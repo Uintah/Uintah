@@ -42,7 +42,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -69,8 +69,8 @@ static DebugStream cout_doing("RIGID_MPM", false);
 extern Uintah::MasterLock cerrLock;
 
 RigidMPM::RigidMPM(const ProcessorGroup* myworld,
-                   const SimulationStateP sharedState) :
-  SerialMPM(myworld, sharedState)
+                   const MaterialManagerP materialManager) :
+  SerialMPM(myworld, materialManager)
 {
 }
 
@@ -103,8 +103,8 @@ void RigidMPM::computeStressTensor(const ProcessorGroup*,
   if (cout_doing.active())
     cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t RigidMPM"<< endl;
 
-  for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
-    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
+  for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->carryForward(patches, mpm_matl, old_dw, new_dw);
     
@@ -148,8 +148,8 @@ void RigidMPM::computeInternalForce(const ProcessorGroup*,
       cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
                  <<"\t\t\t RigidMPM"<< endl;
     }
-    for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> internal_force;
       new_dw->allocateAndPut(internal_force, lb->gInternalForceLabel,dwi,patch);
@@ -193,8 +193,8 @@ void RigidMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration");
 
     Ghost::GhostType  gnone = Ghost::None;
-    for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       // Get required variables for this patch
@@ -277,9 +277,9 @@ void RigidMPM::computeParticleGradients(const ProcessorGroup*,
 
     double partvoldef = 0.;
 
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
       // Get the arrays of particle values to be changed
@@ -464,12 +464,12 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector CMX(0.0,0.0,0.0);
     Vector total_mom(0.0,0.0,0.0);
     double ke=0;
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;

@@ -38,7 +38,7 @@ namespace Uintah {
 
   public:
     PostProcessUda( const ProcessorGroup * myworld,
-                    const SimulationStateP sharedState,
+                    const MaterialManagerP materialManager,
                     const std::string    & udaDir );
 
     virtual ~PostProcessUda();

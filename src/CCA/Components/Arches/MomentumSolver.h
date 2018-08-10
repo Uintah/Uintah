@@ -113,7 +113,7 @@ public:
   ///////////////////////////////////////////////////////////////////////
   // Set up the problem specification database
   void problemSetup(const ProblemSpecP& params,
-		    SimulationStateP & sharedState);
+		    MaterialManagerP & materialManager);
 
   // GROUP: Schedule Action :
   ///////////////////////////////////////////////////////////////////////

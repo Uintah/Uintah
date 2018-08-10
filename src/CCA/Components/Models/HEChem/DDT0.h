@@ -68,7 +68,7 @@ WARNING
   class DDT0 : public HEChemModel {
   public:
     DDT0(const ProcessorGroup* myworld,
-	 const SimulationStateP& sharedState,
+	 const MaterialManagerP& materialManager,
 	 const ProblemSpecP& params,
 	 const ProblemSpecP& prob_spec);
 

@@ -31,8 +31,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -52,8 +52,8 @@ extern DebugStream dbgExch;
 //______________________________________________________________________
 //
 ScalarExch::ScalarExch( const ProblemSpecP     & prob_spec,
-                        const SimulationStateP & sharedState )
-  : ExchangeModel( prob_spec, sharedState )
+                        const MaterialManagerP & materialManager )
+  : ExchangeModel( prob_spec, materialManager )
 {
   d_exchCoeff = scinew ExchangeCoefficients();
   Ilb  = scinew ICELabel();
@@ -313,7 +313,7 @@ void ScalarExch::addExch_VelFC( const ProcessorGroup * pg,
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     for(int m = 0; m < d_numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = d_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
 
       pNewDW->get( sp_vol_CC[m],    Ilb->sp_vol_CCLabel,  indx, patch,gac, 1 );
@@ -371,7 +371,7 @@ void ScalarExch::addExch_VelFC( const ProcessorGroup * pg,
     //________________________________
     //  Boundary Conditons
     for (int m = 0; m < d_numMatls; m++)  {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = d_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
 
       customBC_localVars* BC_localVars = scinew customBC_localVars();
@@ -381,11 +381,11 @@ void ScalarExch::addExch_VelFC( const ProcessorGroup * pg,
                             BC_globalVars, BC_localVars);
 
       setBC<SFCXVariable<double> >(uvel_FCME[m], "Velocity", patch, indx,
-                                    d_sharedState, BC_globalVars, BC_localVars);
+                                    d_materialManager, BC_globalVars, BC_localVars);
       setBC<SFCYVariable<double> >(vvel_FCME[m], "Velocity", patch, indx,
-                                    d_sharedState, BC_globalVars, BC_localVars);
+                                    d_materialManager, BC_globalVars, BC_localVars);
       setBC<SFCZVariable<double> >(wvel_FCME[m], "Velocity", patch, indx,
-                                    d_sharedState, BC_globalVars, BC_localVars);
+                                    d_materialManager, BC_globalVars, BC_localVars);
       delete_CustomBCs( BC_globalVars, BC_localVars );
     }
   }  // patch loop
@@ -494,8 +494,8 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
 
     printTask(patches, patch, dbgExch, "Doing ScalarExch::addExch_Vel_Temp_CC" );
 
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
-    int numICEMatls = d_sharedState->getNumICEMatls();
+    int numMPMMatls = d_materialManager->getNumMatls( "MPM" );
+    int numICEMatls = d_materialManager->getNumMatls( "ICE" );
     int numALLMatls = numMPMMatls + numICEMatls;
     Ghost::GhostType  gn = Ghost::None;
 
@@ -537,7 +537,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
     d_exchCoeff->getConstantExchangeCoeff( K, H);
 
     for (int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = d_materialManager->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int indx = matl->getDWIndex();
@@ -683,7 +683,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
       const Level* level=patch->getLevel();
 
       for (int m = 0; m < numALLMatls; m++)  {
-        Material* matl = d_sharedState->getMaterial( m );
+        Material* matl = d_materialManager->getMaterial( m );
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
         int dwindex = matl->getDWIndex();
         if(mpm_matl && dwindex==sm){
@@ -786,7 +786,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
       std::vector<CCVariable<Vector> > vel_CC_Xchange(numALLMatls);
 
       for (int m = 0; m < numALLMatls; m++) {
-        Material* matl = d_sharedState->getMaterial(m);
+        Material* matl = d_materialManager->getMaterial(m);
         int indx = matl->getDWIndex();
 
         new_dw->allocateAndPut(temp_CC_Xchange[m],Ilb->temp_CC_XchangeLabel,indx,patch);
@@ -799,15 +799,15 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
     //__________________________________
     //  Set boundary conditions
     for (int m = 0; m < numALLMatls; m++)  {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = d_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
 
       customBC_localVars* BC_localVars   = scinew customBC_localVars();
       preprocess_CustomBCs("CC_Exchange", old_dw, new_dw, Ilb, patch, indx, BC_globalVars, BC_localVars);
 
-      setBC(vel_CC[m], "Velocity",   patch, d_sharedState, indx, new_dw,
+      setBC(vel_CC[m], "Velocity",   patch, d_materialManager, indx, new_dw,
                                                         BC_globalVars, BC_localVars, isNotInitialTimeStep);
-      setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, d_sharedState,
+      setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, d_materialManager,
                                          indx, new_dw,  BC_globalVars, BC_localVars, isNotInitialTimeStep);
 #if SET_CFI_BC
 //      set_CFI_BC<Vector>(vel_CC[m],  patch);
@@ -866,7 +866,7 @@ void ScalarExch::addExch_Vel_Temp_CC_1matl( const ProcessorGroup * pg,
     constCCVariable<double>  old_temp;
 
     Ghost::GhostType  gn = Ghost::None;
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);
+    ICEMaterial* ice_matl = (ICEMaterial*) d_materialManager->getMaterial( "ICE", 0);
     int indx = ice_matl->getDWIndex();
 
     old_dw->get(old_temp,  Ilb->temp_CCLabel,      indx, patch, gn, 0);
@@ -908,9 +908,9 @@ void ScalarExch::addExch_Vel_Temp_CC_1matl( const ProcessorGroup * pg,
     preprocess_CustomBCs("CC_Exchange",old_dw, new_dw, Ilb, patch, indx,
                           BC_globalVars, BC_localVars );
 
-    setBC(vel_CC, "Velocity",   patch, d_sharedState,
+    setBC(vel_CC, "Velocity",   patch, d_materialManager,
                                        indx, new_dw,  BC_globalVars, BC_localVars, isNotInitialTimeStep);
-    setBC(Temp_CC,"Temperature",gamma, cv, patch, d_sharedState,
+    setBC(Temp_CC,"Temperature",gamma, cv, patch, d_materialManager,
                                        indx, new_dw,  BC_globalVars, BC_localVars, isNotInitialTimeStep );
 #if SET_CFI_BC
 //      set_CFI_BC<Vector>(vel_CC[m],  patch);

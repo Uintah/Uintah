@@ -33,7 +33,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DOUT.hpp>
@@ -115,7 +115,7 @@ void LoadBalancerCommon::releaseComponents()
   m_scheduler   = nullptr;
   m_application = nullptr;
 
-  m_sharedState = nullptr;
+  m_materialManager = nullptr;
 }
 
 //______________________________________________________________________
@@ -883,10 +883,10 @@ LoadBalancerCommon::inNeighborhood( const Patch * patch
 void
 LoadBalancerCommon::problemSetup(       ProblemSpecP     & pspec
                                 ,       GridP            & grid
-                                , const SimulationStateP & state
+                                , const MaterialManagerP & state
                                 )
 {
-  m_sharedState = state;
+  m_materialManager = state;
 
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   m_output_Nth_proc = 1;

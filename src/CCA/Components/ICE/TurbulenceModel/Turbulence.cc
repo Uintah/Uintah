@@ -27,7 +27,7 @@
 
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -41,14 +41,14 @@ Turbulence::Turbulence()
 {
 }
 
-Turbulence::Turbulence( ProblemSpecP & ps, SimulationStateP & sharedState )
-  : d_sharedState(sharedState)
+Turbulence::Turbulence( ProblemSpecP & ps, MaterialManagerP & materialManager )
+  : d_materialManager(materialManager)
 {
   for( ProblemSpecP child = ps->findBlock("FilterScalar"); child != nullptr; child = child->findNextBlock( "FilterScalar" ) ) {
     FilterScalar* s = scinew FilterScalar;
     child->get("name", s->name);
     
-    s->matl = sharedState->parseAndLookupMaterial(child, "material");
+    s->matl = materialManager->parseAndLookupMaterial(child, "material");
     vector<int> m(1);
     m[0] = s->matl->getDWIndex();
     s->matl_set = scinew MaterialSet();
@@ -84,7 +84,7 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
                           constCCVariable<double>& vol_frac_CC,
                           const int indx,
                           ICELabel* lb,
-                          SimulationStateP&  d_sharedState,
+                          MaterialManagerP&  d_materialManager,
                           constCCVariable<double>& molecularVis,
                           CCVariable<double>& tot_viscosity)
 {
@@ -110,7 +110,7 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
     
   computeTurbViscosity(new_dw, patch, lb, vel_CC,
                        uvel_FC, vvel_FC, wvel_FC, rho_CC, 
-                       indx, d_sharedState, turb_viscosity );
+                       indx, d_materialManager, turb_viscosity );
 
   //__________________________________
   // Set the boundary conditions on the total viscosity such that

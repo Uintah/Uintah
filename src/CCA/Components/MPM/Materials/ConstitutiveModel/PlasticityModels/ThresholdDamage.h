@@ -29,7 +29,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 
@@ -85,7 +85,7 @@ namespace Uintah {
     // constructors
     ThresholdDamage( ProblemSpecP    & ps,
                      MPMFlags        * Mflags,
-                     SimulationState * sharedState );
+                     MaterialManager * materialManager );
 
     ThresholdDamage(const ThresholdDamage* cm);
 

@@ -29,7 +29,7 @@
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -44,7 +44,7 @@ namespace ExchangeModels{
 
   public:
     SlipExch(const ProblemSpecP     & prob_spec,
-             const SimulationStateP & sharedState );
+             const MaterialManagerP & materialManager );
 
     virtual ~SlipExch();
 

@@ -30,7 +30,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
@@ -84,7 +84,7 @@ WARNING
 
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params, const GridP&,
-                              const SimulationStateP& state) = 0;
+                              const MaterialManagerP& state) = 0;
 
     virtual void switchInitialize(const ProblemSpecP& params) = 0;
 

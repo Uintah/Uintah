@@ -29,7 +29,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/MiscMath.h>
@@ -116,7 +116,7 @@ VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face)
             need a patchSubset for each face.
  ---------------------------------------------------------------------  */
 void Lodi_maxMach_patchSubset(const LevelP& level,
-                               SimulationStateP& sharedState,
+                               MaterialManagerP& materialManager,
                                vector<PatchSubset*> & maxMach_patchSubset)
 {
   cout_doing << "Lodi_maxMach_patchSubset "<< endl;
@@ -137,7 +137,7 @@ void Lodi_maxMach_patchSubset(const LevelP& level,
       Patch::FaceType face = *itr;
       //__________________________________
       //  if Lodi face then keep track of the patch
-      if (is_LODI_face(patch,face, sharedState) ) {
+      if (is_LODI_face(patch,face, materialManager) ) {
         p[face].push_back(patch);
       }
     }
@@ -157,13 +157,13 @@ void Lodi_maxMach_patchSubset(const LevelP& level,
  ---------------------------------------------------------------------  */
 bool is_LODI_face(const Patch* patch,
                   Patch::FaceType face,
-                  SimulationStateP& sharedState)
+                  MaterialManagerP& materialManager)
 {
   bool is_lodi_face = false;
-  int numMatls = sharedState->getNumICEMatls();
+  int numMatls = materialManager->getNumMatls( "ICE" );
 
   for (int m = 0; m < numMatls; m++ ) {
-    ICEMaterial* ice_matl = sharedState->getICEMaterial(m);
+    ICEMaterial* ice_matl = materialManager->getMaterial( "ICE", m);
     int indx= ice_matl->getDWIndex();
     bool lodi_pressure =    patch->haveBC(face,indx,"LODI","Pressure");
     bool lodi_density  =    patch->haveBC(face,indx,"LODI","Density");
@@ -184,12 +184,12 @@ bool is_LODI_face(const Patch* patch,
 void lodi_getVars_pressBC( const Patch* patch,
                            Lodi_vars_pressBC* lodi_vars,
                            ICELabel* lb,
-                           SimulationStateP sharedState,
+                           MaterialManagerP materialManager,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw)
 {
   cout_doing << "lodi_getVars_pressBC on patch "<<patch->getID()<< endl;
-  int numMatls = sharedState->getNumMatls();
+  int numMatls = materialManager->getNumMatls();
   std::vector<constCCVariable<double> > Temp_CC(numMatls);
   std::vector<constCCVariable<double> > f_theta_CC(numMatls);
   std::vector<constCCVariable<double> > gamma(numMatls);
@@ -197,7 +197,7 @@ void lodi_getVars_pressBC( const Patch* patch,
   Ghost::GhostType  gn = Ghost::None;
   
   for(int m = 0; m < numMatls; m++) {
-    Material* matl = sharedState->getMaterial( m );
+    Material* matl = materialManager->getMaterial( m );
     int indx = matl->getDWIndex();
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -533,7 +533,7 @@ void computeDi(std::vector<CCVariable<Vector> >& d,
                constCCVariable<double>& speedSound,              
                const Patch* patch,
                DataWarehouse* new_dw,
-               SimulationStateP& sharedState,
+               MaterialManagerP& materialManager,
                const Lodi_variable_basket* user_inputs)                              
 {
   cout_doing << "LODI computeDi "<< endl;
@@ -545,7 +545,7 @@ void computeDi(std::vector<CCVariable<Vector> >& d,
   GridP grid = level->getGrid();
   grid->getLength(domainLength, "minusExtraCells");
   
-  Vector grav = sharedState->getGravity();
+  Vector grav = materialManager->getGravity();
 
   for (int i = 1; i<= 5; i++ ) {           // don't initialize inside main loop
     d[i].initialize(Vector(0.0,0.0,0.0));  // you'll overwrite previously compute di
@@ -560,7 +560,7 @@ void computeDi(std::vector<CCVariable<Vector> >& d,
   for (iter  = bf.begin(); iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
     
-    if (is_LODI_face(patch,face, sharedState) ) {
+    if (is_LODI_face(patch,face, materialManager) ) {
       cout_dbg << " computing DI on face " << face 
                << " patch " << patch->getID()<<endl;
       //_____________________________________
@@ -617,7 +617,7 @@ __________________________________________________________________*/
 void computeNu(CCVariable<Vector>& nu,
                const CCVariable<double>& p, 
                const Patch* patch,
-               SimulationStateP& sharedState)
+               MaterialManagerP& materialManager)
 {
   cout_doing << "LODI computeNu "<< endl;
   double d_SMALL_NUM = 1.0e-100;
@@ -629,7 +629,7 @@ void computeNu(CCVariable<Vector>& nu,
   for (iter  = bf.begin(); iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
     
-    if (is_LODI_face(patch, face, sharedState) ) {
+    if (is_LODI_face(patch, face, materialManager) ) {
       cout_dbg << " computing Nu on face " << face 
                << " patch " << patch->getID()<<endl;   
               
@@ -740,7 +740,7 @@ void  lodi_bc_preprocess( const Patch* patch,
                           const int indx,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
-                          SimulationStateP& sharedState)
+                          MaterialManagerP& materialManager)
 {
   cout_doing << "lodi_bc_preprocess on patch "<<patch->getID()<< endl;
   
@@ -791,7 +791,7 @@ void  lodi_bc_preprocess( const Patch* patch,
   for (iter  = bf.begin(); iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
     
-    if (is_LODI_face(patch,face, sharedState) ) {
+    if (is_LODI_face(patch,face, materialManager) ) {
       //__________________________________
       // Create an iterator that iterates over the face
       // + 2 cells inward.  We don't need to hit every
@@ -830,11 +830,11 @@ void  lodi_bc_preprocess( const Patch* patch,
   }  // boundary face
 
   //compute dissipation coefficients
-  computeNu(nu, press_tmp, patch, sharedState);
+  computeNu(nu, press_tmp, patch, materialManager);
 
   //compute Di at boundary cells
   computeDi(di, rho_old,  press_tmp, vel_old, 
-            speedSound, patch, new_dw, sharedState, lv->var_basket);
+            speedSound, patch, new_dw, materialManager, lv->var_basket);
 }  
  
 /*________________________________________________________
@@ -1076,7 +1076,7 @@ void FaceVel_LODI(const Patch* patch,
                  CCVariable<Vector>& vel_CC,                 
                  Lodi_vars* lv,
                  const Vector& dx,
-                 SimulationStateP& sharedState)                     
+                 MaterialManagerP& materialManager)                     
 
 {
   cout_doing << "Setting FaceVel_LODI on face " << face << endl;
@@ -1107,7 +1107,7 @@ vector<IntVector> dbgCells;
   int dir1  = axes[1];  // other vector directions
   int dir2  = axes[2];
   
-  Vector gravity = sharedState->getGravity();
+  Vector gravity = materialManager->getGravity();
   IntVector offset = IntVector(1,1,1) - Abs(patch->faceDirection(face));
   //__________________________________
   //    S I D E   M I N U S   E D G E S 
@@ -1364,7 +1364,7 @@ void FaceTemp_LODI(const Patch* patch,
              CCVariable<double>& temp_CC,
              Lodi_vars* lv, 
              const Vector& dx,
-             SimulationStateP& sharedState)
+             MaterialManagerP& materialManager)
 {
   cout_doing << "Setting FaceTemp_LODI on face " <<face<< endl; 
   
@@ -1391,7 +1391,7 @@ void FaceTemp_LODI(const Patch* patch,
   int dir1  = axes[1];  // other vector directions
   int dir2  = axes[2];
   
-  Vector gravity = sharedState->getGravity();
+  Vector gravity = materialManager->getGravity();
   IntVector offset = IntVector(1,1,1) - Abs(patch->faceDirection(face));
   //__________________________________
   //    S I D E   M I N U S   E D G E S  
@@ -1578,7 +1578,7 @@ void FaceTemp_LODI(const Patch* patch,
 void FacePress_LODI(const Patch* patch,
                     CCVariable<double>& press_CC,
                     std::vector<CCVariable<double> >& rho_micro,
-                    SimulationStateP& sharedState, 
+                    MaterialManagerP& materialManager, 
                     Patch::FaceType face,
                     Lodi_vars_pressBC* lv)
 {
@@ -1588,7 +1588,7 @@ void FacePress_LODI(const Patch* patch,
     throw InternalError("FacePress_LODI: Lodi_vars_pressBC = null", __FILE__, __LINE__);
   }
 
-  int numMatls = sharedState->getNumMatls();
+  int numMatls = materialManager->getNumMatls();
   std::vector<double> press_eos(numMatls);
   std::vector<constCCVariable<double> >& gamma   = lv->gamma;
   std::vector<constCCVariable<double> >& cv      = lv->cv;
@@ -1596,7 +1596,7 @@ void FacePress_LODI(const Patch* patch,
   std::vector<constCCVariable<double> >& f_theta = lv->f_theta;
 
   //__________________________________  
-  double press_ref= sharedState->getRefPress();    
+  double press_ref= materialManager->getRefPress();    
      
   //__________________________________ 
   Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
@@ -1606,7 +1606,7 @@ void FacePress_LODI(const Patch* patch,
 
     press_CC[c] = 0.0;
     for (int m = 0; m < numMatls; m++) {
-      Material* matl = sharedState->getMaterial( m );
+      Material* matl = materialManager->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       double tmp;

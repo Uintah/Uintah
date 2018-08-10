@@ -93,7 +93,7 @@ namespace Uintah {
 class MPMArches : public ApplicationCommon {
 public:
   MPMArches(const ProcessorGroup* myworld,
-	    const SimulationStateP sharedState);
+	    const MaterialManagerP materialManager);
   
   virtual ~MPMArches();
 

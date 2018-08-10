@@ -7,7 +7,7 @@
 #include <CCA/Components/Arches/Directives.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -27,27 +27,27 @@ FOWYDevolBuilder::FOWYDevolBuilder( const std::string         & modelName,
                                                             const vector<std::string> & reqICLabelNames,
                                                             const vector<std::string> & reqScalarLabelNames,
                                                             ArchesLabel         * fieldLabels,
-                                                            SimulationStateP          & sharedState,
+                                                            MaterialManagerP          & materialManager,
                                                             int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, materialManager, qn )
 {
 }
 
 FOWYDevolBuilder::~FOWYDevolBuilder(){}
 
 ModelBase* FOWYDevolBuilder::build() {
-  return scinew FOWYDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return scinew FOWYDevol( d_modelName, d_materialManager, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
 FOWYDevol::FOWYDevol( std::string modelName,
-                                              SimulationStateP& sharedState,
+                                              MaterialManagerP& materialManager,
                                               ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames,
                                               vector<std::string> scalarLabelNames,
                                               int qn )
-: Devolatilization(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+: Devolatilization(modelName, materialManager, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   pi = acos(-1.0);
 
@@ -203,7 +203,7 @@ FOWYDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_charLabel);
   tsk->computes(_v_inf_label);
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 
 #ifdef HAVE_VISIT
   static bool initialized = false;
@@ -246,7 +246,7 @@ FOWYDevol::initVars( const ProcessorGroup * pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> devol_rate;
     CCVariable<double> gas_devol_rate;
@@ -303,7 +303,7 @@ FOWYDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   if ( _rawcoal_birth_label != nullptr )
     tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 );
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 
 }
 
@@ -323,7 +323,7 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     Vector Dx = patch->dCell();
     double vol = Dx.x()* Dx.y()* Dx.z();

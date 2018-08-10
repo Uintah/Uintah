@@ -32,7 +32,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 namespace Uintah {
 
@@ -44,7 +44,7 @@ public:
 
   enum TABLE_TYPE { CLASSIC, COLDFLOW, CONSTANT };
 
-  TableLookup( SimulationStateP& sharedState );
+  TableLookup( MaterialManagerP& materialManager );
 
   ~TableLookup();
 
@@ -91,7 +91,7 @@ private:
                      DataWarehouse* new_dw, MixingRxnModel* model );
 
   std::map<std::string, MixingRxnModel*> m_tables;        ///< The lookup interface
-  SimulationStateP& m_sharedState;                        ///< Simulation state
+  MaterialManagerP& m_materialManager;                        ///< Simulation state
   TABLE_TYPE m_table_type;                                ///< Describes the table type
   WBCHelper* m_bcHelper;                                  ////< Interface to BCs
 

@@ -109,7 +109,7 @@ public:
     return m_all_in_one_matls;
   }
 
-  const MaterialSet* originalAllMaterials() const;
+  const MaterialSet* allOriginalMaterials() const;
 
   void setOriginalMatlsFromRestart(MaterialSet* matls);
   
@@ -128,7 +128,7 @@ private:
   std::map<std::string, Material*> m_named_matls;
 
   // All simple materials
-  std::vector<SimpleMaterial*>  m_simple_matls;
+  std::vector<SimpleMaterial*> m_simple_matls;
 
   // All materials from all apps
   std::vector<Material*> m_all_matls;
@@ -143,8 +143,8 @@ private:
   // CMs are destroyed.  Store them here until the end.
   std::vector<Material*> m_old_matls;
 
-  // Keep track of the original materials if switching
-  MaterialSet    * m_orig_all_matls{nullptr};
+  // Keep track of all the original materials if switching
+  MaterialSet    * m_all_orig_matls{nullptr};
   MaterialSubset * m_all_in_one_matls{nullptr};
 
   static int count;

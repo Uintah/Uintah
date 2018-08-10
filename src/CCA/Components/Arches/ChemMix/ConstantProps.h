@@ -76,7 +76,7 @@ class ConstantProps : public MixingRxnModel {
 
 public:
 
-  ConstantProps( SimulationStateP& sharedState );
+  ConstantProps( MaterialManagerP& materialManager );
 
   ~ConstantProps();
 

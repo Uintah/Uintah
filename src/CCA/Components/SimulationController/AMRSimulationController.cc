@@ -37,7 +37,7 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/SimulationTime.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>

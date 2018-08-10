@@ -34,8 +34,8 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/SimulationTime.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Handle.h>
@@ -166,7 +166,7 @@ WARNING
 
   public:
     ApplicationCommon(const ProcessorGroup* myworld,
-                      const SimulationStateP sharedState);
+                      const MaterialManagerP materialManager);
 
     virtual ~ApplicationCommon();
   
@@ -204,6 +204,9 @@ WARNING
     // On a restart schedule an initialization task.
     virtual void scheduleRestartInitialize( const LevelP     & level,
                                                   SchedulerP & scheduler ) = 0;
+
+    // Used by the switcher
+    virtual void setupForSwitching() {}
 
     // restartInitialize() is called once and only once if and when a
     // simulation is restarted.  This allows the simulation component
@@ -347,7 +350,7 @@ WARNING
 
     // Access methods for member classes.
     virtual SimulationTime * getSimulationTime() const { return m_simulationTime; }
-    virtual SimulationStateP getSimulationStateP() const { return m_sharedState; }
+    virtual MaterialManagerP getMaterialManagerP() const { return m_materialManager; }
   
   private:
     // The classes are private because only the top level application
@@ -451,7 +454,7 @@ WARNING
     int    m_timeStep{0};
 
   protected:    
-    SimulationStateP m_sharedState{nullptr};
+    MaterialManagerP m_materialManager{nullptr};
 
     ReductionInfoMapper< ApplicationStatsEnum,
                          double > m_application_stats;    

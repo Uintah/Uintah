@@ -84,7 +84,7 @@ class MPMICE : public ApplicationCommon {
 
 public:
   MPMICE(const ProcessorGroup* myworld,
-         const SimulationStateP sharedState,
+         const MaterialManagerP materialManager,
          MPMType type, const bool doAMR = false);
   
   virtual ~MPMICE();

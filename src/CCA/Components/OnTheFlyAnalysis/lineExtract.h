@@ -70,8 +70,8 @@ WARNING
   class lineExtract : public AnalysisModule {
   public:
     lineExtract(const ProcessorGroup* myworld,
-		const SimulationStateP sharedState,
-		const ProblemSpecP& module_spec);
+                const MaterialManagerP materialManager,
+                const ProblemSpecP& module_spec);
     
     lineExtract();
                     
@@ -79,7 +79,9 @@ WARNING
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid);
+                              GridP& grid,
+                              std::vector<std::vector<const VarLabel* > > &PState,
+                              std::vector<std::vector<const VarLabel* > > &PState_preReloc);
                               
     virtual void outputProblemSpec(ProblemSpecP& ps){};
                               

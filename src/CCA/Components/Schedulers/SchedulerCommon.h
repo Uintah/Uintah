@@ -33,8 +33,8 @@
 #include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Util/Timers/Timers.hpp>
 
@@ -100,7 +100,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual ApplicationInterface *getApplication() { return m_application; };
   
     virtual void problemSetup( const ProblemSpecP     & prob_spec,
-                               const SimulationStateP & state );
+                               const MaterialManagerP & state );
 
     virtual void doEmitTaskGraphDocs();
 
@@ -338,7 +338,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     LoadBalancer         * m_loadBalancer {nullptr};
     Output               * m_output       {nullptr};
   
-    SimulationStateP                    m_sharedState{nullptr};
+    MaterialManagerP                    m_materialManager{nullptr};
     std::vector<OnDemandDataWarehouseP> m_dws;
     std::vector<TaskGraph*>             m_task_graphs;
 

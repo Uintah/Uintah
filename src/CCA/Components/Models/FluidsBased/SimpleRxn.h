@@ -73,7 +73,7 @@ WARNING
   class SimpleRxn :public FluidsBasedModel {
   public:
     SimpleRxn(const ProcessorGroup* myworld,
-	      const SimulationStateP& sharedState,
+	      const MaterialManagerP& materialManager,
 	      const ProblemSpecP& params);
     
     virtual ~SimpleRxn();

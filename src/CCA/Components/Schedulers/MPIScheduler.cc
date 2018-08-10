@@ -150,7 +150,7 @@ MPIScheduler::~MPIScheduler()
 //
 void
 MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                          , const SimulationStateP & state
+                          , const MaterialManagerP & state
                           )
 {
   SchedulerCommon::problemSetup(prob_spec, state);
@@ -164,7 +164,7 @@ MPIScheduler::createSubScheduler()
   MPIScheduler * newsched = scinew MPIScheduler( d_myworld, this );
 
   newsched->setComponents( this );
-  newsched->m_sharedState = m_sharedState;
+  newsched->m_materialManager = m_materialManager;
   return newsched;
 }
 
@@ -895,7 +895,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
         
         // Go through all materials since getting an MPMMaterial
         // correctly would depend on MPM
-        for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+        for (int m = 0; m < m_materialManager->getNumMatls(); m++) {
           if (dw->haveParticleSubset(m, patch)) {
             numParticles += dw->getParticleSubset(m, patch)->numParticles();
           }

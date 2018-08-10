@@ -10,7 +10,7 @@ namespace Uintah{
 
 public:
 
-    MMS_mom_csmag<T>( std::string task_name, int matl_index, SimulationStateP shared_state  );
+    MMS_mom_csmag<T>( std::string task_name, int matl_index, MaterialManagerP materialManager  );
     ~MMS_mom_csmag<T>();
 
     void problemSetup( ProblemSpecP& db );
@@ -20,19 +20,19 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, SimulationStateP shared_state ) :
-        _task_name(task_name), _matl_index(matl_index), _shared_state(shared_state){}
+      Builder( std::string task_name, int matl_index, MaterialManagerP materialManager ) :
+        _task_name(task_name), _matl_index(matl_index), _materialManager(materialManager){}
       ~Builder(){}
 
       MMS_mom_csmag* build()
-      { return scinew MMS_mom_csmag<T>( _task_name, _matl_index, _shared_state  ); }
+      { return scinew MMS_mom_csmag<T>( _task_name, _matl_index, _materialManager  ); }
 
       private:
 
       std::string _task_name;
       int _matl_index;
 
-      SimulationStateP _shared_state;
+      MaterialManagerP _materialManager;
     };
 
  protected:
@@ -74,7 +74,7 @@ private:
     std::string m_MMS_source_diff_label;
     std::string m_MMS_source_t_label;
 
-    SimulationStateP _shared_state;
+    MaterialManagerP _materialManager;
 
     /** @brief Helper function to reduce code - Called in initialize and eval **/
     void compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info );
@@ -84,8 +84,8 @@ private:
 
 template <typename T>
 MMS_mom_csmag<T>::MMS_mom_csmag( std::string task_name, int matl_index,
-  SimulationStateP shared_state ) :
-TaskInterface( task_name, matl_index ) , _shared_state(shared_state)
+  MaterialManagerP materialManager ) :
+TaskInterface( task_name, matl_index ) , _materialManager(materialManager)
 {}
 
 //--------------------------------------------------------------------------------------------------

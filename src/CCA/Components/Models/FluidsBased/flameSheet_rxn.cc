@@ -39,7 +39,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -64,9 +64,9 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 //               
 
 flameSheet_rxn::flameSheet_rxn(const ProcessorGroup* myworld, 
-			       const SimulationStateP& sharedState,
+			       const MaterialManagerP& materialManager,
                                const ProblemSpecP& params)
-  : FluidsBasedModel(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   d_matl_set = 0;
   Ilb = scinew ICELabel();
@@ -103,7 +103,7 @@ void flameSheet_rxn::problemSetup(GridP&, const bool isRestart)
   cout_doing << "Doing problemSetup \t\t\t\tFLAMESHEET" << endl;
 
   ProblemSpecP base_ps = d_params->findBlock("flameSheet_rxn");
-  d_matl = m_sharedState->parseAndLookupMaterial(d_params, "material");
+  d_matl = m_materialManager->parseAndLookupMaterial(d_params, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -112,7 +112,7 @@ void flameSheet_rxn::problemSetup(GridP&, const bool isRestart)
   d_matl_set->addReference();
 
   // determine the specific heat of that matl.
-  Material* matl = m_sharedState->getMaterial( m[0] );
+  Material* matl = m_materialManager->getMaterial( m[0] );
   ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
   if (ice_matl){
     d_cp = ice_matl->getSpecificHeat();

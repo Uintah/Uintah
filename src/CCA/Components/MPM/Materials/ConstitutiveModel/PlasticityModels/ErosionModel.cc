@@ -38,10 +38,10 @@ static DebugStream dbg("ErosionModel", false);
 //
 ErosionModel::ErosionModel( ProblemSpecP   & matl_ps,
                             MPMFlags       * flag,
-                            SimulationState* sharedState)
+                            MaterialManager* materialManager)
 {
   d_lb = scinew MPMLabel();
-  d_sharedState = sharedState;
+  d_materialManager = materialManager;
     
   printTask( dbg, "ErosionModel constructor (each Matl)" );
   //__________________________________
@@ -227,7 +227,7 @@ ErosionModel::updateStress_Erosion( ParticleSubset * pset,
   pTimeOfLoc_new.copyData( pTimeOfLoc );
 
   // Get the current simulation time
-  // double simTime = d_sharedState->getElapsedSimTime();
+  // double simTime = d_materialManager->getElapsedSimTime();
                          
   simTime_vartype simTime(0);
   old_dw->get( simTime, d_lb->simulationTimeLabel );

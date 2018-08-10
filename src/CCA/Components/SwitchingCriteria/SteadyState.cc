@@ -74,9 +74,9 @@ SteadyState::~SteadyState()
 
 void SteadyState::problemSetup(const ProblemSpecP& ps, 
                                const ProblemSpecP& restart_prob_spec, 
-                               SimulationStateP& state)
+                               MaterialManagerP& state)
 {
-  m_sharedState = state;
+  m_materialManager = state;
 }
 
 void SteadyState::scheduleInitialize(const LevelP& level, SchedulerP& sched)
@@ -88,7 +88,7 @@ void SteadyState::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(m_heatFluxSumTimeDerivativeLabel);
   t->computes(d_switch_label);
 
-  sched->addTask(t, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(t, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 void SteadyState::initialize(const ProcessorGroup*,
@@ -123,7 +123,7 @@ void SteadyState::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   t->computes(m_heatFluxSumTimeDerivativeLabel);
   t->computes(d_switch_label);
 
-  sched->addTask(t, level->eachPatch(),m_sharedState->allMaterials());
+  sched->addTask(t, level->eachPatch(),m_materialManager->allMaterials());
 
   scheduleDummy(level,sched);
 }
@@ -177,7 +177,7 @@ void SteadyState::scheduleDummy(const LevelP& level, SchedulerP& sched)
 {
   Task* t = scinew Task("SteadyState::dummy", this, &SteadyState::dummy);
   t->requires(Task::OldDW,d_switch_label,level.get_rep());
-  sched->addTask(t, level->eachPatch(),m_sharedState->allMaterials());
+  sched->addTask(t, level->eachPatch(),m_materialManager->allMaterials());
 }
 
 void SteadyState::dummy(const ProcessorGroup* group,

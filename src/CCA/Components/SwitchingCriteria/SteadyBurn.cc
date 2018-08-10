@@ -76,9 +76,9 @@ SteadyBurnCriteria::~SteadyBurnCriteria()
 //
 void SteadyBurnCriteria::problemSetup(const ProblemSpecP& ps, 
                                   const ProblemSpecP& restart_prob_spec, 
-                                  SimulationStateP& state)
+                                  MaterialManagerP& state)
 {
-  d_sharedState = state;
+  d_materialManager = state;
 }
 //__________________________________
 //
@@ -92,7 +92,7 @@ void SteadyBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
   one_matl->add(0);
   one_matl->addReference();
   
-  const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
+  const MaterialSubset* mpm_matls = d_materialManager->allMaterials( "MPM" )->getUnion();
   
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gan = Ghost::AroundNodes;
@@ -107,7 +107,7 @@ void SteadyBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
   
   t->computes(d_switch_label);
 
-  sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
+  sched->addTask(t, level->eachPatch(),d_materialManager->allMaterials());
 
   if (one_matl->removeReference()){
     delete one_matl;
@@ -131,11 +131,11 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
       const Patch* patch = patches->get(p);
       printTask(patches, patch,switching_dbg,"Doing Switching Criteria:SteadyBurnCriteria::switchTest");
       
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(d_material);
+      MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM", d_material);
       int d_indx = mpm_matl->getDWIndex();
 
-      int numAllMatls = d_sharedState->getNumMatls();
-      int numMPMMatls = d_sharedState->getNumMPMMatls();
+      int numAllMatls = d_materialManager->getNumMatls();
+      int numMPMMatls = d_materialManager->getNumMatls( "MPM" );
 
       // mpm matls
       constNCVariable<double> NC_CCweight;
@@ -147,7 +147,7 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
       Ghost::GhostType  gac = Ghost::AroundCells;
       Ghost::GhostType  gan = Ghost::AroundNodes;
       for (int m = 0; m < numMPMMatls; m++) {
-        Material* matl = d_sharedState->getMaterial(m);
+        Material* matl = d_materialManager->getMaterial(m);
         int indx = matl->getDWIndex();
         new_dw->get(gmass[m],        Mlb->gMassLabel,        indx, patch,gan, 2);
         old_dw->get(vol_frac_mpm[m], Ilb->vol_frac_CCLabel,  indx, patch,gac, 1);

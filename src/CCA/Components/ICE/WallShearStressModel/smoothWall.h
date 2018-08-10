@@ -33,7 +33,7 @@ namespace Uintah {
 
   public:
   
-    smoothwall(ProblemSpecP& ps, SimulationStateP& sharedState);
+    smoothwall(ProblemSpecP& ps, MaterialManagerP& materialManager);
     
     virtual ~smoothwall();
     
@@ -77,7 +77,7 @@ namespace Uintah {
                     DataWarehouse*, 
                     DataWarehouse*);
       
-      SimulationStateP d_sharedState;
+      MaterialManagerP d_materialManager;
       Patch::FaceType d_face;
       
       double d_invVonKarman;        // 1/VonKarman 

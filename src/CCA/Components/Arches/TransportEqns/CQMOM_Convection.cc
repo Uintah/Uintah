@@ -165,7 +165,7 @@ CQMOM_Convection::sched_initializeVariables( const LevelP& level, SchedulerP& sc
     tsk->computes( zConvLabels[i] );
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -183,7 +183,7 @@ CQMOM_Convection::initializeVariables( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     for ( int i = 0; i <nMoments; i++ ) {
       CCVariable<double> Fconv;
@@ -252,7 +252,7 @@ CQMOM_Convection::sched_solveCQMOMConvection( const LevelP& level, SchedulerP& s
     tsk->modifies( zConvLabels[i] );
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 
@@ -274,7 +274,7 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
 
     constCCVariable<double> volFrac;
@@ -959,7 +959,7 @@ CQMOM_Convection::sched_initializeWalls( const LevelP& level, SchedulerP& sched,
     tsk->modifies(d_wallIntegerLabel);
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -978,7 +978,7 @@ CQMOM_Convection::initializeWalls( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     //Vector Dx = patch->dCell();
 
     constCCVariable<double> vf;

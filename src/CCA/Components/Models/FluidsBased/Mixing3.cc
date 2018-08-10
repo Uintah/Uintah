@@ -33,7 +33,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
@@ -59,9 +59,9 @@ using namespace Uintah;
 using namespace std;
 
 Mixing3::Mixing3(const ProcessorGroup* myworld,
-		 const SimulationStateP& sharedState,
+		 const MaterialManagerP& materialManager,
 		 const ProblemSpecP& params)
-  : FluidsBasedModel(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   Ilb = scinew ICELabel();
 
@@ -103,11 +103,11 @@ Mixing3::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
   ps->require("massFraction", initialMassFraction);
 }
 
-void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
+void Mixing3::problemSetup(GridP&, MaterialManagerP& in_state,
                             const bool isRestart)
 {
-  sharedState = in_state;
-  matl = sharedState->parseAndLookupMaterial(params, "material");
+  materialManager = in_state;
+  matl = materialManager->parseAndLookupMaterial(params, "material");
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();

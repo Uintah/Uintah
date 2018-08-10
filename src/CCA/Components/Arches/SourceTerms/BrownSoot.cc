@@ -1,6 +1,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -14,7 +14,7 @@ using namespace Uintah;
 
 BrownSoot::BrownSoot( std::string src_name, ArchesLabel* field_labels,
 		      vector<std::string> req_label_names, std::string type )
-: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
+: SourceTermBase(src_name, field_labels->d_materialManager, req_label_names, type), _field_labels(field_labels)
 {
 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() );
@@ -125,7 +125,7 @@ BrownSoot::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   tsk->requires( which_dw, m_rho_label,                          Ghost::None, 0 );
   tsk->requires( Task::OldDW, VarLabel::find("volFraction"), Ghost::None, 0 ); 
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
   
   //get the system pressure:
   ChemHelper& helper = ChemHelper::self();
@@ -156,7 +156,7 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> tar_src;
     CCVariable<double> num_density_src;
@@ -350,7 +350,7 @@ BrownSoot::sched_initialize( const LevelP& level, SchedulerP& sched )
     tsk->computes(m_soot_mass_src_label);
     tsk->computes(m_balance_src_label);
 
-    sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+    sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 void
@@ -365,7 +365,7 @@ BrownSoot::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> tar_src;
     CCVariable<double> num_density_src;

@@ -37,9 +37,9 @@ Dout dbg_pp("postProcess", "PostProcessUda", "PostProcessUda debug info", false)
 //______________________________________________________________________
 //
 PostProcessUda::PostProcessUda( const ProcessorGroup * myworld,
-				    const SimulationStateP sharedState,
+				    const MaterialManagerP materialManager,
                                 const string         & udaDir ) :
-  ApplicationCommon( myworld, sharedState ),
+  ApplicationCommon( myworld, materialManager ),
   d_udaDir(udaDir)
 {}
 
@@ -97,7 +97,7 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
 
   // This matl is for delT
   SimpleMaterial * oneMatl = scinew SimpleMaterial();
-  m_sharedState->registerSimpleMaterial( oneMatl );
+  m_materialManager->registerSimpleMaterial( oneMatl );
 
   delt_label = getDelTLabel();
 
@@ -128,7 +128,7 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  create the analysis modules
-  d_Modules = ModuleFactory::create(prob_spec, m_sharedState, m_output, d_dataArchive);
+  d_Modules = ModuleFactory::create(prob_spec, m_materialManager, m_output, d_dataArchive);
 
   vector<Module*>::iterator iter;
   for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++) {
@@ -255,7 +255,7 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
-  // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+  // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
   
   timeStep_vartype timeStep;
   old_dw->get( timeStep, getTimeStepLabel() );
@@ -334,7 +334,7 @@ void PostProcessUda::scheduleComputeStableTimeStep(const LevelP& level,
   const PatchSet* perProcPatches = m_loadBalancer->getPerProcessorPatchSet(grid);
 
   t->setType(Task::OncePerProc);
-  sched->addTask( t, perProcPatches, m_sharedState->allMaterials() );
+  sched->addTask( t, perProcPatches, m_materialManager->allMaterials() );
 
 }
 

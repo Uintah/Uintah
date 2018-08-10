@@ -50,7 +50,7 @@
 #endif
 
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 #include <string>
 #include <vector>
@@ -68,7 +68,7 @@ AnalysisModuleFactory::~AnalysisModuleFactory()
 
 std::vector<AnalysisModule*>
 AnalysisModuleFactory::create(const ProcessorGroup* myworld,
-			      const SimulationStateP sharedState,
+			      const MaterialManagerP materialManager,
 			      const ProblemSpecP& prob_spec)
 {
   std::string module("");
@@ -91,48 +91,48 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       module = attributes["name"];
 
       if ( module == "statistics" ) {
-        modules.push_back( scinew statistics(          myworld, sharedState, module_ps) );
+        modules.push_back( scinew statistics(          myworld, materialManager, module_ps) );
       }
       else if ( module == "lineExtract" ) {
-        modules.push_back(scinew lineExtract(          myworld, sharedState, module_ps ) );
+        modules.push_back(scinew lineExtract(          myworld, materialManager, module_ps ) );
       }
       else if ( module == "planeExtract" ) {
-        modules.push_back( scinew planeExtract(        myworld, sharedState, module_ps ) );
+        modules.push_back( scinew planeExtract(        myworld, materialManager, module_ps ) );
       }
       else if ( module == "momentumAnalysis" ) {
-        modules.push_back( scinew momentumAnalysis(    myworld, sharedState, module_ps ) );
+        modules.push_back( scinew momentumAnalysis(    myworld, materialManager, module_ps ) );
       }
       else if ( module == "minMax" ) {
-        modules.push_back( scinew MinMax(              myworld, sharedState, module_ps ) );
+        modules.push_back( scinew MinMax(              myworld, materialManager, module_ps ) );
       }
 
 #if !defined( NO_ARCHES ) && !defined( NO_WASATCH ) && !defined( NO_EXAMPLES )
       else if ( module == "radiometer" ) {
-        modules.push_back( scinew OnTheFly_radiometer( myworld, sharedState, module_ps ) );
+        modules.push_back( scinew OnTheFly_radiometer( myworld, materialManager, module_ps ) );
       }
 #endif
 
 #if !defined( NO_ICE )
       else if ( module == "containerExtract" ) {
-        modules.push_back( scinew containerExtract(    myworld, sharedState, module_ps ) );
+        modules.push_back( scinew containerExtract(    myworld, materialManager, module_ps ) );
       }
       else if ( module == "vorticity" ) {
-        modules.push_back( scinew vorticity(           myworld, sharedState, module_ps ) );
+        modules.push_back( scinew vorticity(           myworld, materialManager, module_ps ) );
       }
 #endif
 
 #if !defined( NO_MPM )
       else if ( module == "particleExtract" ) {
-        modules.push_back( scinew particleExtract(     myworld, sharedState, module_ps ) );
+        modules.push_back( scinew particleExtract(     myworld, materialManager, module_ps ) );
       }
       else if ( module == "flatPlate_heatFlux" ) {
-        modules.push_back( scinew flatPlate_heatFlux(  myworld, sharedState, module_ps ) );
+        modules.push_back( scinew flatPlate_heatFlux(  myworld, materialManager, module_ps ) );
       }
 #endif
 
 #if !defined( NO_ICE ) && !defined( NO_MPM )
       else if ( module == "firstLawThermo" ) {
-        modules.push_back( scinew FirstLawThermo(      myworld, sharedState, module_ps ) );
+        modules.push_back( scinew FirstLawThermo(      myworld, materialManager, module_ps ) );
       }
 #endif    
 

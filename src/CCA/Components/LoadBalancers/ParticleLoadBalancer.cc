@@ -38,7 +38,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
@@ -150,7 +150,7 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const std:
           if (dw) {
             //loop through the materials and add up the particles
             //   go through all materials since getting an MPMMaterial correctly would depend on MPM
-            for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+            for (int m = 0; m < m_materialManager->getNumMatls(); m++) {
               ParticleSubset* psubset = 0;
               if (dw->haveParticleSubset(m, oldPatch, low, high))
                 psubset = dw->getParticleSubset(m, oldPatch, low, high);
@@ -264,7 +264,7 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, std::vector<std::v
       if (dw) {
         //loop through the materials and add up the particles
         //   go through all materials since getting an MPMMaterial correctly would depend on MPM
-        for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+        for (int m = 0; m < m_materialManager->getNumMatls(); m++) {
           if (dw->haveParticleSubset(m, patch))
             thisPatchParticles += dw->getParticleSubset(m, patch)->numParticles();
         }
@@ -863,7 +863,7 @@ ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state
 }
 
 void
-ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid, const SimulationStateP& state)
+ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid, const MaterialManagerP& state)
 {
   proc0cout << "Warning the ParticleLoadBalancer is experimental, use at your own risk\n";
 

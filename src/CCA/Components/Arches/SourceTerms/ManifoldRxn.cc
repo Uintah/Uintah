@@ -1,6 +1,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -14,7 +14,7 @@ using namespace Uintah;
 
 ManifoldRxn::ManifoldRxn( std::string src_name, ArchesLabel* field_labels,
 			  vector<std::string> req_label_names, std::string type )
-: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
+: SourceTermBase(src_name, field_labels->d_materialManager, req_label_names, type), _field_labels(field_labels)
 {
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() );
   _conv_label = VarLabel::create( src_name+"_conv", CCVariable<double>::getTypeDescription() );
@@ -91,7 +91,7 @@ ManifoldRxn::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   tsk->requires(Task::NewDW, VarLabel::find("turb_viscosity"), Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, _field_labels->d_delTLabel);
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 //---------------------------------------------------------------------------
@@ -110,7 +110,7 @@ ManifoldRxn::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     constCCVariable<double> old_var;
     constCCVariable<double> new_var;
@@ -194,7 +194,7 @@ ManifoldRxn::sched_initialize( const LevelP& level, SchedulerP& sched )
     tsk->computes(*iter);
   }
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 void
@@ -209,7 +209,7 @@ ManifoldRxn::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
 
     CCVariable<double> src;

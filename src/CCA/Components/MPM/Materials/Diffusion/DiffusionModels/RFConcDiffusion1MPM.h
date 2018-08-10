@@ -26,7 +26,7 @@
 #define UINTAH_RD_RFCONCDIFFUSION1MPM_H
 
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/MPM/Materials/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
@@ -45,7 +45,7 @@ namespace Uintah {
     
      RFConcDiffusion1MPM(
                          ProblemSpecP     & ps,
-                         SimulationStateP & sS,
+                         MaterialManagerP & sS,
                          MPMFlags         * Mflag,
                          std::string        diff_type
                         );

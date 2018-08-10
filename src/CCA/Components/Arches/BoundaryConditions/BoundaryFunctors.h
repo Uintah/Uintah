@@ -737,7 +737,7 @@ public:
 private:
 
   std::string m_sec_var_name;
-  SimulationStateP m_shared_state;
+  MaterialManagerP m_materialManager;
 
 };
 

@@ -57,12 +57,12 @@ typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
 typedef std::vector<std::string> SVec;
 
 //--------------------------------------------------------------------------------------------------
-KokkosSolver::KokkosSolver( SimulationStateP& shared_state,
+KokkosSolver::KokkosSolver( MaterialManagerP& materialManager,
                             const ProcessorGroup* myworld,
                             SolverInterface* solver,
                             const ApplicationCommon* arches )
   : NonlinearSolver ( myworld, arches )
-  , m_sharedState   ( shared_state )
+  , m_materialManager   ( materialManager )
   , m_hypreSolver   ( solver )
 {
   // delta t
@@ -97,7 +97,7 @@ KokkosSolver::sched_restartInitialize( const LevelP     & level
                                      )
 {
 
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
   // Setup BCs
   setupBCs( level, sched, matls );
@@ -125,7 +125,7 @@ KokkosSolver::sched_restartInitializeTimeAdvance( const LevelP     & level
 //--------------------------------------------------------------------------------------------------
 void
 KokkosSolver::problemSetup( const ProblemSpecP     & input_db
-                          ,       SimulationStateP & state
+                          ,       MaterialManagerP & state
                           ,       GridP            & grid
                           )
 {
@@ -181,7 +181,7 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
   for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
-    i->second->set_shared_state(m_sharedState);
+    i->second->set_materialManager(m_materialManager);
     i->second->register_all_tasks(db);
 
   }
@@ -203,7 +203,7 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
   }
 
   // Adds any additional lookup species as specified by the models.
-  m_table_lookup = scinew TableLookup( m_sharedState );
+  m_table_lookup = scinew TableLookup( m_materialManager );
   m_table_lookup->problemSetup( db );
   m_table_lookup->addLookupSpecies();
 
@@ -267,7 +267,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
 
     m_arches_spec->getRootNode()->findBlock("Time")->getWithDefault( "delt_init", m_dt_init, 1. );
 
-    sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
+    sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
 
   } else {
 
@@ -289,7 +289,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
 
     tsk->computes( m_delTLabel, level.get_rep() );
 
-    sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
+    sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
 
   }
 
@@ -310,7 +310,7 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup *
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = m_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     Vector Dx = patch->dCell();
 
@@ -378,7 +378,7 @@ KokkosSolver::sched_initialize( const LevelP& level,
                                 SchedulerP& sched,
                                 const bool doing_restart )
 {
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
   //bool is_restart = false;
   const bool pack_tasks = true;
   const bool dont_pack_tasks = false;
@@ -484,7 +484,7 @@ KokkosSolver::sched_nonlinearSolve( const LevelP & level,
   const bool pack_tasks = true;
   //const bool dont_pack_tasks = false;
 
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
@@ -574,7 +574,7 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
 
   using namespace Uintah::ArchesCore;
 
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
@@ -797,7 +797,7 @@ KokkosSolver::SandBox( const LevelP     & level
 
   const int time_substep = 0;
 
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   BFM::iterator i_transport = m_task_factory_map.find("transport_factory");

@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Ports/SolverInterface.h>
 
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 using namespace Uintah;
 
@@ -10,10 +10,10 @@ typedef ArchesFieldContainer AFC;
 typedef ArchesTaskInfoManager ATIM;
 
 //--------------------------------------------------------------------------------------------------
-PressureEqn::PressureEqn( std::string task_name, int matl_index, SimulationStateP shared_state ) :
+PressureEqn::PressureEqn( std::string task_name, int matl_index, MaterialManagerP materialManager ) :
 TaskInterface( task_name, matl_index ) {
 
-  m_sharedState = shared_state;
+  m_materialManager = materialManager;
   m_pressure_name = "pressure";
 
 }
@@ -53,14 +53,14 @@ PressureEqn::problemSetup( ProblemSpecP& db ){
 //--------------------------------------------------------------------------------------------------
 void
 PressureEqn::sched_Initialize( const LevelP& level, SchedulerP& sched ){
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
   m_hypreSolver->scheduleInitialize( level, sched, matls );
 }
 
 //--------------------------------------------------------------------------------------------------
 void
 PressureEqn::sched_restartInitialize( const LevelP& level, SchedulerP& sched ){
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
   m_hypreSolver->scheduleRestartInitialize( level, sched, matls );
 }
 
@@ -356,7 +356,7 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
     }
   }
 
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
   IntVector m_periodic_vector = level->getPeriodicBoundaries();
 
   const bool isPeriodic = m_periodic_vector.x() == 1 && m_periodic_vector.y() == 1 && m_periodic_vector.z() ==1;

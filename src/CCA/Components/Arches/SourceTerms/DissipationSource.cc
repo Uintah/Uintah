@@ -1,6 +1,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/DissipationSource.h>
@@ -8,9 +8,9 @@
 using namespace std;
 using namespace Uintah; 
 
-DissipationSource::DissipationSource( std::string src_name, SimulationStateP& shared_state,
+DissipationSource::DissipationSource( std::string src_name, MaterialManagerP& materialManager,
                                       vector<std::string> req_label_names, std::string type ) 
-: SourceTermBase(src_name, shared_state, req_label_names, type)
+: SourceTermBase(src_name, materialManager, req_label_names, type)
 {
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 }
@@ -72,7 +72,7 @@ DissipationSource::sched_computeSource( const LevelP& level, SchedulerP& sched, 
     tsk->requires( Task::NewDW, _ccVelocityLabel, Ghost::AroundCells, 1 );
   }
   
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
 }
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term 
@@ -89,7 +89,7 @@ DissipationSource::computeSource( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     
     CCVariable<double> rateSrc; 
     constCCVariable<double> den;    // mixture density
@@ -238,7 +238,7 @@ DissipationSource::sched_initialize( const LevelP& level, SchedulerP& sched )
     tsk->computes(*iter); 
   }
   
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials() );
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) );
 }
 //---------------------------------------------------------------------------
 // Method: initialization
@@ -254,7 +254,7 @@ DissipationSource::initialize( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     CCVariable<double> src;
     new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
     src.initialize(0.0); 

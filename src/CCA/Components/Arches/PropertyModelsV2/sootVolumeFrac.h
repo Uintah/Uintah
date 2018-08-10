@@ -1,8 +1,8 @@
 #ifndef Uintah_Component_Arches_sootVolumeFrac_h
 #define Uintah_Component_Arches_sootVolumeFrac_h
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 // SEE PROPTEMPLATE.CC FOR INSTRUCTIONS
@@ -90,16 +90,16 @@ namespace Uintah{
 
           //public: 
 
-            //Builder( std::string name, SimulationStateP& shared_state,ArchesLabel * fieldLabels) : _name(name), _shared_state(shared_state),_fieldLabels(fieldLabels) {};
+            //Builder( std::string name, MaterialManagerP& materialManager,ArchesLabel * fieldLabels) : _name(name), _materialManager(materialManager),_fieldLabels(fieldLabels) {};
             //~Builder(){}; 
 
             //sootVolumeFrac* build()
-            //{ return scinew sootVolumeFrac( _name, _shared_state, _fieldLabels ); };
+            //{ return scinew sootVolumeFrac( _name, _materialManager, _fieldLabels ); };
 
           //private: 
 
             //std::string _name; 
-            //SimulationStateP& _shared_state; 
+            //MaterialManagerP& _materialManager; 
             //ArchesLabel* _fieldLabels;
 
         //}; // class Builder 

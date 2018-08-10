@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_HeatTransfer_h
 #define Uintah_Component_Arches_HeatTransfer_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -28,7 +28,7 @@ class HeatTransfer: public ModelBase {
 public: 
 
   HeatTransfer( std::string modelName, 
-                SimulationStateP& shared_state, 
+                MaterialManagerP& materialManager, 
                 ArchesLabel* fieldLabels,
                 std::vector<std::string> reqICLabelNames,
                 std::vector<std::string> reqScalarLabelNames,

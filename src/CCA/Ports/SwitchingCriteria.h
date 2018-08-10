@@ -26,7 +26,7 @@
 #define UINTAH_HOMEBREW_SwitchingCriteria_H
 
 #include <Core/Parallel/UintahParallelPort.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -45,7 +45,7 @@ namespace Uintah {
   
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
-                              SimulationStateP& state) = 0;
+                              MaterialManagerP& state) = 0;
 
     virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched)
       {};

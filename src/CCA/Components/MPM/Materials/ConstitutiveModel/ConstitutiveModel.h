@@ -29,7 +29,7 @@
 #include <vector>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -170,9 +170,9 @@ namespace Uintah {
         d_world = myworld;
       }
 
-    inline void setSharedState(SimulationState* sharedState)
+    inline void setMaterialManager(MaterialManager* materialManager)
       {
-        d_sharedState = sharedState;
+        d_materialManager = materialManager;
       }
 
     // Make a clone of the constitutive model
@@ -444,9 +444,9 @@ namespace Uintah {
 
     static const double LargeTimestep;
 
-    // don't store SimulationStateP or it will add a reference 
+    // don't store MaterialManagerP or it will add a reference 
     // that will never be removed
-    SimulationState* d_sharedState;
+    MaterialManager* d_materialManager;
   };
 } // End namespace Uintah
       

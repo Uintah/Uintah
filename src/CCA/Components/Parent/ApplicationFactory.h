@@ -25,7 +25,7 @@
 #ifndef UINTAH_CCA_COMPONENTS_PARENT_APPLICATIONFACTORY_H
 #define UINTAH_CCA_COMPONENTS_PARENT_APPLICATIONFACTORY_H
 
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
 
@@ -42,7 +42,7 @@ namespace Uintah {
     
     static UintahParallelComponent* create(ProblemSpecP& ps,
                                            const ProcessorGroup* world, 
-					   const SimulationStateP sharedState,
+					   const MaterialManagerP materialManager,
                                            std::string uda);
   };
 } // End namespace Uintah

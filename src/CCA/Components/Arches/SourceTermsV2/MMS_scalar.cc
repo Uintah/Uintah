@@ -4,8 +4,8 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
-MMS_scalar::MMS_scalar( std::string task_name, int matl_index, SimulationStateP shared_state ) :
-TaskInterface( task_name, matl_index ) , _shared_state(shared_state)
+MMS_scalar::MMS_scalar( std::string task_name, int matl_index, MaterialManagerP materialManager ) :
+TaskInterface( task_name, matl_index ) , _materialManager(materialManager)
 {}
 
 //--------------------------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& s_t_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_t_label));
   constCCVariable<double>& X  = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( ind_var_name ));
 
-  double time_d      = tsk_info->get_time(); //_shared_state->getElapsedSimTime();
+  double time_d      = tsk_info->get_time(); //_materialManager->getElapsedSimTime();
   //  Vector Dx = patch->dCell();
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -205,7 +205,7 @@ MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& X  = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( ind_var_name ));
 
 
-  double time_d      = tsk_info->get_time(); //_shared_state->getElapsedSimTime();
+  double time_d      = tsk_info->get_time(); //_materialManager->getElapsedSimTime();
   int   time_substep = tsk_info->get_time_substep();
   double factor      = tsk_info->get_ssp_time_factor(time_substep);
   double dt          = tsk_info->get_dt();

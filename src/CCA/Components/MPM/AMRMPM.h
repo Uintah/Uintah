@@ -53,7 +53,7 @@ class AMRMPM : public SerialMPM {
 
 public:
   AMRMPM(const ProcessorGroup* myworld,
-	 const SimulationStateP sharedState);
+	 const MaterialManagerP materialManager);
   
   virtual ~AMRMPM();
   SDInterfaceModel* d_sdInterfaceModel;

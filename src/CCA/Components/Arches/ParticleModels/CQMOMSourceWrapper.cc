@@ -30,7 +30,7 @@
 
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
 
@@ -166,7 +166,7 @@ CQMOMSourceWrapper::sched_initializeVariables( const LevelP& level, SchedulerP& 
     tsk->computes(d_sourceLabels[i]);
   }
   
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
 // Method: Actually initialize the variables.
@@ -183,7 +183,7 @@ CQMOMSourceWrapper::initializeVariables( const ProcessorGroup* pc,
     
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     
     for ( int i = 0; i < nMoments*nSources; i++ ) {
       CCVariable<double> src;
@@ -241,7 +241,7 @@ CQMOMSourceWrapper::sched_buildSourceTerm( const LevelP& level, SchedulerP& sche
     tsk->requires( which_dw, tempLabel, Ghost::None, 0 );
   }
   
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
 // Method: Actually build the source term
@@ -260,7 +260,7 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
     
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     
     constCCVariable<double> volFrac;
     old_dw->get( volFrac, volfrac_label, matlIndex, patch, gn, 0);

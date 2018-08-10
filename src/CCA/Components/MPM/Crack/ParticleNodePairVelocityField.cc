@@ -40,8 +40,8 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
@@ -78,13 +78,13 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
 {       
   for(int p=0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = d_materialManager->getNumMatls( "MPM" );
 
     enum {SAMESIDE=0,ABOVE_CRACK,BELOW_CRACK};
         
     Vector dx = patch->dCell(); 
     for(int m=0; m<numMatls; m++) {
-      MPMMaterial* mpm_matl=d_sharedState->getMPMMaterial(m);
+      MPMMaterial* mpm_matl=d_materialManager->getMaterial( "MPM", m);
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       constParticleVariable<Point> px;

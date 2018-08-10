@@ -89,7 +89,7 @@ namespace WasatchCore{
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
                              Uintah::SolverInterface& linSolver,
-                             Uintah::SimulationStateP sharedState)
+                             Uintah::MaterialManagerP materialManager)
     : MomentumTransportEquationBase<FieldT>(momComponent,
                                             velName,
                          momName,

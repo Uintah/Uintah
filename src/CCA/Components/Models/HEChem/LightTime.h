@@ -74,7 +74,7 @@ WARNING
   class LightTime : public HEChemModel {
   public:
     LightTime(const ProcessorGroup* myworld,
-              const SimulationStateP& sharedState,
+              const MaterialManagerP& materialManager,
               const ProblemSpecP& params);
     
     virtual ~LightTime();

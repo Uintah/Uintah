@@ -40,8 +40,8 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
@@ -79,7 +79,7 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
     Uintah::MPI::Comm_rank(mpi_crack_comm, &pid);
     Uintah::MPI::Comm_size(mpi_crack_comm, &patch_size);
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=d_materialManager->getNumMatls( "MPM" );
     for(int m=0; m<numMPMMatls; m++) {
       if(d_calFractParameters || d_doCrackPropagation) {
         // cfnset - subset of crack-front nodes in each patch
@@ -161,9 +161,9 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
     Uintah::MPI::Comm_rank(mpi_crack_comm, &pid);
     Uintah::MPI::Comm_size(mpi_crack_comm, &patch_size);
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=d_materialManager->getNumMatls( "MPM" );
     for(int m=0; m<numMPMMatls; m++) {
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      MPMMaterial* mpm_matl = d_materialManager->getMaterial( "MPM", m);
 
       // Cell mass of the material
       double d_cell_mass=mpm_matl->getInitialDensity()*dx.x()*dx.y()*dx.z();
@@ -363,7 +363,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
       // for crack geometry visualization
       if(saveCrackGeometry) {
         if(pid==0) {
-	  // double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+	  // double timeStep = m_materialManager->getCurrentTopLevelTimeStep();
 	  timeStep_vartype timeStep;
 	  old_dw->get(timeStep, lb->timeStepLabel);
 

@@ -31,7 +31,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
@@ -110,8 +110,8 @@ namespace WasatchCore{
   //--------------------------------------------------------------------
 
   Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld,
-                    const Uintah::SimulationStateP sharedState )
-    : Uintah::ApplicationCommon( myworld, sharedState ),
+                    const Uintah::MaterialManagerP materialManager )
+    : Uintah::ApplicationCommon( myworld, materialManager ),
       buildTimeIntegrator_ ( true ),
       buildWasatchMaterial_( true ),
       nRKStages_(1),
@@ -536,7 +536,7 @@ namespace WasatchCore{
     //
     if( buildWasatchMaterial_ ){
       Uintah::WasatchMaterial* mat= scinew Uintah::WasatchMaterial();
-      m_sharedState->registerWasatchMaterial(mat);
+      m_materialManager->registerMaterial( "Wasatch", mat);
     }
 
     // we are able to get the solver port from here
@@ -704,7 +704,7 @@ namespace WasatchCore{
                                                                       densityTag,
                                                                       graphCategories_,
                                                                       *m_solver,
-                                                                      m_sharedState,
+                                                                      m_materialManager,
                                                                       *dualTimeMatrixInfo_ );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
@@ -763,7 +763,7 @@ namespace WasatchCore{
     {
       try{
         parse_poisson_equation( poissonEqnParams, graphCategories_,
-                                *m_solver, m_sharedState );
+                                *m_solver, m_materialManager );
       }
       catch( std::runtime_error& err ){
         std::ostringstream msg;
@@ -777,7 +777,7 @@ namespace WasatchCore{
     if( wasatchSpec_->findBlock("Radiation") ){
       parse_radiation_solver( wasatchSpec_->findBlock("Radiation"),
                               *graphCategories_[ADVANCE_SOLUTION],
-                              *m_solver, m_sharedState, persistent_fields() );
+                              *m_solver, m_materialManager, persistent_fields() );
     }
 
     if( buildTimeIntegrator_ ){
@@ -945,19 +945,19 @@ namespace WasatchCore{
   void Wasatch::scheduleInitialize( const Uintah::LevelP& level,
                                     Uintah::SchedulerP& sched )
   {
-    // accessing the m_sharedState->allWasatchMaterials() must be done after
-    // problemSetup. The sharedstate class will create this material set
-    // in postgridsetup, which is called after problemsetup. This is dictated
-    // by Uintah.
+    // Accessing the m_materialManager->allMaterials( "Wasatch" ) must
+    // be done after problemSetup. The material manager class will
+    // create this material set in postgridsetup, which is called
+    // after problemsetup. This is dictated by Uintah.
     if( buildWasatchMaterial_ ){
-      set_wasatch_materials(m_sharedState->allWasatchMaterials());
+      set_wasatch_materials(m_materialManager->allMaterials( "Wasatch" ));
       if( doParticles_ ){
         particlesHelper_->set_materials(get_wasatch_materials());
       }
     }
     else{
       if( doParticles_ ){
-        particlesHelper_->set_materials(m_sharedState->allMaterials());
+        particlesHelper_->set_materials(m_materialManager->allMaterials());
       }
     }
 
@@ -1073,12 +1073,12 @@ namespace WasatchCore{
   {
     isRestarting_ = true;
 
-    // accessing the m_sharedState->allWasatchMaterials() must be done after
-    // problemSetup. The sharedstate class will create this material set
-    // in postgridsetup, which is called after problemsetup. This is dictated
-    // by Uintah.
+    // Accessing the m_materialManager->allMaterials( "Wasatch" ) must
+    // be done after problemSetup. The material manager will create
+    // this material set in postgridsetup, which is called after
+    // problemsetup. This is dictated by Uintah.
     if( buildWasatchMaterial_ ){
-      set_wasatch_materials( m_sharedState->allWasatchMaterials() );
+      set_wasatch_materials( m_materialManager->allMaterials( "Wasatch" ) );
       if( doParticles_ ){
         particlesHelper_->set_materials(get_wasatch_materials());
       }
@@ -1149,7 +1149,7 @@ namespace WasatchCore{
     }
     else{ // default
 
-      // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+      // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
 
       // This method is called at both initialization and
       // otherwise. At initialization the old DW, i.e. DW(0) will not
@@ -1354,7 +1354,7 @@ namespace WasatchCore{
       //----------------------------------------------------------------------------------------------
       
       // add the dualtimetask to the parent scheduler
-      sched->addTask(dualTimeTask, perproc_patches, m_sharedState->allMaterials());
+      sched->addTask(dualTimeTask, perproc_patches, m_materialManager->allMaterials());
       
       subsched_->compile(); // here we need to recompile the subscheduler for reasons mysterious to me - but this seems to make dualtime work with mpi!
     } else {
@@ -1570,7 +1570,7 @@ namespace WasatchCore{
     
     totalDualTimeIterations_ += c - 1;
 
-    // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
     
     Uintah::timeStep_vartype timeStep;
     parentOldDW->get( timeStep, getTimeStepLabel() );
@@ -1636,8 +1636,8 @@ namespace WasatchCore{
                              Uintah::DataWarehouse* const newDW )
   {
     // grab the timestep
-    // const double simTime = m_sharedState->getElapsedSimTime();
-    // const double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    // const double simTime = m_materialManager->getElapsedSimTime();
+    // const double timeStep = m_materialManager->getCurrentTopLevelTimeStep();
 
     Uintah::timeStep_vartype timeStep(0);
     newDW->get( timeStep, getTimeStepLabel() );
@@ -1734,8 +1734,8 @@ namespace WasatchCore{
     Uintah::DataWarehouse* whichDW = has_dual_time() ? oldDW->getOtherDataWarehouse(Uintah::Task::ParentOldDW) : oldDW;
 
     // grab the timestep
-    // const double simTime = m_sharedState->getElapsedSimTime();
-    // const double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    // const double simTime = m_materialManager->getElapsedSimTime();
+    // const double timeStep = m_materialManager->getCurrentTopLevelTimeStep();
     
     Uintah::timeStep_vartype timeStep;
     whichDW->get( timeStep, getTimeStepLabel() );
@@ -1856,7 +1856,7 @@ namespace WasatchCore{
                         Uintah::DataWarehouse* oldDW,
                         Uintah::DataWarehouse* newDW )
   {
-    // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
     
     // This method is called at both initialization and otherwise. At
     // initialization the old DW will not exist so get the value from

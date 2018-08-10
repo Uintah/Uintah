@@ -62,8 +62,8 @@ namespace Uintah {
   class containerExtract : public AnalysisModule {
     public:
       containerExtract(const ProcessorGroup* myworld,
-		       const SimulationStateP sharedState,
-		       const ProblemSpecP& module_spec);
+                       const MaterialManagerP materialManager,
+                       const ProblemSpecP& module_spec);
     
       containerExtract();
 
@@ -71,7 +71,9 @@ namespace Uintah {
 
       virtual void problemSetup(const ProblemSpecP& prob_spec,
                                 const ProblemSpecP& restart_prob_spec,
-                                GridP& grid);
+                                GridP& grid,
+                                std::vector<std::vector<const VarLabel* > > &PState,
+                                std::vector<std::vector<const VarLabel* > > &PState_preReloc);
                                 
       virtual void outputProblemSpec(ProblemSpecP& ps){};          
 

@@ -151,7 +151,7 @@ public:
   /// for entries such as outputNthProc, dynamicAlgorithm, and interval.
   virtual void problemSetup( ProblemSpecP & pspec,
 			     GridP & grid,
-			     const SimulationStateP & state );
+			     const MaterialManagerP & state );
 
   // for DynamicLoadBalancer mostly, but if we're called then it also means the 
   // grid might have changed and need to create a new perProcessorPatchSet
@@ -246,7 +246,7 @@ protected:
   SFC <double> m_sfc;
   bool         m_do_space_curve{false};
 
-  SimulationStateP          m_sharedState;            ///< to keep track of timesteps
+  MaterialManagerP          m_materialManager;            ///< to keep track of timesteps
   Scheduler               * m_scheduler {nullptr};     ///< store the scheduler to not have to keep passing it in
   std::unordered_set<const Patch*>    m_neighbors;               ///< the neighborhood.  See createNeighborhood
   std::unordered_set<int>             m_neighborhood_processors; ///< a list of processors that are in this processors neighborhood

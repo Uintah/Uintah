@@ -123,7 +123,7 @@ using namespace std;
 UintahParallelComponent *
 ApplicationFactory::create( ProblemSpecP& prob_spec,
 			    const ProcessorGroup* myworld, 
-			    const SimulationStateP sharedState,
+			    const MaterialManagerP materialManager,
 			    string uda )
 {
   bool doAMR = false;
@@ -166,7 +166,7 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
 
 #ifndef NO_ARCHES
   if (sim_comp == "arches" || sim_comp == "ARCHES") {
-    return scinew Arches(myworld, sharedState);
+    return scinew Arches(myworld, materialManager);
   } 
   else
     turned_on_options += "arches ";
@@ -176,19 +176,19 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
 
 #ifndef NO_FVM
   if (sim_comp == "electrostatic_solver") {
-    return scinew ElectrostaticSolve(myworld, sharedState);
+    return scinew ElectrostaticSolve(myworld, materialManager);
   }
   else
     turned_on_options += "electrostatic_solver ";
 
   if(sim_comp == "gauss_solver") {
-    return scinew GaussSolve(myworld, sharedState);
+    return scinew GaussSolve(myworld, materialManager);
   }
   else
     turned_on_options += "gauss_solver ";
 
   if(sim_comp == "mpnp"){
-    return scinew MPNP(myworld, sharedState);
+    return scinew MPNP(myworld, materialManager);
   }
   else
     turned_on_options += "mpnp ";
@@ -207,25 +207,25 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
     if ( doAMR ) {
       if ( doNC ) {
         if ( dimension > 2 ) {
-          return scinew AMRNCHeat3D ( myworld, sharedState, verbosity );
+          return scinew AMRNCHeat3D ( myworld, materialManager, verbosity );
         } else {
-          return scinew AMRNCHeat2D ( myworld, sharedState, verbosity );
+          return scinew AMRNCHeat2D ( myworld, materialManager, verbosity );
       } } else { // CC
         if ( dimension > 2 ) {
-          return scinew AMRCCHeat3D ( myworld, sharedState, verbosity );
+          return scinew AMRCCHeat3D ( myworld, materialManager, verbosity );
         } else {
-          return scinew AMRCCHeat2D ( myworld, sharedState, verbosity );
+          return scinew AMRCCHeat2D ( myworld, materialManager, verbosity );
       } } } else { // noAMR
       if ( doNC ) {
         if ( dimension > 2 ) {
-          return scinew NCHeat3D ( myworld, sharedState, verbosity );
+          return scinew NCHeat3D ( myworld, materialManager, verbosity );
         } else {
-          return scinew NCHeat2D ( myworld, sharedState, verbosity );
+          return scinew NCHeat2D ( myworld, materialManager, verbosity );
       } } else { // CC
         if ( dimension > 2 ) {
-          return scinew CCHeat3D ( myworld, sharedState, verbosity );
+          return scinew CCHeat3D ( myworld, materialManager, verbosity );
         } else {
-          return scinew CCHeat2D ( myworld, sharedState, verbosity );
+          return scinew CCHeat2D ( myworld, materialManager, verbosity );
     } } }
   }
   else
@@ -244,12 +244,12 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
     
     if (doAMR){
       if(doImplicitSolver){
-        return scinew impAMRICE(myworld, sharedState);
+        return scinew impAMRICE(myworld, materialManager);
       }else{
-        return scinew AMRICE(myworld, sharedState);
+        return scinew AMRICE(myworld, materialManager);
       }
     }else{
-      return scinew ICE(myworld, sharedState);
+      return scinew ICE(myworld, materialManager);
     }
   } 
   else
@@ -260,37 +260,37 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
 
 #ifndef NO_MPM
   if (sim_comp == "mpm" || sim_comp == "MPM") {
-    return scinew SerialMPM(myworld, sharedState);
+    return scinew SerialMPM(myworld, materialManager);
   } 
   else
     turned_on_options += "mpm ";
   
   if (sim_comp == "rmpm" || sim_comp == "rigidmpm" || sim_comp == "RIGIDMPM") {
-    return scinew RigidMPM(myworld, sharedState);
+    return scinew RigidMPM(myworld, materialManager);
   } 
   else
     turned_on_options += "rigidmpm ";
 
   if (sim_comp == "amrmpm" || sim_comp == "AMRmpm" || sim_comp == "AMRMPM") {
-    return scinew AMRMPM(myworld, sharedState);
+    return scinew AMRMPM(myworld, materialManager);
   } 
   else
     turned_on_options += "amrmpm ";
 
   if (sim_comp == "sfmpm" || sim_comp == "SFmpm" || sim_comp == "SFMPM") {
-    return scinew SingleFieldMPM(myworld, sharedState);
+    return scinew SingleFieldMPM(myworld, materialManager);
   } 
   else
     turned_on_options += "sfmpm ";
 
   if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
-    return scinew ShellMPM(myworld, sharedState);
+    return scinew ShellMPM(myworld, materialManager);
   } 
   else
     turned_on_options += "shellmpm ";
 
   if (sim_comp == "impm" || sim_comp == "IMPM") {
-    return scinew ImpMPM(myworld, sharedState);
+    return scinew ImpMPM(myworld, materialManager);
   }
   else
     turned_on_options += "impm ";
@@ -300,7 +300,7 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
 
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
   if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
-    return scinew MPMArches(myworld, sharedState);
+    return scinew MPMArches(myworld, materialManager);
   } 
   else
     turned_on_options += "mpmarches ";
@@ -310,13 +310,13 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
 
 #if !defined(NO_MPM) && !defined(NO_FVM)
   if (sim_comp == "esmpm" || sim_comp == "ESMPM") {
-    return scinew ESMPM(myworld, sharedState);
+    return scinew ESMPM(myworld, materialManager);
   }
   else
     turned_on_options += "esmpms ";
 
   if (sim_comp == "esmpm2" || sim_comp == "ESMPM2") {
-      return scinew ESMPM2(myworld, sharedState);
+      return scinew ESMPM2(myworld, materialManager);
     }
   else
     turned_on_options += "esmpm2 ";
@@ -326,19 +326,19 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
 
 #if !defined(NO_MPM) && !defined(NO_ICE)
   if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
-    return scinew MPMICE(myworld, sharedState, STAND_MPMICE, doAMR);
+    return scinew MPMICE(myworld, materialManager, STAND_MPMICE, doAMR);
   } 
   else
     turned_on_options += "mpmice ";
 
   if (sim_comp == "smpmice" || sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {
-    return scinew MPMICE(myworld, sharedState, SHELL_MPMICE, doAMR);
+    return scinew MPMICE(myworld, materialManager, SHELL_MPMICE, doAMR);
   } 
   else
     turned_on_options += "shellmpmice ";
 
   if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
-    return scinew MPMICE(myworld, sharedState, RIGID_MPMICE, doAMR);
+    return scinew MPMICE(myworld, materialManager, RIGID_MPMICE, doAMR);
   } 
   else
     turned_on_options += "rigidmpmice ";
@@ -359,36 +359,36 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
       if ( doTest ) {
         if ( doNC ) {
           if ( dimension > 2 ) {
-            return scinew AMRNCPhaseField3DTest ( myworld, sharedState, verbosity );
+            return scinew AMRNCPhaseField3DTest ( myworld, materialManager, verbosity );
           } else {
-            return scinew AMRNCPhaseField2DTest ( myworld, sharedState, verbosity );
+            return scinew AMRNCPhaseField2DTest ( myworld, materialManager, verbosity );
         } } else { // CC
           if ( dimension > 2 ) {
-            return scinew AMRCCPhaseField3DTest ( myworld, sharedState, verbosity );
+            return scinew AMRCCPhaseField3DTest ( myworld, materialManager, verbosity );
           } else {
-            return scinew AMRCCPhaseField2DTest ( myworld, sharedState, verbosity );
+            return scinew AMRCCPhaseField2DTest ( myworld, materialManager, verbosity );
       } } } else { // noTest
         if ( doNC ) {
           if ( dimension > 2 ) {
-            return scinew AMRNCPhaseField3D ( myworld, sharedState, verbosity );
+            return scinew AMRNCPhaseField3D ( myworld, materialManager, verbosity );
           } else {
-            return scinew AMRNCPhaseField2D ( myworld, sharedState, verbosity );
+            return scinew AMRNCPhaseField2D ( myworld, materialManager, verbosity );
         } } else { // CC
           if ( dimension > 2 ) {
-            return scinew AMRCCPhaseField3D ( myworld, sharedState, verbosity );
+            return scinew AMRCCPhaseField3D ( myworld, materialManager, verbosity );
           } else {
-            return scinew AMRCCPhaseField2D ( myworld, sharedState, verbosity );
+            return scinew AMRCCPhaseField2D ( myworld, materialManager, verbosity );
     } } } } else { // noAMR
       if ( doNC ) {
         if ( dimension > 2 ) {
-          return scinew NCPhaseField3D ( myworld, sharedState, verbosity );
+          return scinew NCPhaseField3D ( myworld, materialManager, verbosity );
        }  else {
-          return scinew NCPhaseField2D ( myworld, sharedState, verbosity );
+          return scinew NCPhaseField2D ( myworld, materialManager, verbosity );
       } } else { // CC
         if ( dimension > 2 ) {
-          return scinew CCPhaseField3D ( myworld, sharedState, verbosity );
+          return scinew CCPhaseField3D ( myworld, materialManager, verbosity );
         } else {
-          return scinew CCPhaseField2D ( myworld, sharedState, verbosity );
+          return scinew CCPhaseField2D ( myworld, materialManager, verbosity );
   } } } }
   else
     turned_on_options += "phasefield ";
@@ -399,7 +399,7 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
 
 #ifndef NO_WASATCH
   if (sim_comp == "wasatch") {
-    return scinew WasatchCore::Wasatch(myworld, sharedState);
+    return scinew WasatchCore::Wasatch(myworld, materialManager);
   } 
   else
     turned_on_options += "wasatch ";
@@ -408,13 +408,13 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   //----------------------------
 
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
-    return scinew Switcher(myworld, sharedState, prob_spec, uda);
+    return scinew Switcher(myworld, materialManager, prob_spec, uda);
   } 
   else if (!turned_on_options.empty() )
     turned_on_options += "switcher ";
 
   if (sim_comp == "postProcessUda") {
-    return scinew PostProcessUda(myworld, sharedState, uda);
+    return scinew PostProcessUda(myworld, materialManager, uda);
   } 
   else
     turned_on_options += "postProcessUda ";
@@ -423,95 +423,95 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   
 #ifndef NO_EXAMPLES
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
-    return scinew Benchmark(myworld, sharedState);
+    return scinew Benchmark(myworld, materialManager);
   }
   else
     turned_on_options += "benchmark ";
   
   if (sim_comp == "burger" || sim_comp == "BURGER") {
-    return scinew Burger(myworld, sharedState);
+    return scinew Burger(myworld, materialManager);
   }
   else
     turned_on_options += "burger ";
   
   if (sim_comp == "dosweep" || sim_comp == "DOSWEEP") {
-    return scinew DOSweep(myworld, sharedState);
+    return scinew DOSweep(myworld, materialManager);
   } 
   else
     turned_on_options += "dosweep ";
   
   if (sim_comp == "heat" || sim_comp == "heat") {
     if (doAMR)
-      return scinew AMRHeat(myworld, sharedState);
+      return scinew AMRHeat(myworld, materialManager);
     else
-      return scinew Heat(myworld, sharedState);
+      return scinew Heat(myworld, materialManager);
   }
   else
     turned_on_options += "heat ";
   
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
-    return scinew ParticleTest1(myworld, sharedState);
+    return scinew ParticleTest1(myworld, materialManager);
   } 
   else
     turned_on_options += "particletest ";
   
   if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
-    return scinew Poisson1(myworld, sharedState);
+    return scinew Poisson1(myworld, materialManager);
   }
   else
     turned_on_options += "poisson1 ";
   
   if (sim_comp == "poisson2" || sim_comp == "POISSON2") {
-    return scinew Poisson2(myworld, sharedState);
+    return scinew Poisson2(myworld, materialManager);
   } 
   else
     turned_on_options += "poisson2 ";
 
   if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
-    return scinew Poisson3(myworld, sharedState);
+    return scinew Poisson3(myworld, materialManager);
   } 
   else
     turned_on_options += "poisson3 ";
 
   if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
-    return scinew Poisson4(myworld, sharedState);
+    return scinew Poisson4(myworld, materialManager);
   }
   else
     turned_on_options += "poisson4 ";
 
 #ifndef NO_MODELS_RADIATION
   if (sim_comp == "RMCRT_Test") {
-    return scinew RMCRT_Test(myworld, sharedState);
+    return scinew RMCRT_Test(myworld, materialManager);
   }
   else
     turned_on_options += "RMCRT_Test ";
 #endif
   
   if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
-    return scinew RegridderTest(myworld, sharedState);
+    return scinew RegridderTest(myworld, materialManager);
   } 
   if (sim_comp == "solvertest" || sim_comp == "SOLVERTEST") {
-    return scinew SolverTest1(myworld, sharedState);
+    return scinew SolverTest1(myworld, materialManager);
   }
 
 #ifdef HAVE_HYPRE
   if (sim_comp == "solvertest2" || sim_comp == "SOLVERTEST2") {
-    return scinew SolverTest2(myworld, sharedState);
+    return scinew SolverTest2(myworld, materialManager);
   }
 #endif
 
   if (sim_comp == "wave" || sim_comp == "WAVE") {
     if (doAMR)
-      return scinew AMRWave(myworld, sharedState);
+      return scinew AMRWave(myworld, materialManager);
     else
-      return scinew Wave(myworld, sharedState);
+      return scinew Wave(myworld, materialManager);
   }
   else
     turned_on_options += "wave ";
 
 #ifdef HAVE_CUDA
   if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
-    return scinew UnifiedSchedulerTest(myworld, sharedState);
+    return scinew UnifiedSchedulerTest(myworld, materialManager);
   }
   else
     turned_on_options += "unifiedschedulertest ";

@@ -15,13 +15,13 @@ Index: SerialMPM.cc
      Ghost::GhostType  gnone = Ghost::None;
 +
      Vector gravity = flags->d_gravity;
-+    double time = d_sharedState->getElapsedSimTime();
++    double time = d_materialManager->getElapsedSimTime();
 +    if(time<2.0){
 +      gravity = flags->d_gravity/2.0*time;
 +    }
 +
-     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     for(int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
+       MPMMaterial* mpm_matl = d_materialManager->getMaterial( "MPM",  m );
        int dwi = mpm_matl->getDWIndex();
 Index: ConstitutiveModel/HypoElastic.cc
 ===================================================================

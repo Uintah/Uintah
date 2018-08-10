@@ -360,7 +360,7 @@ void TiledRegridder::OutputGridStats(Grid* newGrid)
 //
 void TiledRegridder::problemSetup(const ProblemSpecP& params, 
                                   const GridP& oldGrid,
-                                  const SimulationStateP& state)
+                                  const MaterialManagerP& state)
 {
   RegridderCommon::problemSetup(params, oldGrid, state);
 

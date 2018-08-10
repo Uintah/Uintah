@@ -126,7 +126,7 @@ protected:
 
 public:
     NCHeat3D ( const ProcessorGroup * myworld,
-	       const SimulationStateP sharedState,
+	       const MaterialManagerP materialManager,
 	       int verbosity = 0 );
   
     virtual ~NCHeat3D();

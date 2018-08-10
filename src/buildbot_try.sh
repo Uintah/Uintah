@@ -114,6 +114,8 @@ if( $CREATE_PATCH == "true" ) then
 
   svn diff -x --context=0 > buildbot_patch.txt
 
+  ls -l buildbot_patch.txt
+  
   set PATCH = "--diff=buildbot_patch.txt --repository=https://gforge.sci.utah.edu/svn/uintah/trunk/src" 
 endif
 

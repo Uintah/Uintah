@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_DepositionVelocity_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 namespace Uintah{
 
@@ -11,7 +11,7 @@ namespace Uintah{
 
 public:
 
-    DepositionVelocity( std::string task_name, int matl_index, const int N, SimulationStateP shared_state );
+    DepositionVelocity( std::string task_name, int matl_index, const int N, MaterialManagerP materialManager );
     ~DepositionVelocity();
 
     void problemSetup( ProblemSpecP& db );
@@ -48,24 +48,24 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, const int N, SimulationStateP shared_state ) : _task_name(task_name), _matl_index(matl_index), _Nenv(N), _shared_state(shared_state){}
+      Builder( std::string task_name, int matl_index, const int N, MaterialManagerP materialManager ) : _task_name(task_name), _matl_index(matl_index), _Nenv(N), _materialManager(materialManager){}
       ~Builder(){}
 
       DepositionVelocity* build()
-      { return scinew DepositionVelocity( _task_name, _matl_index, _Nenv, _shared_state ); }
+      { return scinew DepositionVelocity( _task_name, _matl_index, _Nenv, _materialManager ); }
 
       private:
 
       std::string _task_name;
       int _matl_index;
       int _Nenv;
-      SimulationStateP _shared_state;
+      MaterialManagerP _materialManager;
 
     };
 
 private:
       int _Nenv;
-      SimulationStateP _shared_state;
+      MaterialManagerP _materialManager;
       std::vector<IntVector> _d;
       std::vector<IntVector> _fd;
       std::string _cellType_name;

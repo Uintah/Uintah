@@ -39,7 +39,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/FancyAssert.h>
@@ -158,7 +158,7 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
           if (dw) {
             //loop through the materials and add up the particles
             //   go through all materials since getting an MPMMaterial correctly would depend on MPM
-            for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+            for (int m = 0; m < m_materialManager->getNumMatls(); m++) {
               ParticleSubset* psubset = 0;
               if (dw->haveParticleSubset(m, oldPatch, low, high))
                 psubset = dw->getParticleSubset(m, oldPatch, low, high);
@@ -283,7 +283,7 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
       if (dw) {
         //loop through the materials and add up the particles
         //   go through all materials since getting an MPMMaterial correctly would depend on MPM
-        for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+        for (int m = 0; m < m_materialManager->getNumMatls(); m++) {
           if (dw->haveParticleSubset(m, patch))
             thisPatchParticles += dw->getParticleSubset(m, patch)->numParticles();
         }
@@ -1098,7 +1098,7 @@ DynamicLoadBalancer::finalizeContributions( const GridP & grid )
 //______________________________________________________________________
 //
 void
-DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const SimulationStateP & state )
+DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const MaterialManagerP & state )
 {
   LoadBalancerCommon::problemSetup( pspec, grid, state );
 

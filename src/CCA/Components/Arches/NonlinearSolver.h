@@ -69,7 +69,7 @@ public:
 
   void commonProblemSetup( ProblemSpecP db );
 
-  virtual void problemSetup( const ProblemSpecP& db, SimulationStateP&, GridP& ) = 0;
+  virtual void problemSetup( const ProblemSpecP& db, MaterialManagerP&, GridP& ) = 0;
 
   virtual int sched_nonlinearSolve( const LevelP& level,
                                     SchedulerP& sched ) = 0;

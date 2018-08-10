@@ -33,8 +33,8 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 /**************************************
@@ -80,7 +80,7 @@ namespace Uintah {
   class ModelInterface : public UintahParallelComponent {
   public:
     ModelInterface(const ProcessorGroup* myworld,
-                   const SimulationStateP sharedState);
+                   const MaterialManagerP materialManager);
 
     virtual ~ModelInterface();
 
@@ -117,7 +117,7 @@ namespace Uintah {
     Regridder              * m_regridder   {nullptr};
     Output                 * m_output      {nullptr};
    
-    SimulationStateP m_sharedState {nullptr};
+    MaterialManagerP m_materialManager {nullptr};
     
     bool m_AMR {false};
     bool m_dynamicRegridding {false};

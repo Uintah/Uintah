@@ -5,7 +5,7 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 //Method: Constructor
 //---------------------------------------------------------------------------
-ExtentRxn::ExtentRxn( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
+ExtentRxn::ExtentRxn( std::string prop_name, MaterialManagerP& materialManager ) : PropertyModelBase( prop_name, materialManager )
 {
   _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() ); 
 
@@ -70,7 +70,7 @@ void ExtentRxn::sched_computeProp( const LevelP& level, SchedulerP& sched, int t
   the_label = VarLabel::find(_scalar_name);
   tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
 
-  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+  sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
     
 }
 
@@ -89,7 +89,7 @@ void ExtentRxn::computeProp(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> extent; 
     CCVariable<double> strip; 
@@ -147,7 +147,7 @@ void ExtentRxn::sched_initialize( const LevelP& level, SchedulerP& sched )
   tsk->computes(_prop_label); 
   tsk->computes(_strip_label); 
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -164,7 +164,7 @@ void ExtentRxn::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> prop; 
     CCVariable<double> strip; 

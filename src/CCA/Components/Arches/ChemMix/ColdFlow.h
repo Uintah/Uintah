@@ -76,7 +76,7 @@ class ColdFlow : public MixingRxnModel {
 
 public:
 
-  ColdFlow( SimulationStateP& sharedState );
+  ColdFlow( MaterialManagerP& materialManager );
 
   ~ColdFlow();
 

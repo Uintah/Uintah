@@ -31,8 +31,8 @@
 #include <CCA/Components/ICE/CustomBCs/sine.h>
 
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -54,7 +54,7 @@ namespace Uintah {
   class DataWarehouse;
 
   void BC_bulletproofing(const ProblemSpecP & prob_spec,
-                        SimulationStateP    & sharedState,
+                        MaterialManagerP    & materialManager,
                         GridP               & grid );
   
   //__________________________________
@@ -64,7 +64,7 @@ namespace Uintah {
                       const CCVariable<double>&gamma,
                       const CCVariable<double>&cv, 
                       const Patch* patch,  
-                      SimulationStateP& sharedState,
+                      MaterialManagerP& materialManager,
                       const int mat_id,
                       DataWarehouse* new_dw,
                       customBC_globalVars* globalVars,
@@ -74,7 +74,7 @@ namespace Uintah {
    void setBC(CCVariable<double>& var,     
                       const std::string& type,     // stub function
                       const Patch* patch,  
-                      SimulationStateP& sharedState,
+                      MaterialManagerP& materialManager,
                       const int mat_id,
                       DataWarehouse* new_dw,
                       const bool isNotInitialTimeStep);
@@ -87,7 +87,7 @@ namespace Uintah {
                       const std::string& whichVar, 
                       const std::string& kind, 
                       const Patch* p, 
-                      SimulationStateP& sharedState,
+                      MaterialManagerP& materialManager,
                       const int mat_id, 
                       DataWarehouse* new_dw,
                       customBC_globalVars* globalVars,
@@ -101,7 +101,7 @@ namespace Uintah {
                       const std::string& whichVar, 
                       const std::string& kind,       // stub function 
                       const Patch* p, 
-                      SimulationStateP& sharedState,
+                      MaterialManagerP& materialManager,
                       const int mat_id, 
                       DataWarehouse* new_dw,
                       const bool isNotInitialTimeStep);
@@ -111,7 +111,7 @@ namespace Uintah {
    void setBC(CCVariable<Vector>& variable,
                       const std::string& type,
                       const Patch* patch,
-                      SimulationStateP& sharedState,
+                      MaterialManagerP& materialManager,
                       const int mat_id,
                       DataWarehouse* new_dw, 
                       customBC_globalVars* globalVars,
@@ -121,7 +121,7 @@ namespace Uintah {
    void setBC(CCVariable<Vector>& variable,  // stub function
                       const std::string& type,
                       const Patch* patch,
-                      SimulationStateP& sharedState,
+                      MaterialManagerP& materialManager,
                       const int mat_id,
                       DataWarehouse* new_dw,
                       const bool isNotInitialTimeStep);
@@ -134,7 +134,7 @@ namespace Uintah {
                                  constCCVariable<double> rho_CC,
                                  constCCVariable<double> vol_frac,
                                  const Patch* patch,
-                                 SimulationStateP& sharedState,
+                                 MaterialManagerP& materialManager,
                                  const int mat_id);
   
 
@@ -216,7 +216,7 @@ void setBC(T& vel_FC,
            const std::string& desc,
            const Patch* patch,    
            const int mat_id,
-           SimulationStateP& sharedState,
+           MaterialManagerP& materialManager,
            customBC_globalVars* globalVars,
            customBC_localVars*  localVars)      
 {
@@ -292,14 +292,14 @@ void setBC(T& vel_FC,
           // Custom BCs
           else if(bc_kind == "MMS_1"){
             nCells+= set_MMS_BCs_FC<T>(patch, face, vel_FC, bound_ptr,
-                                        cell_dx, sharedState,
+                                        cell_dx, materialManager,
                                         globalVars->mms,
                                         localVars->mms);
           }
           //__________________________________
           // Custom BCs
           else if(bc_kind == "Sine"){
-            nCells+= set_Sine_BCs_FC<T>(patch, face, vel_FC, bound_ptr, sharedState,
+            nCells+= set_Sine_BCs_FC<T>(patch, face, vel_FC, bound_ptr, materialManager,
                                         globalVars->sine,
                                         localVars->sine);
           }

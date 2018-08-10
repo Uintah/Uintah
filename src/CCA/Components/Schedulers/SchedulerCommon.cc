@@ -182,7 +182,7 @@ void SchedulerCommon::releaseComponents()
   m_output       = nullptr;
   m_application  = nullptr;
 
-  m_sharedState = nullptr;
+  m_materialManager = nullptr;
 }
 
 //______________________________________________________________________
@@ -331,10 +331,10 @@ SchedulerCommon::finalizeNodes( int process /* = 0 */ )
 //
 void
 SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
-                             , const SimulationStateP & state
+                             , const MaterialManagerP & state
                              )
 {
-  m_sharedState = state;
+  m_materialManager = state;
 
   m_tracking_vars_print_location = PRINT_AFTER_EXEC;
 
@@ -722,7 +722,7 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
       IntVector end   = Min(patch->getExtraHighIndex(basis, IntVector(0, 0, 0)), m_tracking_end_index);
 
       // Loop over matls too...
-      for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+      for (int m = 0; m < m_materialManager->getNumMatls(); m++) {
 
         if (!dw->exists(label, m, patch)) {
           std::ostringstream mesg;
@@ -824,7 +824,7 @@ SchedulerCommon::addTaskGraph( Scheduler::tgType type
                              , int               index
                              )
 {
-  TaskGraph* tg = scinew TaskGraph(this, m_sharedState, d_myworld, type, index);
+  TaskGraph* tg = scinew TaskGraph(this, m_materialManager, d_myworld, type, index);
   tg->initialize();
   m_task_graphs.push_back(tg);
 }
@@ -1698,7 +1698,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
         DOUT(g_schedulercommon_dbg, "  Scheduling copy for var " << *var << " matl " << *matls << " Copies: " << *copyPatchSets[L].get_rep());
         dataTasks.back()->computes(var, matls);
       }
-      addTask(dataTasks.back(), copyPatchSets[L].get_rep(), m_sharedState->allMaterials());
+      addTask(dataTasks.back(), copyPatchSets[L].get_rep(), m_materialManager->allMaterials());
 
       // Monitoring tasks must be scheduled last!!
       scheduleTaskMonitoring( copyPatchSets[L].get_rep() );      
@@ -1717,7 +1717,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
         DOUT(g_schedulercommon_dbg, "  Scheduling modify for var " << *var << " matl " << *matls << " Modifies: " << *refinePatchSets[L].get_rep());
         dataTasks.back()->modifies(var, matls);
       }
-      addTask(dataTasks.back(), refinePatchSets[L].get_rep(), m_sharedState->allMaterials());
+      addTask(dataTasks.back(), refinePatchSets[L].get_rep(), m_materialManager->allMaterials());
 
       // Monitoring tasks must be scheduled last!!
       scheduleTaskMonitoring( refinePatchSets[L].get_rep());      
@@ -1841,7 +1841,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
     const Level* newLevel = newPatch->getLevel();
 
     // to create once per matl instead of once per matl-var
-    std::vector<ParticleSubset*> oldsubsets(m_sharedState->getNumMatls()), newsubsets(m_sharedState->getNumMatls());
+    std::vector<ParticleSubset*> oldsubsets(m_materialManager->getNumMatls()), newsubsets(m_materialManager->getNumMatls());
 
     // If there is a level that didn't exist, we don't need to copy it
     if (newLevel->getIndex() >= oldDataWarehouse->getGrid()->numLevels()) {
@@ -2177,7 +2177,7 @@ SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
     }
   }
 
-  addTask(t, level->eachPatch(), m_sharedState->allMaterials());
+  addTask(t, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________
@@ -2209,7 +2209,7 @@ SchedulerCommon::scheduleTaskMonitoring( const PatchSet* patches )
     }
   }
 
-  addTask(t, patches, m_sharedState->allMaterials());
+  addTask(t, patches, m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________

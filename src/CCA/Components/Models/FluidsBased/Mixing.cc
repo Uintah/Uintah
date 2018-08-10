@@ -34,7 +34,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
@@ -44,9 +44,9 @@ using namespace Uintah;
 using namespace std;
 
 Mixing::Mixing(const ProcessorGroup* myworld,
-	       const SimulationStateP& sharedState,
+	       const MaterialManagerP& materialManager,
 	       const ProblemSpecP& params)
-  : FluidsBasedModel(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   Ilb = scinew ICELabel();
 
@@ -112,7 +112,7 @@ void Mixing::outputProblemSpec(ProblemSpecP& ps)
 void Mixing::problemSetup(GridP&,
                            const bool isRestart)
 {
-  matl = m_sharedState->parseAndLookupMaterial(d_params, "material");
+  matl = m_materialManager->parseAndLookupMaterial(d_params, "material");
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();

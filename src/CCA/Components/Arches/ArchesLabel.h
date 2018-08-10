@@ -27,7 +27,7 @@
 #ifndef Uintah_Components_Arches_ArchesLabel_h
 #define Uintah_Components_Arches_ArchesLabel_h
 
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Util/Handle.h>
@@ -69,7 +69,7 @@ namespace Uintah {
 
       ArchesLabel();
       ~ArchesLabel();
-      void setSharedState(SimulationStateP& sharedState);
+      void setMaterialManager(MaterialManagerP& materialManager);
       void problemSetup( const ProblemSpecP& db );
 
       typedef std::map<VARID,const std::string> RLMAP;
@@ -85,7 +85,7 @@ namespace Uintah {
       // recompile task graph flag
       bool recompile_taskgraph;
 
-      SimulationStateP d_sharedState;
+      MaterialManagerP d_materialManager;
 
       // material subset for stencils
       MaterialSubset* d_stencilMatl;

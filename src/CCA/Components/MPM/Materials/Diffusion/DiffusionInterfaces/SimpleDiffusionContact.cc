@@ -33,7 +33,7 @@ using namespace Uintah;
 
 SimpleSDInterface::SimpleSDInterface(
                                          ProblemSpecP     & probSpec  ,
-                                         SimulationStateP & simState  ,
+                                         MaterialManagerP & simState  ,
                                          MPMFlags         * mFlags    ,
                                          MPMLabel         * mpmLabel
                                         )
@@ -80,11 +80,6 @@ void SimpleSDInterface::addComputesAndRequiresDivergence(
   Task* task  = scinew Task("SimpleSDInterface::sdInterfaceDivergence", this,
                             &SimpleSDInterface::sdInterfaceDivergence);
 
-
-  Ghost::GhostType typeGhost;
-  int              numGhost;
-  d_shared_state->getParticleGhostLayer(typeGhost, numGhost);
-
   // Everthing needs to register to calculate the basic interface flux rate
   setBaseComputesAndRequiresDivergence(task, matls->getUnion());
 
@@ -92,10 +87,10 @@ void SimpleSDInterface::addComputesAndRequiresDivergence(
 
   task->requires(Task::NewDW, d_mpm_lb->gVolumeLabel,                  gnone);
   task->requires(Task::NewDW, d_mpm_lb->gVolumeLabel,
-                 d_shared_state->getAllInOneMatl(), Task::OutOfDomain, gnone);
+                 d_materialManager->getAllInOneMatls(), Task::OutOfDomain, gnone);
   task->requires(Task::NewDW, d_mpm_lb->diffusion->gConcentration,     gnone);
   task->requires(Task::NewDW, d_mpm_lb->diffusion->gConcentration,
-                 d_shared_state->getAllInOneMatl(), Task::OutOfDomain, gnone);
+                 d_materialManager->getAllInOneMatls(), Task::OutOfDomain, gnone);
 
 //  task->computes(sdInterfaceRate, mss);
 
@@ -112,10 +107,6 @@ void SimpleSDInterface::sdInterfaceDivergence(
 {
   int numMatls = matls->size();
 
-  Ghost::GhostType  typeGhost;
-  int               numGhost;
-  d_shared_state->getParticleGhostLayer(typeGhost, numGhost);
-
   delt_vartype delT;
   oldDW->get(delT, d_mpm_lb->delTLabel, getLevel(patches) );
   double delTInv = 1.0/delT;
@@ -123,11 +114,12 @@ void SimpleSDInterface::sdInterfaceDivergence(
   for (int patchIdx = 0; patchIdx < patches->size(); ++patchIdx)
   {
     const Patch* patch = patches->get(patchIdx);
-    int totalDWI = d_shared_state->getAllInOneMatl()->get(0);
+    int totalDWI = d_materialManager->getAllInOneMatls()->get(0);
 
     constNCVariable<double>               gTotalVolume;
     newDW->get(gTotalVolume, d_mpm_lb->gVolumeLabel, totalDWI, patch,
-               typeGhost, numGhost);
+               d_mpm_flags->d_particle_ghost_type,
+	       d_mpm_flags->d_particle_ghost_layer);
 
     std::vector<constNCVariable<double> > gVolume(numMatls);
     std::vector<constNCVariable<double> > gConc(numMatls);  // C_i,j = gConc[j][i]
@@ -148,17 +140,22 @@ void SimpleSDInterface::sdInterfaceDivergence(
 
     for (int mIdx = 0; mIdx < numMatls; ++mIdx) {
       int dwi = matls->get(mIdx);
-      newDW->get(gVolume[mIdx], d_mpm_lb->gVolumeLabel,               dwi,
-                 patch, typeGhost, numGhost);
-      newDW->get(gConc[mIdx],   d_mpm_lb->diffusion->gConcentration,  dwi,
-                 patch, typeGhost, numGhost);
+      newDW->get(gVolume[mIdx], d_mpm_lb->gVolumeLabel,              dwi, patch,
+		 d_mpm_flags->d_particle_ghost_type,
+		 d_mpm_flags->d_particle_ghost_layer);
+      newDW->get(gConc[mIdx],   d_mpm_lb->diffusion->gConcentration, dwi, patch,
+		 d_mpm_flags->d_particle_ghost_type,
+		 d_mpm_flags->d_particle_ghost_layer);
 
-      newDW->allocateAndPut(gdCdt_interface[mIdx], sdInterfaceRate, dwi,
-                            patch, typeGhost, numGhost);
+      newDW->allocateAndPut(gdCdt_interface[mIdx], sdInterfaceRate, dwi, patch,
+			    d_mpm_flags->d_particle_ghost_type,
+			    d_mpm_flags->d_particle_ghost_layer);
+      
       gdCdt_interface[mIdx].initialize(0);
 
-      newDW->allocateAndPut(gInterfaceFlag[mIdx],  sdInterfaceFlag, dwi,
-                            patch, typeGhost, numGhost);
+      newDW->allocateAndPut(gInterfaceFlag[mIdx],  sdInterfaceFlag, dwi, patch,
+			    d_mpm_flags->d_particle_ghost_type,
+			    d_mpm_flags->d_particle_ghost_layer);
       gInterfaceFlag[mIdx].initialize(false);
       // Not in place yet, but should be for mass normalization.
       //massNormFactor[mIdx] = mpm_matl->getMassNormFactor();

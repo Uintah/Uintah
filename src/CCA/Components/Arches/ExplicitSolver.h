@@ -94,14 +94,14 @@ public:
 
   public:
 
-    Builder( SimulationStateP& sharedState,
+    Builder( MaterialManagerP& materialManager,
              const MPMArchesLabel* MAlb,
              PhysicalConstants* physConst,
              const ProcessorGroup* myworld,
              ArchesParticlesHelper* particle_helper,
              SolverInterface* hypreSolver,
              const ApplicationCommon* arches ) :
-             _sharedState(sharedState),
+             _materialManager(materialManager),
              _MAlb(MAlb),
              _physConst(physConst),
              _myworld(myworld),
@@ -113,7 +113,7 @@ public:
     ~Builder(){}
 
     ExplicitSolver* build(){
-      return scinew ExplicitSolver( _sharedState,
+      return scinew ExplicitSolver( _materialManager,
                                     _MAlb,
                                     _physConst,
                                     _myworld,
@@ -124,7 +124,7 @@ public:
 
   private:
 
-    SimulationStateP& _sharedState;
+    MaterialManagerP& _materialManager;
     const MPMArchesLabel* _MAlb;
     PhysicalConstants* _physConst;
     const ProcessorGroup* _myworld;
@@ -134,7 +134,7 @@ public:
 
   };
 
-  ExplicitSolver( SimulationStateP& sharedState,
+  ExplicitSolver( MaterialManagerP& materialManager,
                   const MPMArchesLabel* MAlb,
                   PhysicalConstants* physConst,
                   const ProcessorGroup* myworld,
@@ -152,7 +152,7 @@ public:
 
   /** @brief Input file interface. **/
   virtual void problemSetup( const ProblemSpecP& input_db,
-                             SimulationStateP& state,
+                             MaterialManagerP& state,
                              GridP& grid );
 
   /** @brief Solve the nonlinear system. (also does some actual computations) **/
@@ -445,7 +445,7 @@ public:
 
   MomentumSolver* d_momSolver;             ///< Momentum solver
   WallModelDriver* d_wall_ht_models;       ///< Heat transfer models for walls
-  SimulationStateP& d_sharedState;
+  MaterialManagerP& d_materialManager;
   const MPMArchesLabel* d_MAlab;
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
 

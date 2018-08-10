@@ -33,8 +33,8 @@
 using namespace Uintah;
 
 ModelInterface::ModelInterface(const ProcessorGroup* myworld,
-			       const SimulationStateP sharedState)
-  : UintahParallelComponent(myworld), m_sharedState(sharedState)
+			       const MaterialManagerP materialManager)
+  : UintahParallelComponent(myworld), m_materialManager(materialManager)
 {
 }
 

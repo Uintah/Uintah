@@ -32,7 +32,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Util/DebugStream.h>
 
@@ -57,9 +57,9 @@ static DebugStream cout_dbg("STATISTICS_DBG_COUT", false);
 
 //______________________________________________________________________
 statistics::statistics( const ProcessorGroup* myworld,
-                        const SimulationStateP sharedState,
+                        const MaterialManagerP materialManager,
                         const ProblemSpecP& module_spec )
-  : AnalysisModule(myworld, sharedState, module_spec)
+  : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_matlSet     = 0;
   d_stopTime    = DBL_MAX;
@@ -109,11 +109,13 @@ statistics::~statistics()
 //     P R O B L E M   S E T U P
 void statistics::problemSetup(const ProblemSpecP&,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid)
+                              GridP& grid,
+                              std::vector<std::vector<const VarLabel* > > &PState,
+                              std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tstatistics" << endl;
 
-  int numMatls  = m_sharedState->getNumMatls();
+  int numMatls  = m_materialManager->getNumMatls();
 
   //__________________________________
   //  Read in timing information
@@ -147,13 +149,13 @@ void statistics::problemSetup(const ProblemSpecP&,
   Material* matl = nullptr;
 
   if(m_module_spec->findBlock("material") ){
-    matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
+    matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
   } else if (m_module_spec->findBlock("materialIndex") ){
     int indx;
     m_module_spec->get("materialIndex", indx);
-    matl = m_sharedState->getMaterial(indx);
+    matl = m_materialManager->getMaterial(indx);
   } else {
-    matl = m_sharedState->getMaterial(0);
+    matl = m_materialManager->getMaterial(0);
   }
 
   int defaultMatl = matl->getDWIndex();
@@ -706,7 +708,7 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
                                       const Patch*    patch,
                                       Qstats& Q)
 {
-  // double now = m_sharedState->getElapsedSimTime();
+  // double now = m_materialManager->getElapsedSimTime();
   
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
@@ -758,7 +760,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
 
-  // int ts = m_sharedState->getCurrentTopLevelTimeStep();
+  // int ts = m_materialManager->getCurrentTopLevelTimeStep();
   
   timeStep_vartype timeStep_var;      
   old_dw->get(timeStep_var, m_timeStepLabel);
@@ -857,7 +859,7 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
                                                const Patch*    patch,
                                                Qstats& Q)
 {
-  // double now = m_sharedState->getElapsedSimTime();
+  // double now = m_materialManager->getElapsedSimTime();
 
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
@@ -913,7 +915,7 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean,     d_velMean_Label,   matl, patch );
   new_dw->allocateAndPut( uv_vw_wu,  d_velPrime_Label,  matl, patch );
   
-  // int ts = m_sharedState->getCurrentTopLevelTimeStep();
+  // int ts = m_materialManager->getCurrentTopLevelTimeStep();
   
   timeStep_vartype timeStep_var;      
   old_dw->get(timeStep_var, m_timeStepLabel);

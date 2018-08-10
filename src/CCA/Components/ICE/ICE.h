@@ -96,7 +96,7 @@ using namespace ExchangeModels;
     class ICE : public ApplicationCommon {
     public:
       ICE(const ProcessorGroup* myworld,
-	  const SimulationStateP sharedState);
+          const MaterialManagerP materialManager);
       
       virtual ~ICE();
 
@@ -673,6 +673,23 @@ using namespace ExchangeModels;
 
       double d_ref_press;
 
+    public:
+      // Particle state - communicated from MPM 
+      inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
+        particle_ghost_type = type;
+        particle_ghost_layer = ngc;
+      }
+      
+      inline void getParticleGhostLayer(Ghost::GhostType& type, int& ngc) {
+        type = particle_ghost_type;
+        ngc = particle_ghost_layer;
+      }
+      
+    private:
+      //! so all components can know how many particle ghost cells to ask for
+      Ghost::GhostType particle_ghost_type{Ghost::None};
+      int particle_ghost_layer{0};
+    
 // For AMR staff
 
     protected:

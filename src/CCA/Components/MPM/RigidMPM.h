@@ -72,7 +72,7 @@ WARNING
 class RigidMPM : public SerialMPM {
 public:
   RigidMPM(const ProcessorGroup* myworld,
-	   const SimulationStateP sharedState);
+	   const MaterialManagerP materialManager);
   virtual ~RigidMPM();
 
   //////////

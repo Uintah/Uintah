@@ -32,7 +32,7 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
@@ -65,9 +65,9 @@ static DebugStream cout_dbg("momentumAnalysis_dbg", false);
 //______________________________________________________________________
 //
 momentumAnalysis::momentumAnalysis( const ProcessorGroup* myworld,
-				    const SimulationStateP sharedState,
-				    const ProblemSpecP& module_spec )
-  : AnalysisModule(myworld, sharedState, module_spec)
+                                    const MaterialManagerP materialManager,
+                                    const ProblemSpecP& module_spec )
+  : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_zeroMatl     = 0;
   d_zeroMatlSet  = 0;
@@ -125,8 +125,10 @@ momentumAnalysis::~momentumAnalysis()
 //______________________________________________________________________
 //
 void momentumAnalysis::problemSetup(const ProblemSpecP& ,
-				    const ProblemSpecP& ,
-				    GridP& grid)
+                                    const ProblemSpecP& ,
+                                    GridP& grid,
+                                    std::vector<std::vector<const VarLabel* > > &PState,
+                                    std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tmomentumAnalysis" << endl;
 
@@ -157,13 +159,13 @@ void momentumAnalysis::problemSetup(const ProblemSpecP& ,
   //  <materialIndex> 1 </materialIndex>
   Material* matl;
   if( m_module_spec->findBlock("material") ){
-    matl = m_sharedState->parseAndLookupMaterial( m_module_spec, "material" );
+    matl = m_materialManager->parseAndLookupMaterial( m_module_spec, "material" );
   } else if ( m_module_spec->findBlock("materialIndex") ){
     int indx;
     m_module_spec->get("materialIndex", indx);
-    matl = m_sharedState->getMaterial(indx);
+    matl = m_materialManager->getMaterial(indx);
   } else {
-    matl = m_sharedState->getMaterial(0);
+    matl = m_materialManager->getMaterial(0);
   }
 
   d_matlIndx = matl->getDWIndex();
@@ -391,7 +393,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;
 
-  // double now = m_sharedState->getElapsedSimTime();
+  // double now = m_materialManager->getElapsedSimTime();
 
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
@@ -568,7 +570,7 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
 
-  // double now = m_sharedState->getElapsedSimTime();
+  // double now = m_materialManager->getElapsedSimTime();
   double nextTime = lastTime + ( 1.0 / d_analysisFreq );
 
   double time_dw  = lastTime;

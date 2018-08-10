@@ -40,7 +40,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -63,8 +63,8 @@ namespace Uintah
 //______________________________________________________________________
 //
 RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld,
-			 const SimulationStateP sharedState) :
-  ApplicationCommon(myworld, sharedState)
+			 const MaterialManagerP materialManager) :
+  ApplicationCommon(myworld, materialManager)
 {
   d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );
   d_divQLabel     = VarLabel::create( "divQ",     CCVariable<double>::getTypeDescription() );
@@ -113,7 +113,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                               GridP& grid )
 {
   d_material = scinew SimpleMaterial();
-  m_sharedState->registerSimpleMaterial( d_material );
+  m_materialManager->registerSimpleMaterial( d_material );
 
   // TG-0 = carry forward tasks
   // TG-1 = normal RMCRT computations
@@ -326,7 +326,7 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
   task->computes( d_colorLabel );
   task->computes( d_compAbskgLabel );
   task->computes( d_cellTypeLabel );
-  sched->addTask( task, level->eachPatch(), m_sharedState->allMaterials() );
+  sched->addTask( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 //______________________________________________________________________
@@ -348,7 +348,7 @@ void RMCRT_Test::scheduleComputeStableTimeStep ( const LevelP& level, SchedulerP
 
   task->computes( getDelTLabel(),level.get_rep() );
 
-  scheduler->addTask( task, level->eachPatch(), m_sharedState->allMaterials() );
+  scheduler->addTask( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 //______________________________________________________________________
@@ -361,7 +361,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     return;
   }
 
-  const MaterialSet* matls = m_sharedState->allMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials();
   GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
 

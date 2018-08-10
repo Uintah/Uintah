@@ -34,7 +34,7 @@
 
 #include <Core/Grid/Task.h>
 #include <Core/Grid/AMR.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ConvergenceFailure.h>
@@ -51,8 +51,8 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
 static DebugStream cout_dbg("impAMRICE_DBG", false);
 
 impAMRICE::impAMRICE(const ProcessorGroup* myworld,
-                     const SimulationStateP sharedState) :
-  AMRICE(myworld, sharedState)
+                     const MaterialManagerP materialManager) :
+  AMRICE(myworld, materialManager)
 {
 }   
 
@@ -72,9 +72,9 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   GridP grid = level->getGrid();
   int maxLevel = grid->numLevels();
 
-  const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
-  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
-  const MaterialSet* all_matls = m_sharedState->allMaterials();  
+  const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
+  const MaterialSet* mpm_matls = m_materialManager->allMaterials( "MPM" );
+  const MaterialSet* all_matls = m_materialManager->allMaterials();  
 
   MaterialSubset* one_matl = d_press_matl;
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
@@ -368,7 +368,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   cout_doing << d_myworld->myRank() << " impAMRICE::MultiLevelPressureSolve on patch " << *patches << endl;
   //__________________________________
   // define Matl sets and subsets
-  const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* all_matls = m_materialManager->allMaterials();
   MaterialSubset* one_matl    = d_press_matl;
   
   //__________________________________
@@ -830,7 +830,7 @@ void impAMRICE::scheduleCoarsen_delP(SchedulerP& sched,
 
   t->modifies(variable, d_press_matl, oims);        
 
-  sched->addTask(t, coarseLevel->eachPatch(), m_sharedState->allICEMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), m_materialManager->allMaterials( "ICE" ));
 }
 
 /* _____________________________________________________________________
@@ -936,7 +936,7 @@ void impAMRICE::scheduleZeroMatrix_UnderFinePatches(SchedulerP& sched,
   if(coarseLevel->hasFinerLevel()){                                                                      
     t->modifies(lb->matrixLabel, one_matl, oims);
   }   
-  sched->addTask(t, coarseLevel->eachPatch(), m_sharedState->allICEMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), m_materialManager->allMaterials( "ICE" ));
 }
 /* _____________________________________________________________________
  Function~  impAMRICE::zeroMatrix_UnderFinePatches

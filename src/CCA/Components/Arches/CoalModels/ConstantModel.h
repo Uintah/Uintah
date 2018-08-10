@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_ConstantModel_h
 #define Uintah_Component_Arches_ConstantModel_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 
@@ -23,7 +23,7 @@ public:
                         const std::vector<std::string>  & reqICLabelNames,
                         const std::vector<std::string>  & reqScalarLabelNames,
                         ArchesLabel          * fieldLabels,
-                        SimulationStateP           & sharedState,
+                        MaterialManagerP           & materialManager,
                         int qn );
   ~ConstantModelBuilder(); 
 
@@ -39,7 +39,7 @@ class ConstantModel: public ModelBase {
 public: 
 
   ConstantModel( std::string modelName, 
-                 SimulationStateP& shared_state, 
+                 MaterialManagerP& materialManager, 
                  ArchesLabel* fieldLabels,
                  std::vector<std::string> reqICLabelNames,
                  std::vector<std::string> reqScalarLabelNames,

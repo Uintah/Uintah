@@ -73,9 +73,9 @@ static DebugStream cout_doing("MinMax_DOING_COUT", "OnTheFlyAnalysis", "Min/Max 
 ______________________________________________________________________*/
           
 MinMax::MinMax( const ProcessorGroup* myworld,
-                const SimulationStateP sharedState,
+                const MaterialManagerP materialManager,
                 const ProblemSpecP& module_spec )
-  : AnalysisModule(myworld, sharedState, module_spec)
+  : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_matl_set = nullptr;
   d_zero_matl = nullptr;
@@ -109,11 +109,13 @@ MinMax::~MinMax()
 //     P R O B L E M   S E T U P
 void MinMax::problemSetup(const ProblemSpecP&,
                           const ProblemSpecP&,
-                          GridP& grid)
+                          GridP& grid,
+                          std::vector<std::vector<const VarLabel* > > &PState,
+                          std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tMinMax" << endl;
   
-  int numMatls  = m_sharedState->getNumMatls();
+  int numMatls  = m_materialManager->getNumMatls();
 
   d_lb->lastCompTimeLabel =  VarLabel::create("lastCompTime_minMax", 
                                               max_vartype::getTypeDescription() );
@@ -137,13 +139,13 @@ void MinMax::problemSetup(const ProblemSpecP&,
   //  <material>   atmosphere </material>
   //  <materialIndex> 1 </materialIndex>
   if(m_module_spec->findBlock("material") ){
-    d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
+    d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
   } else if (m_module_spec->findBlock("materialIndex") ){
     int indx;
     m_module_spec->get("materialIndex", indx);
-    d_matl = m_sharedState->getMaterial(indx);
+    d_matl = m_materialManager->getMaterial(indx);
   } else {
-    d_matl = m_sharedState->getMaterial(0);
+    d_matl = m_materialManager->getMaterial(0);
   }
   
   int defaultMatl = d_matl->getDWIndex();
@@ -501,7 +503,7 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  // double now = m_sharedState->getElapsedSimTime();
+  // double now = m_materialManager->getElapsedSimTime();
 
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
@@ -618,7 +620,7 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
     }  // patches
   }  // time to write data
 
-  // m_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
+  // m_materialManager->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
 }
 
 //______________________________________________________________________
@@ -643,7 +645,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  // double now = m_sharedState->getElapsedSimTime();
+  // double now = m_materialManager->getElapsedSimTime();
 
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
@@ -811,7 +813,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel ); 
   }  // patches
 
-  // m_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
+  // m_materialManager->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
 }
 
 

@@ -32,7 +32,7 @@
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
@@ -65,7 +65,7 @@ WARNING
   class GaussSolve : public ApplicationCommon {
   public:
     GaussSolve(const ProcessorGroup* myworld,
-	       const SimulationStateP sharedState);
+	       const MaterialManagerP materialManager);
     
     virtual ~GaussSolve();
 

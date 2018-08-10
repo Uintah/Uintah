@@ -33,7 +33,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
@@ -60,9 +60,9 @@ using namespace Uintah;
 using namespace std;
 
 Mixing2::Mixing2(const ProcessorGroup* myworld,
-                 const SimulationStateP& sharedState,
+                 const MaterialManagerP& materialManager,
                  const ProblemSpecP& params)
-  : FluidsBasedModel(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   Ilb = scinew ICELabel();
 
@@ -101,7 +101,7 @@ Mixing2::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 void Mixing2::problemSetup(GridP&,
                             const bool isRestart)
 {
-  matl = m_sharedState->parseAndLookupMaterial(d_params, "material");
+  matl = m_materialManager->parseAndLookupMaterial(d_params, "material");
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();
@@ -450,7 +450,7 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
       cerr << "Mixing2 total energy: " << etotal << ", release rate=" << etotal/dt << '\n';
 #if 0
       {
-        // double simTime = m_sharedState->getElapsedSimTime();
+        // double simTime = m_materialManager->getElapsedSimTime();
 
         static ofstream outt("temp.dat");
         outt << simTime << " " << temperature[IntVector(2,2,0)] << " " << temperature[IntVector(3,2,0)] << " " << temperature[IntVector(3,3,0)] << '\n';

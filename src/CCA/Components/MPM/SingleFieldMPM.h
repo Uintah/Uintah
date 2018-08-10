@@ -81,7 +81,7 @@ WARNING
   class SingleFieldMPM : public MPMCommon {
 public:
     SingleFieldMPM(const ProcessorGroup* myworld,
-	      const SimulationStateP sharedState);
+	      const MaterialManagerP materialManager);
 
   virtual ~SingleFieldMPM();
 

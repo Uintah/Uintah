@@ -31,7 +31,7 @@
 //-- Uintah framework includes --//
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Geometry/IntVector.h>
 
 //-- system includes --//
@@ -75,7 +75,7 @@ namespace Uintah {
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params,
                               const GridP& grid,
-                              const SimulationStateP& state);
+                              const MaterialManagerP& state);
 
     //! On a Switch, basically asks whether to turn off/on the Regridding
     virtual void switchInitialize(const ProblemSpecP& params);
@@ -186,7 +186,7 @@ namespace Uintah {
     Scheduler            * m_scheduler    {nullptr};
     ApplicationInterface * m_application  {nullptr};
 
-    SimulationStateP d_sharedState;  ///< Shared global space, to keep track of timesteps
+    MaterialManagerP d_materialManager;  ///< Shared global space, to keep track of timesteps
     bool d_isAdaptive;               ///< If false, do not regrid (stick with what you have)
     bool d_forceRegridding;         ///< If false, do not regrid (stick with what you have)
 

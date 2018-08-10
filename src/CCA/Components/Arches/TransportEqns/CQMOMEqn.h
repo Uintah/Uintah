@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_CQMOMEqn_h
 #define Uintah_Component_Arches_CQMOMEqn_h
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>

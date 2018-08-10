@@ -32,7 +32,7 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Region.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -117,7 +117,7 @@ public:
 
   //! Reads the problem spec file for the LoadBalancer section, and looks
   //! for entries such as outputNthProc, dynamicAlgorithm, and interval.
-  virtual void problemSetup (ProblemSpecP &, GridP & grid, const SimulationStateP & state ) = 0;
+  virtual void problemSetup (ProblemSpecP &, GridP & grid, const MaterialManagerP & state ) = 0;
 
   //! Creates the Load Balancer's Neighborhood.
   //! This is a vector of patches that represent any patch that this load

@@ -71,7 +71,7 @@ WARNING
   class flameSheet_rxn : public FluidsBasedModel {
   public:
     flameSheet_rxn(const ProcessorGroup* myworld,
-		   const SimulationStateP& sharedState,
+		   const MaterialManagerP& materialManager,
 		   const ProblemSpecP& params);
     
     virtual ~flameSheet_rxn();

@@ -27,7 +27,7 @@
 
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Ports/Output.h>
 
 
@@ -42,7 +42,7 @@ namespace Uintah {
     public:      
       static
        std::vector< Module*>  create(const ProblemSpecP& prob_spec,
-                                     SimulationStateP  & sharedState,
+                                     MaterialManagerP  & materialManager,
                                      Output            * dataArchiever,
                                      DataArchive       * dataArchive);
   };

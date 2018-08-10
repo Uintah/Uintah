@@ -31,7 +31,7 @@
 
 #include <Core/Exceptions/ProblemSetupException.h>
 
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -43,8 +43,8 @@
 using namespace Uintah;
 
 FluidsBasedModel::FluidsBasedModel(const ProcessorGroup* myworld,
-				   const SimulationStateP sharedState)
-  : ModelInterface(myworld, sharedState)
+				   const MaterialManagerP materialManager)
+  : ModelInterface(myworld, materialManager)
 {
 }
 

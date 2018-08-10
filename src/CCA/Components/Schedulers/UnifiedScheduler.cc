@@ -311,7 +311,7 @@ UnifiedScheduler::verifyAnyGpuActive()
 //
 void
 UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                              , const SimulationStateP & state
+                              , const MaterialManagerP & state
                               )
 {
   // Default taskReadyQueueAlg
@@ -740,7 +740,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   m_exec_timer.stop();
 
   // compute the net timings
-  if ( m_sharedState != nullptr ) {
+  if ( m_materialManager != nullptr ) {
 
     // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
     for (int i = 1; i < m_num_threads; ++i) {

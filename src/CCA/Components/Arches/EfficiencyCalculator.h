@@ -17,7 +17,7 @@
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 /** 
  *
  * @class  Scalar Efficiency Calculator
@@ -298,7 +298,7 @@ namespace Uintah {
               tsk->requires( Task::NewDW, _S_label, Ghost::None, 0 ); 
             } 
 
-            sched->addTask( tsk, level->eachPatch(), _a_labs->d_sharedState->allArchesMaterials() ); 
+            sched->addTask( tsk, level->eachPatch(), _a_labs->d_materialManager->allMaterials( "Arches" ) ); 
           
           };
 
@@ -314,7 +314,7 @@ namespace Uintah {
               const Level* level = patch->getLevel(); 
               const int ilvl = level->getID(); 
               int archIndex = 0; // only one arches material
-              int indx = _a_labs->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+              int indx = _a_labs->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
               constSFCXVariable<double> u; 
               constSFCYVariable<double> v; 
@@ -627,7 +627,7 @@ namespace Uintah {
 
             tsk->computes( _residual_label ); 
 
-            sched->addTask( tsk, level->eachPatch(), _a_labs->d_sharedState->allArchesMaterials() ); 
+            sched->addTask( tsk, level->eachPatch(), _a_labs->d_materialManager->allMaterials( "Arches" ) ); 
           
           };
 
@@ -863,7 +863,7 @@ namespace Uintah {
             tsk->requires( Task::NewDW, _a_labs->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
             tsk->requires( Task::NewDW, _phi_label, Ghost::None, 0 ); 
 
-            sched->addTask( tsk, level->eachPatch(), _a_labs->d_sharedState->allArchesMaterials() ); 
+            sched->addTask( tsk, level->eachPatch(), _a_labs->d_materialManager->allMaterials( "Arches" ) ); 
           
           }
 
@@ -879,7 +879,7 @@ namespace Uintah {
               const Level* level = patch->getLevel(); 
               const int ilvl = level->getID(); 
               int archIndex = 0; // only one arches material
-              int indx = _a_labs->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+              int indx = _a_labs->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
               constCCVariable<double> mf_1; 
               constCCVariable<double> mf_2; 
@@ -1097,7 +1097,7 @@ namespace Uintah {
 
             tsk->computes( _efficiency_label ); 
 
-            sched->addTask( tsk, level->eachPatch(), _a_labs->d_sharedState->allArchesMaterials() ); 
+            sched->addTask( tsk, level->eachPatch(), _a_labs->d_materialManager->allMaterials( "Arches" ) ); 
           
           }
 

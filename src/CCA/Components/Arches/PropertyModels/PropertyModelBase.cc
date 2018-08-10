@@ -1,7 +1,7 @@
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
@@ -9,8 +9,8 @@
 using namespace std;
 using namespace Uintah; 
 
-PropertyModelBase::PropertyModelBase( std::string prop_name, SimulationStateP& shared_state ) :
-  _prop_name( prop_name ), _shared_state( shared_state )
+PropertyModelBase::PropertyModelBase( std::string prop_name, MaterialManagerP& materialManager ) :
+  _prop_name( prop_name ), _materialManager( materialManager )
 {
   _init_type = "constant"; //Can be overwritten in derived class
   _const_init = 0.0;
@@ -86,7 +86,7 @@ PropertyModelBase::sched_timeStepInit( const LevelP& level, SchedulerP& sched )
 
   tsk->computes( _prop_label );   // 2nd compute for Julien_abskp
   tsk->requires( Task::OldDW, _prop_label, Ghost::None, 0 );
-  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+  sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
 }
 
 void 
@@ -101,7 +101,7 @@ PropertyModelBase::timeStepInit( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     constCCVariable<double> property_old; 
     old_dw->get(property_old, _prop_label, matlIndex, patch, Ghost::None, 0 );

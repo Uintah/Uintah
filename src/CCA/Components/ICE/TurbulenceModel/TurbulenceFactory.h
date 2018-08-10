@@ -26,7 +26,7 @@
 #define _TURBULENCEFACTORY_H_
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 namespace Uintah {
 
@@ -42,7 +42,7 @@ namespace Uintah {
     // this function has a switch for all known turbulence_models
     // and calls the proper class' readParameters()
     
-    static Turbulence* create(ProblemSpecP& ps, SimulationStateP& sharedState);
+    static Turbulence* create(ProblemSpecP& ps, MaterialManagerP& materialManager);
                               
   };
 

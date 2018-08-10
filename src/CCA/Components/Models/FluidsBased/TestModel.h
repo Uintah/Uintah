@@ -65,7 +65,7 @@ WARNING
   class TestModel : public FluidsBasedModel {
   public:
     TestModel(const ProcessorGroup* myworld,
-	      const SimulationStateP& sharedState,
+	      const MaterialManagerP& materialManager,
 	      const ProblemSpecP& params);
     
     virtual ~TestModel();

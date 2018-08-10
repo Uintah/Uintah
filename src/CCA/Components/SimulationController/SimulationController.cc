@@ -29,7 +29,7 @@
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/SimulationTime.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/OS/Dir.h>
@@ -476,7 +476,7 @@ SimulationController::outputSetup( void )
   m_output->setRuntimeStats( &m_runtime_stats );
 
   m_output->problemSetup( m_ups, m_restart_ps,
-                          m_application->getSimulationStateP() );
+                          m_application->getMaterialManagerP() );
 }
 
 //______________________________________________________________________
@@ -543,7 +543,7 @@ SimulationController::regridderSetup( void )
   // Do this step before fully setting up the application interface so that the
   // Switcher (being an application) can reset the state of the regridder.
   if( m_regridder ) {
-    m_regridder->problemSetup( m_ups, m_current_gridP, m_application->getSimulationStateP() );
+    m_regridder->problemSetup( m_ups, m_current_gridP, m_application->getMaterialManagerP() );
   }
 }
 
@@ -555,7 +555,7 @@ SimulationController::schedulerSetup( void )
   // Now that the grid is completely set up, set up the scheduler.
   m_scheduler->setRuntimeStats( &m_runtime_stats );
 
-  m_scheduler->problemSetup( m_ups, m_application->getSimulationStateP() );
+  m_scheduler->problemSetup( m_ups, m_application->getMaterialManagerP() );
 
   // Additional set up calls.
   m_scheduler->setInitTimestep( true );
@@ -584,7 +584,7 @@ SimulationController::loadBalancerSetup( void )
  
   // In addition, do this step after regridding setup as the minimum
   // patch size that the regridder will create will be known.
-  m_loadBalancer->problemSetup( m_ups, m_current_gridP, m_application->getSimulationStateP() );
+  m_loadBalancer->problemSetup( m_ups, m_current_gridP, m_application->getMaterialManagerP() );
 }
 
 //______________________________________________________________________
@@ -599,8 +599,8 @@ SimulationController::applicationSetup( void )
   // DataArchive::restartInitialize.
   m_application->problemSetup(m_ups, m_restart_ps, m_current_gridP);
 
-  // Finalize the shared state/materials
-  m_application->getSimulationStateP()->finalizeMaterials();
+  // Finalize the materials
+  m_application->getMaterialManagerP()->finalizeMaterials();
 
   m_application->setRestartTimeStep( m_restarting );
 }
@@ -710,7 +710,7 @@ SimulationController::ScheduleReportStats( bool header )
 
   m_scheduler->addTask(task,
                        m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
-                       m_application->getSimulationStateP()->allMaterials() );
+                       m_application->getMaterialManagerP()->allMaterials() );
 
   // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << header << std::endl;
 }
@@ -1206,7 +1206,7 @@ SimulationController::ScheduleCheckInSitu( bool first )
 
     m_scheduler->addTask(task,
                          m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
-                         m_application->getSimulationStateP()->allMaterials() );
+                         m_application->getMaterialManagerP()->allMaterials() );
 
     // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << first << std::endl;
   }

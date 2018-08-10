@@ -51,7 +51,7 @@ SingleLevelRegridder::~SingleLevelRegridder()
 //
 void SingleLevelRegridder::problemSetup(const ProblemSpecP& params, 
                                         const GridP& oldGrid,
-                                        const SimulationStateP& state)
+                                        const MaterialManagerP& state)
 {
 
   RegridderCommon::problemSetup(params, oldGrid, state);

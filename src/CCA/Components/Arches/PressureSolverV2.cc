@@ -40,8 +40,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
@@ -88,7 +88,7 @@ PressureSolver::~PressureSolver()
 // Problem Setup
 //______________________________________________________________________
 void
-PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
+PressureSolver::problemSetup(ProblemSpecP& params,MaterialManagerP& state)
 {
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();
@@ -194,8 +194,8 @@ void PressureSolver::sched_solve(const LevelP& level,
     sched->getLoadBalancer()->getPerProcessorPatchSet(level);
 
   int archIndex = 0; // only one arches material
-  d_indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  d_indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
   string pressLabel = "nullptr";
 
   sched_buildLinearMatrix( sched, perproc_patches, matls,
@@ -529,7 +529,7 @@ PressureSolver::setGuessForX ( const ProcessorGroup* pg,
   // set outputfile name
   string desc  = timelabels->integrator_step_name;
 
-  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // int timeStep = d_lab->d_materialManager->getCurrentTopLevelTimeStep();
   timeStep_vartype timeStep;
   old_dw->get( timeStep, d_lab->d_timeStepLabel );
 
@@ -837,7 +837,7 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
     double gy = d_physicalConsts->getGravity(2);
     double gz = d_physicalConsts->getGravity(3);
 
-    int indx = d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", 0)->getDWIndex();
 
     Ghost::GhostType  gn = Ghost::None;
     old_dw->get(prel,     d_lab->d_pressurePSLabel,     indx, patch, gn, 0);

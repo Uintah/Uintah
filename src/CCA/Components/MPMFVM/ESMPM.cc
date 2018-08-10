@@ -61,11 +61,11 @@ static DebugStream cout_doing("ESMPM_DOING_COUT", false);
 #undef CBDI_FLUXBCS
 
 ESMPM::ESMPM(const ProcessorGroup* myworld,
-	     const SimulationStateP sharedState) :
-  ApplicationCommon(myworld, sharedState)
+	     const MaterialManagerP materialManager) :
+  ApplicationCommon(myworld, materialManager)
 {
-  d_amrmpm = scinew AMRMPM(myworld, m_sharedState);
-  d_esfvm = scinew ElectrostaticSolve(myworld, m_sharedState);
+  d_amrmpm = scinew AMRMPM(myworld, m_materialManager);
+  d_esfvm = scinew ElectrostaticSolve(myworld, m_materialManager);
 
   d_mpm_lb = scinew MPMLabel();
   d_fvm_lb = scinew FVMLabel();
@@ -119,7 +119,7 @@ void ESMPM::problemSetup(const ProblemSpecP& prob_spec,
     dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
 
   if(d_switch_criteria){
-    d_switch_criteria->problemSetup(prob_spec, restart_prob_spec, m_sharedState);
+    d_switch_criteria->problemSetup(prob_spec, restart_prob_spec, m_materialManager);
   }
 
   ProblemSpecP mpm_ps = 0;
@@ -135,7 +135,7 @@ void ESMPM::problemSetup(const ProblemSpecP& prob_spec,
   esmpm_ps->require("conductivity_model", d_cd_model_name);
 
   d_conductivity_model =
-    ESConductivityModelFactory::create(prob_spec, m_sharedState,
+    ESConductivityModelFactory::create(prob_spec, m_materialManager,
 				       d_mpm_flags, d_mpm_lb, d_fvm_lb);
 }
 
@@ -193,8 +193,8 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   if(level->getIndex() > 0)
     return;
 
-  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
-  const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* mpm_matls = m_materialManager->allMaterials( "MPM" );
+  const MaterialSet* all_matls = m_materialManager->allMaterials();
   const MaterialSubset* mpm_matlsub = mpm_matls->getUnion();
 
   int maxLevels = level->getGrid()->numLevels();
@@ -394,9 +394,9 @@ void ESMPM::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* pa
     constCCVariable<double> cc_espotential;
     new_dw->get(cc_espotential, d_fvm_lb->ccESPotential, 0, patch, d_gac, 1);
 
-    int numMatls = m_sharedState->getNumMPMMatls();
+    int numMatls = m_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial* ) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       constParticleVariable<Point> p_position;

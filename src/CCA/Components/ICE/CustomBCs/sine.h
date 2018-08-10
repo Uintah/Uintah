@@ -29,8 +29,8 @@
 #include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <typeinfo>
@@ -82,7 +82,7 @@ namespace Uintah {
                             const std::string& var_desc,
                             Iterator& bound_ptr,
                             const std::string& bc_kind,
-                            SimulationStateP& sharedState,
+                            MaterialManagerP& materialManager,
                             sine_globalVars* gv,
                             sine_localVars* lv);
                            
@@ -99,7 +99,7 @@ namespace Uintah {
                          CCVariable<double>& press_CC,
                          Iterator& bound_ptr,
                          const std::string& bc_kind,
-                         SimulationStateP& sharedState,
+                         MaterialManagerP& materialManager,
                          sine_globalVars* gv,
                          sine_localVars* lv);  
                         
@@ -113,7 +113,7 @@ namespace Uintah {
                        const Patch::FaceType face,
                        T& vel_FC,
                        Iterator& bound_ptr,
-                       SimulationStateP& sharedState,
+                       MaterialManagerP& materialManager,
                        sine_globalVars* gv,
                        sine_localVars* lv)
 {
@@ -141,7 +141,7 @@ namespace Uintah {
   double omega = gv->omega;
   Vector vel_ref=gv->vel_ref;                                
   double t     = lv->simTime + lv->delT;
-  // double t       = sharedState->getElapsedSimTime(); 
+  // double t       = materialManager->getElapsedSimTime(); 
   // t += lv->delT;     
   double change =   A * sin(omega*t);
                                              

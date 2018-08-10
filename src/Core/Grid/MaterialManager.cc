@@ -53,8 +53,8 @@ MaterialManager::~MaterialManager()
     delete m_old_matls[i];
   }
 
-  if(m_orig_all_matls && m_orig_all_matls->removeReference()){
-    delete m_orig_all_matls;
+  if(m_all_orig_matls && m_all_orig_matls->removeReference()){
+    delete m_all_orig_matls;
   }
 }
 
@@ -111,10 +111,10 @@ MaterialManager::allMaterials() const
 //__________________________________
 //
 const MaterialSet*
-MaterialManager::originalAllMaterials() const
+MaterialManager::allOriginalMaterials() const
 {
-  ASSERT(m_orig_all_matls != nullptr);
-  return m_orig_all_matls;
+  ASSERT(m_all_orig_matls != nullptr);
+  return m_all_orig_matls;
 }
 
 //__________________________________
@@ -122,9 +122,9 @@ MaterialManager::originalAllMaterials() const
 void
 MaterialManager::setOriginalMatlsFromRestart( MaterialSet* matls )
 {
-  if (m_orig_all_matls && m_orig_all_matls->removeReference())
-    delete m_orig_all_matls;
-  m_orig_all_matls = matls;
+  if (m_all_orig_matls && m_all_orig_matls->removeReference())
+    delete m_all_orig_matls;
+  m_all_orig_matls = matls;
 }
 
 //__________________________________
@@ -227,11 +227,11 @@ MaterialManager::finalizeMaterials()
   }
   m_all_matl_set->addAll(tmp_matls);
 
-  // Original All Matls
-  if (m_orig_all_matls == nullptr) {
-    m_orig_all_matls = scinew MaterialSet();
-    m_orig_all_matls->addReference();
-    m_orig_all_matls->addAll(tmp_matls);
+  // All Original Matls
+  if (m_all_orig_matls == nullptr) {
+    m_all_orig_matls = scinew MaterialSet();
+    m_all_orig_matls->addReference();
+    m_all_orig_matls->addAll(tmp_matls);
   }
 
   // All In One Matls
@@ -244,13 +244,16 @@ MaterialManager::finalizeMaterials()
   // (i.e. summed over all materials -- the whole enchilada)
   m_all_in_one_matls->add((int)m_all_matls.size());
   
+  for ( auto & var : m_app_matl_set )
+  {
+    if (var.second && var.second->removeReference()) {
+      delete var.second;
+    }
+  }
+  
   for ( auto & var : m_app_matls )
   {
     std::string name = var.first;
-
-    if (m_app_matl_set[name] && m_app_matl_set[name]->removeReference()) {
-      delete m_app_matl_set[name];
-    }
 
     m_app_matl_set[name] = scinew MaterialSet();
     m_app_matl_set[name]->addReference();

@@ -27,7 +27,7 @@
 
 #include <Core/Grid/Material.h>
 
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
@@ -43,7 +43,7 @@ namespace Uintah {
         ESPotential,
         Gauss
       };
-      FVMMaterial(ProblemSpecP& ps, SimulationStateP& shared_state,
+      FVMMaterial(ProblemSpecP& ps, MaterialManagerP& materialManager,
                   FVMMethod method_type);
       ~FVMMaterial();
 

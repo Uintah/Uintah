@@ -185,7 +185,7 @@ class TaskGraph {
   public:
 
     TaskGraph(       SchedulerCommon   * sched
-		         , SimulationStateP        & state
+		         , MaterialManagerP        & state
 		         , const ProcessorGroup    * proc_group
              ,       Scheduler::tgType   tg_type
              ,       int                 index

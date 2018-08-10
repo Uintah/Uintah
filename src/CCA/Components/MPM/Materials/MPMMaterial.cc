@@ -55,7 +55,7 @@ using namespace std;
 using namespace Uintah;
 
 // Standard Constructor
-MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags,
+MPMMaterial::MPMMaterial(ProblemSpecP& ps, MaterialManagerP& ss,MPMFlags* flags,
                          const bool isRestart)
   : Material(ps), d_cm(0),  d_particle_creator(0)
 {
@@ -63,7 +63,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags,
   // The standard set of initializations needed
   standardInitialization(ps,ss,flags,isRestart);
   
-  d_cm->setSharedState(ss.get_rep());
+  d_cm->setMaterialManager(ss.get_rep());
 
   // Check to see which ParticleCreator object we need
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
@@ -72,7 +72,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags,
 //
 void
 MPMMaterial::standardInitialization(ProblemSpecP& ps, 
-                                    SimulationStateP& ss,
+                                    MaterialManagerP& ss,
                                     MPMFlags* flags, 
                                     const bool isRestart)
 
@@ -223,10 +223,11 @@ MPMMaterial::~MPMMaterial()
   }
 }
 
-void MPMMaterial::registerParticleState(SimulationState* sharedState)
+void MPMMaterial::registerParticleState( std::vector<std::vector<const VarLabel* > > &PState,
+					 std::vector<std::vector<const VarLabel* > > &PState_preReloc )
 {
-  sharedState->d_particleState.push_back(d_particle_creator->returnParticleState());
-  sharedState->d_particleState_preReloc.push_back(d_particle_creator->returnParticleStatePreReloc());
+  PState.push_back         (d_particle_creator->returnParticleState());
+  PState_preReloc.push_back(d_particle_creator->returnParticleStatePreReloc());
 }
 
 void MPMMaterial::deleteGeomObjects()

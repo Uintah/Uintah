@@ -29,7 +29,7 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
@@ -54,9 +54,9 @@ TimestepNumber::~TimestepNumber()
 
 void TimestepNumber::problemSetup(const ProblemSpecP& ps, 
                                   const ProblemSpecP& restart_prob_spec, 
-                                  SimulationStateP& sharedState)
+                                  MaterialManagerP& materialManager)
 {
-  m_sharedState = sharedState;
+  m_materialManager = materialManager;
 }
 
 void TimestepNumber::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
@@ -67,7 +67,7 @@ void TimestepNumber::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 
   t->requires(Task::OldDW, m_timeStepLabel);
   t->computes(d_switch_label);
-  sched->addTask(t, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(t, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 void TimestepNumber::switchTest(const ProcessorGroup* group,
@@ -78,7 +78,7 @@ void TimestepNumber::switchTest(const ProcessorGroup* group,
 {
   switching_dbg << "Doing Switch Criteria:TimeStepNumber";
 
-  // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+  // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
   
   timeStep_vartype timeStep_var(0);
   if( old_dw->exists(m_timeStepLabel))

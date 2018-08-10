@@ -35,7 +35,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Task.h>
 #include <string>
 
@@ -137,7 +137,7 @@ DESCRIPTION
          
     Vector findVelFromProfile(double t) const;
     
-    SimulationStateP d_sharedState;
+    MaterialManagerP d_materialManager;
     double    d_stop_time;
     double    d_vol_const;
     Vector    d_vel_after_stop;
@@ -152,7 +152,7 @@ DESCRIPTION
   public:
     // Constructor
     SpecifiedBodyContact(const ProcessorGroup* myworld,
-                         ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb,MPMFlags*flag);
+                         ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb,MPMFlags*flag);
          
     // Destructor
     virtual ~SpecifiedBodyContact();

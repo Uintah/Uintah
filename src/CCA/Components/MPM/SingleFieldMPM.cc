@@ -51,7 +51,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -97,8 +97,8 @@ static Vector face_norm(Patch::FaceType f)
 }
 
 SingleFieldMPM::SingleFieldMPM( const ProcessorGroup* myworld,
-                                const SimulationStateP sharedState) :
-  MPMCommon( myworld, sharedState )
+                                const MaterialManagerP materialManager) :
+  MPMCommon( myworld, materialManager )
 {
   flags = scinew MPMFlags(myworld);
 
@@ -234,7 +234,7 @@ void SingleFieldMPM::problemSetup(const ProblemSpecP& prob_spec,
           cerr << "WARNING: AMRMPM.cc: stringstream failed...\n";
         }
 
-        int numMatls = m_sharedState->getNumMatls();
+        int numMatls = m_materialManager->getNumMatls();
 
         //__________________________________
         // if using "all" matls 
@@ -265,21 +265,21 @@ void SingleFieldMPM::problemSetup(const ProblemSpecP& prob_spec,
     readInsertParticlesFile(flags->d_insertParticlesFile);
   }
 
-  m_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
+  setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
   MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
 
   bool needNormals=false;
   contactModel = ContactFactory::create(d_myworld,
-                                        restart_mat_ps,m_sharedState,lb,flags,
+                                        restart_mat_ps,m_materialManager,lb,flags,
                                         needNormals);
 
   flags->d_computeNormals=needNormals;
 
   thermalContactModel =
-    ThermalContactFactory::create(restart_mat_ps, m_sharedState, lb,flags);
+    ThermalContactFactory::create(restart_mat_ps, m_materialManager, lb,flags);
 
-  heatConductionModel = scinew HeatConduction(m_sharedState,lb,flags);
+  heatConductionModel = scinew HeatConduction(m_materialManager,lb,flags);
 
   materialProblemSetup(restart_mat_ps,flags, isRestart);
 
@@ -290,7 +290,7 @@ void SingleFieldMPM::problemSetup(const ProblemSpecP& prob_spec,
   // call problemSetup
   if(!flags->d_with_ice && !flags->d_with_arches){ // mpmice or mpmarches handles this
     d_analysisModules = AnalysisModuleFactory::create(d_myworld,
-						      m_sharedState,
+						      m_materialManager,
 						      prob_spec);
 
     if(d_analysisModules.size() != 0){
@@ -299,7 +299,8 @@ void SingleFieldMPM::problemSetup(const ProblemSpecP& prob_spec,
            iter != d_analysisModules.end(); iter++) {
         AnalysisModule* am = *iter;
         am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
-        am->problemSetup(prob_spec,restart_prob_spec, grid);
+        am->problemSetup(prob_spec,restart_prob_spec, grid,
+			 d_particleState, d_particleState_preReloc);
       }
     }
   }
@@ -310,7 +311,7 @@ void SingleFieldMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   if (d_switchCriteria) {
     d_switchCriteria->problemSetup(restart_mat_ps,
-                                   restart_prob_spec, m_sharedState);
+                                   restart_prob_spec, m_materialManager);
   }
 }
 //______________________________________________________________________
@@ -329,16 +330,16 @@ void SingleFieldMPM::outputProblemSpec(ProblemSpecP& root_ps)
   }
 
   ProblemSpecP mpm_ps = mat_ps->appendChild("MPM");
-  for (int i = 0; i < m_sharedState->getNumMPMMatls();i++) {
-    MPMMaterial* mat = m_sharedState->getMPMMaterial(i);
+  for (int i = 0; i < m_materialManager->getNumMatls( "MPM" );i++) {
+    MPMMaterial* mat = (MPMMaterial*) m_materialManager->getMaterial( "MPM", i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
 
   contactModel->outputProblemSpec(mpm_ps);
   thermalContactModel->outputProblemSpec(mpm_ps);
 
-  for (int i = 0; i < m_sharedState->getNumCZMatls();i++) {
-    CZMaterial* mat = m_sharedState->getCZMaterial(i);
+  for (int i = 0; i < m_materialManager->getNumMatls( "CZ" );i++) {
+    CZMaterial* mat = (CZMaterial*) m_materialManager->getMaterial( "CZ", i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
 
@@ -421,9 +422,9 @@ void SingleFieldMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->p_qLabel);
   }
 
-  int numMPM = m_sharedState->getNumMPMMatls();
+  int numMPM = m_materialManager->getNumMatls( "MPM" );
   for(int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
@@ -435,7 +436,7 @@ void SingleFieldMPM::scheduleInitialize(const LevelP& level,
     em->addInitialComputesAndRequires( t, mpm_matl );
   }
 
-  sched->addTask(t, patches, m_sharedState->allMPMMaterials());
+  sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
 
   schedulePrintParticleCount(level, sched);
 
@@ -458,9 +459,9 @@ void SingleFieldMPM::scheduleInitialize(const LevelP& level,
     }
   }
 
-  int numCZM = m_sharedState->getNumCZMatls();
+  int numCZM = m_materialManager->getNumMatls( "CZ" );
   for(int m = 0; m < numCZM; m++){
-    CZMaterial* cz_matl = m_sharedState->getCZMaterial(m);
+    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial( "CZ", m);
     CohesiveZone* ch = cz_matl->getCohesiveZone();
     ch->scheduleInitialize(level, sched, cz_matl);
   }
@@ -503,7 +504,7 @@ void SingleFieldMPM::schedulePrintParticleCount(const LevelP& level,
   t->requires(Task::NewDW, lb->partCountLabel);
   t->setType(Task::OncePerProc);
   sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
-                 m_sharedState->allMPMMaterials());
+                 m_materialManager->allMaterials( "MPM" ));
 }
 //__________________________________
 //  Diagnostic task: compute the total number of particles
@@ -535,7 +536,7 @@ void SingleFieldMPM::totalParticleCount(const ProcessorGroup*,
     long int totalParticles = 0;
 
     for(int m=0;m<matls->size();m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -573,7 +574,7 @@ void SingleFieldMPM::scheduleInitializePressureBCs(const LevelP& level,
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
     t->computes(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
                 Task::OutOfDomain);
-    sched->addTask(t, patches, m_sharedState->allMPMMaterials());
+    sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
 
     // Create a task that calculates the force to be associated with
     // each particle based on the pressure BCs
@@ -592,7 +593,7 @@ void SingleFieldMPM::scheduleInitializePressureBCs(const LevelP& level,
        t->computes(             lb->pExternalForceCorner3Label);
        t->computes(             lb->pExternalForceCorner4Label);
     }
-    sched->addTask(t, patches, m_sharedState->allMPMMaterials());
+    sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
   }
 
   if(d_loadCurveIndex->removeReference())
@@ -606,7 +607,7 @@ void SingleFieldMPM::scheduleDeleteGeometryObjects(const LevelP& level,
 
   Task* t = scinew Task("MPM::deleteGeometryObjects",
                   this, &SingleFieldMPM::deleteGeometryObjects);
-  sched->addTask(t, patches, m_sharedState->allMPMMaterials());
+  sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
 }
 
 void SingleFieldMPM::scheduleComputeStableTimeStep(const LevelP& level,
@@ -622,7 +623,7 @@ void SingleFieldMPM::scheduleComputeStableTimeStep(const LevelP& level,
   t = scinew Task("MPM::actuallyComputeStableTimestep",
                    this, &SingleFieldMPM::actuallyComputeStableTimestep);
 
-  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
+  const MaterialSet* mpm_matls = m_materialManager->allMaterials( "MPM" );
 
   t->computes(lb->delTLabel,level.get_rep());
   sched->addTask(t,level->eachPatch(), mpm_matls);
@@ -636,9 +637,9 @@ SingleFieldMPM::scheduleTimeAdvance(const LevelP & level,
     return;
 
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = m_sharedState->allMPMMaterials();
-//  const MaterialSet* cz_matls = m_sharedState->allCZMaterials();
-//  const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "MPM" );
+//  const MaterialSet* cz_matls = m_materialManager->allMaterials( "CZ" );
+//  const MaterialSet* all_matls = m_materialManager->allMaterials();
 
 //  const MaterialSubset* mpm_matls_sub = matls->getUnion();
 //  const MaterialSubset* cz_matls_sub  = cz_matls->getUnion();
@@ -708,17 +709,17 @@ SingleFieldMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    m_sharedState->d_particleState_preReloc,
+                                    d_particleState_preReloc,
                                     lb->pXLabel,
-                                    m_sharedState->d_particleState,
-                                     lb->pParticleIDLabel, matls, 1);
+                                    d_particleState,
+				    lb->pParticleIDLabel, matls, 1);
 
 #if 0
  if(flags->d_useCohesiveZones){
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    m_sharedState->d_cohesiveZoneState_preReloc,
+                                    d_cohesiveZoneState_preReloc,
                                     lb->pXLabel,
-                                    m_sharedState->d_cohesiveZoneState,
+                                    d_cohesiveZoneState,
                                     lb->czIDLabel, cz_matls,2);
   }
 
@@ -809,13 +810,13 @@ void SingleFieldMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     t->requires(Task::OldDW,  lb->pLoadCurveIDLabel,gan,NGP);
   }
 
-  t->computes(lb->gMassLabel,        m_sharedState->getAllInOneMatl(),
+  t->computes(lb->gMassLabel,        m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain);
-  t->computes(lb->gTemperatureLabel, m_sharedState->getAllInOneMatl(),
+  t->computes(lb->gTemperatureLabel, m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain);
-  t->computes(lb->gVolumeLabel,      m_sharedState->getAllInOneMatl(),
+  t->computes(lb->gVolumeLabel,      m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain);
-  t->computes(lb->gVelocityLabel,    m_sharedState->getAllInOneMatl(),
+  t->computes(lb->gVelocityLabel,    m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain);
   t->computes(lb->gMassLabel);
   t->computes(lb->gSp_volLabel);
@@ -872,7 +873,7 @@ void SingleFieldMPM::interpolateSurfaceToGrid(const ProcessorGroup*,
 
     printTask(patches,patch,cout_doing,"Doing interpolateSurfaceToGrid");
 
-    int numMatls = m_sharedState->getNumMPMMatls();
+    int numMatls = m_materialManager->getNumMatls( "MPM" );
 
     Ghost::GhostType  gan = Ghost::AroundNodes;
 
@@ -888,7 +889,7 @@ void SingleFieldMPM::interpolateSurfaceToGrid(const ProcessorGroup*,
     gmassAll.initialize(d_SMALL_NUM_MPM);
 
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       // Create arrays for the particle data
@@ -1079,11 +1080,11 @@ void SingleFieldMPM::scheduleComputeStressTensor(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"MPM::scheduleComputeStressTensor");
 
-  int numMatls = m_sharedState->getNumMPMMatls();
+  int numMatls = m_materialManager->getNumMatls( "MPM" );
   Task* t = scinew Task("MPM::computeStressTensor",
                         this, &SingleFieldMPM::computeStressTensor);
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     const MaterialSubset* matlset = mpm_matl->thisMaterial();
 
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -1172,7 +1173,7 @@ void SingleFieldMPM::scheduleComputeInternalForce(SchedulerP& sched,
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::NewDW,lb->gVolumeLabel, gnone);
-  t->requires(Task::NewDW,lb->gVolumeLabel, m_sharedState->getAllInOneMatl(),
+  t->requires(Task::NewDW,lb->gVolumeLabel, m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain, gnone);
   t->requires(Task::OldDW,lb->pStressLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
@@ -1200,7 +1201,7 @@ void SingleFieldMPM::scheduleComputeInternalForce(SchedulerP& sched,
   }
 
   t->computes(lb->gStressForSavingLabel);
-  t->computes(lb->gStressForSavingLabel, m_sharedState->getAllInOneMatl(),
+  t->computes(lb->gStressForSavingLabel, m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain);
 
   sched->addTask(t, patches, matls);
@@ -1637,9 +1638,9 @@ void SingleFieldMPM::scheduleAddParticles(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pCellNAPIDLabel, zeroth_matl, Ghost::None);
   t->computes(             lb->pCellNAPIDLabel, zeroth_matl);
 
-  int numMatls = m_sharedState->getNumMPMMatls();
+  int numMatls = m_materialManager->getNumMatls( "MPM" );
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addSplitParticlesComputesAndRequires(t, mpm_matl, patches);
   }
@@ -1734,9 +1735,9 @@ SingleFieldMPM::scheduleRefine( const PatchSet   * patches,
     t->computes(lb->AccStrainEnergyLabel);
   }
 
-  int numMPM = m_sharedState->getNumMPMMatls();
+  int numMPM = m_materialManager->getNumMatls( "MPM" );
   for(int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
 
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
@@ -1748,7 +1749,7 @@ SingleFieldMPM::scheduleRefine( const PatchSet   * patches,
     em->addInitialComputesAndRequires(t, mpm_matl);
   }
 
-  sched->addTask(t, patches, m_sharedState->allMPMMaterials());
+  sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
 }
 
 void
@@ -1791,7 +1792,7 @@ void SingleFieldMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
   }
   task->modifies(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials());
   task->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
-  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allMPMMaterials());
+  sched->addTask(task, coarseLevel->eachPatch(), m_materialManager->allMaterials( "MPM" ));
 
 }
 //______________________________________________________________________
@@ -1876,10 +1877,10 @@ void SingleFieldMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
       // Loop through the patches and count
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
-        int numMPMMatls=m_sharedState->getNumMPMMatls();
+        int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
         int numPts = 0;
         for(int m = 0; m < numMPMMatls; m++){
-          MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+          MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
           int dwi = mpm_matl->getDWIndex();
 
           ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
@@ -1920,9 +1921,9 @@ void SingleFieldMPM::initializePressureBC(const ProcessorGroup*,
   // Calculate the force vector at each particle
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
@@ -2009,9 +2010,9 @@ void SingleFieldMPM::deleteGeometryObjects(const ProcessorGroup*,
                                       DataWarehouse* new_dw)
 {
   cout << "Deleting Geometry Objects " << endl;
-  int numMPMMatls=m_sharedState->getNumMPMMatls();
+  int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
   for(int m = 0; m < numMPMMatls; m++){
-    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
     mpm_matl->deleteGeomObjects();
   }
 }
@@ -2053,7 +2054,7 @@ void SingleFieldMPM::actuallyInitialize(const ProcessorGroup*,
     }
 
     for(int m=0;m<matls->size();m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       particleIndex numParticles = mpm_matl->createParticles(cellNAPID,
                                                              patch, new_dw);
 
@@ -2207,7 +2208,7 @@ void SingleFieldMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     printTask(patches,patch,cout_doing,
               "Doing SingleFieldMPM::interpolateParticlesToGrid");
 
-    int numMatls = m_sharedState->getNumMPMMatls();
+    int numMatls = m_materialManager->getNumMatls( "MPM" );
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
@@ -2218,7 +2219,7 @@ void SingleFieldMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     NCVariable<double> gmassglobal,gtempglobal,gvolumeglobal;
     NCVariable<Vector> gvelglobal;
-    int globMatID = m_sharedState->getAllInOneMatl()->get(0);
+    int globMatID = m_materialManager->getAllInOneMatls()->get(0);
     new_dw->allocateAndPut(gmassglobal,  lb->gMassLabel,       globMatID,patch);
     new_dw->allocateAndPut(gtempglobal,  lb->gTemperatureLabel,globMatID,patch);
     new_dw->allocateAndPut(gvolumeglobal,lb->gVolumeLabel,     globMatID,patch);
@@ -2230,7 +2231,7 @@ void SingleFieldMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     Ghost::GhostType  gan = Ghost::AroundNodes;
 
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       // Create arrays for the particle data
@@ -2449,9 +2450,9 @@ void SingleFieldMPM::computeSSPlusVp(const ProcessorGroup*,
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       // Get the arrays of particle values to be changed
@@ -2511,9 +2512,9 @@ void SingleFieldMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
     Ghost::GhostType  gan = Ghost::AroundNodes;
     Ghost::GhostType  gac = Ghost::AroundCells;
 
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
@@ -2581,20 +2582,20 @@ void SingleFieldMPM::addCohesiveZoneForces(const ProcessorGroup*,
 
     Ghost::GhostType  gan = Ghost::AroundNodes;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     std::vector<NCVariable<Vector> > gext_force(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       new_dw->getModifiable(gext_force[m], lb->gExternalForceLabel, dwi, patch);
       new_dw->get(gmass[m],                lb->gMassLabel,dwi, patch, gac, NGN);
     }
 
-    int numCZMatls=m_sharedState->getNumCZMatls();
+    int numCZMatls=m_materialManager->getNumMatls( "CZ" );
     for(int m = 0; m < numCZMatls; m++){
-      CZMaterial* cz_matl = m_sharedState->getCZMaterial( m );
+      CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial( "CZ",  m );
       int dwi = cz_matl->getDWIndex();
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -2721,14 +2722,14 @@ void SingleFieldMPM::computeStressTensor(const ProcessorGroup*,
   printTask(patches, patches->get(0),cout_doing,
             "Doing computeStressTensor");
 
-  for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
+  for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
 
     if (cout_dbg.active()) {
       cout_dbg << " Patch = " << (patches->get(0))->getID();
       cout_dbg << " Mat = " << m;
     }
 
-    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
 
     if (cout_dbg.active())
       cout_dbg << " MPM_Mat = " << mpm_matl;
@@ -2765,10 +2766,10 @@ void SingleFieldMPM::computeContactArea(const ProcessorGroup*,
 
     Vector dx = patch->dCell();
 
-    int numMPMMatls = m_sharedState->getNumMPMMatls();
+    int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       constNCVariable<double> gvolume;
 
@@ -2857,17 +2858,17 @@ void SingleFieldMPM::computeInternalForce(const ProcessorGroup*,
     vector<Vector> d_S(interpolator->size());
     string interp_type = flags->d_interpolator_type;
 
-    int numMPMMatls = m_sharedState->getNumMPMMatls();
+    int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
 
     NCVariable<Matrix3>       gstressglobal;
     constNCVariable<double>   gvolumeglobal;
     new_dw->get(gvolumeglobal,  lb->gVolumeLabel,
-                m_sharedState->getAllInOneMatl()->get(0), patch, Ghost::None,0);
+                m_materialManager->getAllInOneMatls()->get(0), patch, Ghost::None,0);
     new_dw->allocateAndPut(gstressglobal, lb->gStressForSavingLabel,
-                           m_sharedState->getAllInOneMatl()->get(0), patch);
+                           m_materialManager->getAllInOneMatls()->get(0), patch);
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       // Create arrays for the particle position, volume
       // and the constitutive model
@@ -3132,8 +3133,8 @@ void SingleFieldMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     }
 
 #if 0
-    for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       // Get required variables for this patch
@@ -3229,10 +3230,10 @@ void SingleFieldMPM::setGridBoundaryConditions(const ProcessorGroup*,
     }
 
 #if 0
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> gvelocity_star, gacceleration;
       constNCVariable<Vector> gvelocity;
@@ -3278,10 +3279,10 @@ void SingleFieldMPM::setPrescribedMotion(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing setPrescribedMotion");
 
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> gvelocity_star, gacceleration;
 
@@ -3449,10 +3450,10 @@ void SingleFieldMPM::applyExternalLoads(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing applyExternalLoads");
 
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -3587,7 +3588,7 @@ void SingleFieldMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector CMX(0.0,0.0,0.0);
     Vector totalMom(0.0,0.0,0.0);
     double ke=0;
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
@@ -3664,7 +3665,7 @@ void SingleFieldMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 #endif
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
@@ -3952,9 +3953,9 @@ void SingleFieldMPM::computeParticleGradients(const ProcessorGroup*,
     new_dw->get(gvelstar0, lb->gVelocityStarF0Label,    0,  patch, gac,NGP);
     new_dw->get(gvelstar1, lb->gVelocityStarF1Label,    0,  patch, gac,NGP);
 
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
@@ -4159,9 +4160,9 @@ void SingleFieldMPM::finalParticleUpdate(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<int> pLocalized;
@@ -4219,21 +4220,21 @@ void SingleFieldMPM::updateCohesiveZones(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     std::vector<constNCVariable<Vector> > gvelocity(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity[m], lb->gVelocityLabel,dwi, patch, gac, NGN);
       new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN);
     }
 
-    int numCZMatls=m_sharedState->getNumCZMatls();
+    int numCZMatls=m_materialManager->getNumMatls( "CZ" );
     for(int m = 0; m < numCZMatls; m++){
-      CZMaterial* cz_matl = m_sharedState->getCZMaterial( m );
+      CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial( "CZ",  m );
       int dwi = cz_matl->getDWIndex();
 
       // Not populating the delset, but we need this to satisfy Relocate
@@ -4473,9 +4474,9 @@ void SingleFieldMPM::insertParticles(const ProcessorGroup*,
       if(time+delT > d_IPTimes[i] && time <= d_IPTimes[i]){
         index = i;
         if(index>=0){
-          int numMPMMatls=m_sharedState->getNumMPMMatls();
+          int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
           for(int m = 0; m < numMPMMatls; m++){
-            MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+            MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
             int dwi = mpm_matl->getDWIndex();
             ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -4514,7 +4515,7 @@ void SingleFieldMPM::addParticles(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     printTask(patches, patch,cout_doing, "Doing addParticles");
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
     //Carry forward CellNAPID
     constCCVariable<int> NAPID;
@@ -4525,7 +4526,7 @@ void SingleFieldMPM::addParticles(const ProcessorGroup*,
     NAPID_new.copyData(NAPID);
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -4930,9 +4931,9 @@ void SingleFieldMPM::computeParticleScaleFactor(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing computeParticleScaleFactor");
 
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -5036,8 +5037,8 @@ SingleFieldMPM::initialErrorEstimate(const ProcessorGroup*,
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
 
 
-    for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       // Loop over particles
       ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
@@ -5133,7 +5134,7 @@ SingleFieldMPM::refine(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing refine");
 
-    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
     // First do NC_CCweight
     NCVariable<double> NC_CCweight;
@@ -5160,7 +5161,7 @@ SingleFieldMPM::refine(const ProcessorGroup*,
     }
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       if (cout_doing.active()) {
@@ -5227,17 +5228,13 @@ void SingleFieldMPM::scheduleComputeNormals(SchedulerP   & sched,
   Task* t = scinew Task("MPM::computeNormals", this, 
                         &SingleFieldMPM::computeNormals);
 
-  Ghost::GhostType  gp;
-  int ngc_p;
-  m_sharedState->getParticleGhostLayer(gp, ngc_p);
-
-  t->requires(Task::OldDW, lb->pXLabel,                  gp, ngc_p);
-  t->requires(Task::OldDW, lb->pMassLabel,               gp, ngc_p);
-  t->requires(Task::OldDW, lb->pDispLabel,               gp, ngc_p);
-  t->requires(Task::OldDW, lb->pVolumeLabel,             gp, ngc_p);
-  t->requires(Task::OldDW, lb->pSizeLabel,               gp, ngc_p);
-  t->requires(Task::OldDW, lb->pStressLabel,             gp, ngc_p);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
+  t->requires(Task::OldDW, lb->pXLabel,                  particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pMassLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pDispLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pVolumeLabel,             particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pSizeLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pStressLabel,             particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,d_one_matl,Ghost::None);
@@ -5262,7 +5259,7 @@ void SingleFieldMPM::computeNormals(const ProcessorGroup *,
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
 
-  int numMPMMatls = m_sharedState->getNumMPMMatls();
+  int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
   std::vector<constNCVariable<double> >  gmass(numMPMMatls);
   std::vector<NCVariable<Point> >        gposition(numMPMMatls);
   std::vector<NCVariable<Vector> >       gdisp(numMPMMatls);
@@ -5290,7 +5287,7 @@ void SingleFieldMPM::computeNormals(const ProcessorGroup *,
     printTask(patches, patch, cout_doing, "Doing computeNormals");
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[m],                lb->gMassLabel,     dwi,patch,gan,1);
 
@@ -5387,7 +5384,7 @@ void SingleFieldMPM::computeNormals(const ProcessorGroup *,
 
     // Make norms unit length
     for(int m=0;m<numMPMMatls;m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
@@ -5443,7 +5440,7 @@ void SingleFieldMPM::computeParticleSurfaceGradient(const ProcessorGroup *,
                                                      DataWarehouse  * old_dw,
                                                      DataWarehouse  * new_dw)
 {
-  int numMPMMatls = m_sharedState->getNumMPMMatls();
+  int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
   Ghost::GhostType  gan = Ghost::AroundNodes;
 
   timeStep_vartype timeStep;
@@ -5466,7 +5463,7 @@ void SingleFieldMPM::computeParticleSurfaceGradient(const ProcessorGroup *,
     printTask(patches,patch,cout_doing,"Doing computeParticleSurfaceGradient");
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       // This particle set includes ghost particles
@@ -5551,20 +5548,16 @@ void SingleFieldMPM::scheduleComputeGridSurfaceGradient(SchedulerP   & sched,
   Task* t = scinew Task("MPM::computeGridSurfaceGradient", this, 
                         &SingleFieldMPM::computeGridSurfaceGradient);
 
-  Ghost::GhostType  gp;
-  int ngc_p;
-  m_sharedState->getParticleGhostLayer(gp, ngc_p);
-
-  t->requires(Task::OldDW, lb->pXLabel,                  gp, ngc_p);
-  t->requires(Task::OldDW, lb->pSizeLabel,               gp, ngc_p);
-  t->requires(Task::OldDW, lb->pMassLabel,               gp, ngc_p);
-  t->requires(Task::OldDW, lb->pSurfLabel,               gp, ngc_p);
-  t->requires(Task::OldDW, lb->pStressLabel,             gp, ngc_p);
-  t->requires(Task::OldDW, lb->pVolumeLabel,             gp, ngc_p);
-  t->requires(Task::OldDW, lb->pVelocityLabel,           gp, ngc_p);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
-  t->requires(Task::OldDW, lb->pExternalForceLabel,      gp, ngc_p);
-  t->requires(Task::NewDW, lb->pSurfGradLabel_preReloc,  gp, ngc_p);
+  t->requires(Task::OldDW, lb->pXLabel,                  particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pSizeLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pMassLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pSurfLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pStressLabel,             particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pVolumeLabel,             particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pVelocityLabel,           particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pExternalForceLabel,      particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::NewDW, lb->pSurfGradLabel_preReloc,  particle_ghost_type, particle_ghost_layer);
 
   t->computes(lb->gSurfGradLabel,          d_one_matl);
   t->computes(lb->gSurfNormF0Label,        d_one_matl);
@@ -5597,7 +5590,7 @@ void SingleFieldMPM::computeGridSurfaceGradient(const ProcessorGroup *,
 {
   Ghost::GhostType  gan   = Ghost::AroundNodes;
 
-  int numMPMMatls = m_sharedState->getNumMPMMatls();
+  int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
 
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -5662,7 +5655,7 @@ void SingleFieldMPM::computeGridSurfaceGradient(const ProcessorGroup *,
     printTask(patches, patch, cout_doing, "Doing computeGridSurfaceGradient");
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -5702,7 +5695,7 @@ void SingleFieldMPM::computeGridSurfaceGradient(const ProcessorGroup *,
     }   // matl loop
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,

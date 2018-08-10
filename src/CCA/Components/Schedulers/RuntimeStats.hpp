@@ -25,7 +25,7 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP
 #define CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP
 
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/InfoMapper.h>
 #include <Core/Util/Timers/Timers.hpp>

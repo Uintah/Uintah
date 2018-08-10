@@ -33,7 +33,7 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
 namespace Uintah {
@@ -45,7 +45,7 @@ namespace Uintah {
 
   public:
     ExchangeModel(const ProblemSpecP     & prob_spec,
-                  const SimulationStateP & sharedState );
+                  const MaterialManagerP & materialManager );
 
     virtual ~ExchangeModel();
 
@@ -110,7 +110,7 @@ namespace Uintah {
 
     double d_SMALL_NUM = 1.0e-100;
     int    d_numMatls  = -9;
-    SimulationStateP  d_sharedState;
+    MaterialManagerP  d_materialManager;
     MaterialSubset * d_zero_matl;
 
   private:

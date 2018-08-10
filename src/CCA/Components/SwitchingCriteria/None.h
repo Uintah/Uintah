@@ -28,7 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SwitchingCriteria.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 namespace Uintah {
 
@@ -45,7 +45,7 @@ namespace Uintah {
       
       virtual void problemSetup(const ProblemSpecP& ps, 
                                 const ProblemSpecP& restart_prob_spec, 
-                                SimulationStateP& sharedState);
+                                MaterialManagerP& materialManager);
 
       virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
@@ -54,7 +54,7 @@ namespace Uintah {
                       DataWarehouse*);      
 
     private:
-      SimulationStateP d_sharedState; 
+      MaterialManagerP d_materialManager; 
     };
 } // End namespace Uintah
 

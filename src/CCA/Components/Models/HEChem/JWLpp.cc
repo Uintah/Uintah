@@ -32,7 +32,7 @@
 
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -50,10 +50,10 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 JWLpp::JWLpp(const ProcessorGroup* myworld, 
-             const SimulationStateP& sharedState,
+             const MaterialManagerP& materialManager,
              const ProblemSpecP& params,
              const ProblemSpecP& prob_spec)
-  : HEChemModel(myworld, sharedState),
+  : HEChemModel(myworld, materialManager),
     d_params(params), d_prob_spec(prob_spec)
 {
   mymatls = 0;
@@ -118,8 +118,8 @@ void JWLpp::problemSetup(GridP&,
     }
   }
   
-  matl0 = m_sharedState->parseAndLookupMaterial(JWL_ps, "fromMaterial");
-  matl1 = m_sharedState->parseAndLookupMaterial(JWL_ps, "toMaterial");
+  matl0 = m_materialManager->parseAndLookupMaterial(JWL_ps, "fromMaterial");
+  matl1 = m_materialManager->parseAndLookupMaterial(JWL_ps, "toMaterial");
 
   //__________________________________
   //  define the materialSet
@@ -293,8 +293,8 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
 
     // Get the specific heat, this is the value from the input file
     double cv_rct = -1.0; 
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(m_sharedState->getMaterial(m0));
-    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(m_sharedState->getMaterial(m0));
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(m_materialManager->getMaterial(m0));
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(m_materialManager->getMaterial(m0));
     if(mpm_matl) {
       cv_rct = mpm_matl->getSpecificHeat();
     } else if(ice_matl){
@@ -343,10 +343,10 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
-    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
-    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_materialManager, m1, new_dw, isNotInitialTimeStep);
+    setBC(delF,       "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
+    setBC(Fr,         "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
   }
   //__________________________________
   //save total quantities

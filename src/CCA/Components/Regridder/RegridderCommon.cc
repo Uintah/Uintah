@@ -145,7 +145,7 @@ void RegridderCommon::releaseComponents()
   m_loadBalancer = nullptr;
   m_application  = nullptr;
 
-  d_sharedState = nullptr;
+  d_materialManager = nullptr;
 }
 
 //______________________________________________________________________//
@@ -389,11 +389,11 @@ RegridderCommon::switchInitialize(const ProblemSpecP& params)
 //______________________________________________________________________
 //
 void
-RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, const SimulationStateP& state)
+RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, const MaterialManagerP& state)
 {
   rdbg << "RegridderCommon::problemSetup() BGN" << std::endl;
 
-  d_sharedState = state;
+  d_materialManager = state;
 
   grid_ps_ = params->findBlock("Grid");
 
@@ -753,7 +753,7 @@ RegridderCommon::scheduleDilation(const LevelP& level, const bool isLockstepAMR)
   dilate_stability_task->requires(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_stability);
   dilate_regrid_task->requires(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_regrid);
 
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSet* all_matls = d_materialManager->allMaterials();
 
   dilate_stability_task->computes(d_dilatedCellsStabilityLabel, refine_flag_matls);
   m_scheduler->addTask(dilate_stability_task, level->eachPatch(), all_matls);
@@ -894,7 +894,7 @@ RegridderCommon::scheduleInitializeErrorEstimate(const LevelP& level)
   task->computes(  m_oldRefineFlagLabel, refine_flag_matls);
   task->computes(m_refinePatchFlagLabel, refine_flag_matls);
 
-  m_scheduler->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
+  m_scheduler->addTask(task, level->eachPatch(), d_materialManager->allMaterials());
 }
 
 //______________________________________________________________________

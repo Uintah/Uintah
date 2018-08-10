@@ -43,22 +43,22 @@ Uintah::Dout g_deltaT_minor_warnings( "DeltaTMinorWarnings", "ApplicationCommon"
 Uintah::Dout g_deltaT_major_warnings( "DeltaTMajorWarnings", "ApplicationCommon", "Report major warnings when validating the next delta T", true );
 
 ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
-                                      const SimulationStateP   sharedState )
-    : UintahParallelComponent(myworld), m_sharedState(sharedState)
+                                      const MaterialManagerP   materialManager )
+    : UintahParallelComponent(myworld), m_materialManager(materialManager)
 {
-  // There should only be one SimulationState. If there is a single
+  // There should only be one MaterialManager. If there is a single
   // application the ComponentFactory will pass in a null pointer
-  // which will trigger the SimulationState to be created.
+  // which will trigger the MaterialManager to be created.
 
   // If there are multiple applications the Switcher (which is an
-  // application) will create the SimulationState and then pass that
+  // application) will create the MaterialManager and then pass that
   // to the child applications.
 
   // If there are combined applications (aka MPMICE) it will create
-  // the SimulationState and then pass that to the child applications.
+  // the MaterialManager and then pass that to the child applications.
 
-  if (m_sharedState == nullptr) {
-    m_sharedState = scinew SimulationState();
+  if (m_materialManager == nullptr) {
+    m_materialManager = scinew MaterialManager();
   }
 
   //__________________________________
@@ -121,8 +121,8 @@ ApplicationCommon::~ApplicationCommon()
   
   m_appReductionVars.clear();
   
-  // No need to delete the shared state as it is refcounted
-  m_sharedState = nullptr;
+  // No need to delete the material manager as it is refcounted
+  m_materialManager = nullptr;
 }
 
 void ApplicationCommon::setComponents( UintahParallelComponent *comp )
@@ -277,7 +277,7 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
 
   // The above three tasks are on a per proc basis any rank can make
   // the request because it is a either benign or a set value.
-  scheduler->addTask(task, perProcPatchSet, m_sharedState->allMaterials());
+  scheduler->addTask(task, perProcPatchSet, m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________
@@ -372,7 +372,7 @@ ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
   //        << scheduler->get_dw(1) << "  " 
   //        << scheduler->getLastDW() << std::endl;
   
-  scheduler->addTask(task, perProcPatchSet, m_sharedState->allMaterials());
+  scheduler->addTask(task, perProcPatchSet, m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________
@@ -390,12 +390,12 @@ ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
   // Initialize the time step.
   new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
 
-  // m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );  
+  // m_materialManager->setCurrentTopLevelTimeStep( m_timeStep );  
 
   // Initialize the simulation time.
   new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel);
 
-  // m_sharedState->setElapsedSimTime( m_simTime );
+  // m_materialManager->setElapsedSimTime( m_simTime );
 
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
   //        << new_dw << std::endl;  
@@ -430,7 +430,7 @@ ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
   //        << scheduler->get_dw(1) << "  " 
   //        << scheduler->getLastDW() << std::endl;
     
-  scheduler->addTask(task, perProcPatchSet, m_sharedState->allMaterials());
+  scheduler->addTask(task, perProcPatchSet, m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________
@@ -915,7 +915,7 @@ void ApplicationCommon::setTimeStep( int timeStep )
   m_scheduler->getLastDW()->override(timeStep_vartype(m_timeStep),
                                      m_timeStepLabel );
   
-  // m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );
+  // m_materialManager->setCurrentTopLevelTimeStep( m_timeStep );
 }
 
 //______________________________________________________________________
@@ -931,7 +931,7 @@ void ApplicationCommon::incrementTimeStep()
 
   newDW->override(timeStep_vartype(m_timeStep), m_timeStepLabel );
 
-  // m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );
+  // m_materialManager->setCurrentTopLevelTimeStep( m_timeStep );
 }
 
 //______________________________________________________________________
@@ -948,5 +948,5 @@ void ApplicationCommon::setSimTime( double simTime )
   m_scheduler->getLastDW()->override(simTime_vartype(m_simTime),
                                      m_simulationTimeLabel );
   
-  // m_sharedState->setElapsedSimTime( m_simTime );
+  // m_materialManager->setElapsedSimTime( m_simTime );
 }

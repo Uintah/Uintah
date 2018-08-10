@@ -30,7 +30,7 @@
 
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -278,7 +278,7 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
     tsk->requires(Task::OldDW, pr_label, gn, 0);
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
 // Method: Actually initialize the variables.
@@ -297,7 +297,7 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> newVar;
     constCCVariable<double> oldVar;
@@ -383,7 +383,7 @@ ScalarEqn::sched_addSourceTerms( const LevelP& level, SchedulerP& sched, int tim
 
   tsk->modifies(d_RHSLabel);
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 
 }
 //--------------------------------------------------------------------------------------------------
@@ -402,7 +402,7 @@ ScalarEqn::addSourceTerms( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     vector<constCCVarWrapper> sourceVars;
     for (vector<SourceContainer>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
@@ -493,7 +493,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, cons
     }
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 
 }
 //---------------------------------------------------------------------------
@@ -518,7 +518,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     const Level* level = patch->getLevel();
     const int ilvl = level->getID();
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     DataWarehouse* which_dw;
     if ( timeSubStep == 0 ){
@@ -641,7 +641,7 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
   //Old
   tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
 // Method: Actually solve the transport equation.
@@ -661,7 +661,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     delt_vartype DT;
     old_dw->get(DT, d_fieldLabels->d_delTLabel);
@@ -718,7 +718,7 @@ ScalarEqn::sched_timeAve( const LevelP& level, SchedulerP& sched, int timeSubSte
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
 // Method: Time averaging
@@ -738,7 +738,7 @@ ScalarEqn::timeAve( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> new_phi;
     constCCVariable<double> old_phi;
@@ -818,7 +818,7 @@ ScalarEqn::sched_advClipping( const LevelP& level, SchedulerP& sched, int timeSu
 
     tsk->modifies(d_transportVarLabel);
 
-    sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+    sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 
   }
 }
@@ -837,7 +837,7 @@ ScalarEqn::advClipping( const ProcessorGroup* pc,
     //Ghost::GhostType  gn  = Ghost::None;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     int length_clip_dep_low_vec = clip_dep_low_vec.size();
     int length_clip_dep_vec = clip_dep_vec.size();

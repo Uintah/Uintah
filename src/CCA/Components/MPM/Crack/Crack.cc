@@ -39,8 +39,8 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
@@ -60,14 +60,14 @@ using std::string;
 
 #define MAX_BASIS 27
 
-Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
+Crack::Crack(const ProblemSpecP& ps,MaterialManagerP& d_sS,
              Output* d_dataArchiver, MPMLabel* Mlb,MPMFlags* MFlag)
 { 
   Uintah::MPI::Comm_dup( MPI_COMM_WORLD, & mpi_crack_comm );
 
   // Task 1: Initialization of fracture analysis  
   
-  d_sharedState = d_sS;
+  d_materialManager = d_sS;
   dataArchiver  = d_dataArchiver;
   lb            = Mlb;
   flag          = MFlag;
@@ -426,7 +426,7 @@ Crack::CrackDiscretization(const ProcessorGroup*,
     }  
        
     // Allocate memories for crack mesh
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=d_materialManager->getNumMatls( "MPM" );
     css.resize(numMPMMatls);
     csa.resize(numMPMMatls);
     cx.resize(numMPMMatls);

@@ -30,8 +30,8 @@
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <CCA/Ports/Scheduler.h>
 #include <vector>
 #include <map>
@@ -52,7 +52,7 @@ namespace Uintah {
   class CohesiveZone {
   public:
     
-    CohesiveZone(CZMaterial* czmat, MPMFlags* flags,  SimulationStateP& ss);
+    CohesiveZone(CZMaterial* czmat, MPMFlags* flags,  MaterialManagerP& ss);
 
     virtual ~CohesiveZone();
 
@@ -94,7 +94,7 @@ namespace Uintah {
 
     MPMLabel* d_lb;
     MPMFlags* d_flags;
-    SimulationStateP d_sharedState;
+    MaterialManagerP d_materialManager;
 
     std::vector<const VarLabel* > d_cz_state, d_cz_state_preReloc;
   };

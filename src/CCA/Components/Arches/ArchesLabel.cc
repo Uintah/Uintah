@@ -35,7 +35,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Exceptions/InvalidValue.h>
 
 using namespace Uintah;
@@ -427,9 +427,9 @@ ArchesLabel::~ArchesLabel()
 }
 
 void
-ArchesLabel::setSharedState(SimulationStateP& sharedState)
+ArchesLabel::setMaterialManager(MaterialManagerP& materialManager)
 {
-  d_sharedState = sharedState;
+  d_materialManager = materialManager;
 }
 
 void

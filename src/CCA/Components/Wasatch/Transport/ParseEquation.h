@@ -93,7 +93,7 @@ namespace WasatchCore{
    *  \param densityTag the tag for the mixture mass density
    *  \param gc The GraphCategories.
    *  \param linSolver
-   *  \param sharedState
+   *  \param materialManager
    *  \param dualTimeMatrixInfo stores dual time matrix information (tags).
    *
    *  \return an EqnTimestepAdaptorBase object that can be used to
@@ -108,18 +108,18 @@ namespace WasatchCore{
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
                             Uintah::SolverInterface& linSolver,
-                            Uintah::SimulationStateP& sharedState,
+                            Uintah::MaterialManagerP& materialManager,
                             WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo );
 
   void parse_poisson_equation( Uintah::ProblemSpecP params,
                                GraphCategories& gc,
                                Uintah::SolverInterface& linSolver,
-                               Uintah::SimulationStateP& sharedState );
+                               Uintah::MaterialManagerP& materialManager );
 
   void parse_radiation_solver( Uintah::ProblemSpecP params,
                                GraphHelper& gh,
                                Uintah::SolverInterface& linSolver,
-                               Uintah::SimulationStateP& sharedState,
+                               Uintah::MaterialManagerP& materialManager,
                                std::set<std::string>& persistentFields );
 
   std::vector<EqnTimestepAdaptorBase*>

@@ -40,8 +40,8 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
@@ -115,15 +115,15 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    // double simTime = d_sharedState->getElapsedSimTime();
+    // double simTime = d_materialManager->getElapsedSimTime();
 
     // Detect if calculating fracture parameters or
     // doing crack propagation at this time step
     DetectIfDoingFractureAnalysisAtThisTimeStep(simTime);
     
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    int numMPMMatls = d_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = d_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       // Get particle's solutions
@@ -298,9 +298,9 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
     Uintah::MPI::Comm_rank(mpi_crack_comm,&pid);
     MPI_Datatype MPI_VECTOR=fun_getTypeDescription((Vector*)0)->getMPIType();
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = d_materialManager->getNumMatls( "MPM" );
     for(int m=0;m<numMatls;m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      MPMMaterial* mpm_matl = d_materialManager->getMaterial( "MPM", m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 
       int dwi = matls->get(m);
@@ -1148,8 +1148,8 @@ void Crack::OutputCrackFrontResults(const int& m,
     ofstream outCrkFrt1(outFileName1, ios::app);
     ofstream outCrkFrt2(outFileName2, ios::app);
     
-    // double simTime=d_sharedState->getElapsedSimTime();
-    // int timestep=d_sharedState->getCurrentTopLevelTimeStep();
+    // double simTime=d_materialManager->getElapsedSimTime();
+    // int timestep=d_materialManager->getCurrentTopLevelTimeStep();
 
     int num=(int)cfSegNodes[m].size();
     int numSubCracks=0;

@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_MMS_scalar_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 namespace Uintah{
 
@@ -12,7 +12,7 @@ public:
 
     enum WAVE_TYPE { SINE, SINE_T, GCOSINE, T1, T2, T3 };
 
-    MMS_scalar( std::string task_name, int matl_index, SimulationStateP shared_state  );
+    MMS_scalar( std::string task_name, int matl_index, MaterialManagerP materialManager  );
     ~MMS_scalar();
 
     void problemSetup( ProblemSpecP& db );
@@ -46,18 +46,18 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, SimulationStateP shared_state ) : _task_name(task_name), _matl_index(matl_index), _shared_state(shared_state){}
+      Builder( std::string task_name, int matl_index, MaterialManagerP materialManager ) : _task_name(task_name), _matl_index(matl_index), _materialManager(materialManager){}
       ~Builder(){}
 
       MMS_scalar* build()
-      { return scinew MMS_scalar( _task_name, _matl_index, _shared_state  ); }
+      { return scinew MMS_scalar( _task_name, _matl_index, _materialManager  ); }
 
       private:
 
       std::string _task_name;
       int _matl_index;
 
-      SimulationStateP _shared_state;
+      MaterialManagerP _materialManager;
     };
 
 private:
@@ -75,7 +75,7 @@ private:
     std::string m_MMS_source_diff_label;
     std::string m_MMS_source_t_label;
 
-    SimulationStateP _shared_state;
+    MaterialManagerP _materialManager;
 
   };
 }

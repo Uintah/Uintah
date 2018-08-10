@@ -75,7 +75,7 @@ WARNING
   public:
 
     RMCRT_Test ( const ProcessorGroup* myworld,
-		 const SimulationStateP sharedState );
+		 const MaterialManagerP materialManager );
     
     virtual ~RMCRT_Test ( void );
 

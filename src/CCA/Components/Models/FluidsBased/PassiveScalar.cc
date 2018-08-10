@@ -40,7 +40,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
 
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 
@@ -58,9 +58,9 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("PASSIVE_SCALAR_DBG_COUT", false);
 //______________________________________________________________________
 PassiveScalar::PassiveScalar(const ProcessorGroup* myworld, 
-                             const SimulationStateP& sharedState,
+                             const MaterialManagerP& materialManager,
                              const ProblemSpecP& params)
-  : FluidsBasedModel(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   m_modelComputesThermoTransportProps = true;
   
@@ -151,7 +151,7 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
   cout_doing << "Doing problemSetup \t\t\t\tPASSIVE_SCALAR" << endl;
 
   ProblemSpecP PS_ps = d_params->findBlock("PassiveScalar");
-  d_matl = m_sharedState->parseAndLookupMaterial(PS_ps, "material");
+  d_matl = m_materialManager->parseAndLookupMaterial(PS_ps, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -463,7 +463,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         }
       }  // sinusoidal Initialize  
     } // regions
-    setBC(f,"scalar-f", patch, m_sharedState,indx, new_dw, isNotInitialTimeStep); 
+    setBC(f,"scalar-f", patch, m_materialManager,indx, new_dw, isNotInitialTimeStep); 
   }  // patches
 }
 

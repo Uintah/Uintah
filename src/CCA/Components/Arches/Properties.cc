@@ -42,7 +42,7 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -122,24 +122,24 @@ Properties::problemSetup(const ProblemSpecP& params)
 //   else
 //     throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps and Boost libs.",__FILE__,__LINE__);
 //
-//   SimulationStateP& sharedState = d_lab->d_sharedState;
+//   MaterialManagerP& materialManager = d_lab->d_materialManager;
 //
 //   if (mixModel == "ClassicTable") {
 //
 //     // New Classic interface
-//     d_mixingRxnTable = scinew ClassicTableInterface( sharedState );
+//     d_mixingRxnTable = scinew ClassicTableInterface( materialManager );
 //     d_mixingRxnTable->problemSetup( db );
 //   } else if (mixModel == "ColdFlow") {
-//     d_mixingRxnTable = scinew ColdFlow( sharedState );
+//     d_mixingRxnTable = scinew ColdFlow( materialManager );
 //     d_mixingRxnTable->problemSetup( db );
 //   } else if (mixModel == "ConstantProps" ) {
-//     d_mixingRxnTable = scinew ConstantProps( sharedState );
+//     d_mixingRxnTable = scinew ConstantProps( materialManager );
 //     d_mixingRxnTable->problemSetup( db );
 //   }
 // #if HAVE_TABPROPS
 //   else if (mixModel == "TabProps") {
 //     // New TabPropsInterface stuff...
-//     d_mixingRxnTable = scinew TabPropsInterface( sharedState );
+//     d_mixingRxnTable = scinew TabPropsInterface( materialManager );
 //     d_mixingRxnTable->problemSetup( db );
 //   }
 // #endif
@@ -187,8 +187,8 @@ Properties::averageRKProps( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex();
 
     constCCVariable<double> old_density;
     constCCVariable<double> rho1_density;
@@ -275,8 +275,8 @@ Properties::saveTempDensity(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> temp_density;
 
@@ -343,7 +343,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
                           DataWarehouse* new_dw,
                           const TimeIntegratorLabel* timelabels)
 {
-  // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+  // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
 
   timeStep_vartype timeStep;
   old_dw->get( timeStep, d_lab->d_timeStepLabel );
@@ -378,8 +378,8 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex();
 
     constCCVariable<double> new_density;
     constCCVariable<double> old_density;

@@ -35,7 +35,7 @@
 
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Exceptions/InvalidValue.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Parallel/Parallel.h>
@@ -57,27 +57,27 @@ CharOxidationSmithBuilder::CharOxidationSmithBuilder( const std::string         
                                                       const std::vector<std::string> & reqICLabelNames,
                                                       const std::vector<std::string> & reqScalarLabelNames,
                                                       ArchesLabel         * fieldLabels,
-                                                      SimulationStateP          & sharedState,
+                                                      MaterialManagerP          & materialManager,
                                                       int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, materialManager, qn )
 {
 }
 
 CharOxidationSmithBuilder::~CharOxidationSmithBuilder(){}
 
 ModelBase* CharOxidationSmithBuilder::build() {
-  return scinew CharOxidationSmith( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return scinew CharOxidationSmith( d_modelName, d_materialManager, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
 CharOxidationSmith::CharOxidationSmith( std::string modelName,
-                                        SimulationStateP& sharedState,
+                                        MaterialManagerP& materialManager,
                                         ArchesLabel* fieldLabels,
                                         std::vector<std::string> icLabelNames,
                                         std::vector<std::string> scalarLabelNames,
                                         int qn )
-: CharOxidation(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+: CharOxidation(modelName, materialManager, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Set constants
   // Enthalpy of formation (J/mol)
@@ -346,7 +346,7 @@ CharOxidationSmith::sched_initVars( const LevelP& level, SchedulerP& sched )
     tsk->computes(*iter);
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 
 #ifdef HAVE_VISIT
   static bool initialized = false;
@@ -402,7 +402,7 @@ CharOxidationSmith::initVars( const ProcessorGroup * pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> char_rate;
     CCVariable<double> gas_char_rate;
@@ -523,7 +523,7 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   if ( _rawcoal_birth_label != nullptr )
     tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 );
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -543,7 +543,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     Vector Dx = patch->dCell();
     double vol = Dx.x()* Dx.y()* Dx.z();

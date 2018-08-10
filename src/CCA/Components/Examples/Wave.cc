@@ -28,7 +28,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Grid.h>
@@ -48,8 +48,8 @@ using namespace std;
 static DebugStream wave("Wave", false);
 
 Wave::Wave(const ProcessorGroup* myworld,
-	   const SimulationStateP sharedState)
-  : ApplicationCommon(myworld, sharedState)
+	   const MaterialManagerP materialManager)
+  : ApplicationCommon(myworld, materialManager)
 {
   phi_label = VarLabel::create("phi", CCVariable<double>::getTypeDescription(), IntVector(1,1,1));
   pi_label = VarLabel::create("pi", CCVariable<double>::getTypeDescription());
@@ -117,7 +117,7 @@ void Wave::problemSetup(const ProblemSpecP& params,
   if(integration != "Euler" && integration != "RK4")
     throw ProblemSetupException("Unknown integration method for Wave", __FILE__, __LINE__);
   mymat_ = scinew SimpleMaterial();
-  m_sharedState->registerSimpleMaterial(mymat_);
+  m_materialManager->registerSimpleMaterial(mymat_);
 
 }
 //______________________________________________________________________
@@ -129,7 +129,7 @@ void Wave::scheduleInitialize(const LevelP& level,
                            this, &Wave::initialize);
   task->computes(phi_label);
   task->computes(pi_label);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -146,7 +146,7 @@ void Wave::scheduleComputeStableTimeStep(const LevelP& level,
   Task* task = scinew Task("computeStableTimeStep",
                            this, &Wave::computeStableTimeStep);
   task->computes(getDelTLabel(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -164,7 +164,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     //task->requires(Task::OldDW, getDelTLabel());
     task->computes(phi_label);
     task->computes(pi_label);
-    sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+    sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
   } else if(integration == "RK4"){
     Task* task = scinew Task("setupRK4",
                              this, &Wave::setupRK4);
@@ -176,7 +176,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     }
     task->computes(phi_label);
     task->computes(pi_label);
-    sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+    sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
     for(int i=0;i<4;i++){
       Step* s = &rk4steps[i];
@@ -196,7 +196,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
       task->computes(s->newpi_label);
       task->modifies(phi_label);
       task->modifies(pi_label);
-      sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+      sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
     }
   } else {
     throw ProblemSetupException("Unknown integration method for wave", __FILE__, __LINE__);

@@ -32,7 +32,7 @@
 using namespace std;
 using namespace Uintah;
 
-FluxBCModel* FluxBCModelFactory::create(SimulationStateP& ss, MPMFlags* flags)
+FluxBCModel* FluxBCModelFactory::create(MaterialManagerP& ss, MPMFlags* flags)
 {
   if (flags->d_doAutoCycleBC)
     return(scinew AutoCycleFluxBC(ss, flags));

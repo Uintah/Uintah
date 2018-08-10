@@ -82,7 +82,7 @@ KokkosOpenMPScheduler::KokkosOpenMPScheduler( const ProcessorGroup   * myworld
 //
 void
 KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                                   , const SimulationStateP & state
+                                   , const MaterialManagerP & state
                                    )
 {
 

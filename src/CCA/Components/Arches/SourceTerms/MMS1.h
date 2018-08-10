@@ -2,7 +2,7 @@
 #ifndef Uintah_Component_Arches_MMS1_h
 #define Uintah_Component_Arches_MMS1_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
@@ -11,7 +11,7 @@ namespace Uintah{
 class MMS1: public SourceTermBase {
 public: 
 
-  MMS1( std::string srcName, SimulationStateP& shared_state, 
+  MMS1( std::string srcName, MaterialManagerP& materialManager, 
         std::vector<std::string> reqLabelNames, std::string type );
 
   ~MMS1();
@@ -40,20 +40,20 @@ public:
 
     public: 
 
-      Builder( std::string name, std::vector<std::string> required_label_names, SimulationStateP& shared_state )
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
+      Builder( std::string name, std::vector<std::string> required_label_names, MaterialManagerP& materialManager )
+        : _name(name), _materialManager(materialManager), _required_label_names(required_label_names){
           _type = "mms1";
         };
       ~Builder(){}; 
 
       MMS1* build()
-      { return scinew MMS1( _name, _shared_state, _required_label_names, _type ); };
+      { return scinew MMS1( _name, _materialManager, _required_label_names, _type ); };
 
     private: 
 
       std::string _name; 
       std::string _type; 
-      SimulationStateP& _shared_state; 
+      MaterialManagerP& _materialManager; 
       std::vector<std::string> _required_label_names;
 
   }; // Builder

@@ -611,7 +611,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
-  SimulationStateP simStateP = appInterface->getSimulationStateP();
+  MaterialManagerP simStateP = appInterface->getMaterialManagerP();
   SimulationTime*  simTime   = appInterface->getSimulationTime();
   DataWarehouse          *dw = sim->simController->getSchedulerP()->getLastDW();
 
@@ -827,7 +827,7 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
-  SimulationStateP simStateP = appInterface->getSimulationStateP();
+  MaterialManagerP simStateP = appInterface->getMaterialManagerP();
 
   unsigned int row, column;
   std::string text;
@@ -1165,7 +1165,7 @@ void visit_StateVariableCallback(char *val, void *cbdata)
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
-  SimulationStateP simStateP = appInterface->getSimulationStateP();
+  MaterialManagerP simStateP = appInterface->getMaterialManagerP();
 
   unsigned int row, column;
   std::string text;

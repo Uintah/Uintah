@@ -1081,7 +1081,7 @@ void HyperelasticPlastic::computeStressTensor(const PatchSubset* patches,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 { 
-  // double simTime = d_sharedState->getElapsedSimTime();
+  // double simTime = d_materialManager->getElapsedSimTime();
 
   simTime_vartype simTime(0);
   old_dw->get( simTime, lb->simulationTimeLabel );
@@ -1961,7 +1961,7 @@ void HyperelasticPlastic::computeStressTensorImplicit(const PatchSubset* patches
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
-  // double simTime = d_sharedState->getElapsedSimTime();
+  // double simTime = d_materialManager->getElapsedSimTime();
   
   simTime_vartype simTime(0);
   oldDW->get( simTime, lb->simulationTimeLabel );

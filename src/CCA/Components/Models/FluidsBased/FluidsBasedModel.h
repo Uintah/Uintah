@@ -32,8 +32,8 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 
@@ -104,7 +104,7 @@ namespace Uintah {
   class FluidsBasedModel : public ModelInterface {
   public:
     FluidsBasedModel(const ProcessorGroup* myworld,
-  		const SimulationStateP sharedState);
+  		const MaterialManagerP materialManager);
 
     virtual ~FluidsBasedModel();
 

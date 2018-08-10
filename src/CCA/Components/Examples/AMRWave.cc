@@ -28,7 +28,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
 #include <Core/Grid/Variables/PerPatchVars.h>
@@ -45,8 +45,8 @@ using namespace std;
 DebugStream amrwave("AMRWave", false);
 
 AMRWave::AMRWave(const ProcessorGroup* myworld,
-		 const SimulationStateP sharedState)
-  : Wave(myworld, sharedState)
+		 const MaterialManagerP materialManager)
+  : Wave(myworld, materialManager)
 {
 }
 
@@ -92,7 +92,7 @@ void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
   task->modifies(phi_label);
   task->requires(Task::NewDW, pi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
   task->modifies(pi_label);
-  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, coarseLevel->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -109,7 +109,7 @@ void AMRWave::scheduleRefine (const PatchSet* patches, SchedulerP& sched)
     task->computes(phi_label);
     task->computes(pi_label);
   }
-  sched->addTask(task, patches, m_sharedState->allMaterials());
+  sched->addTask(task, patches, m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -120,7 +120,7 @@ void AMRWave::scheduleErrorEstimate(const LevelP& coarseLevel,
   task->requires(Task::NewDW, phi_label, Ghost::AroundCells, 1);
   task->modifies(m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials());
   task->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
-  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, coarseLevel->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //

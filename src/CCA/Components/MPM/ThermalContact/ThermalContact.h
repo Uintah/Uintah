@@ -26,11 +26,11 @@
 #define __ThermalContact__
 
 #include <CCA/Ports/DataWarehouseP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 #include <cmath>

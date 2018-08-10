@@ -31,7 +31,7 @@
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -451,7 +451,7 @@ ICE::setupMatrix( const ProcessorGroup *,
     delt_vartype delT;
     parent_old_dw->get(delT, lb->delTLabel,level);
     Vector dx     = patch->dCell();
-    int numMatls  = m_sharedState->getNumMatls();
+    int numMatls  = m_materialManager->getNumMatls();
     CCVariable<Stencil7> A; 
     CCVariable<double> imp_delP;
     constCCVariable<double> sumKappa;
@@ -478,7 +478,7 @@ ICE::setupMatrix( const ProcessorGroup *,
     } 
   
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = m_sharedState->getMaterial( m );
+      Material* matl = m_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       constSFCXVariable<double> sp_volX_FC, vol_fracX_FC;
       constSFCYVariable<double> sp_volY_FC, vol_fracY_FC;
@@ -577,7 +577,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       pOldDW  = old_dw;
     }
            
-    int numMatls  = m_sharedState->getNumMatls();
+    int numMatls  = m_materialManager->getNumMatls();
     delt_vartype delT;
     pOldDW->get(delT, lb->delTLabel, level);
     
@@ -611,7 +611,7 @@ void ICE::setupRHS(const ProcessorGroup*,
 
     
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = m_sharedState->getMaterial( m );
+      Material* matl = m_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       constSFCXVariable<double> uvel_FC;
       constSFCYVariable<double> vvel_FC;
@@ -808,7 +808,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     
     printTask(patches, patch, cout_doing, "Doing ICE::updatePressure" );
                     
-    int numMatls  = m_sharedState->getNumMatls(); 
+    int numMatls  = m_materialManager->getNumMatls(); 
     Ghost::GhostType  gn = Ghost::None;
           
     CCVariable<double> press_CC;     
@@ -827,7 +827,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     press_CC.initialize(d_EVIL_NUM);
     
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = m_sharedState->getMaterial( m );
+      Material* matl = m_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       parent_new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel, indx,patch,gn,0);
     }             
@@ -850,7 +850,7 @@ void ICE::updatePressure(const ProcessorGroup*,
                             lb,  patch, 999, d_BC_globalVars, BC_localVars );
 
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
-          "sp_vol", "Pressure", patch ,m_sharedState, 0, new_dw, 
+          "sp_vol", "Pressure", patch ,m_materialManager, 0, new_dw, 
           d_BC_globalVars, BC_localVars, isNotInitialTimeStep );
            
     delete_CustomBCs(d_BC_globalVars, BC_localVars);
@@ -883,7 +883,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
     
     printTask(patches, patch, cout_doing, "Doing ICE::computeDel_P" );
             
-    int numMatls  = m_sharedState->getNumMatls(); 
+    int numMatls  = m_materialManager->getNumMatls(); 
       
     CCVariable<double> delP_Dilatate;
     CCVariable<double> delP_MassX;
@@ -909,7 +909,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
     delP_MassX.initialize(0.0); 
          
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = m_sharedState->getMaterial( m );
+      Material* matl = m_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       new_dw->get(rho_CC,      lb->rho_CCLabel,    indx,patch,gn,0);
       //__________________________________
@@ -947,7 +947,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   
   //__________________________________
   // define Matl sets and subsets
-  const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* all_matls = m_materialManager->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   MaterialSubset* one_matl    = d_press_matl;
   
@@ -1089,7 +1089,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
             << " after solve " << max_RHS << "\n" );
     
     // output files for debugging
-    // double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    // double timeStep = m_materialManager->getCurrentTopLevelTimeStep();
 
     timeStep_vartype timeStepVar;
     ParentOldDW->get(timeStepVar, lb->timeStepLabel);

@@ -28,7 +28,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Util/DebugStream.h>
@@ -47,9 +47,9 @@ ______________________________________________________________________*/
 static DebugStream cout_doing("radiometer", false);
 
 OnTheFly_radiometer::OnTheFly_radiometer(const ProcessorGroup* myworld,
-					 const SimulationStateP sharedState,
-					 const ProblemSpecP& module_spec)
-  : AnalysisModule(myworld, sharedState, module_spec)
+                                         const MaterialManagerP materialManager,
+                                         const ProblemSpecP& module_spec)
+  : AnalysisModule(myworld, materialManager, module_spec)
 {
 }
 
@@ -67,7 +67,9 @@ OnTheFly_radiometer::~OnTheFly_radiometer()
 //______________________________________________________________________
 void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
                                        const ProblemSpecP& ,
-                                       GridP& grid)
+                                       GridP& grid,
+                                       std::vector<std::vector<const VarLabel* > > &PState,
+                                       std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
 
 #ifdef USE_RADIOMETER
@@ -82,13 +84,13 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
   Material* matl;
  
   if( m_module_spec->findBlock("material") ){
-    matl = d_sharedState->parseAndLookupMaterial( m_module_spec, "material" );
+    matl = d_materialManager->parseAndLookupMaterial( m_module_spec, "material" );
   } else if ( m_module_spec->findBlock("materialIndex") ){
     int indx;
     m_module_spec->get("materialIndex", indx);
-    matl = d_sharedState->getMaterial(indx);
+    matl = d_materialManager->getMaterial(indx);
   } else {
-    matl = d_sharedState->getMaterial(0);
+    matl = d_materialManager->getMaterial(0);
   }
 
   int matl_index = matl->getDWIndex();
@@ -153,7 +155,7 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
                                    notUsed);
 
   bool getExtraInputs = true;
-  d_radiometer->problemSetup(rad_ps, rad_ps, grid, d_sharedState, getExtraInputs);
+  d_radiometer->problemSetup(rad_ps, rad_ps, grid, d_materialManager, getExtraInputs);
   
   if(!d_output->isLabelSaved( "VRFlux" ) ){
     throw ProblemSetupException("\nERROR:  You've activated the radiometer but your not saving the variable (VRFlux)\n",__FILE__, __LINE__);

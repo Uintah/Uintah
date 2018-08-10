@@ -29,7 +29,7 @@
 
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/SolverInterface.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/CellInformationP.h>
@@ -70,7 +70,7 @@ public:
 
   //______________________________________________________________________
   // Set up the problem specification database
-  void problemSetup(ProblemSpecP& params,SimulationStateP& state);
+  void problemSetup(ProblemSpecP& params,MaterialManagerP& state);
 
 
   //______________________________________________________________________

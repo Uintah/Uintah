@@ -26,8 +26,8 @@
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -42,11 +42,11 @@ Module::Module()
 }
 
 Module::Module(ProblemSpecP     & prob_spec,
-               SimulationStateP & sharedState,
+               MaterialManagerP & materialManager,
                Output           * dataArchiver,
                DataArchive      * dataArchive )
 {
-  d_sharedState  = sharedState;
+  d_materialManager  = materialManager;
   d_dataArchiver = dataArchiver;
   d_dataArchive  = dataArchive;
 
@@ -101,12 +101,12 @@ void Module::createMatlSet(const ProblemSpecP & ps,
   //  <materialIndex> 1 </materialIndex>
   ProblemSpecP module_ps = ps;
 
-  int numMatls = d_sharedState->getNumMatls();
+  int numMatls = d_materialManager->getNumMatls();
 
   int defaultMatlIndex = 0;
   
   if( module_ps->findBlock("material") ){
-    Material* matl = d_sharedState->parseAndLookupMaterial( module_ps, "material" );
+    Material* matl = d_materialManager->parseAndLookupMaterial( module_ps, "material" );
     defaultMatlIndex = matl->getDWIndex();
   } 
   else if ( module_ps->findBlock("materialIndex") ){

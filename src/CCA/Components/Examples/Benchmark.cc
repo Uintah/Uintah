@@ -28,7 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
@@ -43,8 +43,8 @@ using namespace std;
 using namespace Uintah;
 
 Benchmark::Benchmark(const ProcessorGroup* myworld,
-		     const SimulationStateP sharedState)
-  : ApplicationCommon(myworld, sharedState)
+		     const MaterialManagerP materialManager)
+  : ApplicationCommon(myworld, materialManager)
 {
 
   phi_label = VarLabel::create("phi", 
@@ -70,7 +70,7 @@ void Benchmark::problemSetup(const ProblemSpecP& params,
   
   mymat_ = scinew SimpleMaterial();
   
-  m_sharedState->registerSimpleMaterial(mymat_);
+  m_materialManager->registerSimpleMaterial(mymat_);
 }
 //______________________________________________________________________
 //
@@ -82,7 +82,7 @@ void Benchmark::scheduleInitialize(const LevelP& level,
                      
   task->computes(phi_label);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -100,7 +100,7 @@ void Benchmark::scheduleComputeStableTimeStep(const LevelP& level,
                      
   task->requires(Task::NewDW, residual_label);
   task->computes(getDelTLabel(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -114,7 +114,7 @@ Benchmark::scheduleTimeAdvance( const LevelP& level,
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //

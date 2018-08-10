@@ -11,7 +11,7 @@ namespace Uintah{
 
 public:
 
-    PressureEqn( std::string task_name, int matl_index, SimulationStateP shared_state );
+    PressureEqn( std::string task_name, int matl_index, MaterialManagerP materialManager );
     ~PressureEqn();
 
     void problemSetup( ProblemSpecP& db );
@@ -39,8 +39,8 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, SimulationStateP shared_state ) : m_task_name(task_name),
-               m_matl_index(matl_index), m_state(shared_state){}
+      Builder( std::string task_name, int matl_index, MaterialManagerP materialManager ) : m_task_name(task_name),
+               m_matl_index(matl_index), m_state(materialManager){}
       ~Builder(){}
 
       PressureEqn* build()
@@ -50,7 +50,7 @@ public:
 
       std::string m_task_name;
       int m_matl_index;
-      SimulationStateP m_state;
+      MaterialManagerP m_state;
 
     };
 
@@ -80,7 +80,7 @@ private:
 
     SolverInterface* m_hypreSolver;
 
-    SimulationStateP m_sharedState;
+    MaterialManagerP m_materialManager;
 
     IntVector m_periodic_vector;
 

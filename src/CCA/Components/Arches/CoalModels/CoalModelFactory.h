@@ -4,7 +4,7 @@
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
@@ -42,13 +42,13 @@ public:
                 std::vector<std::string>   icLabelNames,
                 std::vector<std::string>   scalarLabelNames,
                 ArchesLabel   * fieldLabels,
-                SimulationStateP    sharedState,
+                MaterialManagerP    materialManager,
                 int                   qn ) :
     d_modelName( model_name ),
     d_icLabels( icLabelNames ),
     d_scalarLabels( scalarLabelNames ),
     d_fieldLabels( fieldLabels ),
-    d_sharedState( sharedState ), d_quadNode( qn ) {}
+    d_materialManager( materialManager ), d_quadNode( qn ) {}
 
   virtual ~ModelBuilder(){}
 
@@ -62,7 +62,7 @@ protected:
   std::vector<std::string>     d_icLabels;
   std::vector<std::string>     d_scalarLabels;
   ArchesLabel* d_fieldLabels;
-  SimulationStateP d_sharedState;
+  MaterialManagerP d_materialManager;
   int                d_quadNode;
 private:
 };

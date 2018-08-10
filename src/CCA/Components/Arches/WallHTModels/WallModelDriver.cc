@@ -24,7 +24,7 @@
 
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -44,13 +44,13 @@ using namespace std;
 using namespace Uintah;
 
 //_________________________________________
-WallModelDriver::WallModelDriver( SimulationStateP& shared_state ) :
-_shared_state( shared_state )
+WallModelDriver::WallModelDriver( MaterialManagerP& materialManager ) :
+_materialManager( materialManager )
 {
 
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
 
-  _matl_index = _shared_state->getArchesMaterial( 0 )->getDWIndex();
+  _matl_index = _materialManager->getMaterial( "Arches",  0 )->getDWIndex();
 
   _T_copy_label = VarLabel::create( "T_copy", CC_double );
   _True_T_Label = VarLabel::create( "true_wall_temperature", CC_double);
@@ -298,7 +298,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   task->requires( Task::OldDW, _timeStepLabel);
   task->requires( Task::OldDW, _simulationTimeLabel);
   task->requires( Task::OldDW, _delTLabel, Ghost::None, 0);
-  sched->addTask(task, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(task, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 
@@ -311,7 +311,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
                            DataWarehouse* new_dw,
                            const int time_subset )
 {
-  // int timeStep = _shared_state->getCurrentTopLevelTimeStep();
+  // int timeStep = _materialManager->getCurrentTopLevelTimeStep();
 
   timeStep_vartype timeStep;
   old_dw->get( timeStep, _timeStepLabel );
@@ -559,7 +559,7 @@ WallModelDriver::sched_copyWallTintoT( const LevelP& level, SchedulerP& sched )
   task->requires( Task::NewDW, _True_T_Label, Ghost::None, 0 );
   task->requires( Task::NewDW, _cellType_label, Ghost::None, 0 );
 
-  sched->addTask( task, level->eachPatch(), _shared_state->allArchesMaterials() );
+  sched->addTask( task, level->eachPatch(), _materialManager->allMaterials( "Arches" ) );
 
 }
 

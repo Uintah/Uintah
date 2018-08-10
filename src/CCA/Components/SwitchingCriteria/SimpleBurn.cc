@@ -66,9 +66,9 @@ SimpleBurnCriteria::~SimpleBurnCriteria()
 //
 void SimpleBurnCriteria::problemSetup(const ProblemSpecP& ps, 
                                   const ProblemSpecP& restart_prob_spec, 
-                                  SimulationStateP& state)
+                                  MaterialManagerP& state)
 {
-  d_sharedState = state;
+  d_materialManager = state;
 }
 //__________________________________
 //
@@ -91,7 +91,7 @@ void SimpleBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
 
   t->computes(d_switch_label);
 
-  sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
+  sched->addTask(t, level->eachPatch(),d_materialManager->allMaterials());
 
   if (one_matl->removeReference()){
     delete one_matl;
@@ -115,7 +115,7 @@ void SimpleBurnCriteria::switchTest(const ProcessorGroup* group,
       const Patch* patch = patches->get(p);
       printTask(patches, patch,switching_dbg,"Doing SimpleBurnCriteria::switchTest");
 
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(d_material);
+      MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM", d_material);
       int indx = mpm_matl->getDWIndex();
 
       constNCVariable<double> gmass, gTempAllMatls;

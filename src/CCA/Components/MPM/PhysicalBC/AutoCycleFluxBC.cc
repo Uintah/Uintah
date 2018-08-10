@@ -42,8 +42,8 @@ static DebugStream cout_doing("AutoCycleFluxBC", false);
 
 #define USE_FLUX_RESTRICTION
 
-AutoCycleFluxBC::AutoCycleFluxBC(SimulationStateP& shared_state, MPMFlags* mpm_flags) :
-    FluxBCModel(shared_state, mpm_flags)
+AutoCycleFluxBC::AutoCycleFluxBC(MaterialManagerP& materialManager, MPMFlags* mpm_flags) :
+    FluxBCModel(materialManager, mpm_flags)
 {
   d_flux_sign = 1.0;
   d_auto_cycle_min = mpm_flags->d_autoCycleMin;
@@ -79,7 +79,7 @@ void AutoCycleFluxBC::scheduleInitializeScalarFluxBCs(const LevelP& level, Sched
                           &AutoCycleFluxBC::countMaterialPointsPerFluxLoadCurve);
     t->requires(Task::NewDW, d_mpm_lb->pLoadCurveIDLabel, Ghost::None);
     t->computes(d_mpm_lb->materialPointsPerLoadCurveLabel, d_load_curve_index, Task::OutOfDomain);
-    sched->addTask(t, patches, d_shared_state->allMPMMaterials());
+    sched->addTask(t, patches, d_materialManager->allMaterials( "MPM" ));
 
 #if 1
     // Create a task that calculates the force to be associated with
@@ -88,7 +88,7 @@ void AutoCycleFluxBC::scheduleInitializeScalarFluxBCs(const LevelP& level, Sched
                     &AutoCycleFluxBC::initializeScalarFluxBC);
     t->requires(Task::NewDW, d_mpm_lb->materialPointsPerLoadCurveLabel,
                 d_load_curve_index, Task::OutOfDomain, Ghost::None);
-    sched->addTask(t, patches, d_shared_state->allMPMMaterials());
+    sched->addTask(t, patches, d_materialManager->allMaterials( "MPM" ));
 #endif
   }
 
@@ -107,7 +107,7 @@ void AutoCycleFluxBC::initializeScalarFluxBC(const ProcessorGroup*, const PatchS
 
   // Calculate the scalar flux at each particle
   for(int p=0;p<patches->size();p++){
-    int numMPMMatls=d_shared_state->getNumMPMMatls();
+    int numMPMMatls=d_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMPMMatls; m++){
       int nofSFBCs = 0;
       for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
@@ -184,7 +184,7 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
                                           DataWarehouse* new_dw)
 {
   // Get the current simulation time
-  // double simTime = d_shared_state->getElapsedSimTime();
+  // double simTime = d_materialManager->getElapsedSimTime();
 
   simTime_vartype simTime;
   old_dw->get(simTime, d_mpm_lb->simulationTimeLabel);
@@ -250,10 +250,10 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
     // Place for user defined loading scenarios to be defined,
     // otherwise pExternalForce is just carried forward.
 
-    int numMPMMatls=d_shared_state->getNumMPMMatls();
+    int numMPMMatls=d_materialManager->getNumMatls( "MPM" );
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_shared_state->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -356,10 +356,10 @@ void AutoCycleFluxBC::countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
       // Loop through the patches and count
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
-        int numMPMMatls=d_shared_state->getNumMPMMatls();
+        int numMPMMatls=d_materialManager->getNumMatls( "MPM" );
         int numPts = 0;
         for(int m = 0; m < numMPMMatls; m++){
-          MPMMaterial* mpm_matl = d_shared_state->getMPMMaterial( m );
+          MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
           int dwi = mpm_matl->getDWIndex();
 
           ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);

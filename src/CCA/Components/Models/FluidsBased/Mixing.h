@@ -68,7 +68,7 @@ WARNING
   class Mixing : public FluidsBasedModel {
   public:
     Mixing(const ProcessorGroup* myworld,
-	   const SimulationStateP& sharedState,
+	   const MaterialManagerP& materialManager,
 	   const ProblemSpecP& params);
     
     virtual ~Mixing();

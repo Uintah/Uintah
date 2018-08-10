@@ -45,11 +45,11 @@ namespace Uintah{
   class Builder : public NonlinearSolver::NLSolverBuilder{
 
   public:
-    Builder( SimulationStateP& sharedState,
+    Builder( MaterialManagerP& materialManager,
              const ProcessorGroup* myWorld,
              SolverInterface* solver,
              const ApplicationCommon* arches ) :
-             m_sharedState(sharedState),
+             m_materialManager(materialManager),
              m_myWorld(myWorld),
              m_solver(solver),
              m_arches(arches)
@@ -57,7 +57,7 @@ namespace Uintah{
      ~Builder(){}
 
      KokkosSolver* build(){
-       return scinew KokkosSolver( m_sharedState,
+       return scinew KokkosSolver( m_materialManager,
                                    m_myWorld,
                                    m_solver,
                                    m_arches );
@@ -65,14 +65,14 @@ namespace Uintah{
 
   private:
 
-    SimulationStateP& m_sharedState;
+    MaterialManagerP& m_materialManager;
     const ProcessorGroup* m_myWorld;
     SolverInterface* m_solver;
     const ApplicationCommon* m_arches;
 
   };
 
-  KokkosSolver( SimulationStateP& sharedState,
+  KokkosSolver( MaterialManagerP& materialManager,
                 const ProcessorGroup* myworld,
                 SolverInterface* solver,
                 const ApplicationCommon* arches );
@@ -85,7 +85,7 @@ namespace Uintah{
 
   /** @brief Input file interface. **/
   void problemSetup( const ProblemSpecP& input_db,
-                     SimulationStateP& state,
+                     MaterialManagerP& state,
                      GridP& grid );
 
   /** @brief Solve the nonlinear system. (also does some actual computations) **/
@@ -148,7 +148,7 @@ namespace Uintah{
       return 1;
     }
 
-    SimulationStateP& m_sharedState;
+    MaterialManagerP& m_materialManager;
 
     std::map<std::string,std::shared_ptr<TaskFactoryBase> > m_task_factory_map;
 

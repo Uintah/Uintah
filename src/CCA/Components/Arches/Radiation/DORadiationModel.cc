@@ -38,7 +38,7 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/MiscMath.h>

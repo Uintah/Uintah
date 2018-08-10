@@ -44,9 +44,9 @@ None::~None()
 
 void None::problemSetup(const ProblemSpecP& ps, 
                         const ProblemSpecP& restart_prob_spec, 
-                        SimulationStateP& state)
+                        MaterialManagerP& state)
 {
-  d_sharedState = state;
+  d_materialManager = state;
 }
 
 void None::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
@@ -56,7 +56,7 @@ void None::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   Task* t = scinew Task("switchTest", this, &None::switchTest);
 
   t->computes(d_switch_label);
-  sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
+  sched->addTask(t, level->eachPatch(),d_materialManager->allMaterials());
 }
 
 

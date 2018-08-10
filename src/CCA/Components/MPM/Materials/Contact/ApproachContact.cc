@@ -29,8 +29,8 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
@@ -48,7 +48,7 @@ using namespace std;
 
 
 ApproachContact::ApproachContact(const ProcessorGroup* myworld,
-                                 ProblemSpecP& ps,SimulationStateP& d_sS,
+                                 ProblemSpecP& ps,MaterialManagerP& d_sS,
                                  MPMLabel* Mlb,MPMFlags* MFlag)
   : Contact(myworld, Mlb, MFlag, ps)
 {
@@ -58,7 +58,7 @@ ApproachContact::ApproachContact(const ProcessorGroup* myworld,
   ps->require("mu",d_mu);
   ps->get("volume_constraint",d_vol_const);
 
-  d_sharedState = d_sS;
+  d_materialManager = d_sS;
 
   if(flag->d_8or27==8){
     NGP=1;
@@ -93,7 +93,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 {
   Ghost::GhostType  gnone = Ghost::None;
 
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = d_materialManager->getNumMatls( "MPM" );
   ASSERTEQ(numMatls, matls->size());
 
   // Need access to all velocity fields at once
@@ -277,7 +277,7 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
 {
   Ghost::GhostType  gnone = Ghost::None;
 
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = d_materialManager->getNumMatls( "MPM" );
   ASSERTEQ(numMatls, matls->size());
 
   // Need access to all velocity fields at once, so store in
@@ -446,7 +446,7 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
     // This converts frictional work into a temperature rate
     for(int m=0;m<matls->size();m++){
       if(!d_matls.requested(m)) continue;
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
       double c_v = mpm_matl->getSpecificHeat();
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
@@ -467,20 +467,16 @@ void ApproachContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   Task * t = scinew Task("ApproachContact::exMomInterpolated", 
                       this, &ApproachContact::exMomInterpolated);
 
-  Ghost::GhostType  gp;
-  int ngc_p;
-  d_sharedState->getParticleGhostLayer(gp, ngc_p);
-
   MaterialSubset* z_matl = scinew MaterialSubset();
   z_matl->add(0);
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->pXLabel,                 gp, ngc_p);
-  t->requires(Task::OldDW, lb->pVolumeLabel,            gp, ngc_p);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gp, ngc_p);
-  t->requires(Task::OldDW, lb->pSizeLabel,              gp, ngc_p);
+  t->requires(Task::OldDW, lb->pXLabel,                 flag->d_particle_ghost_type, flag->d_particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pVolumeLabel,            flag->d_particle_ghost_type, flag->d_particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,flag->d_particle_ghost_type, flag->d_particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pSizeLabel,              flag->d_particle_ghost_type, flag->d_particle_ghost_layer);
   t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,            Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl, Ghost::None);

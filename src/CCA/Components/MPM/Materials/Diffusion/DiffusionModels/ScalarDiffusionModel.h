@@ -30,7 +30,7 @@
 
 #include <Core/Grid/Level.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -56,7 +56,7 @@ namespace Uintah {
   public:
     
               ScalarDiffusionModel(ProblemSpecP     & ps,
-                                   SimulationStateP & sS,
+                                   MaterialManagerP & sS,
                                    MPMFlags         * Mflag,
                                    std::string        diff_type);
     virtual  ~ScalarDiffusionModel();
@@ -191,7 +191,7 @@ namespace Uintah {
 
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
-    SimulationStateP d_sharedState;
+    MaterialManagerP d_materialManager;
     ConductivityEquation* d_conductivity_equation;
 
     int NGP, NGN;

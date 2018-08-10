@@ -30,7 +30,7 @@
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -141,6 +141,9 @@ WARNING
     virtual void scheduleRestartInitialize( const LevelP     & level,
                                                   SchedulerP & scheduler ) = 0;
 
+    // Used by the switcher
+    virtual void setupForSwitching() = 0;
+    
     // restartInitialize() is called once and only once if and when a
     // simulation is restarted.  This allows the simulation component
     // to handle initializations that are necessary when a simulation
@@ -260,7 +263,7 @@ WARNING
     
     // Access methods for member classes.
     virtual SimulationTime * getSimulationTime() const = 0;
-    virtual SimulationStateP getSimulationStateP() const = 0;
+    virtual MaterialManagerP getMaterialManagerP() const = 0;
 
     // Application stats
     enum ApplicationStatsEnum {

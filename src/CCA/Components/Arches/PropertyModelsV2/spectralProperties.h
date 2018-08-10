@@ -2,8 +2,8 @@
 #define Uintah_Component_Arches_spectralProperties_h
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 // SEE PROPTEMPLATE.CC FOR INSTRUCTIONS

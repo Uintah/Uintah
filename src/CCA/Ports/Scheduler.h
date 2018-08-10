@@ -32,7 +32,7 @@
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Task.h>
@@ -98,7 +98,7 @@ class Scheduler : public UintahParallelPort {
     virtual ApplicationInterface *getApplication() = 0;
   
     virtual void problemSetup( const ProblemSpecP     & prob_spec
-                                               , const SimulationStateP & state
+                                               , const MaterialManagerP & state
                                                ) = 0;
 
     virtual void checkMemoryUse( unsigned long & memUsed

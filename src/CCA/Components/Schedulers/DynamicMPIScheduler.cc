@@ -70,7 +70,7 @@ DynamicMPIScheduler::~DynamicMPIScheduler()
 //
 void
 DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
-                                 , const SimulationStateP& state
+                                 , const MaterialManagerP& state
                                  )
 {
   std::string taskQueueAlg = "";
@@ -118,7 +118,7 @@ DynamicMPIScheduler::createSubScheduler()
 {
   DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, this );
   newsched->setComponents( this );
-  newsched->m_sharedState = m_sharedState;
+  newsched->m_materialManager = m_materialManager;
   return newsched;
 }
 

@@ -53,7 +53,7 @@ GENERAL INFORMATION
 class ICEMaterial : public Material {
   public:
     ICEMaterial(ProblemSpecP&, 
-                SimulationStateP& sharedState, const bool isRestart);
+                MaterialManagerP& materialManager, const bool isRestart);
 
     ~ICEMaterial();
 

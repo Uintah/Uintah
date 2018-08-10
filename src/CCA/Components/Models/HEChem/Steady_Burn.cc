@@ -40,7 +40,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -66,10 +66,10 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 const double Steady_Burn::EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton method */
 
 Steady_Burn::Steady_Burn(const ProcessorGroup* myworld, 
-                         const  SimulationStateP& sharedState,
+                         const  MaterialManagerP& materialManager,
                          const ProblemSpecP& params,
                          const ProblemSpecP& prob_spec)
-  : HEChemModel(myworld, sharedState),
+  : HEChemModel(myworld, materialManager),
     d_params(params), d_prob_spec(prob_spec)
 { 
   mymatls = 0;
@@ -113,8 +113,8 @@ Steady_Burn::~Steady_Burn(){
 void Steady_Burn::problemSetup(GridP&,
                                 const bool isRestart) {
   ProblemSpecP SB_ps = d_params->findBlock("Steady_Burn");
-  matl0 = m_sharedState->parseAndLookupMaterial(SB_ps, "fromMaterial");
-  matl1 = m_sharedState->parseAndLookupMaterial(SB_ps, "toMaterial");  
+  matl0 = m_materialManager->parseAndLookupMaterial(SB_ps, "fromMaterial");
+  matl1 = m_materialManager->parseAndLookupMaterial(SB_ps, "toMaterial");  
   
   SB_ps->require("IdealGasConst",     R );
   SB_ps->require("PreExpCondPh",      Ac);
@@ -256,7 +256,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
   
   // define material subsets  
-  const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* all_matls = m_materialManager->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   
   MaterialSubset* one_matl     = scinew MaterialSubset();
@@ -340,7 +340,7 @@ void Steady_Burn::computeNumPPC(const ProcessorGroup*,
       patch->findCell(px[idx],c);
       pFlag[c] += 1.0;
     }    
-    setBC(pFlag, "zeroNeumann", patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(pFlag, "zeroNeumann", patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
   }
  
 }
@@ -368,9 +368,6 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
   
   Ghost::GhostType  gn  = Ghost::None;    
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gp;
-  int ngc_p;
-  m_sharedState->getParticleGhostLayer(gp, ngc_p);
   
   /* Patch Iteration */
   for(int p=0;p<patches->size();p++){
@@ -383,7 +380,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
 
     /* reactant */
-    new_dw->getModifiable(mass_src_0,     Ilb->modelMass_srcLabel,  m0, patch);  
+    new_dw->getModifiable(mass_src_0,     Ilb->modelMass_srcLabel,  m0, patch);
     new_dw->getModifiable(momentum_src_0, Ilb->modelMom_srcLabel,   m0, patch); 
     new_dw->getModifiable(energy_src_0,   Ilb->modelEng_srcLabel,   m0, patch);
     new_dw->getModifiable(sp_vol_src_0,   Ilb->modelVol_srcLabel,   m0, patch);
@@ -419,11 +416,11 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     surfTemp.initialize(0.0);
 
     /* All Material Data */
-    int numAllMatls = m_sharedState->getNumMatls();
+    int numAllMatls = m_materialManager->getNumMatls();
     std::vector<constCCVariable<double> >  vol_frac_CC(numAllMatls);
     std::vector<constCCVariable<double> >  temp_CC(numAllMatls);
     for (int m = 0; m < numAllMatls; m++) {
-      Material* matl = m_sharedState->getMaterial(m);
+      Material* matl = m_materialManager->getMaterial(m);
       int indx = matl->getDWIndex();
       old_dw->get(temp_CC[m],       MIlb->temp_CCLabel,    indx, patch, gac, 1);
       new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel, indx, patch, gac, 1);
@@ -530,8 +527,8 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     }  // cell iterator
 
     /*  set symetric BC  */
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep); 
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_materialManager, m1, new_dw, isNotInitialTimeStep); 
   }
   //__________________________________
   //save total quantities

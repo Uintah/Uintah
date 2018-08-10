@@ -43,7 +43,7 @@ namespace Uintah {
   public:
     ErosionModel( ProblemSpecP& ps,
                   MPMFlags* Mflags,
-                  SimulationState* sharedState  );
+                  MaterialManager* materialManager  );
 
     ~ErosionModel();
 
@@ -92,7 +92,7 @@ namespace Uintah {
   private:
     std::string d_algoName = "none";
     
-    SimulationState* d_sharedState;
+    MaterialManager* d_materialManager;
     double           d_charTime;
     MPMLabel*        d_lb;
     

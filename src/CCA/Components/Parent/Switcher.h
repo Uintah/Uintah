@@ -41,7 +41,7 @@ namespace Uintah {
   public:
 
     Switcher( const ProcessorGroup* myworld,
-	      const SimulationStateP sharedState,
+	      const MaterialManagerP materialManager,
 	      ProblemSpecP& ups, const std::string & uda );
     
     virtual ~Switcher();
@@ -108,7 +108,7 @@ namespace Uintah {
                               DataWarehouse  * new_dw);
                     
     void readSwitcherState( const ProblemSpecP&,
-                                  SimulationStateP& state );
+                                  MaterialManagerP& state );
 
     ProblemSpecP d_master_ups;
 

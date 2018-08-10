@@ -29,7 +29,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/MiscMath.h>
@@ -59,7 +59,7 @@ static DebugStream cout_dbg("LODI_DBG_COUT", false);
             sets which boundaries are lodi
  ______________________________________________________________________  */
 bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
-                         SimulationStateP& sharedState,
+                         MaterialManagerP& materialManager,
                          Lodi_globalVars* global)
 {
   //__________________________________
@@ -137,7 +137,7 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
     lodi->getWithDefault("Li_scale",    global->Li_scale, 1.0);
     
     ProblemSpecP params = lodi;
-    Material* matl = sharedState->parseAndLookupMaterial(params, "material");
+    Material* matl = materialManager->parseAndLookupMaterial(params, "material");
     global->iceMatl_indx = matl->getDWIndex();
       
     //__________________________________
@@ -151,12 +151,12 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
       }
     }
     
-    int numICEMatls = sharedState->getNumICEMatls();
+    int numICEMatls = materialManager->getNumMatls( "ICE" );
     bool foundMatl = false;
     ostringstream indicies;
     
     for(int m = 0; m < numICEMatls; m++){
-      ICEMaterial* matl = sharedState->getICEMaterial( m );
+      ICEMaterial* matl = (ICEMaterial*) materialManager->getMaterial( "ICE",  m );
       int indx = matl->getDWIndex();
       indicies << " " << indx ;
       if(indx == global->iceMatl_indx){
@@ -327,14 +327,14 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
                           const Patch* patch,
                           const string& where,
                           const int matl_indx,
-                          SimulationStateP& sharedState,
+                          MaterialManagerP& materialManager,
                           bool& setLodiBcs,
                           Lodi_localVars* lv,
                           Lodi_globalVars* gv)
 {
   cout_doing << "preprocess_Lodi_BCs on patch "<<patch->getID()<< endl;
 
-  Material* matl = sharedState->getMaterial(gv->iceMatl_indx);
+  Material* matl = materialManager->getMaterial(gv->iceMatl_indx);
   int indx = matl->getDWIndex();  
   Ghost::GhostType  gn  = Ghost::None;
   
@@ -437,7 +437,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     }
 
     computeLi(lv->Li, lv->rho_CC,  lv->press_CC, lv->vel_CC, lv->speedSound, 
-              patch, new_dw, sharedState, indx,gv, false);
+              patch, new_dw, materialManager, indx,gv, false);
               
     if(gv->saveLiTerms  && where == "Advection"){
       CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
@@ -478,14 +478,14 @@ VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face)
  ______________________________________________________________________  */
 bool is_LODI_face(const Patch* patch,
                   Patch::FaceType face,
-                  SimulationStateP& sharedState)
+                  MaterialManagerP& materialManager)
 {
   bool is_lodi_face = false;
-  int numMatls = sharedState->getNumICEMatls();
+  int numMatls = materialManager->getNumMatls( "ICE" );
   bool lodi_pressure =    patch->haveBC(face,0,"LODI","Pressure");
   
   for (int m = 0; m < numMatls; m++ ) {
-    ICEMaterial* ice_matl = sharedState->getICEMaterial(m);
+    ICEMaterial* ice_matl = (ICEMaterial*) materialManager->getMaterial( "ICE", m);
     int indx= ice_matl->getDWIndex();
 
     bool lodi_density  =    patch->haveBC(face,indx,"LODI","Density");
@@ -791,7 +791,7 @@ void computeLi(std::vector<CCVariable<Vector> >& L,
                const CCVariable<double>& speedSound,              
                const Patch* patch,
                DataWarehouse* new_dw,
-               SimulationStateP& sharedState,
+               MaterialManagerP& materialManager,
                const int indx,
                const Lodi_globalVars* user_inputs,
                const bool recursion)                              
@@ -818,7 +818,7 @@ void computeLi(std::vector<CCVariable<Vector> >& L,
   for (iter  = bf.begin(); iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
     
-    if (is_LODI_face(patch,face, sharedState) ) {
+    if (is_LODI_face(patch,face, materialManager) ) {
       cout_doing << "   computing LI \t\t " << patch->getFaceName(face) 
                << " patch " << patch->getID()<< " matl_indx " << indx << endl;
       //_____________________________________
@@ -1053,7 +1053,7 @@ int FaceVel_LODI(const Patch* patch,
                  CCVariable<Vector>& vel_CC,                 
                  Lodi_localVars* lv,
                  const Vector& DX,
-                 SimulationStateP& sharedState)                     
+                 MaterialManagerP& materialManager)                     
 
 {
   cout_doing << "   FaceVel_LODI  \t\t" << patch->getFaceName(face) << endl;
@@ -1171,7 +1171,7 @@ int FaceTemp_LODI(const Patch* patch,
              CCVariable<double>& temp_CC,
              Lodi_localVars* lv, 
              const Vector& DX,
-             SimulationStateP& sharedState)
+             MaterialManagerP& materialManager)
 {
   cout_doing << "   FaceTemp_LODI \t\t" <<patch->getFaceName(face)<< endl; 
   
@@ -1281,7 +1281,7 @@ ______________________________________________________________________  */
 int FacePress_LODI(const Patch* patch,
                     CCVariable<double>& press_CC,
                     std::vector<CCVariable<double> >& rho_micro,
-                    SimulationStateP& sharedState, 
+                    MaterialManagerP& materialManager, 
                     Patch::FaceType face,
                     Lodi_localVars* lv)
 {
