@@ -43,7 +43,7 @@ namespace Uintah {
     static UintahParallelComponent* create(ProblemSpecP& ps,
                                            const ProcessorGroup* world, 
                                            const MaterialManagerP materialManager,
-                                           const std::string uda);
+                                           const std::string & uda);
   };
 } // End namespace Uintah
 
