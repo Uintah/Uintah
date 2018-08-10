@@ -118,13 +118,12 @@
 #include <string>
 
 using namespace Uintah;
-using namespace std;
 
 UintahParallelComponent *
 ApplicationFactory::create( ProblemSpecP& prob_spec,
 			    const ProcessorGroup* myworld, 
 			    const MaterialManagerP materialManager,
-			    string uda )
+			    std::string uda )
 {
   bool doAMR = false;
 
@@ -142,7 +141,7 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
     doAMR = true;
   }
 
-  string sim_comp;
+  std::string sim_comp;
 
   ProblemSpecP sim_ps = prob_spec->findBlock("SimulationComponent");
   if( sim_ps ) {
@@ -160,7 +159,7 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
    
   proc0cout << "Application Component: \t'" << sim_comp << "'\n";
 
-  string turned_on_options;
+  std::string turned_on_options;
 
   //----------------------------
 
