@@ -456,7 +456,7 @@ SimulationController::restartArchiveSetup( void )
     if (m_restart_index == (int) indices.size()) {
       // timestep not found
       std::ostringstream message;
-      message << "Time step " << m_restart_timestep << " not found";
+      message << "Restart time step " << m_restart_timestep << " not found";
       throw InternalError(message.str(), __FILE__, __LINE__);
     }
 
@@ -464,6 +464,9 @@ SimulationController::restartArchiveSetup( void )
     // because problemSetup() creates VarLabels the DataArchive needs.
     m_restart_ps =
       m_restart_archive->getTimestepDocForComponent( m_restart_index );
+
+    proc0cout << "Restart directory: \t'" << restartFromDir.getName() << "'\n"
+              << "Restart time step: \t" << m_restart_timestep << "\n";
   }
 }
 
