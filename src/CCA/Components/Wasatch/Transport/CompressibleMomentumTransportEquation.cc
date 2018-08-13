@@ -499,7 +499,7 @@ namespace WasatchCore{
         return Expr::Tag( exprTag.name() + "_STATE_NONE_" + description + "_bc_" + myBndSpec.name + "_" + direction + "dir", Expr::STATE_NONE );
       };
       
-      const bool isNormal = is_normal_to_boundary(this->staggered_location(), myBndSpec.face);
+//      const bool isNormal = is_normal_to_boundary(this->staggered_location(), myBndSpec.face);
 
       //============================================================================================
       // NSCBC TREATMENT

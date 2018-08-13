@@ -566,7 +566,6 @@ namespace WasatchCore {
            if( doZ_ ){
              const VolFieldT& zvel = zvel_->field_ref();
              const ZFace& strainzy = strainzy_->field_ref();
-             const YFace& strainyz = strainyz_->field_ref();
              const ZFace& strainzz = strainzz_->field_ref();
              result <<= result - (*zFluxInterpOp_) ( strainzy * (*ddz_)(yvel) + (strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*ddz_)(zvel) );
            }

@@ -1774,8 +1774,7 @@ namespace WasatchCore{
                                                Uintah::SchedulerP& sched )
   {
     GraphHelper* const gh = graphCategories_[ ADVANCE_SOLUTION ];
-    Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
-    
+
     if( adaptors_.size() == 0 && gh->rootIDs.empty() ) return; // no equations registered.
     
     for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
