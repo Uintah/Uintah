@@ -35,6 +35,13 @@
 
 namespace Uintah {
 
+//#if defined( UINTAH_ENABLE_KOKKOS )
+//typedef Kokkos::View<IntVector*> BC_List;
+//#else
+template<typename myIntVector>
+using BC_List= std::vector<myIntVector>& ;
+//#endif
+
 class BlockRange
 {
 public:
@@ -80,6 +87,21 @@ void serial_for( BlockRange const & r, const Functor & f )
     f(i,j,k);
   }}}
 }
+
+template <typename myIntVector, typename Functor>
+inline void
+parallel_for(BC_List<myIntVector> iterSpace, const unsigned int bc_size, const Functor & functor)
+//parallel_for( std::vector<IntVector> iterSpace)
+{
+  for (unsigned int iblock=0; iblock<bc_size; ++iblock) {
+    const int i =  iterSpace[iblock][0];
+    const int j =  iterSpace[iblock][1];
+    const int k =  iterSpace[iblock][2];
+    functor(i,j,k);
+  }
+}
+
+
 
 #if defined( UINTAH_ENABLE_KOKKOS )
 

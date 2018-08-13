@@ -44,7 +44,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
-    Uintah::Iterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
+    Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
     IntVector iDir = patch->faceDirection( i_bc->second.face );
     Patch::FaceType face = i_bc->second.face;
     BndTypeEnum my_type = i_bc->second.type;
@@ -75,23 +75,36 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     if ( my_type == OUTLET || my_type == PRESSURE ){
       // This applies the mostly in (pressure)/mostly out (outlet) boundary condition
-      for (cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+      parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+        int i_f = i + move_to_face[0]; // cell on the face
+        int j_f = j + move_to_face[1];
+        int k_f = k + move_to_face[2];
+
+        int im = i - iDir[0];// first interior cell
+        int jm = j - iDir[1];
+        int km = k - iDir[2];
+
+        int ipp = i_f + iDir[0];// extra cell face in the last index (mostly outwardly position) 
+        int jpp = j_f + iDir[1];
+        int kpp = k_f + iDir[2];
+
+
 
         IntVector cface = *cell_iter + move_to_face; // cell on the face
         IntVector cint = *cell_iter - iDir; // first interior cell
         IntVector cef = cface + iDir; // extra cell face in the last index (most outwardly position)
 
-        if ( sign * (*var)[cface] > possmall ){
+        if ( sign * (*var)(i_f,j_f,k_f) > possmall ){
           // du/dx = 0
-          (*var)[cface] = (*var)[cint];
+          (*var)(i_f,j_f,k_f)= (*var)(im,jm,km);
         } else {
           // shut off the hatted value to encourage the mostly-* condition
-          (*var)[cface] = 0.0;
+          (*var)(i_f,j_f,k_f) = 0.0;
         }
 
-        (*var)[cef] = (*var)[cface];
+        (*var)(ipp,jpp,kpp) = (*var)(i_f,j_f,k_f);
 
-      }
+      });
     }
   }
 }

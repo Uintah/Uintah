@@ -464,12 +464,11 @@ private:
       //Get the iterator
 
       if ( on_this_patch ){
-        Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+        Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
         
-          for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-            IntVector c = *cell_iter;
-            phi_unscaled[c] = phi[c] * (ieqn->second).constant*vol_fraction[c] ;
-          }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            phi_unscaled(i,j,k) = phi(i,j,k) * (ieqn->second).constant*vol_fraction(i,j,k) ;
+          });
         }
     }
   }

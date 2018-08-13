@@ -439,7 +439,7 @@ void WBCHelper::add_auxiliary_boundary_condition(const std::string& srcVarName,
 
 //------------------------------------------------------------------------------------------------
 
-Uintah::Iterator&
+Uintah::ListOfCellsIterator&
 WBCHelper::get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
                                       const int& patchID )
 {
@@ -482,10 +482,16 @@ void WBCHelper::add_boundary_mask( const BoundaryIterators& myIters,
   if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
     DOUT( dbgbc_new,"BC " << bndName << " already exists in list of Iterators. Adding new iterator for " << bndName << " on patchID " << patchID << std::endl )
     (*bndNamePatchIDMaskMap_.find(bndName)).second.insert(pair<int, BoundaryIterators>(patchID, myIters));
+    //(*bndNamePatchIDMaskMap_.find(bndName)).second.emplace( patchID, myIters );
+    //(*bndNamePatchIDMaskMap_.find(bndName)).second.emplace( piecewise_construct, make_tuple(patchID), make_tuple(myIters) );
   } else {
     DOUT( dbgbc_new, "BC " << bndName << " does NOT Exist in list of Iterators. Adding new iterator for " << bndName << " on patchID " << patchID << std::endl)
     PatchIDBndItrMapT patchIDIterMap;
-    patchIDIterMap.insert(pair<int, BoundaryIterators>(patchID, myIters));
+    //patchIDIterMap.insert(pair<int, BoundaryIterators>(patchID, myIters));
+
+    patchIDIterMap.emplace( patchID, myIters );
+    patchIDIterMap.emplace( piecewise_construct, make_tuple(patchID), make_tuple(myIters) );
+
     bndNamePatchIDMaskMap_.insert( pair< string, PatchIDBndItrMapT >(bndName, patchIDIterMap ) );
   }
 }
@@ -606,61 +612,60 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
               Uintah::Iterator bndIter; // allocate iterator
               // get the iterator for the extracells for this child
               thisGeom->getCellFaceIterator(bndIter);
-
-              //
-
-              ListOfCellsIterator list_bndExtraCells;
-              ListOfCellsIterator list_bndFaceCells;
-
+              //////////////////Estimate the BC container size///////////////////////
+              // This method is sometimes overestimates by 4 due to double counting//
+              // the corners.                                                      //
+              ///////////////////////////////////////////////////////////////////////
+                int i_size=0; 
               Uintah::Iterator iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xminus, Uintah::Patch::ExtraCells );
-              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
-                list_bndExtraCells.add(*iterLimits);
-              }
+                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
                                iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xplus, Uintah::Patch::ExtraCells );
-              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
-                list_bndExtraCells.add(*iterLimits);
-              }
+                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
                                iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yminus, Uintah::Patch::ExtraCells );
-              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
-                list_bndExtraCells.add(*iterLimits);
-              }
+                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
                                iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yplus, Uintah::Patch::ExtraCells );
-              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
-                list_bndExtraCells.add(*iterLimits);
-              }
+                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
                                iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zminus, Uintah::Patch::ExtraCells );
-              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
-                list_bndExtraCells.add(*iterLimits);
-              }
+                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
                                iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zplus, Uintah::Patch::ExtraCells );
-              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
-                list_bndExtraCells.add(*iterLimits);
+                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+              /////////////END GET BC size ////////////////////
+              
+              
+              ///////////////////////////////////////////////////////////////////////
+              //////////////////Populate BC container ///////////////////////////////
+              ///////////////////////////////////////////////////////////////////////
+              ListOfCellsIterator list_bndExtraCells(i_size+bndIter.size());
+              ListOfCellsIterator list_bndFaceCells(i_size+bndIter.size());
+              for ( bndIter.reset(); !bndIter.done(); bndIter++){   //no parallel_for needed
+                list_bndFaceCells.add(*bndIter);
               }
 
-              for ( bndIter.reset(); !bndIter.done(); bndIter++){
-                int flag = 0;
-                for ( list_bndExtraCells.reset(); !list_bndExtraCells.done(); list_bndExtraCells++ ){
-                  if( *list_bndExtraCells == *bndIter ){
-                    flag = 1;
-                    break;
-                  }
-                }
-                if ( flag == 0 ){
-                    list_bndFaceCells.add(*bndIter);
-                }
-              }
+              iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xminus, Uintah::Patch::ExtraCells);
+                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xplus, Uintah::Patch::ExtraCells );
+                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yminus, Uintah::Patch::ExtraCells );
+                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yplus, Uintah::Patch::ExtraCells );
+                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zminus, Uintah::Patch::ExtraCells );
+                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zplus, Uintah::Patch::ExtraCells );
+                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+              ////////////////////END POPULATE BC CONTAINER//////////////////////////
+
 
               bndIter = list_bndFaceCells;
-
               //
 
-              BoundaryIterators myIters;
+              BoundaryIterators myIters(i_size+bndIter.size());
               DOUT( dbgbc_new, " Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl);
               pack_uintah_iterator(face, patch, bndIter, myIters); // store uintah iterator
               // store a pointer to the list of particle index that are near this boundary.
               //myIters.particleIdx = Uintah::ParticlesHelper::get_boundary_particles(bndName,patchID);
               add_boundary_mask( myIters, bndName, patchID );
-
+               
               //__________________________________________________________________________________
               // Now, each BCGeomObject has BCData associated with it. This BCData contains the list
               // of variables and types (Dirichlet, etc...), and values that the user specified
@@ -772,7 +777,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                 // get the iterator for the extracells for this child
                 thisGeom->getCellFaceIterator(bndIter);
 
-                BoundaryIterators myIters;
+                BoundaryIterators myIters(bndIter.size());
                 DOUT( dbgbc_new, " Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl );
                 pack_uintah_iterator(face_side, patch, bndIter, myIters); // store uintah iterator
                 // store a pointer to the list of particle index that are near this boundary.
@@ -958,10 +963,10 @@ void WBCHelper::computeBCAreaHelper( const ProcessorGroup*,
           }
 
           //get the Uintah Iterator:
-          Uintah::Iterator& grid_iter = get_uintah_extra_bnd_mask( bndmap_iter->second,
+          Uintah::ListOfCellsIterator& grid_iter = get_uintah_extra_bnd_mask( bndmap_iter->second,
                                                                    patch->getID() );
           double area = 0.;
-          for ( grid_iter.reset(); !grid_iter.done(); grid_iter++ ){
+          for ( grid_iter.reset(); !grid_iter.done(); grid_iter++ ){ // No parallel_for needed
 
             //exclude edge cells
             if ( (*grid_iter)[i] != -1 && (*grid_iter)[i] != hi[i] ){

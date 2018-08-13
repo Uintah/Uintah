@@ -331,7 +331,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
 
     if ( on_this_patch ){
       //Get the iterator
-      Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+      Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
       //std::string facename = i_bc->second.name;
       IntVector iDir = patch->faceDirection( i_bc->second.face );
 
@@ -351,32 +351,31 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
             constCCVariable<double>& vol_fraction = 
             tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
           
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              un_var[c] = var[c]/(rho[c]+ SMALL)*vol_fraction[c] ;
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              un_var(i,j,k) = var(i,j,k)/(rho(i,j,k)+ SMALL)*vol_fraction(i,j,k);
+            });
           }
          // unscaling only DQMOM
           for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
             Scaling_info info = ieqn->second;
             T&  un_var = tsk_info->get_uintah_field_add<T>(info.unscaled_var);
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              un_var[c] *= info.constant;
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              un_var(i,j,k) *= info.constant;
+            });
           }
         } else {
           for (int ieqn = istart; ieqn < iend; ieqn++ ){
             T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
             CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]);
           
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              IntVector cp = *cell_iter - iDir;
-              const double rho_inter = 0.5 * (rho[c] + rho[cp]);
-              const double phi_inter = 0.5 * (un_var[c] + un_var[cp]);
-              var[c] = 2.0*rho_inter*phi_inter - un_var[cp]*rho[cp];
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              int ip=i - iDir[0];
+              int jp=j - iDir[1];
+              int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k) + rho(ip,jp,kp));
+              const double phi_inter = 0.5 * (un_var(i,j,k) + un_var(ip,jp,kp));
+              var(i,j,k) = 2.0*rho_inter*phi_inter - un_var(ip,jp,kp)*rho(ip,jp,kp);
+            });
           } 
         }
       
@@ -390,21 +389,23 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
       
             if ( dot == -1 ){
             // face (-) in Staggered Variablewe set BC at 0
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              IntVector cp = *cell_iter - iDir;
-              const double rho_inter = 0.5 * (rho[c]+rho[cp]);
-              var[cp] = un_var[cp]*rho_inter; // BC
-              var[c]  = var[cp]; // extra cell
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              const int ip=i - iDir[0];
+              const int jp=j - iDir[1];
+              const int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
+              var(ip,jp,kp) = un_var(ip,jp,kp)*rho_inter; // BC
+              var(i,j,k)  = var(ip,jp,kp); // extra cell
+            });
           } else {
          // face (+) in Staggered Variablewe set BC at extra cell
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              IntVector cp = *cell_iter - iDir;
-              const double rho_inter = 0.5 * (rho[c]+rho[cp]);
-              var[c] = un_var[c]*rho_inter; // BC and extra cell value
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              const int ip=i - iDir[0];
+              const int jp=j - iDir[1];
+              const int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
+              var(i,j,k) = un_var(i,j,k)*rho_inter; // BC and extra cell value
+            });
          }
          }
       } else {
@@ -416,21 +417,25 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
 
           if ( dot == -1 ){
             // face (-) in Staggered Variablewe set BC at 0
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              IntVector cp = *cell_iter - iDir;
-              const double rho_inter = 0.5 * (rho[c]+rho[cp]);
-              un_var[cp] = var[cp]/rho_inter; // BC
-              un_var[c] = un_var[cp]; // extra cell
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              const int ip=i - iDir[0];
+              const int jp=j - iDir[1];
+              const int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
+              un_var(ip,jp,kp) = var(ip,jp,kp)/rho_inter; // BC
+              un_var(i,j,k) = un_var(ip,jp,kp); // extra cell
+            });
           } else {
          // face (+) in Staggered Variablewe set BC at extra cell
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              const int ip=i - iDir[0];
+              const int jp=j - iDir[1];
+              const int kp=k - iDir[2];
               IntVector c = *cell_iter;
               IntVector cp = *cell_iter - iDir;
-              const double rho_inter = 0.5 * (rho[c]+rho[cp]);
-              un_var[c] = var[c]/rho_inter; // BC and extra cell value
-            }
+              const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
+              un_var(i,j,k) = var(i,j,k)/rho_inter; // BC and extra cell value
+            });
          }
          }
 

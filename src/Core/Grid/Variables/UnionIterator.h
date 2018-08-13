@@ -68,7 +68,7 @@ namespace Uintah {
     public:
 
     UnionIterator(Iterator iter1, Iterator iter2);
-    UnionIterator() : ListOfCellsIterator() {}
+    UnionIterator(int size) : ListOfCellsIterator(size){}
 
     std::ostream& put(std::ostream& out) const
     {
@@ -77,7 +77,9 @@ namespace Uintah {
     }
 
     private:
-
+    UnionIterator() : ListOfCellsIterator(0) {
+                 std::cout<< "this Core/Grid/Variables/unionIterator.h constructor should never be used.  \n";
+               }
 
     }; // end class UnionIterator
 
