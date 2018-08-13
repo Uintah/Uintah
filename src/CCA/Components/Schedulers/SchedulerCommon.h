@@ -100,7 +100,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual ApplicationInterface *getApplication() { return m_application; };
   
     virtual void problemSetup( const ProblemSpecP     & prob_spec,
-                               const MaterialManagerP & state );
+                               const MaterialManagerP & materialManager );
 
     virtual void doEmitTaskGraphDocs();
 

@@ -311,7 +311,7 @@ UnifiedScheduler::verifyAnyGpuActive()
 //
 void
 UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                              , const MaterialManagerP & state
+                              , const MaterialManagerP & materialManager
                               )
 {
   // Default taskReadyQueueAlg
@@ -391,7 +391,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 #endif
   }
 
-  SchedulerCommon::problemSetup(prob_spec, state);
+  SchedulerCommon::problemSetup(prob_spec, materialManager);
 
 #ifdef HAVE_CUDA
   // Now pick out the materials out of the file.  This is done with an assumption that there
@@ -740,7 +740,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   m_exec_timer.stop();
 
   // compute the net timings
-  if ( m_materialManager != nullptr ) {
+  if( d_runtimeStats ) {
 
     // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
     for (int i = 1; i < m_num_threads; ++i) {

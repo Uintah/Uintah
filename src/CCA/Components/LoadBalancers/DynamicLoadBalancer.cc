@@ -1098,9 +1098,9 @@ DynamicLoadBalancer::finalizeContributions( const GridP & grid )
 //______________________________________________________________________
 //
 void
-DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const MaterialManagerP & state )
+DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const MaterialManagerP & materialManager )
 {
-  LoadBalancerCommon::problemSetup( pspec, grid, state );
+  LoadBalancerCommon::problemSetup( pspec, grid, materialManager );
 
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   std::string  dynamicAlgo;

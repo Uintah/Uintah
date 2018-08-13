@@ -70,7 +70,7 @@ DynamicMPIScheduler::~DynamicMPIScheduler()
 //
 void
 DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
-                                 , const MaterialManagerP& state
+                                 , const MaterialManagerP& materialManager
                                  )
 {
   std::string taskQueueAlg = "";
@@ -108,7 +108,7 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
     throw ProblemSetupException("Unknown task ready queue algorithm", __FILE__, __LINE__);
   }
 
-  SchedulerCommon::problemSetup(prob_spec, state);
+  SchedulerCommon::problemSetup(prob_spec, materialManager);
 }
 
 //______________________________________________________________________

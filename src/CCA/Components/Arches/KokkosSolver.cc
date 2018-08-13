@@ -125,7 +125,7 @@ KokkosSolver::sched_restartInitializeTimeAdvance( const LevelP     & level
 //--------------------------------------------------------------------------------------------------
 void
 KokkosSolver::problemSetup( const ProblemSpecP     & input_db
-                          ,       MaterialManagerP & state
+                          ,       MaterialManagerP & materialManager
                           ,       GridP            & grid
                           )
 {

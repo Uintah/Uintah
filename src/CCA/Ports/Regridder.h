@@ -84,7 +84,7 @@ WARNING
 
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params, const GridP&,
-                              const MaterialManagerP& state) = 0;
+                              const MaterialManagerP& materialManager) = 0;
 
     virtual void switchInitialize(const ProblemSpecP& params) = 0;
 

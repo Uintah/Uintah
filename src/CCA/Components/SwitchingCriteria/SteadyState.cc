@@ -74,9 +74,9 @@ SteadyState::~SteadyState()
 
 void SteadyState::problemSetup(const ProblemSpecP& ps, 
                                const ProblemSpecP& restart_prob_spec, 
-                               MaterialManagerP& state)
+                               MaterialManagerP& materialManager)
 {
-  m_materialManager = state;
+  m_materialManager = materialManager;
 }
 
 void SteadyState::scheduleInitialize(const LevelP& level, SchedulerP& sched)

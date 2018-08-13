@@ -78,8 +78,6 @@ void TimestepNumber::switchTest(const ProcessorGroup* group,
 {
   switching_dbg << "Doing Switch Criteria:TimeStepNumber";
 
-  // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
-  
   timeStep_vartype timeStep_var(0);
   if( old_dw->exists(m_timeStepLabel))
     old_dw->get(timeStep_var, m_timeStepLabel);

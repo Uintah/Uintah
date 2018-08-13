@@ -389,11 +389,11 @@ RegridderCommon::switchInitialize(const ProblemSpecP& params)
 //______________________________________________________________________
 //
 void
-RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, const MaterialManagerP& state)
+RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, const MaterialManagerP& materialManager)
 {
   rdbg << "RegridderCommon::problemSetup() BGN" << std::endl;
 
-  d_materialManager = state;
+  d_materialManager = materialManager;
 
   grid_ps_ = params->findBlock("Grid");
 

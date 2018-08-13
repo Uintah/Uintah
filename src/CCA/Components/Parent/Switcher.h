@@ -108,7 +108,7 @@ namespace Uintah {
                               DataWarehouse  * new_dw);
                     
     void readSwitcherState( const ProblemSpecP&,
-                                  MaterialManagerP& state );
+                                  MaterialManagerP& materialManager );
 
     ProblemSpecP d_master_ups;
 

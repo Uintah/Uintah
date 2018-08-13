@@ -437,8 +437,6 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  // double now = m_materialManager->getElapsedSimTime();
-
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
@@ -479,8 +477,6 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
         string dirName = d_planes[p]->name;
         string planePath = udaDir + "/" + dirName;
         
-        // int ts = m_materialManager->getCurrentTopLevelTimeStep();
- 
         timeStep_vartype timeStep_var;      
         old_dw->get(timeStep_var, m_timeStepLabel);
         int ts = timeStep_var;

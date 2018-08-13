@@ -68,7 +68,7 @@ namespace Uintah {
     DynamicLoadBalancer(const ProcessorGroup* myworld);
     ~DynamicLoadBalancer();
 
-    virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, const MaterialManagerP& state);
+    virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, const MaterialManagerP& materialManager);
     virtual bool needRecompile(const GridP& grid); 
 
     /// call one of the assignPatches functions.

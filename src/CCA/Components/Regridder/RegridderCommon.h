@@ -75,7 +75,7 @@ namespace Uintah {
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params,
                               const GridP& grid,
-                              const MaterialManagerP& state);
+                              const MaterialManagerP& materialManager);
 
     //! On a Switch, basically asks whether to turn off/on the Regridding
     virtual void switchInitialize(const ProblemSpecP& params);
@@ -186,9 +186,9 @@ namespace Uintah {
     Scheduler            * m_scheduler    {nullptr};
     ApplicationInterface * m_application  {nullptr};
 
-    MaterialManagerP d_materialManager;  ///< Shared global space, to keep track of timesteps
-    bool d_isAdaptive;               ///< If false, do not regrid (stick with what you have)
-    bool d_forceRegridding;         ///< If false, do not regrid (stick with what you have)
+    MaterialManagerP d_materialManager;  ///< Material manager
+    bool d_isAdaptive;                   ///< If false, do not regrid
+    bool d_forceRegridding;              ///< If false, do not force regriding
 
     // input parameters from ups file
     bool d_dynamicDilation;

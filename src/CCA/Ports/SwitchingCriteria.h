@@ -45,7 +45,7 @@ namespace Uintah {
   
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
-                              MaterialManagerP& state) = 0;
+                              MaterialManagerP& materialManager) = 0;
 
     virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched)
       {};

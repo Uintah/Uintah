@@ -708,8 +708,6 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
                                       const Patch*    patch,
                                       Qstats& Q)
 {
-  // double now = m_materialManager->getElapsedSimTime();
-  
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
@@ -760,8 +758,6 @@ void statistics::computeStats( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
 
-  // int ts = m_materialManager->getCurrentTopLevelTimeStep();
-  
   timeStep_vartype timeStep_var;      
   old_dw->get(timeStep_var, m_timeStepLabel);
   int ts = timeStep_var;
@@ -859,8 +855,6 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
                                                const Patch*    patch,
                                                Qstats& Q)
 {
-  // double now = m_materialManager->getElapsedSimTime();
-
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
@@ -914,8 +908,6 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qsum,      d_velSum_Label,    matl, patch );
   new_dw->allocateAndPut( Qmean,     d_velMean_Label,   matl, patch );
   new_dw->allocateAndPut( uv_vw_wu,  d_velPrime_Label,  matl, patch );
-  
-  // int ts = m_materialManager->getCurrentTopLevelTimeStep();
   
   timeStep_vartype timeStep_var;      
   old_dw->get(timeStep_var, m_timeStepLabel);

@@ -63,7 +63,6 @@ namespace {
 //______________________________________________________________________
 //
 TaskGraph::TaskGraph(       SchedulerCommon   * sched
-                    ,       MaterialManagerP  & state
                     , const ProcessorGroup    * pg
                     ,       Scheduler::tgType   type
                     ,       int                 index

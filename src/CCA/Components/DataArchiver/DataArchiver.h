@@ -89,12 +89,11 @@ class LoadBalancer;
     static bool m_wereSavesAndCheckpointsInitialized;
 
     //! Sets up when the DataArchiver will output and what data, according
-    //! to params.  Also stores state to keep track of time and time steps
-    //! in the simulation.  (If you only need to use DataArchiver to copy 
-    //! data, then you can pass a nullptr MaterialManager
+    //! to params.  If you only need to use DataArchiver to copy 
+    //! data, then MaterialManager can be a nullptr.
     virtual void problemSetup( const ProblemSpecP    & params,
                                const ProblemSpecP    & restart_prob_spec,
-                               const MaterialManagerP& state );
+                               const MaterialManagerP& materialManager );
 
     virtual void outputProblemSpec( ProblemSpecP & root_ps );
 

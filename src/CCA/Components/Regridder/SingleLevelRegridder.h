@@ -52,10 +52,10 @@ DESCRIPTION
     virtual std::string getName() { return std::string("Single Level"); }
 
     virtual Grid* regrid( Grid* oldGrid, const int timeStep);
-		
+                
     virtual void problemSetup(const ProblemSpecP& params,
-			      const GridP& grid,
-			      const MaterialManagerP& state);
+                              const GridP& grid,
+                              const MaterialManagerP& materialManager);
 
     std::vector<IntVector> getMinPatchSize() {return d_tileSize;}
 

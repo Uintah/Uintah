@@ -331,10 +331,10 @@ SchedulerCommon::finalizeNodes( int process /* = 0 */ )
 //
 void
 SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
-                             , const MaterialManagerP & state
+                             , const MaterialManagerP & materialManager
                              )
 {
-  m_materialManager = state;
+  m_materialManager = materialManager;
 
   m_tracking_vars_print_location = PRINT_AFTER_EXEC;
 
@@ -824,7 +824,7 @@ SchedulerCommon::addTaskGraph( Scheduler::tgType type
                              , int               index
                              )
 {
-  TaskGraph* tg = scinew TaskGraph(this, m_materialManager, d_myworld, type, index);
+  TaskGraph* tg = scinew TaskGraph(this, d_myworld, type, index);
   tg->initialize();
   m_task_graphs.push_back(tg);
 }

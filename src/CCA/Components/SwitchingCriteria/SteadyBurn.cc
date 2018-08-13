@@ -76,9 +76,9 @@ SteadyBurnCriteria::~SteadyBurnCriteria()
 //
 void SteadyBurnCriteria::problemSetup(const ProblemSpecP& ps, 
                                   const ProblemSpecP& restart_prob_spec, 
-                                  MaterialManagerP& state)
+                                  MaterialManagerP& materialManager)
 {
-  d_materialManager = state;
+  d_materialManager = materialManager;
 }
 //__________________________________
 //

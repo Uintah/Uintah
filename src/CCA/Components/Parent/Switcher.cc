@@ -908,7 +908,7 @@ Switcher::outputProblemSpec(ProblemSpecP& ps)
 
 void
 Switcher::readSwitcherState( const ProblemSpecP     & spec,
-                                   MaterialManagerP & state )
+                                   MaterialManagerP & materialManager )
 {
   ProblemSpecP ps = (ProblemSpecP)spec;
 
@@ -931,7 +931,7 @@ Switcher::readSwitcherState( const ProblemSpecP     & spec,
       new_matls->getSubset(0)->add(i);
     }
 
-    state->setOriginalMatlsFromRestart(new_matls);
+    materialManager->setOriginalMatlsFromRestart(new_matls);
   }
 
   proc0cout << "  Switcher RESTART: component index = " << d_componentIndex << std::endl;

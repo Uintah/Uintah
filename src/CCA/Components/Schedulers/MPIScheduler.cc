@@ -150,10 +150,10 @@ MPIScheduler::~MPIScheduler()
 //
 void
 MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                          , const MaterialManagerP & state
+                          , const MaterialManagerP & materialManager
                           )
 {
-  SchedulerCommon::problemSetup(prob_spec, state);
+  SchedulerCommon::problemSetup(prob_spec, materialManager);
 }
 
 //______________________________________________________________________

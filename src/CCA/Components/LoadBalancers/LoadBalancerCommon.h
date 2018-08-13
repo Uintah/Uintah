@@ -151,7 +151,7 @@ public:
   /// for entries such as outputNthProc, dynamicAlgorithm, and interval.
   virtual void problemSetup( ProblemSpecP & pspec,
 			     GridP & grid,
-			     const MaterialManagerP & state );
+			     const MaterialManagerP & materialManager );
 
   // for DynamicLoadBalancer mostly, but if we're called then it also means the 
   // grid might have changed and need to create a new perProcessorPatchSet

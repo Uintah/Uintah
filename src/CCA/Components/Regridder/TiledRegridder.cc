@@ -360,9 +360,9 @@ void TiledRegridder::OutputGridStats(Grid* newGrid)
 //
 void TiledRegridder::problemSetup(const ProblemSpecP& params, 
                                   const GridP& oldGrid,
-                                  const MaterialManagerP& state)
+                                  const MaterialManagerP& materialManager)
 {
-  RegridderCommon::problemSetup(params, oldGrid, state);
+  RegridderCommon::problemSetup(params, oldGrid, materialManager);
 
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");

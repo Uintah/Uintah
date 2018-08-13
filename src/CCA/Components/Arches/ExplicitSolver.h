@@ -152,7 +152,7 @@ public:
 
   /** @brief Input file interface. **/
   virtual void problemSetup( const ProblemSpecP& input_db,
-                             MaterialManagerP& state,
+                             MaterialManagerP& materialManager,
                              GridP& grid );
 
   /** @brief Solve the nonlinear system. (also does some actual computations) **/

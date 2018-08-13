@@ -70,7 +70,7 @@ public:
 
   //______________________________________________________________________
   // Set up the problem specification database
-  void problemSetup(ProblemSpecP& params,MaterialManagerP& state);
+  void problemSetup(ProblemSpecP& params,MaterialManagerP& materialManager);
 
 
   //______________________________________________________________________

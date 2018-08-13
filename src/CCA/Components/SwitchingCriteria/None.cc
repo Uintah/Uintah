@@ -44,9 +44,9 @@ None::~None()
 
 void None::problemSetup(const ProblemSpecP& ps, 
                         const ProblemSpecP& restart_prob_spec, 
-                        MaterialManagerP& state)
+                        MaterialManagerP& materialManager)
 {
-  d_materialManager = state;
+  d_materialManager = materialManager;
 }
 
 void None::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)

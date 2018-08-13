@@ -863,11 +863,11 @@ ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state
 }
 
 void
-ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid, const MaterialManagerP& state)
+ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid, const MaterialManagerP& materialManager)
 {
   proc0cout << "Warning the ParticleLoadBalancer is experimental, use at your own risk\n";
 
-  LoadBalancerCommon::problemSetup( pspec, grid, state );
+  LoadBalancerCommon::problemSetup( pspec, grid, materialManager );
   
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   double interval = 0;

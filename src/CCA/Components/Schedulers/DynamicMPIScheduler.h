@@ -63,7 +63,7 @@ class DynamicMPIScheduler : public MPIScheduler {
 
     virtual ~DynamicMPIScheduler();
 
-    virtual void problemSetup( const ProblemSpecP& prob_spec, const MaterialManagerP& state );
+    virtual void problemSetup( const ProblemSpecP& prob_spec, const MaterialManagerP& materialManager );
 
     virtual SchedulerP createSubScheduler();
 

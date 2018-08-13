@@ -88,7 +88,7 @@ PressureSolver::~PressureSolver()
 // Problem Setup
 //______________________________________________________________________
 void
-PressureSolver::problemSetup(ProblemSpecP& params,MaterialManagerP& state)
+PressureSolver::problemSetup(ProblemSpecP& params,MaterialManagerP& materialManager)
 {
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();

@@ -91,7 +91,7 @@ private:
                      DataWarehouse* new_dw, MixingRxnModel* model );
 
   std::map<std::string, MixingRxnModel*> m_tables;        ///< The lookup interface
-  MaterialManagerP& m_materialManager;                        ///< Simulation state
+  MaterialManagerP& m_materialManager;                    ///< Material manager
   TABLE_TYPE m_table_type;                                ///< Describes the table type
   WBCHelper* m_bcHelper;                                  ////< Interface to BCs
 

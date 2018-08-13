@@ -82,7 +82,7 @@ KokkosOpenMPScheduler::KokkosOpenMPScheduler( const ProcessorGroup   * myworld
 //
 void
 KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                                   , const MaterialManagerP & state
+                                   , const MaterialManagerP & materialManager
                                    )
 {
 
@@ -125,7 +125,7 @@ KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
     std::cout << "   WARNING: Kokkos-OpenMP Scheduler is EXPERIMENTAL, not all tasks are Kokkos-enabled yet." << std::endl;
   }
 
-  SchedulerCommon::problemSetup(prob_spec, state);
+  SchedulerCommon::problemSetup(prob_spec, materialManager);
 }
 
 

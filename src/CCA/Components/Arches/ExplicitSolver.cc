@@ -242,7 +242,7 @@ ExplicitSolver::~ExplicitSolver()
 // ****************************************************************************
 void
 ExplicitSolver::problemSetup( const ProblemSpecP & params,
-                              MaterialManagerP & state,
+                              MaterialManagerP & materialManager,
                               GridP& grid )
 {
 
@@ -766,14 +766,14 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
                                          d_boundaryCondition,
                                          d_physicalConsts, d_myworld,
                                          d_hypreSolver );
-  d_pressSolver->problemSetup( db_es, state );
+  d_pressSolver->problemSetup( db_es, materialManager );
 
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
                                       d_turbModel, d_boundaryCondition,
                                       d_physicalConsts,
                                       &_task_factory_map );
 
-  d_momSolver->problemSetup(db_es, state);
+  d_momSolver->problemSetup(db_es, materialManager);
 
   const ProblemSpecP params_root = db->getRootNode();
   std::string t_order;

@@ -37,7 +37,7 @@ Dout dbg_pp("postProcess", "PostProcessUda", "PostProcessUda debug info", false)
 //______________________________________________________________________
 //
 PostProcessUda::PostProcessUda( const ProcessorGroup * myworld,
-				    const MaterialManagerP materialManager,
+                                const MaterialManagerP materialManager,
                                 const string         & udaDir ) :
   ApplicationCommon( myworld, materialManager ),
   d_udaDir(udaDir)
@@ -255,8 +255,6 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
-  // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
-  
   timeStep_vartype timeStep;
   old_dw->get( timeStep, getTimeStepLabel() );
   
@@ -431,7 +429,3 @@ GridP PostProcessUda::getGrid()
   }
   return d_oldGrid;
 }
-
-
-
-

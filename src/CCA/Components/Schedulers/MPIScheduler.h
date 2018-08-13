@@ -72,7 +72,7 @@ class MPIScheduler : public SchedulerCommon {
 
     virtual ~MPIScheduler();
 
-    virtual void problemSetup( const ProblemSpecP& prob_spec, const MaterialManagerP& state );
+    virtual void problemSetup( const ProblemSpecP& prob_spec, const MaterialManagerP& materialManager );
 
     virtual void execute( int tgnum = 0, int iteration = 0 );
 

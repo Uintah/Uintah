@@ -93,7 +93,7 @@ class UnifiedScheduler : public MPIScheduler  {
     
     static int verifyAnyGpuActive();  // used only to check if this Uintah build can communicate with a GPU.  This function exits the program
     
-    virtual void problemSetup( const ProblemSpecP & prob_spec, const MaterialManagerP & state );
+    virtual void problemSetup( const ProblemSpecP & prob_spec, const MaterialManagerP & materialManager );
       
     virtual SchedulerP createSubScheduler();
     

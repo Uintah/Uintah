@@ -40,17 +40,17 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index, MaterialManagerP materialManager ) : m_task_name(task_name),
-               m_matl_index(matl_index), m_state(materialManager){}
+               m_matl_index(matl_index), m_materialManager(materialManager){}
       ~Builder(){}
 
       PressureEqn* build()
-      { return scinew PressureEqn( m_task_name, m_matl_index, m_state ); }
+      { return scinew PressureEqn( m_task_name, m_matl_index, m_materialManager ); }
 
       private:
 
       std::string m_task_name;
       int m_matl_index;
-      MaterialManagerP m_state;
+      MaterialManagerP m_materialManager;
 
     };
 

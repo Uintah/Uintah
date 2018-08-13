@@ -51,10 +51,10 @@ SingleLevelRegridder::~SingleLevelRegridder()
 //
 void SingleLevelRegridder::problemSetup(const ProblemSpecP& params, 
                                         const GridP& oldGrid,
-                                        const MaterialManagerP& state)
+                                        const MaterialManagerP& materialManager)
 {
 
-  RegridderCommon::problemSetup(params, oldGrid, state);
+  RegridderCommon::problemSetup(params, oldGrid, materialManager);
 
   d_maxLevels = oldGrid->numLevels();
   

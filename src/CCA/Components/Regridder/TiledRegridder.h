@@ -35,8 +35,8 @@ namespace Uintah {
 CLASS
    TiledRegridder
    
-	 Tiled Regridding Algorithm
-	 
+         Tiled Regridding Algorithm
+         
 GENERAL INFORMATION
 
    TiledRegridder.h
@@ -52,7 +52,7 @@ KEYWORDS
    TiledRegridder
 
 DESCRIPTION
- 	 Creates a patchset from refinement flags by tiling the grid with patches
+         Creates a patchset from refinement flags by tiling the grid with patches
    and taking any tiles that have refinement flags within them.
 
 WARNING
@@ -68,10 +68,10 @@ WARNING
 
     //! Create a new Grid
     virtual Grid* regrid(Grid* oldGrid, const int timeStep);
-		
+                
     virtual void problemSetup(const ProblemSpecP& params,
-			      const GridP& grid,
-			      const MaterialManagerP& state);
+                              const GridP& grid,
+                              const MaterialManagerP& materialManager);
 
     std::vector<IntVector> getMinPatchSize() {return d_minTileSize;}
 

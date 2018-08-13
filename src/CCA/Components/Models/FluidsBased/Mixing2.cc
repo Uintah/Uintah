@@ -99,7 +99,7 @@ Mixing2::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 }
 
 void Mixing2::problemSetup(GridP&,
-                            const bool isRestart)
+                           const bool isRestart)
 {
   matl = m_materialManager->parseAndLookupMaterial(d_params, "material");
 

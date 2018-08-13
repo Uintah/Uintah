@@ -117,7 +117,7 @@ public:
 
   //! Reads the problem spec file for the LoadBalancer section, and looks
   //! for entries such as outputNthProc, dynamicAlgorithm, and interval.
-  virtual void problemSetup (ProblemSpecP &, GridP & grid, const MaterialManagerP & state ) = 0;
+  virtual void problemSetup (ProblemSpecP &, GridP & grid, const MaterialManagerP & materialManager ) = 0;
 
   //! Creates the Load Balancer's Neighborhood.
   //! This is a vector of patches that represent any patch that this load

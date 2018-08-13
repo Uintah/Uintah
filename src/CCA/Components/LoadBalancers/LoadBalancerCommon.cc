@@ -883,10 +883,10 @@ LoadBalancerCommon::inNeighborhood( const Patch * patch
 void
 LoadBalancerCommon::problemSetup(       ProblemSpecP     & pspec
                                 ,       GridP            & grid
-                                , const MaterialManagerP & state
+                                , const MaterialManagerP & materialManager
                                 )
 {
-  m_materialManager = state;
+  m_materialManager = materialManager;
 
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   m_output_Nth_proc = 1;

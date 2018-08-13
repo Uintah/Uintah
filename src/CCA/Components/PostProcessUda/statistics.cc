@@ -379,8 +379,6 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
                                       const Patch*    patch,
                                       Qstats& Q)
 {
-//   double simTime = d_materialManager->getElapsedSimTime();
-
   simTime_vartype simTime;
   old_dw->get( simTime, m_simulationTimeLabel );
 
@@ -405,8 +403,6 @@ void statistics::computeStats( DataWarehouse* old_dw,
                                const Patch*    patch,
                                Qstats& Q)
 {
-  // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
-  
   timeStep_vartype timeStep;
   old_dw->get( timeStep, m_timeStepLabel );
 

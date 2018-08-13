@@ -98,7 +98,7 @@ class Scheduler : public UintahParallelPort {
     virtual ApplicationInterface *getApplication() = 0;
   
     virtual void problemSetup( const ProblemSpecP     & prob_spec
-                                               , const MaterialManagerP & state
+                                               , const MaterialManagerP & materialManager
                                                ) = 0;
 
     virtual void checkMemoryUse( unsigned long & memUsed

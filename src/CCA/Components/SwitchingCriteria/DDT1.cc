@@ -75,10 +75,10 @@ DDT1Criteria::~DDT1Criteria()
 //__________________________________
 //
 void DDT1Criteria::problemSetup(const ProblemSpecP& ps, 
-                                  const ProblemSpecP& restart_prob_spec, 
-                                  MaterialManagerP& state)
+                                const ProblemSpecP& restart_prob_spec, 
+                                MaterialManagerP& materialManager)
 {
-  d_materialManager = state;
+  d_materialManager = materialManager;
 }
 //__________________________________
 //
