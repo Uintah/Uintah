@@ -431,8 +431,6 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
               const int ip=i - iDir[0];
               const int jp=j - iDir[1];
               const int kp=k - iDir[2];
-              IntVector c = *cell_iter;
-              IntVector cp = *cell_iter - iDir;
               const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
               un_var(i,j,k) = var(i,j,k)/rho_inter; // BC and extra cell value
             });
