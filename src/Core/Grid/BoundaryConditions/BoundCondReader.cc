@@ -1185,8 +1185,6 @@ const BCDataArray BoundCondReader::getBCDataArray(Patch::FaceType& face) const
 
 void BoundCondReader::combineBCS()
 {
-
-  std::cout << " COMBINING BCs DEREKx \n";
   for (Patch::FaceType face = Patch::startFace; 
        face <= Patch::endFace; face=Patch::nextFace(face)) {
     BCR_dbg << std::endl << "Working on Face = " << face << std::endl;
