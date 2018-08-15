@@ -62,7 +62,6 @@ Tracer::createTracers(TracerMaterial* matl,
   int dwi = matl->getDWIndex();
   ParticleSubset* subset = allocateVariables(numTracers,dwi,patch,new_dw);
 
-  particleIndex start = 0;
 
   if(filename!="") {
     std::ifstream is(filename.c_str());
@@ -71,36 +70,30 @@ Tracer::createTracers(TracerMaterial* matl,
                                   __FILE__, __LINE__);
     }
 
-    // Field for position
     double p1,p2,p3;
-    int line = 0;
-    while(is >> p1 >> p2 >> p3){
-      Point pos = Point(p1,p2,p3);
-      line++;
-//      IntVector cell_idx;
-      if(patch->containsPoint(pos)){
-        particleIndex pidx = start;
-        tracer_pos[pidx]   = pos;
-        // Use the tracer's original line # in the .pts file as its unique ID
-        tracerID[pidx] = line;
-        start++;
-
-//        // Figure out unique ID for the Tracer
-//        patch->findCell(pos,cell_idx);
-//        ASSERT(cell_idx.x() <= 0xffff &&
-//               cell_idx.y() <= 0xffff &&
-//               cell_idx.z() <= 0xffff);
-
-//        long64 cellID = ((long64)cell_idx.x() << 16) |
-//                        ((long64)cell_idx.y() << 32) |
-//                        ((long64)cell_idx.z() << 48);
-
-//        short int& myCellNAPID = cellNAPID[cell_idx];
-//        tracerID[pidx] = (cellID | (long64) myCellNAPID);
-//        ASSERT(myCellNAPID < 0x7fff);
-//        myCellNAPID++;
-      }
-    }  // while
+    string line;
+    particleIndex start = 0;
+    while (getline(is, line)) {
+     istringstream ss(line);
+     string token;
+     long64 tid;
+     ss >> token;
+     tid = stoull(token);
+     ss >> token;
+     p1 = stof(token);
+     ss >> token;
+     p2 = stof(token);
+     ss >> token;
+     p3 = stof(token);
+//     cout << tid << " " << p1 << " " << p2 << " " << p3 << endl;
+     Point pos = Point(p1,p2,p3);
+     if(patch->containsPoint(pos)){
+       particleIndex pidx = start;
+       tracer_pos[pidx]   = pos;
+       tracerID[pidx] = tid;
+       start++;
+     }
+    }
     is.close();
   }
 
@@ -133,19 +126,31 @@ Tracer::countTracers(const Patch* patch, const string filename)
   if(filename!="") {
     std::ifstream is(filename.c_str());
     if (!is ){
-      throw ProblemSetupException("ERROR Opening cohesive zone file "+filename+" in countTracers\n",
+      throw ProblemSetupException("ERROR Opening tracer file "+filename+" in countTracers\n",
                                   __FILE__, __LINE__);
     }
 
-    // Field for position, normal, tangential and length.
-    // Everything else is assumed to be zero.
-    double f1,f2,f3;
-    while(is >> f1 >> f2 >> f3){
-      if(patch->containsPoint(Point(f1,f2,f3))){
-        sum++;
-      } else {
+    string line;
+
+    while (getline(is, line)) {
+     istringstream ss(line);
+     string token;
+     long64 tid;
+     double f1,f2,f3;
+     ss >> token;
+     tid = stoull(token);
+     ss >> token;
+     f1 = stof(token);
+     ss >> token;
+     f2 = stof(token);
+     ss >> token;
+     f3 = stof(token);
+     if(patch->containsPoint(Point(f1,f2,f3))){
+       cout << tid << " " << f1 << " " << f2 << " " << f3 << endl;
+       sum++;
       }
     }
+
     is.close();
   }
 
@@ -221,6 +226,6 @@ void Tracer::initialize(const ProcessorGroup*,
       createTracers(tracer_matl, numTracers, cellNATracerID,
                     patch, new_dw, filename);
     }
-//    cout << "Total Tracers " << totalTracers << endl;
+    cout << "Total Tracers " << totalTracers << endl;
   }
 }
