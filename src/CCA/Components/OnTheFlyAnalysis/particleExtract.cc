@@ -29,7 +29,7 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -56,9 +56,9 @@ static DebugStream cout_doing("particleExtract_DOING_COUT", false);
 static DebugStream cout_dbg("particleExtract_DBG_COUT", false);
 //______________________________________________________________________        
 particleExtract::particleExtract(const ProcessorGroup* myworld,
-				 const SimulationStateP sharedState,
-				 const ProblemSpecP& module_spec)
-  : AnalysisModule(myworld, sharedState, module_spec)
+                                 const MaterialManagerP materialManager,
+                                 const ProblemSpecP& module_spec)
+  : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_matl_set = 0;
   ps_lb = scinew particleExtractLabel();
@@ -84,11 +84,13 @@ particleExtract::~particleExtract()
 //     P R O B L E M   S E T U P
 void particleExtract::problemSetup(const ProblemSpecP& ,
                                    const ProblemSpecP& ,
-                                   GridP& grid)
+                                   GridP& grid,
+				   std::vector<std::vector<const VarLabel* > > &PState,
+				   std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tparticleExtract" << endl;
 
-  d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
+  d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
   
   vector<int> m;
   m.push_back( d_matl->getDWIndex() );
@@ -103,13 +105,14 @@ void particleExtract::problemSetup(const ProblemSpecP& ,
   d_matl_set->addAll(m);
   d_matl_set->addReference();   
   
-  ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_partE", 
-                                            max_vartype::getTypeDescription());
+  ps_lb->lastWriteTimeLabel =
+    VarLabel::create("lastWriteTime_partE", max_vartype::getTypeDescription());
                                             
-   ps_lb->filePointerLabel  =  VarLabel::create("filePointer", 
-                                            ParticleVariable< FILE* >::getTypeDescription() );
-   ps_lb->filePointerLabel_preReloc  =  VarLabel::create("filePointer+", 
-                                            ParticleVariable< FILE* >::getTypeDescription() );
+  ps_lb->filePointerLabel =
+    VarLabel::create("filePointer", ParticleVariable< FILE* >::getTypeDescription() );
+
+  ps_lb->filePointerLabel_preReloc =
+    VarLabel::create("filePointer+", ParticleVariable< FILE* >::getTypeDescription() );
                                              
   //__________________________________
   //  Read in timing information
@@ -163,10 +166,10 @@ void particleExtract::problemSetup(const ProblemSpecP& ,
     throw ProblemSetupException("\n ERROR:particleExtract: startTime > stopTime. \n", __FILE__, __LINE__);
   }
  
- // Tell the shared state that these variable need to be relocated
+  // Tell MPM that these variable need to be relocated
   int matl = d_matl->getDWIndex();
-  m_sharedState->d_particleState_preReloc[matl].push_back(ps_lb->filePointerLabel_preReloc);
-  m_sharedState->d_particleState[matl].push_back(ps_lb->filePointerLabel);
+  PState[matl].push_back(         ps_lb->filePointerLabel);
+  PState_preReloc[matl].push_back(ps_lb->filePointerLabel_preReloc);
   
   //__________________________________
   //  Warning
@@ -257,7 +260,7 @@ void particleExtract::restartInitialize()
 }
 //______________________________________________________________________
 void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
-                                         const LevelP& level)
+						  const LevelP& level)
 { 
   int L_indx = level->getIndex();
   if(!doMPMOnLevel(L_indx,level->getGrid()->numLevels())){
@@ -376,7 +379,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
     lastWriteTime = writeTime;
   }
 
-  // double now = m_sharedState->getElapsedSimTime();
+  // double now = m_materialManager->getElapsedSimTime();
 
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);

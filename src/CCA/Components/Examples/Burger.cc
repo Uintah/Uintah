@@ -28,7 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
@@ -44,8 +44,8 @@ using namespace Uintah;
 //______________________________________________________________________
 //  Preliminary
 Burger::Burger(const ProcessorGroup* myworld,
-	       const SimulationStateP sharedState)
-  : ApplicationCommon(myworld, sharedState)
+	       const MaterialManagerP materialManager)
+  : ApplicationCommon(myworld, materialManager)
 {
   u_label = VarLabel::create("u", NCVariable<double>::getTypeDescription());
 }
@@ -63,7 +63,7 @@ void Burger::problemSetup(const ProblemSpecP& params,
   ProblemSpecP burger = params->findBlock("Burger");
   burger->require("delt", delt_);
   mymat_ = scinew SimpleMaterial();
-  m_sharedState->registerSimpleMaterial(mymat_);
+  m_materialManager->registerSimpleMaterial(mymat_);
 }
  
 //______________________________________________________________________
@@ -74,7 +74,7 @@ void Burger::scheduleInitialize(const LevelP& level,
   Task* task = scinew Task("Burger::initialize",
                      this, &Burger::initialize);
   task->computes(u_label);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -92,7 +92,7 @@ void Burger::scheduleComputeStableTimeStep(const LevelP& level,
                      this, &Burger::computeStableTimeStep);
                      
   task->computes(getDelTLabel(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -106,7 +106,7 @@ void  Burger::scheduleTimeAdvance( const LevelP& level,
   task->requires(Task::OldDW, getDelTLabel());
   
   task->computes(u_label);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________

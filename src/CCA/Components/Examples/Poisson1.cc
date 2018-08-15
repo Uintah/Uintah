@@ -31,7 +31,7 @@
 #include <Core/Grid/Variables/KokkosViews.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
@@ -53,9 +53,9 @@ class DetailedTask;
 //Legacy Uintah CPU (UINTAH_ENABLE_KOKKOS is not defined and HAVE_CUDA is not defined)
 
 Poisson1::Poisson1( const ProcessorGroup   * myworld
-                  , const SimulationStateP   sharedState
+                  , const MaterialManagerP   materialManager
                   )
-  : ApplicationCommon( myworld, sharedState )
+  : ApplicationCommon( myworld, materialManager )
 {
   phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
   residual_label = VarLabel::create("residual", sum_vartype::getTypeDescription());
@@ -82,7 +82,7 @@ void Poisson1::problemSetup( const ProblemSpecP & params
 
   mymat_ = scinew SimpleMaterial();
 
-  m_sharedState->registerSimpleMaterial(mymat_);
+  m_materialManager->registerSimpleMaterial(mymat_);
 }
 
 //______________________________________________________________________
@@ -95,7 +95,7 @@ void Poisson1::scheduleInitialize( const LevelP     & level
 
   task->computes(phi_label);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________
@@ -116,7 +116,7 @@ void Poisson1::scheduleComputeStableTimeStep( const LevelP     & level
 
   task->requires(Task::NewDW, residual_label);
   task->computes(getDelTLabel(), level.get_rep());
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________
@@ -125,7 +125,6 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
                                   ,       SchedulerP & sched
                                   )
 {
-
   auto TaskDependencies = [&](Task* task) {
     task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
     task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
@@ -137,13 +136,13 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
                         &Poisson1::timeAdvance<UINTAH_CPU_TAG>,
                         &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG>,
                         &Poisson1::timeAdvance<KOKKOS_CUDA_TAG>,
-                        sched, level->eachPatch(), m_sharedState->allMaterials(), TASKGRAPH::DEFAULT);
+                        sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 
 
 //  CALL_ASSIGN_PORTABLE_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG,
 //                            TaskDependencies,
 //                            "Poisson1::timeAdvance", Poisson1::timeAdvance<,
-//                            level->eachPatch(), m_sharedState->allMaterials(), TASKGRAPH::DEFAULT);
+//                            level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 
 
   //Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
@@ -157,8 +156,7 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
   //task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   //task->computes(residual_label);
 
-  //sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
-
+  //sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________
@@ -187,7 +185,6 @@ void Poisson1::initialize( const ProcessorGroup *
                          )
 {
   int matl = 0;
-  printf("In initialize\n");
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
@@ -217,6 +214,7 @@ void Poisson1::initialize( const ProcessorGroup *
     new_dw->put(sum_vartype(-1), residual_label);
   }
 }
+
 //______________________________________________________________________
 //
 template <typename ES, typename MS>

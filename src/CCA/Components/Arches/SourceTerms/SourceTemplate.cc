@@ -23,9 +23,9 @@
 using namespace std;
 using namespace Uintah; 
 
-CLASSNAME::CLASSNAME( std::string src_name, SimulationStateP& shared_state,
+CLASSNAME::CLASSNAME( std::string src_name, MaterialManagerP& materialManager,
                       vector<std::string> req_label_names ) 
-: SourceTermBase( src_name, shared_state, req_label_names )
+: SourceTermBase( src_name, materialManager, req_label_names )
 {
 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
@@ -92,7 +92,7 @@ CLASSNAME::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
     //tsk->requires( Task::OldDW, .... ); 
   }
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" )); 
 
 }
 //---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ CLASSNAME::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     // add actual calculation of the source here. 
 
@@ -137,7 +137,7 @@ CLASSNAME::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   }
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 void 
@@ -152,7 +152,7 @@ CLASSNAME::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> src;
 

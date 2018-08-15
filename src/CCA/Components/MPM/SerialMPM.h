@@ -87,7 +87,7 @@ WARNING
   class SerialMPM : public MPMCommon {
 public:
     SerialMPM(const ProcessorGroup* myworld,
-	      const SimulationStateP sharedState);
+	      const MaterialManagerP materialManager);
 
   virtual ~SerialMPM();
 

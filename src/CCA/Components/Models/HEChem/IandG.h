@@ -64,7 +64,7 @@ WARNING
   class IandG : public HEChemModel {
   public:
     IandG(const ProcessorGroup* myworld,
-	  const SimulationStateP& sharedState,
+	  const MaterialManagerP& materialManager,
 	  const ProblemSpecP& params);
     
     virtual ~IandG();

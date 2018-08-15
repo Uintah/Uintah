@@ -311,7 +311,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         break;
       default:
         throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
-
+        break;
     }
 
     if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE && assignedExecutionSpace != temp) {
@@ -473,6 +473,7 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
           break;
         default:
           throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
+          break;
       }
     }
 

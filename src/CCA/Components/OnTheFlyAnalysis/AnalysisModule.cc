@@ -36,11 +36,11 @@ using namespace Uintah;
 // NOTE: UintahParallelComponent is noramlly called with the ProcessorGroup
 
 AnalysisModule::AnalysisModule( const ProcessorGroup* myworld,
-				const SimulationStateP sharedState,
+				const MaterialManagerP materialManager,
 				const ProblemSpecP& module_spec ) :
   UintahParallelComponent( myworld )
 {
-  m_sharedState = sharedState;
+  m_materialManager = materialManager;
   m_module_spec = module_spec;
 
   // Time Step

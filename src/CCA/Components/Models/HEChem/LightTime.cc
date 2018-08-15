@@ -41,7 +41,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -65,9 +65,9 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 LightTime::LightTime(const ProcessorGroup* myworld,
-                     const SimulationStateP& sharedState,
+                     const MaterialManagerP& materialManager,
                      const ProblemSpecP& params)
-  : HEChemModel(myworld, sharedState), d_params(params)
+  : HEChemModel(myworld, materialManager), d_params(params)
 {
   mymatls = 0;
   Ilb = scinew ICELabel();
@@ -118,8 +118,8 @@ void LightTime::problemSetup(GridP&,
     throw ProblemSetupException("LightTime: Couldn't find <LightTime> tag", __FILE__, __LINE__);    
   }
   
-  matl0 = m_sharedState->parseAndLookupMaterial(lt_ps, "fromMaterial");
-  matl1 = m_sharedState->parseAndLookupMaterial(lt_ps, "toMaterial");
+  matl0 = m_materialManager->parseAndLookupMaterial(lt_ps, "fromMaterial");
+  matl1 = m_materialManager->parseAndLookupMaterial(lt_ps, "toMaterial");
   
   lt_ps->require("starting_location",    d_start_place);
   lt_ps->require("direction_if_plane",   d_direction);
@@ -300,7 +300,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     new_dw->get(vol_frac_prd,  Ilb->vol_frac_CCLabel,  m1,patch,gn, 0);
 
     const Level* level = patch->getLevel();
-    // double simTime = m_sharedState->getElapsedSimTime();
+    // double simTime = m_materialManager->getElapsedSimTime();
     double delta_L = 1.5*pow(cell_vol,1./3.)/d_D;
 //    double delta_L = 1.5*dx.x()/d_D;
     double A=d_direction.x();
@@ -376,10 +376,10 @@ void LightTime::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
-    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
-    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_materialManager, m1, new_dw, isNotInitialTimeStep);
+    setBC(delF,       "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
+    setBC(Fr,         "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
   }
 }
 //______________________________________________________________________

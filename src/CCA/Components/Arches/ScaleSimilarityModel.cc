@@ -40,7 +40,7 @@
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Variables/Array3.h>
@@ -155,7 +155,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<Vector> Vel; 
     constCCVariable<double> den;

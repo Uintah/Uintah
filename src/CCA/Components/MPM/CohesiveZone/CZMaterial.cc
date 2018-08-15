@@ -36,7 +36,7 @@ using namespace std;
 using namespace Uintah;
 
 // Standard Constructor
-CZMaterial::CZMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
+CZMaterial::CZMaterial(ProblemSpecP& ps, MaterialManagerP& ss,MPMFlags* flags)
   : Material(ps), d_cohesive_zone(0)
 {
   d_lb = scinew MPMLabel();
@@ -72,10 +72,11 @@ CZMaterial::~CZMaterial()
   delete d_cohesive_zone;
 }
 
-void CZMaterial::registerParticleState(SimulationState* sharedState)
+void CZMaterial::registerParticleState( std::vector<std::vector<const VarLabel* > > &CZState,
+					std::vector<std::vector<const VarLabel* > > &CZState_preReloc )
 {
-  sharedState->d_cohesiveZoneState.push_back(d_cohesive_zone->returnCohesiveZoneState());
-  sharedState->d_cohesiveZoneState_preReloc.push_back(d_cohesive_zone->returnCohesiveZoneStatePreReloc());
+  CZState.push_back         (d_cohesive_zone->returnCohesiveZoneState());
+  CZState_preReloc.push_back(d_cohesive_zone->returnCohesiveZoneStatePreReloc());
 }
 
 ProblemSpecP CZMaterial::outputProblemSpec(ProblemSpecP& ps)

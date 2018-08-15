@@ -30,7 +30,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <typeinfo>
@@ -86,12 +86,12 @@ namespace Uintah {
                             const int indx,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
-                            SimulationStateP& sharedState);
+                            MaterialManagerP& materialManager);
                             
   void lodi_getVars_pressBC( const Patch* patch,
                              Lodi_vars_pressBC* lodi_vars,
                              ICELabel* lb,
-                             SimulationStateP sharedState,
+                             MaterialManagerP materialManager,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw);
 
@@ -101,17 +101,17 @@ namespace Uintah {
   VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face);                                           
                                                              
   void Lodi_maxMach_patchSubset(const LevelP& level,
-                                 SimulationStateP& sharedState,
+                                 MaterialManagerP& materialManager,
                                  vector<PatchSubset*> &);
                                   
   bool is_LODI_face(const Patch* patch,
                   Patch::FaceType face,
-                  SimulationStateP& sharedState);                            
+                  MaterialManagerP& materialManager);                            
                             
   void computeNu(CCVariable<Vector>& nu,
                  const CCVariable<double>& p, 
                  const Patch* patch,
-                 SimulationStateP& sharedState);  
+                 MaterialManagerP& materialManager);  
 
   void computeDi(std::vector<CCVariable<Vector> >& d,
                  constCCVariable<double>& rho_old,  
@@ -120,7 +120,7 @@ namespace Uintah {
                  constCCVariable<double>& speedSound, 
                  const Patch* patch,
                  DataWarehouse*,
-                 SimulationStateP& sharedState);
+                 MaterialManagerP& materialManager);
                  
   double computeConvection(const double& nuFrt,     const double& nuMid, 
                            const double& nuLast,    const double& qFrt, 
@@ -145,19 +145,19 @@ namespace Uintah {
                    CCVariable<Vector>& vel_CC,           
                    Lodi_vars* lv,
                    const Vector& dx,
-                   SimulationStateP& sharedState);
+                   MaterialManagerP& materialManager);
                     
   void FaceTemp_LODI(const Patch* patch,
                     const Patch::FaceType face,
                     CCVariable<double>& temp_CC,
                     Lodi_vars* lv, 
                     const Vector& dx,
-                    SimulationStateP& sharedState);
+                    MaterialManagerP& materialManager);
                
   void FacePress_LODI(const Patch* patch,
                       CCVariable<double>& press_CC,
                       std::vector<CCVariable<double> >& rho_micro,
-                      SimulationStateP& sharedState, 
+                      MaterialManagerP& materialManager, 
                       Patch::FaceType face,
                       Lodi_vars_pressBC* lv);
 

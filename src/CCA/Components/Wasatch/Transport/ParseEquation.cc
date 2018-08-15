@@ -296,7 +296,7 @@ namespace WasatchCore{
   void parse_poisson_equation( Uintah::ProblemSpecP poissonEqParams,
                               GraphCategories& gc,
                               Uintah::SolverInterface& linSolver,
-                              Uintah::SimulationStateP& sharedState )
+                              Uintah::MaterialManagerP& materialManager )
   {
     std::string slnVariableName;
     poissonEqParams->get("SolutionVariable", slnVariableName);
@@ -344,7 +344,7 @@ namespace WasatchCore{
   void parse_radiation_solver( Uintah::ProblemSpecP params,
                                GraphHelper& gh,
                                Uintah::SolverInterface& linSolver,
-                               Uintah::SimulationStateP& sharedState,
+                               Uintah::MaterialManagerP& materialManager,
                                std::set<std::string>& persistentFields )
   {
     const Expr::Tag tempTag = parse_nametag( params->findBlock("Temperature")->findBlock("NameTag") );
@@ -587,7 +587,7 @@ namespace WasatchCore{
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
                             Uintah::SolverInterface& linSolver,
-                            Uintah::SimulationStateP& sharedState,
+                            Uintah::MaterialManagerP& materialManager,
                             WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
@@ -815,7 +815,7 @@ namespace WasatchCore{
                                                       gc,
                                                       momentumSpec,
                                                       turbParams,
-                                                      linSolver, sharedState );
+                                                      linSolver, materialManager );
         adaptors.push_back( scinew EqnTimestepAdaptor<XVolField>(momtranseq) );
       }
 
@@ -831,7 +831,7 @@ namespace WasatchCore{
                                                       gc,
                                                       momentumSpec,
                                                       turbParams,
-                                                      linSolver,sharedState );
+                                                      linSolver,materialManager );
         adaptors.push_back( scinew EqnTimestepAdaptor<YVolField>(momtranseq) );
       }
 
@@ -847,7 +847,7 @@ namespace WasatchCore{
                                                       gc,
                                                       momentumSpec,
                                                       turbParams,
-                                                      linSolver,sharedState );
+                                                      linSolver,materialManager );
         adaptors.push_back( scinew EqnTimestepAdaptor<ZVolField>(momtranseq) );
       }
     }

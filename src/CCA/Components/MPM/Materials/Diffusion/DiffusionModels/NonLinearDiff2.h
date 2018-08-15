@@ -30,7 +30,7 @@
  */
 
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
@@ -49,7 +49,7 @@ namespace Uintah {
   class NonLinearDiff2 : public ScalarDiffusionModel {
   public:
     
-    NonLinearDiff2(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
+    NonLinearDiff2(ProblemSpecP& ps, MaterialManagerP& sS, MPMFlags* Mflag,
                         std::string diff_type);
     ~NonLinearDiff2();
 

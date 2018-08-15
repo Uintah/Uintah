@@ -87,7 +87,7 @@ namespace Uintah {
     };
     typedef std::map<std::string, ConstVarContainer> StringToCCVar;
 
-    MixingRxnModel( SimulationStateP& sharedState );
+    MixingRxnModel( MaterialManagerP& materialManager );
 
     virtual ~MixingRxnModel();
 
@@ -892,7 +892,6 @@ namespace Uintah {
 
             this->transform(iv, 0.0);
 
-
             //struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv.size());  //portable version
             struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(iv,iv.size());  //portable version
 
@@ -1042,7 +1041,7 @@ namespace Uintah {
           iv[_eta_index] = _eta_ref;
 
           this->transform(iv, 0.0);
-         
+
           struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(iv,iv.size());  //portable version
           return iv_p;
         };
@@ -1611,7 +1610,7 @@ namespace Uintah {
     /** @brief Common problem setup work */
     void problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* const model );
 
-    SimulationStateP& m_sharedState;        ///< Shared state
+    MaterialManagerP& m_materialManager;    ///< Material Manager
     int m_matl_index;                       ///< Arches material index
 
     bool d_coldflow;                        ///< Will not compute heat loss and will not initialized ethalpy

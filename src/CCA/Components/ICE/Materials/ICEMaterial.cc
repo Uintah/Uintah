@@ -47,7 +47,7 @@ using namespace Uintah;
 
 // Constructor
 ICEMaterial::ICEMaterial( ProblemSpecP     & ps,
-                          SimulationStateP & sharedState,
+                          MaterialManagerP & materialManager,
                           const bool         isRestart ) :
   Material( ps )
 {

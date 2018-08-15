@@ -70,7 +70,7 @@ DynamicMPIScheduler::~DynamicMPIScheduler()
 //
 void
 DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
-                                 , const SimulationStateP& state
+                                 , const MaterialManagerP& materialManager
                                  )
 {
   std::string taskQueueAlg = "";
@@ -108,7 +108,7 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
     throw ProblemSetupException("Unknown task ready queue algorithm", __FILE__, __LINE__);
   }
 
-  SchedulerCommon::problemSetup(prob_spec, state);
+  SchedulerCommon::problemSetup(prob_spec, materialManager);
 }
 
 //______________________________________________________________________
@@ -118,7 +118,7 @@ DynamicMPIScheduler::createSubScheduler()
 {
   DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, this );
   newsched->setComponents( this );
-  newsched->m_sharedState = m_sharedState;
+  newsched->m_materialManager = m_materialManager;
   return newsched;
 }
 

@@ -29,7 +29,7 @@
 #include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <typeinfo>
@@ -82,14 +82,14 @@ namespace Uintah {
                                 const Patch       * patch,
                                 const std::string & where,
                                 const int           indx,
-                                SimulationStateP  & sharedState,
+                                MaterialManagerP  & materialManager,
                                 bool              & setSlipBcs,
                                 slip_localVars    * lv,
                                 slip_globalVars   * gv);
 
   bool is_MicroSlip_face(const Patch      * patch,
                          Patch::FaceType    face,
-                         SimulationStateP & sharedState);
+                         MaterialManagerP & materialManager);
 
   int set_MicroSlipVelocity_BC(const Patch          * patch,
                               const Patch::FaceType   face,

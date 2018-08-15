@@ -46,7 +46,7 @@ SRCS += \
         $(SRCDIR)/SendState.cc                \
         $(SRCDIR)/TaskGraph.cc                \
         $(SRCDIR)/UnifiedScheduler.cc
-     
+
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/GPUDataWarehouse.cu         \
           $(SRCDIR)/GPUGridVariableInfo.cc      \

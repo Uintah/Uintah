@@ -746,7 +746,7 @@ IntrusionBC::setCellType( const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     const int patchID = patch->getID();
     int archIndex = 0;
-    int index = _lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int index = _lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     Box patch_box = patch->getBox();
 
     CCVariable<int> cell_type;
@@ -1409,7 +1409,7 @@ IntrusionBC::setIntrusionT( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex();
+    int index = _lab->d_materialManager->getMaterial( "Arches",  archIndex )->getDWIndex();
     Box patch_box = patch->getBox();
 
     CCVariable<double> temperature;

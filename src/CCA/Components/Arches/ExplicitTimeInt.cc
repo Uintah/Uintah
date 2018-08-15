@@ -13,7 +13,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 
@@ -136,7 +136,7 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; 
-    int indx = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     Ghost::GhostType ghost_type = Ghost::None; 
     int n_extra = 0;
     
@@ -211,7 +211,7 @@ void ExplicitTimeInt::time_ave( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; 
-    int indx = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     //Ghost::GhostType gn = Ghost::None; 
 
     for ( std::vector<std::string>::iterator i = phi_tag.begin(); i != phi_tag.end(); i++ ){ 

@@ -3,7 +3,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -13,8 +13,8 @@
 using namespace Uintah;
 
 AMRHeat::AMRHeat(const ProcessorGroup* myworld,
-		 const SimulationStateP sharedState) :
-  Heat(myworld, sharedState)
+		 const MaterialManagerP materialManager) :
+  Heat(myworld, materialManager)
 {
 
 }
@@ -47,7 +47,7 @@ void AMRHeat::scheduleErrorEstimate(const LevelP&     coarseLevel,
   task->requires(Task::NewDW, d_lb->temperature_nc, Ghost::AroundNodes, 1);
   task->modifies(m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials());
   task->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
-  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, coarseLevel->eachPatch(), m_materialManager->allMaterials());
 }
 
 void AMRHeat::errorEstimate(const ProcessorGroup* pg,
@@ -136,7 +136,7 @@ void AMRHeat::scheduleRefine (const PatchSet*   patches,
     task->requires(Task::NewDW, d_lb->temperature_nc, 0, Task::CoarseLevel,
                    0, Task::NormalDomain, Ghost::AroundNodes, 1);
     task->computes(d_lb->temperature_nc);
-    sched->addTask(task, patches, m_sharedState->allMaterials());
+    sched->addTask(task, patches, m_materialManager->allMaterials());
   }
 }
 

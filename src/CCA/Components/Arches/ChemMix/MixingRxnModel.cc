@@ -58,8 +58,8 @@ using namespace std;
 using namespace Uintah;
 
 //---------------------------------------------------------------------------
-MixingRxnModel::MixingRxnModel( SimulationStateP& sharedState ) :
-m_sharedState(sharedState)
+MixingRxnModel::MixingRxnModel( MaterialManagerP& materialManager ) :
+m_materialManager(materialManager)
 {
 
   d_does_post_mixing = false;
@@ -362,7 +362,7 @@ MixingRxnModel::sched_checkTableBCs( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "MixingRxnModel::checkTableBCs";
   Task* tsk = scinew Task(taskname, this, &MixingRxnModel::checkTableBCs);
-  sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials()  );
+  sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" )  );
 }
 void
 MixingRxnModel::checkTableBCs( const ProcessorGroup* pc,

@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_IntrusionInlet_h
 #define Uintah_Component_Arches_IntrusionInlet_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
@@ -52,7 +52,7 @@ namespace Uintah{
 
         enum DIRECTION { PLUS_X, MINUS_X, PLUS_Y, MINUS_Y, PLUS_Z, MINUS_Z }; 
 
-        IntrusionInlet<sT>( std::string srcName, SimulationStateP& shared_state, 
+        IntrusionInlet<sT>( std::string srcName, MaterialManagerP& materialManager, 
             std::vector<std::string> reqLabelNames, std::string type );
         ~IntrusionInlet<sT>();
 
@@ -77,20 +77,20 @@ namespace Uintah{
 
             public: 
 
-              Builder( std::string name, std::vector<std::string> required_label_names, SimulationStateP& shared_state )
-                : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
+              Builder( std::string name, std::vector<std::string> required_label_names, MaterialManagerP& materialManager )
+                : _name(name), _materialManager(materialManager), _required_label_names(required_label_names){
                   _type = "intrusion_inlet"; 
                 };
               ~Builder(){}; 
 
               IntrusionInlet<sT>* build()
-              { return scinew IntrusionInlet<sT>( _name, _shared_state, _required_label_names, _type ); };
+              { return scinew IntrusionInlet<sT>( _name, _materialManager, _required_label_names, _type ); };
 
             private: 
 
               std::string _name; 
               std::string _type; 
-              SimulationStateP& _shared_state; 
+              MaterialManagerP& _materialManager; 
               std::vector<std::string> _required_label_names;
 
           }; // class Builder 
@@ -117,9 +117,9 @@ namespace Uintah{
   //Method: Constructor
   //---------------------------------------------------------------------------
   template<typename sT>
-    IntrusionInlet<sT>::IntrusionInlet( std::string src_name, SimulationStateP& shared_state,
+    IntrusionInlet<sT>::IntrusionInlet( std::string src_name, MaterialManagerP& materialManager,
         std::vector<std::string> req_label_names, std::string type )
-    : SourceTermBase( src_name, shared_state, req_label_names, type )
+    : SourceTermBase( src_name, materialManager, req_label_names, type )
     {
 
       _src_label = VarLabel::create( src_name, sT::getTypeDescription() ); 
@@ -205,7 +205,7 @@ namespace Uintah{
 
       }
 
-      sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
+      sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" )); 
 
     }
   //---------------------------------------------------------------------------
@@ -224,7 +224,7 @@ namespace Uintah{
 
         const Patch* patch = patches->get(p);
         int archIndex = 0;
-        int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+        int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
         Box patchInteriorBox = patch->getBox(); 
         Vector Dx = patch->dCell(); 
 
@@ -345,7 +345,7 @@ namespace Uintah{
 
       }
 
-      sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+      sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
     }
   template <typename sT>
@@ -360,7 +360,7 @@ namespace Uintah{
 
         const Patch* patch = patches->get(p);
         int archIndex = 0;
-        int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+        int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
         CCVariable<double> src;
 

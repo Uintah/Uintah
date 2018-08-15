@@ -33,9 +33,9 @@
 using namespace Uintah;
 
 AMRCCHeat3D::AMRCCHeat3D ( const ProcessorGroup * myworld,
-			   const SimulationStateP sharedState,
+			   const MaterialManagerP materialManager,
 			   int verbosity )
-  : CCHeat3D ( myworld, sharedState, verbosity )
+  : CCHeat3D ( myworld, materialManager, verbosity )
 {}
 
 AMRCCHeat3D::~AMRCCHeat3D ()
@@ -99,7 +99,7 @@ void AMRCCHeat3D::scheduleRefine ( PatchSet const * patches, SchedulerP & sched 
         Task * task = scinew Task ( "AMRCCHeat3D::task_refine", this, &AMRCCHeat3D::task_refine );
         task->requires ( Task::NewDW, u_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::None, 0 );
         task->computes ( u_label );
-        sched->addTask ( task, patches, m_sharedState->allMaterials() );
+        sched->addTask ( task, patches, m_materialManager->allMaterials() );
     }
 }
 
@@ -108,7 +108,7 @@ void AMRCCHeat3D::scheduleCoarsen ( LevelP const & level_coarse, SchedulerP & sc
     Task * task = scinew Task ( "AMRCCHeat3D::task_coarsen", this, &AMRCCHeat3D::task_coarsen );
     task->requires ( Task::NewDW, u_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0 );
     task->modifies ( u_label );
-    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_materialManager->allMaterials() );
 }
 
 void AMRCCHeat3D::scheduleErrorEstimate ( LevelP const & level_coarse, SchedulerP & sched )
@@ -117,7 +117,7 @@ void AMRCCHeat3D::scheduleErrorEstimate ( LevelP const & level_coarse, Scheduler
     task->requires ( Task::NewDW, u_label, Ghost::Ghost::None, 0 ); // this is actually the old value of this
     task->modifies ( m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials() );
     task->modifies ( m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials() );
-    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_materialManager->allMaterials() );
 }
 
 void AMRCCHeat3D::scheduleInitialErrorEstimate ( LevelP const & level_coarse, SchedulerP & sched )
@@ -131,7 +131,7 @@ void AMRCCHeat3D::scheduleTimeAdvance_forward_euler_refinement ( LevelP const & 
     task->requires ( Task::OldDW, u_label, Ghost::AroundCells, 1 );
     task->requires ( Task::OldDW, u_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1 );
     task->computes ( u_label );
-    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 void AMRCCHeat3D::task_forward_euler_time_advance_refinement ( ProcessorGroup const * myworld, PatchSubset const * patches, MaterialSubset const * matls, DataWarehouse * dw_old, DataWarehouse * dw_new )

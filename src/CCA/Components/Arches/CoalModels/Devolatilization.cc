@@ -5,7 +5,7 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -17,12 +17,12 @@ using namespace std;
 using namespace Uintah; 
 
 Devolatilization::Devolatilization( std::string modelName, 
-                                              SimulationStateP& sharedState,
+                                              MaterialManagerP& materialManager,
                                               ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames, 
                                               vector<std::string> scalarLabelNames,
                                               int qn ) 
-: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+: ModelBase(modelName, materialManager, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   d_quadNode = qn;
 
@@ -91,7 +91,7 @@ Devolatilization::sched_initVars( const LevelP& level, SchedulerP& sched )
   std::string taskname = "Devolatilization::initVars";
   Task* tsk = scinew Task(taskname, this, &Devolatilization::initVars);
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 }
 
 //-------------------------------------------------------------------------
@@ -120,7 +120,7 @@ Devolatilization::initVars( const ProcessorGroup * pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> something; 
     new_dw->allocateAndPut( something, d_something_label, matlIndex, patch ); 

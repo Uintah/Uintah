@@ -161,7 +161,7 @@ DataArchiver::releaseComponents()
   m_application  = nullptr;
   m_loadBalancer = nullptr;
 
-  m_sharedState  = nullptr;
+  m_materialManager  = nullptr;
 }
 
 //______________________________________________________________________
@@ -169,13 +169,13 @@ DataArchiver::releaseComponents()
 void
 DataArchiver::problemSetup( const ProblemSpecP    & params,
                             const ProblemSpecP    & restart_prob_spec,
-                            const SimulationStateP& sharedState )
+                            const MaterialManagerP& materialManager )
 {
   if (dbg.active()) {
     dbg << "Doing ProblemSetup \t\t\t\tDataArchiver\n";
   }
 
-  m_sharedState = sharedState;
+  m_materialManager = materialManager;
   m_upsFile = params;
   ProblemSpecP p = params->findBlock("DataArchiver");
   
@@ -2483,7 +2483,7 @@ DataArchiver::scheduleOutputTimeStep(       vector<SaveItem> & saveLabels,
     }
 
     task->setType( Task::Output );
-    sched->addTask( task, patches, m_sharedState->allMaterials() );
+    sched->addTask( task, patches, m_materialManager->allMaterials() );
   }
   
   if (dbg.active()) {
@@ -2611,7 +2611,9 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
                                    DataWarehouse        * old_dw,
                                    DataWarehouse        * new_dw )
 {
-  if( m_application->recomputeTimeStep() || m_saveReductionLabels.empty() ) {
+  bool val;
+  if( m_application->getReductionVariable( recomputeTimeStep_name, val ) ||
+      m_saveReductionLabels.empty() ) {
     return;
   }
 

@@ -66,7 +66,7 @@ using namespace Uintah;
 
 std::vector<ModelInterface*>
 ModelFactory::makeModels( const ProcessorGroup   * myworld,
-			  const SimulationStateP   sharedState,
+			  const MaterialManagerP   materialManager,
 			  const ProblemSpecP& restart_prob_spec,
                           const ProblemSpecP& prob_spec )
 {
@@ -96,61 +96,61 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
 #if !defined( NO_ICE )
     // ICE turned on
     else if(type == "SimpleRxn") {
-      d_models.push_back(scinew SimpleRxn(myworld, sharedState, model_ps));
+      d_models.push_back(scinew SimpleRxn(myworld, materialManager, model_ps));
     }
     else if(type == "AdiabaticTable") {
-      d_models.push_back(scinew AdiabaticTable(myworld, sharedState, model_ps));
+      d_models.push_back(scinew AdiabaticTable(myworld, materialManager, model_ps));
     }
     else if(type == "Mixing") {
-      d_models.push_back(scinew Mixing(myworld, sharedState, model_ps)); }
+      d_models.push_back(scinew Mixing(myworld, materialManager, model_ps)); }
     else if(type == "flameSheet_rxn") {
-      d_models.push_back(scinew flameSheet_rxn(myworld, sharedState, model_ps));
+      d_models.push_back(scinew flameSheet_rxn(myworld, materialManager, model_ps));
     }
     else if(type == "mass_momentum_energy_src") {
-      d_models.push_back(scinew MassMomEng_src(myworld, sharedState, model_ps));
+      d_models.push_back(scinew MassMomEng_src(myworld, materialManager, model_ps));
     }
     else if(type == "PassiveScalar") {
-      d_models.push_back(scinew PassiveScalar(myworld, sharedState, model_ps));
+      d_models.push_back(scinew PassiveScalar(myworld, materialManager, model_ps));
     }
 #endif
 
 #if !defined( NO_ICE ) && !defined( NO_MPM )    
     else if(type == "Test") {
-      d_models.push_back(scinew TestModel(myworld, sharedState, model_ps));
+      d_models.push_back(scinew TestModel(myworld, materialManager, model_ps));
     }
 
     else if(type == "Simple_Burn") {
-      d_models.push_back(scinew Simple_Burn(myworld, sharedState, model_ps, prob_spec));
+      d_models.push_back(scinew Simple_Burn(myworld, materialManager, model_ps, prob_spec));
     }
     else if(type == "Steady_Burn") {
-      d_models.push_back(scinew Steady_Burn(myworld, sharedState, model_ps, prob_spec));
+      d_models.push_back(scinew Steady_Burn(myworld, materialManager, model_ps, prob_spec));
     }
     else if(type == "Unsteady_Burn") {
-      d_models.push_back(scinew Unsteady_Burn(myworld, sharedState, model_ps, prob_spec));
+      d_models.push_back(scinew Unsteady_Burn(myworld, materialManager, model_ps, prob_spec));
     }
     else if(type == "MesoBurn") {
-      d_models.push_back(scinew MesoBurn(myworld, sharedState, model_ps, prob_spec));
+      d_models.push_back(scinew MesoBurn(myworld, materialManager, model_ps, prob_spec));
     }
     else if(type == "IandG") {
-      d_models.push_back(scinew IandG(myworld, sharedState, model_ps));
+      d_models.push_back(scinew IandG(myworld, materialManager, model_ps));
     }
     else if(type == "JWLpp") {
-      d_models.push_back(scinew JWLpp(myworld, sharedState, model_ps, prob_spec));
+      d_models.push_back(scinew JWLpp(myworld, materialManager, model_ps, prob_spec));
     }
     else if(type == "ZeroOrder") {
-      d_models.push_back(scinew ZeroOrder(myworld, sharedState, model_ps, prob_spec));
+      d_models.push_back(scinew ZeroOrder(myworld, materialManager, model_ps, prob_spec));
     }
     else if(type == "LightTime") {
-      d_models.push_back(scinew LightTime(myworld, sharedState, model_ps));
+      d_models.push_back(scinew LightTime(myworld, materialManager, model_ps));
     }
     else if(type == "DDT0") {
-      d_models.push_back(scinew DDT0(myworld, sharedState, model_ps, prob_spec));
+      d_models.push_back(scinew DDT0(myworld, materialManager, model_ps, prob_spec));
     }
     else if(type == "DDT1") {
-      d_models.push_back(scinew DDT1(myworld, sharedState, model_ps, prob_spec));
+      d_models.push_back(scinew DDT1(myworld, materialManager, model_ps, prob_spec));
     }
     else if(type == "SolidReactionModel") {
-      d_models.push_back(scinew SolidReactionModel(myworld, sharedState, model_ps, prob_spec));
+      d_models.push_back(scinew SolidReactionModel(myworld, materialManager, model_ps, prob_spec));
     }
 #endif
 

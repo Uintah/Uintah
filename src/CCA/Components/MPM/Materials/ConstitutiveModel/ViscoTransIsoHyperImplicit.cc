@@ -303,7 +303,7 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
     new_dw->getOtherDataWarehouse(Task::ParentOldDW);
 
   // Get the current simulation time
-  // double simTime = d_sharedState->getElapsedSimTime();
+  // double simTime = d_materialManager->getElapsedSimTime();
 
   simTime_vartype simTime(0);
   old_dw->get( simTime, lb->simulationTimeLabel );
@@ -806,7 +806,7 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
 //___________________the final one
 {
   // Get the current simulation time
-  // double simTime = d_sharedState->getElapsedSimTime();
+  // double simTime = d_materialManager->getElapsedSimTime();
 
   simTime_vartype simTime(0);
   old_dw->get( simTime, lb->simulationTimeLabel );

@@ -63,7 +63,7 @@ WARNING
   class ZeroOrder : public HEChemModel {
   public:
     ZeroOrder(const ProcessorGroup* myworld,
-	      const SimulationStateP& sharedState,
+	      const MaterialManagerP& materialManager,
 	      const ProblemSpecP& params,
 	      const ProblemSpecP& prob_spec);
 

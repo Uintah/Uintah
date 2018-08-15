@@ -69,7 +69,7 @@ namespace Uintah {
     public:
 
       UnifiedSchedulerTest(const ProcessorGroup* myworld,
-			   const SimulationStateP sharedState);
+			   const MaterialManagerP materialManager);
 
       virtual ~UnifiedSchedulerTest();
 

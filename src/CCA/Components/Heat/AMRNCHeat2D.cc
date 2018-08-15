@@ -41,9 +41,9 @@
 using namespace Uintah;
 
 Uintah::AMRNCHeat2D::AMRNCHeat2D ( const ProcessorGroup * myworld,
-				   const SimulationStateP sharedState,
+				   const MaterialManagerP materialManager,
 				   int verbosity )
-  : NCHeat2D ( myworld, sharedState, verbosity )
+  : NCHeat2D ( myworld, materialManager, verbosity )
 {}
 
 AMRNCHeat2D::~AMRNCHeat2D ()
@@ -108,7 +108,7 @@ void AMRNCHeat2D::scheduleRefine ( PatchSet const * patches, SchedulerP & sched 
         Task * task = scinew Task ( "AMRNCHeat2D::task_refine", this, &AMRNCHeat2D::task_refine );
         task->requires ( Task::NewDW, u_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundNodes, 1 );
         task->computes ( u_label );
-        sched->addTask ( task, patches, m_sharedState->allMaterials() );
+        sched->addTask ( task, patches, m_materialManager->allMaterials() );
     }
 }
 
@@ -117,7 +117,7 @@ void AMRNCHeat2D::scheduleCoarsen ( LevelP const & level_coarse, SchedulerP & sc
     Task * task = scinew Task ( "AMRNCHeat2D::task_coarsen", this, &AMRNCHeat2D::task_coarsen );
     task->requires ( Task::NewDW, u_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0 );
     task->modifies ( u_label );
-    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_materialManager->allMaterials() );
 }
 
 void AMRNCHeat2D::scheduleErrorEstimate ( LevelP const & level_coarse, SchedulerP & sched )
@@ -126,7 +126,7 @@ void AMRNCHeat2D::scheduleErrorEstimate ( LevelP const & level_coarse, Scheduler
     task->requires ( Task::NewDW, u_label, Ghost::AroundNodes, 1 ); // this is actually the old value of this
     task->modifies ( m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials() );
     task->modifies ( m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials() );
-    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_materialManager->allMaterials() );
 }
 
 void AMRNCHeat2D::scheduleInitialErrorEstimate ( LevelP const & level_coarse, SchedulerP & sched )
@@ -140,7 +140,7 @@ void AMRNCHeat2D::scheduleTimeAdvance_forward_euler_refinement ( LevelP const & 
     task->requires ( Task::OldDW, u_label, Ghost::AroundNodes, 1 );
     task->requires ( Task::OldDW, u_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundNodes, 1 );
     task->computes ( u_label );
-    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 void AMRNCHeat2D::task_forward_euler_time_advance_refinement ( ProcessorGroup const * myworld, PatchSubset const * patches, MaterialSubset const * matls, DataWarehouse * dw_old, DataWarehouse * dw_new )

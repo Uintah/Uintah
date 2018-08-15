@@ -38,7 +38,7 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/MiscMath.h>
@@ -1504,7 +1504,6 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     }else{
       new_dw->get( emissSrc, _radIntSource[iband], matlIndex, patch, Ghost::None,0 );  
     }
-
 
     const int kstart=(_plusZ[cdirecn] ? idxLo.z() : idxHi.z()); // allows for direct logic in triple for loop  
     const int jstart=(_plusY[cdirecn] ? idxLo.y() : idxHi.y());

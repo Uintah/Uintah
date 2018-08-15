@@ -26,7 +26,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/StringUtil.h>
@@ -74,10 +74,10 @@ using namespace std;
 static DebugStream dbg("POSTPROCESS_SPATIOTEMPORALAVG", false);
 //______________________________________________________________________
 spatioTemporalAvg::spatioTemporalAvg(ProblemSpecP    & module_spec,
-                                     SimulationStateP& sharedState,
+                                     MaterialManagerP& materialManager,
                                      Output          * dataArchiver,
                                      DataArchive     * dataArchive)
-  : Module(module_spec, sharedState, dataArchiver, dataArchive)
+  : Module(module_spec, materialManager, dataArchiver, dataArchive)
 {
   d_prob_spec = module_spec;
 
@@ -370,8 +370,6 @@ void spatioTemporalAvg::computeAvgWrapper( DataWarehouse     * old_dw,
                                            const Patch       * patch,
                                            Qstats& Q)
 {
-//   double simTime = d_sharedState->getElapsedSimTime();
-
   simTime_vartype simTime;
   old_dw->get( simTime, m_simulationTimeLabel );
   
@@ -395,8 +393,6 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
                                     const Patch    * patch,
                                     Qstats& Q)
 {
-  // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
-  
   timeStep_vartype timeStep;
   old_dw->get( timeStep, m_timeStepLabel );
 

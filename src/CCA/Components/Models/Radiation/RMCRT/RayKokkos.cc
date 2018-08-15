@@ -39,7 +39,6 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
-
 #include <CCA/Components/Models/Radiation/RMCRT/slim.h>
 
 #include <include/sci_defs/uintah_testdefs.h.in>
@@ -60,7 +59,7 @@
 // To enable comparisons with Ray:CPU, define FIXED_RANDOM_NUM both here and in src/Core/Math/MersenneTwister.h
 // To enable comparisons with Ray:GPU, define FIXED_RANDOM_NUM both here and in src/CCA/Components/Models/Radiation/RMCRT/RayGPUKernel.cu
 
-//#define DEBUG 1          // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9          // 1: divQ, 2: boundFlux, 3: scattering
 //#define ML_DEBUG
 //#define FIXED_RANDOM_NUM  // Enable comparisons between implementations
 #define FIXED_RAY_DIR -9  // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
@@ -82,8 +81,6 @@ Optimizations:
   - Temperatures af ints?
   - 2L flux coarsening on the boundaries
 ______________________________________________________________________*/
-
-
 
 
 //______________________________________________________________________
@@ -625,8 +622,6 @@ struct rayTrace_solveDivQFunctor {
   }
 
 };  // end rayTrace_solveDivQFunctor
-
-
 
 
 //---------------------------------------------------------------------------

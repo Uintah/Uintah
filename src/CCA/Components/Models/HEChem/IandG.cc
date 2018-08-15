@@ -40,7 +40,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -59,9 +59,9 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 IandG::IandG(const ProcessorGroup* myworld,
-             const SimulationStateP& sharedState,
+             const MaterialManagerP& materialManager,
              const ProblemSpecP& params)
-  : HEChemModel(myworld, sharedState), d_params(params)
+  : HEChemModel(myworld, materialManager), d_params(params)
 {
   mymatls = 0;
   Ilb = scinew ICELabel();
@@ -97,8 +97,8 @@ void IandG::problemSetup(GridP&,
 {
   ProblemSpecP IG_ps = d_params->findBlock("IandG");
 
-  matl0 = m_sharedState->parseAndLookupMaterial(IG_ps, "fromMaterial");
-  matl1 = m_sharedState->parseAndLookupMaterial(IG_ps, "toMaterial");
+  matl0 = m_materialManager->parseAndLookupMaterial(IG_ps, "fromMaterial");
+  matl1 = m_materialManager->parseAndLookupMaterial(IG_ps, "toMaterial");
   IG_ps->require("I",  d_I);
   IG_ps->require("G1", d_G1);
   IG_ps->require("G2", d_G2);
@@ -346,11 +346,11 @@ void IandG::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
-    setBC(term1, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
-    setBC(term2, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
-    setBC(term3, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
-    setBC(Fr,    "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_materialManager, m1, new_dw, isNotInitialTimeStep);
+    setBC(term1, "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
+    setBC(term2, "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
+    setBC(term3, "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
+    setBC(Fr,    "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
   }
 }

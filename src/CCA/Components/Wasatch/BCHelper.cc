@@ -1073,6 +1073,4 @@ namespace WasatchCore {
   INSTANTIATE_MASK_TYPES(SpatialOps::XVolField);
   INSTANTIATE_MASK_TYPES(SpatialOps::YVolField);
   INSTANTIATE_MASK_TYPES(SpatialOps::ZVolField);
-
-  template const SpatialOps::SpatialMask<ParticleField>* BCHelper::get_spatial_mask< ParticleField >( const BndSpec& myBndSpec,const int& patchID, const bool interior ) const;
 } // class BCHelper

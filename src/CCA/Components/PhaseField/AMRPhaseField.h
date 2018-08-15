@@ -506,7 +506,7 @@ protected:
 
     using PhaseField<VariableType, NumGhosts, Dimension>::psi_label;
     using PhaseField<VariableType, NumGhosts, Dimension>::u_label;
-    using PhaseField<VariableType, NumGhosts, Dimension>::m_sharedState;
+    using PhaseField<VariableType, NumGhosts, Dimension>::m_materialManager;
     using PhaseField<VariableType, NumGhosts, Dimension>::m_regridder;
     using PhaseField<VariableType, NumGhosts, Dimension>::dbg_out1;
     using PhaseField<VariableType, NumGhosts, Dimension>::dbg_out2;
@@ -531,7 +531,7 @@ protected:
 
 public:
     AMRPhaseField ( const ProcessorGroup * myworld,
-		    const SimulationStateP sharedState,
+		    const MaterialManagerP materialManager,
 		    int verbosity = 0 );
   
     virtual ~AMRPhaseField ();
@@ -566,7 +566,7 @@ class AMRPhaseFieldTest : public AMRPhaseField<VariableType, NumGhosts, Dimensio
     using FlagView = PF::FlagView;
     using PhaseField<VariableType, NumGhosts, Dimension>::psi_label;
     using PhaseField<VariableType, NumGhosts, Dimension>::u_label;
-    using PhaseField<VariableType, NumGhosts, Dimension>::m_sharedState;
+    using PhaseField<VariableType, NumGhosts, Dimension>::m_materialManager;
     using PhaseField<VariableType, NumGhosts, Dimension>::m_regridder;
     using PhaseField<VariableType, NumGhosts, Dimension>::dbg_out1;
     using PhaseField<VariableType, NumGhosts, Dimension>::dbg_out2;
@@ -604,8 +604,8 @@ using AMRCCPhaseField3DTest = AMRPhaseFieldTest <PF::CellCentered, 1, 3>;
 using AMRNCPhaseField3DTest = AMRPhaseFieldTest <PF::NodeCentered, 1, 3>;
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
-AMRPhaseField<VariableType, NumGhosts, Dimension>::AMRPhaseField ( const ProcessorGroup * myworld, const SimulationStateP sharedState, int verbosity )
-  : PhaseField<VariableType, NumGhosts, Dimension> ( myworld, sharedState, verbosity )
+AMRPhaseField<VariableType, NumGhosts, Dimension>::AMRPhaseField ( const ProcessorGroup * myworld, const MaterialManagerP materialManager, int verbosity )
+  : PhaseField<VariableType, NumGhosts, Dimension> ( myworld, materialManager, verbosity )
 {}
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
@@ -638,7 +638,7 @@ void AMRPhaseField<VariableType, NumGhosts, Dimension>::scheduleRefine ( PatchSe
     }
     task->computes ( psi_label );
     task->computes ( u_label );
-    sched->addTask ( task, patches, m_sharedState->allMaterials() );
+    sched->addTask ( task, patches, m_materialManager->allMaterials() );
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
@@ -649,7 +649,7 @@ void AMRPhaseField<VariableType, NumGhosts, Dimension>::scheduleCoarsen ( LevelP
     task->requires ( Task::NewDW, u_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0 );
     task->modifies ( psi_label );
     task->modifies ( u_label );
-    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_materialManager->allMaterials() );
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
@@ -659,7 +659,7 @@ void AMRPhaseField<VariableType, NumGhosts, Dimension>::scheduleErrorEstimate ( 
     task->requires ( Task::NewDW, psi_label, Ghost::Ghost::None, 0 ); // this is actually the old value of this
     task->modifies ( m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials() );
     task->modifies ( m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials() );
-    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_materialManager->allMaterials() );
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>

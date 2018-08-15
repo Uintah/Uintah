@@ -30,7 +30,7 @@
 using namespace Uintah;
 using namespace std;
 
-CommonIFConcDiff::CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS,
+CommonIFConcDiff::CommonIFConcDiff(ProblemSpecP& ps, MaterialManagerP& sS,
                                    MPMFlags* mpm_flags, MPMLabel* mpm_lb)
                  : SDInterfaceModel(ps, sS, mpm_flags, mpm_lb)
 {
@@ -63,7 +63,7 @@ void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup *,
                                                      DataWarehouse  * new_dw
                                               )
 {
-  int num_matls = d_shared_state->getNumMPMMatls();
+  int num_matls = d_materialManager->getNumMatls( "MPM" );
   for(int p = 0; p < patches->size(); p++)
   {
     const Patch* patch = patches->get(p);
@@ -130,7 +130,7 @@ void CommonIFConcDiff::sdInterfaceDivergence(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-  int num_matls = d_shared_state->getNumMPMMatls();
+  int num_matls = d_materialManager->getNumMatls( "MPM" );
     for(int p = 0; p < patches->size(); p++){
       const Patch* patch = patches->get(p);
 

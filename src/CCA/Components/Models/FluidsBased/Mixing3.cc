@@ -33,7 +33,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
@@ -59,19 +59,19 @@ using namespace Uintah;
 using namespace std;
 
 Mixing3::Mixing3(const ProcessorGroup* myworld,
-		 const SimulationStateP& sharedState,
+		 const MaterialManagerP& materialManager,
 		 const ProblemSpecP& params)
-  : FluidsBasedModel(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   Ilb = scinew ICELabel();
 
   mymatls = 0;
   gas = 0;
   reactor = 0;
-  params->require("dtemp", dtemp);
-  params->require("dpress", dpress);
-  params->require("dmf", dmf);
-  params->require("dtfactor", dtfactor);
+  d_params->require("dtemp", dtemp);
+  d_params->require("dpress", dpress);
+  d_params->require("dmf", dmf);
+  d_params->require("dtfactor", dtfactor);
   nlook=0;
   nmiss=0;
 }
@@ -103,11 +103,10 @@ Mixing3::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
   ps->require("massFraction", initialMassFraction);
 }
 
-void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
-                            const bool isRestart)
+void Mixing3::problemSetup(GridP&,
+			   const bool isRestart)
 {
-  sharedState = in_state;
-  matl = sharedState->parseAndLookupMaterial(params, "material");
+  matl = m_materialManager->parseAndLookupMaterial(d_params, "material");
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();
@@ -117,9 +116,9 @@ void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
 
   // Parse the Cantera XML file
   string fname;
-  params->get("file", fname);
+  d_params->get("file", fname);
   string id;
-  params->get("id", id);
+  d_params->get("id", id);
   try {
     gas = scinew IdealGasMix(fname, id);
     int nsp = gas->nSpecies();
@@ -158,7 +157,7 @@ void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
   if(streams.size() == 0)
     throw ProblemSetupException("Mixing3 specified with no streams!", __FILE__, __LINE__);
 
-  for (ProblemSpecP child = params->findBlock("stream"); child != 0;
+  for (ProblemSpecP child = d_params->findBlock("stream"); child != 0;
        child = child->findNextBlock("stream")) {
     string name;
     child->getAttribute("name", name);

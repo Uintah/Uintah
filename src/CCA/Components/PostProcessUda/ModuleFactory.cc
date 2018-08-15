@@ -45,13 +45,13 @@ ModuleFactory::~ModuleFactory()
 //
 std::vector<Module*>
 ModuleFactory::create(const ProblemSpecP& prob_spec,
-                      SimulationStateP  & sharedState,
+                      MaterialManagerP  & materialManager,
                       Output            * dataArchiver,
                       DataArchive       * dataArchive)
 {
  
  
-// scinew PostProcessCommon( sharedState, dataArchiver, dataArchive);
+// scinew PostProcessCommon( materialManager, dataArchiver, dataArchive);
  
   std::string module("");
   
@@ -72,10 +72,10 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
       module = attributes["type"];
 
       if ( module == "statistics" ) {
-        modules.push_back ( scinew postProcess::statistics( module_ps, sharedState, dataArchiver, dataArchive) );
+        modules.push_back ( scinew postProcess::statistics( module_ps, materialManager, dataArchiver, dataArchive) );
       }
       else if ( module == "spatioTemporalAvg" ) {
-        modules.push_back ( scinew postProcess::spatioTemporalAvg( module_ps, sharedState, dataArchiver, dataArchive) );
+        modules.push_back ( scinew postProcess::spatioTemporalAvg( module_ps, materialManager, dataArchiver, dataArchive) );
       }
       else if ( module == "reduceUda" ) {
         // do nothing

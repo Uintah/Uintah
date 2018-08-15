@@ -29,7 +29,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>
 
@@ -37,9 +37,9 @@ using namespace Uintah;
 using namespace std;
 
 MassMomEng_src::MassMomEng_src(const ProcessorGroup* myworld,
-                               const SimulationStateP& sharedState,
+                               const MaterialManagerP& materialManager,
                                const ProblemSpecP& params)
-  : FluidsBasedModel(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   mymatls = 0;
   Ilb = scinew ICELabel();
@@ -71,7 +71,7 @@ MassMomEng_src::~MassMomEng_src()
 void MassMomEng_src::problemSetup(GridP&, const bool isRestart )
 {
   ProblemSpecP src_ps = d_params->findBlock("MassMomEng_src");
-  d_matl = m_sharedState->parseAndLookupMaterial(src_ps, "material");
+  d_matl = m_materialManager->parseAndLookupMaterial(src_ps, "material");
 
   src_ps->require("momentum_src", d_src->mom_src_rate);
   src_ps->require("mass_src",     d_src->mass_src_rate);
@@ -164,7 +164,7 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
   double totalEng_src = 0.0;
   Vector totalMom_src(0,0,0);
 
-  // double simTime = m_sharedState->getElapsedSimTime();
+  // double simTime = m_materialManager->getElapsedSimTime();
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  

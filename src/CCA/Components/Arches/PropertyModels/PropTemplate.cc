@@ -23,7 +23,7 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 //Method: Constructor
 //---------------------------------------------------------------------------
-CLASSNAME::CLASSNAME( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
+CLASSNAME::CLASSNAME( std::string prop_name, MaterialManagerP& materialManager ) : PropertyModelBase( prop_name, materialManager )
 {
   _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() ); 
 
@@ -80,7 +80,7 @@ void CLASSNAME::sched_computeProp( const LevelP& level, SchedulerP& sched, int t
 
   }
 
-  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+  sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
     
 }
 
@@ -99,7 +99,7 @@ void CLASSNAME::computeProp(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> prop; 
     if ( new_dw->exists( _prop_label, matlIndex, patch ) ){
@@ -129,7 +129,7 @@ void CLASSNAME::sched_initialize( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task(taskname, this, &CLASSNAME::initialize);
   tsk->computes(_prop_label); 
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -146,7 +146,7 @@ void CLASSNAME::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> prop; 
 

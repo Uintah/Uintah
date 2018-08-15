@@ -70,7 +70,7 @@ WARNING
   class NonAdiabaticTable :public FluidsBasedModel {
   public:
     NonAdiabaticTable(const ProcessorGroup* myworld,
-		      const SimulationStateP& sharedState,
+		      const MaterialManagerP& materialManager,
 		      const ProblemSpecP& params);
     
     virtual ~NonAdiabaticTable();

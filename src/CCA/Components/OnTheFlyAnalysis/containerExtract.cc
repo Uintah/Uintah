@@ -51,7 +51,7 @@
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -79,9 +79,9 @@ static DebugStream cout_dbg("CONTAINEREXTRACT_DBG_COUT", false);
 
 //______________________________________________________________________
 containerExtract::containerExtract( const ProcessorGroup* myworld,
-				    const SimulationStateP sharedState,
-				    const ProblemSpecP& module_spec )
-  : AnalysisModule(myworld, sharedState, module_spec)
+                                    const MaterialManagerP materialManager,
+                                    const ProblemSpecP& module_spec )
+  : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_matl_set = 0;
   ps_lb = scinew containerExtractLabel();
@@ -117,12 +117,14 @@ containerExtract::~containerExtract()
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void containerExtract::problemSetup(const ProblemSpecP& ,
-                               const ProblemSpecP& ,
-                               GridP& grid)
+                                    const ProblemSpecP& ,
+                                    GridP& grid,
+                                    std::vector<std::vector<const VarLabel* > > &PState,
+                                    std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tcontainerExtract" << endl;
 
-  d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
+  d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
   
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -621,7 +623,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  // double now = m_sharedState->getElapsedSimTime();  
+  // double now = m_materialManager->getElapsedSimTime();  
 
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);

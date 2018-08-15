@@ -60,7 +60,7 @@ PSELIBS :=                         \
         Core/Util
 
 LIBS :=                                                              \
-#        $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)    \
+         $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)    \
 #        $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                    \
 #        $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY)                     \
 #        $(NSCBC_LIBRARY)                                            \

@@ -33,8 +33,8 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 /**************************************
@@ -80,7 +80,7 @@ namespace Uintah {
   class ModelInterface : public UintahParallelComponent {
   public:
     ModelInterface(const ProcessorGroup* myworld,
-		   const SimulationStateP sharedState);
+                   const MaterialManagerP materialManager);
 
     virtual ~ModelInterface();
 
@@ -95,15 +95,15 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
     virtual void scheduleInitialize(SchedulerP& scheduler,
-				    const LevelP& level) = 0;
+                                    const LevelP& level) = 0;
 
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimeStep(SchedulerP& scheduler,
-					       const LevelP& level) = 0;
+                                               const LevelP& level) = 0;
     
     virtual void scheduleRefine(const PatchSet* patches,
-				SchedulerP& sched) {};
+                                SchedulerP& sched) {};
 
     virtual void setAMR(bool val) { m_AMR = val; }
     virtual bool isAMR() const { return m_AMR; }
@@ -111,18 +111,13 @@ namespace Uintah {
     virtual void setDynamicRegridding(bool val) {m_dynamicRegridding = val; }
     virtual bool isDynamicRegridding() const { return m_dynamicRegridding; }
 
-    virtual bool adjustOutputInterval()     const { return false; };
-    virtual bool adjustCheckpointInterval() const { return false; };
-
-    virtual bool mayEndSimulation()         const { return false; };
-          
   protected:
     ApplicationInterface   * m_application {nullptr};
     Scheduler              * m_scheduler   {nullptr};
     Regridder              * m_regridder   {nullptr};
     Output                 * m_output      {nullptr};
    
-    SimulationStateP m_sharedState {nullptr};
+    MaterialManagerP m_materialManager {nullptr};
     
     bool m_AMR {false};
     bool m_dynamicRegridding {false};

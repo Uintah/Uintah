@@ -31,8 +31,8 @@
 
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
@@ -49,8 +49,8 @@ namespace Uintah {
   public:
     
     AnalysisModule(const ProcessorGroup* myworld,
-		   const SimulationStateP sharedState,
-		   const ProblemSpecP& module_spec);
+                   const MaterialManagerP materialManager,
+                   const ProblemSpecP& module_spec);
     
     virtual ~AnalysisModule();
 
@@ -62,31 +62,33 @@ namespace Uintah {
 
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid) = 0;
+                              GridP& grid,
+			      std::vector<std::vector<const VarLabel* > > &PState,
+			      std::vector<std::vector<const VarLabel* > > &PState_preReloc) = 0;
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
                                                             
                               
     virtual void scheduleInitialize(SchedulerP& sched,
-                                    const LevelP& level) =0;
+                                    const LevelP& level) = 0;
                                     
     virtual void scheduleRestartInitialize(SchedulerP& sched,
-                                           const LevelP& level) =0;
+                                           const LevelP& level) = 0;
     
     virtual void restartInitialize() = 0;
     
     virtual void scheduleDoAnalysis(SchedulerP& sched,
-                                    const LevelP& level) =0;
+                                    const LevelP& level) = 0;
     
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
-                                    const LevelP& level) =0;
+                                             const LevelP& level) = 0;
 
   protected:
     ApplicationInterface*  m_application {nullptr};
     Output*                m_output      {nullptr};
     Scheduler*             m_scheduler   {nullptr};
 
-    SimulationStateP m_sharedState {nullptr};
+    MaterialManagerP m_materialManager {nullptr};
     
     ProblemSpecP m_module_spec {nullptr};
 

@@ -6,8 +6,8 @@
 
 using namespace Uintah;
 
-DepositionVelocity::DepositionVelocity( std::string task_name, int matl_index, const int N, SimulationStateP shared_state  ) :
-TaskInterface( task_name, matl_index ), _Nenv(N),_shared_state(shared_state) {
+DepositionVelocity::DepositionVelocity( std::string task_name, int matl_index, const int N, MaterialManagerP materialManager  ) :
+TaskInterface( task_name, matl_index ), _Nenv(N),_materialManager(materialManager) {
 
 }
 

@@ -39,7 +39,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/SimpleMaterial.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
@@ -52,8 +52,8 @@ static Uintah::DebugStream dbg("RegridderTest", false);
 namespace Uintah
 {
   RegridderTest::RegridderTest ( const ProcessorGroup* myworld,
-				 const SimulationStateP sharedState ) :
-    ApplicationCommon( myworld, sharedState )
+				 const MaterialManagerP materialManager ) :
+    ApplicationCommon( myworld, materialManager )
   {
     //d_examplesLabel = scinew ExamplesLabel();
     d_oldDensityLabel = VarLabel::create("old_density",
@@ -75,7 +75,7 @@ namespace Uintah
                                    GridP& grid)
   {
     d_material = scinew SimpleMaterial();
-    m_sharedState->registerSimpleMaterial( d_material );
+    m_materialManager->registerSimpleMaterial( d_material );
 
     ProblemSpecP spec = params->findBlock("RegridderTest");
     
@@ -105,7 +105,7 @@ namespace Uintah
     Task* task = scinew Task( "initialize", this, &RegridderTest::initialize );
     task->computes( d_densityLabel );
     task->computes( d_currentAngleLabel, (Level*)0 );
-    scheduler->addTask( task, level->eachPatch(), m_sharedState->allMaterials() );
+    scheduler->addTask( task, level->eachPatch(), m_materialManager->allMaterials() );
   }
   
   void RegridderTest::scheduleRestartInitialize(const LevelP& level,
@@ -117,7 +117,7 @@ namespace Uintah
   {
     Task* task = scinew Task( "computeStableTimeStep", this, &RegridderTest::computeStableTimeStep );
     task->computes( getDelTLabel(),level.get_rep() );
-    scheduler->addTask( task, level->eachPatch(), m_sharedState->allMaterials() );
+    scheduler->addTask( task, level->eachPatch(), m_materialManager->allMaterials() );
   }
 
   void RegridderTest::scheduleTimeAdvance ( const LevelP& level, SchedulerP& scheduler)
@@ -126,7 +126,7 @@ namespace Uintah
     task->requires( Task::OldDW, d_densityLabel, Ghost::AroundCells, 1 );
     task->computes( d_oldDensityLabel );
     task->computes( d_densityLabel );
-    scheduler->addTask( task, level->eachPatch(), m_sharedState->allMaterials() );
+    scheduler->addTask( task, level->eachPatch(), m_materialManager->allMaterials() );
   }
 
   void RegridderTest::scheduleErrorEstimate ( const LevelP& level, SchedulerP& scheduler )
@@ -139,7 +139,7 @@ namespace Uintah
     task->modifies( m_regridder->getOldRefineFlagLabel(), m_regridder->refineFlagMaterials() );
     task->modifies( m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials() );
     task->computes( d_currentAngleLabel, (Level*) 0);
-    scheduler->addTask( task, m_loadBalancer->getPerProcessorPatchSet(level), m_sharedState->allMaterials() );
+    scheduler->addTask( task, m_loadBalancer->getPerProcessorPatchSet(level), m_materialManager->allMaterials() );
   }
 
   void RegridderTest::scheduleInitialErrorEstimate ( const LevelP& level, SchedulerP& scheduler )
@@ -149,7 +149,7 @@ namespace Uintah
     task->modifies( m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials() );
     task->modifies( m_regridder->getOldRefineFlagLabel(), m_regridder->refineFlagMaterials() );
     task->modifies( m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials() );
-    scheduler->addTask( task, level->eachPatch(), m_sharedState->allMaterials() );
+    scheduler->addTask( task, level->eachPatch(), m_materialManager->allMaterials() );
   }
 
   void RegridderTest::scheduleCoarsen ( const LevelP& coarseLevel, SchedulerP& scheduler )
@@ -158,7 +158,7 @@ namespace Uintah
     task->requires(Task::NewDW, d_densityLabel,
                    0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
     task->modifies(d_densityLabel);
-    scheduler->addTask( task, coarseLevel->eachPatch(), m_sharedState->allMaterials() );
+    scheduler->addTask( task, coarseLevel->eachPatch(), m_materialManager->allMaterials() );
   }
 
   void RegridderTest::scheduleRefine ( const PatchSet* patches, SchedulerP& scheduler )
@@ -168,7 +168,7 @@ namespace Uintah
                    Task::NormalDomain, Ghost::None, 0);
     //    task->requires(Task::NewDW, d_oldDensityLabel, 0, Task::CoarseLevel, 0,
     //             Task::NormalDomain, Ghost::None, 0);
-    scheduler->addTask( task, patches, m_sharedState->allMaterials() );
+    scheduler->addTask( task, patches, m_materialManager->allMaterials() );
   }
 
   void RegridderTest::scheduleRefineInterface ( const LevelP& /*level*/, SchedulerP& /*scheduler*/, bool, bool)

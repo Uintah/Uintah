@@ -48,7 +48,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -379,10 +379,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->computes( VarLabel::find(abortTimeStep_name) );
   tsk->computes( VarLabel::find(recomputeTimeStep_name) );
   
-  sched->addTask(tsk, d_perproc_patches, d_lab->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, d_perproc_patches, d_lab->d_materialManager->allMaterials( "Arches" ));
 
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
   if (d_boundaryCondition->anyArchesPhysicalBC()) {
     d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
   }
@@ -418,7 +418,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   subsched->advanceDataWarehouse(grid);
 
   const PatchSet* local_patches  = level->eachPatch();
-  const MaterialSet* local_matls = d_lab->d_sharedState->allArchesMaterials();
+  const MaterialSet* local_matls = d_lab->d_materialManager->allMaterials( "Arches" );
   
   IntVector periodic_vector = level->getPeriodicBoundaries();
   d_3d_periodic = (periodic_vector == IntVector(1,1,1));
@@ -823,7 +823,7 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
                                    SchedulerP& sched)
 {
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
 
   // use BE timelabels for nosolve
   nosolve_timelabels = scinew TimeIntegratorLabel(d_lab,
@@ -1096,7 +1096,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     constSFCXVariable<double> oldUVel;
     constSFCYVariable<double> oldVVel;
@@ -1732,14 +1732,14 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
-//  double simTime = d_lab->d_sharedState->getElapsedSimTime();
+//  double simTime = d_lab->d_materialManager->getElapsedSimTime();
   simTime_vartype simTime;
   old_dw->get( simTime, d_lab->d_simulationTimeLabel );
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
@@ -1857,7 +1857,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     
     constCCVariable<double> denMicro;
     CCVariable<double> denMicro_new;
@@ -2028,7 +2028,7 @@ PicardNonlinearSolver::dummySolve(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     constCCVariable<double> scalarVar;
     CCVariable<double> scalarVar_new;
@@ -2183,8 +2183,8 @@ PicardNonlinearSolver::saveTempCopies(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> temp_density;
     CCVariable<double> temp_scalar;
@@ -2266,7 +2266,7 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
                                        DataWarehouse* new_dw,
                                        const TimeIntegratorLabel* timelabels)
 {
-  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // int timeStep = d_lab->d_materialManager->getCurrentTopLevelTimeStep();
   // timeStep_vartype timeStep;
   // old_dw->get( timeStep, d_lab->d_timeStepLabel );
 
@@ -2289,8 +2289,8 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> densityGuess;
     constCCVariable<double> density;
@@ -2522,8 +2522,8 @@ PicardNonlinearSolver::checkDensityGuess(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> densityGuess;
 
@@ -2577,8 +2577,8 @@ PicardNonlinearSolver::updateDensityGuess(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> densityGuess;
     constCCVariable<double> density;
@@ -2626,8 +2626,8 @@ PicardNonlinearSolver::syncRhoF(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     constCCVariable<double> densityGuess;
     constCCVariable<double> density;
@@ -2713,8 +2713,8 @@ PicardNonlinearSolver::saveFECopies(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> temp_scalar;
     CCVariable<double> temp_reactscalar;

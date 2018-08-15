@@ -33,7 +33,7 @@
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/InvalidValue.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
@@ -51,27 +51,27 @@ SimpleHeatTransferBuilder::SimpleHeatTransferBuilder( const std::string         
                                                       const vector<std::string> & reqICLabelNames,
                                                       const vector<std::string> & reqScalarLabelNames,
                                                       ArchesLabel         * fieldLabels,
-                                                      SimulationStateP          & sharedState,
+                                                      MaterialManagerP          & materialManager,
                                                       int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, materialManager, qn )
 {
 }
 
 SimpleHeatTransferBuilder::~SimpleHeatTransferBuilder(){}
 
 ModelBase* SimpleHeatTransferBuilder::build() {
-  return scinew SimpleHeatTransfer( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return scinew SimpleHeatTransfer( d_modelName, d_materialManager, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
 SimpleHeatTransfer::SimpleHeatTransfer( std::string modelName, 
-                                        SimulationStateP& sharedState,
+                                        MaterialManagerP& materialManager,
                                         ArchesLabel* fieldLabels,
                                         vector<std::string> icLabelNames, 
                                         vector<std::string> scalarLabelNames,
                                         int qn ) 
-: HeatTransfer(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+: HeatTransfer(modelName, materialManager, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Set constants
   Pr = 0.7;
@@ -264,7 +264,7 @@ SimpleHeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched )
   std::string taskname = "SimpleHeatTransfer::initVars";
   Task* tsk = scinew Task(taskname, this, &SimpleHeatTransfer::initVars);
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 }
 
 //-------------------------------------------------------------------------
@@ -282,7 +282,7 @@ SimpleHeatTransfer::initVars( const ProcessorGroup * pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
   }
   */
@@ -417,7 +417,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     }
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 
 }
 
@@ -439,7 +439,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> heat_rate;
     if ( new_dw->exists( d_modelLabel, matlIndex, patch) ) {

@@ -72,7 +72,7 @@ WARNING
   class Steady_Burn : public HEChemModel {
   public:
     Steady_Burn(const ProcessorGroup* myworld,
-		const SimulationStateP& sharedState,
+		const MaterialManagerP& materialManager,
 		const ProblemSpecP& params,
                 const ProblemSpecP& prob_spec);
     

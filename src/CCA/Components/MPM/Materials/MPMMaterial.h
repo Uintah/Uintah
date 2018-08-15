@@ -34,8 +34,8 @@
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <Core/Geometry/Point.h>
@@ -92,12 +92,13 @@ WARNING
    MPMMaterial();
 
    // Standard MPM Material Constructor
-   MPMMaterial(ProblemSpecP&, SimulationStateP& ss, MPMFlags* flags,
+   MPMMaterial(ProblemSpecP&, MaterialManagerP& ss, MPMFlags* flags,
                const bool isRestart);
          
    ~MPMMaterial();
 
-   virtual void registerParticleState(SimulationState* ss);
+   virtual void registerParticleState( std::vector<std::vector<const VarLabel* > > &PState,
+				       std::vector<std::vector<const VarLabel* > > &PState_preReloc );
 
    virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 
@@ -206,7 +207,7 @@ WARNING
    //
    // The standard set of initialization actions except particlecreator
    //
-   void standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
+   void standardInitialization(ProblemSpecP& ps, MaterialManagerP& ss,
                                MPMFlags* flags, const bool isRestart);
  };
 

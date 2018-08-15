@@ -934,7 +934,7 @@ end
 function plotResults(titleStr,t, tstep, P, nodePos, velG, massG, momG, extForceG,intForceG, Limits, Levels)
   global gf;
   global dumpFrames;
-    % plot SimulationState
+    % plot MaterialManager
   % convert multilevel arrays into 1D arrays
   
   

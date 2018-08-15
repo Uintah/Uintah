@@ -53,7 +53,7 @@ protected:
 
 public:
     AMRCCHeat2D ( const ProcessorGroup * myworld,
-		  const SimulationStateP sharedState,
+		  const MaterialManagerP materialManager,
 		  int verbosity = 0 );
   
     virtual ~AMRCCHeat2D ();

@@ -84,7 +84,7 @@ class MPMICE : public ApplicationCommon {
 
 public:
   MPMICE(const ProcessorGroup* myworld,
-         const SimulationStateP sharedState,
+         const MaterialManagerP materialManager,
          MPMType type, const bool doAMR = false);
   
   virtual ~MPMICE();
@@ -287,7 +287,7 @@ public:
                             std::vector<constCCVariable<double> > & cv,
                             std::vector<constCCVariable<double> > & gamma,
                             double convergence_crit,
-                            int numALLMatls,
+                            unsigned int numALLMatls,
                             int & count,
                             double & sum,
                             IntVector c );                   

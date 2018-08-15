@@ -51,7 +51,7 @@ public:
   //
   ///////////////////////////////////////////////////////////////////////////
   ShellMPM(const ProcessorGroup* myworld,
-	   const SimulationStateP sharedState);
+	   const MaterialManagerP materialManager);
   
   virtual ~ShellMPM();
 

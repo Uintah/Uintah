@@ -243,7 +243,6 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
    if (_LsootOn){
      
      CCVariable<double>  absksoot; 
-     //tsk_info->get_unmanaged_uintah_field<CCVariable<double>,double , UintahSpaces::HostSpace  >("absksoot",absksoot);
      tsk_info->get_unmanaged_uintah_field<CCVariable<double>,double , UintahSpaces::HostSpace  >(absksoot,"absksoot",patch->getID(),_matl_index,tsk_info->get_time_substep() );
 
      constCCVariable<double>& soot_vf = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_soot_name));

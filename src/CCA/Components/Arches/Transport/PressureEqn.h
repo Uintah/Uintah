@@ -11,7 +11,7 @@ namespace Uintah{
 
 public:
 
-    PressureEqn( std::string task_name, int matl_index, SimulationStateP shared_state );
+    PressureEqn( std::string task_name, int matl_index, MaterialManagerP materialManager );
     ~PressureEqn();
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
@@ -42,18 +42,18 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, SimulationStateP shared_state ) : m_task_name(task_name),
-               m_matl_index(matl_index), m_state(shared_state){}
+      Builder( std::string task_name, int matl_index, MaterialManagerP materialManager ) : m_task_name(task_name),
+               m_matl_index(matl_index), m_materialManager(materialManager){}
       ~Builder(){}
 
       PressureEqn* build()
-      { return scinew PressureEqn( m_task_name, m_matl_index, m_state ); }
+      { return scinew PressureEqn( m_task_name, m_matl_index, m_materialManager ); }
 
       private:
 
       std::string m_task_name;
       int m_matl_index;
-      SimulationStateP m_state;
+      MaterialManagerP m_materialManager;
 
     };
 
@@ -83,7 +83,7 @@ private:
 
     SolverInterface* m_hypreSolver;
 
-    SimulationStateP m_sharedState;
+    MaterialManagerP m_materialManager;
 
     IntVector m_periodic_vector;
 

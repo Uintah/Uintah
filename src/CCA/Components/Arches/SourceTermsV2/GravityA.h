@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_GravityA_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 namespace Uintah{
 

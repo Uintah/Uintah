@@ -28,7 +28,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
@@ -61,15 +61,17 @@ GENERAL INFORMATION
   public:
 
     MinMax(const ProcessorGroup* myworld,
-	   const SimulationStateP sharedState,
-	   const ProblemSpecP& module_spec);
+           const MaterialManagerP materialManager,
+           const ProblemSpecP& module_spec);
     MinMax();
                     
     virtual ~MinMax();
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid);
+                              GridP& grid,
+                              std::vector<std::vector<const VarLabel* > > &PState,
+                              std::vector<std::vector<const VarLabel* > > &PState_preReloc);
                               
     virtual void outputProblemSpec(ProblemSpecP& ps){};    
                                   

@@ -1,7 +1,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Task.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -24,7 +24,7 @@ b_stepUsesCellLocation(false), b_stepUsesPhysicalLocation(false),
 d_constant_init(0.0), d_step_dir("x"), d_step_start(0.0), d_step_end(0.0), d_step_cellstart(0), d_step_cellend(0), d_step_value(0.0),
 d_use_constant_D(false)
 {
-  d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels->d_sharedState->getArchesMaterial(0)->getDWIndex() );
+  d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels->d_materialManager->getMaterial( "Arches", 0)->getDWIndex() );
   d_disc = scinew Discretization_new();
   _using_new_intrusion = false;
   _table_init = false;
@@ -263,7 +263,7 @@ EqnBase::sched_checkBCs( const LevelP& level, SchedulerP& sched, bool isRegrid =
     tsk->requires( Task::NewDW,VarLabel::find("volFraction") , Ghost::AroundCells, 0 );
   }
 
-  sched->addTask( tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ) );
 }
 
 void
@@ -279,7 +279,7 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     d_boundaryCond->checkBCs( patch, d_eqnName, matlIndex );
 
@@ -311,7 +311,7 @@ EqnBase::sched_tableInitialization( const LevelP& level, SchedulerP& sched )
 
   tsk->modifies( d_transportVarLabel );
 
-  sched->addTask( tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ) );
 
 
 }
@@ -328,7 +328,7 @@ EqnBase::tableInitialization(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage;

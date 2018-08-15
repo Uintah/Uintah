@@ -64,7 +64,7 @@ WARNING
   class MassMomEng_src : public FluidsBasedModel {
   public:
     MassMomEng_src(const ProcessorGroup* myworld,
-		   const SimulationStateP& sharedState,
+		   const MaterialManagerP& materialManager,
 		   const ProblemSpecP& params);
     
     virtual ~MassMomEng_src();

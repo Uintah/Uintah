@@ -29,7 +29,6 @@
 
 #include <CCA/Components/Solvers/SolverCommon.h>
 
-#include <Core/Grid/SimulationState.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/RefCounted.h>
 

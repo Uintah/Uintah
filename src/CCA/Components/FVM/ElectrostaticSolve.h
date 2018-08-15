@@ -30,7 +30,7 @@
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
@@ -63,7 +63,7 @@ WARNING
   class ElectrostaticSolve : public ApplicationCommon {
   public:
     ElectrostaticSolve(const ProcessorGroup* myworld,
-		       const SimulationStateP sharedState);
+		       const MaterialManagerP materialManager);
     virtual ~ElectrostaticSolve();
 
     virtual void problemSetup(const ProblemSpecP& params,

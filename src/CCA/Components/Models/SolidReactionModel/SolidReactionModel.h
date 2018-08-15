@@ -66,7 +66,7 @@ namespace Uintah {
     class SolidReactionModel : public ModelInterface {
     public:
       SolidReactionModel(const ProcessorGroup* d_myworld,
-                         const SimulationStateP& sharedState,
+                         const MaterialManagerP& materialManager,
                          const ProblemSpecP& params,
                          const ProblemSpecP& prob_spec);
       

@@ -12,7 +12,7 @@ namespace Uintah{
   class Heat : public ApplicationCommon {
   public:
     Heat(const ProcessorGroup* myworld,
-	 const SimulationStateP sharedState);
+	 const MaterialManagerP materialManager);
     
     virtual ~Heat();
 

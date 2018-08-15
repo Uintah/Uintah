@@ -40,8 +40,8 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
@@ -79,7 +79,7 @@ Crack::CrackPointSubset(const ProcessorGroup*,
     Uintah::MPI::Comm_rank(mpi_crack_comm, &pid);
     Uintah::MPI::Comm_size(mpi_crack_comm, &patch_size);
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=d_materialManager->getNumMatls( "MPM" );
     for(int m=0; m<numMPMMatls; m++) {
       cnset[m][pid].clear();
       
@@ -151,7 +151,7 @@ Crack::MoveCracks(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel,getLevel(patches) );
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=d_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMPMMatls; m++){ 
       if((int)ce[m].size()==0) // for materials with no cracks
         continue;
@@ -160,7 +160,7 @@ Crack::MoveCracks(const ProcessorGroup*,
       // Task 1: Move crack nodes (cx)
      
       // Get the necessary information
-      MPMMaterial* mpm_matl=d_sharedState->getMPMMaterial(m);
+      MPMMaterial* mpm_matl=d_materialManager->getMaterial( "MPM", m);
       int dwi=mpm_matl->getDWIndex();
 
       ParticleSubset* pset=old_dw->getParticleSubset(dwi,patch);

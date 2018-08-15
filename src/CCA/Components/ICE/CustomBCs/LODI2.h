@@ -30,7 +30,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
@@ -86,25 +86,25 @@ namespace Uintah {
                           const Patch* patch,
                           const std::string& where,
                           const int indx,
-                          SimulationStateP& sharedState,
+                          MaterialManagerP& materialManager,
                           bool& setLodiBcs,
                           Lodi_localVars* lv,
                           Lodi_globalVars* lvb);
                            
 
   bool read_LODI_BC_inputs(const ProblemSpecP&,
-                           SimulationStateP& sharedState,
+                           MaterialManagerP& materialManager,
                            Lodi_globalVars*);
                                                
   VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face);                                           
                                                              
   void Lodi_maxMach_patchSubset(const LevelP& level,
-                                 SimulationStateP& sharedState,
+                                 MaterialManagerP& materialManager,
                                  std::vector<PatchSubset*> &);
                                   
   bool is_LODI_face(const Patch* patch,
                     Patch::FaceType face,
-                    SimulationStateP& sharedState);                            
+                    MaterialManagerP& materialManager);                            
                             
 
   void computeLi(std::vector<CCVariable<Vector> >& L,
@@ -114,7 +114,7 @@ namespace Uintah {
                  const CCVariable<double>& speedSound,              
                  const Patch* patch,
                  DataWarehouse* new_dw,
-                 SimulationStateP& sharedState,
+                 MaterialManagerP& materialManager,
                  const int indx,
                  const Lodi_globalVars* user_inputs, 
                  const bool recursiveTasks);
@@ -136,19 +136,19 @@ namespace Uintah {
                    CCVariable<Vector>& vel_CC,           
                    Lodi_localVars* lv,
                    const Vector& dx,
-                   SimulationStateP& sharedState);
+                   MaterialManagerP& materialManager);
                     
   int FaceTemp_LODI(const Patch* patch,
                     const Patch::FaceType face,
                     CCVariable<double>& temp_CC,
                     Lodi_localVars* lv, 
                     const Vector& dx,
-                    SimulationStateP& sharedState);
+                    MaterialManagerP& materialManager);
                
   int  FacePress_LODI(const Patch* patch,
                       CCVariable<double>& press_CC,
                       std::vector<CCVariable<double> >& rho_micro,
-                      SimulationStateP& sharedState, 
+                      MaterialManagerP& materialManager, 
                       Patch::FaceType face,
                       Lodi_localVars* lv);
 

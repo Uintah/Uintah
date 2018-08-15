@@ -32,8 +32,8 @@
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <CCA/Components/MPM/CohesiveZone/CohesiveZone.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <Core/Geometry/Point.h>
@@ -83,11 +83,12 @@ WARNING
    CZMaterial();
 
    // Standard CZ Material Constructor
-   CZMaterial(ProblemSpecP&, SimulationStateP& ss, MPMFlags* flags);
+   CZMaterial(ProblemSpecP&, MaterialManagerP& ss, MPMFlags* flags);
          
    ~CZMaterial();
 
-   virtual void registerParticleState(SimulationState* ss);
+   virtual void registerParticleState( std::vector<std::vector<const VarLabel* > > &CZState,
+				       std::vector<std::vector<const VarLabel* > > &CZState_preReloc );
 
    virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 

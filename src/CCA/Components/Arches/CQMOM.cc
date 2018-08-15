@@ -12,7 +12,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
@@ -255,7 +255,7 @@ CQMOM::sched_solveCQMOMInversion( const LevelP& level, SchedulerP& sched, int ti
     }
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 // **********************************************
@@ -274,7 +274,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
    
     // get moments from data warehouse and put into CCVariable
     std::vector <constCCVariable<double> > momentCCVars ( nMoments );
@@ -408,7 +408,7 @@ CQMOM::sched_momentCorrection( const LevelP& level, SchedulerP& sched, int timeS
     tsk->modifies(tempLabel);
   }
   
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 
@@ -429,7 +429,7 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     
     // get moments from data warehouse and put into CCVariable
     vector<CCVariable<double>* > ccMoments;
@@ -585,7 +585,7 @@ CQMOM::sched_solveCQMOMInversion321( const LevelP& level, SchedulerP& sched, int
     }
   }
   
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 // **********************************************
@@ -604,7 +604,7 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     
     // get moments from data warehouse and put into CCVariable
     std::vector <constCCVariable<double> > momentCCVars ( nMoments );
@@ -739,7 +739,7 @@ CQMOM::sched_solveCQMOMInversion312( const LevelP& level, SchedulerP& sched, int
     tsk->modifies(tempLabel);
   }
   
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 // **********************************************
@@ -764,7 +764,7 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     
     // get moments from data warehouse and put into CCVariable
     std::vector <constCCVariable<double> > momentCCVars ( nMoments );
@@ -907,7 +907,7 @@ CQMOM::sched_solveCQMOMInversion213( const LevelP& level, SchedulerP& sched, int
     tsk->modifies(tempLabel);
   }
   
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 // **********************************************
@@ -926,7 +926,7 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     
     // get moments from data warehouse and put into CCVariable
     std::vector <constCCVariable<double> > momentCCVars ( nMoments );

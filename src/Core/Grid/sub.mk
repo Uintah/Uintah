@@ -51,14 +51,14 @@ SRCS += \
         $(SRCDIR)/LinearInterpolator.cc    \
         $(SRCDIR)/AxiLinearInterpolator.cc \
         $(SRCDIR)/Material.cc              \
+        $(SRCDIR)/MaterialManager.cc       \
         $(SRCDIR)/GIMPInterpolator.cc      \
         $(SRCDIR)/AxiGIMPInterpolator.cc   \
         $(SRCDIR)/PatchRangeTree.cc        \
         $(SRCDIR)/Patch.cc                 \
         $(SRCDIR)/Region.cc                \
         $(SRCDIR)/SimpleMaterial.cc        \
-        $(SRCDIR)/SimulationState.cc       \
-        $(SRCDIR)/SimulationTime.cc        \
+	$(SRCDIR)/SimulationTime.cc        \
         $(SRCDIR)/Task.cc                  \
         $(SRCDIR)/TOBSplineInterpolator.cc \
         $(SRCDIR)/UnknownVariable.cc       \

@@ -45,7 +45,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -235,7 +235,7 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     // Variables
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
@@ -686,7 +686,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<Vector> ccVel;
     constCCVariable<int> cellType;
@@ -1213,14 +1213,14 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                                         DataWarehouse* new_dw,
                                         const TimeIntegratorLabel* timelabels)
 {
-//  double simTime = d_lab->d_sharedState->getElapsedSimTime();
+//  double simTime = d_lab->d_materialManager->getElapsedSimTime();
   simTime_vartype simTime;
   old_dw->get( simTime, d_lab->d_simulationTimeLabel );
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> IsI;
     constCCVariable<double> MLI;

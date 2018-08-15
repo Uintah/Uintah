@@ -46,7 +46,7 @@ namespace Uintah {
 
   public:
     Turbulence();
-    Turbulence(ProblemSpecP& ps, SimulationStateP& sharedState);
+    Turbulence(ProblemSpecP& ps, MaterialManagerP& materialManager);
     virtual ~Turbulence();
 
     virtual void computeTurbViscosity(DataWarehouse* new_dw,
@@ -58,7 +58,7 @@ namespace Uintah {
                                       constSFCZVariable<double>& wvel_FC,
                                       constCCVariable<double>& rho_CC,
                                       const int indx,
-                                      SimulationStateP&  d_sharedState,
+                                      MaterialManagerP&  d_materialManager,
                                       CCVariable<double>& turb_viscosity) = 0;
 
     virtual void scheduleComputeVariance(SchedulerP& sched,
@@ -72,7 +72,7 @@ namespace Uintah {
                  constCCVariable<double>& vol_frac_CC,
                  const int indx,
                  ICELabel* lb,
-                 SimulationStateP&  d_sharedState,
+                 MaterialManagerP&  d_materialManager,
                  constCCVariable<double>& molecularVis,
                  CCVariable<double>& tot_viscosity);
 
@@ -81,7 +81,7 @@ namespace Uintah {
                               CCVariable<T>& var,
                               const int NGC);
   protected:
-    SimulationStateP d_sharedState;
+    MaterialManagerP d_materialManager;
     double d_filter_width;
 
     struct FilterScalar {

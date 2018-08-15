@@ -28,7 +28,7 @@
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 namespace Uintah {
 
@@ -60,54 +60,46 @@ WARNING
 
 ****************************************/
 
-//using ::Grid::Patch;
-//using ::Interface::DataWarehouseP;
+  class Material {
 
-
-   class Material {
-   public:
-     Material(ProblemSpecP& ps);
-     Material();
+  public:
+    Material(ProblemSpecP& ps);
+    Material();
       
-     virtual ~Material();
+    virtual ~Material();
       
-     virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
-
-      //////////
-      // Return index associated with this material's
-      // location in the data warehouse
-      int getDWIndex() const;
+    virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
+    
+    //////////
+    // Return index associated with this material's
+    // location in the data warehouse
+    int getDWIndex() const;
       
-      void setDWIndex(int);
+    void setDWIndex(int);
 
-     const MaterialSubset* thisMaterial() const {
-       return thismatl;
-     }
+    const MaterialSubset* thisMaterial() const {
+      return m_matlSubset;
+    }
      
-     virtual void registerParticleState(SimulationState* ss);
+    bool hasName() const {
+      return m_haveName;
+    }
+    std::string getName() const {
+      return m_name;
+    }
 
-     bool hasName() const {
-       return haveName;
-     }
-     std::string getName() const {
-       return name;
-     }
-   protected:
+  protected:
+    // Index associated with this material's spot in the DW
+    int m_dwIndex{-1};
+    MaterialSubset* m_matlSubset{nullptr};
 
-      // Index associated with this material's spot in the DW
-      int d_dwindex;
-      MaterialSubset* thismatl;
-
-
-
-   private:
-
-     bool haveName;
-     std::string name;
+  private:
+    bool m_haveName{false};
+    std::string m_name{""};
       
-     Material(const Material &mat);
-     Material& operator=(const Material &mat);
-   };
+    Material(const Material &mat);
+    Material& operator=(const Material &mat);
+  };
 } // End namespace Uintah
 
 #endif // __MATERIAL_H__

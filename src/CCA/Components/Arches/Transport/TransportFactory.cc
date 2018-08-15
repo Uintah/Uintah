@@ -199,7 +199,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
     if ( db ->findBlock("KMomentum")->findBlock("PressureSolver")){
       //Pressure eqn
-      TaskInterface::TaskBuilder* press_tsk = scinew PressureEqn::Builder("build_pressure_system", 0, _shared_state);
+      TaskInterface::TaskBuilder* press_tsk = scinew PressureEqn::Builder("build_pressure_system", 0, _materialManager);
       register_task( "build_pressure_system", press_tsk );
       _pressure_eqn.push_back("build_pressure_system");
 

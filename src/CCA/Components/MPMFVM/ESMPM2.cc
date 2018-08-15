@@ -58,11 +58,11 @@ static DebugStream cout_doing("ESMPM2_DOING_COUT", false);
 #undef CBDI_FLUXBCS
 
 ESMPM2::ESMPM2(const ProcessorGroup* myworld,
-	       const SimulationStateP sharedState) :
-  ApplicationCommon(myworld, sharedState)
+	       const MaterialManagerP materialManager) :
+  ApplicationCommon(myworld, materialManager)
 {
-  d_amrmpm = scinew AMRMPM(myworld, m_sharedState);
-  d_gaufvm = scinew GaussSolve(myworld, m_sharedState);
+  d_amrmpm = scinew AMRMPM(myworld, m_materialManager);
+  d_gaufvm = scinew GaussSolve(myworld, m_materialManager);
 
   d_mpm_lb = scinew MPMLabel();
   d_fvm_lb = scinew FVMLabel();
@@ -111,7 +111,7 @@ void ESMPM2::problemSetup(const ProblemSpecP& prob_spec,
     dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
 
   if(d_switch_criteria){
-    d_switch_criteria->problemSetup(prob_spec, restart_prob_spec, m_sharedState);
+    d_switch_criteria->problemSetup(prob_spec, restart_prob_spec, m_materialManager);
   }
 
   ProblemSpecP mpm_ps = 0;
@@ -180,8 +180,8 @@ void ESMPM2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   if(level->getIndex() > 0)
     return;
 
-  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
-  const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* mpm_matls = m_materialManager->allMaterials( "MPM" );
+  const MaterialSet* all_matls = m_materialManager->allMaterials();
   const MaterialSubset* mpm_matlsub = mpm_matls->getUnion();
 
   int maxLevels = level->getGrid()->numLevels();
@@ -383,9 +383,9 @@ void ESMPM2::computeCCChargeMass(const ProcessorGroup*, const PatchSubset* patch
       cc_permittivity.initialize(0.0);
       cc_part_count.initialize(0);
 
-      int numMatls = m_sharedState->getNumMPMMatls();
+      int numMatls = m_materialManager->getNumMatls( "MPM" );
       for(int m = 0; m < numMatls; m++){
-        MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+        MPMMaterial* mpm_matl = (MPMMaterial* ) m_materialManager->getMaterial( "MPM", m );
         int dwi = mpm_matl->getDWIndex();
 
         constParticleVariable<double> p_poscharge;
@@ -478,9 +478,9 @@ void ESMPM2::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* p
     constCCVariable<double> cc_espotential;
     new_dw->get(cc_espotential, d_fvm_lb->ccESPotential, 0, patch, d_gac, 1);
 
-    int numMatls = m_sharedState->getNumMPMMatls();
+    int numMatls = m_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial* ) m_materialManager->getMaterial( "MPM", m );
       int dwi = mpm_matl->getDWIndex();
 
       constParticleVariable<Point> p_position;

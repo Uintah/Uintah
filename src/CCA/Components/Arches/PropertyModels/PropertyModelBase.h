@@ -4,7 +4,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
@@ -34,7 +34,7 @@ class PropertyModelBase{
 
 public:
 
-  PropertyModelBase( std::string prop_name, SimulationStateP& shared_state );
+  PropertyModelBase( std::string prop_name, MaterialManagerP& materialManager );
   virtual ~PropertyModelBase();
 
   /** @brief Interface to the input file */
@@ -109,7 +109,7 @@ protected:
 
   bool _before_table_lookup;                          ///< To determine if the property model is evaluated before the table look up or after.
 
-  SimulationStateP& _shared_state;                    ///< Uintah shared state
+  MaterialManagerP& _materialManager;                 ///< Uintah Material Manager
 
   /** @brief A common intialization proceedure that can be used by all derived types */
   template <class phiT >

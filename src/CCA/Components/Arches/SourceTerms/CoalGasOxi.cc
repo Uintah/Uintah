@@ -1,6 +1,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasOxi.h>
@@ -21,8 +21,8 @@
 using namespace std;
 using namespace Uintah;
 
-CoalGasOxi::CoalGasOxi( std::string src_name, vector<std::string> label_names, SimulationStateP& shared_state, std::string type )
-: SourceTermBase( src_name, shared_state, label_names, type )
+CoalGasOxi::CoalGasOxi( std::string src_name, vector<std::string> label_names, MaterialManagerP& materialManager, std::string type )
+: SourceTermBase( src_name, materialManager, label_names, type )
 {
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() );
 }
@@ -97,7 +97,7 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
 
   }
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 
@@ -179,7 +179,7 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
     CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -252,7 +252,7 @@ CoalGasOxi::sched_initialize( const LevelP& level, SchedulerP& sched )
     tsk->computes(*iter);
   }
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 void
@@ -267,7 +267,7 @@ CoalGasOxi::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> src;
 

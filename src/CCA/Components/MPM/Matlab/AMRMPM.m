@@ -655,7 +655,7 @@ end
 function plotResults(titleStr,t, tstep, xp, dp, massP, Fp, velP, stressP, nodePos, velG, massG, extForceG,intForceG)
   global dumpFrames;
   
-  % plot SimulationState
+  % plot MaterialManager
   fig1 = sfigure(1);
   set(fig1,'position',[50,100,700,700]);
   

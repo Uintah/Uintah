@@ -27,7 +27,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Math/MiscMath.h>
@@ -181,7 +181,7 @@ int  set_Sine_Velocity_BC(const Patch* patch,
                           const string& var_desc,
                           Iterator& bound_ptr,
                           const string& bc_kind,
-                          SimulationStateP& sharedState,
+                          MaterialManagerP& materialManager,
                           sine_globalVars* gv,
                           sine_localVars* lv)                     
 
@@ -199,7 +199,7 @@ int  set_Sine_Velocity_BC(const Patch* patch,
     double omega   = gv->omega; 
     Vector vel_ref = gv->vel_ref;           
     double t       = lv->simTime + lv->delT;
-    // double t       = sharedState->getElapsedSimTime(); 
+    // double t       = materialManager->getElapsedSimTime(); 
     // t += lv->delT;
     double change  = A * sin(omega*t);
     
@@ -262,7 +262,7 @@ int set_Sine_press_BC(const Patch* patch,
                       CCVariable<double>& press_CC,
                       Iterator& bound_ptr,
                       const string& bc_kind,
-                      SimulationStateP& sharedState,
+                      MaterialManagerP& materialManager,
                       sine_globalVars* gv,
                       sine_localVars* lv)  
 {
@@ -278,7 +278,7 @@ int set_Sine_press_BC(const Patch* patch,
   double omega =  gv->omega;   
   double p_ref =  gv->p_ref;                               
   double t     = lv->simTime + lv->delT;
-  // double t       = sharedState->getElapsedSimTime(); 
+  // double t       = materialManager->getElapsedSimTime(); 
   // t += lv->delT;  // delT is either 0 or delT 
   double change = A * sin(omega*t);                               
 

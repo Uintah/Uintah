@@ -66,7 +66,7 @@ WARNING
   class RegridderTest: public ApplicationCommon {
   public:
     RegridderTest ( const ProcessorGroup* myworld,
-		    const SimulationStateP sharedState );
+		    const MaterialManagerP materialManager );
 
     virtual ~RegridderTest ( void );
 

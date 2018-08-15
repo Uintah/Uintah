@@ -459,7 +459,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
   }
 
   //*********Start - Used for testing purposes - CG *******
-  // int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  // int timestep = d_materialManager->getCurrentTopLevelTimeStep();
   //*********End   - Used for testing purposes - CG *******
 
   // General stuff

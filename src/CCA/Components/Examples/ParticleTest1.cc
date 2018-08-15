@@ -28,7 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
@@ -44,8 +44,8 @@ using namespace std;
 using namespace Uintah;
 
 ParticleTest1::ParticleTest1(const ProcessorGroup* myworld,
-			     const SimulationStateP sharedState)
-  : ApplicationCommon(myworld, sharedState)
+			     const MaterialManagerP materialManager)
+  : ApplicationCommon(myworld, materialManager)
 {
   lb_ = scinew ExamplesLabel();
 }
@@ -66,7 +66,7 @@ void ParticleTest1::problemSetup(const ProblemSpecP& params,
   pt1->getWithDefault("doGhostCells", doGhostCells_ , 0);
   
   mymat_ = scinew SimpleMaterial();
-  m_sharedState->registerSimpleMaterial(mymat_);
+  m_materialManager->registerSimpleMaterial(mymat_);
 }
  
 void ParticleTest1::scheduleInitialize(const LevelP& level,
@@ -77,7 +77,7 @@ void ParticleTest1::scheduleInitialize(const LevelP& level,
   task->computes(lb_->pXLabel);
   task->computes(lb_->pMassLabel);
   task->computes(lb_->pParticleIDLabel);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
  
 void ParticleTest1::scheduleRestartInitialize(const LevelP& level,
@@ -91,14 +91,14 @@ void ParticleTest1::scheduleComputeStableTimeStep(const LevelP& level,
   Task* task = scinew Task("computeStableTimeStep",
                            this, &ParticleTest1::computeStableTimeStep);
   task->computes(getDelTLabel(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
 }
 
 void
 ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  const MaterialSet* matls = m_sharedState->allMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials();
 
   Task* task = scinew Task("timeAdvance",
                            this, &ParticleTest1::timeAdvance);
@@ -125,7 +125,7 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   task->computes(lb_->pXLabel_preReloc);
   task->computes(lb_->pMassLabel_preReloc);
   task->computes(lb_->pParticleIDLabel_preReloc);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
   lb_->d_particleState.clear();
   lb_->d_particleState_preReloc.clear();

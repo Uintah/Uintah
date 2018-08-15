@@ -27,7 +27,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Math/MiscMath.h>
@@ -176,7 +176,7 @@ int set_MMS_Velocity_BC(const Patch* patch,
                          const string& var_desc,
                          Iterator& bound_ptr,
                          const string& bc_kind,
-                         SimulationStateP& sharedState,
+                         MaterialManagerP& materialManager,
                          mms_globalVars* gv,
                          mms_localVars* lv)                     
 
@@ -193,7 +193,7 @@ int set_MMS_Velocity_BC(const Patch* patch,
       double nu = gv->viscosity;
       double A =  gv->A;
       double t = lv->simTime + lv->delT;
-      // double t  = sharedState->getElapsedSimTime();
+      // double t  = materialManager->getElapsedSimTime();
       // t += lv->delT;
       
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
@@ -257,7 +257,7 @@ int set_MMS_press_BC(const Patch* patch,
                       CCVariable<double>& press_CC,
                       Iterator& bound_ptr,
                       const string& bc_kind,
-                      SimulationStateP& sharedState,
+                      MaterialManagerP& materialManager,
                       mms_globalVars* gv,
                       mms_localVars* lv)  
 {
@@ -273,7 +273,7 @@ int set_MMS_press_BC(const Patch* patch,
     double nu = gv->viscosity;
     double A =  gv->A;
     double t = lv->simTime + lv->delT;
-    // double t =  sharedState->getElapsedSimTime();
+    // double t =  materialManager->getElapsedSimTime();
     // t += lv->delT;
     double p_ref = 101325;
 

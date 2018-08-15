@@ -31,7 +31,7 @@
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
@@ -73,7 +73,7 @@ namespace Uintah {
   
   //____________________________________________________________
   bool read_inletVel_BC_inputs(const ProblemSpecP&,
-                               SimulationStateP& sharedState,
+                               MaterialManagerP& materialManager,
                                inletVel_globalVars* global,
                                GridP& grid);
  

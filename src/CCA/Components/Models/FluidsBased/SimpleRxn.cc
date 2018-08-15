@@ -37,7 +37,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
@@ -58,9 +58,9 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
 //______________________________________________________________________
 SimpleRxn::SimpleRxn(const ProcessorGroup* myworld, 
-                     const SimulationStateP & sharedState,
+                     const MaterialManagerP & materialManager,
                      const ProblemSpecP& params)
-  : FluidsBasedModel(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   m_modelComputesThermoTransportProps = true;
   
@@ -110,7 +110,7 @@ SimpleRxn::problemSetup( GridP &, const bool isRestart )
 {
   cout_doing << "Doing problemSetup \t\t\t\tSIMPLE_RXN" << endl;
 
-  d_matl = m_sharedState->parseAndLookupMaterial(d_params, "material");
+  d_matl = m_materialManager->parseAndLookupMaterial(d_params, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -318,7 +318,7 @@ void SimpleRxn::initialize(const ProcessorGroup*,
                               f, FakeDiffusivity, fakedelT);
     }
         
-    setBC( f, "scalar-f", patch, m_sharedState, indx, new_dw, isNotInitialTimeStep );
+    setBC( f, "scalar-f", patch, m_materialManager, indx, new_dw, isNotInitialTimeStep );
     
     //__________________________________
     // compute thermo-transport-physical quantities
@@ -584,7 +584,7 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
       old_dw->get(lastDumpTime, Slb->lastProbeDumpTimeLabel);
       double oldProbeDumpTime = lastDumpTime;
       
-      // double simTime = m_sharedState->getElapsedSimTime();
+      // double simTime = m_materialManager->getElapsedSimTime();
       double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
       
       if (simTime >= nextDumpTime){        // is it time to dump the points

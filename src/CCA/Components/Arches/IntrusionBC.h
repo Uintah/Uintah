@@ -7,7 +7,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/LevelP.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>

@@ -8,7 +8,7 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -25,27 +25,27 @@ RichardsFletcherDevolBuilder::RichardsFletcherDevolBuilder( const std::string   
                                                             const vector<std::string> & reqICLabelNames,
                                                             const vector<std::string> & reqScalarLabelNames,
                                                             ArchesLabel         * fieldLabels,
-                                                            SimulationStateP          & sharedState,
+                                                            MaterialManagerP          & materialManager,
                                                             int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, materialManager, qn )
 {
 }
 
 RichardsFletcherDevolBuilder::~RichardsFletcherDevolBuilder(){}
 
 ModelBase* RichardsFletcherDevolBuilder::build() {
-  return scinew RichardsFletcherDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return scinew RichardsFletcherDevol( d_modelName, d_materialManager, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
 RichardsFletcherDevol::RichardsFletcherDevol( std::string modelName, 
-                                              SimulationStateP& sharedState,
+                                              MaterialManagerP& materialManager,
                                               ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames, 
                                               vector<std::string> scalarLabelNames,
                                               int qn ) 
-: Devolatilization(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+: Devolatilization(modelName, materialManager, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   pi = acos(-1.0);
 }
@@ -199,7 +199,7 @@ RichardsFletcherDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   tsk->requires( Task::OldDW, d_fieldLabels->d_delTLabel); 
   tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 
 }
 
@@ -219,7 +219,7 @@ RichardsFletcherDevol::computeModel( const ProcessorGroup * pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     
     Vector Dx = patch->dCell(); 
     double vol = Dx.x()* Dx.y()* Dx.z(); 

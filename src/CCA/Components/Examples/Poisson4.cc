@@ -30,7 +30,7 @@
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/GridSurfaceIterator.h>
 #include <Core/Grid/Variables/GridIterator.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
@@ -45,8 +45,8 @@ using namespace std;
 using namespace Uintah;
 
 Poisson4::Poisson4(const ProcessorGroup* myworld,
-		   const SimulationStateP sharedState)
-  : ApplicationCommon(myworld, sharedState)
+		   const MaterialManagerP materialManager)
+  : ApplicationCommon(myworld, materialManager)
 {
 
   phi_label = VarLabel::create("phi", 
@@ -73,7 +73,7 @@ void Poisson4::problemSetup(const ProblemSpecP& params,
   
   mymat_ = scinew SimpleMaterial();
   
-  m_sharedState->registerSimpleMaterial(mymat_);
+  m_materialManager->registerSimpleMaterial(mymat_);
 }
 //______________________________________________________________________
 //
@@ -85,7 +85,7 @@ void Poisson4::scheduleInitialize(const LevelP& level,
                      
   task->computes(phi_label);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -103,7 +103,7 @@ void Poisson4::scheduleComputeStableTimeStep(const LevelP& level,
                      
   task->requires(Task::NewDW, residual_label);
   task->computes(getDelTLabel(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -142,7 +142,7 @@ Poisson4::scheduleTimeAdvance( const LevelP& level,
 {
 
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = m_sharedState->allMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials();
 
   scheduleTimeAdvance0(sched,patches,matls);
 
@@ -156,7 +156,7 @@ Poisson4::scheduleTimeAdvance( const LevelP& level,
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 #endif
 }
 //______________________________________________________________________

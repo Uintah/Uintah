@@ -24,7 +24,7 @@
 
 #include <CCA/Components/ICE/WallShearStressModel/smoothWall.h>
 
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/DbgOutput.h>
@@ -48,10 +48,10 @@ static DebugStream dbg("ICE_DOING_COUT", false);
 //  Reference 3: Handout on evernote - urbanmodelpaper
 //______________________________________________________________________
 
-smoothwall::smoothwall(ProblemSpecP& ps, SimulationStateP& sharedState)
-  : WallShearStress(ps, sharedState)
+smoothwall::smoothwall(ProblemSpecP& ps, MaterialManagerP& materialManager)
+  : WallShearStress(ps, materialManager)
 {
-  d_sharedState = sharedState;
+  d_materialManager = materialManager;
 
   string face;
   ps->require("domainFace", face);

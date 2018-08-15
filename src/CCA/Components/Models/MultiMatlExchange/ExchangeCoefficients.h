@@ -28,8 +28,8 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Math/FastMatrix.h>
 

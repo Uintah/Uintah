@@ -40,7 +40,7 @@ namespace Uintah {
   class AMRICE : public ICE {
   public:
     AMRICE(const ProcessorGroup* myworld,
-	   const SimulationStateP sharedState);
+	   const MaterialManagerP materialManager);
 
     virtual ~AMRICE();
     

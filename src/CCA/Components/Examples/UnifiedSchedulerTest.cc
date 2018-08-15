@@ -28,7 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
@@ -52,8 +52,8 @@ using namespace std;
 using namespace Uintah;
 
 UnifiedSchedulerTest::UnifiedSchedulerTest(const ProcessorGroup* myworld,
-					   const SimulationStateP sharedState) :
-  ApplicationCommon(myworld, sharedState)
+					   const MaterialManagerP materialManager) :
+  ApplicationCommon(myworld, materialManager)
 {
   phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
   residual_label = VarLabel::create("residual", sum_vartype::getTypeDescription());
@@ -73,7 +73,7 @@ void UnifiedSchedulerTest::problemSetup(const ProblemSpecP& params,
   ProblemSpecP unifiedSchedTest = params->findBlock("UnifiedSchedulerTest");
   unifiedSchedTest->require("delt", delt_);
   simpleMaterial_ = scinew SimpleMaterial();
-  m_sharedState->registerSimpleMaterial(simpleMaterial_);
+  m_materialManager->registerSimpleMaterial(simpleMaterial_);
 }
 //______________________________________________________________________
 //
@@ -85,7 +85,7 @@ void UnifiedSchedulerTest::scheduleInitialize(const LevelP& level,
   multiTask->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   //multiTask->computes(phi_label);
   multiTask->computes(residual_label);
-  sched->addTask(multiTask, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(multiTask, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -102,7 +102,7 @@ void UnifiedSchedulerTest::scheduleComputeStableTimeStep(const LevelP& level,
 
   task->requires(Task::NewDW, residual_label);
   task->computes(getDelTLabel(), level.get_rep());
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -123,7 +123,7 @@ void UnifiedSchedulerTest::scheduleTimeAdvance(const LevelP& level,
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________

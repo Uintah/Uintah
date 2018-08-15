@@ -43,7 +43,7 @@ static DebugStream cout_doing("AMRMPM", false);
 
 ConstantRate::ConstantRate(
                            ProblemSpecP     & ps,
-                           SimulationStateP & sS,
+                           MaterialManagerP & sS,
                            MPMFlags         * Mflag,
                            std::string        diff_type
                           ): ScalarDiffusionModel(ps,
@@ -86,7 +86,7 @@ void ConstantRate::computeFlux(
                               )
 {
   // Get the current simulation time
-  // double simTime = d_sharedState->getElapsedSimTime();
+  // double simTime = d_materialManager->getElapsedSimTime();
 
   // simTime_vartype simTime;
   // old_dw->get(simTime, d_lb->simulationTimeLabel);
@@ -190,7 +190,7 @@ void ConstantRate::computeDivergence(
   Ghost::GhostType gn  = Ghost::None;
 
   //*********Start - Used for testing purposes - CG *******
-  //int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  //int timestep = d_materialManager->getCurrentTopLevelTimeStep();
   //*********End   - Used for testing purposes - CG *******
 
   constNCVariable<double> gMass;

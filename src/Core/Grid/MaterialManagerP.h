@@ -23,13 +23,13 @@
  */
 
 
-#ifndef UINTAH_HOMEBREW_SimulationStateP_H
-#define UINTAH_HOMEBREW_SimulationStateP_H
+#ifndef UINTAH_CORE_GRID_MATERIALMANAGERP_H
+#define UINTAH_CORE_GRID_MATERIALMANAGERP_H
 
 namespace Uintah {
-   template<class T> class Handle;
-   class SimulationState;
-   typedef Handle<SimulationState> SimulationStateP;
+  template<class T> class Handle;
+  class MaterialManager;
+  typedef Handle<MaterialManager> MaterialManagerP;
 }
 
 #endif

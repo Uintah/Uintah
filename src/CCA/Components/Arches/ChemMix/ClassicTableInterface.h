@@ -68,7 +68,7 @@ class ClassicTableInterface : public MixingRxnModel {
 
 public:
 
-  ClassicTableInterface( SimulationStateP& sharedState );
+  ClassicTableInterface( MaterialManagerP& materialManager );
 
   ~ClassicTableInterface();
 

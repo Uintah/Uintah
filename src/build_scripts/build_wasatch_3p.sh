@@ -92,7 +92,7 @@ fi
 SPATIAL_OPS_TAG=505d2319e55099912b99c86f0ee28ab96a025bef
 TAB_PROPS_TAG=0a671fcdaf53cb517666ba760513a7ce141ecb6e
 RAD_PROPS_TAG=a2626cdccfbb97ccb7d68d43bfe085194cccf4d5
-EXPR_LIB_TAG=05ebb5ac8dfa847f38417ad158abf1e127d4211c
+EXPR_LIB_TAG=86c4334e8ded4f08099270f84679572a09058aa7
 NSCBC_TAG=e50c2e3fb79687dc26745fe2dea6e4252d2757cd
 
 ############################################################################
@@ -171,7 +171,7 @@ if test "$BUILD_SPATIALOPS" = "yes"; then
       fi
       run "cd .."
   else
-    run "git clone http://gitlab.multiscale.utah.edu/common/SpatialOps.git SpatialOps"
+    run "git clone https://gitlab.multiscale.utah.edu/common/SpatialOps.git SpatialOps"
     run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
   fi
   if test ! -z $SPATIAL_OPS_TAG ; then
@@ -250,7 +250,7 @@ if test "$BUILD_EXPRLIB" = "yes"; then
       fi
       run "cd .."
   else
-      run "git clone http://gitlab.multiscale.utah.edu/common/ExprLib.git ExprLib"
+      run "git clone https://gitlab.multiscale.utah.edu/common/ExprLib.git ExprLib"
       run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
   fi
   if test ! -z $EXPR_LIB_TAG ; then
@@ -313,7 +313,7 @@ if test "$BUILD_TABPROPS" = "yes"; then
       fi
       run "cd .."
   else
-      run "git clone http://gitlab.multiscale.utah.edu/common/TabProps.git TabProps"
+      run "git clone https://gitlab.multiscale.utah.edu/common/TabProps.git TabProps"
       run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
   fi
   if test ! -z $TAB_PROPS_TAG ; then
@@ -371,7 +371,7 @@ if test "$BUILD_RADPROPS" = "yes"; then
       fi
       run "cd .."
   else
-     run "git clone http://gitlab.multiscale.utah.edu/common/RadProps.git RadProps"
+     run "git clone https://gitlab.multiscale.utah.edu/common/RadProps.git RadProps"
      run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
   fi
   if test ! -z $RAD_PROPS_TAG ; then
@@ -432,7 +432,7 @@ if test "$BUILD_NSCBC" = "yes"; then
     fi
     run "cd .."
   else
-    run "git clone http://gitlab.multiscale.utah.edu/common/NSCBC.git NSCBC"
+    run "git clone https://gitlab.multiscale.utah.edu/common/NSCBC.git NSCBC"
     run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/NSCBC/build"
   fi
   if test ! -z $NSCBC_TAG ; then

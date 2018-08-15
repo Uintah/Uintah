@@ -35,7 +35,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -51,8 +51,8 @@
 using namespace Uintah;
 
 MPNP::MPNP(const ProcessorGroup* myworld,
-	   const SimulationStateP sharedState)
-  : ApplicationCommon(myworld, sharedState)
+	   const MaterialManagerP materialManager)
+  : ApplicationCommon(myworld, materialManager)
 {
   d_lb = scinew FVMLabel();
 

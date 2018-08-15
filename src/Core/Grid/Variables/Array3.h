@@ -25,8 +25,6 @@
 #ifndef UINTAH_HOMEBREW_ARRAY3_H
 #define UINTAH_HOMEBREW_ARRAY3_H
 
-
-
 #include <Core/Grid/Variables/Array3Window.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Stencil4.h>

@@ -43,8 +43,8 @@
 using namespace Uintah;
 
 DOSweep::DOSweep(const ProcessorGroup* myworld,
-		 const SimulationStateP sharedState)
-  : ApplicationCommon(myworld, sharedState)
+		 const MaterialManagerP materialManager)
+  : ApplicationCommon(myworld, materialManager)
 {
   lb_ = scinew ExamplesLabel();
 }
@@ -90,21 +90,21 @@ void DOSweep::problemSetup(const ProblemSpecP& prob_spec,
     throw ProblemSetupException("DOSweep: Must specify one of X_Laplacian, Y_Laplacian, or Z_Laplacian",
                                 __FILE__, __LINE__);
   mymat_ = scinew SimpleMaterial();
-  m_sharedState->registerSimpleMaterial(mymat_);
+  m_materialManager->registerSimpleMaterial(mymat_);
 }
 //__________________________________
 // 
 void DOSweep::scheduleInitialize(const LevelP& level,
                                  SchedulerP& sched)
 {
-  solver->scheduleInitialize(level,sched,m_sharedState->allMaterials());
+  solver->scheduleInitialize(level,sched,m_materialManager->allMaterials());
 }
 //__________________________________
 //
 void DOSweep::scheduleRestartInitialize(const LevelP& level,
                                         SchedulerP& sched)
 {
-  solver->scheduleRestartInitialize(level,sched,m_sharedState->allMaterials());
+  solver->scheduleRestartInitialize(level,sched,m_materialManager->allMaterials());
 }
 //__________________________________
 // 
@@ -114,7 +114,7 @@ void DOSweep::scheduleComputeStableTimeStep(const LevelP& level,
   Task* task = scinew Task("computeStableTimeStep",this, 
                            &DOSweep::computeStableTimeStep);
   task->computes(getDelTLabel(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //__________________________________
 //
@@ -127,9 +127,9 @@ DOSweep::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   task->computes(lb_->pressure_matrix);
   task->computes(lb_->pressure_rhs);
 
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
-  solver->scheduleSolve(level, sched, m_sharedState->allMaterials(), 
+  solver->scheduleSolve(level, sched, m_materialManager->allMaterials(), 
                         lb_->pressure_matrix, Task::NewDW, lb_->pressure, 
                         false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW,true);
 

@@ -71,7 +71,7 @@ WARNING
   class AdiabaticTable :public FluidsBasedModel {
   public:
     AdiabaticTable(const ProcessorGroup* myworld, 
-		   const SimulationStateP& sharedState,
+		   const MaterialManagerP& materialManager,
                    const ProblemSpecP& params);
                    
     virtual ~AdiabaticTable();

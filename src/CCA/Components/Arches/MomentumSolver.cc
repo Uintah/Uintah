@@ -41,7 +41,7 @@
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -103,7 +103,7 @@ MomentumSolver::~MomentumSolver()
 //****************************************************************************
 void
 MomentumSolver::problemSetup(const ProblemSpecP& params,
-                             SimulationStateP & sharedState)
+                             MaterialManagerP & materialManager)
 {
   ProblemSpecP db = params->findBlock("MomentumSolver");
 
@@ -374,7 +374,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     ArchesVariables velocityVars;
     ArchesConstVariables constVelocityVars;
 
@@ -468,7 +468,7 @@ void MomentumSolver::solveVelHat(const LevelP& level,
                                  const TimeIntegratorLabel* timelabels, const int curr_level )
 {
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
 
   IntVector periodic_vector = level->getPeriodicBoundaries();
   d_3d_periodic = (periodic_vector == IntVector(1,1,1));
@@ -718,7 +718,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     ArchesVariables velocityVars;
     ArchesConstVariables constVelocityVars;
 
@@ -1226,7 +1226,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     constCCVariable<double> old_density;
     constCCVariable<double> temp_density;
@@ -1358,7 +1358,7 @@ MomentumSolver::sched_computeMomentum( const LevelP& level,
   tsk->requires( which_dw, d_lab->d_wVelocitySPBCLabel, Ghost::AroundFaces, 1 );
   tsk->requires( which_dw, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 );
 
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ) );
 
 }
 
@@ -1378,7 +1378,7 @@ void MomentumSolver::computeMomentum( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     DataWarehouse* which_dw;
 

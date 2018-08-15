@@ -26,7 +26,7 @@
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Util/DebugStream.h>
@@ -176,7 +176,7 @@ void addRequires_MicroSlip(Task         * t,
 ____________________________________________________________________*/
 void meanFreePath(DataWarehouse     * new_dw,
                   const Patch       * patch,
-                  SimulationStateP  & sharedState,
+                  MaterialManagerP  & materialManager,
                   slip_localVars    * sv)
 {
   cout_doing << "meanFreePath" << endl;
@@ -200,7 +200,7 @@ void meanFreePath(DataWarehouse     * new_dw,
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
 
-    if ( is_MicroSlip_face(patch,face, sharedState) ) {
+    if ( is_MicroSlip_face(patch,face, materialManager) ) {
 
       // hit the cells in one cell from the face direction
       IntVector offset    = patch->faceDirection(face);
@@ -244,7 +244,7 @@ void  preprocess_MicroSlip_BCs(DataWarehouse    * old_dw,
                                const Patch      * patch,
                                const string     & where,
                                const int /*indx*/,
-                               SimulationStateP & sharedState,
+                               MaterialManagerP & materialManager,
                                bool             & setMicroSlipBcs,
                                slip_localVars   * lv,
                                slip_globalVars  * gv)
@@ -300,7 +300,7 @@ void  preprocess_MicroSlip_BCs(DataWarehouse    * old_dw,
     lv->alpha_temperature = gv->alpha_temperature;
     lv->SlipModel         = gv->SlipModel;
     lv->CreepFlow         = gv->CreepFlow;
-    meanFreePath(new_dw, patch, sharedState, lv);
+    meanFreePath(new_dw, patch, materialManager, lv);
   }
 }
 /* ______________________________________________________________________
@@ -309,13 +309,13 @@ void  preprocess_MicroSlip_BCs(DataWarehouse    * old_dw,
  ______________________________________________________________________  */
 bool is_MicroSlip_face(const Patch      * patch,
                        Patch::FaceType    face,
-                       SimulationStateP & sharedState)
+                       MaterialManagerP & materialManager)
 {
   bool is_MicroSlip_face = false;
-  int numMatls = sharedState->getNumICEMatls();
+  int numMatls = materialManager->getNumMatls( "ICE" );
 
   for (int m = 0; m < numMatls; m++ ) {
-    ICEMaterial* ice_matl = sharedState->getICEMaterial(m);
+    ICEMaterial* ice_matl = (ICEMaterial*) materialManager->getMaterial( "ICE", m);
     int indx              = ice_matl->getDWIndex();
     bool slip_temperature = patch->haveBC( face, indx, "slip", "Temperature");
     bool slip_velocity    = patch->haveBC( face, indx, "slip",  "Velocity");

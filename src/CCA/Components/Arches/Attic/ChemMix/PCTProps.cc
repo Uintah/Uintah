@@ -38,7 +38,7 @@
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
@@ -57,7 +57,7 @@ using namespace Uintah;
 PCTProps::PCTProps( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
   MixingRxnModel( labels, MAlabels )
 {
-  _boundary_condition = scinew BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
+  _boundary_condition = scinew BoundaryCondition_new( labels->d_materialManager->getMaterial( "Arches", 0)->getDWIndex() ); 
 }
 
 //--------------------------------------------------------------------------- 
@@ -135,7 +135,7 @@ PCTProps::sched_getState( const LevelP& level,
     tsk->requires( Task::NewDW, label, gn, 0 ); 
   } 
 
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
+  sched->addTask( tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ) ); 
 }
 
 //--------------------------------------------------------------------------- 
@@ -157,7 +157,7 @@ PCTProps::getState( const ProcessorGroup* pc,
     Ghost::GhostType gn = Ghost::None; 
     const Patch* patch = patches->get(p); 
     int archIndex = 0; 
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     constCCVariable<double> eps_vol; 
     constCCVariable<int> cell_type; 

@@ -55,13 +55,13 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk;
 
         if ( var_type == "CC" ){
-          tsk = scinew MMS_mom<CCVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom<CCVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FX" ){
-          tsk = scinew MMS_mom<SFCXVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom<SFCXVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FY" ){
-          tsk = scinew MMS_mom<SFCYVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom<SFCYVariable<double> >::Builder( name, 0, _materialManager );
         } else {
-          tsk = scinew MMS_mom<SFCZVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
 
         register_task( name, tsk );
@@ -75,13 +75,13 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk;
 
         if ( var_type == "CC" ){
-          tsk = scinew MMS_Shunn<CCVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_Shunn<CCVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FX" ){
-          tsk = scinew MMS_Shunn<SFCXVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_Shunn<SFCXVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FY" ){
-          tsk = scinew MMS_Shunn<SFCYVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_Shunn<SFCYVariable<double> >::Builder( name, 0, _materialManager );
         } else {
-          tsk = scinew MMS_Shunn<SFCZVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_Shunn<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
 
         register_task( name, tsk );
@@ -95,13 +95,13 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk;
 
         if ( var_type == "CC" ){
-          tsk = scinew MMS_ShunnP3<CCVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_ShunnP3<CCVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FX" ){
-          tsk = scinew MMS_ShunnP3<SFCXVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_ShunnP3<SFCXVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FY" ){
-          tsk = scinew MMS_ShunnP3<SFCYVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_ShunnP3<SFCYVariable<double> >::Builder( name, 0, _materialManager );
         } else {
-          tsk = scinew MMS_ShunnP3<SFCZVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_ShunnP3<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
 
         register_task( name, tsk );
@@ -115,13 +115,13 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk;
 
         if ( var_type == "CC" ){
-          tsk = scinew MMS_mom_csmag<CCVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom_csmag<CCVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FX" ){
-          tsk = scinew MMS_mom_csmag<SFCXVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom_csmag<SFCXVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FY" ){
-          tsk = scinew MMS_mom_csmag<SFCYVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom_csmag<SFCYVariable<double> >::Builder( name, 0, _materialManager );
         } else {
-          tsk = scinew MMS_mom_csmag<SFCZVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom_csmag<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
 
         register_task( name, tsk );
@@ -130,7 +130,7 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "MMS_scalar" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew MMS_scalar::Builder( name, 0 , _shared_state );
+        TaskInterface::TaskBuilder* tsk = scinew MMS_scalar::Builder( name, 0 , _materialManager );
         register_task( name, tsk );
         _pre_update_source_tasks.push_back( name );
 
@@ -197,7 +197,7 @@ SourceTermFactoryV2::add_task( ProblemSpecP& db )
 
       if ( type == "MMS_scalar" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew MMS_scalar::Builder( name, 0 , _shared_state );
+        TaskInterface::TaskBuilder* tsk = scinew MMS_scalar::Builder( name, 0 , _materialManager );
         register_task( name, tsk );
         _pre_update_source_tasks.push_back( name );
 
@@ -209,13 +209,13 @@ SourceTermFactoryV2::add_task( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk;
 
         if ( var_type == "CC" ){
-          tsk = scinew MMS_mom<CCVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom<CCVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FX" ){
-          tsk = scinew MMS_mom<SFCXVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom<SFCXVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FY" ){
-          tsk = scinew MMS_mom<SFCYVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom<SFCYVariable<double> >::Builder( name, 0, _materialManager );
         } else {
-          tsk = scinew MMS_mom<SFCZVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
         register_task( name, tsk );
         _pre_update_source_tasks.push_back( name );
@@ -228,13 +228,13 @@ SourceTermFactoryV2::add_task( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk;
 
         if ( var_type == "CC" ){
-          tsk = scinew MMS_Shunn<CCVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_Shunn<CCVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FX" ){
-          tsk = scinew MMS_Shunn<SFCXVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_Shunn<SFCXVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FY" ){
-          tsk = scinew MMS_Shunn<SFCYVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_Shunn<SFCYVariable<double> >::Builder( name, 0, _materialManager );
         } else {
-          tsk = scinew MMS_Shunn<SFCZVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_Shunn<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
         register_task( name, tsk );
         _pre_update_source_tasks.push_back( name );
@@ -246,13 +246,13 @@ SourceTermFactoryV2::add_task( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk;
 
         if ( var_type == "CC" ){
-          tsk = scinew MMS_mom_csmag<CCVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom_csmag<CCVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FX" ){
-          tsk = scinew MMS_mom_csmag<SFCXVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom_csmag<SFCXVariable<double> >::Builder( name, 0, _materialManager );
         } else if ( var_type == "FY" ){
-          tsk = scinew MMS_mom_csmag<SFCYVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom_csmag<SFCYVariable<double> >::Builder( name, 0, _materialManager );
         } else {
-          tsk = scinew MMS_mom_csmag<SFCZVariable<double> >::Builder( name, 0, _shared_state );
+          tsk = scinew MMS_mom_csmag<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
 
         register_task( name, tsk );

@@ -28,7 +28,7 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
 namespace Uintah {
@@ -42,7 +42,7 @@ namespace Uintah {
 
     Module();
     Module(ProblemSpecP     & prob_spec,
-           SimulationStateP & sharedState,
+           MaterialManagerP & materialManager,
            Output           * dataArchiver,
            DataArchive      * dataArchive );
 
@@ -78,7 +78,7 @@ namespace Uintah {
                           const VarLabel * label,
                           const int        matl,
                           const Patch    * patch );
-    SimulationStateP   d_sharedState;
+    MaterialManagerP   d_materialManager;
     DataArchive      * d_dataArchive   = nullptr;
     Output           * d_dataArchiver  = nullptr;
     std::vector<double> d_udaTimes;                 // physical time pulled from uda:index.xml

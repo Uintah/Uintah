@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_RichardsFletcherDevol_h
 #define Uintah_Component_Arches_RichardsFletcherDevol_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
@@ -36,7 +36,7 @@ namespace Uintah{
           const std::vector<std::string>  & reqICLabelNames,
           const std::vector<std::string>  & reqScalarLabelNames,
           ArchesLabel                     * fieldLabels,
-          SimulationStateP                & sharedState,
+          MaterialManagerP                & materialManager,
           int qn );
 
       ~RichardsFletcherDevolBuilder(); 
@@ -54,7 +54,7 @@ namespace Uintah{
     public: 
 
       RichardsFletcherDevol( std::string modelName, 
-          SimulationStateP& shared_state, 
+          MaterialManagerP& materialManager, 
           ArchesLabel* fieldLabels,
           std::vector<std::string> reqICLabelNames,
           std::vector<std::string> reqScalarLabelNames,

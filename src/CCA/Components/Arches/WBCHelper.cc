@@ -89,10 +89,13 @@ std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum )
   switch (bcTypeEnum) {
     case DIRICHLET:
       return "Dirichlet";
+      break;
     case NEUMANN:
       return "Neumann";
+      break;
     default:
       return "Unsupported";
+      break;
   }
 }
 
@@ -103,16 +106,22 @@ const std::string bnd_type_enum_to_string( const BndTypeEnum bndTypeEnum )
   switch (bndTypeEnum) {
     case WALL:
       return "Wall";
+      break;
     case INLET:
       return "Inlet";
+      break;
     case OUTLET:
       return "Outflow";
+      break;
     case PRESSURE:
       return "Pressure";
+      break;
     case USER:
       return "User";
+      break;
     default:
       return "Invalid";
+      break;
   }
 }
 
