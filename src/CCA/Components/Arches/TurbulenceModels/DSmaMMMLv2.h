@@ -77,9 +77,11 @@ DSmaMMMLv2<TT>::~DSmaMMMLv2(){}
 template<typename TT>
 TaskAssignedExecutionSpace DSmaMMMLv2<TT>::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &DSmaMMMLv2<TT>::eval<UINTAH_CPU_TAG>,
-                                       &DSmaMMMLv2<TT>::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &DSmaMMMLv2<TT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &DSmaMMMLv2<TT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DSmaMMMLv2<TT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

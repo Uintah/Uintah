@@ -15,9 +15,11 @@ MMS_scalar::~MMS_scalar()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace MMS_scalar::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &MMS_scalar::eval<UINTAH_CPU_TAG>,
-                                       &MMS_scalar::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &MMS_scalar::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &MMS_scalar::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MMS_scalar::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

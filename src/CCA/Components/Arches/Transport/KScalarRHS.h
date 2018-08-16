@@ -206,9 +206,11 @@ private:
   template <typename T, typename PT>
   TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskEvalFunctionPointers(){
 
-    return create_portable_arches_tasks( this,
-                                         &KScalarRHS<T, PT>::eval<UINTAH_CPU_TAG>,
-                                         &KScalarRHS<T, PT>::eval<KOKKOS_OPENMP_TAG> );
+    return create_portable_arches_tasks( this
+                                       , &KScalarRHS<T, PT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &KScalarRHS<T, PT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &KScalarRHS<T, PT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
 
   }
   //------------------------------------------------------------------------------------------------

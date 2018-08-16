@@ -18,9 +18,11 @@ SurfaceNormals::~SurfaceNormals(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceNormals::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &SurfaceNormals::eval<UINTAH_CPU_TAG>,
-                                       &SurfaceNormals::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &SurfaceNormals::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &SurfaceNormals::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceNormals::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

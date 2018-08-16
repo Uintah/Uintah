@@ -135,9 +135,11 @@ namespace Uintah{
   template <typename T>
   TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskEvalFunctionPointers(){
 
-    return create_portable_arches_tasks( this,
-                                         &FOWYDevol<T>::eval<UINTAH_CPU_TAG>,
-                                         &FOWYDevol<T>::eval<KOKKOS_OPENMP_TAG> );
+    return create_portable_arches_tasks( this
+                                       , &FOWYDevol<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &FOWYDevol<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &FOWYDevol<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
 
   }
 

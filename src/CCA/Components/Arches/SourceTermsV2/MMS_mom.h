@@ -99,9 +99,11 @@ MMS_mom<T>::~MMS_mom(){
 template <typename T>
 TaskAssignedExecutionSpace MMS_mom<T>::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &MMS_mom<T>::eval<UINTAH_CPU_TAG>,
-                                       &MMS_mom<T>::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &MMS_mom<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &MMS_mom<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MMS_mom<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

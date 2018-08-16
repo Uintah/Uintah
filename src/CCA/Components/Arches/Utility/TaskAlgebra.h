@@ -149,9 +149,11 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace TaskAlgebra<T>::loadTaskEvalFunctionPointers(){
 
-    return create_portable_arches_tasks( this,
-                                         &TaskAlgebra<T>::eval<UINTAH_CPU_TAG>,
-                                         &TaskAlgebra<T>::eval<KOKKOS_OPENMP_TAG> );
+    return create_portable_arches_tasks( this
+                                       , &TaskAlgebra<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &TaskAlgebra<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &TaskAlgebra<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
 
   }
 

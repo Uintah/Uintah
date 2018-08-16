@@ -15,11 +15,11 @@ ConstantStateProperties::~ConstantStateProperties(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ConstantStateProperties::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  return create_portable_arches_tasks( this,
-                                       &ConstantStateProperties::eval<UINTAH_CPU_TAG>,
-                                       &ConstantStateProperties::eval<KOKKOS_OPENMP_TAG> );
-  return assignedTag;
+  return create_portable_arches_tasks( this
+                                     , &ConstantStateProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &ConstantStateProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ConstantStateProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

@@ -111,9 +111,11 @@ MMS_Shunn<T>::~MMS_Shunn(){
 template <typename T>
 TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &MMS_Shunn<T>::eval<UINTAH_CPU_TAG>,
-                                       &MMS_Shunn<T>::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &MMS_Shunn<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &MMS_Shunn<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MMS_Shunn<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

@@ -6,9 +6,11 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BurnsChriston::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &BurnsChriston::eval<UINTAH_CPU_TAG>,
-                                       &BurnsChriston::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &BurnsChriston::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &BurnsChriston::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &BurnsChriston::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

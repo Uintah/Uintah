@@ -151,9 +151,11 @@ namespace Uintah{
   template <typename T>
   TaskAssignedExecutionSpace ShaddixEnthalpy<T>::loadTaskEvalFunctionPointers(){
 
-    return create_portable_arches_tasks( this,
-                                         &ShaddixEnthalpy<T>::eval<UINTAH_CPU_TAG>,
-                                         &ShaddixEnthalpy<T>::eval<KOKKOS_OPENMP_TAG> );
+    return create_portable_arches_tasks( this
+                                       , &ShaddixEnthalpy<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &ShaddixEnthalpy<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ShaddixEnthalpy<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
 
   }
 

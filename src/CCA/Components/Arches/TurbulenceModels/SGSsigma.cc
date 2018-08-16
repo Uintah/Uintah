@@ -30,9 +30,11 @@ SGSsigma::~SGSsigma(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SGSsigma::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &SGSsigma::eval<UINTAH_CPU_TAG>,
-                                       &SGSsigma::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &SGSsigma::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &SGSsigma::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SGSsigma::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

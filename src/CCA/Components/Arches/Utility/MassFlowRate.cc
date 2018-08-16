@@ -46,9 +46,11 @@ MassFlowRate::~MassFlowRate(){
 //---------------------------------------------------------------------------
 TaskAssignedExecutionSpace MassFlowRate::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &MassFlowRate::eval<UINTAH_CPU_TAG>,
-                                       &MassFlowRate::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &MassFlowRate::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &MassFlowRate::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MassFlowRate::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

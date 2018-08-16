@@ -15,9 +15,11 @@ DSFTv2::~DSFTv2(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DSFTv2::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &DSFTv2::eval<UINTAH_CPU_TAG>,
-                                       &DSFTv2::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &DSFTv2::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &DSFTv2::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DSFTv2::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

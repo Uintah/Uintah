@@ -11,9 +11,11 @@ BoundaryInfo::~BoundaryInfo(){
 
 TaskAssignedExecutionSpace BoundaryInfo::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &BoundaryInfo::eval<UINTAH_CPU_TAG>,
-                                       &BoundaryInfo::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &BoundaryInfo::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &BoundaryInfo::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &BoundaryInfo::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

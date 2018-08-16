@@ -14,9 +14,11 @@ UFromRhoU::~UFromRhoU(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UFromRhoU::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &UFromRhoU::eval<UINTAH_CPU_TAG>,
-                                       &UFromRhoU::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &UFromRhoU::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &UFromRhoU::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &UFromRhoU::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

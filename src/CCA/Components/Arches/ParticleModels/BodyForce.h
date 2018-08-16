@@ -121,9 +121,11 @@ namespace Uintah{
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskEvalFunctionPointers(){
 
-    return create_portable_arches_tasks( this,
-                                         &BodyForce<IT, DT>::eval<UINTAH_CPU_TAG>,
-                                         &BodyForce<IT, DT>::eval<KOKKOS_OPENMP_TAG> );
+    return create_portable_arches_tasks( this
+                                       , &BodyForce<IT, DT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &BodyForce<IT, DT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &BodyForce<IT, DT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
 
   }
 

@@ -17,9 +17,11 @@ DepositionEnthalpy::~DepositionEnthalpy(){
 
 TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &DepositionEnthalpy::eval<UINTAH_CPU_TAG>,
-                                       &DepositionEnthalpy::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &DepositionEnthalpy::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &DepositionEnthalpy::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DepositionEnthalpy::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

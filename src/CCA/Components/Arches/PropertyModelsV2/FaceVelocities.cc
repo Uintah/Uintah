@@ -27,9 +27,11 @@ FaceVelocities::~FaceVelocities(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace FaceVelocities::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &FaceVelocities::eval<UINTAH_CPU_TAG>,
-                                       &FaceVelocities::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &FaceVelocities::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &FaceVelocities::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &FaceVelocities::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

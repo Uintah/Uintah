@@ -14,9 +14,11 @@ SampleTask::~SampleTask(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SampleTask::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &SampleTask::eval<UINTAH_CPU_TAG>,
-                                       &SampleTask::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &SampleTask::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &SampleTask::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SampleTask::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

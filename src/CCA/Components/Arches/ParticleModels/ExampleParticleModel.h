@@ -113,9 +113,11 @@ private:
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskEvalFunctionPointers(){
 
-    return create_portable_arches_tasks( this,
-                                         &ExampleParticleModel<IT, DT>::eval<UINTAH_CPU_TAG>,
-                                         &ExampleParticleModel<IT, DT>::eval<KOKKOS_OPENMP_TAG> );
+    return create_portable_arches_tasks( this
+                                       , &ExampleParticleModel::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &ExampleParticleModel::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ExampleParticleModel::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
 
   }
 

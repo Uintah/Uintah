@@ -25,9 +25,11 @@ StressTensor::~StressTensor(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace StressTensor::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &StressTensor::eval<UINTAH_CPU_TAG>,
-                                       &StressTensor::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &StressTensor::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &StressTensor::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &StressTensor::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

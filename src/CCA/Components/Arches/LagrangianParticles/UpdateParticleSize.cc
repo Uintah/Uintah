@@ -12,9 +12,11 @@ UpdateParticleSize::~UpdateParticleSize(){
 
 TaskAssignedExecutionSpace UpdateParticleSize::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &UpdateParticleSize::eval<UINTAH_CPU_TAG>,
-                                       &UpdateParticleSize::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &UpdateParticleSize::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &UpdateParticleSize::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &UpdateParticleSize::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

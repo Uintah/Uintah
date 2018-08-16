@@ -14,14 +14,6 @@ ChemMixFactory::ChemMixFactory( const ApplicationCommon* arches ) : TaskFactoryB
 ChemMixFactory::~ChemMixFactory()
 {}
 
-TaskAssignedExecutionSpace ChemMixFactory::loadTaskEvalFunctionPointers(){
-
-  TaskAssignedExecutionSpace assignedTag{};
-  // This task doesn't have an eval method.
-  return assignedTag;
-
-}
-
 void
 ChemMixFactory::register_all_tasks( ProblemSpecP& db )
 {

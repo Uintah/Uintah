@@ -11,9 +11,11 @@ TaskInterface( task_name, matl_index ) {
 
 TaskAssignedExecutionSpace TotNumDensity::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &TotNumDensity::eval<UINTAH_CPU_TAG>,
-                                       &TotNumDensity::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &TotNumDensity::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &TotNumDensity::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &TotNumDensity::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

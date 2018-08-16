@@ -7,9 +7,11 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CoalTemperature::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &CoalTemperature::eval<UINTAH_CPU_TAG>,
-                                       &CoalTemperature::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &CoalTemperature::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &CoalTemperature::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CoalTemperature::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

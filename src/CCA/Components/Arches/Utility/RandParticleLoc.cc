@@ -5,9 +5,11 @@ namespace Uintah {
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RandParticleLoc::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &RandParticleLoc::eval<UINTAH_CPU_TAG>,
-                                       &RandParticleLoc::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &RandParticleLoc::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &RandParticleLoc::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &RandParticleLoc::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

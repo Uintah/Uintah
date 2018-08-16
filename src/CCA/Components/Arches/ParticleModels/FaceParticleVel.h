@@ -116,9 +116,11 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskEvalFunctionPointers(){
 
-    return create_portable_arches_tasks( this,
-                                         &FaceParticleVel<T>::eval<UINTAH_CPU_TAG>,
-                                         &FaceParticleVel<T>::eval<KOKKOS_OPENMP_TAG> );
+    return create_portable_arches_tasks( this
+                                       , &FaceParticleVel::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &FaceParticleVel::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &FaceParticleVel::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
 
   }
 

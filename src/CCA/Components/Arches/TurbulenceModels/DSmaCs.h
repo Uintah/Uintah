@@ -86,9 +86,11 @@ DSmaCs<TT>::~DSmaCs(){
 template<typename TT>
 TaskAssignedExecutionSpace DSmaCs<TT>::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &DSmaCs<TT>::eval<UINTAH_CPU_TAG>,
-                                       &DSmaCs<TT>::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &DSmaCs<TT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &DSmaCs<TT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DSmaCs<TT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

@@ -111,9 +111,11 @@ UnweightVariable<T>::~UnweightVariable()
 template <typename T>
 TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &UnweightVariable::eval<UINTAH_CPU_TAG>,
-                                       &UnweightVariable::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &UnweightVariable<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &UnweightVariable<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &UnweightVariable<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

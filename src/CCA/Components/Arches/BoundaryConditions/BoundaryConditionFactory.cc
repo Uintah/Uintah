@@ -14,14 +14,6 @@ TaskFactoryBase(arches)
 BoundaryConditionFactory::~BoundaryConditionFactory()
 {}
 
-TaskAssignedExecutionSpace BoundaryConditionFactory::loadTaskEvalFunctionPointers(){
-
-  TaskAssignedExecutionSpace assignedTag{};
-  // This task doesn't have an eval() method
-  return assignedTag;
-
-}
-
 void
 BoundaryConditionFactory::register_all_tasks( ProblemSpecP & db )
 {

@@ -10,9 +10,11 @@ InitLagrangianParticleVelocity::~InitLagrangianParticleVelocity(){
 
 TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &InitLagrangianParticleVelocity::eval<UINTAH_CPU_TAG>,
-                                       &InitLagrangianParticleVelocity::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &InitLagrangianParticleVelocity::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &InitLagrangianParticleVelocity::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &InitLagrangianParticleVelocity::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

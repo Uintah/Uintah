@@ -43,10 +43,11 @@ if (_particle_calculator_type == "coal"){
 //---------------------------------------------------------------------------
 TaskAssignedExecutionSpace partRadProperties::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &partRadProperties::eval<UINTAH_CPU_TAG>,
-                                       &partRadProperties::eval<KOKKOS_OPENMP_TAG>,
-                                       &partRadProperties::eval<KOKKOS_CUDA_TAG>);
+  return create_portable_arches_tasks( this
+                                     , &partRadProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &partRadProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &partRadProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

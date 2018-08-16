@@ -17,9 +17,11 @@ PressureBC::~PressureBC()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace PressureBC::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &PressureBC::eval<UINTAH_CPU_TAG>,
-                                       &PressureBC::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &PressureBC::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &PressureBC::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &PressureBC::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

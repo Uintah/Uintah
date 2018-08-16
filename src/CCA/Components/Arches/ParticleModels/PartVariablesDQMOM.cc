@@ -12,9 +12,11 @@ TaskInterface( task_name, matl_index ) {
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &PartVariablesDQMOM::eval<UINTAH_CPU_TAG>,
-                                       &PartVariablesDQMOM::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &PartVariablesDQMOM::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &PartVariablesDQMOM::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &PartVariablesDQMOM::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 

@@ -15,9 +15,12 @@ ContinuityPredictor::~ContinuityPredictor(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ContinuityPredictor::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &ContinuityPredictor::eval<UINTAH_CPU_TAG>,
-                                       &ContinuityPredictor::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &ContinuityPredictor::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &ContinuityPredictor::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ContinuityPredictor::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+
 }
 
 //--------------------------------------------------------------------------------------------------

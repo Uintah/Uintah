@@ -114,9 +114,11 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace ShunnMMSP3<T>::loadTaskEvalFunctionPointers(){
 
-    return create_portable_arches_tasks( this,
-                                         &ShunnMMSP3<T>::eval<UINTAH_CPU_TAG>,
-                                         &ShunnMMSP3<T>::eval<KOKKOS_OPENMP_TAG> );
+    return create_portable_arches_tasks( this
+                                       , &ShunnMMSP3<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &ShunnMMSP3<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ShunnMMSP3<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
 
   }
 

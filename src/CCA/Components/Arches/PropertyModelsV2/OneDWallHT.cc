@@ -21,9 +21,11 @@ OneDWallHT::~OneDWallHT(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace OneDWallHT::loadTaskEvalFunctionPointers(){
 
-  return create_portable_arches_tasks( this,
-                                       &OneDWallHT::eval<UINTAH_CPU_TAG>,
-                                       &OneDWallHT::eval<KOKKOS_OPENMP_TAG> );
+  return create_portable_arches_tasks( this
+                                     , &OneDWallHT::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &OneDWallHT::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &OneDWallHT::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 
 }
 
