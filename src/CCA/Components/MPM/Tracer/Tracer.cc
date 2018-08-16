@@ -146,7 +146,7 @@ Tracer::countTracers(const Patch* patch, const string filename)
      ss >> token;
      f3 = stof(token);
      if(patch->containsPoint(Point(f1,f2,f3))){
-       cout << tid << " " << f1 << " " << f2 << " " << f3 << endl;
+//       cout << tid << " " << f1 << " " << f2 << " " << f3 << endl;
        sum++;
       }
     }
