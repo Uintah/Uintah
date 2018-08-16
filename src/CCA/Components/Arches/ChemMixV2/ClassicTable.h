@@ -160,6 +160,18 @@ struct ClassicTableInfo {
 }
 
 
+           ~Interp_class() {
+#ifdef UINTAH_ENABLE_KOKKOS
+        // no delete needed due to kokkos smart pointers
+#else
+               delete &ind_1; 
+               delete &d_allIndepVarNo; 
+               delete &indep; 
+               delete &table2; 
+#endif
+             }
+
+
 // WORKING!!!!!!!!!!!!!!!!!!!
   template<typename ExecutionSpace,typename MemorySpace ,class TYPE_1 , class TYPE_2  >
   void getState(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, TYPE_1 &indep_storage,
