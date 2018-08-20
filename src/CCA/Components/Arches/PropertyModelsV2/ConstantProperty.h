@@ -18,6 +18,10 @@ public:
     ConstantProperty<T>( std::string task_name, int matl_index );
     ~ConstantProperty<T>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -36,9 +40,11 @@ public:
 
     void register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -93,16 +99,40 @@ private:
   template <typename T>
   ConstantProperty<T>::~ConstantProperty(){}
 
-  //------------------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
-  TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskEvalFunctionPointers(){
-
+  TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskComputeBCsFunctionPointers()
+  {
     return create_portable_arches_tasks( this
+                                       , TaskInterface::BC
+                                       , &ConstantProperty<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &ConstantProperty<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ConstantProperty<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::INITIALIZE
+                                       , &ConstantProperty<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &ConstantProperty<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ConstantProperty<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::TIMESTEP_EVAL
                                        , &ConstantProperty<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &ConstantProperty<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ConstantProperty<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &ConstantProperty<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
-
   }
 
   //------------------------------------------------------------------------------------------------
@@ -154,7 +184,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void ConstantProperty<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void ConstantProperty<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     T& property = tsk_info->get_uintah_field_add<T>( _task_name );
     property.initialize(0.0);

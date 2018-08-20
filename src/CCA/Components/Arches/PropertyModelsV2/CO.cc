@@ -25,14 +25,36 @@ CO::~CO(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace CO::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace CO::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &CO::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &CO::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CO::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CO::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &CO::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &CO::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CO::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CO::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &CO::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &CO::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CO::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CO::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -107,8 +129,8 @@ CO::register_initialize( VIVec& variable_registry , const bool pack_tasks){
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info){
+template<typename ExecutionSpace, typename MemorySpace>
+void CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& CO      = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_model_name );
   CCVariable<double>& CO_diff = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_diff_name );
@@ -196,8 +218,8 @@ CO::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_regi
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace> void
-CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
 
   /* This model computes carbon monoxide as a sum of the equilibrum CO and a defect CO.

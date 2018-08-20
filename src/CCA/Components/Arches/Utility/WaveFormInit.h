@@ -16,6 +16,10 @@ public:
     WaveFormInit<T,CT>( std::string task_name, int matl_index, const std::string var_name );
     ~WaveFormInit<T,CT>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -50,9 +54,11 @@ protected:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
@@ -91,15 +97,40 @@ private:
   WaveFormInit<T, CT>::~WaveFormInit()
   {}
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T, typename CT>
-  TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskEvalFunctionPointers(){
-
+  TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskComputeBCsFunctionPointers()
+  {
     return create_portable_arches_tasks( this
+                                       , TaskInterface::BC
+                                       , &WaveFormInit<T, CT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &WaveFormInit<T, CT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &WaveFormInit<T, CT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T, typename CT>
+  TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::INITIALIZE
+                                       , &WaveFormInit<T, CT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &WaveFormInit<T, CT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T, typename CT>
+  TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::TIMESTEP_EVAL
                                        , &WaveFormInit<T, CT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &WaveFormInit<T, CT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &WaveFormInit<T, CT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &WaveFormInit<T, CT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
-
   }
 
   template <typename T, typename CT>
@@ -144,7 +175,8 @@ private:
   }
 
   template <typename T, typename CT>
-  void WaveFormInit<T, CT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void WaveFormInit<T, CT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     T& dep_field = *(tsk_info->get_uintah_field<T>( _var_name ));
     CT& ind_field = *(tsk_info->get_const_uintah_field<CT>( _ind_var_name ));

@@ -24,6 +24,10 @@ namespace Uintah{
     MassFlowRate( std::string task_name, int matl_index );
     ~MassFlowRate();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -32,7 +36,8 @@ namespace Uintah{
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){};
 
@@ -45,7 +50,8 @@ namespace Uintah{
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){};
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
     class Builder : public TaskInterface::TaskBuilder {
 

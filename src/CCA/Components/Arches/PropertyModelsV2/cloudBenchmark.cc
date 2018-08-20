@@ -4,14 +4,36 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace cloudBenchmark::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace cloudBenchmark::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &cloudBenchmark::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &cloudBenchmark::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &cloudBenchmark::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace cloudBenchmark::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &cloudBenchmark::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &cloudBenchmark::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &cloudBenchmark::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace cloudBenchmark::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &cloudBenchmark::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &cloudBenchmark::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &cloudBenchmark::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &cloudBenchmark::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -56,8 +78,9 @@ cloudBenchmark::register_initialize( VIVec& variable_registry , const bool pack_
 
 }
 
-void
-cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+//--------------------------------------------------------------------------------------------------
+template<typename ExecutionSpace, typename MemorySpace>
+void cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){

@@ -28,14 +28,36 @@ SGSsigma::~SGSsigma(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace SGSsigma::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace SGSsigma::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &SGSsigma::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &SGSsigma::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SGSsigma::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SGSsigma::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &SGSsigma::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &SGSsigma::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SGSsigma::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SGSsigma::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &SGSsigma::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &SGSsigma::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &SGSsigma::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -128,8 +150,8 @@ SGSsigma::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-SGSsigma::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info){
+template<typename ExecutionSpace, typename MemorySpace>
+void SGSsigma::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
   CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
@@ -202,8 +224,8 @@ SGSsigma::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace> void
-SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   Vector Dx=patch->dCell();
   double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();

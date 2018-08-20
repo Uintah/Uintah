@@ -15,15 +15,38 @@ Drhodt::~Drhodt(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace Drhodt::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace Drhodt::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &Drhodt::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &Drhodt::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &Drhodt::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Drhodt::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &Drhodt::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &Drhodt::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &Drhodt::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Drhodt::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &Drhodt::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &Drhodt::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &Drhodt::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
+
 //--------------------------------------------------------------------------------------------------
 void
 Drhodt::problemSetup( ProblemSpecP& db ){
@@ -52,8 +75,8 @@ Drhodt::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& drhodt = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_drhodt );
   drhodt.initialize(0.0);
@@ -72,8 +95,8 @@ Drhodt::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInform
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace> void
-Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density );
   constCCVariable<double>& old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density, ArchesFieldContainer::OLDDW);

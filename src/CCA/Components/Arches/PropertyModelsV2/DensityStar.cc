@@ -15,14 +15,36 @@ DensityStar::~DensityStar(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace DensityStar::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace DensityStar::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &DensityStar::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &DensityStar::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DensityStar::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityStar::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &DensityStar::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &DensityStar::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DensityStar::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityStar::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &DensityStar::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &DensityStar::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DensityStar::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -106,8 +128,8 @@ DensityStar::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info  ){
+template<typename ExecutionSpace, typename MemorySpace>
+void DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& rhoStar = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_densityStar );
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density );
@@ -157,8 +179,8 @@ DensityStar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace> void
-DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");

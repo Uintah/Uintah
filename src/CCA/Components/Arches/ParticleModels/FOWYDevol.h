@@ -36,6 +36,10 @@ namespace Uintah{
     FOWYDevol<T>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~FOWYDevol<T>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -73,9 +77,11 @@ namespace Uintah{
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -132,15 +138,40 @@ namespace Uintah{
   FOWYDevol<T>::~FOWYDevol()
   {}
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
-  TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskEvalFunctionPointers(){
-
+  TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskComputeBCsFunctionPointers()
+  {
     return create_portable_arches_tasks( this
+                                       , TaskInterface::BC
+                                       , &FOWYDevol<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &FOWYDevol<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &FOWYDevol<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::INITIALIZE
+                                       , &FOWYDevol<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &FOWYDevol<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &FOWYDevol<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::TIMESTEP_EVAL
                                        , &FOWYDevol<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &FOWYDevol<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &FOWYDevol<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
-
   }
 
   template <typename T>
@@ -224,7 +255,8 @@ namespace Uintah{
   }
 
   template <typename T>
-  void FOWYDevol<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void FOWYDevol<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 

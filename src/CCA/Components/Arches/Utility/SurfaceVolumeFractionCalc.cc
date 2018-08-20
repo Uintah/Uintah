@@ -5,14 +5,36 @@
 using namespace Uintah;
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &SurfaceVolumeFractionCalc::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &SurfaceVolumeFractionCalc::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceVolumeFractionCalc::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &SurfaceVolumeFractionCalc::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &SurfaceVolumeFractionCalc::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceVolumeFractionCalc::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &SurfaceVolumeFractionCalc::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &SurfaceVolumeFractionCalc::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceVolumeFractionCalc::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &SurfaceVolumeFractionCalc::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -71,8 +93,8 @@ SurfaceVolumeFractionCalc::register_initialize( ArchesVIVector& variable_registr
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   typedef CCVariable<double> T;
 

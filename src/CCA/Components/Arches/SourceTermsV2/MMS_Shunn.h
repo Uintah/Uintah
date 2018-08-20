@@ -14,6 +14,10 @@ public:
     MMS_Shunn<T>( std::string task_name, int matl_index, MaterialManagerP materialManager  );
     ~MMS_Shunn<T>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -52,9 +56,11 @@ public:
     void register_compute_bcs( std::vector<VarInfo>& variable_registry, const int time_substep,
                                const bool pack_tasks){}
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -109,14 +115,38 @@ MMS_Shunn<T>::~MMS_Shunn(){
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &MMS_Shunn<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &MMS_Shunn<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MMS_Shunn<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &MMS_Shunn<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &MMS_Shunn<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MMS_Shunn<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &MMS_Shunn<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &MMS_Shunn<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &MMS_Shunn<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -200,7 +230,8 @@ void MMS_Shunn<T>::register_initialize( std::vector<VarInfo>&
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-void MMS_Shunn<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void MMS_Shunn<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   compute_source(patch, tsk_info);
 

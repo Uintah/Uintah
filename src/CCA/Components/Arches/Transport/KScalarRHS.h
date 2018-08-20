@@ -76,6 +76,10 @@ public:
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> ArchesVIVector;
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -90,9 +94,11 @@ public:
     void register_compute_bcs( ArchesVIVector& variable_registry,
                                const int time_substep , const bool packed_tasks);
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -202,17 +208,42 @@ private:
 
   }
 
-  //------------------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------
   template <typename T, typename PT>
-  TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskEvalFunctionPointers(){
-
+  TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskComputeBCsFunctionPointers()
+  {
     return create_portable_arches_tasks( this
+                                       , TaskInterface::BC
+                                       , &KScalarRHS<T, PT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &KScalarRHS<T, PT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &KScalarRHS<T, PT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T, typename PT>
+  TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::INITIALIZE
+                                       , &KScalarRHS<T, PT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &KScalarRHS<T, PT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &KScalarRHS<T, PT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T, typename PT>
+  TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::TIMESTEP_EVAL
                                        , &KScalarRHS<T, PT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KScalarRHS<T, PT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &KScalarRHS<T, PT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
-
   }
+
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT> void
   KScalarRHS<T, PT>::problemSetup( ProblemSpecP& input_db ){
@@ -459,8 +490,9 @@ private:
   }
 
   //------------------------------------------------------------------------------------------------
-  template <typename T, typename PT> void
-  KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T, typename PT>
+  template<typename ExecutionSpace, typename MemorySpace>
+  void KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     constCCVariable<double>& vol_fraction =
     tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
@@ -596,8 +628,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT>
-  template<typename ExecutionSpace, typename MemorySpace> void
-  KScalarRHS<T, PT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void KScalarRHS<T, PT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     Vector Dx = patch->dCell();
     double ax = Dx.y() * Dx.z();
@@ -874,8 +906,9 @@ private:
   }
 
 //--------------------------------------------------------------------------------------------------
-  template <typename T, typename PT> void
-  KScalarRHS<T, PT>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T, typename PT>
+  template<typename ExecutionSpace, typename MemorySpace>
+  void KScalarRHS<T, PT>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
     m_boundary_functors->apply_bc( m_eqn_names_BC, m_bcHelper, tsk_info, patch );
   }
 }

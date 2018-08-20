@@ -4,14 +4,36 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace BurnsChriston::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace BurnsChriston::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &BurnsChriston::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &BurnsChriston::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &BurnsChriston::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BurnsChriston::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &BurnsChriston::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &BurnsChriston::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &BurnsChriston::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BurnsChriston::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &BurnsChriston::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &BurnsChriston::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &BurnsChriston::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &BurnsChriston::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -57,8 +79,8 @@ BurnsChriston::register_initialize( VIVec& variable_registry , const bool pack_t
 
 }
 
-void
-BurnsChriston::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void BurnsChriston::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){

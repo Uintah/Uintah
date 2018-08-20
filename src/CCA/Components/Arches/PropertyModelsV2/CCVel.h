@@ -15,6 +15,10 @@ public:
     CCVel( std::string task_name, int matl_index );
     ~CCVel();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -31,9 +35,11 @@ public:
 
     void register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 

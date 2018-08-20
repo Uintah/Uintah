@@ -13,14 +13,36 @@ ColdFlowProperties::~ColdFlowProperties(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace ColdFlowProperties::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace ColdFlowProperties::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &ColdFlowProperties::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &ColdFlowProperties::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ColdFlowProperties::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ColdFlowProperties::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &ColdFlowProperties::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &ColdFlowProperties::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ColdFlowProperties::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ColdFlowProperties::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &ColdFlowProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &ColdFlowProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &ColdFlowProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -72,7 +94,8 @@ void ColdFlowProperties::register_initialize( VIVec& variable_registry , const b
 }
 
 //--------------------------------------------------------------------------------------------------
-void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
@@ -150,7 +173,8 @@ void ColdFlowProperties::register_compute_bcs( VIVec& variable_registry, const i
 
 }
 
-void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constCCVariable<double> f = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_mixfrac_label );
 

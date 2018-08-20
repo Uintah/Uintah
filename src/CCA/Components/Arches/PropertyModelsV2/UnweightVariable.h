@@ -16,6 +16,10 @@ public:
     UnweightVariable<T>( std::string task_name, int matl_index );
     ~UnweightVariable<T>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -47,9 +51,11 @@ public:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
@@ -109,14 +115,38 @@ UnweightVariable<T>::~UnweightVariable()
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &UnweightVariable<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &UnweightVariable<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &UnweightVariable<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &UnweightVariable<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &UnweightVariable<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &UnweightVariable<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &UnweightVariable<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &UnweightVariable<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UnweightVariable<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -242,7 +272,8 @@ void UnweightVariable<T>::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>>(m_rho_name);
@@ -329,8 +360,8 @@ void UnweightVariable<T>::register_compute_bcs(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info )
-{
+template<typename ExecutionSpace, typename MemorySpace>
+void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   ArchesCore::VariableHelper<T> helper;

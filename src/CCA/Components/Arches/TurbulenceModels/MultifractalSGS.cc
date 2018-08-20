@@ -59,14 +59,36 @@ namespace Uintah{
   {}
 
   //--------------------------------------------------------------------------------------------------
-  TaskAssignedExecutionSpace MultifractalSGS::loadTaskEvalFunctionPointers(){
-
+  TaskAssignedExecutionSpace MultifractalSGS::loadTaskComputeBCsFunctionPointers()
+  {
     return create_portable_arches_tasks( this
+                                       , TaskInterface::BC
+                                       , &MultifractalSGS::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &MultifractalSGS::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &MultifractalSGS::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  TaskAssignedExecutionSpace MultifractalSGS::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::INITIALIZE
+                                       , &MultifractalSGS::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &MultifractalSGS::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &MultifractalSGS::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  TaskAssignedExecutionSpace MultifractalSGS::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::TIMESTEP_EVAL
                                        , &MultifractalSGS::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &MultifractalSGS::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &MultifractalSGS::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
-
   }
 
   //---------------------------------------------------------------------------------
@@ -142,8 +164,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  void
-    MultifractalSGS::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void MultifractalSGS::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
       // Subgrid stress
       SFCXVariable<double>& ucell_xSgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress"));
       SFCXVariable<double>& ucell_ySgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_ySgsStress"));
@@ -227,8 +249,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemorySpace> void
-  MultifractalSGS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void MultifractalSGS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
       Vector Dx=patch->dCell();
       double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();
 

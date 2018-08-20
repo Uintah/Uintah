@@ -15,14 +15,37 @@ TaskInterface( task_name, matl_index ), _Nenv(N) {}
 //--------------------------------------------------------------------------------------------------
 RateDeposition::~RateDeposition(){}
 
-TaskAssignedExecutionSpace RateDeposition::loadTaskEvalFunctionPointers(){
-
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace RateDeposition::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &RateDeposition::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &RateDeposition::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &RateDeposition::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace RateDeposition::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &RateDeposition::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &RateDeposition::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &RateDeposition::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace RateDeposition::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &RateDeposition::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &RateDeposition::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &RateDeposition::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -169,8 +192,8 @@ RateDeposition::register_initialize( std::vector<AFC_VI>& variable_registry , co
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   for ( int e=0; e< _Nenv;e++){
     const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);
@@ -411,8 +434,8 @@ RateDeposition::register_timestep_eval( std::vector<AFC_VI>& variable_registry, 
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace> void
-RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   //double CaO=_CaO;double MgO=_MgO; double AlO=_AlO;double SiO=_SiO; //const double alpha=0;
   // const double B0=0; const doulbe B1=0; const double B3=0;

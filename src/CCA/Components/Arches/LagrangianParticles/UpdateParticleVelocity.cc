@@ -11,14 +11,37 @@ TaskInterface( task_name, matl_index ) {
 UpdateParticleVelocity::~UpdateParticleVelocity(){
 }
 
-TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskEvalFunctionPointers(){
-
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &UpdateParticleVelocity::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &UpdateParticleVelocity::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &UpdateParticleVelocity::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &UpdateParticleVelocity::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &UpdateParticleVelocity::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &UpdateParticleVelocity::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &UpdateParticleVelocity::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &UpdateParticleVelocity::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &UpdateParticleVelocity::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UpdateParticleVelocity::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -56,8 +79,8 @@ UpdateParticleVelocity::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-UpdateParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void UpdateParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   ParticleTuple pu_t = tsk_info->get_uintah_particle_field( _u_name );
   ParticleTuple pv_t = tsk_info->get_uintah_particle_field( _v_name );
@@ -94,8 +117,8 @@ UpdateParticleVelocity::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace> void
-UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   ParticleTuple pu_t = tsk_info->get_uintah_particle_field( _u_name );
   ParticleTuple pv_t = tsk_info->get_uintah_particle_field( _v_name );

@@ -5,16 +5,37 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace Burnout::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace Burnout::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &Burnout::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &Burnout::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &Burnout::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Burnout::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &Burnout::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &Burnout::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &Burnout::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Burnout::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &Burnout::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &Burnout::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &Burnout::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
-
 
 void
 Burnout::problemSetup( ProblemSpecP& db ){
@@ -61,8 +82,8 @@ Burnout::register_initialize( std::vector<ArchesFieldContainer::VariableInformat
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-Burnout::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void Burnout::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& burnout = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -106,8 +127,8 @@ Burnout::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfor
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace> void
-Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   CCVariable<double>& numerator_sum = tsk_info->get_uintah_field_add< CCVariable<double> >("numerator_sum", 0);

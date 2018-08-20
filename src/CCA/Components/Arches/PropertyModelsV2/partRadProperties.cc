@@ -41,14 +41,37 @@ if (_particle_calculator_type == "coal"){
 //---------------------------------------------------------------------------
 //Method: Load task function pointers for portability
 //---------------------------------------------------------------------------
-TaskAssignedExecutionSpace partRadProperties::loadTaskEvalFunctionPointers(){
-
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace partRadProperties::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &partRadProperties::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &partRadProperties::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &partRadProperties::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace partRadProperties::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &partRadProperties::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &partRadProperties::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &partRadProperties::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace partRadProperties::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &partRadProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &partRadProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      , &partRadProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //---------------------------------------------------------------------------
@@ -290,8 +313,8 @@ partRadProperties::register_initialize( VIVec& variable_registry , const bool pa
 
 }
 
-void
-partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
 
   CCVariable<double>& abskp = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskp_name));
@@ -356,10 +379,8 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 
 }
 
-
-
-template<typename ExecutionSpace, typename MemorySpace> void
-partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
   auto abskp = createContainer<CCVariable<double>, double, 1 , MemorySpace>(1);
   auto scatkt =  createContainer<CCVariable<double>, double, 1 , MemorySpace>(_scatteringOn ? 1 :0);
   auto asymm   =  createContainer<CCVariable<double>, double, 1 , MemorySpace>(_scatteringOn ? 1 :0);

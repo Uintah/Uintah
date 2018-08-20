@@ -24,17 +24,37 @@ gasRadProperties::~gasRadProperties( )
   delete _calc; 
 }
 
-//---------------------------------------------------------------------------
-//Method: Load task function pointers for portability
-//---------------------------------------------------------------------------
-TaskAssignedExecutionSpace gasRadProperties::loadTaskEvalFunctionPointers(){
-
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace gasRadProperties::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &gasRadProperties::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &gasRadProperties::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &gasRadProperties::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace gasRadProperties::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &gasRadProperties::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &gasRadProperties::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &gasRadProperties::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace gasRadProperties::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &gasRadProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &gasRadProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &gasRadProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //---------------------------------------------------------------------------
@@ -116,8 +136,8 @@ gasRadProperties::register_initialize( VIVec& variable_registry , const bool pac
   register_variable( _abskg_name, Uintah::ArchesFieldContainer::COMPUTES, variable_registry );
 }
 
-void
-gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& abskg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abskg_name);
 
@@ -167,9 +187,8 @@ gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 
 }
 
-
-template<typename ExecutionSpace, typename MemorySpace> void
-gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskg_name));

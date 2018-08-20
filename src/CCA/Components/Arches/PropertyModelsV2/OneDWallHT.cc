@@ -19,14 +19,36 @@ OneDWallHT::~OneDWallHT(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace OneDWallHT::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace OneDWallHT::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &OneDWallHT::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &OneDWallHT::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &OneDWallHT::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace OneDWallHT::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &OneDWallHT::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &OneDWallHT::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &OneDWallHT::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace OneDWallHT::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &OneDWallHT::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &OneDWallHT::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &OneDWallHT::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -70,8 +92,8 @@ OneDWallHT::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-OneDWallHT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void OneDWallHT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
 
   CCVariable<double>& Twall = *(tsk_info->get_uintah_field<CCVariable<double> >("Twall"));
@@ -113,8 +135,8 @@ OneDWallHT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace> void
-OneDWallHT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void OneDWallHT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& Twall = *(tsk_info->get_uintah_field<CCVariable<double> >( "Twall"));
   constCCVariable<double>& rad_q = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( _incident_hf_label ));

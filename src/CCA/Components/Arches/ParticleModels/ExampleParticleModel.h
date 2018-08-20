@@ -16,6 +16,10 @@ public:
     ExampleParticleModel<IT, DT>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~ExampleParticleModel<IT, DT>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -52,9 +56,11 @@ protected:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info   );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -110,18 +116,41 @@ private:
   ExampleParticleModel<IT, DT>::~ExampleParticleModel()
   {}
 
+  //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
-  TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskEvalFunctionPointers(){
-
+  TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskComputeBCsFunctionPointers()
+  {
     return create_portable_arches_tasks( this
-                                       , &ExampleParticleModel::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &ExampleParticleModel::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &ExampleParticleModel::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , TaskInterface::BC
+                                       , &ExampleParticleModel<IT, DT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &ExampleParticleModel<IT, DT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ExampleParticleModel<IT, DT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
-
   }
 
+  //--------------------------------------------------------------------------------------------------
+  template <typename IT, typename DT>
+  TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::INITIALIZE
+                                       , &ExampleParticleModel<IT, DT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &ExampleParticleModel<IT, DT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
 
+  //--------------------------------------------------------------------------------------------------
+  template <typename IT, typename DT>
+  TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::TIMESTEP_EVAL
+                                       , &ExampleParticleModel<IT, DT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &ExampleParticleModel<IT, DT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
 
   template <typename IT, typename DT>
   void ExampleParticleModel<IT, DT>::problemSetup( ProblemSpecP& db ){
@@ -148,7 +177,8 @@ private:
   }
 
   template <typename IT, typename DT>
-  void ExampleParticleModel<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info  ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void ExampleParticleModel<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     for ( int ienv = 0; ienv < _N; ienv++ ){
 

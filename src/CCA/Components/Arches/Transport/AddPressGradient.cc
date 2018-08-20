@@ -16,14 +16,36 @@ AddPressGradient::~AddPressGradient()
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace AddPressGradient::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace AddPressGradient::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &AddPressGradient::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &SampAddPressGradientleTask::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &AddPressGradient::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace AddPressGradient::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &AddPressGradient::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &AddPressGradient::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &AddPressGradient::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace AddPressGradient::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &AddPressGradient::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &AddPressGradient::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &AddPressGradient::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -50,6 +72,7 @@ void AddPressGradient::register_timestep_eval( std::vector<AFC::VariableInformat
   register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, _task_name  );
 }
 
+//--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
 void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 

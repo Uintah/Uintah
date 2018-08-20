@@ -9,14 +9,37 @@ TaskInterface( task_name, matl_index ) {
 BoundaryInfo::~BoundaryInfo(){
 }
 
-TaskAssignedExecutionSpace BoundaryInfo::loadTaskEvalFunctionPointers(){
-
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BoundaryInfo::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &BoundaryInfo::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &BoundaryInfo::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &BoundaryInfo::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BoundaryInfo::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &BoundaryInfo::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &BoundaryInfo::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &BoundaryInfo::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BoundaryInfo::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &BoundaryInfo::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &BoundaryInfo::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &BoundaryInfo::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &BoundaryInfo::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 
@@ -51,8 +74,8 @@ BoundaryInfo::register_initialize( VarInfoVecT& variable_registry , const bool p
 
 }
 
-void
-BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+template<typename ExecutionSpace, typename MemorySpace>
+void BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
 //
 //------------------------------------------------
@@ -86,5 +109,5 @@ BoundaryInfo::register_timestep_eval( VarInfoVecT& variable_registry,
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace> void
-BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+template<typename ExecutionSpace, typename MemorySpace>
+void BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}

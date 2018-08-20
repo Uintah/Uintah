@@ -28,6 +28,10 @@ public:
     /** @brief Default destructor **/
     ~VelRhoHatBC();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     /** @brief Input file interface **/
@@ -42,6 +46,12 @@ public:
                                 const int time_substep, const bool pack_tasks );
 
     template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+
+    template <typename ExecutionSpace, typename MemorySpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     /** @brief Builder class containing instructions on how to build the task **/
@@ -49,14 +59,13 @@ public:
 
       public:
 
-        Builder(std::string name, int matl_index):
-        m_task_name(name), m_matl_index(matl_index){};
+      Builder( std::string name, int matl_index ) : m_task_name(name), m_matl_index(matl_index){}
+      ~Builder(){}
 
-        ~Builder() {}
+      VelRhoHatBC* build()
+      { return scinew VelRhoHatBC( m_task_name, m_matl_index ); }
 
-        VelRhoHatBC* build(){ return scinew VelRhoHatBC(m_task_name, m_matl_index);};
-
-      protected:
+      private:
 
         std::string m_task_name;
         int m_matl_index;

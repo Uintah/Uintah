@@ -15,14 +15,37 @@ TaskInterface( task_name, matl_index ), _Nenv(N),_materialManager(materialManage
 DepositionEnthalpy::~DepositionEnthalpy(){
 }
 
-TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskEvalFunctionPointers(){
-
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &DepositionEnthalpy::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &DepositionEnthalpy::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DepositionEnthalpy::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &DepositionEnthalpy::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &DepositionEnthalpy::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DepositionEnthalpy::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &DepositionEnthalpy::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DepositionEnthalpy::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DepositionEnthalpy::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DepositionEnthalpy::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 void
@@ -96,8 +119,8 @@ DepositionEnthalpy::register_initialize( std::vector<ArchesFieldContainer::Varia
   register_variable( _ash_enthalpy_src, ArchesFieldContainer::COMPUTES, variable_registry );
 }
 
-void
-DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
   CCVariable<double>& ash_enthalpy_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_enthalpy_src);
@@ -138,8 +161,8 @@ DepositionEnthalpy::register_timestep_eval(
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace> void
-DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   const int FLOW = -1;
   Vector Dx = patch->dCell(); // cell spacing

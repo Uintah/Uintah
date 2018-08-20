@@ -49,6 +49,10 @@ public:
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> ArchesVIVector;
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -63,9 +67,11 @@ public:
     void register_compute_bcs( ArchesVIVector& variable_registry,
                                const int time_substep , const bool packed_tasks);
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -171,16 +177,41 @@ private:
     delete m_boundary_functors;
 
   }
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace KMomentum<T>::loadTaskEvalFunctionPointers(){
 
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KMomentum<T>::loadTaskComputeBCsFunctionPointers()
+  {
     return create_portable_arches_tasks( this
+                                       , TaskInterface::BC
+                                       , &KMomentum<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &KMomentum<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &KMomentum<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KMomentum<T>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::INITIALIZE
+                                       , &KMomentum<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &KMomentum<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &KMomentum<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KMomentum<T>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::TIMESTEP_EVAL
                                        , &KMomentum<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KMomentum<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &KMomentum<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
-
   }
 
   //------------------------------------------------------------------------------------------------
@@ -379,8 +410,9 @@ private:
   }
 
   //------------------------------------------------------------------------------------------------
-  template <typename T> void
-  KMomentum<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T>
+  template<typename ExecutionSpace, typename MemorySpace>
+  void KMomentum<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -485,8 +517,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template<typename ExecutionSpace, typename MemorySpace> void
-  KMomentum<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void KMomentum<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     Vector Dx = patch->dCell();
     double V = Dx.x()*Dx.y()*Dx.z();
@@ -679,8 +711,9 @@ private:
   }
 
 //--------------------------------------------------------------------------------------------------
-  template <typename T> void
-  KMomentum<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T>
+  template<typename ExecutionSpace, typename MemorySpace>
+  void KMomentum<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     m_boundary_functors->apply_bc( m_eqn_names, m_bcHelper, tsk_info, patch );
 

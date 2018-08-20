@@ -13,16 +13,37 @@ ConstantStateProperties::~ConstantStateProperties(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace ConstantStateProperties::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace ConstantStateProperties::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
-                                     , &ConstantStateProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &ConstantStateProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &ConstantStateProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , TaskInterface::BC
+                                     , &ConstantStateProperties::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &ConstantStateProperties::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ConstantStateProperties::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ConstantStateProperties::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &ConstantStateProperties::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &ConstantStateProperties::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ConstantStateProperties::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ConstantStateProperties::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
+                                     , &ConstantStateProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &ConstantStateProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ConstantStateProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
 
 //--------------------------------------------------------------------------------------------------
 void ConstantStateProperties::problemSetup( ProblemSpecP& db ){
@@ -62,7 +83,8 @@ void ConstantStateProperties::register_initialize( VIVec& variable_registry , co
 }
 
 //--------------------------------------------------------------------------------------------------
-void ConstantStateProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void ConstantStateProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
@@ -114,6 +136,7 @@ void ConstantStateProperties::restart_initialize( const Patch* patch, ArchesTask
 
 void ConstantStateProperties::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
 void ConstantStateProperties::register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
-void ConstantStateProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+template<typename ExecutionSpace, typename MemorySpace>
+void ConstantStateProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 template<typename ExecutionSpace, typename MemorySpace>
 void ConstantStateProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}

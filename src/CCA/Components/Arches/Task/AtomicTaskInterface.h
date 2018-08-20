@@ -87,10 +87,12 @@ public:
       std::vector<AFC::VariableInformation>& variable_registry, const bool packed_tasks ){}
     void register_timestep_init( std::vector<AFC::VariableInformation>& variable_registry,
                                          const bool pack_tasks ){}
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
     void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
 protected:
 
@@ -99,7 +101,7 @@ protected:
 
     /** @brief The actual work done within the derived class **/
     template <typename ExecutionSpace, typename MemorySpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     std::vector<const VarLabel*> m_local_labels;
     WBCHelper* m_bcHelper {nullptr};

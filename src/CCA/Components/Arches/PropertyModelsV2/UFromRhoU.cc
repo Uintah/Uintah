@@ -12,14 +12,36 @@ TaskInterface( task_name, matl_index ){}
 UFromRhoU::~UFromRhoU(){}
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace UFromRhoU::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace UFromRhoU::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &UFromRhoU::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &UFromRhoU::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &UFromRhoU::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UFromRhoU::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &UFromRhoU::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &UFromRhoU::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &UFromRhoU::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UFromRhoU::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &UFromRhoU::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &UFromRhoU::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UFromRhoU::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -65,7 +87,8 @@ void UFromRhoU::register_initialize( AVarInfo& variable_registry , const bool pa
 }
 
 //--------------------------------------------------------------------------------------------------
-void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   compute_velocities( patch, tsk_info );
 

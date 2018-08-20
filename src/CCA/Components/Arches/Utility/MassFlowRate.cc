@@ -44,14 +44,37 @@ MassFlowRate::~MassFlowRate(){
 //---------------------------------------------------------------------------
 //Method: Load task function pointers for portability
 //---------------------------------------------------------------------------
-TaskAssignedExecutionSpace MassFlowRate::loadTaskEvalFunctionPointers(){
-
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace MassFlowRate::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &MassFlowRate::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &MassFlowRate::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MassFlowRate::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace MassFlowRate::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &MassFlowRate::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &MassFlowRate::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MassFlowRate::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace MassFlowRate::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &MassFlowRate::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &MassFlowRate::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MassFlowRate::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &MassFlowRate::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 // Define ----------------------------------------------------------------------
@@ -116,7 +139,8 @@ void MassFlowRate::register_initialize( std::vector<ArchesFieldContainer::Variab
   register_massFlowRate( variable_registry, packed_tasks );
 }
 
-void MassFlowRate::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void MassFlowRate::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   eval_massFlowRate( patch, tsk_info );
 }

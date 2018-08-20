@@ -16,14 +16,36 @@ SurfaceNormals::~SurfaceNormals(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace SurfaceNormals::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace SurfaceNormals::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &SurfaceNormals::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &SurfaceNormals::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceNormals::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SurfaceNormals::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &SurfaceNormals::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &SurfaceNormals::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceNormals::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SurfaceNormals::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &SurfaceNormals::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &SurfaceNormals::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceNormals::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &SurfaceNormals::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -70,8 +92,8 @@ SurfaceNormals::register_initialize( VIVec& variable_registry , const bool packe
 
 }
 
-void
-SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1)
   GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1)

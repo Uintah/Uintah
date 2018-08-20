@@ -10,14 +10,36 @@ TaskInterface( task_name, matl_index ) {
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &PartVariablesDQMOM::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &PartVariablesDQMOM::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &PartVariablesDQMOM::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &PartVariablesDQMOM::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &PartVariablesDQMOM::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &PartVariablesDQMOM::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &PartVariablesDQMOM::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &PartVariablesDQMOM::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &PartVariablesDQMOM::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -70,8 +92,8 @@ PartVariablesDQMOM::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
   CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >("AreaSum",0);// temporal variable
@@ -143,8 +165,8 @@ PartVariablesDQMOM::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace> void
-PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
   CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >("AreaSum",0);// temporal variable

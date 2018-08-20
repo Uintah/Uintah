@@ -15,14 +15,36 @@ VelRhoHatBC::~VelRhoHatBC()
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace VelRhoHatBC::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace VelRhoHatBC::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &VelRhoHatBC::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &VelRhoHatBC::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &VelRhoHatBC::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace VelRhoHatBC::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &VelRhoHatBC::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &VelRhoHatBC::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &VelRhoHatBC::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace VelRhoHatBC::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &VelRhoHatBC::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &VelRhoHatBC::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &VelRhoHatBC::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &VelRhoHatBC::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -44,6 +66,7 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_zmom, AFC::MODIFIES, variable_registry, _task_name );
 }
 
+//--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
 void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 

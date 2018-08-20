@@ -11,18 +11,39 @@ TaskInterface( task_name, matl_index ){}
 //--------------------------------------------------------------------------------------------------
 ConsScalarDiffusion::~ConsScalarDiffusion(){}
 
-//---------------------------------------------------------------------------
-//Method: Load task function pointers for portability
-//---------------------------------------------------------------------------
-TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskEvalFunctionPointers(){
-
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &ConsScalarDiffusion::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &ConsScalarDiffusion::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ConsScalarDiffusion::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &ConsScalarDiffusion::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &ConsScalarDiffusion::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ConsScalarDiffusion::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &ConsScalarDiffusion::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &ConsScalarDiffusion::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &ConsScalarDiffusion::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
+
 //--------------------------------------------------------------------------------------------------
 void ConsScalarDiffusion::problemSetup( ProblemSpecP& db ){
 
@@ -52,7 +73,8 @@ void ConsScalarDiffusion::register_initialize( AVarInfo& variable_registry , con
 }
 
 //--------------------------------------------------------------------------------------------------
-void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info  ){
+template<typename ExecutionSpace, typename MemorySpace>
+void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
 
   CCVariable<double>& gamma = tsk_info->get_uintah_field_add<CCVariable<double> >(m_gamma_name);

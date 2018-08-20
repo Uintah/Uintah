@@ -14,14 +14,36 @@ DensityPredictor::~DensityPredictor(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace DensityPredictor::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace DensityPredictor::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &DensityPredictor::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &DensityPredictor::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DensityPredictor::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityPredictor::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &DensityPredictor::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &DensityPredictor::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DensityPredictor::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityPredictor::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &DensityPredictor::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &DensityPredictor::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DensityPredictor::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -68,9 +90,8 @@ DensityPredictor::register_initialize( std::vector<ArchesFieldContainer::Variabl
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
+template<typename ExecutionSpace, typename MemorySpace>
+void DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& rho = *(tsk_info->get_uintah_field<CCVariable<double> >("new_densityGuess"));
   KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( rho, 0.0 );
@@ -121,8 +142,8 @@ DensityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace> void
-DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& rho_guess = *(tsk_info->get_uintah_field<CCVariable<double> >( "new_densityGuess"));
   CCVariable<double>& rho_guess_a = *(tsk_info->get_uintah_field<CCVariable<double> >( "densityGuess"));

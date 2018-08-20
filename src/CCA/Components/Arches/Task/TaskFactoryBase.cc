@@ -287,6 +287,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
     switch( type ){
       case (TaskInterface::INITIALIZE):
+        temp = (*i_task)->loadTaskInitializeFunctionPointers();
         (*i_task)->register_initialize( variable_registry, pack_tasks );
         time_substep = 0;
         break;
@@ -303,6 +304,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks);
         break;
       case (TaskInterface::BC):
+        temp = (*i_task)->loadTaskComputeBCsFunctionPointers();
         (*i_task)->register_compute_bcs( variable_registry, time_substep , pack_tasks);
         break;
       case (TaskInterface::ATOMIC):
@@ -453,7 +455,7 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
 
       switch( type ){
         case (TaskInterface::INITIALIZE):
-          (*i_task)->initialize( patch, tsk_info_mngr );
+          (*i_task)->initialize<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, executionObject );
           break;
         case (TaskInterface::RESTART_INITIALIZE):
           (*i_task)->restart_initialize( patch, tsk_info_mngr );
@@ -466,7 +468,7 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
           (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, executionObject );
           break;
         case (TaskInterface::BC):
-          (*i_task)->compute_bcs( patch, tsk_info_mngr );
+          (*i_task)->compute_bcs<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, executionObject );
           break;
         case (TaskInterface::ATOMIC):
           (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, executionObject );

@@ -12,14 +12,36 @@ TaskInterface( task_name, matl_index ){}
 CCVel::~CCVel(){}
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace CCVel::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace CCVel::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &CCVel::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &CCVel::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CCVel::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CCVel::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &CCVel::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &CCVel::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CCVel::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CCVel::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &CCVel::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &CCVel::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CCVel::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -94,7 +116,8 @@ void CCVel::register_initialize( AVarInfo& variable_registry , const bool pack_t
 }
 
 //--------------------------------------------------------------------------------------------------
-void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   compute_velocities( patch, tsk_info );
 

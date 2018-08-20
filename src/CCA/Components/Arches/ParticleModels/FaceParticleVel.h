@@ -16,6 +16,10 @@ public:
     FaceParticleVel<T>( std::string task_name, int matl_index, const std::string var_name );
     ~FaceParticleVel<T>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -51,9 +55,11 @@ protected:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info   );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -113,15 +119,40 @@ private:
   FaceParticleVel<T>::~FaceParticleVel()
   {}
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
-  TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskEvalFunctionPointers(){
-
+  TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskComputeBCsFunctionPointers()
+  {
     return create_portable_arches_tasks( this
-                                       , &FaceParticleVel::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &FaceParticleVel::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &FaceParticleVel::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , TaskInterface::BC
+                                       , &FaceParticleVel<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &FaceParticleVel<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &FaceParticleVel<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
+  }
 
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::INITIALIZE
+                                       , &FaceParticleVel<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &FaceParticleVel<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &FaceParticleVel<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::TIMESTEP_EVAL
+                                       , &FaceParticleVel<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &FaceParticleVel<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &FaceParticleVel<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
   }
 
   template <typename T>
@@ -169,7 +200,8 @@ private:
   }
 
   template <typename T>
-  void FaceParticleVel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info   ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void FaceParticleVel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -210,10 +242,7 @@ private:
       Uintah::parallel_for( range, my_interpolant_up, ci );
       Uintah::parallel_for( range, my_interpolant_vp, ci );
       Uintah::parallel_for( range, my_interpolant_wp, ci );
-
-  }
-
-
+    }
   }
   }
 

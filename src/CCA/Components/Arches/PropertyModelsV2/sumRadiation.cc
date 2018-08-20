@@ -5,14 +5,36 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace sumRadiation::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace sumRadiation::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &sumRadiation::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &sumRadiation::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &sumRadiation::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sumRadiation::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &sumRadiation::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &sumRadiation::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &sumRadiation::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sumRadiation::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &sumRadiation::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &sumRadiation::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &sumRadiation::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -137,8 +159,8 @@ sumRadiation::shared_initialize_code( const Patch* patch, ArchesTaskInfoManager*
 
 }
 
-void
-sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   shared_initialize_code( patch, tsk_info );
 
@@ -167,8 +189,8 @@ void sumRadiation::register_timestep_eval( VIVec& variable_registry, const int t
   register_initialize( variable_registry , false);
 }
 
-template<typename ExecutionSpace, typename MemorySpace> void
-sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
   shared_initialize_code( patch, tsk_info );
 }
 

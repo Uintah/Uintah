@@ -59,14 +59,36 @@ namespace Uintah{
   {}
 
   //--------------------------------------------------------------------------------------------------
-  TaskAssignedExecutionSpace FractalUD::loadTaskEvalFunctionPointers(){
-
+  TaskAssignedExecutionSpace FractalUD::loadTaskComputeBCsFunctionPointers()
+  {
     return create_portable_arches_tasks( this
+                                       , TaskInterface::BC
+                                       , &FractalUD::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &FractalUD::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &FractalUD::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  TaskAssignedExecutionSpace FractalUD::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::INITIALIZE
+                                       , &FractalUD::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &FractalUD::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &FractalUD::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  TaskAssignedExecutionSpace FractalUD::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::TIMESTEP_EVAL
                                        , &FractalUD::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &FractalUD::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &FractalUD::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
-
   }
 
   //---------------------------------------------------------------------------------
@@ -168,8 +190,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  void
-    FractalUD::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void FractalUD::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
       // CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
       //mu_sgc.initialize(0.0);
@@ -225,9 +247,6 @@ namespace Uintah{
       wvstress.initialize(0.0);
       wwstress.initialize(0.0);
 
-
-
-
     }
 
   //---------------------------------------------------------------------------------
@@ -266,8 +285,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemorySpace> void
-  FractalUD::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void FractalUD::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
       constSFCXVariable<double>& uFaceX =tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(Ux_face_name);
       constSFCXVariable<double>& uFaceY =tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(Uy_face_name);

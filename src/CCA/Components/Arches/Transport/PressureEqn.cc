@@ -20,16 +20,38 @@ TaskInterface( task_name, matl_index ) {
 //--------------------------------------------------------------------------------------------------
 PressureEqn::~PressureEqn(){}
 
-TaskAssignedExecutionSpace PressureEqn::loadTaskEvalFunctionPointers(){
-
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace PressureEqn::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &PressureEqn::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &PressureEqn::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &PressureEqn::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace PressureEqn::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &PressureEqn::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &PressureEqn::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &PressureEqn::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace PressureEqn::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &PressureEqn::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &PressureEqn::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &PressureEqn::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
-
 
 //--------------------------------------------------------------------------------------------------
 void PressureEqn::create_local_labels(){
@@ -113,8 +135,8 @@ PressureEqn::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();
@@ -211,8 +233,8 @@ PressureEqn::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace> void
-PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemorySpace>
+void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();
@@ -254,8 +276,8 @@ PressureEqn::register_compute_bcs(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   //This only applies BCs to A. Boundary conditions to the RHS are handled upstream in RhoUHatBC
   CCVariable<Stencil7>& A = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");

@@ -41,6 +41,10 @@ namespace Uintah{
     DragModel<IT, DT>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~DragModel<IT, DT>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -78,9 +82,11 @@ namespace Uintah{
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -134,15 +140,40 @@ namespace Uintah{
   DragModel<IT, DT>::~DragModel()
   {}
 
+  //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
-  TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskEvalFunctionPointers(){
-
+  TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskComputeBCsFunctionPointers()
+  {
     return create_portable_arches_tasks( this
+                                       , TaskInterface::BC
+                                       , &DragModel<IT, DT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       //, &DragModel<IT, DT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &DragModel<IT, DT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename IT, typename DT>
+  TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::INITIALIZE
+                                       , &DragModel<IT, DT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &DragModel<IT, DT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &DragModel<IT, DT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename IT, typename DT>
+  TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks( this
+                                       , TaskInterface::TIMESTEP_EVAL
                                        , &DragModel<IT, DT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &DragModel<IT, DT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &DragModel<IT, DT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
-
   }
 
   template <typename IT, typename DT>
@@ -206,7 +237,8 @@ namespace Uintah{
   }
 
   template <typename IT, typename DT>
-  void DragModel<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template<typename ExecutionSpace, typename MemorySpace>
+  void DragModel<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     for ( int ienv = 0; ienv < _N; ienv++ ){
       const std::string name = get_name(ienv, _base_var_name);

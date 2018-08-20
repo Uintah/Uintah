@@ -13,6 +13,10 @@ public:
     MMS_mom<T>( std::string task_name, int matl_index, MaterialManagerP materialManager  );
     ~MMS_mom<T>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
@@ -51,9 +55,11 @@ public:
     void register_compute_bcs( std::vector<VarInfo>& variable_registry, const int time_substep,
                                const bool pack_tasks){}
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -97,14 +103,38 @@ MMS_mom<T>::~MMS_mom(){
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-TaskAssignedExecutionSpace MMS_mom<T>::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace MMS_mom<T>::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &MMS_mom<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &MMS_mom<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MMS_mom<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+TaskAssignedExecutionSpace MMS_mom<T>::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &MMS_mom<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &MMS_mom<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MMS_mom<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+TaskAssignedExecutionSpace MMS_mom<T>::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &MMS_mom<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &MMS_mom<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &MMS_mom<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -159,7 +189,8 @@ void MMS_mom<T>::register_initialize( std::vector<VarInfo>&
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-void MMS_mom<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void MMS_mom<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   compute_source(patch, tsk_info);
 

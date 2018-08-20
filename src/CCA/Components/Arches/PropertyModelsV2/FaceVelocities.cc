@@ -25,14 +25,36 @@ TaskInterface( task_name, matl_index ){
 FaceVelocities::~FaceVelocities(){}
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace FaceVelocities::loadTaskEvalFunctionPointers(){
-
+TaskAssignedExecutionSpace FaceVelocities::loadTaskComputeBCsFunctionPointers()
+{
   return create_portable_arches_tasks( this
+                                     , TaskInterface::BC
+                                     , &FaceVelocities::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &FaceVelocities::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &FaceVelocities::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace FaceVelocities::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::INITIALIZE
+                                     , &FaceVelocities::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &FaceVelocities::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &FaceVelocities::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace FaceVelocities::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks( this
+                                     , TaskInterface::TIMESTEP_EVAL
                                      , &FaceVelocities::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &FaceVelocities::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &FaceVelocities::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -86,7 +108,8 @@ void FaceVelocities::register_initialize( AVarInfo& variable_registry , const bo
 }
 
 //--------------------------------------------------------------------------------------------------
-void FaceVelocities::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void FaceVelocities::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   SFCXVariable<double>& ucell_xvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xvel"));
   SFCXVariable<double>& ucell_yvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_yvel"));
