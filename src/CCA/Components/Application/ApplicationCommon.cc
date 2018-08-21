@@ -295,7 +295,10 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   Patch* patch = nullptr;
 
   if (patches->size() != 0 && !new_dw->exists(m_delTLabel, -1, patch)) {
-    int multiplier = 1;
+
+    // Start with the time step multiplier.
+    double multiplier = m_simulationTime->m_time_step_multiplier;
+    
     const GridP grid = patches->get(0)->getLevel()->getGrid();
 
     for (int i = 0; i < grid->numLevels(); i++) {
@@ -309,17 +312,19 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
         delt_vartype delTvar;
         new_dw->get(delTvar, m_delTLabel, level.get_rep());
 
-        new_dw->put(delt_vartype(delTvar * multiplier), m_delTLabel);
+	// Adjust the next delT by the multiplier and validate
+	m_nextDelT = validateNextDelT( delTvar * multiplier );
+
+	new_dw->put(delt_vartype(m_nextDelT), m_delTLabel);
       }
+
+      // What should happen if there is no delta T???
     }
   }
 
   if (d_myworld->nRanks() > 1) {
     new_dw->reduceMPI(m_delTLabel, 0, 0, -1);
   }
-
-  // Validate the next delta T
-  validateNextDelT( new_dw );
 
   // Reduce the application specific reduction variables. If no value
   // was computed on an MPI rank, a benign value will be set. If the
@@ -452,6 +457,10 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
     
     // Update the simulation time.
     m_simTime += m_delT;
+
+    // Question - before putting the value into the warehouse should
+    // it be broadcasted to assure it is sync'd acrosss all ranks?
+    // Uintah::MPI::Bcast( &m_simTime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
     new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel);
   }
@@ -698,35 +707,25 @@ ApplicationCommon::setNextDelT( double delT )
 
 //______________________________________________________________________
 //
-void
-ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
+double
+ApplicationCommon::validateNextDelT( double nextDelT )
 {
-  // Retrieve the proposed next delta T and adjust it based on
-  // simulation time info parameters.
-
   // NOTE: This check is performed BEFORE the simulation time is
   // updated. As such, being that the time step has completed, the
   // actual simulation time is the current simulation time plus the
   // current delta T.
 
-  delt_vartype delt_var;
-  newDW->get( delt_var, m_delTLabel );
-  m_nextDelT = delt_var;
-
-  // Adjust the next delT by the factor
-  m_nextDelT *= m_simulationTime->m_delt_factor;
-      
   // Check to see if the next delT is below the delt_min
-  if( m_nextDelT < m_simulationTime->m_delt_min ) {
+  if( nextDelT < m_simulationTime->m_delt_min ) {
     std::ostringstream message;
 
     message << "WARNING (a) at time step " << m_timeStep << " "
             << "and sim time " << m_simTime << " "
-            << ": raising the next delT from " << m_nextDelT;
-    
-    m_nextDelT = m_simulationTime->m_delt_min;
-    
-    message << " to minimum: " << m_nextDelT;
+            << ": raising the next delT from " << nextDelT;
+     
+    nextDelT = m_simulationTime->m_delt_min;
+   
+    message << " to minimum: " << nextDelT;
 
     DOUT( d_myworld->myRank() == 0 && g_deltaT_major_warnings, message.str() );
   }
@@ -737,16 +736,16 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
   
   if( m_delT > 0.0 &&
       m_simulationTime->m_max_delt_increase > 0 &&
-      m_nextDelT > delt_tmp ) {
+      nextDelT > delt_tmp ) {
     std::ostringstream message;
 
     message << "WARNING (b) at time step " << m_timeStep << " "
             << "and sim time " << m_simTime << " "
-            << ": lowering the next delT from " << m_nextDelT;
+            << ": lowering the next delT from " << nextDelT;
     
-    m_nextDelT = delt_tmp;
+    nextDelT = delt_tmp;
     
-    message << " to maxmimum: " << m_nextDelT
+    message << " to maxmimum: " << nextDelT
               << " (maximum increase of " << m_simulationTime->m_max_delt_increase
               << ")";
 
@@ -756,32 +755,32 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
   // Check to see if the next delT exceeds the max_initial_delt
   if( m_simulationTime->m_max_initial_delt > 0 &&
       m_simTime+m_delT <= m_simulationTime->m_initial_delt_range &&
-      m_nextDelT > m_simulationTime->m_max_initial_delt ) {
+      nextDelT > m_simulationTime->m_max_initial_delt ) {
     std::ostringstream message;
 
     message << "WARNING (c) at time step " << m_timeStep << " "
             << "and sim time " << m_simTime << " "
-            << ": lowering the next delT from " << m_nextDelT ;
+            << ": lowering the next delT from " << nextDelT ;
 
-    m_nextDelT = m_simulationTime->m_max_initial_delt;
+    nextDelT = m_simulationTime->m_max_initial_delt;
 
-    message<< " to maximum: " << m_nextDelT
+    message<< " to maximum: " << nextDelT
              << " (for initial timesteps)";
 
     DOUT( d_myworld->myRank() == 0 && g_deltaT_major_warnings, message.str() );
   }
 
   // Check to see if the next delT exceeds the delt_max
-  if( m_nextDelT > m_simulationTime->m_delt_max ) {
+  if( nextDelT > m_simulationTime->m_delt_max ) {
     std::ostringstream message;
 
     message << "WARNING (d) at time step " << m_timeStep << " "
             << "and sim time " << m_simTime << " "
-            << ": lowering the next delT from " << m_nextDelT;
+            << ": lowering the next delT from " << nextDelT;
 
-    m_nextDelT = m_simulationTime->m_delt_max;
+    nextDelT = m_simulationTime->m_delt_max;
     
-    message << " to maximum: " << m_nextDelT;
+    message << " to maximum: " << nextDelT;
 
     DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
   }
@@ -792,16 +791,16 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
 
     // Clamp to the output time
     double nextOutput = m_output->getNextOutputTime();
-    if (nextOutput != 0 && m_simTime + m_delT + m_nextDelT > nextOutput) {
+    if (nextOutput != 0 && m_simTime + m_delT + nextDelT > nextOutput) {
       std::ostringstream message;
 
       message << "WARNING (e) at time step " << m_timeStep << " "
             << "and sim time " << m_simTime << " "
-            << ": lowering the next delT from " << m_nextDelT;
+            << ": lowering the next delT from " << nextDelT;
 
-      m_nextDelT = nextOutput - (m_simTime+m_delT);
+      nextDelT = nextOutput - (m_simTime+m_delT);
 
-      message << " to " << m_nextDelT
+      message << " to " << nextDelT
                 << " to line up with output time";
 
       DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
@@ -809,16 +808,16 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
 
     // Clamp to the checkpoint time
     double nextCheckpoint = m_output->getNextCheckpointTime();
-    if (nextCheckpoint != 0 && m_simTime + m_delT + m_nextDelT > nextCheckpoint) {
+    if (nextCheckpoint != 0 && m_simTime + m_delT + nextDelT > nextCheckpoint) {
       std::ostringstream message;
       
       message << "WARNING (f) at time step " << m_timeStep << " "
             << "and sim time " << m_simTime << " "
-            << ": lowering the next delT from " << m_nextDelT;
+            << ": lowering the next delT from " << nextDelT;
 
-      m_nextDelT = nextCheckpoint - (m_simTime+m_delT);
+      nextDelT = nextCheckpoint - (m_simTime+m_delT);
 
-      message << " to " << m_nextDelT
+      message << " to " << nextDelT
                 << " to line up with checkpoint time";
 
       DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
@@ -827,12 +826,11 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
   
   // Clamp delT to the max end time,
   if (m_simulationTime->m_end_at_max_time &&
-      m_simTime + m_delT + m_nextDelT > m_simulationTime->m_max_time) {
-    m_nextDelT = m_simulationTime->m_max_time - (m_simTime+m_delT);
+      m_simTime + m_delT + nextDelT > m_simulationTime->m_max_time) {
+    nextDelT = m_simulationTime->m_max_time - (m_simTime+m_delT);
   }
 
-  // Write the next delT to the data warehouse
-  newDW->override( delt_vartype(m_nextDelT), m_delTLabel );
+  return nextDelT;
 }
 
 //______________________________________________________________________

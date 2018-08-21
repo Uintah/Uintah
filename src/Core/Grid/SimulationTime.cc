@@ -41,8 +41,6 @@ SimulationTime::SimulationTime( const ProblemSpecP & params )
   // proc0cout << "  Reading the <Time> block from: "
   // 	    << Uintah::basename(params->getFile()) << "\n";
 
-  m_delt_factor = 1.0;
-  
   ProblemSpecP time_ps = params->findBlock( "Time" );
 
   if ( !time_ps ) {
@@ -55,7 +53,7 @@ SimulationTime::SimulationTime( const ProblemSpecP & params )
   time_ps->require( "initTime", m_init_time );
   time_ps->require( "delt_min", m_delt_min );
   time_ps->require( "delt_max", m_delt_max );
-  time_ps->require( "timestep_multiplier", m_delt_factor );
+  time_ps->require( "timestep_multiplier", m_time_step_multiplier );
 
   if( !time_ps->get( "delt_init", m_max_initial_delt) &&
       !time_ps->get("max_initial_delt", m_max_initial_delt ) ) {
@@ -149,7 +147,7 @@ SimulationTime::problemSetup( const ProblemSpecP & params )
   
   time_ps->require( "delt_min", m_delt_min );
   time_ps->require( "delt_max", m_delt_max );
-  time_ps->require( "timestep_multiplier", m_delt_factor );
+  time_ps->require( "timestep_multiplier", m_time_step_multiplier );
 
   if( !time_ps->get("delt_init", m_max_initial_delt) &&
       !time_ps->get("max_initial_delt", m_max_initial_delt) ) {

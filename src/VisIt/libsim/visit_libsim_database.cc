@@ -123,6 +123,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   SchedulerP      schedulerP = sim->simController->getSchedulerP();
+  LoadBalancer *  lb         = sim->simController->getLoadBalancer();
   GridP           gridP      = sim->gridP;
       
   if( !schedulerP.get_rep() || !gridP.get_rep() )
@@ -335,13 +336,32 @@ visit_handle visit_SimGetMetaData(void *cbdata)
             VisIt_MeshMetaData_setGroupTitle(mmd, "levels");
             VisIt_MeshMetaData_setGroupPieceName(mmd, "level");
 
-            for (int k=0; k<totalPatches; ++k)
+            // VisIt_MeshMetaData_setNumDomains(mmd, sim->myworld->nRanks());
+            // VisIt_MeshMetaData_setDomainTitle(mmd, "ranks");
+            // VisIt_MeshMetaData_setDomainPieceName(mmd, "rank");
+            // VisIt_MeshMetaData_setNumGroups(mmd, sim->myworld->nNodes());
+            // VisIt_MeshMetaData_setGroupTitle(mmd, "nodes");
+            // VisIt_MeshMetaData_setGroupPieceName(mmd, "node");
+	    
+            for (int p=0; p<totalPatches; ++p)
             {
               char tmpName[64];
               int level, local_patch;
       
-              GetLevelAndLocalPatchNumber(stepInfo, k, level, local_patch);
-              sprintf(tmpName,"level%d, patch%d", level, local_patch);
+              GetLevelAndLocalPatchNumber(stepInfo, p, level, local_patch);
+
+	      LevelP levelP = gridP->getLevel(level);
+	      const Patch* patch = levelP->getPatch(local_patch);
+	      
+	      int rank = lb->getPatchwiseProcessorAssignment(patch);
+		
+              sprintf(tmpName,"level%d, patch%d, node%d, rank%d",
+	      	      level, local_patch,
+	      	      sim->myworld->myNode(), rank);
+
+              // sprintf(tmpName,"node%d, rank%d, level%d, patch%d",
+	      // 	      sim->myworld->myNode(), rank,
+	      // 	      level, local_patch);
 
               VisIt_MeshMetaData_addGroupId(mmd, level);
               VisIt_MeshMetaData_addDomainName(mmd, tmpName);

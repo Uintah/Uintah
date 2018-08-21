@@ -647,12 +647,13 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 1.0e-4;
       double maxValue = 1.0e+4;
-      oldValue = simTime->m_delt_factor;
+      oldValue = simTime->m_time_step_multiplier;
       
       if( newValue < minValue || maxValue < newValue )
       {
         std::stringstream msg;
-        msg << "Visit libsim - the value (" << newValue << ") for DeltaTFactor "
+        msg << "Visit libsim - the value (" << newValue
+	    << ") for the DeltaTMutlipler "
             << "is outside the range [" << minValue << ", " << maxValue << "]. "
             << "Resetting value.";
         VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
@@ -660,7 +661,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
         return;
       }
 
-      simTime->m_delt_factor = newValue;
+      simTime->m_time_step_multiplier = newValue;
       visit_VarModifiedMessage( sim, "DeltaTFactor", oldValue, newValue );
     }
     break;

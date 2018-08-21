@@ -945,8 +945,8 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   // Update the system var (time step and simulation time). Must be
   // done after the output and after scheduleComputeStableTimeStep.
   m_application->scheduleUpdateSystemVars( m_current_gridP,
-                                   m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
-                                   m_scheduler );
+                                           m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+                                           m_scheduler );
 
   // Report all of the stats before doing any possible in-situ work
   // as that effects the lap timer for the time steps.

@@ -93,8 +93,8 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, sim->delt_next, 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTFactor", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_delt_factor, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMultiplier", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_time_step_multiplier, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxDeltaTIncrease", 0);

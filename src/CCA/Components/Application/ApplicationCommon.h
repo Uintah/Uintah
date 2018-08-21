@@ -375,7 +375,7 @@ WARNING
 
     virtual   void setNextDelT( double delT );
     virtual double getNextDelT() const { return m_nextDelT; }
-    virtual   void validateNextDelT( DataWarehouse  * new_dw );
+    virtual double validateNextDelT( double nextDelT );
 
     //////////
     virtual   void setSimTime( double simTime );

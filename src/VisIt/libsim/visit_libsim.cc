@@ -242,6 +242,13 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->switchIndex = -1;
   sim->nodeIndex = -1;
 
+
+  std::string hostName = sim->myworld->myProcName();
+  std::string hostNode = sim->myworld->myProcName();
+  
+  hostName.erase(std::remove_if(hostName.begin(), hostName.end(), (int(*)(int))std::isdigit), hostName.end());
+  hostNode.erase(std::remove_if(hostNode.begin(), hostNode.end(), (int(*)(int))std::isalpha), hostNode.end());
+
   // Possible machine file names.
   const unsigned int nMachines = 1;
   std::string hostNames[ nMachines ] = { "ash" };

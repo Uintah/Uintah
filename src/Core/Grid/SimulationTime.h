@@ -78,7 +78,7 @@ public:
   double m_initial_delt_range{0};     // Simulation time range for the initial delta T
   double m_delt_min{0};               // Minimum delta T
   double m_delt_max{1};               // Maximum delta T
-  double m_delt_factor{1};            // Factor for increasing delta T
+  double m_time_step_multiplier{1.0}; // Factor for increasing delta T
   double m_max_delt_increase{0};      // Maximum delta T increase.
   double m_override_restart_delt{0};  // Override the restart delta T value
 
