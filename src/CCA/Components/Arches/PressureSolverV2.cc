@@ -82,6 +82,10 @@ PressureSolver::PressureSolver(ArchesLabel* label,
 PressureSolver::~PressureSolver()
 {
   delete d_source;
+
+  if(do_custom_arches_linear_solve){
+    delete custom_solver;
+  }
 }
 
 //______________________________________________________________________
@@ -90,6 +94,8 @@ PressureSolver::~PressureSolver()
 void
 PressureSolver::problemSetup(ProblemSpecP& params,MaterialManagerP& materialManager)
 {
+  //do_custom_arches_linear_solve=true; //  Don't use hypre, use proto-type solver
+  
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();
   db->getWithDefault("normalize_pressure",      d_norm_press, false);
@@ -98,13 +104,15 @@ PressureSolver::problemSetup(ProblemSpecP& params,MaterialManagerP& materialMana
   // make source and boundary_condition objects
   d_source = scinew Source(d_physicalConsts);
 
-  d_hypreSolver->readParameters(db, "pressure" );
-  
-  d_hypreSolver->getParameters()->setSolveOnExtraCells(false);
+  if(!do_custom_arches_linear_solve){
+    d_hypreSolver->readParameters(db, "pressure" );
 
-  //force a zero setup frequency since nothing else
-  //makes any sense at the moment.
-  d_hypreSolver->getParameters()->setSetupFrequency(0.0);
+    d_hypreSolver->getParameters()->setSolveOnExtraCells(false);
+
+    //force a zero setup frequency since nothing else
+    //makes any sense at the moment.
+    d_hypreSolver->getParameters()->setSetupFrequency(0.0);
+  }
 
   d_enforceSolvability = false;
   if ( db->findBlock("enforce_solvability")){
@@ -166,7 +174,13 @@ void PressureSolver::scheduleInitialize( const LevelP& level,
                                          SchedulerP& sched, 
                                          const MaterialSet* matls)
 {
-  d_hypreSolver->scheduleInitialize( level, sched, matls );
+  if(do_custom_arches_linear_solve){
+    int archIndex = 0; // only one arches material
+    custom_solver = scinew linSolver(d_MAlab,   this, d_boundaryCondition ,d_physicalConsts ,d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(),d_lab );
+    custom_solver->sched_PreconditionerConstruction( sched, matls, level );// hard coded for level 0 
+  }else{
+    d_hypreSolver->scheduleInitialize( level, sched, matls );
+  }
 }
 //______________________________________________________________________
 //
@@ -537,7 +551,9 @@ PressureSolver::setGuessForX ( const ProcessorGroup* pg,
 
   ostringstream fname;
   fname << "." << desc.c_str() << "." << timeStep << "." << d_iteration;
-  d_hypreSolver->getParameters()->setOutputFileName(fname.str());
+  if(!do_custom_arches_linear_solve){
+    d_hypreSolver->getParameters()->setOutputFileName(fname.str());
+  }
 
 }
 
@@ -588,16 +604,28 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
 
   IntVector periodic_vector = level->getPeriodicBoundaries();
   const bool isPeriodic =periodic_vector.x() == 1 && periodic_vector.y() == 1 && periodic_vector.z() ==1;
-  if ( isPeriodic || d_enforceSolvability ) {
-    d_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, rk_stage);
-  }
 
-  d_hypreSolver->scheduleSolve(level, sched,  matls,
-                               A,      Task::NewDW,
-                               x,      modifies_x,
-                               b,      Task::NewDW,
-                               guess,  Task::NewDW,
-                               isFirstSolve);
+
+
+  if(do_custom_arches_linear_solve){
+
+    custom_solver->sched_customSolve(sched,  matls, patches,
+                                     A,      Task::NewDW,
+                                     x,      Task::NewDW,
+                                     b,      Task::NewDW,
+                                     guess,  Task::NewDW, rk_stage ,level); 
+  }else{
+    if ( isPeriodic || d_enforceSolvability ) {
+      d_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, rk_stage);
+    }
+
+    d_hypreSolver->scheduleSolve(level, sched,  matls,
+                                 A,      Task::NewDW,
+                                 x,      modifies_x,
+                                 b,      Task::NewDW,
+                                 guess,  Task::NewDW,
+                                 isFirstSolve);
+  }
 
   //add this?
   //if ( d_ref_value != 0. ) {
