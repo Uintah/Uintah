@@ -26,7 +26,7 @@
 
 #ifndef Uintah_Components_Arches_PressureSolverV2_h
 #define Uintah_Components_Arches_PressureSolverV2_h
-
+#include <CCA/Components/Arches/linSolver.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Grid/MaterialManagerP.h>
@@ -37,7 +37,7 @@
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Task.h>
-
+#include <CCA/Components/Arches/linSolver.h>
 namespace Uintah {
 
 class MPMArchesLabel;
@@ -108,6 +108,12 @@ public:
   inline std::vector<std::string> get_pressure_source_ref(){
     return d_new_sources;
   }
+
+  //__________________________________
+  // Set stencil weights
+  void calculatePressureCoeff(const Patch* patch,
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars);
 
 private:
 
@@ -196,12 +202,6 @@ private:
                         const VarLabel* refPressLabel);
 
   //__________________________________
-  // Set stencil weights
-  void calculatePressureCoeff(const Patch* patch,
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars);
-
-  //__________________________________
   // Modify stencil weights to account for voidage due
   // to multiple materials
   void mmModifyPressureCoeffs(const Patch* patch,
@@ -227,8 +227,10 @@ private:
   bool d_norm_press;
   bool d_do_only_last_projection;
   bool d_enforceSolvability;
-
+  bool do_custom_arches_linear_solve{false};
   SolverInterface* d_hypreSolver;
+
+  linSolver* custom_solver;
 
   std::vector<std::string> d_new_sources;
   std::map<std::string, double> d_source_weights;

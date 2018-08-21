@@ -85,6 +85,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/NonlinearSolver.cc           \
         $(SRCDIR)/PhysicalConstants.cc         \
         $(SRCDIR)/PressureSolverV2.cc          \
+        $(SRCDIR)/linSolver.cc          \
         $(SRCDIR)/Properties.cc                \
         $(SRCDIR)/RHSSolver.cc                 \
         $(SRCDIR)/ScaleSimilarityModel.cc      \
