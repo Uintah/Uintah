@@ -27,7 +27,6 @@
 
 #include <cstring>
 #include <iostream>
-#include <map>
 
 using namespace Uintah;
 
@@ -37,94 +36,78 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
                               ,       int              nRanks
                               ,       int              threads
                               )
-  : m_rank(rank)
+  : m_parent_group(parent)
+  , m_comm(comm)
+  , m_rank(rank)
   , m_nRanks(nRanks)
   , m_threads(threads)
-  , m_comm(comm)
-  , m_parent_group(parent)
 {
-  m_node = -1;
-  m_nNodes = 0;
+  // Get the processor name for this rank.
+  procName_t proc_name;
+  int procNameLength;
 
-  int resultlen;
+  MPI::Get_processor_name( proc_name, &procNameLength );
+  proc_name[procNameLength] = '\0';
 
-  // For each rank get the processor name.
-  MPI::Get_processor_name( m_proc_name, &resultlen );
-
-  // Gather all of the processor names on the root node.
-  char all_proc_names[nRanks*MPI_MAX_PROCESSOR_NAME+1];
-  all_proc_names[nRanks*MPI_MAX_PROCESSOR_NAME] = '\0';
+  m_proc_name = std::string(proc_name);
   
-  MPI::Gather(  m_proc_name,  MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
-	      all_proc_names, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, 0, MPI_COMM_WORLD);
+  m_all_proc_names = new procName_t[m_nRanks];
 
-  char proc_name[MPI_MAX_PROCESSOR_NAME];
+  // Gather all of the processor names in rank order.
+  MPI::Allgather(      proc_name,  MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR,
+                 m_all_proc_names, MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR,
+                 MPI_COMM_WORLD);
 
-  // For the root node create a map that stores the unique processor
-  // name.
-  if( m_rank == 0 )
+  // Loop through each rank and map its processor name to a node index.
+  for( int i=0; i<nRanks; ++i )
   {
-    std::map< std::string, unsigned int > proc_name_map;
+    // Find the processor name in the map.
+    std::map< std::string, unsigned int >::iterator iter =
+      m_proc_name_map.find( std::string(m_all_proc_names[i]) );
 
-    // For each rank get its processor name.
-    for( int i=0; i<nRanks; ++i )
+    // Found this processor name already so get the index.
+    if( iter != m_proc_name_map.end() )
     {
-      // The rank's processor name.
-      unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;      
-      strncpy( proc_name, &(all_proc_names[cc]), MPI_MAX_PROCESSOR_NAME);
-
-      // Find the processor name in the map.
-      if( proc_name_map.find(std::string(proc_name) ) == proc_name_map.end() )
-      {
-	// Store the name in the map for uniqueness.
-	proc_name_map[ std::string(proc_name) ] = m_nNodes;
-
-	// Store the processor name in an array for broadcasting.
-	cc = m_nNodes * MPI_MAX_PROCESSOR_NAME;
-	
-	strncpy( &(all_proc_names[cc]), proc_name, MPI_MAX_PROCESSOR_NAME);
-	
-	++m_nNodes;	
-      }	  
+      m_node = iter->second;
     }
-  }    
-
-  // From the root node broadcast the number of unique processor names.
-  MPI::Bcast(&m_nNodes, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-  // From the root node broadcast the unique processor names.
-  MPI::Bcast(all_proc_names, m_nNodes*MPI_MAX_PROCESSOR_NAME,
-	     MPI_CHAR, 0, MPI_COMM_WORLD);
-
-  // Find the local processor name for this rank and get an associated
-  // processor name index.
-  for( int i=0; i<m_nNodes; ++i )
-  {
-    unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;    
-    strncpy( proc_name, &(all_proc_names[cc]), MPI_MAX_PROCESSOR_NAME);
-
-    // Check the local processor name with the unique processor name
-    // list, if a match store the index.
-    if( std::string(m_proc_name) == std::string(proc_name) )
+    // First time finding this name so store the name in the map.
+    else
     {
-      m_node = i;
-      break;
+      m_node = m_proc_name_map.size();
+      
+      m_proc_name_map[ m_proc_name ] = m_node;
+
+      m_nNodes = m_proc_name_map.size();
     }
   }
-  
-  // Create a node based communicator. The node index becomes the
-  // "color" while using the world rank which is unique for the
-  // ordering.
-  MPI::Comm_split(m_comm, m_node, m_rank, &m_node_comm);
 
-  // Get the number of ranks for this node and the rank on this node.
-  MPI::Comm_rank(m_node_comm, &m_node_rank);
-  MPI::Comm_size(m_node_comm, &m_node_nRanks);
+  // More than one node so create a node based communicator.
+  if( m_nNodes > 1 )
+  {
+    // The node index becomes the "color" while using the world rank
+    // which is unique for the ordering.
+    MPI::Comm_split(m_comm, m_node, m_rank, &m_node_comm);
+    
+    // Get the number of ranks for this node and the rank on this node.
+    MPI::Comm_rank(m_node_comm, &m_node_rank);
+    MPI::Comm_size(m_node_comm, &m_node_nRanks);
+  }
+  // Only one node so no need for a separtate communicator.
+  else
+  {
+    m_node_nRanks = m_nRanks;
+    m_node_rank = m_rank;
+
+    m_node_comm = m_comm;
+  }
 }
 
 ProcessorGroup::~ProcessorGroup() 
 {
+  // if( m_nNodes > 1 )
   // MPI::Comm_free( &m_node_comm );
+
+  delete [] m_all_proc_names;  
 };
 
 
@@ -146,4 +129,26 @@ void ProcessorGroup::setGlobalComm(int num_comms) const
       Parallel::exitAll(1);
     }
   }
+}
+
+// From any rank get the node index.
+int ProcessorGroup::getNodeFromRank( int rank ) const
+{
+  // Make sure the rank is valid.
+  if( 0 <= rank && rank < m_nRanks )
+  {
+    // First get the process name for this rank
+    std::string proc_name = m_all_proc_names[rank];
+
+    // Make sure the name exists in the map.
+    if( m_proc_name_map.find(proc_name) != m_proc_name_map.end() )
+    {
+      // Return the index.
+      return m_proc_name_map.at(proc_name);
+    }
+    else
+      return -1;
+  }
+  else
+    return -1;
 }
