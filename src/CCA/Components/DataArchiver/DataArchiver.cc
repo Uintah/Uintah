@@ -1941,7 +1941,7 @@ DataArchiver::writeto_xml_files( std::map< std::string,
     //__________________________________
     //  Writeto XML files
     // to check for output nth proc
-    int dir_timestep = getTimeStepTopLevel();
+    // int dir_timestep = getTimeStepTopLevel();
   
     string iname = m_dir.getName() + "/index.xml";
 
