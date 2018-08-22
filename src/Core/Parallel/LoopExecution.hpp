@@ -127,19 +127,21 @@ enum TASKGRAPH {
 #define ORIGINAL_KOKKOS_CUDA_TAG    Kokkos::Cuda COMMA Kokkos::CudaSpace
 
 #if defined(UINTAH_ENABLE_KOKKOS) && defined(HAVE_CUDA)
-  #define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #if defined(KOKKOS_ENABLE_OPENMP)
+    #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
     #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
   #else
+    #define UINTAH_CPU_TAG            UintahSpaces::CPU COMMA UintahSpaces::HostSpace
     #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #endif
   #define KOKKOS_CUDA_TAG             Kokkos::Cuda COMMA Kokkos::CudaSpace
 #elif defined(UINTAH_ENABLE_KOKKOS) && !defined(HAVE_CUDA)
-  #define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #if defined(KOKKOS_ENABLE_OPENMP)
+    #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
     #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
     #define KOKKOS_CUDA_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
   #else
+    #define UINTAH_CPU_TAG            UintahSpaces::CPU COMMA UintahSpaces::HostSpace
     #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
     #define KOKKOS_CUDA_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #endif
