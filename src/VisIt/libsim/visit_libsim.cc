@@ -806,8 +806,8 @@ void visit_Initialize( visit_simulation_data *sim )
                       visit_UPSVariableCallback,             (void*) sim);
   VisItUI_cellChanged("OutputIntervalVariableTable",
                       visit_OutputIntervalVariableCallback,  (void*) sim);
-  VisItUI_valueChanged("ClampTimeStepsToOutput",
-                       visit_ClampTimeStepsToOutputCallback, (void*) sim);
+  VisItUI_valueChanged("ClampTimeToOutput",
+                       visit_ClampTimeToOutputCallback,      (void*) sim);
         
   VisItUI_valueChanged("ImageGroupBox",
                        visit_ImageGenerateCallback, (void*) sim);

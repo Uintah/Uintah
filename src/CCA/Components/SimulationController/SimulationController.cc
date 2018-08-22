@@ -30,7 +30,6 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/MaterialManager.h>
-#include <Core/Grid/SimulationTime.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/OS/Dir.h>
 #include <Core/OS/ProcessInfo.h>
@@ -746,7 +745,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
       // Get the wall time if is needed, otherwise ignore it.
       double walltime;
       
-      if( m_application->getSimulationTime()->m_max_wall_time > 0 )
+      if( m_application->getMaxWallTime() > 0 )
         walltime = m_wall_timers.GetWallTime();
       else
         walltime = 0;
@@ -1240,7 +1239,7 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
     // Get the wall time if is needed, otherwise ignore it.
     double walltime;
     
-    if( m_application->getSimulationTime()->m_max_wall_time > 0 )
+    if( m_application->getMaxWallTime() > 0 )
       walltime = m_wall_timers.GetWallTime();
     else
       walltime = 0;

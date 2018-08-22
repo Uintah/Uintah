@@ -113,9 +113,6 @@ ApplicationCommon::~ApplicationCommon()
   VarLabel::destroy(m_simulationTimeLabel);
   VarLabel::destroy(m_delTLabel);
 
-  if( m_simulationTime )
-    delete m_simulationTime;
-
   for ( auto & var : m_appReductionVars )
     delete var.second;
   
@@ -203,10 +200,6 @@ void ApplicationCommon::releaseComponents()
 
 void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
 {
-  m_simulationTime = scinew SimulationTime(prob_spec);
-
-  m_simTime = m_simulationTime->m_init_time;
-
   // Check for an AMR attribute with the grid.
   ProblemSpecP grid_ps = prob_spec->findBlock("Grid");
 
@@ -228,6 +221,69 @@ void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
     m_dynamicRegridding = (type.empty() || type == std::string("Dynamic"));
 
     amr_ps->get("useLockStep", m_lockstepAMR);
+  }
+
+  // Get the common time stepping specs
+  ProblemSpecP time_ps = prob_spec->findBlock( "Time" );
+
+  if ( !time_ps ) {
+    throw ProblemSetupException("ERROR SimulationTime \n"
+                                "Can not find the <Time> block.",
+                                __FILE__, __LINE__);
+  }
+
+  time_ps->require( "initTime", m_simTime );
+  time_ps->require( "maxTime",  m_maxSimTime );
+
+  time_ps->require( "delt_min", m_minDelT );
+  time_ps->require( "delt_max", m_maxDelT );
+  time_ps->require( "timestep_multiplier", m_delTMultiplier );
+
+  if( !time_ps->get( "delt_init", m_maxInitialDelT) &&
+      !time_ps->get("max_initial_delt", m_maxInitialDelT ) ) {
+    m_maxInitialDelT = 0;
+  }
+  
+  if( !time_ps->get( "initial_delt_range", m_initialDelTRange ) ) {
+    m_initialDelTRange = 0;
+  }
+  
+  if( !time_ps->get( "max_delt_increase", m_maxDelTIncrease ) ) {
+    m_maxDelTIncrease = 0;
+  }
+    
+  if( !time_ps->get( "override_restart_delt", m_overrideRestartDelT) ) {
+    m_overrideRestartDelT = 0.0;
+  }
+
+  if( !time_ps->get( "max_Timesteps", m_maxTimeSteps ) ) {
+    m_maxTimeSteps = 0;
+  }
+  
+  if( !time_ps->get( "max_wall_time", m_maxWallTime ) ) {
+    m_maxWallTime = 0;
+  }
+  
+  if ( !time_ps->get( "clamp_time_to_output", m_clampTimeToOutput ) ) {
+    m_clampTimeToOutput = false;
+  }
+
+  if ( !time_ps->get( "end_at_max_time_exactly", m_endAtMaxSimTime ) ) {
+    m_endAtMaxSimTime = false;
+  }
+
+  if ( time_ps->get( "clamp_timestep_to_output", m_clampTimeToOutput ) ) {
+    throw ProblemSetupException("ERROR SimulationTime \n"
+                                "clamp_timestep_to_output has been deprecated "
+                                "and has been replaced by clamp_time_to_output.",
+                                __FILE__, __LINE__);
+  }
+
+  if ( time_ps->get( "end_on_max_time_exactly", m_endAtMaxSimTime ) ) {
+    throw ProblemSetupException("ERROR SimulationTime \n"
+                                "end_on_max_time_exactly has been deprecated "
+                                "and has been replaced by end_at_max_time_exactly.",
+                                __FILE__, __LINE__);
   }
 }
 
@@ -297,7 +353,7 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   if (patches->size() != 0 && !new_dw->exists(m_delTLabel, -1, patch)) {
 
     // Start with the time step multiplier.
-    double multiplier = m_simulationTime->m_time_step_multiplier;
+    double multiplier = m_delTMultiplier;
     
     const GridP grid = patches->get(0)->getLevel()->getGrid();
 
@@ -312,10 +368,10 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
         delt_vartype delTvar;
         new_dw->get(delTvar, m_delTLabel, level.get_rep());
 
-	// Adjust the next delT by the multiplier and validate
-	m_nextDelT = validateNextDelT( delTvar * multiplier );
+        // Adjust the next delT by the multiplier and validate
+        m_nextDelT = validateNextDelT( delTvar * multiplier );
 
-	new_dw->put(delt_vartype(m_nextDelT), m_delTLabel);
+        new_dw->put(delt_vartype(m_nextDelT), m_delTLabel);
       }
 
       // What should happen if there is no delta T???
@@ -395,12 +451,8 @@ ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
   // Initialize the time step.
   new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
 
-  // m_materialManager->setCurrentTopLevelTimeStep( m_timeStep );  
-
   // Initialize the simulation time.
   new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel);
-
-  // m_materialManager->setElapsedSimTime( m_simTime );
 
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
   //        << new_dw << std::endl;  
@@ -559,10 +611,10 @@ ApplicationCommon::recomputeDelT()
             << std::endl;
 
   // Bulletproofing
-  if (new_delT < m_simulationTime->m_delt_min || new_delT <= 0) {
+  if (new_delT < m_minDelT || new_delT <= 0) {
     std::ostringstream warn;
     warn << "The new delT (" << new_delT << ") is either less than "
-         << "delT_min (" << m_simulationTime->m_delt_min << ") or equal to 0";
+         << "minDelT (" << m_minDelT << ") or equal to 0";
     throw InternalError(warn.str(), __FILE__, __LINE__);
   }
 
@@ -678,11 +730,11 @@ void
 ApplicationCommon::setNextDelT( double delT )
 {
   // Restart - Check to see if the user has set a restart delT.
-  if (m_simulationTime->m_override_restart_delt != 0) {
+  if (m_overrideRestartDelT != 0) {
     proc0cout << "Overriding restart delT " << m_delT << " with "
-              << m_simulationTime->m_override_restart_delt << "\n";
+              << m_overrideRestartDelT << "\n";
     
-    m_nextDelT = m_simulationTime->m_override_restart_delt;
+    m_nextDelT = m_overrideRestartDelT;
 
     m_scheduler->getLastDW()->override(delt_vartype(m_nextDelT), m_delTLabel);
   }
@@ -716,14 +768,14 @@ ApplicationCommon::validateNextDelT( double nextDelT )
   // current delta T.
 
   // Check to see if the next delT is below the delt_min
-  if( nextDelT < m_simulationTime->m_delt_min ) {
+  if( nextDelT < m_minDelT ) {
     std::ostringstream message;
 
     message << "WARNING (a) at time step " << m_timeStep << " "
             << "and sim time " << m_simTime << " "
             << ": raising the next delT from " << nextDelT;
      
-    nextDelT = m_simulationTime->m_delt_min;
+    nextDelT = m_minDelT;
    
     message << " to minimum: " << nextDelT;
 
@@ -732,10 +784,10 @@ ApplicationCommon::validateNextDelT( double nextDelT )
 
   // Check to see if the next delT was increased too much over the
   // current delT
-  double delt_tmp = (1.0+m_simulationTime->m_max_delt_increase) * m_delT;
+  double delt_tmp = (1.0+m_maxDelTIncrease) * m_delT;
   
   if( m_delT > 0.0 &&
-      m_simulationTime->m_max_delt_increase > 0 &&
+      m_maxDelTIncrease > 0 &&
       nextDelT > delt_tmp ) {
     std::ostringstream message;
 
@@ -746,23 +798,23 @@ ApplicationCommon::validateNextDelT( double nextDelT )
     nextDelT = delt_tmp;
     
     message << " to maxmimum: " << nextDelT
-              << " (maximum increase of " << m_simulationTime->m_max_delt_increase
+              << " (maximum increase of " << m_maxDelTIncrease
               << ")";
 
     DOUT( d_myworld->myRank() == 0 && g_deltaT_major_warnings, message.str() );
   }
 
   // Check to see if the next delT exceeds the max_initial_delt
-  if( m_simulationTime->m_max_initial_delt > 0 &&
-      m_simTime+m_delT <= m_simulationTime->m_initial_delt_range &&
-      nextDelT > m_simulationTime->m_max_initial_delt ) {
+  if( m_maxInitialDelT > 0 &&
+      m_simTime+m_delT <= m_initialDelTRange &&
+      nextDelT > m_maxInitialDelT ) {
     std::ostringstream message;
 
     message << "WARNING (c) at time step " << m_timeStep << " "
             << "and sim time " << m_simTime << " "
             << ": lowering the next delT from " << nextDelT ;
 
-    nextDelT = m_simulationTime->m_max_initial_delt;
+    nextDelT = m_maxInitialDelT;
 
     message<< " to maximum: " << nextDelT
              << " (for initial timesteps)";
@@ -771,25 +823,26 @@ ApplicationCommon::validateNextDelT( double nextDelT )
   }
 
   // Check to see if the next delT exceeds the delt_max
-  if( nextDelT > m_simulationTime->m_delt_max ) {
+  if( nextDelT > m_maxDelT ) {
     std::ostringstream message;
 
     message << "WARNING (d) at time step " << m_timeStep << " "
             << "and sim time " << m_simTime << " "
             << ": lowering the next delT from " << nextDelT;
 
-    nextDelT = m_simulationTime->m_delt_max;
+    nextDelT = m_maxDelT;
     
     message << " to maximum: " << nextDelT;
 
     DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
   }
 
-  // Clamp the next delT to match the requested output and/or
-  // checkpoint times
-  if( m_simulationTime->m_clamp_time_to_output ) {
+  // Adjust the next delT to clamp the simulatin time to the requested
+  // output and/or checkpoint times.
+  if( m_clampTimeToOutput ) {
 
-    // Clamp to the output time
+    // Adjust the next delta T to clamp the simulation time to the
+    // output time.
     double nextOutput = m_output->getNextOutputTime();
     if (nextOutput != 0 && m_simTime + m_delT + nextDelT > nextOutput) {
       std::ostringstream message;
@@ -806,7 +859,8 @@ ApplicationCommon::validateNextDelT( double nextDelT )
       DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
     }
 
-    // Clamp to the checkpoint time
+    // Adjust the next delta T to clamp the simulation time to the
+    // checkpoint time.
     double nextCheckpoint = m_output->getNextCheckpointTime();
     if (nextCheckpoint != 0 && m_simTime + m_delT + nextDelT > nextCheckpoint) {
       std::ostringstream message;
@@ -824,10 +878,21 @@ ApplicationCommon::validateNextDelT( double nextDelT )
     }
   }
   
-  // Clamp delT to the max end time,
-  if (m_simulationTime->m_end_at_max_time &&
-      m_simTime + m_delT + nextDelT > m_simulationTime->m_max_time) {
-    nextDelT = m_simulationTime->m_max_time - (m_simTime+m_delT);
+  // Adjust delta T so to end at the max simulation time.
+  if (m_endAtMaxSimTime &&
+      m_simTime + m_delT + nextDelT > m_maxSimTime) {
+    std::ostringstream message;
+
+    message << "WARNING (g) at time step " << m_timeStep << " "
+            << "and sim time " << m_simTime << " "
+            << ": lowering the next delT from " << nextDelT;
+    
+    nextDelT = m_maxSimTime - (m_simTime+m_delT);
+
+    message << " to " << nextDelT
+            << " to line up with the maximum simulation time";
+
+    DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
   }
 
   return nextDelT;
@@ -847,20 +912,20 @@ ApplicationCommon::isLastTimeStep( double walltime )
   if( getReductionVariable( abortTimeStep_name, val ) )
     return true;
 
-  if( m_simTime >= m_simulationTime->m_max_time )
+  if( m_simTime >= m_maxSimTime )
     return true;
 
-  if( m_simulationTime->m_max_time_steps > 0 &&
-      m_timeStep >= m_simulationTime->m_max_time_steps )
+  if( m_maxTimeSteps > 0 &&
+      m_timeStep >= m_maxTimeSteps )
     return true;
 
-  if( m_simulationTime->m_max_wall_time > 0 )
+  if( m_maxWallTime > 0 )
   {
     // When using the wall clock time, rank 0 determines the time and
     // sends it to all other ranks.
     Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
-    if(walltime >= m_simulationTime->m_max_wall_time )
+    if(walltime >= m_maxWallTime )
       return true;
   }
 
@@ -879,20 +944,20 @@ ApplicationCommon::isLastTimeStep( double walltime )
 bool
 ApplicationCommon::maybeLastTimeStep( double walltime ) const
 {  
-  if( m_simTime + m_delT >= m_simulationTime->m_max_time )
+  if( m_simTime + m_delT >= m_maxSimTime )
     return true;
            
-  if( m_simulationTime->m_max_time_steps > 0 &&
-      m_timeStep + 1 >= m_simulationTime->m_max_time_steps )
+  if( m_maxTimeSteps > 0 &&
+      m_timeStep + 1 >= m_maxTimeSteps )
     return true;
            
-  if( m_simulationTime->m_max_wall_time > 0 )
+  if( m_maxWallTime > 0 )
   {
     // When using the wall clock time, rank 0 determines the time and
     // sends it to all other ranks.
     Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
   
-    if( walltime >= m_simulationTime->m_max_wall_time )
+    if( walltime >= m_maxWallTime )
       return true;
   }
 
@@ -912,8 +977,6 @@ void ApplicationCommon::setTimeStep( int timeStep )
   // scheduling.
   m_scheduler->getLastDW()->override(timeStep_vartype(m_timeStep),
                                      m_timeStepLabel );
-  
-  // m_materialManager->setCurrentTopLevelTimeStep( m_timeStep );
 }
 
 //______________________________________________________________________
@@ -928,8 +991,6 @@ void ApplicationCommon::incrementTimeStep()
   DataWarehouse* newDW = m_scheduler->getLastDW();
 
   newDW->override(timeStep_vartype(m_timeStep), m_timeStepLabel );
-
-  // m_materialManager->setCurrentTopLevelTimeStep( m_timeStep );
 }
 
 //______________________________________________________________________
@@ -945,6 +1006,4 @@ void ApplicationCommon::setSimTime( double simTime )
   // scheduling.
   m_scheduler->getLastDW()->override(simTime_vartype(m_simTime),
                                      m_simulationTimeLabel );
-  
-  // m_materialManager->setElapsedSimTime( m_simTime );
 }

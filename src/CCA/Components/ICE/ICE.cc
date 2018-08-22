@@ -443,7 +443,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
 
   //__________________________________
   // WARNINGS
-  if ( d_impICE && getSimulationTime()->m_max_delt_increase > 10 ){
+  if ( d_impICE && getMaxDelTIncrease() > 10 ){
     proc0cout <<"\n \n W A R N I N G: " << endl;
     proc0cout << " When running implicit ICE you should specify "<<endl;
     proc0cout <<" \t \t <max_delt_increase>    2.0ish  "<<endl;

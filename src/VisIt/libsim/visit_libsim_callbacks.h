@@ -71,7 +71,7 @@ namespace Uintah {
  
   void visit_UPSVariableCallback           ( char *val, void *cbdata );
   void visit_OutputIntervalVariableCallback( char *val, void *cbdata );
-  void visit_ClampTimeStepsToOutputCallback( int   val, void *cbdata );
+  void visit_ClampTimeToOutputCallback     ( int   val, void *cbdata );
 
   void visit_ImageGenerateCallback( int   val, void *cbdata );
   void visit_ImageFilenameCallback( char *val, void *cbdata );

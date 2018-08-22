@@ -65,7 +65,7 @@
         <string>Max Time</string>
        </property>
       </widget>
-      <widget class="QLabel" name="TimestepLabel">
+      <widget class="QLabel" name="TimeStepLabel">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -111,7 +111,7 @@
         <string>Time</string>
        </property>
       </widget>
-      <widget class="QLabel" name="TimestepLabel_2">
+      <widget class="QLabel" name="MaxTimeStepLabel">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -147,7 +147,7 @@
         <string>End execution at max time</string>
        </property>
       </widget>
-      <widget class="QCheckBox" name="ClampTimestepsToOutput">
+      <widget class="QCheckBox" name="ClampTimeToOutput">
        <property name="geometry">
         <rect>
          <x>410</x>
@@ -160,7 +160,7 @@
         <string>Clamp time to output</string>
        </property>
       </widget>
-      <widget class="QLabel" name="StopATimestepLabel">
+      <widget class="QLabel" name="StopATimeStepLabel">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -970,7 +970,7 @@
   <tabstop>MaxTimeStep</tabstop>
   <tabstop>Time</tabstop>
   <tabstop>MaxTime</tabstop>
-  <tabstop>ClampTimestepsToOutput</tabstop>
+  <tabstop>ClampTimeToOutput</tabstop>
   <tabstop>EndOnMaxTime</tabstop>
   <tabstop>StopAtTimeStep</tabstop>
   <tabstop>StopAtLastTimeStep</tabstop>

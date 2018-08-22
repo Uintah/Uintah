@@ -137,15 +137,14 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   // Adjust the time state - done after it is read.
-  double t_start = d_udaTimes[0];
-  double t_end   = d_udaTimes[ d_udaTimes.size() -1 ];
-  getSimulationTime()->m_time_step_multiplier = 1.0;
-  getSimulationTime()->m_delt_min    = 0;
-  getSimulationTime()->m_delt_max    = 1e99;
-  getSimulationTime()->m_init_time   = t_start;
-  getSimulationTime()->m_max_time    = t_end;
-  getSimulationTime()->m_max_delt_increase = 1e99;
-  getSimulationTime()->m_max_initial_delt  = 1e99;
+  m_simTime         = d_udaTimes[0];
+  m_maxSimTime      = d_udaTimes[d_udaTimes.size()-1];
+
+  m_maxInitialDelT  = 1e99;
+  m_minDelT         = 0.0;
+  m_maxDelT         = 1e99;
+  m_delTMultiplier  = 1.0;
+  m_maxDelTIncrease = 1e99;
 
   proc0cout << "\n";
 }

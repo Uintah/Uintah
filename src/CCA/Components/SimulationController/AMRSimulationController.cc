@@ -38,7 +38,6 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/MaterialManager.h>
-#include <Core/Grid/SimulationTime.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -231,7 +230,7 @@ AMRSimulationController::run()
     // when the time step is finished. It is currently used only for
     // outputing and checkpointing. Both of which typically take much
     // longer than the simulation calculation.
-    if( m_application->getSimulationTime()->m_max_wall_time > 0 )
+    if( m_application->getMaxWallTime() > 0 )
       predictedWalltime = walltime +
         1.5 * m_wall_timers.ExpMovingAverage().seconds();
     else

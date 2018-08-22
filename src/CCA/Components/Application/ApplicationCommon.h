@@ -36,7 +36,6 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/MaterialManager.h>
-#include <Core/Grid/SimulationTime.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Handle.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -163,6 +162,7 @@ WARNING
                             public ApplicationInterface {
 
     friend class Switcher;
+    friend class PostProcessUda;
 
   public:
     ApplicationCommon(const ProcessorGroup* myworld,
@@ -349,9 +349,56 @@ WARNING
     virtual bool activeReductionVariable(std::string name) { return m_appReductionVars[name]->active; }
 
     // Access methods for member classes.
-    virtual SimulationTime * getSimulationTime() const { return m_simulationTime; }
     virtual MaterialManagerP getMaterialManagerP() const { return m_materialManager; }
   
+    virtual ReductionInfoMapper< ApplicationStatsEnum,
+                                 double > & getApplicationStats()
+    { return m_application_stats; };
+
+    virtual void resetApplicationStats( double val )
+    { m_application_stats.reset( val ); };
+      
+    virtual void reduceApplicationStats( bool allReduce,
+                                         const ProcessorGroup* myWorld )
+    { m_application_stats.reduce( allReduce, myWorld ); };      
+ 
+  public:
+    virtual void   setOverrideRestartDelT( double val ) { m_overrideRestartDelT = val; }
+    virtual double getOverrideRestartDelT() const { return m_overrideRestartDelT; }
+
+    virtual void   setMaxInitialDelT( double val ) { m_maxInitialDelT = val; }
+    virtual double getMaxInitialDelT() const { return m_maxInitialDelT; }
+
+    virtual void   setInitialDelTRange( double val ) { m_initialDelTRange = val; }
+    virtual double getInitialDelTRange() const { return m_initialDelTRange; }
+
+    virtual void   setDelTMultiplier( double val ) { m_delTMultiplier = val; }
+    virtual double getDelTMultiplier() const { return m_delTMultiplier; }
+
+    virtual void   setMaxDelTIncrease( double val ) { m_maxDelTIncrease = val; }
+    virtual double getMaxDelTIncrease() const { return m_maxDelTIncrease; }
+    
+    virtual void   setMinDelT( double val ) { m_minDelT = val; }
+    virtual double getMinDelT() const { return m_minDelT; }
+
+    virtual void   setMaxDelT( double val ) { m_maxDelT = val; }
+    virtual double getMaxDelT() const { return m_maxDelT; }
+
+    virtual void   setEndAtMaxSimTime( bool val ) { m_endAtMaxSimTime = val; }
+    virtual bool   getEndAtMaxSimTime() const  { return m_endAtMaxSimTime; }
+
+    virtual void   setMaxSimTime( double val ) { m_maxSimTime = val; }
+    virtual double getMaxSimTime() const { return m_maxSimTime; }
+
+    virtual void   setMaxTimeSteps( int val ) { m_maxTimeSteps = val; }
+    virtual int    getMaxTimeSteps() const { return m_maxTimeSteps; }
+
+    virtual void   setMaxWallTime( double val ) { m_maxWallTime = val; }
+    virtual double getMaxWallTime() const { return m_maxWallTime; }
+
+    virtual void   setClampTimeToOutput( bool val ) { m_clampTimeToOutput = val; }
+    virtual bool   getClampTimeToOutput() const { return m_clampTimeToOutput; }
+
   private:
     // The classes are private because only the top level application
     // should be changing them. This only really matters when there are
@@ -402,17 +449,7 @@ WARNING
     virtual bool isLastTimeStep( double walltime );
     virtual bool maybeLastTimeStep( double walltime ) const;
 
-    virtual ReductionInfoMapper< ApplicationStatsEnum,
-                                 double > & getApplicationStats()
-    { return m_application_stats; };
 
-    virtual void resetApplicationStats( double val )
-    { m_application_stats.reset( val ); };
-      
-    virtual void reduceApplicationStats( bool allReduce,
-                                         const ProcessorGroup* myWorld )
-    { m_application_stats.reduce( allReduce, myWorld ); };      
- 
   protected:
     Scheduler       * m_scheduler    {nullptr};
     LoadBalancer    * m_loadBalancer {nullptr};
@@ -442,18 +479,35 @@ WARNING
     const VarLabel* m_simulationTimeLabel;
     const VarLabel* m_delTLabel;
   
-    SimulationTime* m_simulationTime {nullptr};
-  
     double m_delT{0.0};
     double m_nextDelT{0.0};
 
-    double m_simTime{0.0};             // current sim time
-    double m_simTimeStart{0.0};        // starting sim time
+    double m_simTime{0.0};             // Current sim time
+    double m_simTimeStart{0.0};        // Starting sim time
+    
+    int    m_timeStep{0};              // Current time step
 
-    // The time step that the simulation is at.
-    int    m_timeStep{0};
+    // The simulation runs to either the maximum number of time steps
+    // (maxTimestep) or the maximum simulation time (maxTime), which
+    // ever comes first. If the "max_Timestep" is not specified in the .ups
+    // file, then it is set to zero.
+    double m_overrideRestartDelT{0}; // Override the restart delta T value
+    double m_maxInitialDelT{0};      // Maximum initial delta T
+    double m_initialDelTRange{0};    // Simulation time range for the initial delta T
 
-  protected:    
+    double m_minDelT{0};             // Minimum delta T
+    double m_maxDelT{1};             // Maximum delta T
+    double m_maxDelTIncrease{0};     // Maximum delta T increase.
+    double m_delTMultiplier{1.0};    // Multiple for increasing delta T
+
+    double m_maxSimTime{0};          // Maximum simulation time
+    int    m_maxTimeSteps{0};        // Maximum number of time steps to run.  
+    double m_maxWallTime{0};         // Maximum wall time.
+  
+    bool m_clampTimeToOutput{false}; // Clamp the time to the next output or checkpoint
+    bool m_endAtMaxSimTime{false};   // End the simulation at exactly this sim time.
+
+  protected:
     MaterialManagerP m_materialManager{nullptr};
 
     ReductionInfoMapper< ApplicationStatsEnum,

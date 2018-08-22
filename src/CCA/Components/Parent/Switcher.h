@@ -41,8 +41,8 @@ namespace Uintah {
   public:
 
     Switcher( const ProcessorGroup* myworld,
-	      const MaterialManagerP materialManager,
-	      ProblemSpecP& ups, const std::string & uda );
+              const MaterialManagerP materialManager,
+              ProblemSpecP& ups, const std::string & uda );
     
     virtual ~Switcher();
 
@@ -63,7 +63,7 @@ namespace Uintah {
     virtual void scheduleFinalizeTimestep(      const LevelP& level, SchedulerP& sched );
 
     virtual void switchApplication( const ProblemSpecP     & restart_prob_spec,
-				    const GridP            & grid );
+                                    const GridP            & grid );
 
     virtual bool needRecompile( const GridP& grid );
     virtual void restartInitialize();
@@ -151,7 +151,6 @@ namespace Uintah {
 
     static DebugStream switcher_dbg;
   };
-
 }
 
 #endif  // UINTAH_CCA_COMPONENTS_PARENT_SWITCHER_H
