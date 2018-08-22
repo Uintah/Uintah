@@ -1495,15 +1495,17 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
         }
 
         // Loop through each core.
-        for( unsigned int i=0; i<nCores; ++i )
+        for( unsigned int c=0; c<nCores; ++c )
         {
           // Get an x y index based on the xNode size.
-          unsigned int lx = bx + i % sim->xNode;
-          unsigned int ly = by + i / sim->xNode;
+          unsigned int lx = bx + c % sim->xNode;
+          unsigned int ly = by + c / sim->xNode;
 
           if( global ||
-              (local && s == sim->switchIndex && n == sim->nodeIndex &&
-               (int) i == sim->myworld->myNode_myRank()) )
+              (local &&
+               s == sim->switchIndex &&
+               n == sim->nodeIndex &&
+               (int) c == sim->myworld->myNode_myRank()) )
           {
             // All cells are quads
             connections[nConnections++] = VISIT_CELL_QUAD;

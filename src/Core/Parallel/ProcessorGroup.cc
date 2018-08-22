@@ -24,6 +24,7 @@
 
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <cstring>
 #include <iostream>
@@ -61,25 +62,17 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
   // Loop through each rank and map its processor name to a node index.
   for( int i=0; i<nRanks; ++i )
   {
-    // Find the processor name in the map.
-    std::map< std::string, unsigned int >::iterator iter =
-      m_proc_name_map.find( std::string(m_all_proc_names[i]) );
-
-    // Found this processor name already so get the index.
-    if( iter != m_proc_name_map.end() )
+    // If the name is not found add it to the map.
+    if( m_proc_name_map.find( std::string(m_all_proc_names[i]) ) ==
+        m_proc_name_map.end() )
     {
-      m_node = iter->second;
-    }
-    // First time finding this name so store the name in the map.
-    else
-    {
-      m_node = m_proc_name_map.size();
-      
-      m_proc_name_map[ m_proc_name ] = m_node;
-
+      m_proc_name_map[ m_all_proc_names[i] ] = m_nNodes;
       m_nNodes = m_proc_name_map.size();
     }
   }
+
+  // Get the index for this processor name.
+  m_node = m_proc_name_map[ m_proc_name ];
 
   // More than one node so create a node based communicator.
   if( m_nNodes > 1 )

@@ -335,7 +335,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
           std::vector< unsigned int > nodes;
           
           sim->switchNodeList.push_back( nodes );
-	}
+        }
         // A switch connection
         else if( line.find("[") == 0 )
         {
@@ -378,32 +378,32 @@ void visit_InitLibSim( visit_simulation_data *sim )
         {
           std::stringstream msg;
           msg << "Visit libsim - "
-	      << "Parse error \"" << line << "\" "
-	      << "in the current network file: " << filename;
+              << "Parse error \"" << line << "\" "
+              << "in the current network file: " << filename;
           
           VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
         }
       }
       
       if( sim->switchNodeList.size() &&
-	  ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) )
+          ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) )
       {
-	std::stringstream msg;
-	msg << "Visit libsim - "
-	    << "Can not find node " << sim->myworld->myProcName() << " "
-	    << "in the current network file: " << filename;
+        std::stringstream msg;
+        msg << "Visit libsim - "
+            << "Can not find node " << sim->myworld->myProcName() << " "
+            << "in the current network file: " << filename;
           
-	VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+        VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
       }
 
       DOUT( (sim->switchNodeList.size() &&
-	     ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) ),
-	    "Visit libsim - "
-	    << "Can not find node " << sim->myworld->myProcName() << " "
-	    << "in the current network file: " << filename );
+             ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) ),
+            "Visit libsim - "
+            << "Can not find node " << sim->myworld->myProcName() << " "
+            << "in the current network file: " << filename );
 
       infile.close();
-
+ 
       // Get the greatest common demoninator so to have multiple columns.
       unsigned int gcd = 2;
       
