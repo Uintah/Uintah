@@ -33,57 +33,57 @@
 
 
 #include "Matrix3x3.h"
-#include <cstring> 		// memcpy
-#include <cmath>		// fabs
-#include <iomanip>		// std::setw
+#include <cstring>              // memcpy
+#include <cmath>                // fabs
+#include <iomanip>              // std::setw
 #include <stdexcept>
-#include <sstream>					// std::cerr, std::cout, std::endl
+#include <sstream>                                      // std::cerr, std::cout, std::endl
 #include <iostream>
 
 Matrix3x3::Matrix3x3()
 {
-	_values[0] = 0.0; _values[1] = 0.0; _values[2] = 0.0;
-	_values[3] = 0.0; _values[4] = 0.0; _values[5] = 0.0;
-	_values[6] = 0.0; _values[7] = 0.0; _values[8] = 0.0;
+        _values[0] = 0.0; _values[1] = 0.0; _values[2] = 0.0;
+        _values[3] = 0.0; _values[4] = 0.0; _values[5] = 0.0;
+        _values[6] = 0.0; _values[7] = 0.0; _values[8] = 0.0;
 }
 
 Matrix3x3::Matrix3x3(const double val){
-	for (int i = 0; i < 9; i++){
-		_values[i] = val;
-	}
+        for (int i = 0; i < 9; i++){
+                _values[i] = val;
+        }
 }
 
 Matrix3x3::Matrix3x3(const bool isIdentity){
-	_values[0] = 0.0; _values[1] = 0.0; _values[2] = 0.0;
-	_values[3] = 0.0; _values[4] = 0.0; _values[5] = 0.0;
-	_values[6] = 0.0; _values[7] = 0.0; _values[8] = 0.0;
+        _values[0] = 0.0; _values[1] = 0.0; _values[2] = 0.0;
+        _values[3] = 0.0; _values[4] = 0.0; _values[5] = 0.0;
+        _values[6] = 0.0; _values[7] = 0.0; _values[8] = 0.0;
 
-	if (isIdentity){
-		_values[0] = 1.0;
-		_values[4] = 1.0;
-		_values[8] = 1.0;
-	}
+        if (isIdentity){
+                _values[0] = 1.0;
+                _values[4] = 1.0;
+                _values[8] = 1.0;
+        }
 }
 
-Matrix3x3::Matrix3x3(	const double v0,
-						const double v1,
-						const double v2,
-						const double v3,
-						const double v4,
-						const double v5,
-						const double v6,
-						const double v7,
-						const double v8)
+Matrix3x3::Matrix3x3(   const double v0,
+                                                const double v1,
+                                                const double v2,
+                                                const double v3,
+                                                const double v4,
+                                                const double v5,
+                                                const double v6,
+                                                const double v7,
+                                                const double v8)
 {
-	_values[0] = v0;
-	_values[1] = v1;
-	_values[2] = v2;
-	_values[3] = v3;
-	_values[4] = v4;
-	_values[5] = v5;
-	_values[6] = v6;
-	_values[7] = v7;
-	_values[8] = v8;
+        _values[0] = v0;
+        _values[1] = v1;
+        _values[2] = v2;
+        _values[3] = v3;
+        _values[4] = v4;
+        _values[5] = v5;
+        _values[6] = v6;
+        _values[7] = v7;
+        _values[8] = v8;
 }
 
 Matrix3x3::~Matrix3x3()
@@ -92,197 +92,197 @@ Matrix3x3::~Matrix3x3()
 
 void Matrix3x3::identity()
 {
-	_values[0] = 1.0; _values[1] = 0.0; _values[2] = 0.0;
-	_values[3] = 0.0; _values[4] = 1.0; _values[5] = 0.0;
-	_values[6] = 0.0; _values[7] = 0.0; _values[8] = 1.0;
+        _values[0] = 1.0; _values[1] = 0.0; _values[2] = 0.0;
+        _values[3] = 0.0; _values[4] = 1.0; _values[5] = 0.0;
+        _values[6] = 0.0; _values[7] = 0.0; _values[8] = 1.0;
 }
 
 Matrix3x3 Matrix3x3::transpose() const
 {
-	Matrix3x3 ans(*this);
-	ans._values[1] = _values[3];
-	ans._values[2] = _values[6];
-	ans._values[3] = _values[1];
-	ans._values[5] = _values[7];
-	ans._values[6] = _values[2];
-	ans._values[7] = _values[5];
-	return ans;
+        Matrix3x3 ans(*this);
+        ans._values[1] = _values[3];
+        ans._values[2] = _values[6];
+        ans._values[3] = _values[1];
+        ans._values[5] = _values[7];
+        ans._values[6] = _values[2];
+        ans._values[7] = _values[5];
+        return ans;
 }
 
 void Matrix3x3::swap(Matrix3x3 *rhs){
-	double cpy[9];
-	size_t n = 9 * sizeof(double);
-	memcpy(cpy, rhs->_values, n);
-	memcpy(rhs->_values, _values, n);
-	memcpy(_values, cpy, n);
+        double cpy[9];
+        size_t n = 9 * sizeof(double);
+        memcpy(cpy, rhs->_values, n);
+        memcpy(rhs->_values, _values, n);
+        memcpy(_values, cpy, n);
 }
 
 Matrix3x3 Matrix3x3::operator+= (const Matrix3x3 rhs)
 {
-	for (int i = 0; i < 9; i++){
-		_values[i] += rhs._values[i];
-	}
-	
-	return *this;
+        for (int i = 0; i < 9; i++){
+                _values[i] += rhs._values[i];
+        }
+        
+        return *this;
 }
 
 const Matrix3x3 Matrix3x3::operator+(const Matrix3x3 rhs) const
 {
-	Matrix3x3 ans(*this);
-	ans += rhs;
-	return ans;
+        Matrix3x3 ans(*this);
+        ans += rhs;
+        return ans;
 }
 
 Matrix3x3 Matrix3x3::operator-= (const Matrix3x3 rhs)
 {
-	for (int i = 0; i < 9; i++){
-		_values[i] -= rhs._values[i];
-	}
-	
-	return *this;
+        for (int i = 0; i < 9; i++){
+                _values[i] -= rhs._values[i];
+        }
+        
+        return *this;
 }
 
 const Matrix3x3 Matrix3x3::operator-(const Matrix3x3 rhs) const
 {
-	Matrix3x3 ans(*this);
-	ans -= rhs;
-	return ans;
+        Matrix3x3 ans(*this);
+        ans -= rhs;
+        return ans;
 }
 
 Matrix3x3 Matrix3x3::operator*= (const double rhs)
 {
-	for (int i = 0; i < 9; i++){
-		_values[i] *= rhs;
-	}
-	
-	return *this;
+        for (int i = 0; i < 9; i++){
+                _values[i] *= rhs;
+        }
+        
+        return *this;
 }
 
 const Matrix3x3 Matrix3x3::operator*(const double rhs) const
 {
-	Matrix3x3 ans(*this);
-	ans *= rhs;
-	return ans;
+        Matrix3x3 ans(*this);
+        ans *= rhs;
+        return ans;
 }
 
 Matrix3x3 Matrix3x3::operator/= (const double rhs)
 {
-	if (fabs(rhs) < 1.e-12){
-		throw std::domain_error("Matrix3x3::operator/=: divide by 0");
-	}
-	for (int i = 0; i < 9; i++){
-		_values[i] /= rhs;
-	}
-	
-	return *this;
+        if (fabs(rhs) < 1.e-12){
+                throw std::domain_error("Matrix3x3::operator/=: divide by 0");
+        }
+        for (int i = 0; i < 9; i++){
+                _values[i] /= rhs;
+        }
+        
+        return *this;
 }
 
 const Matrix3x3 Matrix3x3::operator/(const double rhs) const
 {
-	Matrix3x3 ans(*this);
-	ans /= rhs;
-	return ans;
+        Matrix3x3 ans(*this);
+        ans /= rhs;
+        return ans;
 }
 
 const Matrix3x3 Matrix3x3::operator*(const Matrix3x3 rhs) const
 {
-	Matrix3x3 ans(0.0);
-	int i, j, k;
-	for (i = 0; i < 3; i++){
-		for (j = 0; j < 3; j++){
-			for (k = 0; k < 3; k++){
-				ans._values[i*3 + j] += get(i, k) * rhs.get(k, j);
-			}
-		}
-	}
-	return ans;
+        Matrix3x3 ans(0.0);
+        int i, j, k;
+        for (i = 0; i < 3; i++){
+                for (j = 0; j < 3; j++){
+                        for (k = 0; k < 3; k++){
+                                ans._values[i*3 + j] += get(i, k) * rhs.get(k, j);
+                        }
+                }
+        }
+        return ans;
 }
 
 double Matrix3x3::determinant() const
 {
-	double ans = (_values[0] * _values[4] * _values[8]);
-	ans       += (_values[1] * _values[5] * _values[6]);
-	ans       += (_values[2] * _values[3] * _values[7]);
-	ans       -= (_values[2] * _values[4] * _values[6]);
-	ans       -= (_values[1] * _values[3] * _values[8]);
-	ans       -= (_values[0] * _values[5] * _values[7]);
-	return ans;
+        double ans = (_values[0] * _values[4] * _values[8]);
+        ans       += (_values[1] * _values[5] * _values[6]);
+        ans       += (_values[2] * _values[3] * _values[7]);
+        ans       -= (_values[2] * _values[4] * _values[6]);
+        ans       -= (_values[1] * _values[3] * _values[8]);
+        ans       -= (_values[0] * _values[5] * _values[7]);
+        return ans;
 }
 
 const Matrix3x3 Matrix3x3::inverse() const
 {
-	//  0 1 2
-	//  3 4 5
-	//  6 7 8
-	Matrix3x3 ans;
-	double det = determinant();
-	
-	if (det == 0.0){
-		throw std::domain_error("Matrix3x3::inverse: Matrix is singular");
-	}
-	
-	ans._values[0] = ((_values[4] * _values[8]) - (_values[5] * _values[7]));
-	ans._values[1] = ((_values[2] * _values[7]) - (_values[1] * _values[8]));
-	ans._values[2] = ((_values[1] * _values[5]) - (_values[2] * _values[4]));
-	ans._values[3] = ((_values[5] * _values[6]) - (_values[3] * _values[8]));
-	ans._values[4] = ((_values[0] * _values[8]) - (_values[2] * _values[6]));
-	ans._values[5] = ((_values[2] * _values[3]) - (_values[0] * _values[5]));
-	ans._values[6] = ((_values[3] * _values[7]) - (_values[4] * _values[6]));
-	ans._values[7] = ((_values[1] * _values[6]) - (_values[0] * _values[7]));
-	ans._values[8] = ((_values[0] * _values[4]) - (_values[1] * _values[3]));
-	
-	ans *= (1/det);
-	return ans;
+        //  0 1 2
+        //  3 4 5
+        //  6 7 8
+        Matrix3x3 ans;
+        double det = determinant();
+        
+        if (det == 0.0){
+                throw std::domain_error("Matrix3x3::inverse: Matrix is singular");
+        }
+        
+        ans._values[0] = ((_values[4] * _values[8]) - (_values[5] * _values[7]));
+        ans._values[1] = ((_values[2] * _values[7]) - (_values[1] * _values[8]));
+        ans._values[2] = ((_values[1] * _values[5]) - (_values[2] * _values[4]));
+        ans._values[3] = ((_values[5] * _values[6]) - (_values[3] * _values[8]));
+        ans._values[4] = ((_values[0] * _values[8]) - (_values[2] * _values[6]));
+        ans._values[5] = ((_values[2] * _values[3]) - (_values[0] * _values[5]));
+        ans._values[6] = ((_values[3] * _values[7]) - (_values[4] * _values[6]));
+        ans._values[7] = ((_values[1] * _values[6]) - (_values[0] * _values[7]));
+        ans._values[8] = ((_values[0] * _values[4]) - (_values[1] * _values[3]));
+        
+        ans *= (1/det);
+        return ans;
 }
 
 double Matrix3x3::get(const int i, const int j) const{
-	if (i < 0 || j < 0 || i > 2 || j > 2){
-		throw std::out_of_range("Matrix3x3::get: both indices must be in range [0,2]");
-	}
-	
-	int idx = 3*i + j;
-	return _values[idx];
+        if (i < 0 || j < 0 || i > 2 || j > 2){
+                throw std::out_of_range("Matrix3x3::get: both indices must be in range [0,2]");
+        }
+        
+        int idx = 3*i + j;
+        return _values[idx];
 }
 
 void Matrix3x3::set(const int i, const int j, const double val)
 {
-	if (i < 0 || j < 0 || i > 2 || j > 2){
-		throw std::out_of_range("Matrix3x3::get: both indices must be in range [0,2]");
-	}
-	
-	int idx = 3*i + j;
-	_values[idx] = val;
-	
+        if (i < 0 || j < 0 || i > 2 || j > 2){
+                throw std::out_of_range("Matrix3x3::get: both indices must be in range [0,2]");
+        }
+        
+        int idx = 3*i + j;
+        _values[idx] = val;
+        
 }
 
 double Matrix3x3::trace() const
 {
-	double ans;
-	ans = _values[0] + _values[4] + _values[8];
-	return ans;
+        double ans;
+        ans = _values[0] + _values[4] + _values[8];
+        return ans;
 }
 
 double Matrix3x3::normSquared() const
 {
-	int i;
-	double ans = 0;
-	for (i = 0; i < 9; i++){
-		ans += _values[i] * _values[i];
-	}
-	return ans;
+        int i;
+        double ans = 0;
+        for (i = 0; i < 9; i++){
+                ans += _values[i] * _values[i];
+        }
+        return ans;
 }
 
 std::ostream& operator<<(std::ostream& out, const Matrix3x3 rhs){
-	out << std::endl;
-	int i, j;
-	for (i = 0; i < 3; i++){
-		for (j = 0; j < 3; j++){
-			out << "\t" << std::fixed << std::setw( 11 ) << rhs.get(i, j);
-		}
-		out << std::endl;
-	}
-	
-	return out;
+        out << std::endl;
+        int i, j;
+        for (i = 0; i < 3; i++){
+                for (j = 0; j < 3; j++){
+                        out << "\t" << std::fixed << std::setw( 11 ) << rhs.get(i, j);
+                }
+                out << std::endl;
+        }
+        
+        return out;
 }
 
 int Matrix3x3::getEigenValues(double *e1, double *e2, double *e3) const
@@ -363,9 +363,9 @@ int SolveQuadratic(double *c, double *s) {
    return 2;
 }
 
-int SolveCubic 	( 	double c[4],
-					double s[3]	 
-				)
+int SolveCubic  (       double c[4],
+                                        double s[3]      
+                                )
 {
     int     i, num;
     double  sub;

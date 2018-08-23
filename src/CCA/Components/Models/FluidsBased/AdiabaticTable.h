@@ -71,7 +71,7 @@ WARNING
   class AdiabaticTable :public FluidsBasedModel {
   public:
     AdiabaticTable(const ProcessorGroup* myworld, 
-		   const MaterialManagerP& materialManager,
+                   const MaterialManagerP& materialManager,
                    const ProblemSpecP& params);
                    
     virtual ~AdiabaticTable();
@@ -140,10 +140,10 @@ WARNING
                                std::vector<constCCVariable<double> >& ind_vars);
                                
     void  errorEstimate(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset*,
-			DataWarehouse*,
-			DataWarehouse* new_dw,
+                        const PatchSubset* patches,
+                        const MaterialSubset*,
+                        DataWarehouse*,
+                        DataWarehouse* new_dw,
                         bool);    
 
     //__________________________________

@@ -64,7 +64,7 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 //               
 
 flameSheet_rxn::flameSheet_rxn(const ProcessorGroup* myworld, 
-			       const MaterialManagerP& materialManager,
+                               const MaterialManagerP& materialManager,
                                const ProblemSpecP& params)
   : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
@@ -129,8 +129,8 @@ void flameSheet_rxn::problemSetup(GridP&, const bool isRestart)
                                             sum_vartype::getTypeDescription());
                                             
   registerTransportedVariable(d_matl_set,
-			      d_scalar->scalar_CCLabel,
-			      d_scalar->scalar_source_CCLabel);
+                              d_scalar->scalar_CCLabel,
+                              d_scalar->scalar_source_CCLabel);
 
   //__________________________________
   // Read in the constants for the scalar 

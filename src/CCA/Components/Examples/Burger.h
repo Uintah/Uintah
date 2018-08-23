@@ -67,7 +67,7 @@ WARNING
   class Burger : public ApplicationCommon {
   public:
     Burger(const ProcessorGroup* myworld,
-	   const MaterialManagerP materialManager);
+           const MaterialManagerP materialManager);
     
     virtual ~Burger();
 

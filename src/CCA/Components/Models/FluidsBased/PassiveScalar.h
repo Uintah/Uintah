@@ -67,8 +67,8 @@ WARNING
   class PassiveScalar :public FluidsBasedModel {
   public:
     PassiveScalar(const ProcessorGroup* myworld, 
-		  const MaterialManagerP& materialManager,
-		  const ProblemSpecP& params);
+                  const MaterialManagerP& materialManager,
+                  const ProblemSpecP& params);
     
     virtual ~PassiveScalar();
 

@@ -65,8 +65,8 @@ WARNING
   class JWLpp : public HEChemModel {
   public:
     JWLpp(const ProcessorGroup* myworld,
-	  const MaterialManagerP& materialManager,
-	  const ProblemSpecP& params,
+          const MaterialManagerP& materialManager,
+          const ProblemSpecP& params,
           const ProblemSpecP& prob_spec);
 
     virtual ~JWLpp();

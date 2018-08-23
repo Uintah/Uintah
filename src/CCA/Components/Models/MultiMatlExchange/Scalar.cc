@@ -90,7 +90,7 @@ void ScalarExch::outputProblemSpec(ProblemSpecP & matl_ps )
 void ScalarExch::sched_AddExch_VelFC( SchedulerP            & sched,
                                       const PatchSet        * patches,
                                       const MaterialSubset  * ice_matls,
-				      const MaterialSubset  * mpm_matls,
+                                      const MaterialSubset  * mpm_matls,
                                       const MaterialSet     * all_matls,
                                       customBC_globalVars   * BC_globalVars,
                                       const bool recursion )

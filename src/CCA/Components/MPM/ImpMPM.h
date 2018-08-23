@@ -85,7 +85,7 @@ WARNING
 class ImpMPM : public MPMCommon {
 public:
   ImpMPM(const ProcessorGroup* myworld,
-	 const MaterialManagerP sharedStat);
+         const MaterialManagerP sharedStat);
   
   virtual ~ImpMPM();
 

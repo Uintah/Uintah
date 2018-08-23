@@ -199,7 +199,7 @@ void smoothwall::wallShearStresses(DataWarehouse* old_dw,
         double vel1 = vel_CC[adj][dir1];                        // transverse velocity components
         double vel2 = vel_CC[adj][dir2];
         double u_tilde = ( pow(vel1, 2)  + pow(vel2, 2) );
-	 u_tilde = sqrt( u_tilde ) + SMALL_NUM;                   // avoid division by 0
+         u_tilde = sqrt( u_tilde ) + SMALL_NUM;                   // avoid division by 0
         double u_streamwise = u_tilde;
 
         double rel_error   = DBL_MAX;

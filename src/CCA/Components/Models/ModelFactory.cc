@@ -66,8 +66,8 @@ using namespace Uintah;
 
 std::vector<ModelInterface*>
 ModelFactory::makeModels( const ProcessorGroup   * myworld,
-			  const MaterialManagerP   materialManager,
-			  const ProblemSpecP& restart_prob_spec,
+                          const MaterialManagerP   materialManager,
+                          const ProblemSpecP& restart_prob_spec,
                           const ProblemSpecP& prob_spec )
 {
   std::vector<ModelInterface*> d_models;

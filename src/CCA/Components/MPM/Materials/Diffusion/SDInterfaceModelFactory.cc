@@ -43,7 +43,7 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP      & ps      ,
 {
   ProblemSpecP mpm_ps = 
      ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
-	if(!mpm_ps)
+        if(!mpm_ps)
     throw ProblemSetupException("Cannot MPM material subsection.",
                                 __FILE__, __LINE__);
 
@@ -54,7 +54,7 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP      & ps      ,
   if (child) {
     child->getWithDefault("type", diff_interface_type, "null");
   }
-	
+        
 //  if (flags->d_integrator_type != "implicit" &&
 //      flags->d_integrator_type != "explicit"){
 //    string txt="MPM: time integrator [explicit or implicit] hasn't been set.";

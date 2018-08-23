@@ -820,14 +820,14 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
           } // End if(num>0)
         } // End of loop over ranks (i)
         if(pid==0) {
-	  timeStep_vartype timeStep;
-	  old_dw->get(timeStep, lb->timeStepLabel);
+          timeStep_vartype timeStep;
+          old_dw->get(timeStep, lb->timeStepLabel);
 
-	  simTime_vartype simTime;
-	  old_dw->get(simTime, lb->simulationTimeLabel);
+          simTime_vartype simTime;
+          old_dw->get(simTime, lb->simulationTimeLabel);
 
-	  OutputCrackFrontResults(m, timeStep, simTime);
-	}
+          OutputCrackFrontResults(m, timeStep, simTime);
+        }
       } // End if(calFractParameters || doCrackPropagation)
     } // End of loop over matls
     delete interpolator;
@@ -1119,7 +1119,7 @@ short Crack::PointInTriangle(const Point& p,const Point& pt1,
 
 
 void Crack::OutputCrackFrontResults(const int& m,
-				    const int& timeStep, const double& simTime)
+                                    const int& timeStep, const double& simTime)
 {
   if(cfSegNodes[m].size()>0) {
     // Create output file name in format: CrackFrontResults.matXXX

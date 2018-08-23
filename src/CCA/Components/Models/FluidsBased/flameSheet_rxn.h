@@ -71,8 +71,8 @@ WARNING
   class flameSheet_rxn : public FluidsBasedModel {
   public:
     flameSheet_rxn(const ProcessorGroup* myworld,
-		   const MaterialManagerP& materialManager,
-		   const ProblemSpecP& params);
+                   const MaterialManagerP& materialManager,
+                   const ProblemSpecP& params);
     
     virtual ~flameSheet_rxn();
 
@@ -124,9 +124,9 @@ WARNING
    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-			     const MaterialSubset* matls, 
+                             const MaterialSubset* matls, 
                              DataWarehouse*, 
-			     DataWarehouse* new_dw);
+                             DataWarehouse* new_dw);
 
     flameSheet_rxn(const flameSheet_rxn&);
     flameSheet_rxn& operator=(const flameSheet_rxn&);

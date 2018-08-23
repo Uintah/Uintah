@@ -45,7 +45,7 @@ static DebugStream cout_doing("ShellMPM", false);
 // Construct ShellMPM using the SerialMPM constructor
 //
 ShellMPM::ShellMPM(const ProcessorGroup* myworld,
-		   const MaterialManagerP materialManager) :
+                   const MaterialManagerP materialManager) :
   SerialMPM(myworld, materialManager)
 {
 }
@@ -91,7 +91,7 @@ ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
 
     // Register as an MPM material
     mat->registerParticleState( d_particleState,
-				d_particleState_preReloc );
+                                d_particleState_preReloc );
 
     m_materialManager->registerMaterial( "MPM", mat);
   }

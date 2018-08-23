@@ -85,8 +85,8 @@ particleExtract::~particleExtract()
 void particleExtract::problemSetup(const ProblemSpecP& ,
                                    const ProblemSpecP& ,
                                    GridP& grid,
-				   std::vector<std::vector<const VarLabel* > > &PState,
-				   std::vector<std::vector<const VarLabel* > > &PState_preReloc)
+                                   std::vector<std::vector<const VarLabel* > > &PState,
+                                   std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tparticleExtract" << endl;
 
@@ -260,7 +260,7 @@ void particleExtract::restartInitialize()
 }
 //______________________________________________________________________
 void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
-						  const LevelP& level)
+                                                  const LevelP& level)
 { 
   int L_indx = level->getIndex();
   if(!doMPMOnLevel(L_indx,level->getGrid()->numLevels())){

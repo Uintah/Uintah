@@ -48,7 +48,7 @@
 using namespace Uintah;
 
 SolverTest2::SolverTest2(const ProcessorGroup* myworld,
-			 const MaterialManagerP materialManager)
+                         const MaterialManagerP materialManager)
   : ApplicationCommon(myworld, materialManager)
 {
   lb_ = scinew ExamplesLabel();

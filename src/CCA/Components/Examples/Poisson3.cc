@@ -50,7 +50,7 @@ static DebugStream dbg("Poisson3", false);
 /********************/
 
 Poisson3::Poisson3(const ProcessorGroup* myworld,
-		   const MaterialManagerP materialManager)
+                   const MaterialManagerP materialManager)
   : ApplicationCommon(myworld, materialManager),
   interpolator_(2)
 {

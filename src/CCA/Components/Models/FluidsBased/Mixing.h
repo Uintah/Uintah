@@ -68,8 +68,8 @@ WARNING
   class Mixing : public FluidsBasedModel {
   public:
     Mixing(const ProcessorGroup* myworld,
-	   const MaterialManagerP& materialManager,
-	   const ProblemSpecP& params);
+           const MaterialManagerP& materialManager,
+           const ProblemSpecP& params);
     
     virtual ~Mixing();
 
@@ -107,15 +107,15 @@ WARNING
   private:
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
-		    const MaterialSubset* matls, 
+                    const MaterialSubset* matls, 
                     DataWarehouse*, 
-		    DataWarehouse* new_dw);
+                    DataWarehouse* new_dw);
                   
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-			     const MaterialSubset* matls, 
+                             const MaterialSubset* matls, 
                              DataWarehouse*, 
-			     DataWarehouse* new_dw);
+                             DataWarehouse* new_dw);
 
     Mixing(const Mixing&);
     Mixing& operator=(const Mixing&);

@@ -88,7 +88,7 @@ WARNING
    ~CZMaterial();
 
    virtual void registerParticleState( std::vector<std::vector<const VarLabel* > > &CZState,
-				       std::vector<std::vector<const VarLabel* > > &CZState_preReloc );
+                                       std::vector<std::vector<const VarLabel* > > &CZState_preReloc );
 
    virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 

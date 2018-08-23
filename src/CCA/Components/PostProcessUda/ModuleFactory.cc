@@ -81,9 +81,9 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
         // do nothing
       }      
       else {
-	std::ostringstream msg;
-	msg << "\nERROR<PostProcess>: Unknown analysis module : " << module << ".\n";
-	throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+        std::ostringstream msg;
+        msg << "\nERROR<PostProcess>: Unknown analysis module : " << module << ".\n";
+        throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
       }
     } 
   }

@@ -101,8 +101,8 @@ namespace Uintah {
 
     virtual void scheduleComputeFlux(      Task         * task,
                                      const MPMMaterial  * matl,
-		                                 const PatchSet     * patch
-		                                ) const = 0;
+                                                 const PatchSet     * patch
+                                                ) const = 0;
 
     virtual void addSplitParticlesComputesAndRequires(      Task        * task,
                                                       const MPMMaterial * matl,

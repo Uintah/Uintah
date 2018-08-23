@@ -66,7 +66,7 @@ WARNING
   class Benchmark : public ApplicationCommon {
   public:
     Benchmark(const ProcessorGroup* myworld,
-	      const MaterialManagerP materialManager);
+              const MaterialManagerP materialManager);
     
     virtual ~Benchmark();
 

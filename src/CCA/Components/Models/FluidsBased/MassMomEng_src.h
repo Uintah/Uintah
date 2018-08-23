@@ -64,8 +64,8 @@ WARNING
   class MassMomEng_src : public FluidsBasedModel {
   public:
     MassMomEng_src(const ProcessorGroup* myworld,
-		   const MaterialManagerP& materialManager,
-		   const ProblemSpecP& params);
+                   const MaterialManagerP& materialManager,
+                   const ProblemSpecP& params);
     
     virtual ~MassMomEng_src();
 
@@ -103,9 +103,9 @@ WARNING
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-			     const MaterialSubset* matls, 
+                             const MaterialSubset* matls, 
                              DataWarehouse*, 
-			     DataWarehouse* new_dw);
+                             DataWarehouse* new_dw);
 
     MassMomEng_src(const MassMomEng_src&);
     MassMomEng_src& operator=(const MassMomEng_src&);

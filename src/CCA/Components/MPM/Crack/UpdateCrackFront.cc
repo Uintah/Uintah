@@ -363,12 +363,12 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
       // for crack geometry visualization
       if(saveCrackGeometry) {
         if(pid==0) {
-	  // double timeStep = m_materialManager->getCurrentTopLevelTimeStep();
-	  timeStep_vartype timeStep;
-	  old_dw->get(timeStep, lb->timeStepLabel);
+          // double timeStep = m_materialManager->getCurrentTopLevelTimeStep();
+          timeStep_vartype timeStep;
+          old_dw->get(timeStep, lb->timeStepLabel);
 
-	  OutputCrackGeometry(m,timeStep);
-	}
+          OutputCrackGeometry(m,timeStep);
+        }
       }
 
     } // End of loop over matls

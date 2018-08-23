@@ -64,7 +64,7 @@ WARNING
   class SolverTest2 : public ApplicationCommon {
   public:
     SolverTest2(const ProcessorGroup* myworld,
-		const MaterialManagerP materialManager);
+                const MaterialManagerP materialManager);
     
     virtual ~SolverTest2();
 

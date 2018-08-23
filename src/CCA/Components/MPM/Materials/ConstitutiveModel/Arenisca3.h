@@ -191,7 +191,7 @@ namespace Uintah {
 
     void computeElasticProperties(const Matrix3 stress,
                                   const Matrix3 ep,
-				                  const double& P3,
+                                                  const double& P3,
                                   double & bulk,
                                   double & shear
                                  );
@@ -235,10 +235,10 @@ namespace Uintah {
     double computePorePressure(const double ev);
 
     int nonHardeningReturn(const double& I1_trial,
-							const double& rJ2_trial,
+                                                        const double& rJ2_trial,
                             const Matrix3& S_trial,
-							const double& I1_old,
-							const double& rJ2_old,
+                                                        const double& I1_old,
+                                                        const double& rJ2_old,
                             const Matrix3& S_old,
                             const Matrix3& d_e,
                             const double& X,
@@ -246,8 +246,8 @@ namespace Uintah {
                             const double& coher,
                             const double& bulk,
                             const double& shear,
-							double& I1_new,
-							double& rJ2_new,
+                                                        double& I1_new,
+                                                        double& rJ2_new,
                             Matrix3& S_new,
                                   Matrix3& d_ep_new);
 
@@ -271,7 +271,7 @@ namespace Uintah {
                                  const double& r_to_rJ2
                                 );
     int computeYieldFunction(const double& I1,
-							 const double& rJ2,
+                                                         const double& rJ2,
                              const double& X,
                              const double& Zeta,
                              const double& coher,

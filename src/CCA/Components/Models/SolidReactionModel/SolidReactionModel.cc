@@ -64,8 +64,8 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 SolidReactionModel::SolidReactionModel(const ProcessorGroup* myworld,
-				       const MaterialManagerP& materialManager,
-				       const ProblemSpecP& params,
+                                       const MaterialManagerP& materialManager,
+                                       const ProblemSpecP& params,
                                        const ProblemSpecP& prob_spec)
   : ModelInterface(myworld, materialManager),
     d_params(params), d_prob_spec(prob_spec)

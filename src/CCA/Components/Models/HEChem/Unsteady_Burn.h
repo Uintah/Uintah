@@ -69,8 +69,8 @@ WARNING
   class Unsteady_Burn : public HEChemModel {
   public:
     Unsteady_Burn(const ProcessorGroup* myworld,
-		  const MaterialManagerP& materialManager,
-		  const ProblemSpecP& params,
+                  const MaterialManagerP& materialManager,
+                  const ProblemSpecP& params,
                   const ProblemSpecP& prob_spec);
     
     virtual ~Unsteady_Burn();
@@ -99,9 +99,9 @@ WARNING
  
   private:    
     void computeModelSources(const ProcessorGroup*,
-			     const PatchSubset*,
+                             const PatchSubset*,
                              const MaterialSubset*,
-			     DataWarehouse*, 
+                             DataWarehouse*, 
                              DataWarehouse*);
 
     double computeBurnedMass(double To, double P, double Vc, double surfArea, double delT,

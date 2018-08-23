@@ -45,7 +45,7 @@ using namespace std;
 using namespace Uintah;
 
 Poisson2::Poisson2(const ProcessorGroup* myworld,
-		   const MaterialManagerP materialManager)
+                   const MaterialManagerP materialManager)
   : ApplicationCommon(myworld, materialManager)
 {
   phi_label = VarLabel::create("phi", 

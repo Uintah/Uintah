@@ -45,7 +45,7 @@ using namespace std;
 DebugStream amrwave("AMRWave", false);
 
 AMRWave::AMRWave(const ProcessorGroup* myworld,
-		 const MaterialManagerP materialManager)
+                 const MaterialManagerP materialManager)
   : Wave(myworld, materialManager)
 {
 }

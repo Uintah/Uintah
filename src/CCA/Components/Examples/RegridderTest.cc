@@ -52,7 +52,7 @@ static Uintah::DebugStream dbg("RegridderTest", false);
 namespace Uintah
 {
   RegridderTest::RegridderTest ( const ProcessorGroup* myworld,
-				 const MaterialManagerP materialManager ) :
+                                 const MaterialManagerP materialManager ) :
     ApplicationCommon( myworld, materialManager )
   {
     //d_examplesLabel = scinew ExamplesLabel();

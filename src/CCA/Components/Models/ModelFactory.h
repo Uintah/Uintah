@@ -71,9 +71,9 @@ namespace Uintah {
     
     static std::vector<ModelInterface*>
     makeModels(const ProcessorGroup   * myworld,
-	       const MaterialManagerP   materialManager,
-	       const ProblemSpecP& orig_or_restart_ps, 
-	       const ProblemSpecP& prob_spec);
+               const MaterialManagerP   materialManager,
+               const ProblemSpecP& orig_or_restart_ps, 
+               const ProblemSpecP& prob_spec);
   };
 }
 

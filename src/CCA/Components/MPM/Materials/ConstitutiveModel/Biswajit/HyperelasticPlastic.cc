@@ -1753,12 +1753,12 @@ void HyperelasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
 // pDamage_new (damage; if negative, damage inactive), pStress
  void HyperelasticPlastic::updateDamageAndModifyStress(const Matrix3& defGrad, 
                                      const double& pFailureStrain, 
-				     double& pFailureStrain_new,
+                                     double& pFailureStrain_new,
                                      const double& pVolume, 
                                      const double& pDamage,
                                      double& pDamage_new, 
                                      Matrix3& pStress,
-				     const long64 particleID)
+                                     const long64 particleID)
  {
   Matrix3 Identity, zero(0.0); Identity.Identity();
   double tau_b;  // current 'energy'
@@ -1779,12 +1779,12 @@ void HyperelasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
       //previously damaged, deactivate damage?
       if (d_brittle_damage.allowRecovery) {  //recovery
         pStress = pStress*d_brittle_damage.recoveryCoeff;
-	pDamage_new = -pDamage; //flag damage to be negative
+        pDamage_new = -pDamage; //flag damage to be negative
       
        if (d_brittle_damage.printDamage) cout << "Particle " << particleID << " damage halted: damage=" << pDamage_new << endl;
       }
       else
-	pStress = pStress*(1.0-pDamage); // no recovery (default)
+        pStress = pStress*(1.0-pDamage); // no recovery (default)
     }
   } //end pDamage <=0.0
 
@@ -1810,47 +1810,47 @@ void HyperelasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
         // equivalent dimension of the particle
         double particleSize = pow(pVolume, 1.0/3.0);
         double r0b = d_brittle_damage.r0b;
-	double const_D=d_brittle_damage.constant_D;
-	double const_C = r0b*particleSize*(1.0+const_D) \
+        double const_D=d_brittle_damage.constant_D;
+        double const_C = r0b*particleSize*(1.0+const_D) \
                /(d_brittle_damage.Gf*const_D)*log(1.0+const_D);
-	double d1=1.0+const_D*exp(-const_C*(tau_b-r0b));
-	double damage=0.999/const_D*((1.0+const_D)/d1 - 1.0);
+        double d1=1.0+const_D*exp(-const_C*(tau_b-r0b));
+        double damage=0.999/const_D*((1.0+const_D)/d1 - 1.0);
 
-	// Restrict the maximum damage in a time step for stability reason.
-	if ((damage-pDamage) > d_brittle_damage.maxDamageInc) {
-	  damage=pDamage+d_brittle_damage.maxDamageInc;
-	}
-	// Update threshold and damage
-	pFailureStrain_new = tau_b;
-	pDamage_new = damage;
+        // Restrict the maximum damage in a time step for stability reason.
+        if ((damage-pDamage) > d_brittle_damage.maxDamageInc) {
+          damage=pDamage+d_brittle_damage.maxDamageInc;
+        }
+        // Update threshold and damage
+        pFailureStrain_new = tau_b;
+        pDamage_new = damage;
 
-	// Update stress
-	pStress = pStress*(1.0-damage);
+        // Update stress
+        pStress = pStress*(1.0-damage);
         if (d_brittle_damage.printDamage){
           cout << "Particle " << particleID << " damaged: "
                << " damage=" << pDamage_new << " epsMax=" << epsMax 
                << " tau_b=" << tau_b << endl;
         }
       } else {
-	if (pDamage==0.0) return; // never damaged
+        if (pDamage==0.0) return; // never damaged
 
-	//current energy less than previous; deactivate damage?
-	if (d_brittle_damage.allowRecovery) { //recovery
+        //current energy less than previous; deactivate damage?
+        if (d_brittle_damage.allowRecovery) { //recovery
           pStress = pStress*d_brittle_damage.recoveryCoeff;
-	  pDamage_new = -pDamage; //flag it to be negative
+          pDamage_new = -pDamage; //flag it to be negative
           if (d_brittle_damage.printDamage){
             cout << "Particle " << particleID << " damage halted: damage=" 
                  << pDamage_new << endl;
           }
-	}
-	else { //no recovery (default)
-	  pStress = pStress*(1.0-pDamage);
+        }
+        else { //no recovery (default)
+          pStress = pStress*(1.0-pDamage);
           if (d_brittle_damage.printDamage){
             cout << "Particle " << particleID << " damaged: " 
                  << " damage=" << pDamage_new << " epsMax=" << epsMax 
                  << " tau_b=" << tau_b << endl;
           }
-	}
+        }
       } // end if tau_b > pFailureStrain
 
   } //end if pressure
@@ -2188,14 +2188,14 @@ void HyperelasticPlastic::computeStressTensorImplicit(const PatchSubset* patches
       
         // Modify the stress if particle has damaged/failed
         if(d_useDamage){
-	  if (d_brittleDamage) {
+          if (d_brittleDamage) {
              updateDamageAndModifyStress(defGrad, pFailureStrain[idx],
                                          pFailureStrain_new[idx],
                                          pVolume_new[idx], pDamage[idx],
                                          pDamage_new[idx], pStress_new[idx],
                                          pParticleID[idx]);
-	  } else {
-	    updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
+          } else {
+            updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
                                                  pLocalized[idx],
                                                  pLocalized_new[idx],
                                                  pTimeOfLoc[idx],
@@ -2203,7 +2203,7 @@ void HyperelasticPlastic::computeStressTensorImplicit(const PatchSubset* patches
                                                  pStress_new[idx],
                                                  pParticleID[idx],
                                                  time);
-	  }
+          }
         }
 
         // Compute the strain energy for non-localized particles

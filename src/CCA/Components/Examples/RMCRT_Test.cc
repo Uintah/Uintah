@@ -63,7 +63,7 @@ namespace Uintah
 //______________________________________________________________________
 //
 RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld,
-			 const MaterialManagerP materialManager) :
+                         const MaterialManagerP materialManager) :
   ApplicationCommon(myworld, materialManager)
 {
   d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );
@@ -586,7 +586,7 @@ int RMCRT_Test::computeTaskGraphIndex( const int timeStep )
 
   // Also do radiation solve on timestep 1.
   int task_graph_index = ((timeStep % d_radCalc_freq == 0) ||
-			  (timeStep == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+                          (timeStep == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
 
   return task_graph_index;
 }

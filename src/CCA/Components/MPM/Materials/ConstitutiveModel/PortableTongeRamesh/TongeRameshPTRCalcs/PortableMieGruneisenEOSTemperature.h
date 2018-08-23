@@ -109,7 +109,7 @@ namespace PTR {
     /////////////////////////////////////////////////////////////////////////
     /*! Calculate the pressure using a equation of state */
     /////////////////////////////////////////////////////////////////////////
-	/* double computePressure(const double &rho_0, const PState &state); */
+        /* double computePressure(const double &rho_0, const PState &state); */
 
     // Calculate rate of temperature change due to compression/expansion
     double computeIsentropicTemperatureRate(const double T,
@@ -124,7 +124,7 @@ namespace PTR {
     // Compute pressure (option 1)
     double computePressure(const PState state) const;
 
-	double computePressure(const double rho_orig, const double rho_cur) const;
+        double computePressure(const double rho_orig, const double rho_cur) const;
 
     // Compute pressure (option 2)
     void computePressure(const double rho_orig,

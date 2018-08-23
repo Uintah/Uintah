@@ -68,7 +68,7 @@ WARNING
   class DOSweep : public ApplicationCommon {
   public:
     DOSweep(const ProcessorGroup* myworld,
-	    const MaterialManagerP materialManager);
+            const MaterialManagerP materialManager);
     
     virtual ~DOSweep();
 

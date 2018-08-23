@@ -63,8 +63,8 @@ namespace Uintah {
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
-			      std::vector<std::vector<const VarLabel* > > &PState,
-			      std::vector<std::vector<const VarLabel* > > &PState_preReloc) = 0;
+                              std::vector<std::vector<const VarLabel* > > &PState,
+                              std::vector<std::vector<const VarLabel* > > &PState_preReloc) = 0;
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
                                                             

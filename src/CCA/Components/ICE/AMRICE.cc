@@ -1810,8 +1810,8 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
               int n_CFI_cells     =  getFaceMark(1, finePatch, patchFace);
               //__________________________________
               // If the number of "marked" cells/numICEMatls != n_CFI_cells
-	      // ignore if a recompute time step has already been requested
-	      bool rts = new_dw->recomputeTimeStep();
+              // ignore if a recompute time step has already been requested
+              bool rts = new_dw->recomputeTimeStep();
 
               if ( n_touched_cells != n_CFI_cells && !rts){
                 ostringstream warn;
@@ -1916,11 +1916,11 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                         m_iter != d_models.end(); m_iter++){
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
       if( fb_model )
-	fb_model->scheduleErrorEstimate(coarseLevel, sched);;
+        fb_model->scheduleErrorEstimate(coarseLevel, sched);;
       
       HEChemModel* hec_model = dynamic_cast<HEChemModel*>( *m_iter );
       if( hec_model )
-	hec_model->scheduleErrorEstimate(coarseLevel, sched);;
+        hec_model->scheduleErrorEstimate(coarseLevel, sched);;
   }
 }
 

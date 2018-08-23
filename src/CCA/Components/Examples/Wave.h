@@ -67,7 +67,7 @@ WARNING
   class Wave : public ApplicationCommon {
   public:
     Wave(const ProcessorGroup* myworld,
-	 const MaterialManagerP materialManager);
+         const MaterialManagerP materialManager);
     
     virtual ~Wave();
 

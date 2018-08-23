@@ -329,7 +329,7 @@ class Crack
     short  PointInTriangle(const Point&,const Point&,const Point&,const Point&);
     void   GetPositionToComputeCOD(const int&,const Point&,const Matrix3&,double&);
     void   OutputCrackFrontResults(const int&,
-				   const int& timeStep, const double& simTime);
+                                   const int& timeStep, const double& simTime);
 
            // Private methods in CrackPropagation.cc
     void   TrimLineSegmentWithBox(const Point&,Point&,const Point&,const Point&);

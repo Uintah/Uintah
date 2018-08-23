@@ -366,13 +366,13 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 
         tensorL=velGrad[idx];
 
-	J = deformationGradient_new[idx].Determinant();
-	if (J<=0){
-	  cout<< "ERROR, negative J! "<<endl;
-	  cout<<"J= "<<J<<endl;
-	  cout<<"L= "<<tensorL<<endl;
-	}
-	rho_cur[idx] = rho_orig/J;      
+        J = deformationGradient_new[idx].Determinant();
+        if (J<=0){
+          cout<< "ERROR, negative J! "<<endl;
+          cout<<"J= "<<J<<endl;
+          cout<<"L= "<<tensorL<<endl;
+        }
+        rho_cur[idx] = rho_orig/J;      
       }
 
 
@@ -399,10 +399,10 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
       Matrix3 unrotated_stress = (tensorR.Transpose())*((stress_old[idx]+initial_stress)*tensorR);
       D = (tensorR.Transpose())*(D*tensorR);
       if (wdist.Perturb){
-	k_o[idx] = k_o_dist[idx];
+        k_o[idx] = k_o_dist[idx];
       }else{
-	k_o[idx] = k_o_const;
-	k_o_dist_new[idx] = k_o_const;
+        k_o[idx] = k_o_const;
+        k_o_dist_new[idx] = k_o_const;
       }
       double lame = bulk - 2.0/3.0*shear;
       double eta_in = eta_old[idx];
@@ -417,81 +417,81 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
       pdlambda[idx] = 0.0;
       softened[idx] = 0;
       if (f_trial[idx] <0.0){ 
-	stress_new[idx] = trial_stress[idx];
+        stress_new[idx] = trial_stress[idx];
       }else{
 
-	//define frequently used constants:
+        //define frequently used constants:
 
 
-	double I1_trial,J2_trial;
-	Matrix3 S_trial;
-	Matrix3 S_old;
-	double J2_old,I1_old;
-	computeInvariants(trial_stress[idx], S_trial, I1_trial, J2_trial);
-	computeInvariants(stress_old[idx],S_old,I1_old,J2_old);
+        double I1_trial,J2_trial;
+        Matrix3 S_trial;
+        Matrix3 S_old;
+        double J2_old,I1_old;
+        computeInvariants(trial_stress[idx], S_trial, I1_trial, J2_trial);
+        computeInvariants(stress_old[idx],S_old,I1_old,J2_old);
 
 
-	Matrix3 A,M;
-	//comput M and N using the new stress estimate:
-	//M = Identity*alpha_p + S_trial*(1.0/(sqrt_two*sqrt_J2_trial))*(1.0-alpha_p);
-	Matrix3 Strial_hat = S_trial*(1.0/sqrt(2.0*J2_trial));
-	M = (Identity*alpha_p + Strial_hat*(sqrt(2.0)/2.0) )*(1.0/sqrt(0.5+3.0*alpha_p*alpha_p));
-	A = (Identity*lame*(M.Trace()) + M*2.0*shear);
-	double dlambda_new=0.0;
+        Matrix3 A,M;
+        //comput M and N using the new stress estimate:
+        //M = Identity*alpha_p + S_trial*(1.0/(sqrt_two*sqrt_J2_trial))*(1.0-alpha_p);
+        Matrix3 Strial_hat = S_trial*(1.0/sqrt(2.0*J2_trial));
+        M = (Identity*alpha_p + Strial_hat*(sqrt(2.0)/2.0) )*(1.0/sqrt(0.5+3.0*alpha_p*alpha_p));
+        A = (Identity*lame*(M.Trace()) + M*2.0*shear);
+        double dlambda_new=0.0;
 
-	double current_yield_strength;
-	// do a local iteration in order to provide a good initial guess for the nonlocal iteration
-	double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
-	dlambda_new = (f_trial[idx]  )/( shear/factorp + alpha*9.0*bulk*alpha_p/factorp + h_local);
-	  
-	current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*dlambda_new);
-	
-	pdlambda[idx] = dlambda_new;
+        double current_yield_strength;
+        // do a local iteration in order to provide a good initial guess for the nonlocal iteration
+        double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
+        dlambda_new = (f_trial[idx]  )/( shear/factorp + alpha*9.0*bulk*alpha_p/factorp + h_local);
+          
+        current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*dlambda_new);
+        
+        pdlambda[idx] = dlambda_new;
 
 
-	//update the stress using the the last estimate for dlambda
-	current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*dlambda_new);
-	if (current_yield_strength<minimum_yield_stress){
-	  eta_new[idx] = eta_old[idx];	  
-	}else{
-	  eta_new[idx] = eta_old[idx] + h_local*pdlambda[idx];
-	}
+        //update the stress using the the last estimate for dlambda
+        current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*dlambda_new);
+        if (current_yield_strength<minimum_yield_stress){
+          eta_new[idx] = eta_old[idx];    
+        }else{
+          eta_new[idx] = eta_old[idx] + h_local*pdlambda[idx];
+        }
 
-	// compute a new stress estimate
-	stress_new[idx] = trial_stress[idx] - A*pdlambda[idx];
-	
-	//see if we are beyond the vertex
-	double J2_new,I1_new;
-	Matrix3 S_new;
-	computeInvariants(stress_new[idx], S_new, I1_new, J2_new);
-	if (current_yield_strength<0){
-	  cout<<"zero yield strength detected"<<endl;
-	  //just set deviator to zero (von-Mise ONLY!!)
-	  stress_new[idx] = Identity*(1.0/3.0)*trial_stress[idx].Trace();
-	}else if(alpha*I1_new>current_yield_strength){
-	  //just put the stress on the vertex
-	  cout<<"stress on yield vertex"<<endl;
-	  stress_new[idx] = Identity*(1.0/(3.0*alpha))*current_yield_strength;
+        // compute a new stress estimate
+        stress_new[idx] = trial_stress[idx] - A*pdlambda[idx];
+        
+        //see if we are beyond the vertex
+        double J2_new,I1_new;
+        Matrix3 S_new;
+        computeInvariants(stress_new[idx], S_new, I1_new, J2_new);
+        if (current_yield_strength<0){
+          cout<<"zero yield strength detected"<<endl;
+          //just set deviator to zero (von-Mise ONLY!!)
+          stress_new[idx] = Identity*(1.0/3.0)*trial_stress[idx].Trace();
+        }else if(alpha*I1_new>current_yield_strength){
+          //just put the stress on the vertex
+          cout<<"stress on yield vertex"<<endl;
+          stress_new[idx] = Identity*(1.0/(3.0*alpha))*current_yield_strength;
 
-	}
+        }
 
 /*  This is commented out because apparently f_new is never used
-	double f_new;
-	if (current_yield_strength<minimum_yield_stress){
-	  f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0,hardening_type);
-	}else{
-	  f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx],hardening_type);
-	}
+        double f_new;
+        if (current_yield_strength<minimum_yield_stress){
+          f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0,hardening_type);
+        }else{
+          f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx],hardening_type);
+        }
 */
-	// this is just generating an initial estimate, so it doesn't need to actually hit the yield surface
-	/*if (abs(f_new)>10.0){
-	  cerr<<"ERROR!  did not return to yield surface"<<endl;
-	  cerr<<"eta_new[idx]= "<<eta_new[idx]<<endl;
-	  cerr<<"sqrt(J2_new)= "<<sqrt(J2_new)<<endl;
-	  cerr<<"I1_new= "<<I1_new<<endl;
-	  cerr<<"current_yield_strength= "<<current_yield_strength<<endl;
-	  }*/
-	//cerr<<"final increment in plastic strain is"<<dlambda_new<<endl;
+        // this is just generating an initial estimate, so it doesn't need to actually hit the yield surface
+        /*if (abs(f_new)>10.0){
+          cerr<<"ERROR!  did not return to yield surface"<<endl;
+          cerr<<"eta_new[idx]= "<<eta_new[idx]<<endl;
+          cerr<<"sqrt(J2_new)= "<<sqrt(J2_new)<<endl;
+          cerr<<"I1_new= "<<I1_new<<endl;
+          cerr<<"current_yield_strength= "<<current_yield_strength<<endl;
+          }*/
+        //cerr<<"final increment in plastic strain is"<<dlambda_new<<endl;
 
       }
 
@@ -506,21 +506,21 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 
       //interpolate plastic multiplier to the grid
       if(!flag->d_axisymmetric){
-	// Get the node indices that surround the cell
-	NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+        // Get the node indices that surround the cell
+        NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
                                                 deformationGradient[idx]);
       } else {  // axi-symmetric kinematics
-	// Get the node indices that surround the cell
-	NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+        // Get the node indices that surround the cell
+        NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
                                                 deformationGradient[idx]);
       }
       IntVector node;
       for(int k=0; k< NN; k++){
-	node = ni[k];
-	if(patch->containsNode(node)){
-	  gmat[node]    += S[k];
-	  gdlambda[node]+= pdlambda[idx]*S[k];
-	}
+        node = ni[k];
+        if(patch->containsNode(node)){
+          gmat[node]    += S[k];
+          gdlambda[node]+= pdlambda[idx]*S[k];
+        }
       }
 
 
@@ -546,111 +546,111 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
       int NN = flag->d_8or27;
       for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();
                                                         iter++){
-	particleIndex idx = *iter;
-	if (f_trial[idx]>0.0 || softened[idx]==1){
-	  dlambda_nl=0.0;
-	  // use the local estimate 
-	  double dlambda_old = pdlambda[idx];
-	  //evaluate nonlocal average
-	  //if l_nonlocal is less than the cell spacing, just stick with the local value:
-	  EvaluateNonLocalAverage(dlambda_nl,V_alpha,pdlambda,px,gdlambda,gmat,patch,idx,l_nonlocal);
-	  eta_nl_new[idx] = eta_nl_old[idx] + h_nonlocal*dlambda_nl;
-	  if (softened[idx]==1){
-	    f_trial[idx] = YieldFunction(trial_stress[idx],alpha,k_o[idx],eta_old[idx],eta_nl_new[idx],hardening_type);
-	  }
-	  if(f_trial[idx]>0){
-	    double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
-	    pdlambda[idx] = (f_trial[idx] - h_nonlocal*dlambda_nl  )/( shear/factorp + alpha*9.0*bulk*alpha_p/factorp + h_local);
+        particleIndex idx = *iter;
+        if (f_trial[idx]>0.0 || softened[idx]==1){
+          dlambda_nl=0.0;
+          // use the local estimate 
+          double dlambda_old = pdlambda[idx];
+          //evaluate nonlocal average
+          //if l_nonlocal is less than the cell spacing, just stick with the local value:
+          EvaluateNonLocalAverage(dlambda_nl,V_alpha,pdlambda,px,gdlambda,gmat,patch,idx,l_nonlocal);
+          eta_nl_new[idx] = eta_nl_old[idx] + h_nonlocal*dlambda_nl;
+          if (softened[idx]==1){
+            f_trial[idx] = YieldFunction(trial_stress[idx],alpha,k_o[idx],eta_old[idx],eta_nl_new[idx],hardening_type);
+          }
+          if(f_trial[idx]>0){
+            double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
+            pdlambda[idx] = (f_trial[idx] - h_nonlocal*dlambda_nl  )/( shear/factorp + alpha*9.0*bulk*alpha_p/factorp + h_local);
 
-	  }else{
-	    pdlambda[idx] = 0.0;
-	  }
-	  // check if we have over-softened
-	  double current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*pdlambda[idx]) + (eta_nl_old[idx]+h_nonlocal*dlambda_nl);
-	  if(current_yield_strength<minimum_yield_stress){
+          }else{
+            pdlambda[idx] = 0.0;
+          }
+          // check if we have over-softened
+          double current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*pdlambda[idx]) + (eta_nl_old[idx]+h_nonlocal*dlambda_nl);
+          if(current_yield_strength<minimum_yield_stress){
 
-	    eta_new[idx] = eta_old[idx];
-	    eta_nl_new[idx] = eta_nl_old[idx];
+            eta_new[idx] = eta_old[idx];
+            eta_nl_new[idx] = eta_nl_old[idx];
 
-	    double f_trial_min = YieldFunction(trial_stress[idx],alpha,minimum_yield_stress,0.0,0.0,hardening_type);
-	    double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
-	    pdlambda[idx] = (f_trial_min )/( shear/factorp + alpha*9.0*bulk*alpha_p/factorp );
+            double f_trial_min = YieldFunction(trial_stress[idx],alpha,minimum_yield_stress,0.0,0.0,hardening_type);
+            double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
+            pdlambda[idx] = (f_trial_min )/( shear/factorp + alpha*9.0*bulk*alpha_p/factorp );
 
-	  }else{
-	    eta_new[idx] = eta_old[idx] + h_local*pdlambda[idx];
+          }else{
+            eta_new[idx] = eta_old[idx] + h_local*pdlambda[idx];
 
-	    eta_nl_new[idx] = eta_nl_old[idx] + h_nonlocal*dlambda_nl;
-	  }
+            eta_nl_new[idx] = eta_nl_old[idx] + h_nonlocal*dlambda_nl;
+          }
 
-	  //compute the return derection based upon the trial stress
-	  Matrix3 S_trial;
-	  double I1_trial,J2_trial;
-	  computeInvariants(trial_stress[idx],S_trial,I1_trial,J2_trial);
-	  Matrix3 Strial_hat = S_trial*(1.0/sqrt(2.0*J2_trial));
-	  double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
-	  Matrix3 M = (Identity*alpha_p + Strial_hat*(sqrt(2.0)/2.0))*(1.0/factorp);	
-	  double lame = bulk - 2.0/3.0*shear;
-	  Matrix3 A = (Identity*lame*(M.Trace()) + M*2.0*shear);
-	  //compute a new estimate for the stress
-	  stress_new[idx] = trial_stress[idx] - A*pdlambda[idx];
-	  
+          //compute the return derection based upon the trial stress
+          Matrix3 S_trial;
+          double I1_trial,J2_trial;
+          computeInvariants(trial_stress[idx],S_trial,I1_trial,J2_trial);
+          Matrix3 Strial_hat = S_trial*(1.0/sqrt(2.0*J2_trial));
+          double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
+          Matrix3 M = (Identity*alpha_p + Strial_hat*(sqrt(2.0)/2.0))*(1.0/factorp);    
+          double lame = bulk - 2.0/3.0*shear;
+          Matrix3 A = (Identity*lame*(M.Trace()) + M*2.0*shear);
+          //compute a new estimate for the stress
+          stress_new[idx] = trial_stress[idx] - A*pdlambda[idx];
+          
 
-	  current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*pdlambda[idx]) + (eta_nl_old[idx]+h_nonlocal*dlambda_nl);
+          current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*pdlambda[idx]) + (eta_nl_old[idx]+h_nonlocal*dlambda_nl);
 /*  This is commented out because apparently f_new is never used
-	  double f_new;
-	  if (current_yield_strength<minimum_yield_stress){
-	    f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0,hardening_type);
-	  }else{
-	    f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx],hardening_type);
-	  }
+          double f_new;
+          if (current_yield_strength<minimum_yield_stress){
+            f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0,hardening_type);
+          }else{
+            f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx],hardening_type);
+          }
 */
 
-	  //cerr<<"yield function value after nonlocal iteration "<<q-1<<" is "<<f_new<<endl;
+          //cerr<<"yield function value after nonlocal iteration "<<q-1<<" is "<<f_new<<endl;
 
-	  //compute the iteration error
-	  error = abs(pdlambda[idx] - dlambda_old);
+          //compute the iteration error
+          error = abs(pdlambda[idx] - dlambda_old);
 
-	  // find out if this is the maximum value for dlambda or error
-	  if (pdlambda[idx]>dlambda_max) dlambda_max = pdlambda[idx];
-	  if (error>error_max)error_max = error;
+          // find out if this is the maximum value for dlambda or error
+          if (pdlambda[idx]>dlambda_max) dlambda_max = pdlambda[idx];
+          if (error>error_max)error_max = error;
 
-	  // get the interpolation data
-	  if(!flag->d_axisymmetric){
-	    // Get the node indices that surround the cell
-	    NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+          // get the interpolation data
+          if(!flag->d_axisymmetric){
+            // Get the node indices that surround the cell
+            NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
                                                 deformationGradient[idx]);
-	  } else {  // axi-symmetric kinematics
-	    // Get the node indices that surround the cell
-	    NN =interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+          } else {  // axi-symmetric kinematics
+            // Get the node indices that surround the cell
+            NN =interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
                                                deformationGradient[idx]);
-	  }
+          }
 
-	  //replace the old value of gdlambda with the interpolated values of the new estimate
-	  //this results in a Gauss-Seidell iteration rather than a Jacobi
-	  for(int k=0; k< NN; k++){
-	    IntVector node;
-	    node = ni[k];
-	    if(patch->containsNode(node)){
-	      gdlambda[node]-= dlambda_old  *S[k];
-	      gdlambda[node]+= pdlambda[idx]*S[k];
-	    }
-	  }
-	  //done with plastic part
-	  
+          //replace the old value of gdlambda with the interpolated values of the new estimate
+          //this results in a Gauss-Seidell iteration rather than a Jacobi
+          for(int k=0; k< NN; k++){
+            IntVector node;
+            node = ni[k];
+            if(patch->containsNode(node)){
+              gdlambda[node]-= dlambda_old  *S[k];
+              gdlambda[node]+= pdlambda[idx]*S[k];
+            }
+          }
+          //done with plastic part
+          
 
-	}else{	
-	  //update the nonlocal isv for the elastic particles
-	  EvaluateNonLocalAverage(dlambda_nl,V_alpha,pdlambda,px,gdlambda,gmat,patch,idx,l_nonlocal);	  
-	  eta_nl_new[idx] = eta_nl_old[idx] + h_nonlocal*dlambda_nl;
-	  //now evaluate the yield function with this value for eta_nl
-	  double f_max = YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx],hardening_type);
-	  if (f_max>0.0){
-	    softened[idx] = 1;
-	    soften_elastic = true;
-	    cout<<"elastic softening"<<endl;
-	  }
+        }else{  
+          //update the nonlocal isv for the elastic particles
+          EvaluateNonLocalAverage(dlambda_nl,V_alpha,pdlambda,px,gdlambda,gmat,patch,idx,l_nonlocal);     
+          eta_nl_new[idx] = eta_nl_old[idx] + h_nonlocal*dlambda_nl;
+          //now evaluate the yield function with this value for eta_nl
+          double f_max = YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx],hardening_type);
+          if (f_max>0.0){
+            softened[idx] = 1;
+            soften_elastic = true;
+            cout<<"elastic softening"<<endl;
+          }
 
-	}//end elastic part
+        }//end elastic part
 
 
       }//end loop particles
@@ -678,7 +678,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 
       // Compute wave speed + particle velocity at each particle, 
       // store the maximum
-	
+        
       c_dil = sqrt((bulk+(4.0/3.0)*shear)/(rho_cur[idx]));
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
@@ -761,18 +761,18 @@ void NonLocalDruckerPrager::EvaluateNonLocalAverage(double& dlambda_nl,double& V
     V_alpha=0.0;
     for(int i=xmin_index;i<xmax_index+1;i++){
       for(int j=ymin_index;j<ymax_index+1;j++){
-	for(int k=zmin_index;k<zmax_index+1;k++){
-	  IntVector index_ijk(i,j,k);
-	  if(patch->containsNode(index_ijk)){
-	    Point x_ijk(i,j,k);
-	    double alpha_ijk = alpha_nl(px_index,x_ijk,l_nonlocal_index)*gmat[index_ijk];
-	    V_alpha +=alpha_ijk;
+        for(int k=zmin_index;k<zmax_index+1;k++){
+          IntVector index_ijk(i,j,k);
+          if(patch->containsNode(index_ijk)){
+            Point x_ijk(i,j,k);
+            double alpha_ijk = alpha_nl(px_index,x_ijk,l_nonlocal_index)*gmat[index_ijk];
+            V_alpha +=alpha_ijk;
 
-	    if(gmat[index_ijk]>1e-10){
-	      dlambda_nl+= alpha_ijk*gdlambda[index_ijk]/gmat[index_ijk];
-	    }
-	  }
-	}// end z-loop
+            if(gmat[index_ijk]>1e-10){
+              dlambda_nl+= alpha_ijk*gdlambda[index_ijk]/gmat[index_ijk];
+            }
+          }
+        }// end z-loop
       }// end y-loop
     }//end x-loop
 

@@ -48,7 +48,7 @@ using namespace std;
 static DebugStream wave("Wave", false);
 
 Wave::Wave(const ProcessorGroup* myworld,
-	   const MaterialManagerP materialManager)
+           const MaterialManagerP materialManager)
   : ApplicationCommon(myworld, materialManager)
 {
   phi_label = VarLabel::create("phi", CCVariable<double>::getTypeDescription(), IntVector(1,1,1));
