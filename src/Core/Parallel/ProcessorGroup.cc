@@ -82,16 +82,15 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
     MPI::Comm_split(m_comm, m_node, m_rank, &m_node_comm);
     
     // Get the number of ranks for this node and the rank on this node.
-    MPI::Comm_rank(m_node_comm, &m_node_rank);
     MPI::Comm_size(m_node_comm, &m_node_nRanks);
+    MPI::Comm_rank(m_node_comm, &m_node_rank);
   }
   // Only one node so no need for a separtate communicator.
   else
   {
     m_node_nRanks = m_nRanks;
-    m_node_rank = m_rank;
-
-    m_node_comm = m_comm;
+    m_node_rank   = m_rank;
+    m_node_comm   = m_comm;
   }
 }
 
