@@ -122,9 +122,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SchedulerP      schedulerP = sim->simController->getSchedulerP();
-  LoadBalancer *  lb         = sim->simController->getLoadBalancer();
-  GridP           gridP      = sim->gridP;
+  SchedulerP     schedulerP = sim->simController->getSchedulerP();
+  LoadBalancer * lb         = sim->simController->getLoadBalancer();
+  GridP          gridP      = sim->gridP;
       
   if( !schedulerP.get_rep() || !gridP.get_rep() )
   {
@@ -354,11 +354,10 @@ visit_handle visit_SimGetMetaData(void *cbdata)
               const Patch* patch = levelP->getPatch(local_patch);
               
               int rank = lb->getPatchwiseProcessorAssignment(patch);
-                
+              int node = sim->myworld->getNodeFromRank(rank);
+
               sprintf(tmpName,"level%d, patch%d, node%d, rank%d",
-                      level, local_patch,
-                      sim->myworld->getNodeFromRank(rank),
-                      rank);
+                      level, local_patch, node, rank);
 
               // sprintf(tmpName,"node%d, rank%d, level%d, patch%d",
               //         level, local_patch,
@@ -393,104 +392,43 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           meshes_added.insert(mesh_for_this_var);
         }
 
-        // Add mesh vars
-        int numMaterials = stepInfo->varInfo[i].materials.size();
+        std::string mesh_name[2] = {mesh_for_this_var,
+                                    ("Machine_" + sim->hostName + "/Patch") };
 
-        if( numMaterials == 0 )
+        std::string mesh[2] = {"/Sim", "/"+sim->hostName};
+
+        // If there is a machine layout then the patch data can be
+        // placed on the simulation and machine mesh.
+        for( int k=0; k<1+int(isPerPatchVar && addMachineData); ++k )
         {
-          std::string newVarname = varname;
-
-          if( isPerPatchVar )
-            newVarname = "Patch/" + newVarname;
-          else
-            newVarname.append("/0");
-
-          if (mesh_vars_added.find(mesh_for_this_var+newVarname) ==
-              mesh_vars_added.end())
-          {
-            mesh_vars_added.insert(mesh_for_this_var+newVarname);
-            
-            visit_handle vmd = VISIT_INVALID_HANDLE;
-            
-            if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-            {
-              VisIt_VariableMetaData_setName(vmd, newVarname.c_str());
-              VisIt_VariableMetaData_setMeshName(vmd, mesh_for_this_var.c_str());
-              VisIt_VariableMetaData_setCentering(vmd, cent);
-            
-              // 3 -> vector dimension
-              if (vartype.find("Vector") != std::string::npos)
-              {
-                VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
-                VisIt_VariableMetaData_setNumComponents(vmd, 3);
-              }
-              // 9 -> tensor 
-              else if (vartype.find("Matrix3") != std::string::npos)
-              {
-                VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_TENSOR);
-                VisIt_VariableMetaData_setNumComponents(vmd, 9);
-              }
-              // 7 -> vector
-              else if (vartype.find("Stencil7") != std::string::npos)
-              {
-                VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
-                VisIt_VariableMetaData_setNumComponents(vmd, 7);
-              }
-              // 4 -> vector
-              else if (vartype.find("Stencil4") != std::string::npos)
-              {
-                VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
-                VisIt_VariableMetaData_setNumComponents(vmd, 4);
-              }
-              // scalar
-              else // if (vartype.find("Scalar") != std::string::npos)
-              {
-                VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-                VisIt_VariableMetaData_setNumComponents(vmd, 1);
-              }
-              // else
-              // {
-              //   std::stringstream msg;
-              //   msg << "Visit libsim - "
-              //       << "Uintah variable \"" << varname << "\"  "
-              //       << "has an unknown variable type \""
-              //       << vartype << "\"";
-              
-              //   VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
-              //   continue;
-              // }
-              
-              VisIt_SimulationMetaData_addVariable(md, vmd);
-            }
-          }
-        }
-        else
-        {
-          for (int j=0; j<numMaterials; ++j)
+          // Add mesh vars
+          int numMaterials = stepInfo->varInfo[i].materials.size();
+          
+          if( numMaterials == 0 )
           {
             std::string newVarname = varname;
-
-            if( isPerPatchVar )
-              newVarname = "Patch/" + newVarname;
-            else
-            {
-              char buffer[128];
-              sprintf(buffer, "%d", stepInfo->varInfo[i].materials[j]);
-              newVarname.append("/");
-              newVarname.append(buffer);
-            }
             
-            if (mesh_vars_added.find(mesh_for_this_var+newVarname) ==
+            if( isPerPatchVar )
+            {
+              newVarname = "Patch/" + newVarname;
+              
+              if( addMachineData )
+                newVarname += mesh[k];
+            }
+            else
+              newVarname.append("/0");
+            
+            if (mesh_vars_added.find(mesh_name[k]+newVarname) ==
                 mesh_vars_added.end())
             {
-              mesh_vars_added.insert(mesh_for_this_var+newVarname);
+              mesh_vars_added.insert(mesh_name[k]+newVarname);
               
               visit_handle vmd = VISIT_INVALID_HANDLE;
               
               if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
               {
                 VisIt_VariableMetaData_setName(vmd, newVarname.c_str());
-                VisIt_VariableMetaData_setMeshName(vmd, mesh_for_this_var.c_str());
+                VisIt_VariableMetaData_setMeshName(vmd, mesh_name[k].c_str());
                 VisIt_VariableMetaData_setCentering(vmd, cent);
                 
                 // 3 -> vector dimension
@@ -523,6 +461,86 @@ visit_handle visit_SimGetMetaData(void *cbdata)
                   VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
                   VisIt_VariableMetaData_setNumComponents(vmd, 1);
                 }
+              // else
+              // {
+              //   std::stringstream msg;
+              //   msg << "Visit libsim - "
+              //       << "Uintah variable \"" << varname << "\"  "
+              //       << "has an unknown variable type \""
+              //       << vartype << "\"";
+              
+              //   VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+              //   continue;
+              // }
+
+                VisIt_SimulationMetaData_addVariable(md, vmd);
+              }
+            }
+          }
+          else
+          {
+            for (int j=0; j<numMaterials; ++j)
+            {
+              std::string newVarname = varname;
+              
+              if( isPerPatchVar )
+              {
+                newVarname = "Patch/" + newVarname;
+                
+                if( addMachineData )
+                  newVarname += mesh[k];
+              }
+              else
+              {
+                char buffer[128];
+                sprintf(buffer, "%d", stepInfo->varInfo[i].materials[j]);
+                newVarname.append("/");
+                newVarname.append(buffer);
+              }
+              
+              if (mesh_vars_added.find(mesh_name[k]+newVarname) ==
+                  mesh_vars_added.end())
+              {
+                mesh_vars_added.insert(mesh_name[k]+newVarname);
+                
+                visit_handle vmd = VISIT_INVALID_HANDLE;
+                
+                if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+                {
+                  VisIt_VariableMetaData_setName(vmd, newVarname.c_str());
+                  VisIt_VariableMetaData_setMeshName(vmd, mesh_name[k].c_str());
+                  VisIt_VariableMetaData_setCentering(vmd, cent);
+                  
+                  // 3 -> vector dimension
+                  if (vartype.find("Vector") != std::string::npos)
+                  {
+                    VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
+                    VisIt_VariableMetaData_setNumComponents(vmd, 3);
+                  }
+                  // 9 -> tensor 
+                  else if (vartype.find("Matrix3") != std::string::npos)
+                  {
+                    VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_TENSOR);
+                    VisIt_VariableMetaData_setNumComponents(vmd, 9);
+                  }
+                  // 7 -> vector
+                  else if (vartype.find("Stencil7") != std::string::npos)
+                  {
+                    VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
+                    VisIt_VariableMetaData_setNumComponents(vmd, 7);
+                  }
+                  // 4 -> vector
+                  else if (vartype.find("Stencil4") != std::string::npos)
+                  {
+                    VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
+                    VisIt_VariableMetaData_setNumComponents(vmd, 4);
+                  }
+                  // scalar
+                  else // if (vartype.find("Scalar") != std::string::npos)
+                  {
+                    VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+                    VisIt_VariableMetaData_setNumComponents(vmd, 1);
+                  }
                 // else
                 // {
                 //   std::stringstream msg;
@@ -535,7 +553,8 @@ visit_handle visit_SimGetMetaData(void *cbdata)
                 //   continue;
                 // }
                 
-                VisIt_SimulationMetaData_addVariable(md, vmd);
+                  VisIt_SimulationMetaData_addVariable(md, vmd);
+                }
               }
             }
           }
@@ -965,10 +984,11 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     // placed on the machine mesh.
     if( addMachineData )
     {
-      // If there is a machine layout then there is a global and local
-      // machine mesh. The global is all of the nodes and cores. The
-      // local is the nodes and cores actually used.
-      for( unsigned int i=0; i<2; ++i )
+      // If there is a machine layout then there is a global, local,
+      // and patch machine mesh. The global is all of the nodes and
+      // cores. The local is the nodes and cores actually used. The
+      // patch is patches on the each core.
+      for( unsigned int i=0; i<3; ++i )
       {
         visit_handle mmd = VISIT_INVALID_HANDLE;
         
@@ -978,12 +998,12 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           /* Set the mesh’s properties.*/
           std::string meshName = "Machine_" + sim->hostName;
 
-          // Global mesh
-          if( i == 0 )
+          if( i == 0 ) // Global mesh
             VisIt_MeshMetaData_setName(mmd, (meshName + "/Global").c_str());
-          // Local mesh
-          else 
+          else if( i == 1 ) // Local mesh
             VisIt_MeshMetaData_setName(mmd, (meshName + "/Local").c_str());
+          else if( i == 2 ) // Patch mesh
+            VisIt_MeshMetaData_setName(mmd, (meshName + "/Patch").c_str());
 
           VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_UNSTRUCTURED);
           VisIt_MeshMetaData_setTopologicalDimension(mmd, 2);
@@ -991,28 +1011,29 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           VisIt_MeshMetaData_setXLabel(mmd, "Switches");
           VisIt_MeshMetaData_setYLabel(mmd, "Nodes");
 
-          // For the globabl view there is only one domain. For the
-          // local view thre is one domain per rank.
+          // For the global view there is only one domain. For the
+          // local and patch view there is one domain per rank.
           VisIt_MeshMetaData_setNumDomains(mmd,
                              (i == 0 ? 1 : sim->myworld->nRanks()));
 
-          // VisIt_MeshMetaData_setDomainTitle(mmd, "patches");
-          // VisIt_MeshMetaData_setDomainPieceName(mmd, "patch");
-          // VisIt_MeshMetaData_setNumGroups(mmd, numLevels);
-          // VisIt_MeshMetaData_setGroupTitle(mmd, "levels");
-          // VisIt_MeshMetaData_setGroupPieceName(mmd, "level");
+          if( i > 0 )
+          {
+            VisIt_MeshMetaData_setDomainTitle(mmd, "ranks");
+            VisIt_MeshMetaData_setDomainPieceName(mmd, "rank");
+            VisIt_MeshMetaData_setNumGroups(mmd, sim->myworld->nNodes());
+            VisIt_MeshMetaData_setGroupTitle(mmd, "nodes");
+            VisIt_MeshMetaData_setGroupPieceName(mmd, "node");
 
-          // for (int k=0; k<totalPatches; ++k)
-          // {
-          //   char tmpName[64];
-          //   int level, local_patch;
-          
-          //   GetLevelAndLocalPatchNumber(stepInfo, k, level, local_patch);
-          //   sprintf(tmpName,"level%d, patch%d", level, local_patch);
-          
-          //   VisIt_MeshMetaData_addGroupId(mmd, level);
-          //   VisIt_MeshMetaData_addDomainName(mmd, tmpName);
-          // }
+            for (int rank=0; rank<sim->myworld->nRanks(); ++rank)
+            {
+              int node = sim->myworld->getNodeFromRank( rank );
+              char tmpName[64];       
+              sprintf(tmpName,"node%d, rank%d", node, rank);
+              
+              VisIt_MeshMetaData_addGroupId(mmd, node);
+              VisIt_MeshMetaData_addDomainName(mmd, tmpName);
+            }
+          }
 
           // ARS - FIXME
           // VisIt_MeshMetaData_setContainsExteriorBoundaryGhosts(mmd, false);
@@ -1134,7 +1155,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 //
 //  Purpose:
 //      Calculates two important data structures.  One is the structure domain
-//      nesting, which tells VisIt how the  patches are nested, which allows
+//      nesting, which tells VisIt how the patches are nested, which allows
 //      VisIt to ghost out coarse zones that are refined by smaller zones.
 //      The other structure is the rectilinear domain boundaries, which tells
 //      VisIt which patches are next to each other, allowing VisIt to create
@@ -1431,82 +1452,90 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
+  SchedulerP     schedulerP = sim->simController->getSchedulerP();
+  LoadBalancer * lb         = sim->simController->getLoadBalancer();
+  GridP          gridP      = sim->gridP;
+
   if( std::string(meshname).find("Machine_") == 0 )
   {
-    bool global = (std::string(meshname).find("Global") != std::string::npos);
-    bool local  = (std::string(meshname).find("Local" ) != std::string::npos);
+    bool global = (std::string(meshname).find("/Global") != std::string::npos);
+    bool local  = (std::string(meshname).find("/Local" ) != std::string::npos);
+    bool patch  = (std::string(meshname).find("/Patch" ) != std::string::npos);
 
     // Only rank 0 return the whole of the mesh.
     if( global && sim->myworld->myRank() != 0 )
       return VISIT_INVALID_HANDLE;
 
-    // Total size of the layout - add one to have gap between nodes.
-    unsigned int xMax = sim->switchNodeList.size() * (sim->xNode+1);
-    unsigned int yMax = sim->maxNodes              * (sim->yNode+1);
-
-    unsigned int totalCores =
-      sim->switchNodeList.size() * sim->maxNodes * sim->maxCores;
-
-    // Set all of the points as rectilinear grid.
-    unsigned int nPts = xMax * yMax;
-
-    float* xPts = new float[nPts];
-    float* yPts = new float[nPts];
-    float* zPts = new float[nPts];
-
-    for( unsigned int j=0; j<yMax; ++j)
-    {
-      for( unsigned int i=0; i<xMax; ++i)
-      {
-        xPts[j*xMax+i] = i;
-        yPts[j*xMax+i] = j;
-        zPts[j*xMax+i] = 0;
-      }
-    }
-
     // nConnections are for quads so the type plus four points.
     const unsigned int nQuadVals = 5;
     unsigned int nConnections = 0;
-    int* connections = new int[ totalCores * nQuadVals ];
+    int* connections = nullptr;
 
-    for( unsigned int i=0; i<totalCores*nQuadVals; ++i)
-      connections[i] = 0;
-    
-    // Loop through each switch.
-    for( unsigned int s=0; s<sim->switchNodeList.size(); ++s )
-    {
-      unsigned int bx = s * (sim->xNode+1);
-        
-      // Loop through each node.
-      for( unsigned int n=0; n<sim->switchNodeList[s].size(); ++n )
+    unsigned int nPts = 0;
+    float* xPts = nullptr;
+    float* yPts = nullptr;
+    // float* zPts = nullptr;
+
+    if( global )
+    {    
+      // Total size of the layout - add one to have gap between nodes.
+      const unsigned int xMax = sim->switchNodeList.size() * (sim->xNode+1);
+      const unsigned int yMax = sim->maxNodes              * (sim->yNode+1);
+
+      // Set all of the points as rectilinear grid.
+      nPts = xMax * yMax;
+
+      xPts = new float[nPts];
+      yPts = new float[nPts];
+      // zPts = new float[nPts];
+
+      for( unsigned int j=0; j<yMax; ++j)
       {
-        unsigned int by = n * (sim->yNode+1);
-
-        // Get the number of cores for this node.
-        unsigned int nCores = 0;
-        for( unsigned int i=0; i<sim->nodeCores.size(); ++i )
+        for( unsigned int i=0; i<xMax; ++i)
         {
-          if( sim->nodeStart[i] <= sim->switchNodeList[s][n] &&
-              sim->switchNodeList[s][n] <= sim->nodeStop[i] )
+          xPts[j*xMax+i] = i;
+          yPts[j*xMax+i] = j;
+          // zPts[j*xMax+i] = 0;
+        }
+      }
+
+      const unsigned int totalCores =
+        sim->switchNodeList.size()*sim->maxNodes*sim->maxCores;
+
+      // Connections are for quads so the type plus four points.
+      connections = new int[ totalCores * nQuadVals ];
+
+      // Loop through each switch.
+      for( unsigned int s=0; s<sim->switchNodeList.size(); ++s )
+      {
+        // Get the node x index based on the xNode size.
+        unsigned int bx = s * (sim->xNode+1);
+        
+        // Loop through each node.
+        for( unsigned int n=0; n<sim->switchNodeList[s].size(); ++n )
+        {
+          // Get the node y index based on the yNode size.
+          unsigned int by = n * (sim->yNode+1);
+          
+          // Get the number of cores for this node.
+          unsigned int nCores = 0;
+          for( unsigned int i=0; i<sim->nodeCores.size(); ++i )
+          {
+            if( sim->nodeStart[i] <= sim->switchNodeList[s][n] &&
+                sim->switchNodeList[s][n] <= sim->nodeStop[i] )
             {
               nCores = sim->nodeCores[i];
               break;
             }
-        }
-
-        // Loop through each core.
-        for( unsigned int c=0; c<nCores; ++c )
-        {
-          // Get an x y index based on the xNode size.
-          unsigned int lx = bx + c % sim->xNode;
-          unsigned int ly = by + c / sim->xNode;
-
-          if( global ||
-              (local &&
-               s == sim->switchIndex &&
-               n == sim->nodeIndex &&
-               (int) c == sim->myworld->myNode_myRank()) )
+          }
+          
+          // Loop through each core.
+          for( unsigned int c=0; c<nCores; ++c )
           {
+            // Get the core x y index based on the xNode size.
+            unsigned int lx = bx + c % sim->xNode;
+            unsigned int ly = by + c / sim->xNode;
+            
             // All cells are quads
             connections[nConnections++] = VISIT_CELL_QUAD;
             
@@ -1520,16 +1549,130 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       }
     }
 
+    else if( local )
+    {
+      // Total size of the layout one core per domain;
+      const unsigned int xMax = 2;
+      const unsigned int yMax = 2;
+
+      // Set all of the points as rectilinear grid.
+      nPts = xMax * yMax;
+
+      // Indexes in the switch, node, and core.
+      unsigned int s = sim->switchIndex;
+      unsigned int n = sim->nodeIndex;
+      unsigned int c = sim->myworld->myNode_myRank();
+
+      // Get the node x y location based on the x/y node size.
+      unsigned int bx = s * (sim->xNode+1);
+      unsigned int by = n * (sim->yNode+1);
+          
+      // Get the core x y location based on the xNode size.
+      unsigned int lx = bx + c % sim->xNode;
+      unsigned int ly = by + c / sim->xNode;
+            
+      xPts = new float[nPts];
+      yPts = new float[nPts];
+      // zPts = new float[nPts];
+
+      for( unsigned int j=0; j<yMax; ++j)
+      {
+        for( unsigned int i=0; i<xMax; ++i)
+        {
+          xPts[j*xMax+i] = lx + i;
+          yPts[j*xMax+i] = ly + j;
+          // zPts[j*xMax+i] = 0;
+        }
+      }
+
+      // Connections are for quads so the type plus four points.
+      connections = new int[ nQuadVals ];
+
+      // All cells are quads
+      connections[nConnections++] = VISIT_CELL_QUAD;
+      
+      // Set the index based on a rectilinear grid.
+      connections[nConnections++] = (+0) * xMax + (+0);
+      connections[nConnections++] = (+1) * xMax + (+0);
+      connections[nConnections++] = (+1) * xMax + (+1);
+      connections[nConnections++] = (+0) * xMax + (+1);
+    }
+
+    else if( patch )
+    {
+      const PatchSubset* myPatches =
+        lb->getPerProcessorPatchSet(gridP)->getSubset( domain );
+
+      const unsigned int nPatches = myPatches->size();
+
+      // Total size of the layout. Try to make rectangles.
+      unsigned int xMax = sqrt(nPatches);
+      unsigned int yMax = xMax;
+
+      // Make sure to cover all the patches - may be blank areas.
+      while( xMax * yMax < nPatches )
+        ++yMax;
+
+      // Add one to get the far boundary.
+      xMax += 1;
+      yMax += 1;
+
+      // Set all of the points as rectilinear grid.
+      nPts = xMax * yMax;
+
+      // Indexes in the switch, node, and core
+      unsigned int s = sim->switchIndex;
+      unsigned int n = sim->nodeIndex;
+      unsigned int c = sim->myworld->myNode_myRank();
+
+      // Get the node x y location based on the x/y node size.
+      unsigned int bx = s * (sim->xNode+1);
+      unsigned int by = n * (sim->yNode+1);
+          
+      // Get the core x y location based on the xNode size.
+      unsigned int lx = bx + c % sim->xNode;
+      unsigned int ly = by + c / sim->xNode;
+            
+      xPts = new float[nPts];
+      yPts = new float[nPts];
+      // zPts = new float[nPts];
+
+      float dx = 1.0 / (float) (xMax-1);
+      float dy = 1.0 / (float) (yMax-1);
+
+      for( unsigned int j=0; j<yMax; ++j)
+      {
+        for( unsigned int i=0; i<xMax; ++i)
+        {
+          xPts[j*xMax+i] = lx + i * dx;
+          yPts[j*xMax+i] = ly + j * dy;
+          // zPts[j*xMax+i] = 1;
+        }
+      }
+
+      // Connections are for quads so the type plus four points.
+      connections = new int[ nPatches * nQuadVals ];
+
+      for (unsigned int  p = 0; p < nPatches; ++p) {
+
+        // Get an x y index based on the xMax size.
+        unsigned int px = p % (xMax-1);
+        unsigned int py = p / (xMax-1);
+
+        // All cells are quads
+        connections[nConnections++] = VISIT_CELL_QUAD;
+        
+        // Set the index based on a rectilinear grid.
+        connections[nConnections++] = (py+0) * xMax + (px+0);
+        connections[nConnections++] = (py+1) * xMax + (px+0);
+        connections[nConnections++] = (py+1) * xMax + (px+1);
+        connections[nConnections++] = (py+0) * xMax + (px+1);
+      }
+    }
+
     // nConnections are for quads so the type plus four points.
     unsigned int nCells = nConnections / nQuadVals;
 
-    // The original connection array was a maximum resize it to the
-    // actual number of connections.
-    int* tmp = new int[nConnections];
-    std::copy_n(connections, nConnections, tmp);
-    delete[] connections;
-    connections = tmp;
-    
     visit_handle meshH = VISIT_INVALID_HANDLE;
  
     if(VisIt_UnstructuredMesh_alloc(&meshH) != VISIT_ERROR)
@@ -1537,18 +1680,19 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       visit_handle xH ,yH, zH;
       VisIt_VariableData_alloc( &xH );
       VisIt_VariableData_alloc( &yH );
-      VisIt_VariableData_alloc( &zH );
+      // VisIt_VariableData_alloc( &zH );
       
       VisIt_VariableData_setDataF( xH, VISIT_OWNER_VISIT, 1, nPts, xPts );
       VisIt_VariableData_setDataF( yH, VISIT_OWNER_VISIT, 1, nPts, yPts );
-      VisIt_VariableData_setDataF( zH, VISIT_OWNER_VISIT, 1, nPts, zPts );
+      // VisIt_VariableData_setDataF( zH, VISIT_OWNER_VISIT, 1, nPts, zPts );
     
       visit_handle connH;
       VisIt_VariableData_alloc( &connH );
       VisIt_VariableData_setDataI( connH, VISIT_OWNER_VISIT, 1,
                                    nConnections, connections );
 
-      VisIt_UnstructuredMesh_setCoordsXYZ( meshH, xH, yH, zH );
+      VisIt_UnstructuredMesh_setCoordsXY( meshH, xH, yH );
+      // VisIt_UnstructuredMesh_setCoordsXYZ( meshH, xH, yH, zH );
       VisIt_UnstructuredMesh_setConnectivity( meshH, nCells, connH );
 
       // No need to delete the points or the connections as the flag
@@ -1558,9 +1702,6 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 
     return meshH;
   }  
-
-  SchedulerP schedulerP = sim->simController->getSchedulerP();
-  GridP      gridP      = sim->gridP;
 
   // LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
   // bool &forceMeshReload = sim->forceMeshReload;
@@ -1993,8 +2134,9 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     return varH;
   }  
 
-  SchedulerP schedulerP      = sim->simController->getSchedulerP();
-  GridP gridP                = sim->gridP;
+  SchedulerP schedulerP = sim->simController->getSchedulerP();
+  LoadBalancer * lb     = sim->simController->getLoadBalancer();
+  GridP gridP           = sim->gridP;
 
   LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
   // bool &forceMeshReload = sim->forceMeshReload;
@@ -2005,6 +2147,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   bool isParticleVar = false;
   bool isInternalVar = false;
   bool isMachineMeshVar = false;
+
+  bool isPerPatchVar = false;
 
   // Get the var name sans the material. If a patch or processor
   // variable then the var name will be either "Patch" or "Processor".
@@ -2063,10 +2207,16 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
       matl = "0";
 
-      // Get the var name sans the material.
-      // found = varName.find_last_of("/");
-      // matl = varName.substr(found + 1);
-      // varName = varName.substr(0, found);
+      // If the machine profile is available get the sim or host name.
+      if( sim->switchNodeList.size() )
+      {
+        // If a the per patch is on the machine view (i.e. not the sim view)
+        isPerPatchVar = (varName.find("/Sim") == std::string::npos);
+
+        // Get the var name sans the sim or host name.
+        found = varName.find_last_of("/");
+        varName = varName.substr(0, found);
+      }
     }
 
     for (int k=0; k<(int)stepInfo->varInfo.size(); ++k)
@@ -2470,6 +2620,38 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
           gd->data[i] = 0;
       }
     }
+    else if( isPerPatchVar )
+    {
+      // Here the request is for per patch data that is going on the
+      // machine view.  The domain is for a rank.
+      const PatchSubset* myPatches =
+        lb->getPerProcessorPatchSet(gridP)->getSubset( domain );
+
+      const unsigned int nPatches = myPatches->size();
+      
+      gd = new GridDataRaw;
+      gd->num = nPatches;
+      gd->components = 1;
+      gd->data = new double[gd->num * gd->components];
+
+      // Get the data for each patch and store it in the grid data object.
+      for (unsigned int p = 0; p < nPatches; ++p)
+      {
+        const Patch* patch = myPatches->get(p);
+
+        GetLevelAndLocalPatchNumber(stepInfo,
+                                    patch->getGridIndex(), level, local_patch);
+
+        GridDataRaw *tmp =
+          getGridData(schedulerP, gridP, level, local_patch, varName,
+                      atoi(matl.c_str()), plow, phigh, (LoadExtra) 0 );
+
+        gd->data[p] = tmp->data[0];
+
+        delete tmp->data;
+        delete tmp;
+      }
+    }
     // Patch data from the warehouse
     else
     {
@@ -2490,6 +2672,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
             << "could not be processed.";
             
         VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+
 
         gd = new GridDataRaw;
 
@@ -2525,7 +2708,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
           }
         }
 
-        gd->data = new double[gd->num*gd->components];
+        gd->data = new double[gd->num * gd->components];
 
         for (int i=0; i<gd->num*gd->components; ++i)
           gd->data[i] = 0;
@@ -2541,7 +2724,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       // owns the data (VISIT_OWNER_SIM - indicates the simulation
       // owns the data). However, gd needs to be deleted.
       
-      // delete gd->data
+      // delete gd->data;
       delete gd;
     }
   }
