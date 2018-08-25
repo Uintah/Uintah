@@ -343,7 +343,7 @@ private:
         Uintah::ListOfCellsIterator& cell_iter
           = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-        parallel_for_unstructured(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+        parallel_for_unstructured(executionObject, cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
            
           IntVector ijk(i,j,k);
           IntVector orig_ijk(i,j,k);

@@ -153,13 +153,6 @@ enum TASKGRAPH {
 
 namespace Uintah {
 
-//#if defined( UINTAH_ENABLE_KOKKOS )
-//typedef Kokkos::View<IntVector*> BC_List;
-//#else
-template<typename myIntVector>
-using BC_List= std::vector<myIntVector>& ;
-//#endif
-
 class BlockRange;
 
 class BlockRange
@@ -264,6 +257,9 @@ struct struct1DArray {
 
 };
 
+
+
+
 template <typename T, unsigned int CAPACITY_FIRST_DIMENSION, unsigned int CAPACITY_SECOND_DIMENSION>
 struct struct2DArray {
   struct1DArray<T, CAPACITY_SECOND_DIMENSION> arr[CAPACITY_FIRST_DIMENSION];
@@ -291,6 +287,23 @@ struct struct2DArray {
 
 };
 
+
+struct int_3{
+  int dim[3]; // indices for x y z dimensions
+
+  int_3(  ) { }
+
+  int_3(  const int i, const int j, const int k) {
+          dim[0]=i;
+          dim[1]=j;
+          dim[2]=k;
+  }
+       
+
+  inline const int& operator[]( unsigned int index) const {
+    return dim[index];
+  }
+};
 
 //----------------------------------------------------------------------------
 // Start parallel loops
@@ -886,15 +899,15 @@ sweeping_parallel_for( BlockRange const & r, const Functor & functor, const bool
 // often needed for boundary conditions and possibly structured grids
 // TODO: Can this be called parallel_for_unstructured?
 #if defined(UINTAH_ENABLE_KOKKOS)
-template <typename ExecutionSpace, typename Functor>
-inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_for( Kokkos::View<int*, Kokkos::HostSpace> iterSpace, const Functor & functor)
+template <typename ExecutionSpace, typename MemorySpace, typename Functor>
+typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
+parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+             Kokkos::View<int_3*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
-  const int n_tot=iterSpace.size()/3;
-  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, n_tot).set_chunk_size(2), [=](int iblock) {
-    const int i =  iterSpace[iblock*3];
-    const int j =  iterSpace[iblock*3+1];
-    const int k =  iterSpace[iblock*3+2];
+  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, list_size).set_chunk_size(2), [=](int iblock) {
+    const int i =  iterSpace[iblock][0];
+    const int j =  iterSpace[iblock][1];
+    const int k =  iterSpace[iblock][2];
     functor(i,j,k);
   });
 }
@@ -908,31 +921,44 @@ parallel_for( Kokkos::View<int*, Kokkos::HostSpace> iterSpace, const Functor & f
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
-             Kokkos::View<int*, Kokkos::HostSpace> iterSpace , const Functor & functor )
+parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+             Kokkos::View<int_3*, Kokkos::CudaSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
-  const int number_of_indices=3;
-  Kokkos::View< int*, Kokkos::CudaSpace >  iterSpace_gpu("BoundaryCondition_uintah_parallel_for_list",iterSpace.size());
-  Kokkos::deep_copy(iterSpace_gpu,iterSpace);
-  const int n_tot=iterSpace.size()/number_of_indices;
 
-  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
-  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
+  unsigned int cudaThreadsPerBlock = executionObject.getCudaThreadsPerBlock();
+  unsigned int cudaBlocksPerLoop   = executionObject.getCudaBlocksPerLoop();
 
-  const int actualThreads = n_tot > cuda_threads_per_block ? cuda_threads_per_block : n_tot;
+  const unsigned int actualThreads = (int) list_size > cudaThreadsPerBlock ? cudaThreadsPerBlock : list_size;
 
-  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
+#if defined(NO_STREAM)
+  Kokkos::Cuda instanceObject();
+  Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( cudaBlocksPerLoop, actualThreads );
+#else
+  void* stream = executionObject.getStream();
+  if (!stream) {
+    std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
+    SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
+  }
+  Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+  Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( instanceObject, cudaBlocksPerLoop, actualThreads );
+#endif
 
-  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_blocks_per_loop, actualThreads ),
-                        [=] __device__ ( typename policy_type::member_type thread ) {
+  typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
 
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, n_tot), [=] (const int& iblock) {
-      const int i =  iterSpace_gpu[iblock*number_of_indices];
-      const int j =  iterSpace_gpu[iblock*number_of_indices+1];
-      const int k =  iterSpace_gpu[iblock*number_of_indices+2];
+  Kokkos::parallel_for (teamPolicy, KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
+
+    const unsigned int currentBlock = thread.league_rank();
+    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, list_size), [&,iterSpace] (const unsigned int& iblock) {
+      const int i =  iterSpace[iblock][0];
+      const int j =  iterSpace[iblock][1];
+      const int k =  iterSpace[iblock][2];
       functor(i,j,k);
+      });
     });
-  });
+#if defined(NO_STREAM)
+  cudaDeviceSynchronize();
+#endif
+
 }
 #endif //HAVE_CUDA
 #endif //UINTAH_ENABLE_KOKKOS
@@ -1269,18 +1295,33 @@ void parallel_for( BlockRange const & r, const Functor & f, const Option& op )
   }}}
 };
 
-template <typename myIntVector, typename Functor>
-inline void
-parallel_for_unstructured(BC_List<myIntVector> iterSpace, const unsigned int bc_size, const Functor & functor)
-//parallel_for( std::vector<IntVector> iterSpace)
+#if defined( UINTAH_ENABLE_KOKKOS )
+template <typename ExecutionSpace, typename MemorySpace, typename Functor>
+typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
+parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+             Kokkos::View<int_3*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
-  for (unsigned int iblock=0; iblock<bc_size; ++iblock) {
+  for (unsigned int iblock=0; iblock<list_size; ++iblock) {
     const int i =  iterSpace[iblock][0];
     const int j =  iterSpace[iblock][1];
     const int k =  iterSpace[iblock][2];
     functor(i,j,k);
-  }
+  };
 }
+#else
+template <typename ExecutionSpace, typename MemorySpace, typename Functor>
+typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
+parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+             std::vector<int_3> &iterSpace ,const unsigned int list_size , const Functor & functor )
+{
+  for (unsigned int iblock=0; iblock<list_size; ++iblock) {
+    const int i =  iterSpace[iblock][0];
+    const int j =  iterSpace[iblock][1];
+    const int k =  iterSpace[iblock][2];
+    functor(i,j,k);
+  };
+}
+#endif
 
 #if defined( UINTAH_ENABLE_KOKKOS )
 

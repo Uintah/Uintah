@@ -102,6 +102,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <Core/Parallel/KokkosTools.h>
 
 using namespace Uintah;
 
@@ -834,6 +835,10 @@ int main( int argc, char *argv[], char *env[] )
     simController->attachPort( "load balancer", loadBalancer );
     appComp->attachPort( "load balancer", loadBalancer );
 
+#ifdef UINTAH_ENABLE_KOKKOS
+    Kokkos::initialize();
+#endif //UINTAH_ENABLE_KOKKOS
+
     //__________________________________
     // Scheduler
     SchedulerCommon* scheduler =
@@ -932,8 +937,14 @@ int main( int argc, char *argv[], char *env[] )
     delete loadBalancer;
     delete solver;   
     delete application;
-    delete scheduler;
     delete simController;
+    delete scheduler;
+
+#ifdef UINTAH_ENABLE_KOKKOS
+  Uintah::cleanupKokkosTools();
+  Kokkos::finalize();
+#endif //UINTAH_ENABLE_KOKKOS
+
   }
   
   catch (ProblemSetupException& e) {

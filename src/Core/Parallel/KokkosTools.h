@@ -33,6 +33,7 @@
 
 #include <Core/Parallel/MasterLock.h>
 #include <Kokkos_Random.hpp>
+#include <sci_defs/kokkos_defs.h>
 #include <memory>
 
 namespace {

@@ -192,7 +192,7 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
       CCVariable<double>& prop = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
       const SpeciesInfo info = i->second;
 
-      parallel_for_unstructured(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (int i,int j,int k) {
+      parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (int i,int j,int k) {
 
         int ip = i-iDir[0];
         int jp = j-iDir[1];

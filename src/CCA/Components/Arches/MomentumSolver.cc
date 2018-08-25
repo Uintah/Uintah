@@ -50,6 +50,8 @@
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
 #include <sci_defs/visit_defs.h>
 
+#include <Core/Parallel/Portability.h>
+
 using namespace Uintah;
 using namespace std;
 
@@ -299,9 +301,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
     taskname += "extraProjection";
   }
 
-  Task* tsk = scinew Task(taskname,
-                          this, &MomentumSolver::buildLinearMatrix,
-                          timelabels, extraProjection);
+  auto TaskDependencies = [&](Task* tsk) {
 
   tsk->requires(Task::OldDW, d_lab->d_timeStepLabel);
   tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
@@ -337,19 +337,29 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+};
 
-  sched->addTask(tsk, patches, matls);
+
+  create_portable_tasks(TaskDependencies, this,
+                        taskname,
+                        &MomentumSolver::buildLinearMatrix<UINTAH_CPU_TAG>,
+                        &MomentumSolver::buildLinearMatrix<KOKKOS_OPENMP_TAG>,
+                        //&MomentumSolver::buildLinearMatrix<KOKKOS_CUDA_TAG>,
+                        sched, patches,matls, TASKGRAPH::DEFAULT, 
+                        timelabels, extraProjection); // variadic arguments
 }
 
 //****************************************************************************
 // Actual build of the linear matrix
 //****************************************************************************
-void
-MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
+template <typename ExecutionSpace, typename MemorySpace> void
+MomentumSolver::buildLinearMatrix(
                                   const PatchSubset* patches,
                                   const MaterialSubset* /*matls*/,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw,
+                                  OnDemandDataWarehouse* old_dw,
+                                  OnDemandDataWarehouse* new_dw,
+                                  UintahParams& uintahParams,
+                                  ExecutionObject<ExecutionSpace,MemorySpace>& exObj,
                                   const TimeIntegratorLabel* timelabels,
                                   bool extraProjection)
 {
@@ -456,7 +466,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_boundaryCondition->velRhoHatInletBC(patch,
                                           &velocityVars, &constVelocityVars,
                                           indx,
-                                          timeStep, simTime, time_shift);
+                                          timeStep, simTime, time_shift, exObj);
   }
 }
 
@@ -525,7 +535,7 @@ void MomentumSolver::solveVelHat(const LevelP& level,
 // ****************************************************************************
 // Schedule build of linear matrix
 // ****************************************************************************
-void
+void 
 MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* matls,
@@ -534,9 +544,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 {
   string taskname =  "MomentumSolver::BuildCoeffVelHat" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname,
-                          this, &MomentumSolver::buildLinearMatrixVelHat,
-                          timelabels, curr_level);
+  auto TaskDependencies = [&](Task* tsk) {
 
   tsk->requires(Task::OldDW, d_lab->d_timeStepLabel);
   tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
@@ -647,8 +655,16 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     tsk->requires(Task::NewDW, VarLabel::find( *iter ), gac, 1);
 
   }
+};
 
-  sched->addTask(tsk, patches, matls);
+  create_portable_tasks(TaskDependencies, this,
+                        taskname,
+                        &MomentumSolver::buildLinearMatrixVelHat<UINTAH_CPU_TAG>,
+                        &MomentumSolver::buildLinearMatrixVelHat<KOKKOS_OPENMP_TAG>,
+                        //&MomentumSolver::buildLinearMatrixVelHat<KOKKOS_CUDA_TAG>,
+                        sched, patches,matls, TASKGRAPH::DEFAULT, 
+                        timelabels, curr_level); // variadic arguments
+
 
 }
 
@@ -681,12 +697,13 @@ struct sumNonlinearSources{
 // ***********************************************************************
 // Actual build of linear matrices for momentum components
 // ***********************************************************************
-void
-MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
-                                        const PatchSubset* patches,
+template <typename ExecutionSpace, typename MemorySpace> void
+MomentumSolver::buildLinearMatrixVelHat(const PatchSubset* patches,
                                         const MaterialSubset* /*matls*/,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw,
+                                        OnDemandDataWarehouse* old_dw,
+                                        OnDemandDataWarehouse* new_dw,
+                                        UintahParams& uintahParams,
+                                        ExecutionObject<ExecutionSpace,MemorySpace>& exObj,
                                         const TimeIntegratorLabel* timelabels,
                                         const int curr_level )
 {
@@ -703,7 +720,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     parent_old_dw = old_dw;
   }
 
-  DataWarehouse* which_dw;
+  OnDemandDataWarehouse* which_dw;
   if ( curr_level == 0  ){
     which_dw = old_dw;
   } else {
@@ -784,13 +801,17 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       new_dw->get(constVelocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,   indx, patch,gn, 0);
     }
 
+      IntVector domLo(  patch->getExtraCellLowIndex());
+      IntVector domHi(  patch->getExtraCellHighIndex());
+
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocateTemporary(velocityVars.uVelocityCoeff[ii],         patch);
-      new_dw->allocateTemporary(velocityVars.vVelocityCoeff[ii],         patch);
-      new_dw->allocateTemporary(velocityVars.wVelocityCoeff[ii],         patch);
-      new_dw->allocateTemporary(velocityVars.uVelocityConvectCoeff[ii],  patch);
-      new_dw->allocateTemporary(velocityVars.vVelocityConvectCoeff[ii],  patch);
-      new_dw->allocateTemporary(velocityVars.wVelocityConvectCoeff[ii],  patch);
+      velocityVars.uVelocityCoeff[ii].allocate(domLo,domHi);
+      velocityVars.vVelocityCoeff[ii].allocate(domLo,domHi);       
+      velocityVars.wVelocityCoeff[ii].allocate(domLo,domHi);       
+      velocityVars.uVelocityConvectCoeff[ii].allocate(domLo,domHi);
+      velocityVars.vVelocityConvectCoeff[ii].allocate(domLo,domHi);
+      velocityVars.wVelocityConvectCoeff[ii].allocate(domLo,domHi);
+
       velocityVars.uVelocityCoeff[ii].initialize(0.0);
       velocityVars.vVelocityCoeff[ii].initialize(0.0);
       velocityVars.wVelocityCoeff[ii].initialize(0.0);
@@ -799,17 +820,17 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       velocityVars.wVelocityConvectCoeff[ii].initialize(0.0);
     }
 
-    new_dw->allocateTemporary(velocityVars.uVelLinearSrc,     patch);
-    new_dw->allocateTemporary(velocityVars.vVelLinearSrc,     patch);
-    new_dw->allocateTemporary(velocityVars.wVelLinearSrc,     patch);
+    velocityVars.uVelLinearSrc.allocate(domLo,domHi);
+    velocityVars.vVelLinearSrc.allocate(domLo,domHi);
+    velocityVars.wVelLinearSrc.allocate(domLo,domHi);
 
     velocityVars.uVelLinearSrc.initialize(0.0);
     velocityVars.vVelLinearSrc.initialize(0.0);
     velocityVars.wVelLinearSrc.initialize(0.0);
 
-    new_dw->allocateTemporary(velocityVars.uVelNonlinearSrc,  patch);
-    new_dw->allocateTemporary(velocityVars.vVelNonlinearSrc,  patch);
-    new_dw->allocateTemporary(velocityVars.wVelNonlinearSrc,  patch);
+    velocityVars.uVelNonlinearSrc.allocate(domLo,domHi);
+    velocityVars.vVelNonlinearSrc.allocate(domLo,domHi);
+    velocityVars.wVelNonlinearSrc.allocate(domLo,domHi);
 
     velocityVars.uVelNonlinearSrc.initialize(0.0);
     velocityVars.vVelNonlinearSrc.initialize(0.0);
@@ -1053,7 +1074,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     // add multimaterial momentum source term
     if (d_MAlab){
-      d_source->computemmMomentumSource(pc, patch, cellinfo,
+      d_source->computemmMomentumSource(patch, cellinfo,
                                         &velocityVars, &constVelocityVars);
     }
 
@@ -1162,7 +1183,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     d_boundaryCondition->velRhoHatInletBC(patch,
                                           &velocityVars, &constVelocityVars,
                                           indx,
-                                          timeStep, simTime, time_shift);
+                                          timeStep, simTime, time_shift, exObj);
 
     d_boundaryCondition->velocityOutletPressureBC( patch,
                                                    indx,

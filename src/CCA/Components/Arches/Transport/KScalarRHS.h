@@ -215,7 +215,7 @@ private:
     return create_portable_arches_tasks( this
                                        , TaskInterface::BC
                                        , &KScalarRHS<T, PT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &KScalarRHS<T, PT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       , &KScalarRHS<T, PT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &KScalarRHS<T, PT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
@@ -909,7 +909,7 @@ private:
   template <typename T, typename PT>
   template<typename ExecutionSpace, typename MemorySpace>
   void KScalarRHS<T, PT>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
-    m_boundary_functors->apply_bc( m_eqn_names_BC, m_bcHelper, tsk_info, patch );
+    m_boundary_functors->apply_bc( m_eqn_names_BC, m_bcHelper, tsk_info, patch ,executionObject);
   }
 }
 #endif

@@ -1722,6 +1722,20 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
       }
     }
   }
+  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+    const int numPatches = patches->size();
+    const int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
+        labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Modifies); // modifies 2nd, may require copy
+        if (vars.find(lpmd) == vars.end()) {
+          vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
+        }
+      }
+    }
+  }
   for (const Task::Dependency* dependantVar = task->getComputes(); dependantVar != 0; dependantVar = dependantVar->m_next) {
     constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
@@ -1870,7 +1884,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
         cerrLock.unlock();
       }
 
-      if (curDependency->m_dep_type == Task::Requires) {
+      if (curDependency->m_dep_type == Task::Requires || curDependency->m_dep_type == Task::Modifies) {
 
         // For any variable, only ONE task should manage all ghost cells for it.
         // It is a giant mess to try and have two tasks simultaneously managing ghost cells for a single var.
@@ -1892,7 +1906,6 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           //See if we get to be the lucky thread that processes all ghost cells for this simulation variable
           gatherGhostCells = gpudw->compareAndSwapAwaitingGhostDataOnGPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
         }
-
         if ( allocated && correctSize && ( copyingIn || validOnGPU )) {
           //This variable exists or soon will exist on the destination.  So the non-ghost cell part of this
           //variable doesn't need any more work.
@@ -2344,6 +2357,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
             std::cerr << "UnifiedScheduler::initiateH2D(), unsupported variable type for computes variable "
                       << curDependency->m_var->getName() << std::endl;
           }
+
         }
       } else if (curDependency->m_dep_type == Task::Computes) {
         // compute the amount of space the host needs to reserve on the GPU for this variable.
@@ -2408,7 +2422,6 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
 
   // gpu_stats << myRankThread() << " Calling prepareGhostCellsIntoTaskDW for " << dtask->getName() << std::endl;
   prepareGhostCellsIntoTaskDW(dtask);
-
 }
 
 

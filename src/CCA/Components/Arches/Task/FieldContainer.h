@@ -475,6 +475,12 @@ namespace Uintah{
       DataWarehouse* getOldDW(){
         return _old_dw;
       }
+      const Patch* getPatch(){
+           return _patch;
+      }
+      const int getMaterialIndex(){
+          return _matl_index;
+      }
 
     private:
 

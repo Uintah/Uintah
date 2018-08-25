@@ -34,6 +34,10 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Task.h>
 
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
+
+#include <Core/Grid/Variables/ListOfCellsIterator.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -79,8 +83,6 @@
 
 namespace Uintah {
 
-class ArchesVariables;
-class ArchesConstVariables;
 class CellInformation;
 class VarLabel;
 class PhysicalConstants;
@@ -227,11 +229,14 @@ void sched_setInitProfile( SchedulerP& sched,
                            const LevelP& level,
                            const MaterialSet* matls);
 
-void setInitProfile( const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset*,
-                     DataWarehouse*,
-                     DataWarehouse* new_dw );
+template <typename ExecutionSpace, typename MemorySpace> void
+setInitProfile(
+               const PatchSubset* patches,
+               const MaterialSubset*,
+               OnDemandDataWarehouse*,
+               OnDemandDataWarehouse* new_dw,
+               UintahParams& uintahParams,
+               ExecutionObject<ExecutionSpace,MemorySpace>& exObj);
 
 void sched_checkMomBCs( SchedulerP& sched,
                         const LevelP& level,
@@ -243,34 +248,423 @@ void checkMomBCs( const ProcessorGroup* pc,
                   DataWarehouse* old_dw,
                   DataWarehouse* new_dw );
 
-void setVelFromExtraValue( const Patch* patch, const Patch::FaceType& face,
+template <typename ExecutionSpace, typename MemorySpace> void
+setVel( const Patch* patch, const Patch::FaceType& face,
+                                SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+                                constCCVariable<double>& density,
+                                Iterator bound_ptr, Vector value , ExecutionObject<ExecutionSpace, MemorySpace>& exObj  )
+{
+
+  //get the face direction
+  IntVector insideCellDir = patch->faceDirection(face);
+  ListOfCellsIterator  boundary_cells(bound_ptr); // unneccessary copy, but ListOfCells is more friendly to portability
+  
+  switch ( face ) {
+
+  case Patch::xminus:
+
+    parallel_for_unstructured( exObj,boundary_cells.get_ref_to_iterator<MemorySpace>(),boundary_cells.size(), [&] (int i,int j,int k) {
+      int im=i - insideCellDir[0];
+      int jm=j - insideCellDir[1];
+      int km=k - insideCellDir[2];
+
+
+
+      uVel(i,j,k)  = value.x();
+      uVel(im,jm,km) = value.x();
+
+      vVel(i,j,k) = 2.*value.y() - vVel(im,jm,km);
+      wVel(i,j,k) = 2.*value.z() - wVel(im,jm,km);
+
+    });
+    break;
+  case Patch::xplus:
+
+    parallel_for_unstructured( exObj,boundary_cells.get_ref_to_iterator<MemorySpace>(),boundary_cells.size(), [&] (int i,int j,int k) {
+      int im=i - insideCellDir[0];
+      int jm=j - insideCellDir[1];
+      int km=k - insideCellDir[2];
+
+      int ip=i + insideCellDir[0];
+      int jp=j + insideCellDir[1];
+      int kp=k + insideCellDir[2];
+
+      uVel(ip,jp,kp)  = value.x();
+      uVel(i,j,k)   = value.x();
+
+      vVel(i,j,k) = 2.0*value.y() - vVel(im,jm,km);
+      wVel(i,j,k) = 2.0*value.z() - wVel(im,jm,km);
+
+    });
+    break;
+  case Patch::yminus:
+
+    parallel_for_unstructured( exObj,boundary_cells.get_ref_to_iterator<MemorySpace>(),boundary_cells.size(), [&] (int i,int j,int k) {
+      int im=i - insideCellDir[0];
+      int jm=j - insideCellDir[1];
+      int km=k - insideCellDir[2];
+
+
+      vVel(i,j,k) = value.y();
+      vVel(im,jm,km) = value.y();
+
+      uVel(i,j,k) = 2.0 * value.x() - uVel(im,jm,km);
+      wVel(i,j,k) = 2.0 * value.z() - wVel(im,jm,km);
+
+    });
+    break;
+  case Patch::yplus:
+
+    parallel_for_unstructured( exObj,boundary_cells.get_ref_to_iterator<MemorySpace>(),boundary_cells.size(), [&] (int i,int j,int k) {
+      int im=i - insideCellDir[0];
+      int jm=j - insideCellDir[1];
+      int km=k - insideCellDir[2];
+
+      int ip=i + insideCellDir[0];
+      int jp=j + insideCellDir[1];
+      int kp=k + insideCellDir[2];
+
+      vVel(ip,jp,kp) = value.y();
+      vVel(i,j,k) = value.y();
+
+      uVel(i,j,k) = 2.0 * value.x() - uVel(im,jm,km);
+      wVel(i,j,k) = 2.0 * value.z() - wVel(im,jm,km);
+
+    });
+    break;
+  case Patch::zminus:
+
+    parallel_for_unstructured( exObj,boundary_cells.get_ref_to_iterator<MemorySpace>(),boundary_cells.size(), [&] (int i,int j,int k) {
+      int im=i - insideCellDir[0];
+      int jm=j - insideCellDir[1];
+      int km=k - insideCellDir[2];
+
+      wVel(i,j,k) = value.z();
+      wVel(im,jm,km) = value.z();
+
+      uVel(i,j,k) = 2.0 * value.x() - uVel(im,jm,km);
+      vVel(i,j,k) = 2.0 * value.y() - vVel(im,jm,km);
+
+    });
+    break;
+  case Patch::zplus:
+
+    parallel_for_unstructured( exObj,boundary_cells.get_ref_to_iterator<MemorySpace>(),boundary_cells.size(), [&] (int i,int j,int k) {
+      int im=i - insideCellDir[0];
+      int jm=j - insideCellDir[1];
+      int km=k - insideCellDir[2];
+
+      int ip=i + insideCellDir[0];
+      int jp=j + insideCellDir[1];
+      int kp=k + insideCellDir[2];
+
+      wVel(ip,jp,kp) = value.z();
+      wVel(i,j,k) = value.z();
+
+      uVel(i,j,k) = 2.0 * value.x() - uVel(im,jm,km);
+      vVel(i,j,k) = 2.0 * value.y() - vVel(im,jm,km);
+
+    });
+    break;
+  default:
+
+    break;
+
+  }
+}
+template <typename ExecutionSpace, typename MemorySpace> void
+setVelFromExtraValue( const Patch* patch, const Patch::FaceType& face,
+                                                   SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+                                                   constCCVariable<double>& density,
+                                                   Iterator bound_ptr, Vector value, ExecutionObject<ExecutionSpace,MemorySpace>& exObj  )
+{
+
+  //get the face direction
+  IntVector insideCellDir = patch->faceDirection(face);
+
+  switch ( face ) {
+
+  case Patch::xminus:
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      uVel[cp] = uVel[c];
+
+    }
+
+    break;
+  case Patch::xplus:
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      uVel[cp] = uVel[c];
+
+    }
+    break;
+  case Patch::yminus:
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      vVel[cp] = vVel[c];
+
+    }
+    break;
+  case Patch::yplus:
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      vVel[cp] = vVel[c];
+
+    }
+    break;
+  case Patch::zminus:
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      wVel[cp] = wVel[c];
+
+    }
+    break;
+  case Patch::zplus:
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      wVel[cp] = wVel[c];
+
+    }
+    break;
+  default:
+
+    break;
+
+  }
+}
+
+template <typename ExecutionSpace, typename MemorySpace> void
+setTurbInlet( const Patch* patch, const Patch::FaceType& face,
+                                      SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+                                      constCCVariable<double>& density,
+                                      Iterator bound_ptr, DigitalFilterInlet * TurbInlet,
+                                      const int timeStep,
+                                      const double simTime, ExecutionObject<ExecutionSpace, MemorySpace>& exObj )
+{
+  IntVector insideCellDir = patch->faceDirection(face);
+
+  int j, k;
+  // int timeStep = d_lab->d_materialManager->getCurrentTopLevelTimeStep();
+  // double simTime = d_lab->d_materialManager->getElapsedSimTime();
+  int t = TurbInlet->getTimeIndex( timeStep, simTime);
+
+  IntVector shiftVec;
+  shiftVec = TurbInlet->getOffsetVector( );
+
+  switch ( face ) {
+  case Patch::xminus:
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      std::vector<double> velVal (3);
+      j = c.y() - shiftVec.y();
+      k = c.z() - shiftVec.z();
+
+      velVal = TurbInlet->getVelocityVector(t, j, k);
+
+      uVel[c]  = velVal[0];
+      uVel[cp] = velVal[0];
+      vVel[c]  = velVal[1];
+      wVel[c]  = velVal[2];
+    }
+    break;
+  case Patch::xplus:
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr + insideCellDir;
+
+      std::vector<double> velVal (3);
+      j = c.y() - shiftVec.y();
+      k = c.z() - shiftVec.z();
+
+      velVal = TurbInlet->getVelocityVector(t, j, k);
+
+      uVel[cp] = velVal[0];
+      uVel[c]  = velVal[0];
+      vVel[c]  = velVal[1];
+      wVel[c]  = velVal[2];
+    }
+    break;
+  case Patch::yminus:
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      std::vector<double> velVal (3);
+      j = c.x() - shiftVec.x();
+      k = c.z() - shiftVec.z();
+
+      velVal = TurbInlet->getVelocityVector(t, j, k);
+
+      uVel[c]  = velVal[0];
+      vVel[c]  = velVal[1];
+      vVel[cp] = velVal[1];
+      wVel[c]  = velVal[2];
+    }
+
+    break;
+  case Patch::yplus:
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr + insideCellDir;
+
+      std::vector<double> velVal (3);
+      j = c.x() - shiftVec.x();
+      k = c.z() - shiftVec.z();
+
+      velVal = TurbInlet->getVelocityVector(t, j, k);
+
+      uVel[c]  = velVal[0];
+      vVel[c]  = velVal[1];
+      vVel[cp] = velVal[1];
+      wVel[c]  = velVal[2];
+    }
+    break;
+  case Patch::zminus:
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      std::vector<double> velVal (3);
+      j = c.x() - shiftVec.x();
+      k = c.y() - shiftVec.y();
+
+      velVal = TurbInlet->getVelocityVector(t, j, k);
+
+      uVel[c]  = velVal[0];
+      vVel[c]  = velVal[1];
+      wVel[c]  = velVal[2];
+      wVel[cp] = velVal[2];
+    }
+    break;
+  case Patch::zplus:
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr + insideCellDir;
+
+      std::vector<double> velVal (3);
+      j = c.x() - shiftVec.x();
+      k = c.y() - shiftVec.y();
+
+      velVal = TurbInlet->getVelocityVector(t, j, k);
+
+      uVel[c]  = velVal[0];
+      vVel[c]  = velVal[1];
+      wVel[c]  = velVal[2];
+      wVel[cp] = velVal[2];
+    }
+    break;
+  default:
+    break;
+
+  }
+
+//  cout << "Inlet Timestep is " << t << endl;
+}
+
+template<class d0T, class d1T, class d2T, typename ExecutionSpace, typename MemorySpace> void
+setSwirl( const Patch* patch, const Patch::FaceType& face,
+                                  d0T& uVel, d1T& vVel, d2T& wVel,
+                                  constCCVariable<double>& density,
+                                  Iterator bound_ptr, Vector value,
+                                  double swrl_no, Vector swrl_cent, ExecutionObject<ExecutionSpace, MemorySpace> &exObj )
+{
+
+  //get the face direction
+  IntVector insideCellDir = patch->faceDirection(face);
+  Vector Dx = patch->dCell();
+  Vector mDx; //mapped dx
+  int dir = 0;
+
+  int norm = getNormal(face);
+  double pm = -1.0*insideCellDir[norm];
+
+  //remap the dx's and vector values
+  for (int i = 0; i < 3; i++ ) {
+    if ( insideCellDir[i] != 0 ) {
+      dir = i;
+    }
+  }
+  Vector bc_values;
+  for (int i = 0; i < 3; i++ ) {
+    int index = index_map[dir][i];
+    bc_values[i] = value[index];
+    mDx[i] = Dx[index];
+  }
+
+  for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+    IntVector c  = *bound_ptr;
+    IntVector cp = *bound_ptr - insideCellDir;
+
+    uVel[c]  = pm * bc_values.x();
+    uVel[cp] = pm * bc_values.x();
+
+    double ave_u = bc_values.x();
+
+    Point p = patch->cellPosition(c);
+    std::vector<double> my_p;
+    my_p.push_back(p.x());
+    my_p.push_back(p.y());
+    my_p.push_back(p.z());
+
+    double y = my_p[index_map[dir][1]] - swrl_cent[index_map[dir][1]];
+    double z = my_p[index_map[dir][2]] + mDx.z()/2.0 - swrl_cent[index_map[dir][2]];
+
+    double denom = pow(y,2.0) + pow(z,2.0);
+    denom = pow(denom,0.5);
+
+    double bc_v = -1.0 * z * swrl_no * ave_u /denom;
+    vVel[c] = 2.0*bc_v - vVel[cp];
+
+    y = my_p[index_map[dir][1]] + mDx.y()/2.0 - swrl_cent[index_map[dir][1]];
+    z = my_p[index_map[dir][2]] - swrl_cent[index_map[dir][2]];
+
+    denom = pow(y,2) + pow(z,2);
+    denom = pow(denom,0.5);
+
+    double bc_w = y * swrl_no * ave_u / denom;
+    wVel[c] = 2.0*bc_w - wVel[cp];
+  }
+}
+
+template <typename ExecutionSpace, typename MemorySpace> void
+setVelFromInput( const Patch* patch, const Patch::FaceType& face, std::string face_name,
                            SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
-                           constCCVariable<double>& density,
-                           Iterator bound_ptr, Vector value );
+                           Iterator bound_iter, std::string file_name, ExecutionObject<ExecutionSpace,MemorySpace>& exObj );
 
-void setVel( const Patch* patch, const Patch::FaceType& face,
-             SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
-             constCCVariable<double>& density,
-             Iterator bound_iter, Vector value );
-
-
-void setTurbInlet( const Patch* patch, const Patch::FaceType& face,
-                   SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
-                   constCCVariable<double>& density,
-                   Iterator bound_iter, DigitalFilterInlet * TurbIn,
-                   const int timeStep,
-                   const double simTime  );
-
-template<class d0T, class d1T, class d2T>
-void setSwirl( const Patch* patch, const Patch::FaceType& face,
-               d0T& uVel, d1T& vVel, d2T& wVel,
-               constCCVariable<double>& density,
-               Iterator bound_ptr, Vector value,
-               double swirl_no, Vector swirl_cent );
-
-void setVelFromInput( const Patch* patch, const Patch::FaceType& face, std::string face_name,
-                           SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
-                           Iterator bound_iter, std::string file_name );
 
 void velocityOutletPressureBC( const Patch* patch,
                                     int matl_index,
@@ -289,20 +683,20 @@ void delPForOutletPressure( const Patch* patch,
                                  Patch::FaceType pface,
                                  velType& vel,
                                  constCCVariable<double>& P,
-                                 constCCVariable<double>& density );
+                                 constCCVariable<double>& density);
 
 template <class stencilType>
 void zeroStencilDirection( const Patch* patch,
                            const int matl_index,
                            const int sign,
                            stencilType& A,
-                           std::vector<BC_TYPE>& types );
+                           std::vector<BC_TYPE>& types);
 
 template <class varType> void
 zeroGradientBC( const Patch* patch,
                 const int matl_index,
                 varType& phi,
-                std::vector<BC_TYPE>& types );
+                std::vector<BC_TYPE>& types);
 
 void sched_setupNewIntrusions( SchedulerP&,
                                const LevelP& level,
@@ -556,14 +950,119 @@ void calculateVelocityPred_mm(const Patch* patch,
                               CellInformation* cellinfo,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars);
+//****************************************************************************
+// Set the inlet rho hat velocity BC
+//****************************************************************************
+template <typename ExecutionSpace, typename MemorySpace> void
+velRhoHatInletBC(const Patch* patch,
+                                    ArchesVariables* vars,
+                                    ArchesConstVariables* constvars,
+                                    const int matl_index,
+                                    const int timeStep,
+                                    const double simTime,
+                                    double time_shift,
+                                    ExecutionObject<ExecutionSpace,MemorySpace>& exObj)
+{
+  //double simTime = d_lab->d_materialManager->getElapsedSimTime();
+  //double current_time = simTime + time_shift;
+  // Get the low and high index for the patch and the variables
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
+  // stores cell type info for the patch with the ghost cell type
 
-void velRhoHatInletBC(const Patch* patch,
-                      ArchesVariables* vars,
-                      ArchesConstVariables* constvars,
-                      const int matl_index,
-                      const int timeStep,
-                      const double simTime,
-                      double time_shift);
+  std::vector<Patch::FaceType>::const_iterator bf_iter;
+  std::vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+
+  const Level* level = patch->getLevel();
+  const int ilvl = level->getID();
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+        bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
+
+    for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ) {
+
+      //get the face
+      Patch::FaceType face = *bf_iter;
+      IntVector insideCellDir = patch->faceDirection(face);
+
+      //get the number of children
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+      for (int child = 0; child < numChildren; child++) {
+
+        double bc_value = 0;
+        Vector bc_v_value(0,0,0);
+        std::string bc_s_value = "NA";
+        std::string bc_kind = "NotSet";
+        Iterator bound_ptr;
+        bool foundIterator = false;
+
+        if ( bc_iter->second.type == VELOCITY_INLET ||
+             bc_iter->second.type == TURBULENT_INLET ||
+             bc_iter->second.type == STABL ) {
+          foundIterator =
+                  getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind);
+        } else if ( bc_iter->second.type == VELOCITY_FILE ) {
+          foundIterator =
+                  getIteratorBCValue<std::string>( patch, face, child, bc_iter->second.name, matl_index, bc_s_value, bound_ptr);
+        } else {
+          foundIterator =
+                  getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind);
+        }
+
+        if ( foundIterator ) {
+          bound_ptr.reset();
+           
+          if ( bc_iter->second.type == VELOCITY_INLET
+            || bc_iter->second.type == MASSFLOW_INLET ) {
+
+            setVel( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity,exObj );
+
+          } else if ( bc_iter->second.type == STABL ) {
+
+            setStABL( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, &bc_iter->second, bound_ptr ,exObj);
+
+          } else if (bc_iter->second.type == TURBULENT_INLET) {
+
+            setTurbInlet( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.TurbIn,
+                          timeStep, simTime , exObj );
+
+          } else if ( bc_iter->second.type == SWIRL ) {
+
+            if ( face == Patch::xminus || face == Patch::xplus ) {
+
+              setSwirl( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat,
+                        constvars->new_density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent, exObj );
+
+            } else if ( face == Patch::yminus || face == Patch::yplus ) {
+
+              setSwirl( patch, face, vars->vVelRhoHat, vars->wVelRhoHat, vars->uVelRhoHat,
+                        constvars->new_density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent , exObj );
+
+            } else if ( face == Patch::zminus || face == Patch::zplus ) {
+
+              setSwirl( patch, face, vars->wVelRhoHat, vars->uVelRhoHat, vars->vVelRhoHat,
+                        constvars->new_density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent, exObj  );
+
+            }
+
+          } else if ( bc_iter->second.type == VELOCITY_FILE ) {
+
+            setVelFromExtraValue( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity,exObj );
+
+          } else if ( bc_iter->second.type == WALL ) {
+
+            setVel( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity,exObj );
+
+          }
+
+        }
+      }
+    }
+  }
+}
+
 
 void velRhoHatOutletPressureBC( const Patch* patch,
                                 SFCXVariable<double>& uvel,
@@ -644,11 +1143,157 @@ struct BCInfo {
 
 };
 
-void setStABL( const Patch* patch, const Patch::FaceType& face,
-               SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
-               BCInfo* bcinfo,
-               Iterator bound_ptr  );
+template <typename ExecutionSpace, typename MemorySpace> void
+setStABL( const Patch* patch, const Patch::FaceType& face,
+                                  SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+                                  BCInfo* bcinfo,
+                                  Iterator bound_ptr , ExecutionObject<ExecutionSpace, MemorySpace> & exObj )
+{
 
+  IntVector insideCellDir = patch->faceDirection(face);
+  Vector Dx = patch->dCell();
+
+  switch ( face ) {
+  case Patch::xminus:
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      Point p = patch->getCellPosition(c);
+      double vel = 0;
+      if ( p(bcinfo->dir_gravity) > 0.0 ) {
+        vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo );
+      } else {
+        vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[0] ) / bcinfo->zo );
+      }
+
+      uVel[c]  = vel;
+      uVel[cp] = vel;
+
+      vVel[c] = bcinfo->velocity[1];
+      wVel[c] = bcinfo->velocity[2];
+    }
+
+    break;
+  case Patch::xplus:
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      Point p = patch->getCellPosition(c);
+      double vel = 0;
+      if ( p(bcinfo->dir_gravity) > 0.0 ) {
+        vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo );
+      } else {
+        vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[0] ) / bcinfo->zo );
+      }
+
+      uVel[c]  = -vel;
+      uVel[cp] = -vel;
+
+      vVel[c] = bcinfo->velocity[1];
+      wVel[c] = bcinfo->velocity[2];
+
+    }
+    break;
+  case Patch::yminus:
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      Point p = patch->getCellPosition(c);
+      double vel = 0;
+      if ( p(bcinfo->dir_gravity) > 0.0 ) {
+        vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo );
+      } else {
+        vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[1] ) / bcinfo->zo );
+      }
+
+      vVel[c]  = vel;
+      vVel[cp] = vel;
+
+      uVel[c] = bcinfo->velocity[0];
+      wVel[c] = bcinfo->velocity[2];
+
+
+    }
+    break;
+  case Patch::yplus:
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      Point p = patch->getCellPosition(c);
+      double vel = 0;
+      if ( p(bcinfo->dir_gravity) > 0.0 ) {
+        vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo );
+      } else {
+        vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[1] ) / bcinfo->zo );
+      }
+
+      vVel[c]  = -vel;
+      vVel[cp] = -vel;
+
+      uVel[c] = bcinfo->velocity[0];
+      wVel[c] = bcinfo->velocity[2];
+
+    }
+    break;
+  case Patch::zminus:
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      Point p = patch->getCellPosition(c);
+      double vel = 0;
+      if ( p(bcinfo->dir_gravity) > 0.0 ) {
+        vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo );
+      } else {
+        vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[2] ) / bcinfo->zo );
+      }
+
+      wVel[c]  = vel;
+      wVel[cp] = vel;
+
+      uVel[c] = bcinfo->velocity[0];
+      vVel[c] = bcinfo->velocity[1];
+
+
+    }
+    break;
+  case Patch::zplus:
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+      IntVector c  = *bound_ptr;
+      IntVector cp = *bound_ptr - insideCellDir;
+
+      Point p = patch->getCellPosition(c);
+      double vel = 0;
+      if ( p(bcinfo->dir_gravity) > 0.0 ) {
+        vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo );
+      } else {
+        vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[2] ) / bcinfo->zo );
+      }
+
+      wVel[c]  = -vel;
+      wVel[cp] = -vel;
+
+      uVel[c] = bcinfo->velocity[0];
+      vVel[c] = bcinfo->velocity[1];
+
+    }
+    break;
+  default:
+
+    break;
+
+  }
+}
 
 typedef std::map<BC_TYPE, std::string> BCNameMap;
 typedef std::map<int, BCInfo>      BCInfoMap;
@@ -737,7 +1382,7 @@ template <class velType, class oldVelType> void
 outletPressureMinus( IntVector insideCellDir,
                      Iterator bound_ptr,
                      double const sign, velType& vel,
-                     oldVelType& old_vel );
+                     oldVelType& old_vel);
 
 /** @brief A method for applying the outlet/pressure BC on plus faces. **/
 template <class velType, class oldVelType> void

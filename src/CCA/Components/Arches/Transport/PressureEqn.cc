@@ -306,7 +306,7 @@ void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_in
       sign = 1.0;
     }
 
-    parallel_for_unstructured(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+    parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
       const int im=i- iDir[0];
       const int jm=j- iDir[1];

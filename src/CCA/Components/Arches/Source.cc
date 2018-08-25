@@ -306,7 +306,7 @@ Source::modifyVelMassSource(const Patch* patch, constCCVariable<double> volFract
 // Add the momentum source from continuous solid-gas momentum exchange
 //****************************************************************************
 void
-Source::computemmMomentumSource(const ProcessorGroup*,
+Source::computemmMomentumSource(
                                 const Patch* patch,
                                 CellInformation*,
                                 ArchesVariables* vars,

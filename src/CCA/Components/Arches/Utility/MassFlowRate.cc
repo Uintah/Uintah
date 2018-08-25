@@ -142,7 +142,7 @@ void MassFlowRate::register_initialize( std::vector<ArchesFieldContainer::Variab
 template<typename ExecutionSpace, typename MemorySpace>
 void MassFlowRate::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
-  eval_massFlowRate( patch, tsk_info );
+  eval_massFlowRate( patch, tsk_info, executionObject );
 }
 
 // Timestep Eval ---------------------------------------------------------------
@@ -155,7 +155,7 @@ void MassFlowRate::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 template<typename ExecutionSpace, typename MemorySpace>
 void MassFlowRate::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
-  eval_massFlowRate( patch, tsk_info );
+  eval_massFlowRate( patch, tsk_info , executionObject);
 }
 
 // Definitions -----------------------------------------------------------------
@@ -189,7 +189,8 @@ void MassFlowRate::register_massFlowRate( std::vector<ArchesFieldContainer::Vari
 }
 
 // -----------------------------------------------------------------------------
-void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace> executionObject ){
 
   constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("density");
 
@@ -240,7 +241,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
           }
 
           //Now loop through the cells:
-            parallel_for_unstructured(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
             const int ic = i - normal[0]; // interior cell index
             const int jc = j - normal[1];
@@ -316,7 +317,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
         }
 
         //Now loop through the cells:
-        parallel_for_unstructured(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+        parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
           const int ic = i - normal[0]; // interior cell index
           const int jc = j - normal[1];

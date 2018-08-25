@@ -126,11 +126,16 @@ public:
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule the build of the linearized momentum matrix
-  void sched_buildLinearMatrix(SchedulerP& sched,
-                               const PatchSet* patches,
-                               const MaterialSet* matls,
-                               const TimeIntegratorLabel* timelabels,
-                               bool extraProjection );
+
+template <typename ExecutionSpace, typename MemorySpace> void
+buildLinearMatrix(const PatchSubset* patches,
+                  const MaterialSubset* /*matls*/,
+                  OnDemandDataWarehouse* old_dw,
+                  OnDemandDataWarehouse* new_dw,
+                  UintahParams& uintahParams,
+                  ExecutionObject<ExecutionSpace,MemorySpace>& exObj,
+                  const TimeIntegratorLabel* timelabels,
+                  bool extraProjection);
 
 
   void solveVelHat(const LevelP& level,
@@ -145,6 +150,13 @@ public:
                                      const MaterialSet* matls,
                                      const TimeIntegratorLabel* timelabels,
                                      const int curr_level );
+
+   void sched_buildLinearMatrix(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls,
+                                        const TimeIntegratorLabel* timelabels,
+                                        bool extraProjection);
+
 
   void sched_averageRKHatVelocities(SchedulerP& sched,
                                     const PatchSet* patches,
@@ -194,13 +206,15 @@ private:
                          bool extraProjection );
 
 
-  void buildLinearMatrixVelHat(const ProcessorGroup* pc,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse*,
-                               DataWarehouse*,
-                               const TimeIntegratorLabel* timelabels,
-                               const int curr_level );
+template <typename ExecutionSpace, typename MemorySpace> void
+buildLinearMatrixVelHat(const PatchSubset* patches,
+                                        const MaterialSubset* /*matls*/,
+                                        OnDemandDataWarehouse* old_dw,
+                                        OnDemandDataWarehouse* new_dw,
+                                        UintahParams& uintahParams,
+                                        ExecutionObject<ExecutionSpace,MemorySpace>& exObj,
+                                        const TimeIntegratorLabel* timelabels,
+                                        const int curr_level );
 
   void averageRKHatVelocities(const ProcessorGroup*,
                               const PatchSubset* patches,

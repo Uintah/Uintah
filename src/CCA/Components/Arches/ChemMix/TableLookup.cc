@@ -32,6 +32,7 @@
 
 // Uintah includes
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/Portability.h>
 
 using namespace std;
 namespace Uintah{
@@ -136,25 +137,35 @@ TableLookup::sched_setDependBCs( const LevelP& level,
                                  SchedulerP& sched,
                                  MixingRxnModel* model ){
 
-  Task* tsk = scinew Task("setDependBCs", this, &TableLookup::setDependBCs, model );
 
-  std::map<std::string, const VarLabel*> depend_var_map = model->getDVVars();
+  auto TaskDependencies = [&](Task* tsk) {
+    std::map<std::string, const VarLabel*> depend_var_map = model->getDVVars();
 
-  for ( auto i = depend_var_map.begin(); i != depend_var_map.end(); i++ ){
-    tsk->modifies( i->second );
-  }
+    for ( auto i = depend_var_map.begin(); i != depend_var_map.end(); i++ ){
+      tsk->modifies( i->second );
+    }
+  };
 
-  sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
+  create_portable_tasks(TaskDependencies, this,
+                        "setDependBCs",
+                        &TableLookup::setDependBCs<UINTAH_CPU_TAG>,
+                        &TableLookup::setDependBCs<KOKKOS_OPENMP_TAG>,
+                        //&TableLookup::setDependBCs<KOKKOS_CUDA_TAG>,
+                        sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT, model);
+  //Task* tsk = scinew Task("setDependBCs", this, &TableLookup::setDependBCs, model );
+  //sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
 
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-TableLookup::setDependBCs( const ProcessorGroup* pc,
+template <typename ExecutionSpace, typename MemSpace> void 
+TableLookup::setDependBCs( 
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw,
+                           OnDemandDataWarehouse* old_dw,
+                           OnDemandDataWarehouse* new_dw,
+                           UintahParams& uintahParams,
+                           ExecutionObject<ExecutionSpace,MemSpace>& exObj ,
                            MixingRxnModel* model )
 {
   for (int p=0; p < patches->size(); p++){
@@ -190,7 +201,7 @@ TableLookup::setDependBCs( const ProcessorGroup* pc,
               m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
             if ( (*spec).bcType == DIRICHLET ){
-              parallel_for_unstructured(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
                 var(i,j,k) = (*spec).value;
               });
             } else {

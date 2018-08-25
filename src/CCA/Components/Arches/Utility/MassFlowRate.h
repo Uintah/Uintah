@@ -105,7 +105,8 @@ namespace Uintah{
 
     void register_massFlowRate( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
 
-    void eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template<typename ExecutionSpace, typename MemorySpace>
+    void eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info ,ExecutionObject<ExecutionSpace,MemorySpace>);
 
   };
 

@@ -79,7 +79,7 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
 
     if ( my_type == WALL || my_type == INLET ){
 
-      parallel_for_unstructured(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+      parallel_for_unstructured(executionObject, cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
         // enforce dp/dn = 0
         p(i,j,k) = p(i-iDir[0],j-iDir[1],k-iDir[2]);
 
@@ -91,7 +91,7 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
 
       const double sign = -(iDir[0]+iDir[1]+iDir[2]);
 
-      parallel_for_unstructured(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+      parallel_for_unstructured(executionObject, cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
         p(i,j,k) = sign*p(i-iDir[0],j-iDir[1],k-iDir[2]);
       });
     }

@@ -110,7 +110,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
 
     if ( my_type == OUTLET || my_type == PRESSURE ){
       // This applies the mostly in (pressure)/mostly out (outlet) boundary condition
-      parallel_for_unstructured(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+      parallel_for_unstructured(executionObject, cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
         int i_f = i + move_to_face[0]; // cell on the face
         int j_f = j + move_to_face[1];
         int k_f = k + move_to_face[2];
@@ -122,12 +122,6 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
         int ipp = i_f + iDir[0];// extra cell face in the last index (mostly outwardly position) 
         int jpp = j_f + iDir[1];
         int kpp = k_f + iDir[2];
-
-
-
-        IntVector cface = *cell_iter + move_to_face; // cell on the face
-        IntVector cint = *cell_iter - iDir; // first interior cell
-        IntVector cef = cface + iDir; // extra cell face in the last index (most outwardly position)
 
         if ( sign * (*var)(i_f,j_f,k_f) > possmall ){
           // du/dx = 0
