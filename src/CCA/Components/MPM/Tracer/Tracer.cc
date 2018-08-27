@@ -54,7 +54,6 @@ Tracer::~Tracer()
 ParticleSubset* 
 Tracer::createTracers(TracerMaterial* matl,
                       particleIndex numTracers,
-                      CCVariable<short int>& cellNAPID,
                       const Patch* patch,
                       DataWarehouse* new_dw,
                       const string filename)
@@ -211,11 +210,7 @@ void Tracer::initialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-//  printTask(patches, patch,cout_doing,"Doing initialize for Tracers\t");
-
-    CCVariable<short int> cellNATracerID;
-    new_dw->allocateAndPut(cellNATracerID, d_lb->pCellNATracerIDLabel, 0,patch);
-    cellNATracerID.initialize(0);
+    //printTask(patches, patch,cout_doing,"Doing initialize for Tracers\t");
 
     for(int m=0;m<tracer_matls->size();m++){
       TracerMaterial* tracer_matl = d_sharedState->getTracerMaterial( m );
@@ -223,7 +218,7 @@ void Tracer::initialize(const ProcessorGroup*,
       particleIndex numTracers = countTracers(patch,filename);
       totalTracers+=numTracers;
 
-      createTracers(tracer_matl, numTracers, cellNATracerID,
+      createTracers(tracer_matl, numTracers,
                     patch, new_dw, filename);
     }
     cout << "Total Tracers " << totalTracers << endl;

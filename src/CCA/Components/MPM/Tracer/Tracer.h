@@ -58,7 +58,6 @@ namespace Uintah {
 
     virtual ParticleSubset* createTracers(TracerMaterial* matl,
                                             particleIndex numParticles,
-                                            CCVariable<short int>& cellNAPID,
                                             const Patch*,DataWarehouse* new_dw,
                                             const std::string filename);
 

@@ -4216,89 +4216,85 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
       new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN);
     }
 
-    int numTracerMatls=m_sharedState->getNumTracerMatls();
-    for(int m = 0; m < numTracerMatls; m++){
-      TracerMaterial* t_matl = m_sharedState->getTracerMaterial( m );
-      int dwi = t_matl->getDWIndex();
+    int tm = 0;
+    TracerMaterial* t_matl = m_sharedState->getTracerMaterial( tm );
+    int dwi = t_matl->getDWIndex();
 
-//      int adv_matl = t_matl->getAssociatedMaterial();
+    // Not populating the delset, but we need this to satisfy Relocate
+    ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
+    new_dw->deleteParticles(delset);
 
-      // Not populating the delset, but we need this to satisfy Relocate
-      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
-      new_dw->deleteParticles(delset);
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    // Get the arrays of particle values to be changed
+    constParticleVariable<Point> tx;
+    ParticleVariable<Point> tx_new;
+    constParticleVariable<long64> tracer_ids;
+    ParticleVariable<long64> tracer_ids_new;
 
-      // Get the arrays of particle values to be changed
-      constParticleVariable<Point> tx;
-      ParticleVariable<Point> tx_new;
-      constParticleVariable<long64> tracer_ids;
-      ParticleVariable<long64> tracer_ids_new;
+    old_dw->get(tx,          lb->pXLabel,                         pset);
+    old_dw->get(tracer_ids,  lb->tracerIDLabel,                   pset);
 
-      old_dw->get(tx,          lb->pXLabel,                         pset);
-      old_dw->get(tracer_ids,  lb->tracerIDLabel,                   pset);
+    new_dw->allocateAndPut(tx_new,        lb->pXLabel_preReloc,       pset);
+    new_dw->allocateAndPut(tracer_ids_new,lb->tracerIDLabel_preReloc, pset);
 
-      new_dw->allocateAndPut(tx_new,        lb->pXLabel_preReloc,       pset);
-      new_dw->allocateAndPut(tracer_ids_new,lb->tracerIDLabel_preReloc, pset);
+    tracer_ids_new.copyData(tracer_ids);
 
-      tracer_ids_new.copyData(tracer_ids);
+    // Loop over particles
+    for(ParticleSubset::iterator iter = pset->begin();
+        iter != pset->end(); iter++){
+      particleIndex idx = *iter;
 
-      // Loop over particles
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
+      Matrix3 size(1.0,0.,0.,0.,1.0,0.,0.,0.,1.0);
+      Matrix3 defgrad;
+      defgrad.Identity();
 
-        Matrix3 size(1.0,0.,0.,0.,1.0,0.,0.,0.,1.0);
-        Matrix3 defgrad;
-        defgrad.Identity();
+      // Get the node indices that surround the cell
+      int NN = interpolator->findCellAndWeights(tx[idx],ni,S,size,defgrad);
+      Vector vel(0.0,0.0,0.0);
 
-        // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(tx[idx],ni,S,size,defgrad);
-        Vector vel(0.0,0.0,0.0);
-
-        double sumSk=0.0;
-        // Accumulate the contribution from each surrounding vertex
-        for(int m = 0; m < numMPMMatls; m++){
-         if(m!=flags->d_containerMaterial){
-          for (int k = 0; k < NN; k++) {
-            IntVector node = ni[k];
-            vel   += gvelocity[m][node]*gmass[m][node]*S[k];
-            sumSk += gmass[m][node]*S[k];
-          }
-         }
+      double sumSk=0.0;
+      // Accumulate the contribution from each surrounding vertex
+      for(int m = 0; m < numMPMMatls; m++){
+       if(m!=flags->d_containerMaterial){
+        for (int k = 0; k < NN; k++) {
+          IntVector node = ni[k];
+          vel   += gvelocity[m][node]*gmass[m][node]*S[k];
+          sumSk += gmass[m][node]*S[k];
         }
-        vel/=sumSk;
+       }
+      }
+      vel/=sumSk;
 
-        tx_new[idx] = tx[idx] + vel*delT;
+      tx_new[idx] = tx[idx] + vel*delT;
 
-        // Check to see if a tracer has left the domain
-        if(!domain.inside(tx_new[idx])){
-          static ProgressiveWarning warn("A tracer has moved outside the domain. Pushing it back in.  This is a ProgressiveWarning.",10);
-          warn.invoke();
-          double epsilon = 1.e-15;
-          Point txn = tx_new[idx];
-          if(tx_new[idx].x()<dom_min.x()){
-            tx_new[idx] = Point(dom_min.x()+epsilon, txn.y(), txn.z());
-            txn = tx_new[idx];
-          }
-          if(tx_new[idx].x()>dom_max.x()){
-            tx_new[idx] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
-            txn = tx_new[idx];
-          }
-          if(tx_new[idx].y()<dom_min.y()){
-            tx_new[idx] = Point(txn.x(),dom_min.y()+epsilon, txn.z());
-            txn = tx_new[idx];
-          }
-          if(tx_new[idx].y()>dom_max.y()){
-            tx_new[idx] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
-            txn = tx_new[idx];
-          }
-          if(tx_new[idx].z()<dom_min.z()){
-            tx_new[idx] = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
-          }
-          if(tx_new[idx].z()>dom_max.z()){
-            tx_new[idx] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
-          }
+      // Check to see if a tracer has left the domain
+      if(!domain.inside(tx_new[idx])){
+        static ProgressiveWarning warn("A tracer has moved outside the domain. Pushing it back in.  This is a ProgressiveWarning.",10);
+        warn.invoke();
+        double epsilon = 1.e-15;
+        Point txn = tx_new[idx];
+        if(tx_new[idx].x()<dom_min.x()){
+          tx_new[idx] = Point(dom_min.x()+epsilon, txn.y(), txn.z());
+          txn = tx_new[idx];
+        }
+        if(tx_new[idx].x()>dom_max.x()){
+          tx_new[idx] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
+          txn = tx_new[idx];
+        }
+        if(tx_new[idx].y()<dom_min.y()){
+          tx_new[idx] = Point(txn.x(),dom_min.y()+epsilon, txn.z());
+          txn = tx_new[idx];
+        }
+        if(tx_new[idx].y()>dom_max.y()){
+          tx_new[idx] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
+          txn = tx_new[idx];
+        }
+        if(tx_new[idx].z()<dom_min.z()){
+          tx_new[idx] = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
+        }
+        if(tx_new[idx].z()>dom_max.z()){
+          tx_new[idx] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
         }
       }
     }
@@ -5027,53 +5023,20 @@ void SerialMPM::addTracers(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing addTracers");
 
-#if 0
-   //Carry forward CellNAPID
-   constCCVariable<int> NAPID;
-   CCVariable<int> NAPID_new;
-   Ghost::GhostType  gnone = Ghost::None;
-   old_dw->get(NAPID,               lb->pCellNAPIDLabel,    0,patch,gnone,0);
-   new_dw->allocateAndPut(NAPID_new,lb->pCellNAPIDLabel,    0,patch);
-   NAPID_new.copyData(NAPID);
-#endif
+    if(flags->d_doAuthigenesis && AddedParticlesOld<1.0){
+      cout << "Doing addTracers" << endl;
 
-   if(flags->d_doAuthigenesis && AddedParticlesOld<1.0){
-    cout << "Doing addTracers" << endl;
+      int tm = 0;  // Only one tracer material now
+      int numNewTracers=0;
 
-    int numTracerMatls = m_sharedState->getNumTracerMatls();
-
-    vector<Point> P;
-    vector<long64> lineNum;
-    for(int m = 0; m < numTracerMatls; m++){
-      int numNewTracersNeeded=0;
-      P.clear();
-
-      TracerMaterial* tr_matl = m_sharedState->getTracerMaterial( m );
+      TracerMaterial* tr_matl = m_sharedState->getTracerMaterial( tm );
       int dwi = tr_matl->getDWIndex();
+      Tracer* tr = tr_matl->getTracer();
 
-      stringstream mnum;
-      mnum << dwi;
-      string mnums = mnum.str();
-      string filename=flags->d_authigenesisBaseFilename + "Tracers." + mnums;
-      std::ifstream is(filename.c_str());
-      cout << "filename  = " << filename  << endl;
+      string filename = tr_matl->getTracerFilename();
+      numNewTracers = tr->countTracers(patch,filename);
 
-      if(is) {
-       double x,y,z;
-       int line=0;
-       while(is >> x >> y >> z){
-        Point testPoint(x,y,z);
-        line++;
-        if(patch->containsPoint(testPoint)){
-          P.push_back(testPoint);
-          lineNum.push_back(line);
-          numNewTracersNeeded++;
-        }
-       }
-       is.close();
-      }
-
-      cout << "numNewTracersNeeded = " << numNewTracersNeeded << endl;
+//      cout << "numNewTracers = " << numNewTracers << endl;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -5082,43 +5045,46 @@ void SerialMPM::addTracers(const ProcessorGroup*,
       new_dw->getModifiable(px,       lb->pXLabel_preReloc,           pset);
       new_dw->getModifiable(pids,     lb->tracerIDLabel_preReloc,     pset);
 
-      const unsigned int oldNumTr = pset->addParticles(numNewTracersNeeded);
+      ParticleSubset* psetnew = 
+                new_dw->createParticleSubset(numNewTracers,dwi,patch);
 
       ParticleVariable<Point> pxtmp;
       ParticleVariable<long64> pidstmp;
-      new_dw->allocateTemporary(pidstmp,  pset);
-      new_dw->allocateTemporary(pxtmp,    pset);
+      new_dw->allocateTemporary(pidstmp,  psetnew);
+      new_dw->allocateTemporary(pxtmp,    psetnew);
 
-      // copy data from old variables
-      long64 pid_max=-1;
-      for( unsigned int pp=0; pp<oldNumTr; ++pp ){
-        pxtmp[pp]    = px[pp];
-        pidstmp[pp]  = pids[pp];
-        pid_max = max(pid_max,pidstmp[pp]);
+      std::ifstream is(filename.c_str());
+
+      double p1,p2,p3;
+      string line;
+      particleIndex start = 0;
+      while (getline(is, line)) {
+       istringstream ss(line);
+       string token;
+       long64 tid;
+       ss >> token;
+       tid = stoull(token);
+       ss >> token;
+       p1 = stof(token);
+       ss >> token;
+       p2 = stof(token);
+       ss >> token;
+       p3 = stof(token);
+//     cout << tid << " " << p1 << " " << p2 << " " << p3 << endl;
+       Point pos = Point(p1,p2,p3);
+       if(patch->containsPoint(pos)){
+         particleIndex pidx = start;
+         pxtmp[pidx]   = pos;
+         pidstmp[pidx] = tid;
+         start++;
+       }
       }
-      int pid_max_B = pid_max/1000000000;
 
-      for(int i = 0;i<numNewTracersNeeded;i++){
-#if 0
-          IntVector c_orig;
-          patch->findCell(P[i],c_orig);
-          long64 cellID = ((long64)c_orig.x() << 16) |
-                          ((long64)c_orig.y() << 32) |
-                          ((long64)c_orig.z() << 48);
-
-          int& myCellNAPID = NAPID_new[c_orig];
-          pidstmp[new_index]    = (cellID | (long64) myCellNAPID);
-          NAPID_new[c_orig]++;
-#endif
-        int new_index=oldNumTr+i;
-        pxtmp[new_index]      = P[i];
-        pidstmp[new_index]    = (pid_max_B+1)*1000000000 + lineNum[i];
-      }
+      is.close();
 
       // put back temporary data
       new_dw->put(pxtmp,    lb->pXLabel_preReloc,             true);
       new_dw->put(pidstmp,  lb->tracerIDLabel_preReloc,       true);
-    }  // for matls
    }    // if doAuth && AddedNewParticles<1.0....
   }   // for patches
 //   flags->d_doAuthigenesis = false;
