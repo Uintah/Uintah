@@ -32,6 +32,7 @@
 use XML::Simple;
 use Data::Dumper;
 use Time::HiRes qw/time/;
+use File::Basename;
 use Cwd;
 
 # removes white spaces from variable
@@ -48,7 +49,7 @@ my $data = $simple->XMLin("$tstFile");
 
 #__________________________________
 # copy gnuplot script
-my $gpFile = $data->{gnuplot}[0]->{script}[0];
+my $gpFile = cleanStr( $data->{gnuplot}[0]->{script}[0] );
 
 if( length $gpFile ){  
   chomp($gpFile);              
@@ -59,7 +60,7 @@ if( length $gpFile ){
 #__________________________________
 # set exitOnCrash       OPTIONAL
 if ( length $data->{exitOnCrash}->[0] ){
-  $exitOnCrash = $data->{exitOnCrash}->[0];
+  $exitOnCrash = cleanStr( $data->{exitOnCrash}->[0] );
 }else{
   $exitOnCrash = "true";
 }
@@ -70,7 +71,7 @@ print "  Exit order of accuracy scripts on crash or timeout ($exitOnCrash)\n";
 #__________________________________
 # set timeout value       OPTIONAL
 if ( length $data->{susTimeout_minutes}->[0] ){
-  $timeout = $data->{susTimeout_minutes}->[0];
+  $timeout = cleanStr( $data->{susTimeout_minutes}->[0] );
   $timeout = $timeout*60;                   # minutes-> seconds               
 }else{
   $timeout = 24*60*60;                       # default 24 hours
@@ -80,10 +81,9 @@ print "  Simulation timeout: $timeout seconds\n";
 
 #__________________________________
 # determing the ups basename
-$upsFile         =$data->{upsFile}->[0];
-chomp($upsFile);
-my $ups_basename = $upsFile;
-$ups_basename    =~ s/.ups//;                     # Removing the extension .ups so that we can use this to build our uda file names
+$upsFile         = cleanStr( $data->{upsFile}->[0] );
+$upsFile         = basename( $upsFile );
+my $ups_basename = basename( $upsFile, ".ups" );  # Removing the extension .ups so that we can use this to build our uda file names
 
 #__________________________________
 # Read in the test data from xml file
@@ -340,16 +340,17 @@ close(statsFile);
 sub runSusCmd {
   my( $timeout, $exitOnCrash, $statsFile, @args ) = @_;
 
-  print "\tLaunching: @args\n";
+  print "\tLaunching: (@args)\n";
   @cmd = (" timeout --preserve-status $timeout @args ");
 
+  my $rc = -9;
   if ( $exitOnCrash eq "TRUE" ) {
 
     $rc = system("@cmd");
 
-    if ( $rc != 0 || $rc != 36608 ){
+    if ( $rc != 0 && $rc != 36608 ){
       die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
-      return 1
+      return 1;
     }
 
   }else{
@@ -366,10 +367,50 @@ sub runSusCmd {
     print "\t\tERROR the simulation crashed. (rc = $rc)\n";
     print $statsFile "\t\tERROR the simulation crashed. (rc = $rc)\n";
   }
-  
-  
-  
+
   return $rc;  
 
 };
 
+#______________________________________________________________________
+#   subroutines
+#______________________________________________________________________
+#  
+#  Remove any white space or newlines in array elements or scalars
+#  (This belongs in a separate common module to avoid duplication -Todd)
+sub cleanStr {
+
+  my @inputs = @_;
+  
+  my $n   = scalar @inputs;           # number of array elements
+  my $len = length $inputs[0];        # number of characters in first element
+  
+  # if the first element is empty return ""
+  if( $len == 0 ){
+    return "";
+  }
+  
+  #__________________________________
+  # if there is one array element return a scalar
+  if( $n == 1 ){
+    $inputs[0] =~ s/\n//g;        # remove newlines
+    $inputs[0] =~ s/ //g;         # remove white spaces
+    return $inputs[0];
+  }
+
+  #__________________________________
+  #  Arrays
+  my @result = ();
+  my $i = 0;
+  
+  foreach $i (@inputs){
+    $i =~ s/\n//g;        # remove newlines
+    $i =~ s/ //g;         # remove white spaces
+    my $l = length $i;
+    
+    if ($l > 0){
+      push( @result, $i );
+    }
+  }
+  return @result;
+}

@@ -10,8 +10,6 @@
 #  for each uintah component listed and runs the order of accuracy tests
 #  listed in test_config_files/component/whatToRun.xml file.
 #
-#  Each OA test should have a corresponding comparison program that returns the L2nom
-#
 #
 #  Algorithm:
 #  - create the output directory
@@ -36,16 +34,17 @@
 #    xmlstarlet
 #
 #______________________________________________________________________
-
-use strict;
+use strict; 
+use warnings;
 use XML::Simple;
 use Data::Dumper;
 use File::Path;
+use File::Basename;
 use Cwd;
 
 #__________________________________
 # bulletproofing
-my @modules = qw(XML::Simple Data::Dumper File::Path );
+my @modules = qw(XML::Simple Data::Dumper File::Path File::Basename );
 
 for(@modules) {
   eval "use $_";
@@ -63,18 +62,18 @@ my $simple = XML::Simple->new(ForceArray=>1, suppressempty => "");
 
 # Find the path to orderAccuracy scripts and prune /framework_scripts off 
 # the end if snecessary
-my $me = `dirname $0 |xargs readlink -f --no-newline`;
-$me =~ s/\/framework_scripts//;
+
+my $OA_path = `dirname $0 |xargs readlink -f --no-newline`;
 
 # Define the paths
-my $base_path             = $me;    # path to orderAccuracy scripts
-my $config_files_path     = $base_path . "/test_config_files";  # configurations files
-my $scripts_path          = $base_path . "/framework_scripts";  # framework scripts
-my $postProcessCmd_path   = $base_path . "/postProcessTools";   # postProcessing 
+my $src_path              = dirname($OA_path);                # top level src path
+my $config_files_path     = $OA_path . "/test_config_files";  # configurations files
+my $scripts_path          = $OA_path . "/framework_scripts";  # framework scripts
+my $postProcessCmd_path   = $OA_path . "/postProcessTools";   # postProcessing 
 my $here_path             = cwd;
 
-if (! -e $base_path."/framework_scripts" ){
-  print "\n\nError: You must specify the path to the orderAccuracy directory ($base_path)\n";
+if (! -e $OA_path."/framework_scripts" ){
+  print "\n\nError: You must specify the path to the orderAccuracy directory ($OA_path)\n";
   print " Now exiting\n";
   exit
 }
@@ -97,9 +96,15 @@ if (! -e $config_files_path . "/components.xml" ){
 }
 
 my $xml = $simple->XMLin($config_files_path . "/components.xml");
-my @components   = @{$xml->{component}};
-my $sus_path     = $xml->{sus_path}[0];
-my $extraScripts_path = $xml->{scripts_path}[0];
+my @components        = cleanStr( @{$xml->{component}}   );
+my $sus_path          = cleanStr( $xml->{sus_path}[0]    );
+my $extraScripts_path = cleanStr( $xml->{scripts_path}[0]);
+my $inputs_path       = cleanStr( $xml->{inputs_path}[0] );
+
+# default inputs path (src/StandAlone/inputs)
+if( ! length $inputs_path ){
+  $inputs_path = $src_path . "/StandAlone/inputs/";
+}
 
 
 #__________________________________
@@ -141,14 +146,14 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
    my $whatToRun = $simple->XMLin($fw_path."/whatToRun.xml");
    
    # add the comparison utilities path to PATH
-   my $p   = $whatToRun->{postProcessCmd_path}[0];
-   my $orgPath = $ENV{"PATH"};
+   my $p        = cleanStr( $whatToRun->{postProcessCmd_path}[0] );
+   my $orgPath  = $ENV{"PATH"};
    $ENV{"PATH"} = "$p:$orgPath";
    
    # additional symbolic links to make
-   my $input = $whatToRun->{symbolicLinks}[0];
-   my @symLinks = split(/ /,$input);
-  
+   my $sl       = $whatToRun->{symbolicLinks}[0];
+   my @symLinks = split(/ /,$sl);
+   @symLinks    = cleanStr(@symLinks);
    
    #__________________________________
    # loop over all tests
@@ -159,19 +164,17 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
    my $otherFiles = "";
    
    for($i = 0; $i<=$#tests; $i++){
+   
      my $test     = $tests[$i];
-     my $testName = $test->{name}[0];
-     my $upsFile  = $test->{ups}[0];
-     my $tstFile  = $test->{tst}[0];
+     my $testName = cleanStr( $test->{name}[0] );
+     my $tstFile  = cleanStr( $test->{tst}[0] );
      
-     #remove newline from variable if they exist
-     chomp($upsFile);
-     chomp($tstFile);
-     
-     
+     my $tstData  = $simple->XMLin("$fw_path/$tstFile");
+     my $upsFile  = cleanStr( $tstData->{upsFile}[0] );
+     $upsFile     = $inputs_path.$component."/".$upsFile;
+
      if($test->{otherFilesToCopy}[0] ){ 
-        $otherFiles= $test->{otherFilesToCopy}[0];
-        chomp($otherFiles);
+        $otherFiles= cleanStr( $test->{otherFilesToCopy}[0] );
      }
     
      #find a unique testname
@@ -194,11 +197,11 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      print "=======================================================================================\n";
      # bulletproofing
      # do these files exist
-     if (! -e $fw_path."/".$upsFile || 
+     if (! -e $upsFile              || 
          ! -e $fw_path."/".$tstFile ||
          ! -e $fw_path."/".$otherFiles ){
        print "\n \nERROR:setupFrameWork:\n";
-       print "The ups file: \n \t $fw_path/$upsFile \n"; 
+       print "The ups file: \n \t $upsFile \n"; 
        print "or the tst file: \n \t $fw_path/$tstFile \n";
        print "or the other file(s) \n \t $fw_path/$otherFiles \n";
        print "do not exist.  Now exiting\n";
@@ -218,10 +221,10 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      my $sus = `which sus`;
      system("ln -s $sus > /dev/null 2>&1");
 
-     # make any symbolic Links needed by that component
+     # create any symbolic links requested by that component
      my $j = 0;
      foreach $j (@symLinks) {
-       if( $j gt "" && $j ne "."){
+       if( -e $j ){ 
          system("ln -s $j > /dev/null 2>&1");
        }
      }
@@ -245,4 +248,48 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
    }
    chdir("..");
  }
+ 
+#______________________________________________________________________
+#   subroutines
+#______________________________________________________________________
+#  
+#  Remove any white space or newlines in array elements or scalars
+#  (This belongs in a separate common module to avoid duplication -Todd)
+
+sub cleanStr {
+
+  my @inputs = @_;
+  
+  my $n   = scalar @inputs;           # number of array elements
+  my $len = length $inputs[0];        # number of characters in first element
+  
+  # if the first element is empty return ""
+  if( $len == 0 ){
+    return "";
+  }
+  
+  #__________________________________
+  # if there is one array element return a scalar
+  if( $n == 1 ){
+    $inputs[0] =~ s/\n//g;        # remove newlines
+    $inputs[0] =~ s/ //g;         # remove white spaces
+    return $inputs[0];
+  }
+
+  #__________________________________
+  #  Arrays
+  my @result = ();
+  my $i = 0;
+  
+  foreach $i (@inputs){
+    $i =~ s/\n//g;        # remove newlines
+    $i =~ s/ //g;         # remove white spaces
+    my $l = length $i;
+    
+    if ($l > 0){
+      push( @result, $i );
+    }
+  }
+  return @result;
+}
   # END
