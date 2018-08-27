@@ -590,7 +590,7 @@ template <typename ES, typename MemSpace>
     auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
 
     auto x =  tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double,MemSpace >(m_x_name);
-    auto y =  tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double,MemSpace >(m_x_name);
+    auto y =  tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double,MemSpace >(m_y_name);
 
 
     VariableHelper<T> var_help;
