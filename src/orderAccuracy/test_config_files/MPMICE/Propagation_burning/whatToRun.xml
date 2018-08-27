@@ -1,7 +1,0 @@
-<config>
-<postProcessCmd_path></postProcessCmd_path>
-<test>
-  <name>Propagation</name>
-  <tst>Propagation_burning.tst</tst>
-</test>
-</config>

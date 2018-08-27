@@ -99,12 +99,7 @@ my $xml = $simple->XMLin($config_files_path . "/components.xml");
 my @components        = cleanStr( @{$xml->{component}}   );
 my $sus_path          = cleanStr( $xml->{sus_path}[0]    );
 my $extraScripts_path = cleanStr( $xml->{scripts_path}[0]);
-my $inputs_path       = cleanStr( $xml->{inputs_path}[0] );
 
-# default inputs path (src/StandAlone/inputs)
-if( ! length $inputs_path ){
-  $inputs_path = $src_path . "/StandAlone/inputs/";
-}
 
 
 #__________________________________
@@ -150,10 +145,13 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
    my $orgPath  = $ENV{"PATH"};
    $ENV{"PATH"} = "$p:$orgPath";
    
-   # additional symbolic links to make
-   my $sl       = $whatToRun->{symbolicLinks}[0];
-   my @symLinks = split(/ /,$sl);
-   @symLinks    = cleanStr(@symLinks);
+   # additional symbolic links to make OPTIONAL
+   my@symLinks = ();
+   if( $whatToRun->{symbolicLinks}[0] ){
+     my $sl     = $whatToRun->{symbolicLinks}[0];
+     @symLinks  = split(/ /,$sl);
+     @symLinks  = cleanStr(@symLinks);
+   }
    
    #__________________________________
    # loop over all tests
@@ -168,16 +166,33 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      my $test     = $tests[$i];
      my $testName = cleanStr( $test->{name}[0] );
      my $tstFile  = cleanStr( $test->{tst}[0] );
+     $tstFile     = $fw_path."/".$tstFile;
+     my $tst_basename = basename( $tstFile );
+         
+     my $tstData  = $simple->XMLin( "$tstFile" );
      
-     my $tstData  = $simple->XMLin("$fw_path/$tstFile");
-     my $upsFile  = cleanStr( $tstData->{upsFile}[0] );
-     $upsFile     = $inputs_path.$component."/".$upsFile;
+                    # Inputs directory default path (src/StandAlone/inputs)
+     my $inputs_path  = cleanStr( $tstData->{inputs_path}[0] );
+     if( ! length $inputs_path ){
+       $inputs_path = $src_path . "/StandAlone/inputs/";
+     }    
 
+                   # UPS file
+     my $ups_tmp  = cleanStr( $tstData->{upsFile}[0] );
+     my $upsFile  = $inputs_path.$component."/".$ups_tmp;
+     
+                   # if it's not in the std location look for it
+     if ( ! -e $ups_tmp ){
+       $upsFile = `find $inputs_path  |grep --word-regexp $ups_tmp`;
+       chomp( $upsFile );
+     }
+
+                   # Other files needed
      if($test->{otherFilesToCopy}[0] ){ 
-        $otherFiles= cleanStr( $test->{otherFilesToCopy}[0] );
+       $otherFiles= cleanStr( $test->{otherFilesToCopy}[0] );
      }
     
-     #find a unique testname
+                    # find a unique testname
      my $count = 0;
      my $testNameOld = $testName;
      $testName = "$testName.$count";
@@ -197,12 +212,12 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      print "=======================================================================================\n";
      # bulletproofing
      # do these files exist
-     if (! -e $upsFile              || 
-         ! -e $fw_path."/".$tstFile ||
+     if (! -e $upsFile || 
+         ! -e $tstFile ||
          ! -e $fw_path."/".$otherFiles ){
        print "\n \nERROR:setupFrameWork:\n";
-       print "The ups file: \n \t $upsFile \n"; 
-       print "or the tst file: \n \t $fw_path/$tstFile \n";
+       print "The ups file: \n       \t $upsFile \n"; 
+       print "or the tst file: \n     \t $tstFile \n";
        print "or the other file(s) \n \t $fw_path/$otherFiles \n";
        print "do not exist.  Now exiting\n";
        exit
@@ -231,17 +246,17 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      
      # Bulletproofing
      print "\t Checking that the tst file is a properly formatted xml file  \n";
-     system("xmlstarlet val --err $tstFile") == 0 ||  die("\nERROR: $tstFile, contains errors.\n");
+     system("xmlstarlet val --err $tst_basename") == 0 ||  die("\nERROR: $tst_basename, contains errors.\n");
      
      # clean out any comment in the TST file
-     system("xmlstarlet c14n --without-comments $tstFile > $tstFile.clean 2>&1");
-     $tstFile = "$tstFile.clean";
+     system("xmlstarlet c14n --without-comments $tst_basename > $tst_basename.clean 2>&1");
+     $tst_basename = "$tst_basename.clean";
      
      
      #__________________________________
      # run the tests
-     print "\n\nLaunching: run_tests.pl $testing_path/$tstFile\n\n";
-     my @args = (" $scripts_path/run_tests.pl","$testing_path/$tstFile", "$fw_path");
+     print "\n\nLaunching: run_tests.pl $testing_path/$tst_basename\n\n";
+     my @args = (" $scripts_path/run_tests.pl","$testing_path/$tst_basename", "$fw_path");
      system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
 
      chdir("..");

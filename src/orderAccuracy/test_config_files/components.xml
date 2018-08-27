@@ -14,11 +14,6 @@
 
  <!-- optional path to sus -->
  <sus_path></sus_path>
- 
- <!-- optional path to inputs directory 
-      default is src/StandAlone/inputs  -->
- <inputs_path>  </inputs_path>
-
 
  <!-- path to any additional scripts that may be needed by all the components-->
  <scripts_path>/uufs/chpc.utah.edu/sys/pkg/octave/std/bin/  </scripts_path>

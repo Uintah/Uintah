@@ -5,7 +5,7 @@
 <!-- NOTE....... plotScript2 is hard coded!!!!!-->
 
 <gnuplot>
-  <script>plotScript.gp</script>
+  <script>Compare_burn_rates/plotScript.gp</script>
   <title>Burn Rates vs Pressure At 298K</title>
   <ylabel>Burn Rate (m/s)</ylabel>
   <xlabel>Pressure (Pa)</xlabel>

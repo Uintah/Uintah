@@ -72,9 +72,9 @@ print "  Exit order of accuracy scripts on crash or timeout ($exitOnCrash)\n";
 # set timeout value       OPTIONAL
 if ( length $data->{susTimeout_minutes}->[0] ){
   $timeout = cleanStr( $data->{susTimeout_minutes}->[0] );
-  $timeout = $timeout*60;                   # minutes-> seconds               
+  $timeout = $timeout*60;                               # minutes-> seconds               
 }else{
-  $timeout = 24*60*60;                       # default 24 hours
+  $timeout = 24*60*60;                                  # default 24 hours
 }
 print "  Simulation timeout: $timeout seconds\n";
 
@@ -83,7 +83,7 @@ print "  Simulation timeout: $timeout seconds\n";
 # determing the ups basename
 $upsFile         = cleanStr( $data->{upsFile}->[0] );
 $upsFile         = basename( $upsFile );
-my $ups_basename = basename( $upsFile, ".ups" );  # Removing the extension .ups so that we can use this to build our uda file names
+my $ups_basename = basename( $upsFile, ".ups" );        # Removing the extension .ups so that we can use this to build our uda file names
 
 #__________________________________
 # Read in the test data from xml file
@@ -94,8 +94,8 @@ my @tests = @{$data->{Test}};
        
 for($i = 0; $i<=$#tests; $i++){
   my $test         = $tests[$i];
-  $test_title[$i]  = $test->{Title}[0];          # test title
-  $sus_cmd[$i]     = $test->{sus_cmd}[0];        # sus command
+  $test_title[$i]  = $test->{Title}[0];                 # test title
+  $sus_cmd[$i]     = $test->{sus_cmd}[0];               # sus command
   
   if( length $test->{postProcess_cmd}[0] ){
     $postProc_cmd[$i] = $test->{postProcess_cmd}[0];    # comparison utility command
@@ -110,7 +110,7 @@ $num_of_tests=$#tests;
 # Note Debian doesn't have the --skip-dot option
 for ($i=0;$i<=$num_of_tests;$i++){
    if( length $postProc_cmd[$i] ){
-    my @stripped_cmd = split(/ /,$postProc_cmd[$i]);  # remove command options
+    my @stripped_cmd = split(/ /,$postProc_cmd[$i]);      # remove command options
     my $cmd = `which --skip-dot $stripped_cmd[0] > /dev/null 2>&1`;
     system("ln -fs $cmd > /dev/null 2>&1");
   }
