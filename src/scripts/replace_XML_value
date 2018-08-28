@@ -19,7 +19,7 @@ if ( $#argv != 3 ) then
   echo ""
   echo "Usage:  replace_XML_value  <xml path to value> <replacement value> <xmlfile>"
   echo ""
-  echo "Example:  To change the resolution of Box 1"
+  echo "Example 1):  To change the resolution of Box 1"
   echo '    Use replace_XML_value  "/Uintah_specification/Grid/Level/Box[@label='1']/resolution" "[17,17,1]" <xmlfile>  '
   echo "          <Level>                                              "
   echo "          <Box label = "0">                                    "
@@ -42,7 +42,15 @@ if ( $#argv != 3 ) then
   echo "         </Level>                                              "
   echo "                                                               "
   echo ""
-  echo " To see the xml paths in the file execute:    xmlstarlet el -v <xmlFile>"
+  echo "Example 2):  To change the attribute side z- to x+             "
+  echo '   Use  replace_XML_value "Uintah_specification/Grid/BoundaryConditions/Face[@side='z-']/@side" "x-" <xmlfile> '
+  echo "  <Grid>                                                      "
+  echo "    <BoundaryConditions>                                      "
+  echo "      <Face side = "z-">                                      "
+  echo "        <BCType>                                              "
+  echo "        </BCType>                                             "
+  echo "      </Face>                                                 "
+  echo "  For the xml paths in the file execute:    xmlstarlet el -v <xmlFile>"
   echo ""
   exit(-1)
 endif

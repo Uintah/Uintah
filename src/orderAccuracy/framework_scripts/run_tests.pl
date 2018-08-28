@@ -11,7 +11,6 @@
 #   - make a symbolic link to the comparison utility used to compute the L2nomr
 #   - read in the replacement patterns for each test and all tests
 #   - perform global replacements on the ups file
-#   - perform global findReplace on the ups file
 #
 #   Loop over tests
 #     - create a new ups file
@@ -48,7 +47,7 @@ $config_files_path = $ARGV[1];
 my $data = $simple->XMLin("$tstFile");
 
 #__________________________________
-# copy gnuplot script
+# copy gnuplot script   OPTIONAL
 my $gpFile = cleanStr( $data->{gnuplot}[0]->{script}[0] );
 
 if( length $gpFile ){  
@@ -94,20 +93,23 @@ my @tests = @{$data->{Test}};
        
 for($i = 0; $i<=$#tests; $i++){
   my $test         = $tests[$i];
-  $test_title[$i]  = $test->{Title}[0];                 # test title
+  $test_title[$i]  = cleanStr( $test->{Title}[0] );     # test title
   $sus_cmd[$i]     = $test->{sus_cmd}[0];               # sus command
   
+  $postProc_cmd[$i] = "";
+  
   if( length $test->{postProcess_cmd}[0] ){
-    $postProc_cmd[$i] = $test->{postProcess_cmd}[0];    # comparison utility command
-  }else{
-    $postProc_cmd[$i] = "";
+    $postProc_cmd[$i] = $test->{postProcess_cmd}[0];    # comparison utility command  OPTIONAL
   }
-  #print Dumper($test);         #debugging
 }
+
 $num_of_tests=$#tests;
+
+
 #__________________________________
 # make a symbolic link to the post processing command
 # Note Debian doesn't have the --skip-dot option
+
 for ($i=0;$i<=$num_of_tests;$i++){
    if( length $postProc_cmd[$i] ){
     my @stripped_cmd = split(/ /,$postProc_cmd[$i]);      # remove command options
@@ -115,8 +117,6 @@ for ($i=0;$i<=$num_of_tests;$i++){
     system("ln -fs $cmd > /dev/null 2>&1");
   }
 }
-
-
 
 #__________________________________
 # Read in all of the replacement patterns 
@@ -213,6 +213,7 @@ while ($line=<tstFile>){
 close(tstFile);
 #__________________________________
 # Globally, replace lines in the main ups file before each test.
+
 @replacementPatterns = (@global_replaceLines);
 foreach $rp (@global_replaceLines){
   system("replace_XML_line", "$rp", "$upsFile") ==0 ||  die("Error replacing_XML_line $rp in file $upsFile \n $@");
@@ -227,16 +228,6 @@ foreach $rv (@global_replaceValues){
   $value   = $tmp[1];
   system("replace_XML_value", "$xmlPath", "$value", "$upsFile")==0 ||  die("Error: replace_XML_value $xmlPath $value $upsFile \n $@");
   print "\treplace_XML_value $xmlPath $value\n";
-}
-
-
-#__________________________________
-# Globally perform substitutions in the main ups
-my $substitutions = $data->{AllTests}->[0]->{substitutions};
-
-foreach my $t (@{$substitutions->[0]->{text}}){
-  print "Now making the substitution text Find: $t->{find} replace: $t->{replace} in file: $upsFile \n";
-  system("findReplace","$t->{find}","$t->{replace}", "$upsFile");
 }
 
 open(statsFile,">out.stat");

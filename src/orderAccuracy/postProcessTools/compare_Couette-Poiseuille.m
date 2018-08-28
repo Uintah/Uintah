@@ -16,7 +16,7 @@ function Usage
   printf('compare_Couette-Poiseuille.m <options>\n')                                                                    
   printf('options:\n')                                                                                       
   printf('  -uda  <udaFileName> - name of the uda file \n')                                                  
-  %printf('  -pDir <1,2,3>       - principal direction \n')                                                   
+  printf('  -pDir <1,2,3>       - principal direction \n')                                                   
   printf('  -mat                - material index \n')                                                        
   printf('  -plot <true, false> - produce a plot \n')                                                        
   printf('  -ts                 - Timestep to compute L2 error, default is the last timestep\n') 
@@ -38,9 +38,9 @@ endif
 
 %__________________________________
 % USER DEFINED VARIABLE
-wallVel        = 1.25
+wallVel        = 0.0
 viscosity      = 1e-3
-dpdx           = (101324 - 101325)/(1.0)
+dpdx           = (101325 - 101315)/(1.0)
 
 %__________________________________
 % defaults
@@ -79,7 +79,7 @@ end
 [s0, r0]=unix('puda > /dev/null 2>&1');
 [s1, r1]=unix('lineextract > /dev/null 2>&1');
 
-if( s0 ~=0 || s1 ~= 0 )
+if( s0 ~=1 || s1 ~= 1 )
   disp('Cannot execute uintah utilites puda, lineextract');
   disp('  a) make sure you are in the right directory, and');
   disp('  b) the utilities (puda/lineextract) have been compiled');
@@ -88,22 +88,25 @@ end
 
 %________________________________
 %  extract the physical time
-c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" > tmp 2>&1',uda);
-[status0, result0]=unix(c0);
+c0 = sprintf('puda -timesteps %s | grep ''^[0-9]'' | awk ''{print $2}'' > tmp 2>&1 ',uda);
+[status0, result0]=unix(c0)
 physicalTime  = load('tmp');
 
 if(ts == 999)  % default
-  ts = length(physicalTime)
+  ts = length(physicalTime) -1
 endif
+
 %________________________________
 %  extract the grid information from the uda file
-c0 = sprintf('puda -gridstats %s > tmp 2>&1',uda); unix(c0);
+c0 = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i > tmp 2>&1',uda,ts-1, ts);
+unix(c0);
 
 [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
 [s,r2] = unix('grep -m1 -w "Domain Length" tmp         |cut -d":" -f2 | tr -d "[]"');
 
 resolution   = str2num(r1)
 domainLength = str2num(r2)
+
 
 % find the y direction
 if(pDir == 1)
@@ -126,7 +129,7 @@ elseif(pDir == 3)
 %  to be filled in
 end
 
-c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o vel.dat -m %i  -uda %s','vel_CC > /dev/null 2>&1',L,ts-1,startEnd,mat,uda);
+c1 = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel.dat -m %i  -uda %s  > /dev/null 2>&1',L, ts, startEnd, mat, uda);
 [s1, r1] = unix(c1);
 
 % import the velocity into array
@@ -139,6 +142,7 @@ vel_sim = vel(:,3 + pDir);
 nu = viscosity;
 dy = y_CC(2) - y_CC(1)
 h  = (domainLength(yDir) + dy)/2.0
+
 % you need to add dy because the velocity BC is set dy/2 from the edge of wall.
 
 % Exact solution for Combined Couette-Poiseuille flow
@@ -174,25 +178,32 @@ if (nargv > 0)
 end
 
 % cleanup 
-unix('/bin/rm vel.dat sim.dat tmp');
+unix('/bin/rm vel.dat tmp');
 
 %______________________________
 % Plot the results
 if (strcmp(makePlot,"true"))
-  subplot(2,1,1),plot(vel_sim, y_CC, 'b:o;computed;', vel_exact, y_CC, 'r:+;exact;')
+  hf = figure();
+  set (hf, "visible", "off");
+  
+  subplot(2,1,1)
+  plot( vel_sim, y_CC, 'b:o;computed;', vel_exact, y_CC, 'r:+;exact;')
   xlabel('u velocity')
   ylabel('y')
   title('Combined Couette-Poiseuille Flow');
   grid on;
-  
-  subplot(2,1,2),plot(d,y_CC, 'b:+');
   hold on;
+  
+  subplot(2,1,2)
+  plot( d, y_CC, 'b:+');
   xlabel('|u - u_{exact}|'); 
   ylabel('y');
   grid on;
+  hold off;
   
-  unix('/bin/rm Couette-Poiseuille.ps')
-  print('Couette-Poiseuille.ps','-dps', '-FTimes-Roman:14')
+  set (hf, "visible", "on");
   pause
-
+  
+  unix('/bin/rm Couette-Poiseuille.ps');
+  print( hf, 'Couette-Poiseuille.ps','-dps', '-FTimes-Roman:14');
 end
