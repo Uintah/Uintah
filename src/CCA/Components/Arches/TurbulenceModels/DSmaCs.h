@@ -56,15 +56,15 @@ private:
     std::string m_Cs_name; //DSmaCs constant
     std::string m_turb_viscosity_name;
     double m_molecular_visc;
-    //std::string m_t_vis_name_production; 
+    //std::string m_t_vis_name_production;
     std::string m_t_vis_name;
     //int Type_filter ;
-    Uintah::FILTER Type_filter;
+    Uintah::ArchesCore::FILTER Type_filter;
     std::string m_volFraction_name;
     std::string m_density_name;
     std::string m_IsI_name;
-    bool m_create_labels_IsI_t_viscosity{true};   
-    FilterTest m_Filter;
+    bool m_create_labels_IsI_t_viscosity{true};
+    Uintah::ArchesCore::TestFilter m_Filter;
   };
 
 //--------------------------------------------------------------------------------------------------
@@ -258,7 +258,7 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   m_Filter.applyFilter<TT>((*MM),filterMM,range,vol_fraction);
   m_Filter.applyFilter<TT>((*ML),filterML,range,vol_fraction);
 
-  const double m_MM_lower_value = 1.0e-14; 
+  const double m_MM_lower_value = 1.0e-14;
   const double m_ML_lower_value = 1.0e-14;
   Uintah::parallel_for( range, [&](int i, int j, int k){
     double value = 0;
@@ -269,25 +269,25 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
      //value  = (*ML)(i,j,k)/(*MM)(i,j,k);
       value  = filterML(i,j,k)/filterMM(i,j,k);
     }
-    
+
     //double value  = filterML(i,j,k)/filterMM(i,j,k);
     //if (value < 0 || filterMM(i,j,k) < m_MM_lower_value) {
-    //  value = 0; 
-    //} 
+    //  value = 0;
+    //}
 
 
     Cs(i,j,k) = vol_fraction(i,j,k)*Min(value,10.0);
-    mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*(*IsI)(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); // 
-    mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; // 
+    mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*(*IsI)(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); //
+    mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; //
 
   });
-  BCfilter bcfilter;
-  bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction); 
-  bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction); 
-  bcfilter.apply_zero_neumann(patch,Cs,vol_fraction); 
+  Uintah::ArchesCore::BCFilter bcfilter;
+  bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction);
+  bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction);
+  bcfilter.apply_zero_neumann(patch,Cs,vol_fraction);
 
   //Uintah::parallel_for( range, [&](int i, int j, int k){
-  //  mu_sgc_p(i,j,k) = mu_sgc(i,j,k); 
+  //  mu_sgc_p(i,j,k) = mu_sgc(i,j,k);
   //});
 }
 //--------------------------------------------------------------------------------------------------

@@ -56,15 +56,15 @@ private:
     std::string m_Cs_name; //DSmaCsv2 constant
     std::string m_turb_viscosity_name;
     double m_molecular_visc;
-    //std::string m_t_vis_name_production; 
+    //std::string m_t_vis_name_production;
     std::string m_t_vis_name;
     //int Type_filter ;
-    Uintah::FILTER Type_filter;
+    Uintah::ArchesCore::FILTER Type_filter;
     std::string m_volFraction_name;
     std::string m_density_name;
     std::string m_IsI_name;
-    bool m_create_labels_IsI_t_viscosity{true};   
-    FilterTest m_Filter;
+    bool m_create_labels_IsI_t_viscosity{true};
+    Uintah::ArchesCore::TestFilter m_Filter;
   };
 
 //--------------------------------------------------------------------------------------------------
@@ -246,7 +246,7 @@ DSmaCsv2<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   m_Filter.applyFilter<TT>((*MM),filterMM,vol_fraction,range);
   m_Filter.applyFilter<TT>((*ML),filterML,vol_fraction,range);
 
-  const double m_MM_lower_value = 1.0e-14; 
+  const double m_MM_lower_value = 1.0e-14;
   const double m_ML_lower_value = 1.0e-14;
   Uintah::parallel_for( range, [&](int i, int j, int k){
     double value = 0;
@@ -257,19 +257,19 @@ DSmaCsv2<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
      //value  = (*ML)(i,j,k)/(*MM)(i,j,k);
       value  = vol_fraction(i,j,k)*filterML(i,j,k)/filterMM(i,j,k);
     }
-    
+
     //double value  = filterML(i,j,k)/filterMM(i,j,k);
     //if (value < 0 || filterMM(i,j,k) < m_MM_lower_value) {
-    //  value = 0; 
-    //} 
+    //  value = 0;
+    //}
 
 
     Cs(i,j,k) = Min(value,10.0);
     if (Cs(i,j,k) > 9.9) {
       Cs(i,j,k) = 0.0;
     }
-    mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*(*IsI)(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); // 
-    mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; // 
+    mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*(*IsI)(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); //
+    mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; //
 
   });
   //apply zero neumann
@@ -294,7 +294,7 @@ DSmaCsv2<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   proc0cout << "       Task: " << "DSmaCsv2" << "  Type: " << "Dynamic model" << std::endl;
 
   //Uintah::parallel_for( range, [&](int i, int j, int k){
-  //  mu_sgc_p(i,j,k) = mu_sgc(i,j,k); 
+  //  mu_sgc_p(i,j,k) = mu_sgc(i,j,k);
   //});
 }
 //--------------------------------------------------------------------------------------------------

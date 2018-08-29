@@ -662,7 +662,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  CT& number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ); // total number density
+  // CT& number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ); // total number density - unused
 
   InversionBase* invf;
 
@@ -739,8 +739,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   CT& surfAreaF = tsk_info->get_const_uintah_field_add< CT >( m_surfAreaF_name );
 
-  Uintah::BlockRange range_E(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() ); 
-  Uintah::parallel_for( range_E, [&](int i, int j, int k){ 
+  Uintah::BlockRange range_E(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for( range_E, [&](int i, int j, int k){
     char_rate(i,j,k)          = 0.0;
     gas_char_rate(i,j,k)      = 0.0;
     particle_temp_rate(i,j,k) = 0.0;
@@ -748,7 +748,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
     surface_rate(i,j,k)       = 0.0;
 
     for ( int r = 0; r < _NUM_reactions; r++ ) {
-      (*reaction_rate[r])(i,j,k) = 0.0; 
+      (*reaction_rate[r])(i,j,k) = 0.0;
     }
   });
 
@@ -905,7 +905,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
         for ( int j = 0; j < _NUM_reactions; j++ ) {
 
           for ( int k = 0; k < _NUM_reactions; k++ ) {
-            rh_l_delta[k] = rh_l[k]; 
+            rh_l_delta[k] = rh_l[k];
           }
 
           rh_l_delta[j] = rh_l[j] + delta;

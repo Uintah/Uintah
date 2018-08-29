@@ -65,8 +65,8 @@ namespace Uintah{
       std::string m_rhou_vel_name;
       std::string m_rhov_vel_name;
       std::string m_rhow_vel_name;
-      //int Type_filter ; 
-      Uintah::FILTER Type_filter; 
+      //int Type_filter ;
+      Uintah::ArchesCore::FILTER Type_filter; 
   };
 }
 #endif

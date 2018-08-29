@@ -491,7 +491,6 @@ KokkosSolver::sched_nonlinearSolve( const LevelP & level,
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
-  BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
   BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
   BFM::iterator i_particle_model_fac = m_task_factory_map.find("particle_model_factory");
 
@@ -576,7 +575,6 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
 
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
-  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
@@ -799,7 +797,6 @@ KokkosSolver::SandBox( const LevelP     & level
 
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
-  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");

@@ -190,7 +190,7 @@ void MMS_mom<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_
   T& f_mms = *(tsk_info->get_uintah_field<T>(m_MMS_label));
   T& s_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_label));
   T& s_diff_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_diff_label));
-  T& s_t_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_t_label));
+  // T& s_t_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_t_label));
 
   constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);
   constCCVariable<double>& y = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_y_name);
@@ -221,14 +221,14 @@ void MMS_mom<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_
      });
   }  else if (m_which_vel == "p") {
      const double u_x = 1.0;
-     const double u_y = 1.0;      
+     const double u_y = 1.0;
      Uintah::parallel_for( range, [&](int i, int j, int k){
 
        f_mms(i,j,k) = 1.0  - m_amp * cos( m_two_pi * x(i,j,k) )
                                   * sin( m_two_pi * y(i,j,k) );
 
        s_mms(i,j,k) =  m_amp*m_two_pi*u_x*sin(m_two_pi*x(i,j,k))*sin(m_two_pi*y(i,j,k))
-                        - m_amp*m_two_pi*u_y*cos(m_two_pi*x(i,j,k))*cos(m_two_pi*y(i,j,k)); 
+                        - m_amp*m_two_pi*u_y*cos(m_two_pi*x(i,j,k))*cos(m_two_pi*y(i,j,k));
 
        s_diff_mms(i,j,k) = -2.0*m_amp*m_two_pi*m_two_pi*cos(m_two_pi*x(i,j,k))*sin(m_two_pi*y(i,j,k));
 

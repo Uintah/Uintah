@@ -67,10 +67,10 @@ private:
     std::string m_IsI_name;
     //std::string m_ref_density_name;
     //std::string m_cell_type_name;
-    //int Type_filter ; 
-    bool m_create_labels_IsI_t_viscosity{true};   
-    Uintah::FILTER Type_filter; 
-    FilterTest m_Filter;
+    //int Type_filter ;
+    bool m_create_labels_IsI_t_viscosity{true};
+    Uintah::ArchesCore::FILTER Type_filter;
+    Uintah::ArchesCore::TestFilter m_Filter;
   };
 }
 #endif

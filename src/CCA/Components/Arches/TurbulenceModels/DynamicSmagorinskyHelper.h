@@ -2,38 +2,29 @@
 #define Uintah_Component_Arches_DynamicSmagorinskyHelper_h
 
 #include <CCA/Components/Arches/GridTools.h>
-namespace Uintah {
+namespace Uintah { namespace ArchesCore {
 
   enum FILTER { THREEPOINTS, SIMPSON, BOX };
 
-  static FILTER get_filter_from_string( const std::string & value ){
+  FILTER get_filter_from_string( const std::string & value );
 
-    if (      value == "simpson" ){      return SIMPSON; }
-    else if ( value == "three_points" ){ return THREEPOINTS; }
-    else if ( value == "box" ){          return BOX; }
-    else {
-      throw InvalidValue("Error: Filter type not recognized: "+value, __FILE__, __LINE__);
-    }
-
-  }
-  
-  struct BCfilter { 
+  struct BCFilter {
     void apply_BC_filter_rho( const Patch* patch, CCVariable<double>& var,
                             CCVariable<double>& rho, constCCVariable<double>& vol_fraction){
-    
+
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
 
-    
+
       for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-    
+
         Patch::FaceType face = *itr;
         IntVector f_dir = patch->getFaceDirection(face);
-    
+
         for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
           IntVector c = *iter;
-    
+
               var[c] = rho[c] ;
         }
       }
@@ -41,19 +32,19 @@ namespace Uintah {
 
     }
     void apply_BC_rho( const Patch* patch, CCVariable<double>& var,
-                            constCCVariable<double>& rho, 
+                            constCCVariable<double>& rho,
                             constCCVariable<double>& vol_fraction){
-      
-    
+
+
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-    
+
       for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-    
+
         Patch::FaceType face = *itr;
         IntVector f_dir = patch->getFaceDirection(face);
-    
+
         for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
           IntVector c = *iter;
           var[c] = vol_fraction[c]*0.5*(rho[c]+rho[c-f_dir])+(1.-vol_fraction[c])*rho[c-f_dir];
@@ -62,19 +53,19 @@ namespace Uintah {
     }
     void apply_zero_neumann( const Patch* patch, CCVariable<double>& var,
                              constCCVariable<double>& vol_fraction ){
-    
+
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-    
+
       for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-    
+
         Patch::FaceType face = *itr;
         IntVector f_dir = patch->getFaceDirection(face);
-    
+
         for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
           IntVector c = *iter;
-    
+
           if ( vol_fraction[c] > 1e-10 ){
             var[c] = var[c-f_dir];
           }
@@ -84,19 +75,19 @@ namespace Uintah {
     template <typename T, typename CT>
     void apply_BC_rhou( const Patch* patch, T& var, CT& vel,
                           constCCVariable<double> rho, constCCVariable<double> vol_fraction  ){
-    
+
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-    
+
       ArchesCore::VariableHelper<T> var_help;
       IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
       for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-    
+
         Patch::FaceType face = *itr;
         IntVector f_dir = patch->getFaceDirection(face);
-      
+
         const double dot = vDir[0]*f_dir[0] + vDir[1]*f_dir[1] + vDir[2]*f_dir[2];
 
         //The face normal and the velocity are in parallel
@@ -104,7 +95,7 @@ namespace Uintah {
             //Face +
           for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
             IntVector c = *iter;
-          
+
             if ( vol_fraction[c] > 1e-10 ){
               var[c-f_dir] = vel[c-f_dir]*(rho[c-f_dir]+rho[c])/2.;
               var[c] = vel[c-f_dir];
@@ -114,30 +105,30 @@ namespace Uintah {
               // Face -
           for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
             IntVector c = *iter;
-          
+
             if ( vol_fraction[c] > 1e-10 ){
               var[c] = vel[c]*(rho[c-f_dir]+rho[c])/2.;
             }
-          } 
+          }
        }
        }
       }
     template <typename T>
     void apply_zero_neumann( const Patch* patch, T& var,
                              constCCVariable<double> vol_fraction  ){
-    
+
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-    
+
       ArchesCore::VariableHelper<T> var_help;
       IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
       for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-    
+
         Patch::FaceType face = *itr;
         IntVector f_dir = patch->getFaceDirection(face);
-      
+
         const double dot = vDir[0]*f_dir[0] + vDir[1]*f_dir[1] + vDir[2]*f_dir[2];
 
         //The face normal and the velocity are in parallel
@@ -145,7 +136,7 @@ namespace Uintah {
             //Face +
           for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
             IntVector c = *iter;
-          
+
             if ( vol_fraction[c] > 1e-10 ){
               var[c-f_dir] = var[c-f_dir-f_dir];
               var[c] = var[c-f_dir];
@@ -155,39 +146,39 @@ namespace Uintah {
               // Face -
           for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
             IntVector c = *iter;
-          
+
             if ( vol_fraction[c] > 1e-10 ){
               var[c] = var[c-f_dir];
             }
-          } 
+          }
        }
        }
       }
   };
-  struct FilterTest {
+  struct TestFilter {
 
     void get_w(FILTER Type)
-      {    
-      
+      {
+
       if (Type == THREEPOINTS  ) {
       // Three points symmetric: eq. 2.49 : LES for compressible flows Garnier et al.
         for ( int m = -1; m <= 1; m++ ){
           for ( int n = -1; n <= 1; n++ ){
             for ( int l = -1; l <= 1; l++ ){
               double my_value = abs(m) + abs(n) + abs(l)+3.0;
-              w[m+1][n+1][l+1]= (1.0/std::pow(2.0,my_value)); 
+              w[m+1][n+1][l+1]= (1.0/std::pow(2.0,my_value));
             }
           }
         }
       wt = 1.;
       } else if (Type == SIMPSON) {
       // Simpson integration rule: eq. 2.50 : LES for compressible flows Garnier et al.
-      // ref shows 1D case. For 3D case filter 3 times with 1D filter . 
+      // ref shows 1D case. For 3D case filter 3 times with 1D filter .
       for ( int m = -1; m <= 1; m++ ){
         for ( int n = -1; n <= 1; n++ ){
           for ( int l = -1; l <= 1; l++ ){
             double my_value = -abs(m) - abs(n) - abs(l)+3.0;
-            w[m+1][n+1][l+1] = std::pow(4.0,my_value); 
+            w[m+1][n+1][l+1] = std::pow(4.0,my_value);
           }
         }
       }
@@ -198,7 +189,7 @@ namespace Uintah {
       for ( int m = -1; m <= 1; m++ ){
         for ( int n = -1; n <= 1; n++ ){
           for ( int l = -1; l <= 1; l++ ){
-            w[m+1][n+1][l+1] = 1.0; 
+            w[m+1][n+1][l+1] = 1.0;
           }
         }
       }
@@ -209,23 +200,23 @@ namespace Uintah {
     }
   // rh*u filter
   template <typename V_T>
-  void applyFilter(V_T& var, Array3<double>& Fvar, constCCVariable<double>& rho, 
-        constCCVariable<double>& eps, BlockRange range) 
+  void applyFilter(V_T& var, Array3<double>& Fvar, constCCVariable<double>& rho,
+        constCCVariable<double>& eps, BlockRange range)
   {
   ArchesCore::VariableHelper<V_T> helper;
   const int i_n = helper.ioff;
   const int j_n = helper.joff;
   const int k_n = helper.koff;
- 
+
   Uintah::parallel_for( range, [&](int i, int j, int k){
-    double F_var = 0.0; 
+    double F_var = 0.0;
     for ( int m = -1; m <= 1; m++ ){
       for ( int n = -1; n <= 1; n++ ){
         for ( int l = -1; l <= 1; l++ ){
           double vf = std::floor((eps(i+m,j+n,k+l)
                       + eps(i+m-i_n,j+n-j_n,k+l-k_n))/2.0);
           F_var += w[m+1][n+1][l+1]*(vf*var(i+m,j+n,k+l)*
-                   (rho(i+m,j+n,k+l)+rho(i+m-i_n,j+n-j_n,k+l-k_n))/2.); 
+                   (rho(i+m,j+n,k+l)+rho(i+m-i_n,j+n-j_n,k+l-k_n))/2.);
         }
       }
     }
@@ -235,19 +226,19 @@ namespace Uintah {
   });
   }
   //  This filter does not weight the intrusion cells instead c value is used.
-  //  used in density  
+  //  used in density
   template <typename T>
-  void applyFilter(T& var, Array3<double>& Fvar, 
-                  BlockRange range, constCCVariable<double>& eps ) 
+  void applyFilter(T& var, Array3<double>& Fvar,
+                  BlockRange range, constCCVariable<double>& eps )
   {
 
   Uintah::parallel_for( range, [&](int i, int j, int k){
-    double F_var = 0.0; 
+    double F_var = 0.0;
     for ( int m = -1; m <= 1; m++ ){
       for ( int n = -1; n <= 1; n++ ){
         for ( int l = -1; l <= 1; l++ ){
           F_var += w[m+1][n+1][l+1]*(eps(i+m,j+n,k+l)*var(i+m,j+n,k+l)
-                 +(1.-eps(i+m,j+n,k+l))*var(i,j,k)); 
+                 +(1.-eps(i+m,j+n,k+l))*var(i,j,k));
         }
       }
     }
@@ -257,16 +248,16 @@ namespace Uintah {
   }
   // scalar filter
   template <typename V_T>
-  void applyFilter(V_T& var, Array3<double>& Fvar,  
-        constCCVariable<double>& eps, BlockRange range) 
+  void applyFilter(V_T& var, Array3<double>& Fvar,
+        constCCVariable<double>& eps, BlockRange range)
   {
 
   Uintah::parallel_for( range, [&](int i, int j, int k){
-    double F_var = 0.0; 
+    double F_var = 0.0;
     for ( int m = -1; m <= 1; m++ ){
       for ( int n = -1; n <= 1; n++ ){
         for ( int l = -1; l <= 1; l++ ){
-          F_var += w[m+1][n+1][l+1]* eps(i+m,j+n,k+l)*var(i+m,j+n,k+l); 
+          F_var += w[m+1][n+1][l+1]* eps(i+m,j+n,k+l)*var(i+m,j+n,k+l);
         }
       }
     }
@@ -275,14 +266,14 @@ namespace Uintah {
   });
   }
   private:
-  
+
   FILTER Type ;
   double w[3][3][3];
   double wt;
   };
 
   struct computeIsInsij{
-    computeIsInsij(Array3<double>& i_IsI, Array3<double>& i_s11, Array3<double>& i_s22, Array3<double>& i_s33, 
+    computeIsInsij(Array3<double>& i_IsI, Array3<double>& i_s11, Array3<double>& i_s22, Array3<double>& i_s33,
                    Array3<double>& i_s12, Array3<double>& i_s13, Array3<double>& i_s23,
                    const Array3<double>& i_uVel, const Array3<double>& i_vVel, const Array3<double>& i_wVel,
                    const Array3<double>& i_CCuVel, const Array3<double>& i_CCvVel, const Array3<double>& i_CCwVel, const Vector& i_Dx):
@@ -320,7 +311,7 @@ namespace Uintah {
   double wtp = 0.0;
   double wbp = 0.0;
 
-  // x-dir 
+  // x-dir
   {
   STENCIL3_1D(0);
   uep = uVel(IJK_P_);
@@ -359,7 +350,7 @@ namespace Uintah {
   wtp = wVel(IJK_P_);
   wbp = wVel(IJK_);
   }
-  
+
   s11(IJK_) = (uep-uwp)/Dx.x();
   s22(IJK_) = (vnp-vsp)/Dx.y();
   s33(IJK_) = (wtp-wbp)/Dx.z();
@@ -368,12 +359,12 @@ namespace Uintah {
   s23(IJK_) = 0.50 * ((vtp-vbp)/Dx.z() + (wnp-wsp)/Dx.y());
 
   IsI(IJK_) = 2.0 * ( std::pow(s11(IJK_),2.0) + std::pow(s22(IJK_),2.0) + std::pow(s33(IJK_),2.0)
-            + 2.0 * ( std::pow(s12(IJK_),2.0) + std::pow(s13(IJK_),2.0) + std::pow(s23(IJK_),2.0) ) ); 
+            + 2.0 * ( std::pow(s12(IJK_),2.0) + std::pow(s13(IJK_),2.0) + std::pow(s23(IJK_),2.0) ) );
 
-  IsI(IJK_) = std::sqrt( IsI(IJK_) ); 
+  IsI(IJK_) = std::sqrt( IsI(IJK_) );
     }
   private:
- 
+
   Array3<double>& IsI;
   Array3<double>& s11;
   Array3<double>& s22;
@@ -390,15 +381,15 @@ namespace Uintah {
   const Vector& Dx;
   };
 
-  struct computefilterIsInsijv2{
-    computefilterIsInsijv2(Array3<double>& i_filterIsI, Array3<double>& i_filters11, Array3<double>& i_filters22, 
-                         Array3<double>& i_filters33, Array3<double>& i_filters12, Array3<double>& i_filters13, 
+  struct computeFilterIsInsijv2{
+    computeFilterIsInsijv2(Array3<double>& i_filterIsI, Array3<double>& i_filters11, Array3<double>& i_filters22,
+                         Array3<double>& i_filters33, Array3<double>& i_filters12, Array3<double>& i_filters13,
                          Array3<double>& i_filters23,
                          constSFCXVariable<double> i_filterRhoU, constSFCYVariable<double> i_filterRhoV,
                          constSFCZVariable<double> i_filterRhoW, constCCVariable<double> i_filterRho,
                          const Vector& i_Dx, constCCVariable<double> i_eps):
-                         filterIsI(i_filterIsI), filters11(i_filters11), filters22(i_filters22), 
-                         filters33(i_filters33), filters12(i_filters12), filters13(i_filters13), 
+                         filterIsI(i_filterIsI), filters11(i_filters11), filters22(i_filters22),
+                         filters33(i_filters33), filters12(i_filters12), filters13(i_filters13),
                          filters23(i_filters23), filterRhoU(i_filterRhoU), filterRhoV(i_filterRhoV),
                          filterRhoW(i_filterRhoW),filterRho(i_filterRho), Dx(i_Dx), eps(i_eps)
   {}
@@ -494,9 +485,9 @@ namespace Uintah {
   filters12(i,j,k) = 0.5*((funp-fusp)/Dx.y() + (fvep-fvwp)/Dx.x());
   filters13(i,j,k) = 0.5*((futp-fubp)/Dx.z() + (fwep-fwwp)/Dx.x());
   filters23(i,j,k) = 0.5*((fvtp-fvbp)/Dx.z() + (fwnp-fwsp)/Dx.y());
-  filterIsI(i,j,k) = std::sqrt(2.0*(filters11(i,j,k)*filters11(i,j,k) 
+  filterIsI(i,j,k) = std::sqrt(2.0*(filters11(i,j,k)*filters11(i,j,k)
                      + filters22(i,j,k)*filters22(i,j,k) + filters33(i,j,k)*filters33(i,j,k)+
-                     2.0*(filters12(i,j,k)*filters12(i,j,k) + 
+                     2.0*(filters12(i,j,k)*filters12(i,j,k) +
                       filters13(i,j,k)*filters13(i,j,k) + filters23(i,j,k)*filters23(i,j,k))));
   }
   private:
@@ -515,14 +506,14 @@ namespace Uintah {
   constCCVariable<double>& eps;
   };
   struct computefilterIsInsij{
-    computefilterIsInsij(Array3<double>& i_filterIsI, Array3<double>& i_filters11, Array3<double>& i_filters22, 
-                         Array3<double>& i_filters33, Array3<double>& i_filters12, Array3<double>& i_filters13, 
+    computefilterIsInsij(Array3<double>& i_filterIsI, Array3<double>& i_filters11, Array3<double>& i_filters22,
+                         Array3<double>& i_filters33, Array3<double>& i_filters12, Array3<double>& i_filters13,
                          Array3<double>& i_filters23,
                          constSFCXVariable<double> i_filterRhoU, constSFCYVariable<double> i_filterRhoV,
                          constSFCZVariable<double> i_filterRhoW, constCCVariable<double> i_filterRho,
                          const Vector& i_Dx):
-                         filterIsI(i_filterIsI), filters11(i_filters11), filters22(i_filters22), 
-                         filters33(i_filters33), filters12(i_filters12), filters13(i_filters13), 
+                         filterIsI(i_filterIsI), filters11(i_filters11), filters22(i_filters22),
+                         filters33(i_filters33), filters12(i_filters12), filters13(i_filters13),
                          filters23(i_filters23), filterRhoU(i_filterRhoU), filterRhoV(i_filterRhoV),
                          filterRhoW(i_filterRhoW),filterRho(i_filterRho), Dx(i_Dx)
   {}
@@ -618,9 +609,9 @@ namespace Uintah {
   filters12(i,j,k) = 0.5*((funp-fusp)/Dx.y() + (fvep-fvwp)/Dx.x());
   filters13(i,j,k) = 0.5*((futp-fubp)/Dx.z() + (fwep-fwwp)/Dx.x());
   filters23(i,j,k) = 0.5*((fvtp-fvbp)/Dx.z() + (fwnp-fwsp)/Dx.y());
-  filterIsI(i,j,k) = std::sqrt(2.0*(filters11(i,j,k)*filters11(i,j,k) 
+  filterIsI(i,j,k) = std::sqrt(2.0*(filters11(i,j,k)*filters11(i,j,k)
                      + filters22(i,j,k)*filters22(i,j,k) + filters33(i,j,k)*filters33(i,j,k)+
-                     2.0*(filters12(i,j,k)*filters12(i,j,k) + 
+                     2.0*(filters12(i,j,k)*filters12(i,j,k) +
                       filters13(i,j,k)*filters13(i,j,k) + filters23(i,j,k)*filters23(i,j,k))));
   }
   private:
@@ -637,5 +628,5 @@ namespace Uintah {
   constCCVariable<double>& filterRho;
   const Vector& Dx;
   };
-} //namespace
+}} //namespace Uintah::ArchesCore
 #endif

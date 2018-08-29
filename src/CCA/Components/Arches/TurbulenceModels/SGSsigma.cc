@@ -93,7 +93,7 @@ SGSsigma::problemSetup( ProblemSpecP& db ){
 //--------------------------------------------------------------------------------------------------
 void
 SGSsigma::create_local_labels(){
-  
+
   if (m_create_labels_IsI_t_viscosity) {
     register_new_variable<CCVariable<double> >(m_IsI_name);
     register_new_variable<CCVariable<double> >( m_t_vis_name);
@@ -124,7 +124,7 @@ SGSsigma::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
   mu_sgc.initialize(0.0);
   mu_turb.initialize(0.0);
-  
+
   //CCVariable<double>& sigOper =  tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigOper);
   //Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
@@ -206,7 +206,7 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   constCCVariable<double>& CCuVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_u_vel_name);
   constCCVariable<double>& CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_v_vel_name);
   constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
-  
+
   //constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
   //constCCVariable<double>& Density_sigma = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("density");
   //constCCVariable<Vector>& CCVelocity =    tsk_info->get_const_uintah_field_add<constCCVariable<Vector> >("CCVelocity");
@@ -233,46 +233,46 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   Uintah::parallel_for( range, [&](int i, int j, int k){
-    // face velocity of fourth order 
+    // face velocity of fourth order
     //VelgUx=(-2.0*uVel(i+2,j,k)      +12.0*uVel(i+1,j,k)        -6.0*uVel(i,j,k)            - 4.0*uVel(i-1,j,k))/dx/12.0;
     //VelgUy=(-CCVelocity(i,j+2,k)[0] +8.0*CCVelocity(i,j+1,k)[0]-8.0*CCVelocity(i,j-1,k)[0] + CCVelocity(i,j-2,k)[0])/dy/12.0;
     //VelgUz=(-CCVelocity(i,j,k+2)[0] +8.0*CCVelocity(i,j,k+1)[0]-8.0*CCVelocity(i,j,k-1)[0] + CCVelocity(i,j,k-2)[0])/dz/12.0;
-                                                           
+
     //VelgVx=(-CCVelocity(i+2,j,k)[1] +8.0*CCVelocity(i+1,j,k)[1]-8.0*CCVelocity(i-1,j,k)[1] + CCVelocity(i-2,j,k)[1])/dx/12.0;
     //VelgVy=(-2.0*vVel(i,j+2,k)      +12.0*vVel(i,j+1,k)        -6.0*vVel(i,j,k)            -4.0*vVel(i,j-1,k))/dy/12.0;
     //VelgVz=(-CCVelocity(i,j,k+2)[1] +8.0*CCVelocity(i,j,k+1)[1]-8.0*CCVelocity(i,j,k-1)[1] + CCVelocity(i,j,k-2)[1])/dz/12.0;
-                                                           
+
     //VelgWx=(-CCVelocity(i+2,j,k)[2] +8.0*CCVelocity(i+1,j,k)[2]-8.0*CCVelocity(i-1,j,k)[2] + CCVelocity(i-2,j,k)[2])/dx/12.0;
     //VelgWy=(-CCVelocity(i,j+2,k)[2] +8.0*CCVelocity(i,j+1,k)[2]-8.0*CCVelocity(i,j-1,k)[2] + CCVelocity(i,j-2,k)[2])/dy/12.0;
     //VelgWz=(-2.0*wVel(i,j,k+2)      +12.0*wVel(i,j,k+1)        -6.0*wVel(i,j,k)            -4.0*wVel(i,j,k-1))/dz/12.0;
-    
-    // face velocity of second order-most reliable 
+
+    // face velocity of second order-most reliable
     //VelgUx=(uVel(i+1,j,k) - uVel(i,j,k))/dx;
     //VelgUy=(CCVelocity(i,j+1,k)[0] - CCVelocity(i,j-1,k)[0])/dy/2.0;
     //VelgUz=(CCVelocity(i,j,k+1)[0] - CCVelocity(i,j,k-1)[0])/dz/2.0;
-                                                           
+
     //VelgVx=(CCVelocity(i+1,j,k)[1] - CCVelocity(i-1,j,k)[1])/dx/2.0;
     //VelgVy=(vVel(i,j+1,k) - vVel(i,j,k))/dy;
     //VelgVz=(CCVelocity(i,j,k+1)[1] - CCVelocity(i,j,k-1)[1])/dz/2.0;
-                                                           
+
     //VelgWx=(CCVelocity(i+1,j,k)[2] - CCVelocity(i-1,j,k)[2])/dx/2.0;
     //VelgWy=(CCVelocity(i,j+1,k)[2] - CCVelocity(i,j-1,k)[2])/dy/2.0;
     //VelgWz=(wVel(i,j,k+1)-wVel(i,j,k))/dz;
-    
+
     // Consider the kokkos interface and old interface
     VelgUx=(uVel(i+1,j,k) - uVel(i,j,k))/dx;
     VelgUy=(CCuVel(i,j+1,k) - CCuVel(i,j-1,k))/dy/2.0;
     VelgUz=(CCuVel(i,j,k+1) - CCuVel(i,j,k-1))/dz/2.0;
-                                                           
+
     VelgVx=(CCvVel(i+1,j,k) - CCvVel(i-1,j,k))/dx/2.0;
     VelgVy=(vVel(i,j+1,k) - vVel(i,j,k))/dy;
     VelgVz=(CCvVel(i,j,k+1) - CCvVel(i,j,k-1))/dz/2.0;
-                                                           
+
     VelgWx=(CCwVel(i+1,j,k) - CCwVel(i-1,j,k))/dx/2.0;
     VelgWy=(CCwVel(i,j+1,k) - CCwVel(i,j-1,k))/dy/2.0;
     VelgWz=(wVel(i,j,k+1)-wVel(i,j,k))/dz;
 
-    
+
     G11=VelgUx*VelgUx+VelgVx*VelgVx+VelgWx*VelgWx;
     G12=VelgUx*VelgUy+VelgVx*VelgVy+VelgWx*VelgWy;
     G13=VelgUx*VelgUz+VelgVx*VelgVz+VelgWx*VelgWz;
@@ -302,7 +302,7 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
     sigma3=pow(I1/3-2*sqrt(alpha1)*cos(m_PI/3-alpha3),0.5);
 
     sigOper=std::max( 1e-30, sigma3*(sigma1-sigma2)*(sigma2-sigma3)/(sigma1*sigma1) );
-     
+
     const double s11= VelgUx;
     const double s22= VelgVy;
     const double s33= VelgWz;
@@ -317,7 +317,7 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
 
     mu_sgc(i,j,k) =  ( m_Cs * m_Cs * filter2 * sigOper  * Density_sigma(i,j,k)+m_molecular_visc )
                               * vol_fraction(i,j,k) ;
-    mu_turb(i,j,k) = (mu_sgc(i,j,k) - m_molecular_visc)*vol_fraction(i,j,k); // 
+    mu_turb(i,j,k) = (mu_sgc(i,j,k) - m_molecular_visc)*vol_fraction(i,j,k); //
 
     //TurbViscosity_new(i,j,k) = viscosity_new(i,j,k) - mu;
 
@@ -332,7 +332,7 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
 
   });
 
-  BCfilter bcfilter;
-  bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction); 
-  bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction); 
+  ArchesCore::BCFilter bcfilter;
+  bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction);
+  bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction);
 }

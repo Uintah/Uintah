@@ -173,15 +173,16 @@ namespace Uintah{
   void
     MultifractalSGS::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-      SFCXVariable<double>& ucell_xSgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress"));
-      SFCXVariable<double>& ucell_ySgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_ySgsStress"));
-      SFCXVariable<double>& ucell_zSgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_zSgsStress"));
-      SFCYVariable<double>& vcell_xSgsStress = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_xSgsStress"));
-      SFCYVariable<double>& vcell_ySgsStress = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_ySgsStress"));
-      SFCYVariable<double>& vcell_zSgsStress = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_zSgsStress"));
-      SFCZVariable<double>& wcell_xSgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_xSgsStress"));
-      SFCZVariable<double>& wcell_ySgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_ySgsStress"));
-      SFCZVariable<double>& wcell_zSgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_zSgsStress"));
+      // Unused - creating a compiler warning
+      // SFCXVariable<double>& ucell_xSgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress"));
+      // SFCXVariable<double>& ucell_ySgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_ySgsStress"));
+      // SFCXVariable<double>& ucell_zSgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_zSgsStress"));
+      // SFCYVariable<double>& vcell_xSgsStress = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_xSgsStress"));
+      // SFCYVariable<double>& vcell_ySgsStress = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_ySgsStress"));
+      // SFCYVariable<double>& vcell_zSgsStress = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_zSgsStress"));
+      // SFCZVariable<double>& wcell_xSgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_xSgsStress"));
+      // SFCZVariable<double>& wcell_ySgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_ySgsStress"));
+      // SFCZVariable<double>& wcell_zSgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_zSgsStress"));
 
     }
 
@@ -297,7 +298,7 @@ namespace Uintah{
 
           double strainUD_magn = sqrt(StrainUD[1-1]*StrainUD[1-1]+StrainUD[2-1]*StrainUD[2-1]+StrainUD[3-1]*StrainUD[3-1]
                                  + 2.0*(StrainUD[4-1]*StrainUD[4-1]+StrainUD[5-1]*StrainUD[5-1]+StrainUD[6-1]*StrainUD[6-1]));
-          
+
 
           // calcuting strain ratio
           for (unsigned int iter=0 ;iter < StrainUD.size(); iter++)
@@ -312,7 +313,7 @@ namespace Uintah{
           double C_sgs_G = sgsVelCoeff(mu,LegthScales,strainUD_magn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
 
           // paper 2004(II)-eq.14
-          
+
           // at u-cell xface
           tau[0]= ucell_xvel_face(i,j,k)*ucell_xvel_face(i,j,k);
           tau[1]= ucell_xvel_face(i,j,k)*ucell_XvelD(i,j,k)*C_sgs_G;

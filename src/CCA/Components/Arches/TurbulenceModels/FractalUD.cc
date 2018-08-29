@@ -177,9 +177,9 @@ namespace Uintah{
       SFCZVariable<double>& wcell_YvelD     = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_YvelD"));
       SFCZVariable<double>& wcell_ZvelD     = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_ZvelD"));
       //U2D
-      SFCXVariable<double>& u2D_ctr    = *(tsk_info->get_uintah_field<SFCXVariable<double> >("u2D_ctr"));
-      SFCYVariable<double>& v2D_ctr   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >("v2D_ctr"));
-      SFCZVariable<double>& w2D_ctr    = *(tsk_info->get_uintah_field<SFCZVariable<double> >("w2D_ctr"));
+      // SFCXVariable<double>& u2D_ctr    = *(tsk_info->get_uintah_field<SFCXVariable<double> >("u2D_ctr"));
+      // SFCYVariable<double>& v2D_ctr   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >("v2D_ctr"));
+      // SFCZVariable<double>& w2D_ctr    = *(tsk_info->get_uintah_field<SFCZVariable<double> >("w2D_ctr"));
       uD_ctr.initialize(0.0);
       ucell_XvelD.initialize(0.0);
       ucell_YvelD.initialize(0.0);

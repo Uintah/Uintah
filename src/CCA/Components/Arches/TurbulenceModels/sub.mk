@@ -10,7 +10,7 @@ SRCDIR := CCA/Components/Arches/TurbulenceModels
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =            
+CUDA_ENABLED_SRCS =
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -27,6 +27,7 @@ endif
 # Normal source files:
 
 SRCS += \
+				$(SRCDIR)/DynamicSmagorinskyHelper.cc \
 				$(SRCDIR)/SGSsigma.cc \
 				$(SRCDIR)/Smagorinsky.cc \
 				$(SRCDIR)/DSmaCs.cc \

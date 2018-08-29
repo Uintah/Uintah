@@ -5,7 +5,7 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   SGSforTransport::SGSforTransport( std::string task_name, int matl_index ) :
     TaskInterface( task_name, matl_index ) {
-      // Create SGS stress 
+      // Create SGS stress
       m_SgsStress_names.resize(9);
       m_SgsStress_names[0] = "ucell_xSgsStress";
       m_SgsStress_names[1] = "ucell_ySgsStress";
@@ -97,11 +97,12 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   void
     SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-    
-      SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
-      SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
-      SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
-    
+
+      // Unused - creating a compiler warning
+      // SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
+      // SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
+      // SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
+
     }
 
   //--------------------------------------------------------------------------------------------------
@@ -123,9 +124,9 @@ namespace Uintah{
     SGSforTransport::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       Vector Dx=patch->dCell();
       //  double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();
-      double vol = Dx.x()*Dx.y()*Dx.z();
-      double Area_NS =Dx.x()*Dx.z(); 
-      double Area_EW =Dx.y()*Dx.z(); 
+      // double vol = Dx.x()*Dx.y()*Dx.z();
+      double Area_NS =Dx.x()*Dx.z();
+      double Area_EW =Dx.y()*Dx.z();
       double Area_TB =Dx.x()*Dx.y();
       double densitygas=1.0;//kg/m3
       double cellvol=Dx.x()*Dx.y()*Dx.z();

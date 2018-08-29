@@ -120,7 +120,6 @@ Deposition::problemSetup(const ProblemSpecP& inputdb, int qn)
   std::string w_name = ArchesCore::append_qn_env( "w", d_quadNode );
   EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(w_name);
   _w_scale = temp_eqn.getScalingConstant(d_quadNode);
-  DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
 
   _w_label = VarLabel::find(w_name);
 

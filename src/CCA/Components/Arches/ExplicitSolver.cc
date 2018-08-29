@@ -1130,7 +1130,6 @@ ExplicitSolver::sched_initialize( const LevelP& level,
     BFM::iterator i_partmod_fac = _task_factory_map.find("particle_model_factory");
     BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
     BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
-    BFM::iterator i_turb_model_fac = _task_factory_map.find("turbulence_model_factory");
 
     i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
     i_util_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
@@ -3148,7 +3147,6 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     new_dw->get(cellType,  d_lab->d_cellTypeLabel,      indx,patch, gn, 0);
 
     // For adding other source terms as specified in the pressure solver section
-    SourceTermFactory& factory = SourceTermFactory::self();
     std::vector<std::string> extra_sources;
     extra_sources = d_pressSolver->get_pressure_source_ref();
     std::vector<constCCVariable<double> > src_values;
