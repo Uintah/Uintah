@@ -141,8 +141,8 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // Need weight name and scaling constant
-  //std::string weight_name = ArchesCore::append_env("w", d_quadNode);
-  _weight_varlabel = VarLabel::find(weight_name);
+  std::string unscaled_weight_name = ArchesCore::append_env("w", d_quadNode);
+  _weight_varlabel = VarLabel::find(unscaled_weight_name);
   std::string scaled_weight_name = ArchesCore::append_qn_env("w", d_quadNode);
   _scaled_weight_varlabel = VarLabel::find(scaled_weight_name);
   std::string weightqn_name = ArchesCore::append_qn_env("w", d_quadNode);
