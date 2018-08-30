@@ -355,7 +355,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
 
   // delt_vartype delT;
   // old_dw->get(delT, lb->delTLabel, getLevel(patches) );
-	  
+          
   for(int p=0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
@@ -430,7 +430,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
 
           // Calculate crack propagation velocity
           double vc1=0.,vc2=0.,vcc=0.;
-	  /*
+          /*
           if(sp) { // Record crack incremental and time instant 
             cfSegDis[m][2*i]=(p1p-p1).length();
             cfSegTime[m][2*i] =simTime-delT;            
@@ -446,7 +446,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
             vc2=cfSegDis[m][2*i+1]/(simTime-cfSegTime[m][2*i+1]);
             vcc=(vc1+vc2)/2.;
           }  
-	  */
+          */
           short CASE=0;             // No propagation
           if(l12/css[m]<0.25) {
             CASE=1;                 // Too short segment, drop it

@@ -180,9 +180,6 @@ TableLookup::setDependBCs(
 
       if (i_bc->second.has_patch(patch->getID()) ){
 
-        //Get the iterator
-        Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-
         std::string facename = i_bc->second.name;
 
         std::map<std::string, const VarLabel*> depend_var_map = model->getDVVars();

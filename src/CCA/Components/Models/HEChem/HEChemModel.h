@@ -73,7 +73,7 @@ namespace Uintah {
   class HEChemModel : public ModelInterface {
   public:
     HEChemModel(const ProcessorGroup* myworld,
-		const MaterialManagerP materialManager)
+                const MaterialManagerP materialManager)
       : ModelInterface(myworld, materialManager) {};
 
     virtual ~HEChemModel() {};
@@ -83,17 +83,17 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
     virtual void scheduleInitialize(SchedulerP& scheduler,
-				    const LevelP& level) = 0;
+                                    const LevelP& level) = 0;
 
     virtual void scheduleComputeStableTimeStep(SchedulerP& scheduler,
-					       const LevelP& level) = 0;
+                                               const LevelP& level) = 0;
 
     // Used by DDT1 ONLY.
     virtual void scheduleRefine(const PatchSet* patches,
-				SchedulerP& sched) {};
+                                SchedulerP& sched) {};
 
     virtual void scheduleComputeModelSources(SchedulerP& scheduler,
-					     const LevelP& level) = 0;
+                                             const LevelP& level) = 0;
 
     // Used by LightTime ONLY.
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,

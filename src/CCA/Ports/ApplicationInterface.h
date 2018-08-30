@@ -74,7 +74,6 @@ WARNING
   class Regridder;
   class Output;
   
-  class SimulationTime;
   class VarLabel;
 
   class DebugStream;
@@ -262,7 +261,6 @@ WARNING
     virtual bool activeReductionVariable(std::string name) = 0;
     
     // Access methods for member classes.
-    virtual SimulationTime * getSimulationTime() const = 0;
     virtual MaterialManagerP getMaterialManagerP() const = 0;
 
     // Application stats
@@ -280,6 +278,43 @@ WARNING
     virtual void reduceApplicationStats( bool allReduce,
                                          const ProcessorGroup* myWorld ) = 0;
 
+
+    virtual void   setDelTOverrideRestart( double val ) = 0;
+    virtual double getDelTOverrideRestart() const = 0;
+
+    virtual void   setDelTInitialMax( double val ) = 0;
+    virtual double getDelTInitialMax() const = 0;
+
+    virtual void   setDelTInitialRange( double val ) = 0;
+    virtual double getDelTInitialRange() const = 0;
+
+    virtual void   setDelTMultiplier( double val ) = 0;
+    virtual double getDelTMultiplier() const = 0;
+
+    virtual void   setDelTMaxIncrease( double val ) = 0;
+    virtual double getDelTMaxIncrease() const = 0;
+    
+    virtual void   setDelTMin( double val ) = 0;
+    virtual double getDelTMin() const = 0;
+
+    virtual void   setDelTMax( double val ) = 0;
+    virtual double getDelTMax() const = 0;
+
+    virtual void   setSimTimeEndAtMax( bool val ) = 0;
+    virtual bool   getSimTimeEndAtMax() const = 0;
+
+    virtual void   setSimTimeMax( double val ) = 0;
+    virtual double getSimTimeMax() const = 0;
+
+    virtual void   setTimeStepsMax( int val ) = 0;
+    virtual int    getTimeStepsMax() const = 0;
+
+    virtual void   setWallTimeMax( double val ) = 0;
+    virtual double getWallTimeMax() const = 0;
+
+    virtual void   setClampTimeToOutput( bool val ) = 0;
+    virtual bool   getClampTimeToOutput() const = 0;
+    
     // The member methods are private as the child application should
     // ONLY get/set these values via the data warehouse.
   private:
@@ -318,6 +353,7 @@ WARNING
 
     virtual bool isLastTimeStep( double walltime ) = 0;
     virtual bool maybeLastTimeStep( double walltime ) const = 0;
+
 
     ApplicationInterface(const ApplicationInterface&);
     ApplicationInterface& operator=(const ApplicationInterface&);

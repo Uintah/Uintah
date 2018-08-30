@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/PostProcessUda/PostProcess.h>
+#include <CCA/Components/PostProcessUda/PostProcessUda.h>
 #include <CCA/Components/PostProcessUda/ModuleFactory.h>
 #include <Core/Exceptions/InternalError.h>
 
@@ -137,15 +137,14 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   // Adjust the time state - done after it is read.
-  double t_start = d_udaTimes[0];
-  double t_end   = d_udaTimes[ d_udaTimes.size() -1 ];
-  getSimulationTime()->m_delt_factor = 1;
-  getSimulationTime()->m_delt_min    = 0;
-  getSimulationTime()->m_delt_max    = 1e99;
-  getSimulationTime()->m_init_time   = t_start;
-  getSimulationTime()->m_max_time    = t_end;
-  getSimulationTime()->m_max_delt_increase = 1e99;
-  getSimulationTime()->m_max_initial_delt  = 1e99;
+  m_simTime         = d_udaTimes[0];
+  m_simTimeMax      = d_udaTimes[d_udaTimes.size()-1];
+
+  m_delTInitialMax  = 1e99;
+  m_delTMin         = 0.0;
+  m_delTMax         = 1e99;
+  m_delTMultiplier  = 1.0;
+  m_delTMaxIncrease = 1e99;
 
   proc0cout << "\n";
 }

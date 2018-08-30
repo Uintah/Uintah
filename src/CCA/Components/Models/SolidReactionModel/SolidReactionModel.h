@@ -77,7 +77,7 @@ namespace Uintah {
       virtual void outputProblemSpec(ProblemSpecP& ps);
         
       virtual void scheduleInitialize(SchedulerP&,
-				      const LevelP& level);
+                                      const LevelP& level);
         
       virtual void restartInitialize() {}
       

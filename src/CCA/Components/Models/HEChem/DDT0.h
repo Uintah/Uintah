@@ -68,20 +68,20 @@ WARNING
   class DDT0 : public HEChemModel {
   public:
     DDT0(const ProcessorGroup* myworld,
-	 const MaterialManagerP& materialManager,
-	 const ProblemSpecP& params,
-	 const ProblemSpecP& prob_spec);
+         const MaterialManagerP& materialManager,
+         const ProblemSpecP& params,
+         const ProblemSpecP& prob_spec);
 
     virtual ~DDT0();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
     virtual void problemSetup(GridP& grid,
-			       const bool isRestart);
+                               const bool isRestart);
 
       
     virtual void scheduleInitialize(SchedulerP&,
-				    const LevelP& level);
+                                    const LevelP& level);
 
     virtual void initialize(const ProcessorGroup*,
                             const PatchSubset*,
@@ -92,10 +92,10 @@ WARNING
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
-					       const LevelP& level);
+                                               const LevelP& level);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-						   const LevelP& level);
+                                                   const LevelP& level);
                                              
   private:    
     void computeModelSources(const ProcessorGroup*, 

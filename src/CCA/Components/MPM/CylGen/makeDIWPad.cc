@@ -1,8 +1,5 @@
-// This is a circle packing code that generates a distribution of cylinders
-// according to a user specified size distribution and a target volume fraction.
-// User can either ask for a uniform distribution of particles based on a
-// min and max diameter, or can specify a non-uniform distribution.
-
+// This little code generates simple BCC geometries for direct ink write "foam"
+// pads.
 
 // To compile:
 
@@ -12,9 +9,10 @@
 
 // >makeDIWPad
 
-// The code will create a PositionRadius.txt file, and also an xml file
-// called DIWPad.xml which is compatible for inclusion in a Uintah Problem
-// Specification (ups) file.
+// Inputs, listed below, include the number of threads per layer, thread
+// diameter, thread spacing and thread overlap.  The output is an xml file
+// the name of which contains much of this information, and is
+// compatible for inclusion in a Uintah Problem Specification (ups) file.
 
 
 #include <stdlib.h>
@@ -43,7 +41,7 @@ int main()
   // Parameters for user to change - BEGIN
 
   int numLayers         = 10;
-  int threadsPerLayer   = 20;
+  int threadsPerLayer   = 25;
   double threadDiameter = 0.0355;
   double threadSpacing  = 0.0710;
   double threadOverlap  = 0.10; // Fraction of the diameter

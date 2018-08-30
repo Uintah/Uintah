@@ -44,7 +44,7 @@ using namespace Uintah;
 //______________________________________________________________________
 //  Preliminary
 Burger::Burger(const ProcessorGroup* myworld,
-	       const MaterialManagerP materialManager)
+               const MaterialManagerP materialManager)
   : ApplicationCommon(myworld, materialManager)
 {
   u_label = VarLabel::create("u", NCVariable<double>::getTypeDescription());

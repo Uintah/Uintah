@@ -64,8 +64,8 @@ WARNING
   class IandG : public HEChemModel {
   public:
     IandG(const ProcessorGroup* myworld,
-	  const MaterialManagerP& materialManager,
-	  const ProblemSpecP& params);
+          const MaterialManagerP& materialManager,
+          const ProblemSpecP& params);
     
     virtual ~IandG();
 
@@ -84,14 +84,14 @@ WARNING
                                                const LevelP& level);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-					     const LevelP& level);
+                                             const LevelP& level);
                                              
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-			     const MaterialSubset* matls, 
+                             const MaterialSubset* matls, 
                              DataWarehouse*, 
-			     DataWarehouse* new_dw);
+                             DataWarehouse* new_dw);
 
     IandG(const IandG&);
     IandG& operator=(const IandG&);

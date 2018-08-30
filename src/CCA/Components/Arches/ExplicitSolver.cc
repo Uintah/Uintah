@@ -915,6 +915,25 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   }
 
   tsk->computes(d_lab->d_delTLabel,level.get_rep());
+
+#ifdef OUTPUT_WITH_BAD_DELTA_T
+  // This method is called at both initialization and
+  // otherwise. At initialization the old DW, i.e. DW(0) will not
+  // exist so require the value from the new DW.  Otherwise for a
+  // normal time step require the time step from the old DW.
+  if(sched->get_dw(0) ) {
+    tsk->requires( Task::OldDW, VarLabel::find(timeStep_name) );
+  }
+  else if(sched->get_dw(1) ) {
+    tsk->requires( Task::NewDW, VarLabel::find(timeStep_name) );
+  }
+
+  // For when delta T goes below a value output and checkpoint
+  tsk->computes( VarLabel::find(    outputTimeStep_name) );
+  tsk->computes( VarLabel::find(checkpointTimeStep_name) );
+  tsk->computes( VarLabel::find(     endSimulation_name) );
+#endif
+  
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 
 }
@@ -1091,6 +1110,27 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
       delta_t = delta_t2;
       new_dw->put(delt_vartype(delta_t), d_lab->d_delTLabel, level);
 
+#ifdef OUTPUT_WITH_BAD_DELTA_T
+      // This method is called at both initialization and otherwise. At
+      // initialization the old DW will not exist so get the value from
+      // the new DW.  Otherwise for a normal time step get the time step
+      // from the old DW.
+      timeStep_vartype timeStep(0);
+
+      if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
+        old_dw->get(timeStep, VarLabel::find(timeStep_name) );
+      else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
+        new_dw->get(timeStep, VarLabel::find(timeStep_name) );
+      
+      // If after the first 10 time steps delta T goes below this
+      // value immediately output and checkpoint. Then end the simulation.
+      if( 10 < timeStep && delta_t <= 0.01 )
+      {
+        new_dw->put( bool_or_vartype(true), VarLabel::find(    outputTimeStep_name) );
+        new_dw->put( bool_or_vartype(true), VarLabel::find(checkpointTimeStep_name) );
+        new_dw->put( bool_or_vartype(true), VarLabel::find(     endSimulation_name) );
+      }
+#endif      
     }
   } else { // if not on the arches level
 
@@ -1130,7 +1170,6 @@ ExplicitSolver::sched_initialize( const LevelP& level,
     BFM::iterator i_partmod_fac = _task_factory_map.find("particle_model_factory");
     BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
     BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
-    BFM::iterator i_turb_model_fac = _task_factory_map.find("turbulence_model_factory");
 
     i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
     i_util_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
@@ -3148,7 +3187,6 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     new_dw->get(cellType,  d_lab->d_cellTypeLabel,      indx,patch, gn, 0);
 
     // For adding other source terms as specified in the pressure solver section
-    SourceTermFactory& factory = SourceTermFactory::self();
     std::vector<std::string> extra_sources;
     extra_sources = d_pressSolver->get_pressure_source_ref();
     std::vector<constCCVariable<double> > src_values;

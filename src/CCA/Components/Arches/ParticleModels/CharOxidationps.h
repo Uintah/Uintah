@@ -740,8 +740,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
     tsk_info->get_const_uintah_field< CT, const double, MemorySpace>(species[ns], _species_names[ns], _patch, _matl_index, _time_substep);
   }
 
-  // number_density is unused.
-  //CT& number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ); // total number density
+  // CT& number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ); // total number density - unused
 
   // model variables (CCVariables)
   auto char_rate           = tsk_info->get_uintah_field_add<T, double, MemorySpace>(m_modelLabel, _patch, _matl_index, _new_dw_time_substep);

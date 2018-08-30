@@ -63,7 +63,7 @@ WARNING
   class AMRWave : public Wave {
   public:
     AMRWave(const ProcessorGroup* myworld,
-	    const MaterialManagerP materialManager);
+            const MaterialManagerP materialManager);
     
     virtual ~AMRWave();
 

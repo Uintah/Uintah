@@ -215,11 +215,11 @@ template<typename ExecutionSpace, typename MemSpace>
 void
 MMS_scalar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
-
-  CCVariable<double>& f_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_label));
-  CCVariable<double>& s_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_label));
-  CCVariable<double>& s_diff_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_diff_label));
-  CCVariable<double>& s_t_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_t_label));
+  // Nothing going on here...did we mean to initialize the variable? 
+  // CCVariable<double>& f_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_label));
+  // CCVariable<double>& s_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_label));
+  // CCVariable<double>& s_diff_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_diff_label));
+  // CCVariable<double>& s_t_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_t_label));
 
 }
 

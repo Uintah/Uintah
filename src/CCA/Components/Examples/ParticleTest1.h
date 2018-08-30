@@ -66,7 +66,7 @@ WARNING
   class ParticleTest1 : public ApplicationCommon {
   public:
     ParticleTest1(const ProcessorGroup* myworld,
-		  const MaterialManagerP materialManager);
+                  const MaterialManagerP materialManager);
     
     virtual ~ParticleTest1();
 

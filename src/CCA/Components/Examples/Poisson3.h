@@ -71,7 +71,7 @@ WARNING
   class Poisson3 : public ApplicationCommon {
   public:
     Poisson3(const ProcessorGroup* myworld,
-	     const MaterialManagerP materialManager);
+             const MaterialManagerP materialManager);
     
     virtual ~Poisson3();
 

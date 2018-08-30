@@ -87,7 +87,7 @@ LinearSwelling::problemSetup(const ProblemSpecP& params, int qn)
 
   m_init_diam = ArchesCore::get_inlet_particle_size( db, qn );
   double init_particle_density = ArchesCore::get_inlet_particle_density( db );
-  double ash_mass_frac = coal_helper.get_coal_db().ash_mf; 
+  double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
   double p_volume = M_PI/6.*m_init_diam*m_init_diam*m_init_diam; // particle volme [m^3]
   m_init_rc = p_volume*init_particle_density*(1.-ash_mass_frac);
 
@@ -117,8 +117,6 @@ LinearSwelling::problemSetup(const ProblemSpecP& params, int qn)
   std::string scaled_weight_name = ArchesCore::append_qn_env("w", d_quadNode);
   m_scaled_weight_varlabel = VarLabel::find(scaled_weight_name);
   std::string weightqn_name = ArchesCore::append_qn_env("w", d_quadNode);
-  EqnBase& temp_current_eqn2 = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
-  DQMOMEqn& current_eqn2 = dynamic_cast<DQMOMEqn&>(temp_current_eqn2);
 
   // Get rcmass scaling constant
   std::string rc_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);

@@ -53,11 +53,11 @@
 #include <CCA/Components/Models/ModelFactory.h>
 #include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <CCA/Components/Regridder/RegridderFactory.h>
 #include <CCA/Components/Schedulers/SchedulerFactory.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
+#include <CCA/Ports/SolverInterface.h>
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Schedulers/UnifiedScheduler.h>

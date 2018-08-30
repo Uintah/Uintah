@@ -36,7 +36,7 @@ using namespace Uintah;
 static DebugStream cout_doing("MPM", false);
 
 MPMCommon::MPMCommon(const ProcessorGroup* myworld,
-		     MaterialManagerP materialManager) :
+                     MaterialManagerP materialManager) :
   ApplicationCommon(myworld, materialManager)
 {
   lb = scinew MPMLabel();
@@ -84,7 +84,7 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     MPMMaterial *mat = scinew MPMMaterial(ps, m_materialManager, flags,isRestart);
 
     mat->registerParticleState( d_particleState,
-				d_particleState_preReloc );
+                                d_particleState_preReloc );
     
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
@@ -130,7 +130,7 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
     CZMaterial *mat = scinew CZMaterial(ps, m_materialManager, flags);
 
     mat->registerParticleState( d_cohesiveZoneState,
-				d_cohesiveZoneState_preReloc );
+                                d_cohesiveZoneState_preReloc );
 
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will

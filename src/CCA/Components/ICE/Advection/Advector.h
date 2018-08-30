@@ -85,7 +85,7 @@ namespace Uintah {
                           SFCXVariable<double>& q_XFC,
                           SFCYVariable<double>& q_YFC,
                           SFCZVariable<double>& q_ZFC,
-			     DataWarehouse* /*new_dw*/)=0;
+                             DataWarehouse* /*new_dw*/)=0;
 
     virtual void advectQ(const CCVariable<double>& q_CC,
                          const CCVariable<double>& mass,
@@ -138,12 +138,12 @@ namespace Uintah {
   class ignore_q_FC_calc_D {     // does nothing
     public:
     inline void operator()( const IntVector&,
-			    SFCXVariable<double>&, 
-			    SFCYVariable<double>&,  
-			    SFCZVariable<double>&,  
-			    double[],  
-			    double[],
-			    const CCVariable<double>&)
+                            SFCXVariable<double>&, 
+                            SFCYVariable<double>&,  
+                            SFCZVariable<double>&,  
+                            double[],  
+                            double[],
+                            const CCVariable<double>&)
     {
     }
   };
@@ -151,12 +151,12 @@ namespace Uintah {
   class ignore_q_FC_calc_V {    // does nothing
     public:
     inline void operator()( const IntVector&,
-			    SFCXVariable<double>&, 
-			    SFCYVariable<double>&,  
-			    SFCZVariable<double>&,  
-			    double[],  
-			    Vector[],
-			    const CCVariable<Vector>&)
+                            SFCXVariable<double>&, 
+                            SFCYVariable<double>&,  
+                            SFCZVariable<double>&,  
+                            double[],  
+                            Vector[],
+                            const CCVariable<Vector>&)
     {
     }
   };
@@ -166,12 +166,12 @@ namespace Uintah {
   class save_q_FC {
     public:
     inline void operator()( const IntVector& c, 
-			    SFCXVariable<double>& q_XFC,           
-			    SFCYVariable<double>& q_YFC,           
-			    SFCZVariable<double>& q_ZFC,           
-			    double faceVol[], 
-			    double q_face_flux[],
-			    const CCVariable<double>& q_CC) 
+                            SFCXVariable<double>& q_XFC,           
+                            SFCYVariable<double>& q_YFC,           
+                            SFCZVariable<double>& q_ZFC,           
+                            double faceVol[], 
+                            double q_face_flux[],
+                            const CCVariable<double>& q_CC) 
     {
     
       double tmp_XFC, tmp_YFC, tmp_ZFC, q_tmp;

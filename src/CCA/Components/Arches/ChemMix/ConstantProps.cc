@@ -132,7 +132,7 @@ ConstantProps::sched_getState( const LevelP& level,
           sched->get_dw(0)->get( timeStep, m_timeStepLabel );
         else if( sched->get_dw(1) && sched->get_dw(1)->exists( m_timeStepLabel ) )
           sched->get_dw(1)->get( timeStep, m_timeStepLabel );
-        
+
         if ( timeStep != 0 ){
           tsk->requires( Task::OldDW, i->second, Ghost::None, 0 );
         }
@@ -293,7 +293,7 @@ ConstantProps::getState( const ProcessorGroup* pc,
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-        std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first );
+        //std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); //unused 
 
         if ( i->first == "density" ){
           (*i->second.var)[c] *= eps_vol[c];

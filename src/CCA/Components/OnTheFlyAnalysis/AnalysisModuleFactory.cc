@@ -68,8 +68,8 @@ AnalysisModuleFactory::~AnalysisModuleFactory()
 
 std::vector<AnalysisModule*>
 AnalysisModuleFactory::create(const ProcessorGroup* myworld,
-			      const MaterialManagerP materialManager,
-			      const ProblemSpecP& prob_spec)
+                              const MaterialManagerP materialManager,
+                              const ProblemSpecP& prob_spec)
 {
   std::string module("");
   ProblemSpecP da_ps = prob_spec->findBlock("DataAnalysis");
@@ -79,8 +79,8 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
   if (da_ps) {
   
     for( ProblemSpecP module_ps = da_ps->findBlock( "Module" );
-	              module_ps != nullptr;
-	              module_ps = module_ps->findNextBlock( "Module" ) ) {
+                      module_ps != nullptr;
+                      module_ps = module_ps->findNextBlock( "Module" ) ) {
                         
       if( !module_ps ) {
         throw ProblemSetupException( "\nERROR<DataAnalysis>: Could not find find <Module> tag.\n", __FILE__, __LINE__ );
@@ -137,9 +137,9 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
 #endif    
 
       else {
-	std::ostringstream msg;
-	msg << "\nERROR<DataAnalysis>: Unknown analysis module : " << module << ".\n";
-	throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+        std::ostringstream msg;
+        msg << "\nERROR<DataAnalysis>: Unknown analysis module : " << module << ".\n";
+        throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
       }
     } 
   }

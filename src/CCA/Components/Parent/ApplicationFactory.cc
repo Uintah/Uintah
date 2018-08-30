@@ -24,7 +24,7 @@
 
 #include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
-#include <CCA/Components/PostProcessUda/PostProcess.h>
+#include <CCA/Components/PostProcessUda/PostProcessUda.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>

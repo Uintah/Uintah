@@ -28,7 +28,7 @@ namespace Uintah {
   class impAMRICE : public AMRICE{
   public:
     impAMRICE(const ProcessorGroup* myworld,
-	      const MaterialManagerP materialManager);
+              const MaterialManagerP materialManager);
     
     virtual ~impAMRICE();
     

@@ -390,9 +390,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
               double gradv = bc->getValue();
 
               for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
-		IntVector nd = *nbound_ptr;
-		variable[nd] = variable[nd-off] - gradv*dx;
-	      }
+                IntVector nd = *nbound_ptr;
+                variable[nd] = variable[nd-off] - gradv*dx;
+              }
 
               for(NodeIterator it(l,h); !it.done(); it++) {
                 IntVector nd = *it;

@@ -82,9 +82,9 @@ WARNING
   class MesoBurn : public HEChemModel {
   public:
     MesoBurn(const ProcessorGroup* myworld,
-	     const MaterialManagerP& materialManager,
-	     const ProblemSpecP& params,
-	     const ProblemSpecP& prob_spec);
+             const MaterialManagerP& materialManager,
+             const ProblemSpecP& params,
+             const ProblemSpecP& prob_spec);
     
     virtual ~MesoBurn();
 
@@ -112,15 +112,15 @@ WARNING
 
   private:    
     void computeModelSources(const ProcessorGroup*,
-			     const PatchSubset*,
+                             const PatchSubset*,
                              const MaterialSubset*,
-			     DataWarehouse*, 
+                             DataWarehouse*, 
                              DataWarehouse*);
     
     void computeParticleVariables(const ProcessorGroup*,
-				  const PatchSubset*,
+                                  const PatchSubset*,
                                   const MaterialSubset*,
-				  DataWarehouse*, 
+                                  DataWarehouse*, 
                                   DataWarehouse*);
     
     double computeBurnedMass(double To, double& Ts,  double P, double Vc,

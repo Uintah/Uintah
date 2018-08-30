@@ -638,7 +638,6 @@ template<typename ExecutionSpace, typename MemorySpace>
 void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   const double dt = tsk_info->get_dt();
-  std::vector<std::string>::iterator i = _ave_sum_names.begin();
 
   int N = _ave_sum_names.size();
 

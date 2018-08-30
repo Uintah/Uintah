@@ -55,7 +55,7 @@ CoalGasHeat::problemSetup(const ProblemSpecP& inputdb)
     }
 
     int Nenv = ArchesCore::get_num_env(db,ArchesCore::DQMOM_METHOD);
-    double ash_mass_frac = coal_helper.get_coal_db().ash_mf; 
+    double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
     double init_particle_density = ArchesCore::get_inlet_particle_density( db );
     double initial_diameter = 0.0;
     double p_volume = 0.0;
@@ -98,8 +98,6 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     weight_name += node;
     model_name  += "_qn";
     model_name  += node;
-
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( weight_name );
 
     ModelBase& model = modelFactory.retrieve_model( model_name );
 

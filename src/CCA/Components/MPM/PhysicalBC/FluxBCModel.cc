@@ -152,7 +152,7 @@ void FluxBCModel::scheduleApplyExternalScalarFlux(SchedulerP& sched, const Patch
   t->requires(Task::OldDW, d_mpm_lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pSizeLabel,              Ghost::None);
   if(d_mpm_flags->d_doScalarDiffusion){
-    t->requires(Task::OldDW, d_mpm_lb->diffusion->pArea,		Ghost::None);
+    t->requires(Task::OldDW, d_mpm_lb->diffusion->pArea,                Ghost::None);
   }
   t->requires(Task::OldDW, d_mpm_lb->pVolumeLabel,            Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pDeformationMeasureLabel,Ghost::None);

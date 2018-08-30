@@ -254,10 +254,11 @@ template <typename T>
 template<typename ExecutionSpace, typename MemSpace>
 void MMS_mom_csmag<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
-  T& f_mms = *(tsk_info->get_uintah_field<T>(m_MMS_label));
-  T& s_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_label));
-  T& s_diff_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_diff_label));
-  T& s_t_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_t_label));
+  // These aren't used and are creating a compiler warning. 
+  // T& f_mms = *(tsk_info->get_uintah_field<T>(m_MMS_label));
+  // T& s_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_label));
+  // T& s_diff_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_diff_label));
+  // T& s_t_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_t_label));
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -292,7 +293,7 @@ void MMS_mom_csmag<T>::compute_source( const Patch* patch, ArchesTaskInfoManager
   T& f_mms = *(tsk_info->get_uintah_field<T>(m_MMS_label));
   T& s_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_label));
   T& s_diff_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_diff_label));
-  T& s_t_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_t_label));
+ // T& s_t_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_t_label));
 
   constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);
   constCCVariable<double>& y = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_y_name);

@@ -53,7 +53,7 @@ class AMRMPM : public SerialMPM {
 
 public:
   AMRMPM(const ProcessorGroup* myworld,
-	 const MaterialManagerP materialManager);
+         const MaterialManagerP materialManager);
   
   virtual ~AMRMPM();
   SDInterfaceModel* d_sdInterfaceModel;
@@ -80,7 +80,7 @@ public:
                                         SchedulerP&);
 
   virtual void scheduleAnalysis(const LevelP& level,
-				SchedulerP&);
+                                SchedulerP&);
 
   virtual void scheduleRefine(const PatchSet* patches, 
                               SchedulerP& scheduler);

@@ -459,7 +459,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
   if ( d_monitorCell != IntVector(-9,-9,-9) && patch->containsCell (d_monitorCell) ){
     IntVector c = d_monitorCell;
     cout << "  stats:  " << c <<  setw(10) << Q.Q_Label->getName()
-	 << " time step: " << ts
+         << " time step: " << ts
          <<"\t time step " <<  timeStep
          << " d_startTime: " << d_startTime << "\n"
          <<"\t Q_var: " << Qvar[c]

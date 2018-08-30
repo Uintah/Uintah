@@ -27,6 +27,7 @@
 
 #include <Core/Parallel/UintahMPI.h>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -70,6 +71,8 @@ public:
 
   std::string myProcName() const { return std::string(m_proc_name); }
 
+  int getNodeFromRank( int rank ) const;
+
   // Returns the total number of nodes this MPI session is running on.
   int nNodes() const { return m_nNodes; }
   int myNode() const { return m_node; }
@@ -95,10 +98,11 @@ public:
 
   void setGlobalComm( int num_comms ) const;
 
-
 private:
 
-  // can only be called from Parallel
+  friend class Parallel;
+
+  // Can only be called from Parallel
   ProcessorGroup( const ProcessorGroup * parent
                 ,       MPI_Comm         comm
                 ,       int              rank
@@ -106,31 +110,41 @@ private:
                 ,       int              threads
                 );
 
-  // eliminate copy, assignment and move
+  // Eliminate copy, assignment and move
   ProcessorGroup( const ProcessorGroup & )            = delete;
   ProcessorGroup& operator=( const ProcessorGroup & ) = delete;
   ProcessorGroup( ProcessorGroup && )                 = delete;
   ProcessorGroup& operator=( ProcessorGroup && )      = delete;
 
-  char m_proc_name[MPI_MAX_PROCESSOR_NAME];
-  
-  int  m_node;   // Node this rank is executing on.
-  int  m_nNodes; // Total number of nodes this MPI session is running on.
+  // Parent processor.
+  const ProcessorGroup          * m_parent_group{nullptr};
 
-  int  m_node_rank;   // MPI rank of this process relative to the node.
-  int  m_node_nRanks; // Total number of MPI Ranks relative to the node.
-
-  int  m_rank;   // MPI rank of this process.
-  int  m_nRanks; // Total number of MPI Ranks.
-
-  int  m_threads;
-
-  MPI_Comm                        m_comm;
-  MPI_Comm                        m_node_comm;
+  // Communicators.
+  MPI_Comm                        m_comm{0};
+  MPI_Comm                        m_node_comm{0};
   mutable std::vector<MPI_Comm>   m_global_comms;
-  const ProcessorGroup          * m_parent_group;
 
-  friend class Parallel;
+  // Rank, node, thread, and name details.
+  int m_rank{-1};   // MPI rank of this process.
+  int m_nRanks{0};  // Total number of MPI Ranks.
+
+  int m_node{-1};   // Index of the node this rank is executing on.
+  int m_nNodes{0};  // Total number of nodes this MPI session is running on.
+
+  int m_node_rank{-1};  // MPI rank of this process relative to the node.
+  int m_node_nRanks{0}; // Total number of MPI Ranks relative to the node.
+
+  int m_threads{0};
+
+  std::string m_proc_name{""};
+  
+  // For storing all the processor names so to provide a mapping from
+  // the name to an index from any rank.
+  typedef char procName_t[MPI_MAX_PROCESSOR_NAME+1];
+
+  procName_t * m_all_proc_names{nullptr};
+
+  std::map< std::string, unsigned int > m_proc_name_map;
 };
 
 }  // namespace Uintah

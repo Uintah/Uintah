@@ -24,7 +24,7 @@
 #endif
 
 #include <ostream>
-#include <cmath>		// sqrt
+#include <cmath>                // sqrt
 
 /* Define a symmetric 3x3 matrix, elements are stored
   as: [00 11 22 sqrt(2)*12 sqrt(2)*02 sqrt(2)*01]
@@ -41,7 +41,7 @@ class SymMatrix3
   SymMatrix3();
   SymMatrix3(const double val);
   SymMatrix3(const bool isIdentity);
-  SymMatrix3(	const double v0,
+  SymMatrix3(   const double v0,
                 const double v1,
                 const double v2,
                 const double v3,
@@ -50,7 +50,7 @@ class SymMatrix3
                 );
 
   virtual ~SymMatrix3();
-		
+                
   void identity();
   double determinant() const;
   double trace() const;
@@ -65,13 +65,13 @@ class SymMatrix3
   double get(const int i) const;
   void set(const int i, const int j, const double val);
   void set(const int i, const double val);
-		
+                
   void swap(SymMatrix3 *rhs);
 
   void calcRZTheta(double *r, double *z, double *theta,
                    SymMatrix3* er, SymMatrix3 *ez, SymMatrix3 *etheta
                    ) const ;
-		
+                
   SymMatrix3& operator+= (const SymMatrix3 rhs);
   const SymMatrix3 operator+(const SymMatrix3 rhs) const;
   SymMatrix3& operator-= (const SymMatrix3 rhs);
@@ -109,7 +109,7 @@ class SymMatrix3
     /* return (*this - isotropic()); */
     return retMatrix;
   }
-		
+                
  private:
   double _values[6];
   /* add your private declarations */

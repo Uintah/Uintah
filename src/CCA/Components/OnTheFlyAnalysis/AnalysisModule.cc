@@ -36,8 +36,8 @@ using namespace Uintah;
 // NOTE: UintahParallelComponent is noramlly called with the ProcessorGroup
 
 AnalysisModule::AnalysisModule( const ProcessorGroup* myworld,
-				const MaterialManagerP materialManager,
-				const ProblemSpecP& module_spec ) :
+                                const MaterialManagerP materialManager,
+                                const ProblemSpecP& module_spec ) :
   UintahParallelComponent( myworld )
 {
   m_materialManager = materialManager;

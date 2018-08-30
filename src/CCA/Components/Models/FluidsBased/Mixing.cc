@@ -44,8 +44,8 @@ using namespace Uintah;
 using namespace std;
 
 Mixing::Mixing(const ProcessorGroup* myworld,
-	       const MaterialManagerP& materialManager,
-	       const ProblemSpecP& params)
+               const MaterialManagerP& materialManager,
+               const ProblemSpecP& params)
   : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   Ilb = scinew ICELabel();
@@ -154,8 +154,8 @@ void Mixing::problemSetup(GridP&,
       throw ProblemSetupException("Variable: "+stream->name+" does not have any initial value regions", __FILE__, __LINE__);
 
     registerTransportedVariable(mymatls,
-				stream->massFraction_CCLabel,
-				stream->massFraction_source_CCLabel);
+                                stream->massFraction_CCLabel,
+                                stream->massFraction_source_CCLabel);
 
     streams.push_back(stream);
   }

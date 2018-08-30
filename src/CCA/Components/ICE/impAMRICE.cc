@@ -119,7 +119,7 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                                             all_matls);        
                           
     d_exchModel->sched_AddExch_VelFC(       sched, patches, ice_matls_sub,
-					                    mpm_matls_sub,
+                                                            mpm_matls_sub,
                                                             all_matls,
                                                             d_BC_globalVars,
                                                             false);
@@ -356,13 +356,13 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
  Function~  impAMRICE::multiLevelPressureSolve-- 
 _____________________________________________________________________*/
 void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
-					const PatchSubset* patches,
-					const MaterialSubset*,
-					DataWarehouse* ParentOldDW,
-					DataWarehouse* ParentNewDW,
-					GridP grid,
-					const MaterialSubset* ice_matls,
-					const MaterialSubset* mpm_matls)
+                                        const PatchSubset* patches,
+                                        const MaterialSubset*,
+                                        DataWarehouse* ParentOldDW,
+                                        DataWarehouse* ParentNewDW,
+                                        GridP grid,
+                                        const MaterialSubset* ice_matls,
+                                        const MaterialSubset* mpm_matls)
 {
   // this function will be called exactly once per processor, regardless of the number of patches assigned
   // get the patches our processor is responsible for

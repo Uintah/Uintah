@@ -70,8 +70,8 @@ WARNING
   class NonAdiabaticTable :public FluidsBasedModel {
   public:
     NonAdiabaticTable(const ProcessorGroup* myworld,
-		      const MaterialManagerP& materialManager,
-		      const ProblemSpecP& params);
+                      const MaterialManagerP& materialManager,
+                      const ProblemSpecP& params);
     
     virtual ~NonAdiabaticTable();
     
@@ -87,7 +87,7 @@ WARNING
                                                const LevelP& level);
                                   
     virtual void scheduleComputeModelSources(SchedulerP&,
-					     const LevelP& level);
+                                             const LevelP& level);
                                             
    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                 const LevelP&,

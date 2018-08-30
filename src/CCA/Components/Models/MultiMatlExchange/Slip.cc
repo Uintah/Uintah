@@ -488,6 +488,7 @@ void SlipExch::vel_CC_exchange( CellIterator  iter,
   FastMatrix Kslip(d_numMatls, d_numMatls);
   FastMatrix a(d_numMatls, d_numMatls);
   Vector vel_T[MAX_MATLS];                    // Transposed velocity
+  Vector vel_T_dbg[MAX_MATLS];                // Transposed velocity for visualizing
 
   // for readability
   int gm = d_fluidMatlIndx;
@@ -516,7 +517,7 @@ void SlipExch::vel_CC_exchange( CellIterator  iter,
       double av     = d_momentum_accommodation_coeff;
       double Beta_v = (2 - av)/av;
 
-      Kslip(gm,sm) = A_V / (Beta_v * meanFreePath[gm][c] * vol_frac_CC[sm][c]); // DOUBLE CHECK the material index of meanFreePath  -Todd
+      Kslip(gm,sm) = A_V / (Beta_v * meanFreePath[gm][c] * vol_frac_CC[sm][c]);
 
       if(Kslip(gm,sm) > k_org(gm,sm)) {
         Kslip(gm,sm) = k_org(gm,sm);                                            // K > Kslip in reality, so if Kslip > K in computation, fix this.
@@ -537,11 +538,13 @@ void SlipExch::vel_CC_exchange( CellIterator  iter,
       //__________________________________
       //  coordinate Transformation
       for(int m = 0; m < d_numMatls; m++) {
-        vel_T[m][i] = 0;
+        vel_T[m][i]     = 0;
+        vel_T_dbg[m][i] = 0;
 
         for(int j = 0; j < 3; j++) {
           vel_T[m][i] += Q(i,j) * vel_CC[m][c][j];
         }
+        vel_T_dbg[m][i] = vel_T[m][i];
       }
 
       //__________________________________
@@ -553,7 +556,7 @@ void SlipExch::vel_CC_exchange( CellIterator  iter,
         b[m] = 0.0;
 
         for(int n = 0; n < d_numMatls; n++) {
-          a(m,n) = - delT * vol_frac_CC[n][c] * sp_vol_CC[m][c] * K(m,n);  // double check equation --Todd
+          a(m,n) = - delT * vol_frac_CC[n][c] * sp_vol_CC[m][c] * K(m,n);
           adiag -= a(m,n);
           b[m]  -= a(m,n) * (vel_T[n][i] - vel_T[m][i]);
         }
@@ -563,14 +566,14 @@ void SlipExch::vel_CC_exchange( CellIterator  iter,
       a.destructiveSolve(b);
 
       for(int m = 0; m < d_numMatls; m++) {
-        vel_T[m][i] = b[m];                  // double check the += --Todd
+        vel_T[m][i] = b[m];
       }
     } // loop over directions
 
     //__________________________________
     //  coordinate transformation
     for(int m = 0; m < d_numMatls; m++) {
-      vel_T_CC[m][c] = vel_T[m];               // for visualization
+      vel_T_CC[m][c] = vel_T_dbg[m];               // for visualization
 
       Vector vel_exch( Vector(0.0) );
 
@@ -807,7 +810,7 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
         computeSurfaceRotationMatrix(Q, surfaceNorm[sm][c]); // Makes Q at each cell c
 
 
-	 double A_V = 1.0/( dx.x()*fabs(Q(1,0)) +
+         double A_V = 1.0/( dx.x()*fabs(Q(1,0)) +
                            dx.y()*fabs(Q(1,1)) +
                            dx.z()*fabs(Q(1,2)) );
 
@@ -817,10 +820,10 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
 
         H(gm,sm) = A_V / (Beta_t * meanFreePath[gm][c] * vol_frac_CC[sm][c]);      // The viscosity does not appear here because it's taken out of lambda
 
-	 if(H(gm,sm) > h(gm,sm)) {
-	   H(gm,sm) = h(gm,sm);
-	 }
-	 H(sm,gm) = H(gm,sm);
+         if(H(gm,sm) > h(gm,sm)) {
+           H(gm,sm) = h(gm,sm);
+         }
+         H(sm,gm) = H(gm,sm);
       }  // if a surface cell
 
       //__________________________________

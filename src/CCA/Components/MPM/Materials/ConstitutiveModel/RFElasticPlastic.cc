@@ -790,7 +790,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
         */
 
         //if (timestep == 10000)
-				//  cout << "Index: " << idx << ", Equiv: " << equivStress << endl;
+                                //  cout << "Index: " << idx << ", Equiv: " << equivStress << endl;
 
         if (flow_rule < 0.0) {
           // Set the deviatoric stress to the trial stress

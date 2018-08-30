@@ -10,8 +10,6 @@
 #  for each uintah component listed and runs the order of accuracy tests
 #  listed in test_config_files/component/whatToRun.xml file.
 #
-#  Each OA test should have a corresponding comparison program that returns the L2nom
-#
 #
 #  Algorithm:
 #  - create the output directory
@@ -36,16 +34,17 @@
 #    xmlstarlet
 #
 #______________________________________________________________________
-
-use strict;
+use strict; 
+use warnings;
 use XML::Simple;
 use Data::Dumper;
 use File::Path;
+use File::Basename;
 use Cwd;
 
 #__________________________________
 # bulletproofing
-my @modules = qw(XML::Simple Data::Dumper File::Path );
+my @modules = qw(XML::Simple Data::Dumper File::Path File::Basename );
 
 for(@modules) {
   eval "use $_";
@@ -63,18 +62,18 @@ my $simple = XML::Simple->new(ForceArray=>1, suppressempty => "");
 
 # Find the path to orderAccuracy scripts and prune /framework_scripts off 
 # the end if snecessary
-my $me = `dirname $0 |xargs readlink -f --no-newline`;
-$me =~ s/\/framework_scripts//;
+
+my $OA_path = `dirname $0 |xargs readlink -f --no-newline`;
 
 # Define the paths
-my $base_path             = $me;    # path to orderAccuracy scripts
-my $config_files_path     = $base_path . "/test_config_files";  # configurations files
-my $scripts_path          = $base_path . "/framework_scripts";  # framework scripts
-my $postProcessCmd_path   = $base_path . "/postProcessTools";   # postProcessing 
+my $src_path              = dirname($OA_path);                # top level src path
+my $config_files_path     = $OA_path . "/test_config_files";  # configurations files
+my $scripts_path          = $OA_path . "/framework_scripts";  # framework scripts
+my $postProcessCmd_path   = $OA_path . "/postProcessTools";   # postProcessing 
 my $here_path             = cwd;
 
-if (! -e $base_path."/framework_scripts" ){
-  print "\n\nError: You must specify the path to the orderAccuracy directory ($base_path)\n";
+if (! -e $OA_path."/framework_scripts" ){
+  print "\n\nError: You must specify the path to the orderAccuracy directory ($OA_path)\n";
   print " Now exiting\n";
   exit
 }
@@ -97,9 +96,10 @@ if (! -e $config_files_path . "/components.xml" ){
 }
 
 my $xml = $simple->XMLin($config_files_path . "/components.xml");
-my @components   = @{$xml->{component}};
-my $sus_path     = $xml->{sus_path}[0];
-my $extraScripts_path = $xml->{scripts_path}[0];
+my @components        = cleanStr( @{$xml->{component}}   );
+my $sus_path          = cleanStr( $xml->{sus_path}[0]    );
+my $extraScripts_path = cleanStr( $xml->{scripts_path}[0]);
+
 
 
 #__________________________________
@@ -119,7 +119,6 @@ system("which mpirun")  == 0           || die("\nCannot find the command mpirun 
 system("which xmlstarlet")  == 0       || die("\nCannot find the command xmlstarlet $@");
 system("which replace_XML_line")  == 0 || die("\nCannot find the command replace_XML_line $@");
 system("which replace_XML_value") == 0 || die("\nCannot find the command replace_XML_value $@");
-system("which findReplace")       == 0 || die("\nCannot find the command findReplace $@");
 
 #__________________________________
 # loop over each component 
@@ -141,14 +140,17 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
    my $whatToRun = $simple->XMLin($fw_path."/whatToRun.xml");
    
    # add the comparison utilities path to PATH
-   my $p   = $whatToRun->{postProcessCmd_path}[0];
-   my $orgPath = $ENV{"PATH"};
+   my $p        = cleanStr( $whatToRun->{postProcessCmd_path}[0] );
+   my $orgPath  = $ENV{"PATH"};
    $ENV{"PATH"} = "$p:$orgPath";
    
-   # additional symbolic links to make
-   my $input = $whatToRun->{symbolicLinks}[0];
-   my @symLinks = split(/ /,$input);
-  
+   # additional symbolic links to make OPTIONAL
+   my@symLinks = ();
+   if( $whatToRun->{symbolicLinks}[0] ){
+     my $sl     = $whatToRun->{symbolicLinks}[0];
+     @symLinks  = split(/ /,$sl);
+     @symLinks  = cleanStr(@symLinks);
+   }
    
    #__________________________________
    # loop over all tests
@@ -159,22 +161,37 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
    my $otherFiles = "";
    
    for($i = 0; $i<=$#tests; $i++){
+   
      my $test     = $tests[$i];
-     my $testName = $test->{name}[0];
-     my $upsFile  = $test->{ups}[0];
-     my $tstFile  = $test->{tst}[0];
+     my $testName = cleanStr( $test->{name}[0] );
+     my $tstFile  = cleanStr( $test->{tst}[0] );
+     $tstFile     = $fw_path."/".$tstFile;
+     my $tst_basename = basename( $tstFile );
+         
+     my $tstData  = $simple->XMLin( "$tstFile" );
      
-     #remove newline from variable if they exist
-     chomp($upsFile);
-     chomp($tstFile);
+                    # Inputs directory default path (src/StandAlone/inputs)
+     my $inputs_path  = cleanStr( $tstData->{inputs_path}[0] );
+     if( ! length $inputs_path ){
+       $inputs_path = $src_path . "/StandAlone/inputs/";
+     }    
+
+                   # UPS file
+     my $ups_tmp  = cleanStr( $tstData->{upsFile}[0] );
+     my $upsFile  = $inputs_path.$component."/".$ups_tmp;
      
-     
+                   # if it's not in the std location look for it
+     if ( ! -e $ups_tmp ){
+       $upsFile = `find $inputs_path  |grep --word-regexp $ups_tmp`;
+       chomp( $upsFile );
+     }
+
+                   # Other files needed
      if($test->{otherFilesToCopy}[0] ){ 
-        $otherFiles= $test->{otherFilesToCopy}[0];
-        chomp($otherFiles);
+       $otherFiles= cleanStr( $test->{otherFilesToCopy}[0] );
      }
     
-     #find a unique testname
+                    # find a unique testname
      my $count = 0;
      my $testNameOld = $testName;
      $testName = "$testName.$count";
@@ -194,12 +211,12 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      print "=======================================================================================\n";
      # bulletproofing
      # do these files exist
-     if (! -e $fw_path."/".$upsFile || 
-         ! -e $fw_path."/".$tstFile ||
+     if (! -e $upsFile || 
+         ! -e $tstFile ||
          ! -e $fw_path."/".$otherFiles ){
        print "\n \nERROR:setupFrameWork:\n";
-       print "The ups file: \n \t $fw_path/$upsFile \n"; 
-       print "or the tst file: \n \t $fw_path/$tstFile \n";
+       print "The ups file: \n       \t $upsFile \n"; 
+       print "or the tst file: \n     \t $tstFile \n";
        print "or the other file(s) \n \t $fw_path/$otherFiles \n";
        print "do not exist.  Now exiting\n";
        exit
@@ -218,31 +235,75 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      my $sus = `which sus`;
      system("ln -s $sus > /dev/null 2>&1");
 
-     # make any symbolic Links needed by that component
+     # create any symbolic links requested by that component
      my $j = 0;
      foreach $j (@symLinks) {
-       if( $j gt "" && $j ne "."){
+       if( -e $j ){ 
          system("ln -s $j > /dev/null 2>&1");
        }
      }
      
      # Bulletproofing
      print "\t Checking that the tst file is a properly formatted xml file  \n";
-     system("xmlstarlet val --err $tstFile") == 0 ||  die("\nERROR: $tstFile, contains errors.\n");
+     system("xmlstarlet val --err $tst_basename") == 0 ||  die("\nERROR: $tst_basename, contains errors.\n");
      
      # clean out any comment in the TST file
-     system("xmlstarlet c14n --without-comments $tstFile > $tstFile.clean 2>&1");
-     $tstFile = "$tstFile.clean";
+     system("xmlstarlet c14n --without-comments $tst_basename > $tst_basename.clean 2>&1");
+     $tst_basename = "$tst_basename.clean";
      
      
      #__________________________________
      # run the tests
-     print "\n\nLaunching: run_tests.pl $testing_path/$tstFile\n\n";
-     my @args = (" $scripts_path/run_tests.pl","$testing_path/$tstFile", "$fw_path");
+     print "\n\nLaunching: run_tests.pl $testing_path/$tst_basename\n\n";
+     my @args = (" $scripts_path/run_tests.pl","$testing_path/$tst_basename", "$fw_path");
      system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
 
      chdir("..");
    }
    chdir("..");
  }
+ 
+#______________________________________________________________________
+#   subroutines
+#______________________________________________________________________
+#  
+#  Remove any white space or newlines in array elements or scalars
+#  (This belongs in a separate common module to avoid duplication -Todd)
+
+sub cleanStr {
+
+  my @inputs = @_;
+  
+  my $n   = scalar @inputs;           # number of array elements
+  my $len = length $inputs[0];        # number of characters in first element
+  
+  # if the first element is empty return ""
+  if( $len == 0 ){
+    return "";
+  }
+  
+  #__________________________________
+  # if there is one array element return a scalar
+  if( $n == 1 ){
+    $inputs[0] =~ s/\n//g;        # remove newlines
+    $inputs[0] =~ s/ //g;         # remove white spaces
+    return $inputs[0];
+  }
+
+  #__________________________________
+  #  Arrays
+  my @result = ();
+  my $i = 0;
+  
+  foreach $i (@inputs){
+    $i =~ s/\n//g;        # remove newlines
+    $i =~ s/ //g;         # remove white spaces
+    my $l = length $i;
+    
+    if ($l > 0){
+      push( @result, $i );
+    }
+  }
+  return @result;
+}
   # END

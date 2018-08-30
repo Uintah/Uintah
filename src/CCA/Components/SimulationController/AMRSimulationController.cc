@@ -24,7 +24,7 @@
 
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 
-#include <CCA/Components/PostProcessUda/PostProcess.h>
+#include <CCA/Components/PostProcessUda/PostProcessUda.h>
 
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -38,7 +38,6 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/MaterialManager.h>
-#include <Core/Grid/SimulationTime.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -231,7 +230,7 @@ AMRSimulationController::run()
     // when the time step is finished. It is currently used only for
     // outputing and checkpointing. Both of which typically take much
     // longer than the simulation calculation.
-    if( m_application->getSimulationTime()->m_max_wall_time > 0 )
+    if( m_application->getWallTimeMax() > 0 )
       predictedWalltime = walltime +
         1.5 * m_wall_timers.ExpMovingAverage().seconds();
     else
@@ -945,8 +944,8 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   // Update the system var (time step and simulation time). Must be
   // done after the output and after scheduleComputeStableTimeStep.
   m_application->scheduleUpdateSystemVars( m_current_gridP,
-                                   m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
-                                   m_scheduler );
+                                           m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+                                           m_scheduler );
 
   // Report all of the stats before doing any possible in-situ work
   // as that effects the lap timer for the time steps.

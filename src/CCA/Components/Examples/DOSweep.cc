@@ -43,7 +43,7 @@
 using namespace Uintah;
 
 DOSweep::DOSweep(const ProcessorGroup* myworld,
-		 const MaterialManagerP materialManager)
+                 const MaterialManagerP materialManager)
   : ApplicationCommon(myworld, materialManager)
 {
   lb_ = scinew ExamplesLabel();

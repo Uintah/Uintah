@@ -36,7 +36,6 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/MaterialManager.h>
-#include <Core/Grid/SimulationTime.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Handle.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -163,6 +162,7 @@ WARNING
                             public ApplicationInterface {
 
     friend class Switcher;
+    friend class PostProcessUda;
 
   public:
     ApplicationCommon(const ProcessorGroup* myworld,
@@ -349,9 +349,56 @@ WARNING
     virtual bool activeReductionVariable(std::string name) { return m_appReductionVars[name]->active; }
 
     // Access methods for member classes.
-    virtual SimulationTime * getSimulationTime() const { return m_simulationTime; }
     virtual MaterialManagerP getMaterialManagerP() const { return m_materialManager; }
   
+    virtual ReductionInfoMapper< ApplicationStatsEnum,
+                                 double > & getApplicationStats()
+    { return m_application_stats; };
+
+    virtual void resetApplicationStats( double val )
+    { m_application_stats.reset( val ); };
+      
+    virtual void reduceApplicationStats( bool allReduce,
+                                         const ProcessorGroup* myWorld )
+    { m_application_stats.reduce( allReduce, myWorld ); };      
+ 
+  public:
+    virtual void   setDelTOverrideRestart( double val ) { m_delTOverrideRestart = val; }
+    virtual double getDelTOverrideRestart() const { return m_delTOverrideRestart; }
+
+    virtual void   setDelTInitialMax( double val ) { m_delTInitialMax = val; }
+    virtual double getDelTInitialMax() const { return m_delTInitialMax; }
+
+    virtual void   setDelTInitialRange( double val ) { m_delTInitialRange = val; }
+    virtual double getDelTInitialRange() const { return m_delTInitialRange; }
+
+    virtual void   setDelTMultiplier( double val ) { m_delTMultiplier = val; }
+    virtual double getDelTMultiplier() const { return m_delTMultiplier; }
+
+    virtual void   setDelTMaxIncrease( double val ) { m_delTMaxIncrease = val; }
+    virtual double getDelTMaxIncrease() const { return m_delTMaxIncrease; }
+    
+    virtual void   setDelTMin( double val ) { m_delTMin = val; }
+    virtual double getDelTMin() const { return m_delTMin; }
+
+    virtual void   setDelTMax( double val ) { m_delTMax = val; }
+    virtual double getDelTMax() const { return m_delTMax; }
+
+    virtual void   setSimTimeEndAtMax( bool val ) { m_simTimeEndAtMax = val; }
+    virtual bool   getSimTimeEndAtMax() const  { return m_simTimeEndAtMax; }
+
+    virtual void   setSimTimeMax( double val ) { m_simTimeMax = val; }
+    virtual double getSimTimeMax() const { return m_simTimeMax; }
+
+    virtual void   setTimeStepsMax( int val ) { m_timeStepsMax = val; }
+    virtual int    getTimeStepsMax() const { return m_timeStepsMax; }
+
+    virtual void   setWallTimeMax( double val ) { m_wallTimeMax = val; }
+    virtual double getWallTimeMax() const { return m_wallTimeMax; }
+
+    virtual void   setClampTimeToOutput( bool val ) { m_clampTimeToOutput = val; }
+    virtual bool   getClampTimeToOutput() const { return m_clampTimeToOutput; }
+
   private:
     // The classes are private because only the top level application
     // should be changing them. This only really matters when there are
@@ -367,15 +414,15 @@ WARNING
     // virtual void setReductionVariable(std::string name, double &val ) { m_appReductionVars[name]->min_var  = val; }
 
     //////////
-    virtual   void setDelT( double delT ) { m_delT = delT; }
+    virtual void   setDelT( double delT ) { m_delT = delT; }
     virtual double getDelT() const { return m_delT; }
-    virtual   void setDelTForAllLevels( SchedulerP& scheduler,
+    virtual void   setDelTForAllLevels( SchedulerP& scheduler,
                                         const GridP & grid,
                                         const int totalFine );
 
-    virtual   void setNextDelT( double delT );
-    virtual double getNextDelT() const { return m_nextDelT; }
-    virtual   void validateNextDelT( DataWarehouse  * new_dw );
+    virtual void         setNextDelT( double delT );
+    virtual double       getNextDelT() const { return m_delTNext; }
+    virtual unsigned int validateNextDelT( double &delTNext, unsigned int level );
 
     //////////
     virtual   void setSimTime( double simTime );
@@ -402,17 +449,7 @@ WARNING
     virtual bool isLastTimeStep( double walltime );
     virtual bool maybeLastTimeStep( double walltime ) const;
 
-    virtual ReductionInfoMapper< ApplicationStatsEnum,
-                                 double > & getApplicationStats()
-    { return m_application_stats; };
 
-    virtual void resetApplicationStats( double val )
-    { m_application_stats.reset( val ); };
-      
-    virtual void reduceApplicationStats( bool allReduce,
-                                         const ProcessorGroup* myWorld )
-    { m_application_stats.reduce( allReduce, myWorld ); };      
- 
   protected:
     Scheduler       * m_scheduler    {nullptr};
     LoadBalancer    * m_loadBalancer {nullptr};
@@ -442,18 +479,47 @@ WARNING
     const VarLabel* m_simulationTimeLabel;
     const VarLabel* m_delTLabel;
   
-    SimulationTime* m_simulationTime {nullptr};
-  
+
+    // The simulation runs to either the maximum number of time steps
+    // (timeStepsMax) or the maximum simulation time (simTimeMax), which
+    // ever comes first. If the "max_Timestep" is not specified in the .ups
+    // file, then it is set to zero.
     double m_delT{0.0};
-    double m_nextDelT{0.0};
+    double m_delTNext{0.0};
 
-    double m_simTime{0.0};             // current sim time
-    double m_simTimeStart{0.0};        // starting sim time
+    double m_delTOverrideRestart{0}; // Override the restart delta T value
+    double m_delTInitialMax{0};      // Maximum initial delta T
+    double m_delTInitialRange{0};    // Simulation time range for the initial delta T
 
-    // The time step that the simulation is at.
-    int    m_timeStep{0};
+    double m_delTMin{0};             // Minimum delta T
+    double m_delTMax{1};             // Maximum delta T
+    double m_delTMultiplier{1.0};    // Multiple for increasing delta T
+    double m_delTMaxIncrease{0};     // Maximum delta T increase.
 
-  protected:    
+    double m_simTime{0.0};           // Current sim time
+    double m_simTimeStart{0.0};      // Starting sim time    
+    double m_simTimeMax{0};          // Maximum simulation time
+    bool   m_simTimeEndAtMax{false}; // End the simulation at exactly this sim time.
+
+    int    m_timeStep{0};            // Current time step
+    int    m_timeStepsMax{0};        // Maximum number of time steps to run.  
+
+    double m_wallTimeMax{0};         // Maximum wall time.
+  
+    bool m_clampTimeToOutput{false}; // Clamp the time to the next output or checkpoint
+
+    enum VALIDATE
+    {
+      DELTA_T_INITIAL_MAX      = 0x0001,
+      DELTA_T_MAX_INCREASE     = 0x0002,
+      DELTA_T_MIN              = 0x0004,
+      DELTA_T_MAX              = 0x0008,
+      CLAMP_TIME_TO_OUTPUT     = 0x0010,
+      CLAMP_TIME_TO_CHECKPOINT = 0x0020,
+      CLAMP_TIME_TO_MAX        = 0x0040
+    };
+      
+  protected:
     MaterialManagerP m_materialManager{nullptr};
 
     ReductionInfoMapper< ApplicationStatsEnum,

@@ -198,9 +198,11 @@ class LoadBalancer;
     virtual int    getNextCheckpointWallTime() const { return m_nextCheckpointWallTime; }
 
     //! Returns true if data will be output this time step
+    virtual void setOutputTimeStep( bool val, const GridP & grid );
     virtual bool isOutputTimeStep() const { return m_isOutputTimeStep; }
 
     //! Returns true if data will be checkpointed this time step
+    virtual void setCheckpointTimeStep( bool val, const GridP & grid );
     virtual bool isCheckpointTimeStep() const { return m_isCheckpointTimeStep; }
 
     //! Get the directory of the current time step for outputting info.

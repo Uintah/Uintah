@@ -55,47 +55,47 @@ WARNING
 
   class PotentiostaticBC: public MPMPhysicalBC {
     public:
-	  	  	  PotentiostaticBC(
-			  	  	  	      	  	  ProblemSpecP	& ps
-							  , const GridP			& grid
-							  , const MPMFlags		* flag);
-	  	  	 ~PotentiostaticBC();
+                          PotentiostaticBC(
+                                                                  ProblemSpecP  & ps
+                                                          , const GridP                 & grid
+                                                          , const MPMFlags              * flag);
+                         ~PotentiostaticBC();
 
-	  // Required functions from MPMPhysicalBC.h
-	  virtual std::string 	getType() const;
-	  virtual void 			outputProblemSpec(ProblemSpecP & ps);
+          // Required functions from MPMPhysicalBC.h
+          virtual std::string   getType() const;
+          virtual void                  outputProblemSpec(ProblemSpecP & ps);
 
-	  // Locate and flag the material points to which this boundary condition
-	  //   will be applied (i.e. the surface points).
-	 	 	  bool			flagMaterialPoint(
-	 	 			  	  	  	  	  	  	   const Point	&	p
-											 , const Vector &   buffer = Vector(1.0,1.0,1.0));
+          // Locate and flag the material points to which this boundary condition
+          //   will be applied (i.e. the surface points).
+                          bool                  flagMaterialPoint(
+                                                                                           const Point  &       p
+                                                                                         , const Vector &   buffer = Vector(1.0,1.0,1.0));
 
-	 //  Get the load curve number for this BC.
-	 inline   int			loadCurveID() const { return d_loadCurve->getID(); }
+         //  Get the load curve number for this BC.
+         inline   int                   loadCurveID() const { return d_loadCurve->getID(); }
 
-	 // Get the surface geometry descriptor
-	 inline GeometryPiece* getSurface() const { return d_surface; }
+         // Get the surface geometry descriptor
+         inline GeometryPiece* getSurface() const { return d_surface; }
 
-	 //  Get the surface type
-	 inline std::string getSurfaceType() const { return d_surfaceType; }
+         //  Get the surface type
+         inline std::string getSurfaceType() const { return d_surfaceType; }
 
-	 // Set the number of material points on the surface
-	 inline void numMaterialPoints(long numPoints) { d_numMaterialPoints = numPoints ; }
+         // Set the number of material points on the surface
+         inline void numMaterialPoints(long numPoints) { d_numMaterialPoints = numPoints ; }
 
-	 // Query the number of material points on the surface.
-	 inline long numMaterialPoints() { return d_numMaterialPoints; }
+         // Query the number of material points on the surface.
+         inline long numMaterialPoints() { return d_numMaterialPoints; }
 
-	 double particleFlux(double time, double area) const;
+         double particleFlux(double time, double area) const;
 
     private:
 
-	 // Loading points for material (time, flux magnitude pairs).
-	  LoadCurve<double>* d_loadCurve;
+         // Loading points for material (time, flux magnitude pairs).
+          LoadCurve<double>* d_loadCurve;
 
-	  GeometryPiece*     d_surface;
-	  std::string        d_surfaceType;
-	  long               d_numMaterialPoints;
+          GeometryPiece*     d_surface;
+          std::string        d_surfaceType;
+          long               d_numMaterialPoints;
   };
 
 

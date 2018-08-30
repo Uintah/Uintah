@@ -50,6 +50,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/OS/Dir.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/StringUtil.h>
 
 #include <sci_defs/uintah_defs.h>
 
@@ -824,7 +825,37 @@ void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
   
   // Send the subcomponent's UPS file to the switcher's simulation
   // time.  Note this goes into the switcher not the subcomponent.
-  getSimulationTime()->problemSetup( subCompUps );
+  proc0cout << "  Reading the <Time> block from: "
+            << Uintah::basename(subCompUps->getFile()) << "\n";
+
+  ProblemSpecP time_ps = subCompUps->findBlock("Time");
+
+  if ( !time_ps ) {
+    throw ProblemSetupException("ERROR SimulationTime \n"
+                                "Can not find the <Time> block.",
+                                __FILE__, __LINE__);
+  }
+  
+  time_ps->require( "delt_min", m_delTMin );
+  time_ps->require( "delt_max", m_delTMax );
+  time_ps->require( "timestep_multiplier", m_delTMultiplier );
+
+  if( !time_ps->get("delt_init", m_delTInitialMax) &&
+      !time_ps->get("max_initial_delt", m_delTInitialMax) ) {
+    m_delTInitialMax = 0;
+  }
+
+  if( !time_ps->get("initial_delt_range", m_delTInitialRange) ) {
+    m_delTInitialRange = 0;
+  }
+
+  if( !time_ps->get("max_delt_increase", m_delTMaxIncrease) ) {
+    m_delTMaxIncrease = 0;
+  }
+  
+  if( !time_ps->get( "override_restart_delt", m_delTOverrideRestart) ) {
+    m_delTOverrideRestart = 0;
+  }
 
   // Set flags for checking reduction vars - done after the
   // subcomponent problem spec is read because the values may be based
@@ -865,16 +896,14 @@ Switcher::needRecompile( const GridP & grid )
 
     switchApplication( nullptr, grid );
     
-    // Each application has their own init_delt specified.  On a switch
-    // from one application to the next, delT needs to be adjusted to
-    // the value specified in the input file. 
-    double new_delT = getSimulationTime()->m_max_initial_delt;
-
-    proc0cout << "Switching the Next delT from " << m_delT
-              << " to " << new_delT
+    // Each application has their own maximum initial delta T
+    // specified.  On a switch from one application to the next, delT
+    // needs to be adjusted to the value specified in the input file.
+    proc0cout << "Switching the next delT from " << m_delT
+              << " to " << m_delTInitialMax
               << std::endl;
     
-    setDelT( new_delT );
+    setDelT( m_delTInitialMax );
 
     // This is needed to get the "ICE surrounding matl"
     d_app->restartInitialize();

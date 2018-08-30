@@ -44,7 +44,7 @@ using namespace std;
 using namespace Uintah;
 
 ParticleTest1::ParticleTest1(const ProcessorGroup* myworld,
-			     const MaterialManagerP materialManager)
+                             const MaterialManagerP materialManager)
   : ApplicationCommon(myworld, materialManager)
 {
   lb_ = scinew ExamplesLabel();
@@ -70,7 +70,7 @@ void ParticleTest1::problemSetup(const ProblemSpecP& params,
 }
  
 void ParticleTest1::scheduleInitialize(const LevelP& level,
-				       SchedulerP& sched)
+                                       SchedulerP& sched)
 {
   Task* task = scinew Task("initialize",
                            this, &ParticleTest1::initialize);

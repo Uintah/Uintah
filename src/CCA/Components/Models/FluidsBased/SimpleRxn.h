@@ -73,8 +73,8 @@ WARNING
   class SimpleRxn :public FluidsBasedModel {
   public:
     SimpleRxn(const ProcessorGroup* myworld,
-	      const MaterialManagerP& materialManager,
-	      const ProblemSpecP& params);
+              const MaterialManagerP& materialManager,
+              const ProblemSpecP& params);
     
     virtual ~SimpleRxn();
 
@@ -92,36 +92,36 @@ WARNING
                                                const LevelP& level);
                                   
     virtual void scheduleComputeModelSources(SchedulerP&,
-					     const LevelP& level);
+                                             const LevelP& level);
                                             
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-							 const LevelP&,
-							 const MaterialSet*);
+                                                         const LevelP&,
+                                                         const MaterialSet*);
     
     virtual void computeSpecificHeat(CCVariable<double>&,
-				     const Patch*,
-				     DataWarehouse*,
-				     const int);
+                                     const Patch*,
+                                     DataWarehouse*,
+                                     const int);
     
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-				       SchedulerP& sched);
+                                       SchedulerP& sched);
     
     virtual void scheduleTestConservation(SchedulerP&,
-					  const PatchSet* patches);
+                                          const PatchSet* patches);
   private:
     ICELabel* Ilb;
                                                 
     void modifyThermoTransportProperties(const ProcessorGroup*, 
-					 const PatchSubset* patches,        
-					 const MaterialSubset*,             
-					 DataWarehouse*,                    
-					 DataWarehouse* new_dw);             
+                                         const PatchSubset* patches,        
+                                         const MaterialSubset*,             
+                                         DataWarehouse*,                    
+                                         DataWarehouse* new_dw);             
     
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
-		    const MaterialSubset* matls, 
-		    DataWarehouse*, 
-		    DataWarehouse* new_dw);
+                    const MaterialSubset* matls, 
+                    DataWarehouse*, 
+                    DataWarehouse* new_dw);
                                    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,

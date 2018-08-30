@@ -42,8 +42,8 @@ namespace Uintah {
   public:      
     static
     std::vector< AnalysisModule*> create( const ProcessorGroup* myworld,
-					  const MaterialManagerP materialManager,
-					  const ProblemSpecP& prob_spec );
+                                          const MaterialManagerP materialManager,
+                                          const ProblemSpecP& prob_spec );
   };
 }
 

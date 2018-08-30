@@ -59,8 +59,8 @@ using namespace Uintah;
 using namespace std;
 
 Mixing3::Mixing3(const ProcessorGroup* myworld,
-		 const MaterialManagerP& materialManager,
-		 const ProblemSpecP& params)
+                 const MaterialManagerP& materialManager,
+                 const ProblemSpecP& params)
   : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   Ilb = scinew ICELabel();
@@ -104,7 +104,7 @@ Mixing3::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 }
 
 void Mixing3::problemSetup(GridP&,
-			   const bool isRestart)
+                           const bool isRestart)
 {
   matl = m_materialManager->parseAndLookupMaterial(d_params, "material");
 
@@ -140,8 +140,8 @@ void Mixing3::problemSetup(GridP&,
       stream->massFraction_source_CCLabel = VarLabel::create(mfsname, CCVariable<double>::getTypeDescription());
       
       registerTransportedVariable(mymatls,
-				  stream->massFraction_CCLabel,
-				  stream->massFraction_source_CCLabel);
+                                  stream->massFraction_CCLabel,
+                                  stream->massFraction_source_CCLabel);
       
       streams.push_back(stream);
       names[stream->name] = stream;
@@ -384,10 +384,10 @@ double Mixing3::lookup(int nsp, int idt, int itemp, int ipress, int* imf,
 }
 
 void Mixing3::computeModelSources(const ProcessorGroup*, 
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

@@ -119,7 +119,7 @@ void SimpleSDInterface::sdInterfaceDivergence(
     constNCVariable<double>               gTotalVolume;
     newDW->get(gTotalVolume, d_mpm_lb->gVolumeLabel, totalDWI, patch,
                d_mpm_flags->d_particle_ghost_type,
-	       d_mpm_flags->d_particle_ghost_layer);
+               d_mpm_flags->d_particle_ghost_layer);
 
     std::vector<constNCVariable<double> > gVolume(numMatls);
     std::vector<constNCVariable<double> > gConc(numMatls);  // C_i,j = gConc[j][i]
@@ -141,21 +141,21 @@ void SimpleSDInterface::sdInterfaceDivergence(
     for (int mIdx = 0; mIdx < numMatls; ++mIdx) {
       int dwi = matls->get(mIdx);
       newDW->get(gVolume[mIdx], d_mpm_lb->gVolumeLabel,              dwi, patch,
-		 d_mpm_flags->d_particle_ghost_type,
-		 d_mpm_flags->d_particle_ghost_layer);
+                 d_mpm_flags->d_particle_ghost_type,
+                 d_mpm_flags->d_particle_ghost_layer);
       newDW->get(gConc[mIdx],   d_mpm_lb->diffusion->gConcentration, dwi, patch,
-		 d_mpm_flags->d_particle_ghost_type,
-		 d_mpm_flags->d_particle_ghost_layer);
+                 d_mpm_flags->d_particle_ghost_type,
+                 d_mpm_flags->d_particle_ghost_layer);
 
       newDW->allocateAndPut(gdCdt_interface[mIdx], sdInterfaceRate, dwi, patch,
-			    d_mpm_flags->d_particle_ghost_type,
-			    d_mpm_flags->d_particle_ghost_layer);
+                            d_mpm_flags->d_particle_ghost_type,
+                            d_mpm_flags->d_particle_ghost_layer);
       
       gdCdt_interface[mIdx].initialize(0);
 
       newDW->allocateAndPut(gInterfaceFlag[mIdx],  sdInterfaceFlag, dwi, patch,
-			    d_mpm_flags->d_particle_ghost_type,
-			    d_mpm_flags->d_particle_ghost_layer);
+                            d_mpm_flags->d_particle_ghost_type,
+                            d_mpm_flags->d_particle_ghost_layer);
       gInterfaceFlag[mIdx].initialize(false);
       // Not in place yet, but should be for mass normalization.
       //massNormFactor[mIdx] = mpm_matl->getMassNormFactor();

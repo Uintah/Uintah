@@ -43,7 +43,7 @@
 using namespace Uintah;
 
 FluidsBasedModel::FluidsBasedModel(const ProcessorGroup* myworld,
-				   const MaterialManagerP materialManager)
+                                   const MaterialManagerP materialManager)
   : ModelInterface(myworld, materialManager)
 {
 }
@@ -55,7 +55,7 @@ FluidsBasedModel::~FluidsBasedModel()
   for(t_iter  = d_trans_vars.begin();
       t_iter != d_trans_vars.end(); t_iter++){
     TransportedVariable* tvar = *t_iter;
-	  
+          
     VarLabel::destroy(tvar->var_Lagrangian);
     VarLabel::destroy(tvar->var_adv);
     delete tvar;
@@ -65,7 +65,7 @@ FluidsBasedModel::~FluidsBasedModel()
   for( r_iter  = d_reflux_vars.begin();
        r_iter != d_reflux_vars.end(); r_iter++){
     AMRRefluxVariable* rvar = *r_iter;
-	  
+          
     VarLabel::destroy(rvar->var_X_FC_flux);
     VarLabel::destroy(rvar->var_Y_FC_flux);
     VarLabel::destroy(rvar->var_Z_FC_flux);
@@ -76,8 +76,8 @@ FluidsBasedModel::~FluidsBasedModel()
 }
 
 void FluidsBasedModel::registerTransportedVariable(const MaterialSet* matlSet,
-						   const VarLabel* var,
-						   const VarLabel* src)
+                                                   const VarLabel* var,
+                                                   const VarLabel* src)
 {
   TransportedVariable* t = scinew TransportedVariable;
   t->matlSet = matlSet;
@@ -94,7 +94,7 @@ void FluidsBasedModel::registerTransportedVariable(const MaterialSet* matlSet,
 //  by the AMR refluxing task.  We're actually
 //  creating the varLabels and putting them is a vector
 void FluidsBasedModel::registerAMRRefluxVariable(const MaterialSet* matlSet,
-					    const VarLabel* var)
+                                            const VarLabel* var)
 {
   AMRRefluxVariable* t = scinew AMRRefluxVariable;
   

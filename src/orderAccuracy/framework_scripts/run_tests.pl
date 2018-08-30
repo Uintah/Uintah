@@ -11,7 +11,6 @@
 #   - make a symbolic link to the comparison utility used to compute the L2nomr
 #   - read in the replacement patterns for each test and all tests
 #   - perform global replacements on the ups file
-#   - perform global findReplace on the ups file
 #
 #   Loop over tests
 #     - create a new ups file
@@ -32,6 +31,7 @@
 use XML::Simple;
 use Data::Dumper;
 use Time::HiRes qw/time/;
+use File::Basename;
 use Cwd;
 
 # removes white spaces from variable
@@ -47,8 +47,8 @@ $config_files_path = $ARGV[1];
 my $data = $simple->XMLin("$tstFile");
 
 #__________________________________
-# copy gnuplot script
-my $gpFile = $data->{gnuplot}[0]->{script}[0];
+# copy gnuplot script   OPTIONAL
+my $gpFile = cleanStr( $data->{gnuplot}[0]->{script}[0] );
 
 if( length $gpFile ){  
   chomp($gpFile);              
@@ -59,7 +59,7 @@ if( length $gpFile ){
 #__________________________________
 # set exitOnCrash       OPTIONAL
 if ( length $data->{exitOnCrash}->[0] ){
-  $exitOnCrash = $data->{exitOnCrash}->[0];
+  $exitOnCrash = cleanStr( $data->{exitOnCrash}->[0] );
 }else{
   $exitOnCrash = "true";
 }
@@ -70,20 +70,19 @@ print "  Exit order of accuracy scripts on crash or timeout ($exitOnCrash)\n";
 #__________________________________
 # set timeout value       OPTIONAL
 if ( length $data->{susTimeout_minutes}->[0] ){
-  $timeout = $data->{susTimeout_minutes}->[0];
-  $timeout = $timeout*60;                   # minutes-> seconds               
+  $timeout = cleanStr( $data->{susTimeout_minutes}->[0] );
+  $timeout = $timeout*60;                               # minutes-> seconds               
 }else{
-  $timeout = 24*60*60;                       # default 24 hours
+  $timeout = 24*60*60;                                  # default 24 hours
 }
 print "  Simulation timeout: $timeout seconds\n";
 
 
 #__________________________________
 # determing the ups basename
-$upsFile         =$data->{upsFile}->[0];
-chomp($upsFile);
-my $ups_basename = $upsFile;
-$ups_basename    =~ s/.ups//;                     # Removing the extension .ups so that we can use this to build our uda file names
+$upsFile         = cleanStr( $data->{upsFile}->[0] );
+$upsFile         = basename( $upsFile );
+my $ups_basename = basename( $upsFile, ".ups" );        # Removing the extension .ups so that we can use this to build our uda file names
 
 #__________________________________
 # Read in the test data from xml file
@@ -94,29 +93,30 @@ my @tests = @{$data->{Test}};
        
 for($i = 0; $i<=$#tests; $i++){
   my $test         = $tests[$i];
-  $test_title[$i]  = $test->{Title}[0];          # test title
-  $sus_cmd[$i]     = $test->{sus_cmd}[0];        # sus command
+  $test_title[$i]  = cleanStr( $test->{Title}[0] );     # test title
+  $sus_cmd[$i]     = $test->{sus_cmd}[0];               # sus command
+  
+  $postProc_cmd[$i] = "";
   
   if( length $test->{postProcess_cmd}[0] ){
-    $postProc_cmd[$i] = $test->{postProcess_cmd}[0];    # comparison utility command
-  }else{
-    $postProc_cmd[$i] = "";
+    $postProc_cmd[$i] = $test->{postProcess_cmd}[0];    # comparison utility command  OPTIONAL
   }
-  #print Dumper($test);         #debugging
 }
+
 $num_of_tests=$#tests;
+
+
 #__________________________________
 # make a symbolic link to the post processing command
 # Note Debian doesn't have the --skip-dot option
+
 for ($i=0;$i<=$num_of_tests;$i++){
    if( length $postProc_cmd[$i] ){
-    my @stripped_cmd = split(/ /,$postProc_cmd[$i]);  # remove command options
+    my @stripped_cmd = split(/ /,$postProc_cmd[$i]);      # remove command options
     my $cmd = `which --skip-dot $stripped_cmd[0] > /dev/null 2>&1`;
     system("ln -fs $cmd > /dev/null 2>&1");
   }
 }
-
-
 
 #__________________________________
 # Read in all of the replacement patterns 
@@ -213,6 +213,7 @@ while ($line=<tstFile>){
 close(tstFile);
 #__________________________________
 # Globally, replace lines in the main ups file before each test.
+
 @replacementPatterns = (@global_replaceLines);
 foreach $rp (@global_replaceLines){
   system("replace_XML_line", "$rp", "$upsFile") ==0 ||  die("Error replacing_XML_line $rp in file $upsFile \n $@");
@@ -227,16 +228,6 @@ foreach $rv (@global_replaceValues){
   $value   = $tmp[1];
   system("replace_XML_value", "$xmlPath", "$value", "$upsFile")==0 ||  die("Error: replace_XML_value $xmlPath $value $upsFile \n $@");
   print "\treplace_XML_value $xmlPath $value\n";
-}
-
-
-#__________________________________
-# Globally perform substitutions in the main ups
-my $substitutions = $data->{AllTests}->[0]->{substitutions};
-
-foreach my $t (@{$substitutions->[0]->{text}}){
-  print "Now making the substitution text Find: $t->{find} replace: $t->{replace} in file: $upsFile \n";
-  system("findReplace","$t->{find}","$t->{replace}", "$upsFile");
 }
 
 open(statsFile,">out.stat");
@@ -340,16 +331,17 @@ close(statsFile);
 sub runSusCmd {
   my( $timeout, $exitOnCrash, $statsFile, @args ) = @_;
 
-  print "\tLaunching: @args\n";
+  print "\tLaunching: (@args)\n";
   @cmd = (" timeout --preserve-status $timeout @args ");
 
+  my $rc = -9;
   if ( $exitOnCrash eq "TRUE" ) {
 
     $rc = system("@cmd");
 
-    if ( $rc != 0 || $rc != 36608 ){
+    if ( $rc != 0 && $rc != 36608 ){
       die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
-      return 1
+      return 1;
     }
 
   }else{
@@ -366,10 +358,50 @@ sub runSusCmd {
     print "\t\tERROR the simulation crashed. (rc = $rc)\n";
     print $statsFile "\t\tERROR the simulation crashed. (rc = $rc)\n";
   }
-  
-  
-  
+
   return $rc;  
 
 };
 
+#______________________________________________________________________
+#   subroutines
+#______________________________________________________________________
+#  
+#  Remove any white space or newlines in array elements or scalars
+#  (This belongs in a separate common module to avoid duplication -Todd)
+sub cleanStr {
+
+  my @inputs = @_;
+  
+  my $n   = scalar @inputs;           # number of array elements
+  my $len = length $inputs[0];        # number of characters in first element
+  
+  # if the first element is empty return ""
+  if( $len == 0 ){
+    return "";
+  }
+  
+  #__________________________________
+  # if there is one array element return a scalar
+  if( $n == 1 ){
+    $inputs[0] =~ s/\n//g;        # remove newlines
+    $inputs[0] =~ s/ //g;         # remove white spaces
+    return $inputs[0];
+  }
+
+  #__________________________________
+  #  Arrays
+  my @result = ();
+  my $i = 0;
+  
+  foreach $i (@inputs){
+    $i =~ s/\n//g;        # remove newlines
+    $i =~ s/ //g;         # remove white spaces
+    my $l = length $i;
+    
+    if ($l > 0){
+      push( @result, $i );
+    }
+  }
+  return @result;
+}

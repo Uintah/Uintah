@@ -83,10 +83,10 @@ namespace Uintah {
       double T2_rate_dependence;
       double subcycling_characteristic_number;
       bool Use_Disaggregation_Algorithm;
-	  int J3_type;
-	  double J3_psi;
-	  double principal_stress_cutoff;
-	  
+          int J3_type;
+          double J3_psi;
+          double principal_stress_cutoff;
+          
     };
     const VarLabel* pAreniscaFlagLabel;          //0: ok, 1: pevp<-p3
     const VarLabel* pAreniscaFlagLabel_preReloc;
@@ -193,7 +193,7 @@ namespace Uintah {
 
     void computeElasticProperties(const Matrix3 stress,
                                   const Matrix3 ep,
-				                  const double& P3,
+                                                  const double& P3,
                                   double & bulk,
                                   double & shear
                                  );
@@ -215,7 +215,7 @@ namespace Uintah {
                            double& I1,
                            double& J2,
                            double& rJ2,
-						   double& J3);
+                                                   double& J3);
 
     int computeSubstep(const Matrix3& d_e,       // total strain increment for substep
                        const Matrix3& sigma_old, // stress at start of substep
@@ -276,23 +276,23 @@ namespace Uintah {
                                );
 
     void checkInputParameters();
-	
-	void computeRotationToSphericalCS(const Vector& pnew,// interior point
-		                              const Vector& p0,	 // origin (i.e. trial stress)
-		                                    Matrix3& R	 // Rotation matrix
-									  );
+        
+        void computeRotationToSphericalCS(const Vector& pnew,// interior point
+                                              const Vector& p0,  // origin (i.e. trial stress)
+                                                    Matrix3& R   // Rotation matrix
+                                                                          );
 
-	void computeEigenProjectors(const Matrix3& A,// Input tensor
-								Vector& lambda,  // Ordered eigenvalues {LMH}
-								Matrix3& PL,	 // Low eigenprojector
-								Matrix3& PM,	 // Mid eigenprojector
-								Matrix3& PH		 // High eigenprojector
-							   );
-	void computeEigenValues(const Matrix3& A,// Input tensor
-							Vector& lambda  // Ordered eigenvalues {LMH}
-							);
-	
-	
+        void computeEigenProjectors(const Matrix3& A,// Input tensor
+                                                                Vector& lambda,  // Ordered eigenvalues {LMH}
+                                                                Matrix3& PL,     // Low eigenprojector
+                                                                Matrix3& PM,     // Mid eigenprojector
+                                                                Matrix3& PH              // High eigenprojector
+                                                           );
+        void computeEigenValues(const Matrix3& A,// Input tensor
+                                                        Vector& lambda  // Ordered eigenvalues {LMH}
+                                                        );
+        
+        
   public: //Uintah MPM constitutive model specific functions
 
     // carry forward CM data for RigidMPM

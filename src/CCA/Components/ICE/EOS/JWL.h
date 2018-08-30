@@ -103,24 +103,24 @@ WARNING
         double   R2;
         double   om;
         double   rho0;  // kg/m^3
-	
-	/* The following used only in JWL::computeRhoMicro 
+        
+        /* The following used only in JWL::computeRhoMicro 
 
-	   Modified by:
-	   Changwei Xiong
-	   Department of Chemistry 
-	   University of Utah
-	*/
+           Modified by:
+           Changwei Xiong
+           Department of Chemistry 
+           University of Utah
+        */
         typedef struct { 
-	  double   Pressure;
-	  double   Temperature;
-	  double   SpecificHeat;
-	  double   IL, IR;
+          double   Pressure;
+          double   Temperature;
+          double   SpecificHeat;
+          double   IL, IR;
         } IterationVariables;
 
-	double func(double rhoM, IterationVariables *);
-	double deri(double rhoM, IterationVariables *);
-	void   setInterval(double f, double rhoM, IterationVariables *);
+        double func(double rhoM, IterationVariables *);
+        double deri(double rhoM, IterationVariables *);
+        void   setInterval(double f, double rhoM, IterationVariables *);
       };
 } // End namespace Uintah
       

@@ -37,7 +37,7 @@ namespace PTR{
 PortableMieGruneisenEOSTemperature::PortableMieGruneisenEOSTemperature()
 {
 }
-	
+        
 PortableMieGruneisenEOSTemperature::PortableMieGruneisenEOSTemperature(const CMData cm)
 {
   d_const = cm;
@@ -341,7 +341,7 @@ PortableMieGruneisenEOSTemperature::computeStrainEnergy(const double rho_0,
     const double T0(d_const.theta_0);
 
     // Power series expansion using 10 terms: (Computed in mathematica)
-#define Power(x, y)	(pow((double)(x), (double)(y)))
+#define Power(x, y)     (pow((double)(x), (double)(y)))
     double CvThetaH = (Power(C0,2)*Power(eta,2))/2. +
       ((-3*Power(C0,2)*G0 + 4*Power(C0,2)*S1)*
        Power(eta,3))/6. + (Power(C0,2)*

@@ -845,7 +845,7 @@ namespace Uintah {
                       << " iterations, final residual= " << final_res_norm
                       << ", requesting the time step be recomputed.\n";
 
-	    new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+            new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
             new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
           } else {
             throw ConvergenceFailure("HypreSolver variable: "+ m_X_label->getName()+", solver: "+ m_params->solvertype+", preconditioner: "+ m_params->precondtype,

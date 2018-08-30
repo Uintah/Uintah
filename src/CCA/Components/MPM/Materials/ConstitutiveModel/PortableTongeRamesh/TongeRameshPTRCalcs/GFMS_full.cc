@@ -14,9 +14,9 @@
  */
 
 //#include "SymMatrix3.h"
-#include <cstring> 		// memcpy
-#include <cmath>		// fabs
-#include <iomanip>		// std::setw
+#include <cstring>              // memcpy
+#include <cmath>                // fabs
+#include <iomanip>              // std::setw
 #include <stdexcept>
 #include <iostream>
 
@@ -30,9 +30,9 @@ SymMatrix3::SymMatrix3()
 }
 
 SymMatrix3::SymMatrix3(const double val){
-	for (int i = 0; i < 6; i++){
-		_values[i] = val;
-	}
+        for (int i = 0; i < 6; i++){
+                _values[i] = val;
+        }
 }
 
 SymMatrix3::SymMatrix3(const bool isIdentity){
@@ -47,19 +47,19 @@ SymMatrix3::SymMatrix3(const bool isIdentity){
   }
 }
 
-SymMatrix3::SymMatrix3(	const double v0,
-						const double v1,
-						const double v2,
-						const double v3,
-						const double v4,
-						const double v5)
+SymMatrix3::SymMatrix3( const double v0,
+                                                const double v1,
+                                                const double v2,
+                                                const double v3,
+                                                const double v4,
+                                                const double v5)
 {
-	_values[0] = v0;
-	_values[1] = v1;
-	_values[2] = v2;
-	_values[3] = v3;
-	_values[4] = v4;
-	_values[5] = v5;
+        _values[0] = v0;
+        _values[1] = v1;
+        _values[2] = v2;
+        _values[3] = v3;
+        _values[4] = v4;
+        _values[5] = v5;
 }
 
 SymMatrix3::~SymMatrix3()
@@ -74,78 +74,78 @@ void SymMatrix3::identity()
 }
 
 void SymMatrix3::swap(SymMatrix3 *rhs){
-	double cpy[6];
-	size_t n = 6 * sizeof(double);
-	memcpy(cpy, rhs->_values, n);
-	memcpy(rhs->_values, _values, n);
-	memcpy(_values, cpy, n);
+        double cpy[6];
+        size_t n = 6 * sizeof(double);
+        memcpy(cpy, rhs->_values, n);
+        memcpy(rhs->_values, _values, n);
+        memcpy(_values, cpy, n);
 }
 
 SymMatrix3& SymMatrix3::operator+= (const SymMatrix3 rhs)
 {
-	for (int i = 0; i < 6; i++){
-		_values[i] += rhs._values[i];
-	}
-	
-	return *this;
+        for (int i = 0; i < 6; i++){
+                _values[i] += rhs._values[i];
+        }
+        
+        return *this;
 }
 
 const SymMatrix3 SymMatrix3::operator+(const SymMatrix3 rhs) const
 {
-	SymMatrix3 ans(*this);
-	ans += rhs;
-	return ans;
+        SymMatrix3 ans(*this);
+        ans += rhs;
+        return ans;
 }
 
 SymMatrix3& SymMatrix3::operator-= (const SymMatrix3 rhs)
 {
-	for (int i = 0; i < 6; i++){
-		_values[i] -= rhs._values[i];
-	}
-	
-	return *this;
+        for (int i = 0; i < 6; i++){
+                _values[i] -= rhs._values[i];
+        }
+        
+        return *this;
 }
 
 const SymMatrix3 SymMatrix3::operator-(const SymMatrix3 rhs) const
 {
-	SymMatrix3 ans(*this);
-	ans -= rhs;
-	return ans;
+        SymMatrix3 ans(*this);
+        ans -= rhs;
+        return ans;
 }
 
 SymMatrix3& SymMatrix3::operator*= (const double rhs)
 {
-	for (int i = 0; i < 6; i++){
-		_values[i] *= rhs;
-	}
-	
-	return *this;
+        for (int i = 0; i < 6; i++){
+                _values[i] *= rhs;
+        }
+        
+        return *this;
 }
 
 const SymMatrix3 SymMatrix3::operator*(const double rhs) const
 {
-	SymMatrix3 ans(*this);
-	ans *= rhs;
-	return ans;
+        SymMatrix3 ans(*this);
+        ans *= rhs;
+        return ans;
 }
 
 SymMatrix3& SymMatrix3::operator/= (const double rhs)
 {
-	if (fabs(rhs) < 1.e-12){
-		throw std::domain_error("SymMatrix3::operator/=: divide by 0");
-	}
-	for (int i = 0; i < 6; i++){
-		_values[i] /= rhs;
-	}
-	
-	return *this;
+        if (fabs(rhs) < 1.e-12){
+                throw std::domain_error("SymMatrix3::operator/=: divide by 0");
+        }
+        for (int i = 0; i < 6; i++){
+                _values[i] /= rhs;
+        }
+        
+        return *this;
 }
 
 const SymMatrix3 SymMatrix3::operator/(const double rhs) const
 {
-	SymMatrix3 ans(*this);
-	ans /= rhs;
-	return ans;
+        SymMatrix3 ans(*this);
+        ans /= rhs;
+        return ans;
 }
 
 const SymMatrix3 SymMatrix3::operator*(const SymMatrix3 rhs) const
@@ -166,12 +166,12 @@ const SymMatrix3 SymMatrix3::operator*(const SymMatrix3 rhs) const
 
 double SymMatrix3::determinant() const
 {
-	double ans = (_values[0] * _values[1] * _values[2]);
-	ans       += (_values[5] * _values[3] * _values[4])/(sqrt(2.0)); // This shows up twice
-	ans       -= (_values[1] * _values[4] * _values[4])/2.0;
-	ans       -= (_values[2] * _values[5] * _values[5])/2.0;
-	ans       -= (_values[0] * _values[3] * _values[3])/2.0;
-	return ans;
+        double ans = (_values[0] * _values[1] * _values[2]);
+        ans       += (_values[5] * _values[3] * _values[4])/(sqrt(2.0)); // This shows up twice
+        ans       -= (_values[1] * _values[4] * _values[4])/2.0;
+        ans       -= (_values[2] * _values[5] * _values[5])/2.0;
+        ans       -= (_values[0] * _values[3] * _values[3])/2.0;
+        return ans;
 }
 
 double SymMatrix3::get(const int i, const int j) const{
@@ -180,7 +180,7 @@ double SymMatrix3::get(const int i, const int j) const{
   }
 
   double val = i==j ? _values[i] : _values[6-(i+j)]/sqrt(2.0);
-	
+        
   return val;
 }
 

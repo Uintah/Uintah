@@ -62,16 +62,17 @@ namespace Uintah {
 
   int visit_ProcessVisItCommand( visit_simulation_data *sim );
 
-  void visit_MaxTimeStepCallback( char *val, void *cbdata );
-  void visit_MaxTimeCallback    ( char *val, void *cbdata );
-  void visit_EndOnMaxTimeCallback( int   val, void *cbdata );
+  void visit_TimeStepsMaxCallback( char *val, void *cbdata );
+
+  void visit_SimTimeMaxCallback     ( char *val, void *cbdata );
+  void visit_SimTimeEndAtMaxCallback( int   val, void *cbdata );
 
   void visit_DeltaTVariableCallback   ( char *val, void *cbdata );
   void visit_WallTimesVariableCallback( char *val, void *cbdata );
  
   void visit_UPSVariableCallback           ( char *val, void *cbdata );
   void visit_OutputIntervalVariableCallback( char *val, void *cbdata );
-  void visit_ClampTimeStepsToOutputCallback( int   val, void *cbdata );
+  void visit_ClampTimeToOutputCallback     ( int   val, void *cbdata );
 
   void visit_ImageGenerateCallback( int   val, void *cbdata );
   void visit_ImageFilenameCallback( char *val, void *cbdata );
