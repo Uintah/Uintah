@@ -44,7 +44,7 @@ Uintah::Dout g_deltaT_major_warnings( "DeltaTMajorWarnings", "ApplicationCommon"
 
 Uintah::Dout g_deltaT_prevalidate_min( "DeltaTPreValidateMin", "ApplicationCommon", "Before reducing validate the next delta T w/minimal warnings", false );
 
-Uintah::Dout g_deltaT_prevalidate_max( "DeltaTPreValidateMax", "ApplicationCommon", "Before reducing validate the next delta T w/maximal warnings", false );
+Uintah::Dout g_deltaT_prevalidate_max( "DeltaTPreValidateMax", "ApplicationCommon", "Before reducing validate the next delta T w/maximal warnings", true );
 
 ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
                                       const MaterialManagerP   materialManager )
@@ -78,6 +78,20 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   VarLabel* nonconstDelT = VarLabel::create(delT_name, delt_vartype::getTypeDescription());
   nonconstDelT->allowMultipleComputes();
   m_delTLabel = nonconstDelT;
+
+
+  // Reduction vars local to the application.
+  
+  // An application can request that an output or checkpoint been done
+  // immediately.
+
+  // output time step
+  m_appReductionVars[ outputTimeStep_name ] = new
+    ApplicationReductionVariable( outputTimeStep_name, bool_or_vartype::getTypeDescription() );
+
+  // checkpoint time step
+  m_appReductionVars[ checkpointTimeStep_name ] = new
+    ApplicationReductionVariable( checkpointTimeStep_name, bool_or_vartype::getTypeDescription() );
 
   // An application may adjust the output interval or the checkpoint
   // interval during a simulation.  For example in deflagration ->
@@ -418,6 +432,28 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   for ( auto & var : m_appReductionVars )
     var.second->reduce( new_dw );
 
+  // Specific handling for bool reduction vars that need the grid.
+  if (patches->size() != 0 )
+  {
+    const GridP grid = patches->get(0)->getLevel()->getGrid();
+
+    if( m_appReductionVars[outputTimeStep_name]->active )
+    {
+      if( !m_appReductionVars[outputTimeStep_name]->bool_var.isBenignValue() )
+      {
+        m_output->setOutputTimeStep( true, grid );
+      }
+    }
+
+    if( m_appReductionVars[checkpointTimeStep_name]->active )
+    {
+      if( !m_appReductionVars[checkpointTimeStep_name]->bool_var.isBenignValue() )
+      {
+        m_output->setCheckpointTimeStep( true, grid );
+      }
+    }
+  }
+  
   // Specific handling for double reduction vars.
   if( m_appReductionVars[outputInterval_name]->active )
   {
@@ -771,10 +807,10 @@ ApplicationCommon::setNextDelT( double delT )
 
 //______________________________________________________________________
 //
-bool
+unsigned int
 ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 {
-  int invalid = 0;
+  unsigned int invalid = 0;
 
   std::ostringstream message;
       
@@ -843,7 +879,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
   {
     invalid |= DELTA_T_MAX;
 
-    if( g_deltaT_minor_warnings )
+    if( g_deltaT_major_warnings )
     {
       message << "lowering the next delT from " << delTNext;
       delTNext = m_delTMax;
@@ -1039,7 +1075,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     }
   }
   
-  return (bool) invalid;
+  return invalid;
 }
 
 //______________________________________________________________________

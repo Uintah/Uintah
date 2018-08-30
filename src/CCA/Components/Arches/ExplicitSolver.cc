@@ -915,6 +915,25 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   }
 
   tsk->computes(d_lab->d_delTLabel,level.get_rep());
+
+#ifdef OUTPUT_WITH_BAD_DELTA_T
+  // This method is called at both initialization and
+  // otherwise. At initialization the old DW, i.e. DW(0) will not
+  // exist so require the value from the new DW.  Otherwise for a
+  // normal time step require the time step from the old DW.
+  if(sched->get_dw(0) ) {
+    tsk->requires( Task::OldDW, VarLabel::find(timeStep_name) );
+  }
+  else if(sched->get_dw(1) ) {
+    tsk->requires( Task::NewDW, VarLabel::find(timeStep_name) );
+  }
+
+  // For when delta T goes below a value output and checkpoint
+  tsk->computes( VarLabel::find(    outputTimeStep_name) );
+  tsk->computes( VarLabel::find(checkpointTimeStep_name) );
+  tsk->computes( VarLabel::find(     endSimulation_name) );
+#endif
+  
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 
 }
@@ -1091,6 +1110,27 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
       delta_t = delta_t2;
       new_dw->put(delt_vartype(delta_t), d_lab->d_delTLabel, level);
 
+#ifdef OUTPUT_WITH_BAD_DELTA_T
+      // This method is called at both initialization and otherwise. At
+      // initialization the old DW will not exist so get the value from
+      // the new DW.  Otherwise for a normal time step get the time step
+      // from the old DW.
+      timeStep_vartype timeStep(0);
+
+      if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
+        old_dw->get(timeStep, VarLabel::find(timeStep_name) );
+      else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
+        new_dw->get(timeStep, VarLabel::find(timeStep_name) );
+      
+      // If after the first 10 time steps delta T goes below this
+      // value immediately output and checkpoint. Then end the simulation.
+      if( 10 < timeStep && delta_t <= 0.01 )
+      {
+        new_dw->put( bool_or_vartype(true), VarLabel::find(    outputTimeStep_name) );
+        new_dw->put( bool_or_vartype(true), VarLabel::find(checkpointTimeStep_name) );
+        new_dw->put( bool_or_vartype(true), VarLabel::find(     endSimulation_name) );
+      }
+#endif      
     }
   } else { // if not on the arches level
 

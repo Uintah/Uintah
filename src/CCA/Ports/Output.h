@@ -161,9 +161,11 @@ WARNING
     virtual int    getNextCheckpointWallTime() const = 0; // integer - seconds
       
     // Returns true if data will be output this time step
+    virtual void setOutputTimeStep( bool val, const GridP& grid ) = 0;
     virtual bool isOutputTimeStep() const = 0;
 
     // Returns true if data will be checkpointed this time step
+    virtual void setCheckpointTimeStep( bool val, const GridP& grid ) = 0;
     virtual bool isCheckpointTimeStep() const = 0;
 
     // Returns true if the label is being saved

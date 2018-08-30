@@ -1156,7 +1156,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
   
   //__________________________________
   //  Schedule Checkpoint (reduction variables)
-  if( delT != 0.0 && m_checkpointCycle > 0 &&
+  if( delT != 0.0 && // m_checkpointCycle > 0 &&
       ( m_checkpointInterval > 0 ||
         m_checkpointTimeStepInterval > 0 ||
         m_checkpointWallTimeInterval > 0 ) ) {
@@ -1198,6 +1198,99 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
 
 } // end sched_allOutputTasks()
 
+//______________________________________________________________________
+//
+void
+DataArchiver::setOutputTimeStep( bool val, const GridP& grid )
+{
+  if( m_isOutputTimeStep != val )
+  {
+    m_isOutputTimeStep = val;
+    
+    // Create the output timestep directories
+    if( m_isOutputTimeStep && m_outputFileFormat != PIDX ) {
+      makeTimeStepDirs( m_dir, m_saveLabels, grid, &m_lastTimeStepLocation );
+    }
+  }
+}
+
+//______________________________________________________________________
+//
+void
+DataArchiver::setCheckpointTimeStep( bool val, const GridP& grid )
+{
+  if( m_isCheckpointTimeStep != val )
+  {
+    m_isCheckpointTimeStep = val;
+    
+    // Create the output checkpoint directories
+    if( m_isCheckpointTimeStep ) {
+      string timestepDir;
+      makeTimeStepDirs( m_checkpointsDir, m_checkpointLabels, grid, &timestepDir );
+      
+      string iname = m_checkpointsDir.getName() + "/index.xml";
+      
+      ProblemSpecP index;
+      
+      if( m_writeMeta ) {
+        index = loadDocument( iname );
+        
+        // store a back up in case it dies while writing index.xml
+        
+        string ibackup_name = m_checkpointsDir.getName() + "/index_backup.xml";
+        index->output( ibackup_name.c_str() );
+      }
+      
+      m_checkpointTimeStepDirs.push_back( timestepDir );
+      
+      if( m_checkpointCycle > 0 &&
+          (int) m_checkpointTimeStepDirs.size() > m_checkpointCycle ) {
+        if( m_writeMeta ) {
+          // Remove reference to outdated checkpoint directory from the checkpoint index.
+          ProblemSpecP ts = index->findBlock( "timesteps" );
+          ProblemSpecP temp = ts->getFirstChild();
+          ts->removeChild( temp );
+          
+          index->output( iname.c_str() );
+          
+          // remove out-dated checkpoint directory
+          Dir expiredDir( m_checkpointTimeStepDirs.front() );
+          
+          // Try to remove the expired checkpoint directory...
+          if( !Dir::removeDir( expiredDir.getName().c_str() ) ) {
+            // Something strange happened... let's test the filesystem...
+            cout << "\nWarning! removeDir() Failed for '" << expiredDir.getName() << "' in DataArchiver.cc::beginOutputTimeStep()\n\n"; 
+            stringstream error_stream;          
+            if( !testFilesystem( expiredDir.getName(), error_stream, Parallel::getMPIRank() ) ) {
+              cout << error_stream.str();
+              cout.flush();
+              // The file system just gave us some problems...
+              printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );
+            }
+          }
+        }
+        m_checkpointTimeStepDirs.pop_front();
+      }
+
+      if( d_myworld->myRank() == 0 )
+      {
+        if( m_checkpointCycle == 0 ) {
+          DOUT( true, "WARNING the checkpoint cycle is set to zero. "
+                "No checpoints will be deleted. This may cause unacceptable disk usage." );
+        }
+        
+        if( (int) m_checkpointTimeStepDirs.size() > 10 ) {
+          DOUT( true, "WARNING there are currently checkpoint "
+                << m_checkpointTimeStepDirs.size() << " files. "
+                << "This may be excessive and cause unacceptable disk usage." );
+        }
+      }
+      
+      //if (m_writeMeta)
+      //index->releaseDocument();
+    }
+  }
+}
 
 //______________________________________________________________________
 //
@@ -1212,12 +1305,15 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
     dbg << "    beginOutputTimeStep\n";
   }
 
+  m_isOutputTimeStep = false;
+  m_isCheckpointTimeStep = false;
+  
   // Do *not* update the next values here as the original values are
   // needed to compare with if there is a time step recompute.  See
   // reEvaluateOutputTimeStep
 
   // Check for an output.
-  m_isOutputTimeStep =
+  bool isOutputTimeStep =
     // Output based on the simulation time.
     ( ( ( m_outputInterval > 0.0 && ( delT != 0.0 || m_outputInitTimeStep ) ) &&
         ( simTime + delT >= m_nextOutputTime ) ) ||
@@ -1230,13 +1326,10 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
       // Output based on the being the last timestep.
       (m_outputLastTimeStep && m_maybeLastTimeStep) );
 
-  // Create the output timestep directories
-  if( m_isOutputTimeStep && m_outputFileFormat != PIDX ) {
-    makeTimeStepDirs( m_dir, m_saveLabels, grid, &m_lastTimeStepLocation );
-  }
-
+  setOutputTimeStep( isOutputTimeStep, grid );
+  
   // Check for a checkpoint.
-  m_isCheckpointTimeStep =
+  bool isCheckpointTimeStep =
     // Checkpoint based on the simulation time.
     ( (m_checkpointInterval > 0.0 &&
        (simTime + delT) >= m_nextCheckpointTime) ||
@@ -1252,68 +1345,17 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
   if( m_checkpointWallTimeInterval > 0 ) {
 
     if( m_elapsedWallTime >= m_nextCheckpointWallTime ) {
-      m_isCheckpointTimeStep = true;
+      isCheckpointTimeStep = true;
     }
   }
   
-  // Create the output checkpoint directories
-  if( m_isCheckpointTimeStep ) {
-    
-    string timestepDir;
-    makeTimeStepDirs( m_checkpointsDir, m_checkpointLabels, grid, &timestepDir );
-    
-    string iname = m_checkpointsDir.getName() + "/index.xml";
-
-    ProblemSpecP index;
-    
-    if( m_writeMeta ) {
-      index = loadDocument( iname );
-      
-      // store a back up in case it dies while writing index.xml
-
-      string ibackup_name = m_checkpointsDir.getName() + "/index_backup.xml";
-      index->output( ibackup_name.c_str() );
-    }
-
-    m_checkpointTimeStepDirs.push_back( timestepDir );
-
-    if( (int)m_checkpointTimeStepDirs.size() > m_checkpointCycle ) {
-      if( m_writeMeta ) {
-        // Remove reference to outdated checkpoint directory from the checkpoint index.
-        ProblemSpecP ts = index->findBlock( "timesteps" );
-        ProblemSpecP temp = ts->getFirstChild();
-        ts->removeChild( temp );
-
-        index->output( iname.c_str() );
-        
-        // remove out-dated checkpoint directory
-        Dir expiredDir( m_checkpointTimeStepDirs.front() );
-
-        // Try to remove the expired checkpoint directory...
-        if( !Dir::removeDir( expiredDir.getName().c_str() ) ) {
-          // Something strange happened... let's test the filesystem...
-          cout << "\nWarning! removeDir() Failed for '" << expiredDir.getName() << "' in DataArchiver.cc::beginOutputTimeStep()\n\n"; 
-          stringstream error_stream;          
-          if( !testFilesystem( expiredDir.getName(), error_stream, Parallel::getMPIRank() ) ) {
-            cout << error_stream.str();
-            cout.flush();
-            // The file system just gave us some problems...
-            printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );
-          }
-        }
-      }
-      m_checkpointTimeStepDirs.pop_front();
-    }
-    //if (m_writeMeta)
-    //index->releaseDocument();
-  }
+  setCheckpointTimeStep( isCheckpointTimeStep, grid );
 
   if (dbg.active()) {
-    dbg << "    write output timestep (" << m_isOutputTimeStep << ")" << std::endl
-        << "    write CheckPoints (" << m_isCheckpointTimeStep << ")" << std::endl
+    dbg << "    write output timestep (" << isOutputTimeStep << ")" << std::endl
+        << "    write CheckPoints (" << isCheckpointTimeStep << ")" << std::endl
         << "    end\n";
-  }
-  
+  }  
 } // end beginOutputTimeStep
 
 //______________________________________________________________________
@@ -4290,7 +4332,7 @@ DataArchiver::setElapsedWallTime( double val )
 }
 
 //______________________________________________________________________
-// Called to set the elapsed wall time
+// Called to set the cycle, i.e. how many checkpoints to save
 //
 void
 DataArchiver::setCheckpointCycle( int val )

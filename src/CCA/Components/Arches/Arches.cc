@@ -73,6 +73,14 @@ Arches::Arches(const ProcessorGroup* myworld,
   //lagrangian particles:
   m_particlesHelper = scinew ArchesParticlesHelper();
   m_particlesHelper->sync_with_arches(this);
+
+#ifdef OUTPUT_WITH_BAD_DELTA_T
+  // The other reduciton vars are set in the problem setup because the
+  // UPS file needs to be read first.
+  activateReductionVariable(     outputTimeStep_name, true );
+  activateReductionVariable( checkpointTimeStep_name, true );
+  activateReductionVariable(      endSimulation_name, true );
+#endif
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -187,8 +195,8 @@ Arches::problemSetup( const ProblemSpecP     & params,
       for( iter  = m_analysis_modules.begin();
            iter != m_analysis_modules.end(); iter++) {
         AnalysisModule* am = *iter;
-	std::vector<std::vector<const VarLabel* > > dummy;
-	am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
+        std::vector<std::vector<const VarLabel* > > dummy;
+        am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
         am->problemSetup(params, materials_ps, grid, dummy, dummy);
       }
     }

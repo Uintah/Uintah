@@ -414,15 +414,15 @@ WARNING
     // virtual void setReductionVariable(std::string name, double &val ) { m_appReductionVars[name]->min_var  = val; }
 
     //////////
-    virtual   void setDelT( double delT ) { m_delT = delT; }
+    virtual void   setDelT( double delT ) { m_delT = delT; }
     virtual double getDelT() const { return m_delT; }
-    virtual   void setDelTForAllLevels( SchedulerP& scheduler,
+    virtual void   setDelTForAllLevels( SchedulerP& scheduler,
                                         const GridP & grid,
                                         const int totalFine );
 
-    virtual   void setNextDelT( double delT );
-    virtual double getNextDelT() const { return m_delTNext; }
-    virtual bool   validateNextDelT( double &delTNext, unsigned int level );
+    virtual void         setNextDelT( double delT );
+    virtual double       getNextDelT() const { return m_delTNext; }
+    virtual unsigned int validateNextDelT( double &delTNext, unsigned int level );
 
     //////////
     virtual   void setSimTime( double simTime );
