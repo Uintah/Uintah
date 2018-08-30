@@ -42,7 +42,7 @@
       <property name="title">
        <string>TIme Info</string>
       </property>
-      <widget class="QLineEdit" name="MaxTime">
+      <widget class="QLineEdit" name="SimTimeMax">
        <property name="geometry">
         <rect>
          <x>300</x>
@@ -52,7 +52,7 @@
         </rect>
        </property>
       </widget>
-      <widget class="QLabel" name="MaxTimeLabel">
+      <widget class="QLabel" name="SimTimeMaxLabel">
        <property name="geometry">
         <rect>
          <x>230</x>
@@ -88,7 +88,7 @@
         </rect>
        </property>
       </widget>
-      <widget class="QLineEdit" name="Time">
+      <widget class="QLineEdit" name="SimTime">
        <property name="geometry">
         <rect>
          <x>300</x>
@@ -98,7 +98,7 @@
         </rect>
        </property>
       </widget>
-      <widget class="QLabel" name="TimeLabel">
+      <widget class="QLabel" name="SimTimeLabel">
        <property name="geometry">
         <rect>
          <x>230</x>
@@ -111,7 +111,7 @@
         <string>Time</string>
        </property>
       </widget>
-      <widget class="QLabel" name="MaxTimeStepLabel">
+      <widget class="QLabel" name="TimeStepsMaxLabel">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -124,7 +124,7 @@
         <string>Max Time Step</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="MaxTimeStep">
+      <widget class="QLineEdit" name="TimeStepsMax">
        <property name="geometry">
         <rect>
          <x>110</x>
@@ -134,7 +134,7 @@
         </rect>
        </property>
       </widget>
-      <widget class="QCheckBox" name="EndOnMaxTime">
+      <widget class="QCheckBox" name="SimTimeEndAtMax">
        <property name="geometry">
         <rect>
          <x>410</x>

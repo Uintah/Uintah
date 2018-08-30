@@ -443,10 +443,10 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
 
   //__________________________________
   // WARNINGS
-  if ( d_impICE && getMaxDelTIncrease() > 10 ){
+  if ( d_impICE && getDelTMaxIncrease() > 10 ){
     proc0cout <<"\n \n W A R N I N G: " << endl;
     proc0cout << " When running implicit ICE you should specify "<<endl;
-    proc0cout <<" \t \t <max_delt_increase>    2.0ish  "<<endl;
+    proc0cout <<" \t \t <max_delt_increase> to ~2.0 "<<endl;
     proc0cout << " to a) prevent rapid fluctuations in the timestep and "<< endl;
     proc0cout << "    b) to prevent outflux Vol > cell volume \n \n" <<endl;
   } 
@@ -549,7 +549,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
       vector<AnalysisModule*>::iterator iter;
       for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
         AnalysisModule* am = *iter;
-	std::vector<std::vector<const VarLabel* > > dummy;
+        std::vector<std::vector<const VarLabel* > > dummy;
         am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
         am->problemSetup(prob_spec, restart_prob_spec, grid, dummy, dummy);
       }
@@ -943,7 +943,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
 
   d_exchModel->sched_AddExch_VelFC(       sched, patches,ice_matls_sub,
-					                 mpm_matls_sub, 
+                                                         mpm_matls_sub, 
                                                          all_matls,
                                                          d_BC_globalVars,
                                                          false);

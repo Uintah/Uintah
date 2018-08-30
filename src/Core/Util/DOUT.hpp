@@ -39,70 +39,65 @@
 #include <string>
 
 
-#define DOUT( cond, ... )                  \
-  if (cond) {                              \
-    std::ostringstream dout_msg;           \
-    dout_msg << __VA_ARGS__;               \
-    printf("%s\n",dout_msg.str().c_str()); \
-  }
-
-
-#define TOUTALL( ... )                       \
-  std::ostringstream tout_msg;               \
-  tout_msg << __VA_ARGS__;                   \
-  printf("%d:%d   %s\n"                      \
-        , MPI::Impl::prank( MPI_COMM_WORLD ) \
-        , MPI::Impl::tid()                   \
-        , tout_msg.str().c_str());           \
-
-
-#define POUT( ... )                        \
-  {                                        \
-    std::ostringstream dout_msg;           \
-    dout_msg << __FILE__ << ":";           \
-    dout_msg << __LINE__ << " : ";         \
-    dout_msg << __VA_ARGS__;               \
-    printf("%s\n",dout_msg.str().c_str()); \
-  }
-
-
-#define TOUT()                             \
-  printf("TOUT:  %d  %d  %s:%d\n"          \
-      , MPI::Impl::prank( MPI_COMM_WORLD ) \
-      , MPI::Impl::tid()                   \
-      , __FILE__                           \
-      , __LINE__                           \
-      )
-
-
-#define DOUTP( cond, ... )                                  \
-  if (cond) {                                               \
-    std::ostringstream dout_msg;                            \
-    dout_msg << "(Proc ";                                   \
-    dout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << ") "; \
-    dout_msg << __FILE__ << ":";                            \
-    dout_msg << __LINE__ << " : ";                          \
-    dout_msg << __VA_ARGS__;                                \
-    printf("%s\n",dout_msg.str().c_str());                  \
-  }
-
-#define DOUTP0( cond, ... )                                 \
-  if ( MPI::Impl::prank( MPI_COMM_WORLD ) == 0 && cond) {   \
-    std::ostringstream dout_msg;                            \
-    dout_msg << __FILE__ << ":";                            \
-    dout_msg << __LINE__ << " : ";                          \
-    dout_msg << __VA_ARGS__;                                \
-    printf("%s\n",dout_msg.str().c_str());                  \
+//__________________________________
+// Conditional
+#define DOUT( cond, ... )                                  \
+  if (cond) {                                              \
+    std::ostringstream dout_msg;                           \
+    dout_msg << __VA_ARGS__;                               \
+    printf("%s\n",dout_msg.str().c_str());                 \
   }
 
 //__________________________________
-//  output: all threads on rank 0
-#define DOUTR0( ... )                                \
-  if ( MPI::Impl::prank( MPI_COMM_WORLD ) == 0 ) {   \
-    std::ostringstream dout_msg;                     \
-    dout_msg << __VA_ARGS__;                         \
-    printf("%s",dout_msg.str().c_str());             \
+// Conditional with rank
+#define DOUTR( cond, ... )                                 \
+  if ( cond) {                                             \
+    std::ostringstream dout_msg;                           \
+    dout_msg << __VA_ARGS__;                               \
+    dout_msg << "Rank ";                                   \
+    dout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << " "; \
+    printf("%s\n",dout_msg.str().c_str());                 \
   }
+
+//__________________________________
+// Conditional with rank, file, and line number reported
+#define DOUTALL( cond, ... )                               \
+  if (cond) {                                              \
+    std::ostringstream pout_msg;                           \
+    pout_msg << "Rank ";                                   \
+    pout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << " "; \
+    pout_msg << __FILE__ << ":";                           \
+    pout_msg << __LINE__ << " : ";                         \
+    pout_msg << __VA_ARGS__;                               \
+    printf("%s\n", pout_msg.str().c_str());                \
+  }
+
+//__________________________________
+//  For threads, Rank and thread reported
+#define TOUT( ... ) {					    \
+    std::ostringstream tout_msg;			    \
+    tout_msg << "Rank ";				    \
+    tout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << "  "; \
+    tout_msg << "Thread ";			            \
+    tout_msg << MPI::Impl::tid() << ") ";		    \
+    tout_msg << __VA_ARGS__;				    \
+    printf("%s\n", tout_msg.str().c_str());		    \
+  }
+
+//__________________________________
+//  For threads, with rank, thread, file, and line, reported
+#define TOUTALL( ... ) {                                    \
+    std::ostringstream tout_msg;                            \
+    tout_msg << "Rank ";                                    \
+    tout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << "  "; \
+    tout_msg << "Thread ";                                  \
+    tout_msg << MPI::Impl::tid() << ") ";                   \
+    tout_msg << __FILE__ << ":";                            \
+    tout_msg << __LINE__ << " : ";                          \
+    tout_msg << __VA_ARGS__;                                \
+    printf("%s\n", tout_msg.str().c_str());                 \
+  }
+
 
 namespace Uintah {
 

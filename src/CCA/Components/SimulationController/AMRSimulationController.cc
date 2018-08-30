@@ -230,7 +230,7 @@ AMRSimulationController::run()
     // when the time step is finished. It is currently used only for
     // outputing and checkpointing. Both of which typically take much
     // longer than the simulation calculation.
-    if( m_application->getMaxWallTime() > 0 )
+    if( m_application->getWallTimeMax() > 0 )
       predictedWalltime = walltime +
         1.5 * m_wall_timers.ExpMovingAverage().seconds();
     else

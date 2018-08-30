@@ -745,7 +745,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
       // Get the wall time if is needed, otherwise ignore it.
       double walltime;
       
-      if( m_application->getMaxWallTime() > 0 )
+      if( m_application->getWallTimeMax() > 0 )
         walltime = m_wall_timers.GetWallTime();
       else
         walltime = 0;
@@ -1236,10 +1236,10 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
 
     m_wall_timers.InSitu.start();
 
-    // Get the wall time if is needed, otherwise ignore it.
+    // Get the wall time if it is needed, otherwise ignore it.
     double walltime;
     
-    if( m_application->getMaxWallTime() > 0 )
+    if( m_application->getWallTimeMax() > 0 )
       walltime = m_wall_timers.GetWallTime();
     else
       walltime = 0;

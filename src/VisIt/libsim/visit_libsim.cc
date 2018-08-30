@@ -799,10 +799,10 @@ void visit_Initialize( visit_simulation_data *sim )
     VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
 
   
-  VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
-  VisItUI_textChanged("MaxTime",     visit_MaxTimeCallback,     (void*) sim);
-  VisItUI_valueChanged("EndOnMaxTime",
-                       visit_EndOnMaxTimeCallback, (void*) sim);
+  VisItUI_textChanged("TimeStepsMax", visit_TimeStepsMaxCallback, (void*) sim);
+  VisItUI_textChanged("SimTime",      visit_SimTimeMaxCallback,   (void*) sim);
+  VisItUI_valueChanged("SimTimeEndAtMax",
+                       visit_SimTimeEndAtMaxCallback, (void*) sim);
 
   VisItUI_cellChanged("DeltaTVariableTable",
                       visit_DeltaTVariableCallback,          (void*) sim);

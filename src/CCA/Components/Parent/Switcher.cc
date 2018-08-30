@@ -836,34 +836,26 @@ void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
                                 __FILE__, __LINE__);
   }
   
-  time_ps->require( "delt_min", m_minDelT );
-  time_ps->require( "delt_max", m_maxDelT );
+  time_ps->require( "delt_min", m_delTMin );
+  time_ps->require( "delt_max", m_delTMax );
   time_ps->require( "timestep_multiplier", m_delTMultiplier );
 
-  if( !time_ps->get("delt_init", m_maxInitialDelT) &&
-      !time_ps->get("max_initial_delt", m_maxInitialDelT) ) {
-    m_maxInitialDelT = 0;
+  if( !time_ps->get("delt_init", m_delTInitialMax) &&
+      !time_ps->get("max_initial_delt", m_delTInitialMax) ) {
+    m_delTInitialMax = 0;
   }
 
-  if( !time_ps->get("initial_delt_range", m_initialDelTRange) ) {
-    m_initialDelTRange = 0;
-  }
-  else if( m_initialDelTRange < 0 ) {
-    proc0cout << "Negative initial_delt_range is not allowed.\n";
-    proc0cout << "resetting to 0 (i.e. the value is ignored)\n";
-    m_initialDelTRange = 0;
+  if( !time_ps->get("initial_delt_range", m_delTInitialRange) ) {
+    m_delTInitialRange = 0;
   }
 
-  if( !time_ps->get("max_delt_increase", m_maxDelTIncrease) ) {
-    m_maxDelTIncrease = 0;
-  }
-  else if( m_maxDelTIncrease < 0 ) {
-    proc0cout << "Negative max_delt_increase is not allowed.\n";
-    proc0cout << "resetting to 0 (i.e. the value is ignored)\n";
-    m_maxDelTIncrease = 0;
+  if( !time_ps->get("max_delt_increase", m_delTMaxIncrease) ) {
+    m_delTMaxIncrease = 0;
   }
   
-  time_ps->get( "override_restart_delt", m_overrideRestartDelT);
+  if( !time_ps->get( "override_restart_delt", m_delTOverrideRestart) ) {
+    m_delTOverrideRestart = 0;
+  }
 
   // Set flags for checking reduction vars - done after the
   // subcomponent problem spec is read because the values may be based
@@ -908,10 +900,10 @@ Switcher::needRecompile( const GridP & grid )
     // specified.  On a switch from one application to the next, delT
     // needs to be adjusted to the value specified in the input file.
     proc0cout << "Switching the next delT from " << m_delT
-              << " to " << m_maxInitialDelT
+              << " to " << m_delTInitialMax
               << std::endl;
     
-    setDelT( m_maxInitialDelT );
+    setDelT( m_delTInitialMax );
 
     // This is needed to get the "ICE surrounding matl"
     d_app->restartInitialize();

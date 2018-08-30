@@ -279,38 +279,38 @@ WARNING
                                          const ProcessorGroup* myWorld ) = 0;
 
 
-    virtual void   setOverrideRestartDelT( double val ) = 0;
-    virtual double getOverrideRestartDelT() const = 0;
+    virtual void   setDelTOverrideRestart( double val ) = 0;
+    virtual double getDelTOverrideRestart() const = 0;
 
-    virtual void   setMaxInitialDelT( double val ) = 0;
-    virtual double getMaxInitialDelT() const = 0;
+    virtual void   setDelTInitialMax( double val ) = 0;
+    virtual double getDelTInitialMax() const = 0;
 
-    virtual void   setInitialDelTRange( double val ) = 0;
-    virtual double getInitialDelTRange() const = 0;
+    virtual void   setDelTInitialRange( double val ) = 0;
+    virtual double getDelTInitialRange() const = 0;
 
     virtual void   setDelTMultiplier( double val ) = 0;
     virtual double getDelTMultiplier() const = 0;
 
-    virtual void   setMaxDelTIncrease( double val ) = 0;
-    virtual double getMaxDelTIncrease() const = 0;
+    virtual void   setDelTMaxIncrease( double val ) = 0;
+    virtual double getDelTMaxIncrease() const = 0;
     
-    virtual void   setMinDelT( double val ) = 0;
-    virtual double getMinDelT() const = 0;
+    virtual void   setDelTMin( double val ) = 0;
+    virtual double getDelTMin() const = 0;
 
-    virtual void   setMaxDelT( double val ) = 0;
-    virtual double getMaxDelT() const = 0;
+    virtual void   setDelTMax( double val ) = 0;
+    virtual double getDelTMax() const = 0;
 
-    virtual void   setEndAtMaxSimTime( bool val ) = 0;
-    virtual bool   getEndAtMaxSimTime() const = 0;
+    virtual void   setSimTimeEndAtMax( bool val ) = 0;
+    virtual bool   getSimTimeEndAtMax() const = 0;
 
-    virtual void   setMaxSimTime( double val ) = 0;
-    virtual double getMaxSimTime() const = 0;
+    virtual void   setSimTimeMax( double val ) = 0;
+    virtual double getSimTimeMax() const = 0;
 
-    virtual void   setMaxTimeSteps( int val ) = 0;
-    virtual int    getMaxTimeSteps() const = 0;
+    virtual void   setTimeStepsMax( int val ) = 0;
+    virtual int    getTimeStepsMax() const = 0;
 
-    virtual void   setMaxWallTime( double val ) = 0;
-    virtual double getMaxWallTime() const = 0;
+    virtual void   setWallTimeMax( double val ) = 0;
+    virtual double getWallTimeMax() const = 0;
 
     virtual void   setClampTimeToOutput( bool val ) = 0;
     virtual bool   getClampTimeToOutput() const = 0;

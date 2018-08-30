@@ -363,38 +363,38 @@ WARNING
     { m_application_stats.reduce( allReduce, myWorld ); };      
  
   public:
-    virtual void   setOverrideRestartDelT( double val ) { m_overrideRestartDelT = val; }
-    virtual double getOverrideRestartDelT() const { return m_overrideRestartDelT; }
+    virtual void   setDelTOverrideRestart( double val ) { m_delTOverrideRestart = val; }
+    virtual double getDelTOverrideRestart() const { return m_delTOverrideRestart; }
 
-    virtual void   setMaxInitialDelT( double val ) { m_maxInitialDelT = val; }
-    virtual double getMaxInitialDelT() const { return m_maxInitialDelT; }
+    virtual void   setDelTInitialMax( double val ) { m_delTInitialMax = val; }
+    virtual double getDelTInitialMax() const { return m_delTInitialMax; }
 
-    virtual void   setInitialDelTRange( double val ) { m_initialDelTRange = val; }
-    virtual double getInitialDelTRange() const { return m_initialDelTRange; }
+    virtual void   setDelTInitialRange( double val ) { m_delTInitialRange = val; }
+    virtual double getDelTInitialRange() const { return m_delTInitialRange; }
 
     virtual void   setDelTMultiplier( double val ) { m_delTMultiplier = val; }
     virtual double getDelTMultiplier() const { return m_delTMultiplier; }
 
-    virtual void   setMaxDelTIncrease( double val ) { m_maxDelTIncrease = val; }
-    virtual double getMaxDelTIncrease() const { return m_maxDelTIncrease; }
+    virtual void   setDelTMaxIncrease( double val ) { m_delTMaxIncrease = val; }
+    virtual double getDelTMaxIncrease() const { return m_delTMaxIncrease; }
     
-    virtual void   setMinDelT( double val ) { m_minDelT = val; }
-    virtual double getMinDelT() const { return m_minDelT; }
+    virtual void   setDelTMin( double val ) { m_delTMin = val; }
+    virtual double getDelTMin() const { return m_delTMin; }
 
-    virtual void   setMaxDelT( double val ) { m_maxDelT = val; }
-    virtual double getMaxDelT() const { return m_maxDelT; }
+    virtual void   setDelTMax( double val ) { m_delTMax = val; }
+    virtual double getDelTMax() const { return m_delTMax; }
 
-    virtual void   setEndAtMaxSimTime( bool val ) { m_endAtMaxSimTime = val; }
-    virtual bool   getEndAtMaxSimTime() const  { return m_endAtMaxSimTime; }
+    virtual void   setSimTimeEndAtMax( bool val ) { m_simTimeEndAtMax = val; }
+    virtual bool   getSimTimeEndAtMax() const  { return m_simTimeEndAtMax; }
 
-    virtual void   setMaxSimTime( double val ) { m_maxSimTime = val; }
-    virtual double getMaxSimTime() const { return m_maxSimTime; }
+    virtual void   setSimTimeMax( double val ) { m_simTimeMax = val; }
+    virtual double getSimTimeMax() const { return m_simTimeMax; }
 
-    virtual void   setMaxTimeSteps( int val ) { m_maxTimeSteps = val; }
-    virtual int    getMaxTimeSteps() const { return m_maxTimeSteps; }
+    virtual void   setTimeStepsMax( int val ) { m_timeStepsMax = val; }
+    virtual int    getTimeStepsMax() const { return m_timeStepsMax; }
 
-    virtual void   setMaxWallTime( double val ) { m_maxWallTime = val; }
-    virtual double getMaxWallTime() const { return m_maxWallTime; }
+    virtual void   setWallTimeMax( double val ) { m_wallTimeMax = val; }
+    virtual double getWallTimeMax() const { return m_wallTimeMax; }
 
     virtual void   setClampTimeToOutput( bool val ) { m_clampTimeToOutput = val; }
     virtual bool   getClampTimeToOutput() const { return m_clampTimeToOutput; }
@@ -421,8 +421,8 @@ WARNING
                                         const int totalFine );
 
     virtual   void setNextDelT( double delT );
-    virtual double getNextDelT() const { return m_nextDelT; }
-    virtual double validateNextDelT( double nextDelT );
+    virtual double getNextDelT() const { return m_delTNext; }
+    virtual bool   validateNextDelT( double &delTNext, unsigned int level );
 
     //////////
     virtual   void setSimTime( double simTime );
@@ -479,34 +479,46 @@ WARNING
     const VarLabel* m_simulationTimeLabel;
     const VarLabel* m_delTLabel;
   
-    double m_delT{0.0};
-    double m_nextDelT{0.0};
-
-    double m_simTime{0.0};             // Current sim time
-    double m_simTimeStart{0.0};        // Starting sim time
-    
-    int    m_timeStep{0};              // Current time step
 
     // The simulation runs to either the maximum number of time steps
-    // (maxTimestep) or the maximum simulation time (maxTime), which
+    // (timeStepsMax) or the maximum simulation time (simTimeMax), which
     // ever comes first. If the "max_Timestep" is not specified in the .ups
     // file, then it is set to zero.
-    double m_overrideRestartDelT{0}; // Override the restart delta T value
-    double m_maxInitialDelT{0};      // Maximum initial delta T
-    double m_initialDelTRange{0};    // Simulation time range for the initial delta T
+    double m_delT{0.0};
+    double m_delTNext{0.0};
 
-    double m_minDelT{0};             // Minimum delta T
-    double m_maxDelT{1};             // Maximum delta T
-    double m_maxDelTIncrease{0};     // Maximum delta T increase.
+    double m_delTOverrideRestart{0}; // Override the restart delta T value
+    double m_delTInitialMax{0};      // Maximum initial delta T
+    double m_delTInitialRange{0};    // Simulation time range for the initial delta T
+
+    double m_delTMin{0};             // Minimum delta T
+    double m_delTMax{1};             // Maximum delta T
     double m_delTMultiplier{1.0};    // Multiple for increasing delta T
+    double m_delTMaxIncrease{0};     // Maximum delta T increase.
 
-    double m_maxSimTime{0};          // Maximum simulation time
-    int    m_maxTimeSteps{0};        // Maximum number of time steps to run.  
-    double m_maxWallTime{0};         // Maximum wall time.
+    double m_simTime{0.0};           // Current sim time
+    double m_simTimeStart{0.0};      // Starting sim time    
+    double m_simTimeMax{0};          // Maximum simulation time
+    bool   m_simTimeEndAtMax{false}; // End the simulation at exactly this sim time.
+
+    int    m_timeStep{0};            // Current time step
+    int    m_timeStepsMax{0};        // Maximum number of time steps to run.  
+
+    double m_wallTimeMax{0};         // Maximum wall time.
   
     bool m_clampTimeToOutput{false}; // Clamp the time to the next output or checkpoint
-    bool m_endAtMaxSimTime{false};   // End the simulation at exactly this sim time.
 
+    enum VALIDATE
+    {
+      DELTA_T_INITIAL_MAX      = 0x0001,
+      DELTA_T_MAX_INCREASE     = 0x0002,
+      DELTA_T_MIN              = 0x0004,
+      DELTA_T_MAX              = 0x0008,
+      CLAMP_TIME_TO_OUTPUT     = 0x0010,
+      CLAMP_TIME_TO_CHECKPOINT = 0x0020,
+      CLAMP_TIME_TO_MAX        = 0x0040
+    };
+      
   protected:
     MaterialManagerP m_materialManager{nullptr};
 

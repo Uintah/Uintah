@@ -1082,12 +1082,14 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     
     //__________________________________
     // diagnostics
+    int proc = d_myworld->myRank();
+    
     subNewDW->get(max_RHS,     lb->max_RHSLabel);
     subOldDW->get(max_RHS_old, lb->max_RHSLabel);
-    
-    DOUTR0(  "  Outer iteration " << counter
-            << " max_rhs before solve "<< max_RHS_old
-            << " after solve " << max_RHS << "\n" );
+
+    DOUT( proc == 0, "  Outer iteration " << counter
+          << " max_rhs before solve "<< max_RHS_old
+          << " after solve " << max_RHS );
     
     // output files for debugging
     // double timeStep = m_materialManager->getCurrentTopLevelTimeStep();
@@ -1096,7 +1098,6 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     ParentOldDW->get(timeStepVar, lb->timeStepLabel);
     double timeStep = timeStepVar;
 
-    int proc = d_myworld->myRank();
     ostringstream fname;
     
     fname << "." << proc <<"." << timeStep << "." << counter;
@@ -1107,11 +1108,11 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     //  too many outer iterations
     if (counter > d_iters_before_timestep_recompute ){
       recompute = true;
-      DOUTR0( "\nWARNING: The max iterations occured before a time step recompute was reached\n" );
+      DOUT( proc == 0, "\nWARNING: The max iterations occurred before a time step recompute was reached" );
     }
     //  The solver or advection has requested to recompute the time step
     if (subNewDW->recomputeTimeStep() ) {
-      DOUTR0( "\n  WARNING:  impICE:implicitPressureSolve time step recompute.\n" );
+      DOUT( proc == 0, "\n  WARNING:  impICE:implicitPressureSolve time step recompute." );
       recompute = true;
     }
     
@@ -1120,10 +1121,10 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       smallest_max_RHS_sofar = max_RHS;
     }
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
-      DOUTR0( "\nWARNING: outer iteration is diverging now "
-                << "recomputing the timestep"
-                << " Max_RHS " << max_RHS 
-                << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar << "\n");
+      DOUT( proc == 0, "\nWARNING: outer iteration is diverging now "
+            << "recomputing the timestep"
+            << " Max_RHS " << max_RHS 
+            << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar);
       recompute = true;
     }
     if( recompute ) {
