@@ -24,7 +24,7 @@
 
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 
-#include <CCA/Components/PostProcessUda/PostProcess.h>
+#include <CCA/Components/PostProcessUda/PostProcessUda.h>
 
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>

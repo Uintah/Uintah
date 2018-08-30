@@ -33,7 +33,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/PostProcessUda
 
 SRCS += \
-	$(SRCDIR)/PostProcess.cc          \
+	$(SRCDIR)/PostProcessUda.cc       \
 	$(SRCDIR)/Module.cc               \
 	$(SRCDIR)/ModuleFactory.cc        \
 	$(SRCDIR)/statistics.cc           \

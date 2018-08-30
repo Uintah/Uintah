@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/PostProcessUda/PostProcess.h>
+#include <CCA/Components/PostProcessUda/PostProcessUda.h>
 #include <CCA/Components/PostProcessUda/ModuleFactory.h>
 #include <Core/Exceptions/InternalError.h>
 
