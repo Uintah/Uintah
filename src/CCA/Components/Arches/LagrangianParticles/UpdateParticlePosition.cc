@@ -14,8 +14,7 @@ UpdateParticlePosition::~UpdateParticlePosition(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &UpdateParticlePosition::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &UpdateParticlePosition::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UpdateParticlePosition::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -25,8 +24,7 @@ TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskComputeBCsFunctionPoi
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &UpdateParticlePosition::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &UpdateParticlePosition::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UpdateParticlePosition::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -36,12 +34,24 @@ TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskInitializeFunctionPoi
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &UpdateParticlePosition::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &UpdateParticlePosition::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UpdateParticlePosition::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &UpdateParticlePosition::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &UpdateParticlePosition::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 //--------------------------------------------------------------------------------------------------
 void
@@ -99,8 +109,8 @@ UpdateParticlePosition::register_timestep_init(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-UpdateParticlePosition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+template<typename ExecutionSpace, typename MemSpace> void
+UpdateParticlePosition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
 //--------------------------------------------------------------------------------------------------
 void

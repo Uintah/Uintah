@@ -17,8 +17,7 @@ VariableStats::~VariableStats()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VariableStats::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &VariableStats::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &VariableStats::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &VariableStats::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -28,8 +27,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VariableStats::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &VariableStats::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &VariableStats::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &VariableStats::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -39,11 +37,26 @@ TaskAssignedExecutionSpace VariableStats::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VariableStats::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &VariableStats::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &VariableStats::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &VariableStats::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+TaskAssignedExecutionSpace VariableStats::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &VariableStats::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &VariableStats::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace VariableStats::loadTaskRestartInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
+                                     , &VariableStats::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &VariableStats::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
 
@@ -373,7 +386,8 @@ void VariableStats::register_restart_initialize( VIVec& variable_registry , cons
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> 
+void VariableStats::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   typedef std::vector<std::string> StrVec;
 
@@ -448,7 +462,8 @@ void VariableStats::register_timestep_init( VIVec& variable_registry , const boo
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   auto i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){

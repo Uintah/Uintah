@@ -15,8 +15,7 @@ DSFTv2::~DSFTv2(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DSFTv2::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &DSFTv2::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &DSFTv2::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DSFTv2::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -26,8 +25,7 @@ TaskAssignedExecutionSpace DSFTv2::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DSFTv2::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &DSFTv2::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &DSFTv2::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DSFTv2::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -37,12 +35,24 @@ TaskAssignedExecutionSpace DSFTv2::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DSFTv2::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &DSFTv2::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &DSFTv2::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DSFTv2::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace DSFTv2::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &DSFTv2::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &DSFTv2::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace DSFTv2::loadTaskRestartInitFunctionPointers()
+{
+ return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -147,8 +157,8 @@ DSFTv2::register_timestep_init( std::vector<ArchesFieldContainer::VariableInform
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DSFTv2::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+DSFTv2::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 }
 

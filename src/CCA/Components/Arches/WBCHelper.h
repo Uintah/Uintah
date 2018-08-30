@@ -369,13 +369,16 @@ public:
                                   const LevelP& level,
                                   const MaterialSet* matls );
 
-  void computeBCAreaHelper( const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset*,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw,
-                            const IntVector lo,
-                            const IntVector hi );
+template <typename ExecutionSpace, typename MemSpace> void
+      computeBCAreaHelper( 
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          OnDemandDataWarehouse        * old_dw,
+                          OnDemandDataWarehouse        * new_dw,
+                          UintahParams& uintahParams,
+                          ExecutionObject<ExecutionSpace,MemSpace>& executionObject ,
+                          const IntVector lo,
+                          const IntVector hi );
 
   void sched_bindBCAreaHelper( SchedulerP& sched,
                                   const LevelP& level,

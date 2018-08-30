@@ -24,8 +24,7 @@ spectralProperties::~spectralProperties( )
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace spectralProperties::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &spectralProperties::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &spectralProperties::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &spectralProperties::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -35,8 +34,7 @@ TaskAssignedExecutionSpace spectralProperties::loadTaskComputeBCsFunctionPointer
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace spectralProperties::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &spectralProperties::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &spectralProperties::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &spectralProperties::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -46,12 +44,24 @@ TaskAssignedExecutionSpace spectralProperties::loadTaskInitializeFunctionPointer
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace spectralProperties::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &spectralProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &spectralProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &spectralProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace spectralProperties::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &spectralProperties::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &spectralProperties::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace spectralProperties::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //---------------------------------------------------------------------------
@@ -146,16 +156,14 @@ void spectralProperties::register_restart_initialize( VIVec& variable_registry ,
 
 }
 
-void spectralProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-}
 
 void spectralProperties::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
 }
 
 
-void spectralProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+spectralProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 }
 

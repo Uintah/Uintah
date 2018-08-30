@@ -17,8 +17,7 @@ Drhodt::~Drhodt(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Drhodt::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &Drhodt::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &Drhodt::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &Drhodt::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -28,8 +27,7 @@ TaskAssignedExecutionSpace Drhodt::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Drhodt::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &Drhodt::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &Drhodt::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &Drhodt::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -39,12 +37,24 @@ TaskAssignedExecutionSpace Drhodt::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Drhodt::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &Drhodt::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &Drhodt::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &Drhodt::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace Drhodt::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &Drhodt::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &Drhodt::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace Drhodt::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

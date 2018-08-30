@@ -18,8 +18,7 @@ WALE::~WALE()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WALE::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &WALE::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &WALE::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &WALE::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -29,8 +28,7 @@ TaskAssignedExecutionSpace WALE::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WALE::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &WALE::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &WALE::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &WALE::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -40,12 +38,24 @@ TaskAssignedExecutionSpace WALE::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WALE::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &WALE::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &WALE::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &WALE::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace WALE::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &WALE::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &WALE::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace WALE::loadTaskRestartInitFunctionPointers()
+{
+ return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //---------------------------------------------------------------------------------
@@ -141,8 +151,9 @@ WALE::register_timestep_init( std::vector<AFC::VariableInformation>&
 }
 
 //---------------------------------------------------------------------------------
+template<typename ExecutionSpace, typename MemSpace>
 void
-WALE::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+WALE::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
  // CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
 

@@ -41,15 +41,10 @@ namespace Uintah{
   class WBCHelper;
   class TaskInterface;
 
-  template <typename ES, typename MS>
-  using computeBCsFunctionPtr  = void (TaskInterface::*)( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject<ES, MS>& executionObject );
+
 
   template <typename ES, typename MS>
-  using initializeFunctionPtr  = void (TaskInterface::*)( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject<ES, MS>& executionObject );
-
-  template <typename ES, typename MS>
-  using evalFunctionPtr  = void (TaskInterface::*)( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject<ES, MS>& executionObject );
-
+  using archesFunctionPtr  = void (TaskInterface::*)( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject<ES, MS>& executionObject );
 
   class TaskInterface{
 
@@ -120,6 +115,9 @@ public:
     virtual TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers() = 0;
     virtual TaskAssignedExecutionSpace loadTaskEvalFunctionPointers() = 0;
 
+    virtual TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers() = 0;
+    virtual TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers() = 0;
+
     // Hacky code warning.  Before portability was introduced, Arches had its own task execution system
     // that launched the correct method using polymorphism.
     // These Arches tasks are distinct from Uintah tasks, and are run *inside* Uintah tasks.
@@ -138,7 +136,7 @@ public:
     template<typename ExecutionSpace, typename MemorySpace>
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemorySpace>& executionObject ) {
 
-      computeBCsFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
+      archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
       auto index = std::type_index(typeid(ExecutionSpace));
       auto handler = this->computeBCsFunctionPtrs.find(index);
@@ -151,8 +149,8 @@ public:
       }
 
       // Found the compute_bcs() function pointer associated with the execution space.  Run it.
-      computeBCsFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
-          reinterpret_cast< computeBCsFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
+      archesFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
+          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
 
       if ( handler_ptr ) {
         (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
@@ -161,15 +159,15 @@ public:
 
     //--------------------------------------------------------------------------------------------------
     template<typename ExecutionSpace, typename MemorySpace>
-    void addComputeBCsFunctionPtr( std::type_index ti, computeBCsFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
-      computeBCsFunctionPtrs.emplace( ti, reinterpret_cast< computeBCsFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
+    void addComputeBCsFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
+      computeBCsFunctionPtrs.emplace( ti, reinterpret_cast< archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
     }
 
     //--------------------------------------------------------------------------------------------------
     template<typename ExecutionSpace, typename MemorySpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemorySpace>& executionObject ) {
 
-      initializeFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
+      archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
       auto index = std::type_index(typeid(ExecutionSpace));
       auto handler = this->initializeFunctionPtrs.find(index);
@@ -182,8 +180,8 @@ public:
       }
 
       // Found the initialize() function pointer associated with the execution space.  Run it.
-      initializeFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
-          reinterpret_cast< initializeFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
+      archesFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
+          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
 
       if ( handler_ptr ) {
         (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
@@ -192,15 +190,15 @@ public:
 
     //--------------------------------------------------------------------------------------------------
     template<typename ExecutionSpace, typename MemorySpace>
-    void addInitializeFunctionPtr( std::type_index ti, initializeFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
-      initializeFunctionPtrs.emplace( ti, reinterpret_cast< initializeFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
+    void addInitializeFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
+      initializeFunctionPtrs.emplace( ti, reinterpret_cast< archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
     }
 
     //--------------------------------------------------------------------------------------------------
     template<typename ExecutionSpace, typename MemorySpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemorySpace>& executionObject ) {
 
-      evalFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
+      archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
       auto index = std::type_index(typeid(ExecutionSpace));
       auto handler = this->evalFunctionPtrs.find(index);
@@ -213,8 +211,8 @@ public:
       }
 
       // Found the eval() function pointer associated with the execution space.  Run it.
-      evalFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
-          reinterpret_cast< evalFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
+      archesFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
+          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
 
       if ( handler_ptr ) {
         (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
@@ -222,15 +220,82 @@ public:
     }
 
     //--------------------------------------------------------------------------------------------------
-    template<typename ExecutionSpace, typename MemorySpace>
-    void addEvalFunctionPtr( std::type_index ti, evalFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
-      evalFunctionPtrs.emplace( ti, reinterpret_cast< evalFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
+    template<typename ExecutionSpace, typename MemorySpace  >
+    void 
+    addEvalFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
+      evalFunctionPtrs.emplace( ti, reinterpret_cast< archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
     }
 
+    template<typename ExecutionSpace, typename MemorySpace>
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemorySpace>& executionObject ) {
+
+      archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
+
+      auto index = std::type_index(typeid(ExecutionSpace));
+      auto handler = this->restartInitFunctionPtrs.find(index);
+
+      if ( handler != this->restartInitFunctionPtrs.end() ) {
+        function_ptr = handler->second;
+      }
+      else {
+        throw InternalError("Derived class version of Arches task restart_initialize() not found!", __FILE__, __LINE__);
+      }
+
+      // Found the restart_initialize() function pointer associated with the execution space.  Run it.
+      archesFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
+          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
+
+      if ( handler_ptr ) {
+        (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
+      }
+    }
+
+    template<typename ExecutionSpace, typename MemorySpace  >
+    void 
+    addRestartInitFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
+      restartInitFunctionPtrs.emplace( ti, reinterpret_cast< archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
+    }
+
+    template<typename ExecutionSpace, typename MemorySpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemorySpace>& executionObject ) {
+
+      archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
+
+      auto index = std::type_index(typeid(ExecutionSpace));
+      auto handler = this->timestepInitFunctionPtrs.find(index);
+
+      if ( handler != this->timestepInitFunctionPtrs.end() ) {
+        function_ptr = handler->second;
+      }
+      else {
+        throw InternalError("Derived class version of Arches task timestep_init() not found!", __FILE__, __LINE__);
+      }
+
+      // Found the timestep_init() function pointer associated with the execution space.  Run it.
+      archesFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
+          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
+
+      if ( handler_ptr ) {
+        (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
+      }
+    }
+
+
+    template<typename ExecutionSpace, typename MemorySpace  >
+    void 
+    addTimestepInitFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
+      timestepInitFunctionPtrs.emplace( ti, reinterpret_cast< archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
+    }
+
+
+
 private:
-    std::map<std::type_index, evalFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > > computeBCsFunctionPtrs;
-    std::map<std::type_index, evalFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > > initializeFunctionPtrs;
-    std::map<std::type_index, evalFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > > evalFunctionPtrs;
+    std::map<std::type_index, archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > > computeBCsFunctionPtrs;
+    std::map<std::type_index, archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > > initializeFunctionPtrs;
+    std::map<std::type_index, archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > > evalFunctionPtrs;
+
+    std::map<std::type_index, archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > > timestepInitFunctionPtrs;
+    std::map<std::type_index, archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > > restartInitFunctionPtrs;
 
 public:
     //------end portability support members----------------------------------------------------
@@ -277,12 +342,6 @@ public:
     void set_bcHelper( Uintah::WBCHelper* helper ){
       m_bcHelper = helper;
     }
-
-    /** @brief The actual work done within the derived class **/
-    virtual void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
-
-    /** @brief Work done at the top of a timestep **/
-    virtual void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
 
 protected:
 
@@ -336,14 +395,70 @@ protected:
 
   };
 
-  template < typename ArchesTaskObject
-           , typename PortableTaskType
+  // Template Specialization
+  template< unsigned int arches_mode>
+  struct ArchesSchedulingHelper{
+     template<typename ExecutionSpace, typename MemorySpace  >
+     void 
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI  ) {
+        std::cout << "Invalid use of ArchesSchedulingHelper  \n";
+     }
+  };
+
+
+  template< >
+  struct ArchesSchedulingHelper<TaskInterface::INITIALIZE>{
+     template<typename ExecutionSpace, typename MemorySpace  >
+     void 
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI ) {
+       ArchTI->addInitializeFunctionPtr<ExecutionSpace,MemorySpace>(ti,ep);
+     }
+  };
+
+  template< >
+  struct ArchesSchedulingHelper<TaskInterface::TIMESTEP_EVAL>{
+     template<typename ExecutionSpace, typename MemorySpace  >
+     void 
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI ) {
+       ArchTI->addEvalFunctionPtr<ExecutionSpace,MemorySpace>(ti,ep);
+     }
+  };
+
+  template< >
+  struct ArchesSchedulingHelper<TaskInterface::BC>{
+     template<typename ExecutionSpace, typename MemorySpace  >
+     void 
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI ) {
+       ArchTI->addComputeBCsFunctionPtr<ExecutionSpace,MemorySpace>(ti,ep);
+     }
+  };
+
+  template< >
+  struct ArchesSchedulingHelper<TaskInterface::RESTART_INITIALIZE>{
+     template<typename ExecutionSpace, typename MemorySpace  >
+     void 
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI ) {
+       ArchTI->addRestartInitFunctionPtr<ExecutionSpace,MemorySpace>(ti,ep);
+     }
+  };
+
+  template< >
+  struct ArchesSchedulingHelper<TaskInterface::TIMESTEP_INITIALIZE>{
+     template<typename ExecutionSpace, typename MemorySpace  >
+     void 
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI ) {
+       ArchTI->addTimestepInitFunctionPtr<ExecutionSpace,MemorySpace>(ti,ep);
+     }
+  };
+
+
+  template <unsigned int ArchesTaskType 
+           , typename ArchesTaskObject
            , typename ES1, typename MS1
            , typename ES2, typename MS2
            , typename ES3, typename MS3
            >
   TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject* taskPtr
-                                                         , PortableTaskType taskType
                                                          , void ( ArchesTaskObject::*afp1 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
                                                                                            ,       ExecutionObject<ES1, MS1> & executionObject
@@ -358,6 +473,7 @@ protected:
                                                                                            )
                                                          )
   {
+    ArchesSchedulingHelper<ArchesTaskType> helpMe;
     TaskAssignedExecutionSpace assignedTag{};
 
     // Check for CUDA tasks
@@ -367,55 +483,14 @@ protected:
       if ( std::is_same< Kokkos::Cuda , ES1 >::value || std::is_same< Kokkos::Cuda , ES2 >::value || std::is_same< Kokkos::Cuda , ES3 >::value ) {
 
         if (std::is_same< Kokkos::Cuda , ES1 >::value) {          // Task supports Kokkos::Cuda builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< computeBCsFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< initializeFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
         }
         else if (std::is_same< Kokkos::Cuda , ES2 >::value) {     // Task supports Kokkos::Cuda builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< computeBCsFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< initializeFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
         }
         else if (std::is_same< Kokkos::Cuda , ES3 >::value) {     // Task supports Kokkos::Cuda builds
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES3, MS3> >(afp3), taskPtr);
 
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< computeBCsFunctionPtr<ES3, MS3> >(afp3));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< initializeFunctionPtr<ES3, MS3> >(afp3));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< evalFunctionPtr<ES3, MS3> >(afp3));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
         }
         assignedTag = KOKKOS_CUDA;
       }
@@ -426,110 +501,26 @@ protected:
       if ( std::is_same< Kokkos::OpenMP , ES1 >::value || std::is_same< Kokkos::OpenMP , ES2 >::value || std::is_same< Kokkos::OpenMP , ES3 >::value ) {
 
         if (std::is_same< Kokkos::OpenMP , ES1 >::value) {        // Task supports Kokkos::OpenMP builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< computeBCsFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< initializeFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
         }
         else if (std::is_same< Kokkos::OpenMP , ES2 >::value) {   // Task supports Kokkos::OpenMP builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< computeBCsFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< initializeFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
         }
         else if (std::is_same< Kokkos::OpenMP , ES3 >::value) {   // Task supports Kokkos::OpenMP builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< computeBCsFunctionPtr<ES3, MS3> >(afp3));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< initializeFunctionPtr<ES3, MS3> >(afp3));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< evalFunctionPtr<ES3, MS3> >(afp3));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES3, MS3> >(afp3), taskPtr);
         }
         assignedTag = KOKKOS_OPENMP;
       }
       else if ( std::is_same< UintahSpaces::CPU , ES1 >::value || std::is_same< UintahSpaces::CPU , ES2 >::value || std::is_same< UintahSpaces::CPU , ES3 >::value ) {
 
         if (std::is_same< UintahSpaces::CPU , ES1 >::value) { // Task supports non-Kokkos builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< computeBCsFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< initializeFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
         }
         else if (std::is_same< UintahSpaces::CPU , ES2 >::value) { // Task supports non-Kokkos builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< computeBCsFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< initializeFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
         }
         else if (std::is_same< UintahSpaces::CPU , ES3 >::value) { // Task supports non-Kokkos builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< computeBCsFunctionPtr<ES3, MS3> >(afp3));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< initializeFunctionPtr<ES3, MS3> >(afp3));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< evalFunctionPtr<ES3, MS3> >(afp3));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES3, MS3> >(afp3), taskPtr);
         }
         assignedTag = UINTAH_CPU;
       }
@@ -538,13 +529,12 @@ protected:
   }
 
   // The two tag overloaded version of create_portable_arches_tasks()
-  template < typename ArchesTaskObject
-           , typename PortableTaskType
+  template <unsigned int ArchesTaskType 
+           , typename ArchesTaskObject
            , typename ES1, typename MS1
            , typename ES2, typename MS2
            >
   TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject * taskPtr
-                                                         , PortableTaskType   taskType
                                                          , void ( ArchesTaskObject::*afp1 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
                                                                                            ,       ExecutionObject<ES1, MS1> & executionObject
@@ -555,6 +545,7 @@ protected:
                                                                                            )
                                                          )
   {
+    ArchesSchedulingHelper<ArchesTaskType> helpMe;
     TaskAssignedExecutionSpace assignedTag{};
 
     // Check for CUDA tasks
@@ -564,118 +555,34 @@ protected:
       if ( std::is_same< Kokkos::Cuda , ES1 >::value || std::is_same< Kokkos::Cuda , ES2 >::value ) {
 
         if ( std::is_same< Kokkos::Cuda , ES1 >::value ) {        // Task supports Kokkos::Cuda builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< computeBCsFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< initializeFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
           }
         }
         else if (std::is_same< Kokkos::Cuda , ES2 >::value) {     // Task supports Kokkos::Cuda builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< computeBCsFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< initializeFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
         }
         assignedTag = KOKKOS_CUDA;
       }
-    }
 
     if (assignedTag == TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE) {
 
       if ( std::is_same< Kokkos::OpenMP , ES1 >::value || std::is_same< Kokkos::OpenMP , ES2 >::value) {
 
         if (std::is_same< Kokkos::OpenMP , ES1 >::value) {        // Task supports Kokkos::OpenMP builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< computeBCsFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< initializeFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
         }
         else if ( std::is_same< Kokkos::OpenMP , ES2 >::value ) {  // Task supports Kokkos::OpenMP builds
-
-          if ( taskType == TaskInterface::BC ) {                   // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< computeBCsFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {      // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< initializeFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {   // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
         }
         assignedTag = KOKKOS_OPENMP;
       }
       else if ( std::is_same< UintahSpaces::CPU , ES1 >::value || std::is_same< UintahSpaces::CPU , ES2 >::value ) {
 
         if ( std::is_same< UintahSpaces::CPU , ES1 >::value ) {   // Task supports non-Kokkos builds
-
-          if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< computeBCsFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< initializeFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
         }
         else if ( std::is_same< UintahSpaces::CPU , ES2 >::value ) {  // Task supports non-Kokkos builds
-
-          if ( taskType == TaskInterface::BC ) {                      // Arches compute_bcs() task
-            taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< computeBCsFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::INITIALIZE ) {         // Arches initialize() task
-            taskPtr->addInitializeFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< initializeFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {      // Arches eval() task
-            taskPtr->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
-          }
-          else {
-            std::cout << taskType << std::endl;
-            // Return "Unknown task type. Please fix."
-            throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-          }
+            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
         }
         assignedTag = UINTAH_CPU;
       }
@@ -684,18 +591,18 @@ protected:
   }
 
   // The one tag overloaded version of create_portable_arches_tasks()
-  template < typename ArchesTaskObject
-           , typename PortableTaskType
+  template <unsigned int ArchesTaskType 
+           , typename ArchesTaskObject
            , typename ES1, typename MS1
            >
   TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject * taskPtr
-                                                         , PortableTaskType   taskType
                                                          , void ( ArchesTaskObject::*afp1 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
                                                                                            ,       ExecutionObject<ES1, MS1> & executionObject
                                                                                            )
                               )
   {
+    ArchesSchedulingHelper<ArchesTaskType> helpMe;
     TaskAssignedExecutionSpace assignedTag{};
 
     // Check for CUDA tasks
@@ -703,21 +610,7 @@ protected:
     if ( Uintah::Parallel::usingDevice() ) {
 
       if ( std::is_same< Kokkos::Cuda , ES1 >::value) {         // Task supports Kokkos::Cuda builds
-
-        if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-          taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< computeBCsFunctionPtr<ES1, MS1> >(afp1));
-        }
-        else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-          taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< initializeFunctionPtr<ES1, MS1> >(afp1));
-        }
-        else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
-        }
-        else {
-          std::cout << taskType << std::endl;
-          // Return "Unknown task type. Please fix."
-          throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-        }
+        helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
         assignedTag = KOKKOS_CUDA;
       }
     }
@@ -725,39 +618,11 @@ protected:
     if ( assignedTag == TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE ) {
 
       if ( std::is_same< Kokkos::OpenMP , ES1 >::value ) {      // Task supports Kokkos::OpenMP builds
-
-        if ( taskType == TaskInterface::BC ) {                  // Arches compute_bcs() task
-          taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< computeBCsFunctionPtr<ES1, MS1> >(afp1));
-        }
-        else if ( taskType == TaskInterface::INITIALIZE ) {     // Arches initialize() task
-          taskPtr->addInitializeFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< initializeFunctionPtr<ES1, MS1> >(afp1));
-        }
-        else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {  // Arches eval() task
-          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
-        }
-        else {
-          std::cout << taskType << std::endl;
-          // Return "Unknown task type. Please fix."
-          throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-        }
+        helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
         assignedTag = KOKKOS_OPENMP;
       }
       else if ( std::is_same< UintahSpaces::CPU , ES1 >::value ) {  // Task supports non-Kokkos builds
-
-        if ( taskType == TaskInterface::BC ) {                      // Arches compute_bcs() task
-          taskPtr->addComputeBCsFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< computeBCsFunctionPtr<ES1, MS1> >(afp1));
-        }
-        else if ( taskType == TaskInterface::INITIALIZE ) {         // Arches initialize() task
-          taskPtr->addInitializeFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< initializeFunctionPtr<ES1, MS1> >(afp1));
-        }
-        else if ( taskType == TaskInterface::TIMESTEP_EVAL ) {      // Arches eval() task
-          taskPtr->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
-        }
-        else {
-          std::cout << taskType << std::endl;
-          // Return "Unknown task type. Please fix."
-          throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
-        }
+        helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
         assignedTag = UINTAH_CPU;
       }
     }

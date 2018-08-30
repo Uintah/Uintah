@@ -19,6 +19,10 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+  
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (MMS_mom) class.
@@ -61,7 +65,7 @@ public:
     template <typename ExecutionSpace, typename MemorySpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
 
     template <typename ExecutionSpace, typename MemorySpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
@@ -105,8 +109,7 @@ MMS_mom<T>::~MMS_mom(){
 template <typename T>
 TaskAssignedExecutionSpace MMS_mom<T>::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &MMS_mom<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &MMS_mom<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &MMS_mom<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -117,8 +120,7 @@ TaskAssignedExecutionSpace MMS_mom<T>::loadTaskComputeBCsFunctionPointers()
 template <typename T>
 TaskAssignedExecutionSpace MMS_mom<T>::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &MMS_mom<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &MMS_mom<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &MMS_mom<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -129,12 +131,26 @@ TaskAssignedExecutionSpace MMS_mom<T>::loadTaskInitializeFunctionPointers()
 template <typename T>
 TaskAssignedExecutionSpace MMS_mom<T>::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &MMS_mom<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &MMS_mom<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &MMS_mom<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+template <typename T>
+TaskAssignedExecutionSpace MMS_mom<T>::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &MMS_mom<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &MMS_mom<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+template <typename T>
+TaskAssignedExecutionSpace MMS_mom<T>::loadTaskRestartInitFunctionPointers()
+{
+ return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -203,7 +219,8 @@ void MMS_mom<T>::register_timestep_init( std::vector<VarInfo>&
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-void MMS_mom<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace>
+void MMS_mom<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 }
 

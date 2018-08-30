@@ -12,8 +12,7 @@ TaskInterface( task_name, matl_index ) {
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace TotNumDensity::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &TotNumDensity::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &TotNumDensity::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &TotNumDensity::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -23,8 +22,7 @@ TaskAssignedExecutionSpace TotNumDensity::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace TotNumDensity::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &TotNumDensity::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &TotNumDensity::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &TotNumDensity::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -34,14 +32,25 @@ TaskAssignedExecutionSpace TotNumDensity::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace TotNumDensity::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &TotNumDensity::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &TotNumDensity::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &TotNumDensity::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
+TaskAssignedExecutionSpace TotNumDensity::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &TotNumDensity::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &TotNumDensity::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace TotNumDensity::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
 //--------------------------------------------------------------------------------------------------
 void
 TotNumDensity::problemSetup( ProblemSpecP& db ){

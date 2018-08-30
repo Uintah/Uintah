@@ -7,8 +7,7 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sumRadiation::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &sumRadiation::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &sumRadiation::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &sumRadiation::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -18,8 +17,7 @@ TaskAssignedExecutionSpace sumRadiation::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sumRadiation::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &sumRadiation::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &sumRadiation::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &sumRadiation::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -29,13 +27,26 @@ TaskAssignedExecutionSpace sumRadiation::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sumRadiation::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &sumRadiation::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &sumRadiation::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &sumRadiation::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
+
+TaskAssignedExecutionSpace sumRadiation::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &sumRadiation::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &sumRadiation::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace sumRadiation::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
 
 //--------------------------------------------------------------------------------------------------
 void
@@ -171,16 +182,14 @@ void sumRadiation::register_restart_initialize( VIVec& variable_registry , const
   //register_initialize(variable_registry);
 }
 
-void sumRadiation::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  //initialize( patch,tsk_info);
-}
 
 //--------------------------------------------------------------------------------------------------
 void sumRadiation::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
   //register_initialize( variable_registry , const bool pack_tasks);
 }
 
-void sumRadiation::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+sumRadiation::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
   //initialize( patch,tsk_info);
 }
 

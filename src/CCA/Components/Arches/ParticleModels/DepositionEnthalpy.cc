@@ -18,8 +18,7 @@ DepositionEnthalpy::~DepositionEnthalpy(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &DepositionEnthalpy::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &DepositionEnthalpy::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DepositionEnthalpy::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -29,8 +28,7 @@ TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskComputeBCsFunctionPointer
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &DepositionEnthalpy::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &DepositionEnthalpy::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DepositionEnthalpy::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -40,12 +38,24 @@ TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskInitializeFunctionPointer
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &DepositionEnthalpy::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &DepositionEnthalpy::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DepositionEnthalpy::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &DepositionEnthalpy::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &DepositionEnthalpy::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 void

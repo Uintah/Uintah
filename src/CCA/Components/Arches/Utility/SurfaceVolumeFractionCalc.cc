@@ -7,8 +7,7 @@ using namespace Uintah;
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &SurfaceVolumeFractionCalc::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &SurfaceVolumeFractionCalc::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &SurfaceVolumeFractionCalc::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -18,8 +17,7 @@ TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskComputeBCsFunction
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &SurfaceVolumeFractionCalc::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &SurfaceVolumeFractionCalc::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &SurfaceVolumeFractionCalc::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -29,13 +27,26 @@ TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskInitializeFunction
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &SurfaceVolumeFractionCalc::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &SurfaceVolumeFractionCalc::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &SurfaceVolumeFractionCalc::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
+
+TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &SurfaceVolumeFractionCalc::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &SurfaceVolumeFractionCalc::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
 
 //--------------------------------------------------------------------------------------------------
 void SurfaceVolumeFractionCalc::problemSetup( ProblemSpecP& db ){
@@ -180,8 +191,8 @@ SurfaceVolumeFractionCalc::register_timestep_init( ArchesVIVector& variable_regi
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject){
 
   CCVariable<double>& cc_vol_frac = tsk_info->get_uintah_field_add<CCVariable<double> >("volFraction");
   constCCVariable<double>& cc_vol_frac_old = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");

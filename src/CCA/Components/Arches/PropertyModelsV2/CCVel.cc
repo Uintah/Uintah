@@ -14,8 +14,7 @@ CCVel::~CCVel(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CCVel::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &CCVel::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &CCVel::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CCVel::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -25,8 +24,7 @@ TaskAssignedExecutionSpace CCVel::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CCVel::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &CCVel::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &CCVel::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CCVel::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -36,12 +34,24 @@ TaskAssignedExecutionSpace CCVel::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CCVel::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &CCVel::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &CCVel::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CCVel::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace CCVel::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &CCVel::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &CCVel::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace CCVel::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -139,7 +149,8 @@ void CCVel::register_timestep_init( AVarInfo& variable_registry , const bool pac
 }
 
 //--------------------------------------------------------------------------------------------------
-void CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   constCCVariable<double>& old_u_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_u_vel_name_cc);
   constCCVariable<double>& old_v_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_v_vel_name_cc);

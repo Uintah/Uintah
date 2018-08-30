@@ -15,8 +15,7 @@ MMS_scalar::~MMS_scalar()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace MMS_scalar::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &MMS_scalar::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &MMS_scalar::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &MMS_scalar::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -26,8 +25,7 @@ TaskAssignedExecutionSpace MMS_scalar::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace MMS_scalar::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &MMS_scalar::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &MMS_scalar::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &MMS_scalar::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -37,12 +35,24 @@ TaskAssignedExecutionSpace MMS_scalar::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace MMS_scalar::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &MMS_scalar::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &MMS_scalar::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &MMS_scalar::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace MMS_scalar::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &MMS_scalar::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &MMS_scalar::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace MMS_scalar::loadTaskRestartInitFunctionPointers()
+{
+ return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -201,8 +211,9 @@ MMS_scalar::register_timestep_init( std::vector<ArchesFieldContainer::VariableIn
 }
 
 //--------------------------------------------------------------------------------------------------
+template<typename ExecutionSpace, typename MemSpace>
 void
-MMS_scalar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+MMS_scalar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 
   CCVariable<double>& f_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_label));

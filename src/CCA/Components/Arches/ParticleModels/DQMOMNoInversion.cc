@@ -14,8 +14,7 @@ DQMOMNoInversion::~DQMOMNoInversion(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &DQMOMNoInversion::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &DQMOMNoInversion::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DQMOMNoInversion::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -25,8 +24,7 @@ TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskComputeBCsFunctionPointers(
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &DQMOMNoInversion::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &DQMOMNoInversion::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DQMOMNoInversion::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -36,13 +34,26 @@ TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskInitializeFunctionPointers(
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &DQMOMNoInversion::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &DQMOMNoInversion::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DQMOMNoInversion::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
+
+TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &DQMOMNoInversion::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &DQMOMNoInversion::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskRestartInitFunctionPointers()
+{
+    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
 
 //--------------------------------------------------------------------------------------------------
 void DQMOMNoInversion::problemSetup( ProblemSpecP& db ){
@@ -141,7 +152,8 @@ void DQMOMNoInversion::register_timestep_init(
 }
 
 //--------------------------------------------------------------------------------------------------
-void DQMOMNoInversion::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+DQMOMNoInversion::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
 

@@ -89,8 +89,8 @@ public:
                                          const bool pack_tasks ){}
     template <typename ExecutionSpace, typename MemorySpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
     template <typename ExecutionSpace, typename MemorySpace>
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 

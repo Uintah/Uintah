@@ -25,8 +25,7 @@ StressTensor::~StressTensor(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace StressTensor::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &StressTensor::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &StressTensor::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &StressTensor::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -36,8 +35,7 @@ TaskAssignedExecutionSpace StressTensor::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace StressTensor::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &StressTensor::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &StressTensor::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &StressTensor::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -47,12 +45,24 @@ TaskAssignedExecutionSpace StressTensor::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace StressTensor::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &StressTensor::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &StressTensor::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &StressTensor::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace StressTensor::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &StressTensor::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &StressTensor::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace StressTensor::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -61,8 +61,7 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace FractalUD::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::BC
+    return create_portable_arches_tasks<TaskInterface::BC>( this
                                        , &FractalUD::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        //, &FractalUD::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &FractalUD::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -72,8 +71,7 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace FractalUD::loadTaskInitializeFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::INITIALIZE
+    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &FractalUD::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        //, &FractalUD::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &FractalUD::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -83,14 +81,25 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace FractalUD::loadTaskEvalFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::TIMESTEP_EVAL
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &FractalUD::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &FractalUD::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &FractalUD::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
+TaskAssignedExecutionSpace FractalUD::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &FractalUD::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &FractalUD::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace FractalUD::loadTaskRestartInitFunctionPointers()
+{
+ return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
   //---------------------------------------------------------------------------------
   void
     FractalUD::problemSetup( ProblemSpecP& db ){
@@ -256,8 +265,9 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
+template<typename ExecutionSpace, typename MemSpace>
   void
-    FractalUD::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+    FractalUD::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
     }
 
   //---------------------------------------------------------------------------------

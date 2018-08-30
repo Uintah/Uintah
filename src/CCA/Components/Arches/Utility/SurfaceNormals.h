@@ -18,6 +18,10 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+  
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize(
@@ -43,7 +47,7 @@ public:
     template <typename ExecutionSpace, typename MemorySpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
 
     template <typename ExecutionSpace, typename MemorySpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}

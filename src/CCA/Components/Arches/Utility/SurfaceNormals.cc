@@ -18,8 +18,7 @@ SurfaceNormals::~SurfaceNormals(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceNormals::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &SurfaceNormals::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &SurfaceNormals::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &SurfaceNormals::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -29,8 +28,7 @@ TaskAssignedExecutionSpace SurfaceNormals::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceNormals::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &SurfaceNormals::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &SurfaceNormals::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &SurfaceNormals::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -40,12 +38,24 @@ TaskAssignedExecutionSpace SurfaceNormals::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceNormals::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &SurfaceNormals::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &SurfaceNormals::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &SurfaceNormals::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace SurfaceNormals::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &SurfaceNormals::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &SurfaceNormals::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace SurfaceNormals::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -172,8 +182,8 @@ SurfaceNormals::register_timestep_init( VIVec& variable_registry, const bool pac
 
 }
 
-void
-SurfaceNormals::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+SurfaceNormals::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   SFCXVariable<double>& n_in_x = *(tsk_info->get_uintah_field<SFCXVariable<double> >("surf_in_normX"));
   SFCYVariable<double>& n_in_y = *(tsk_info->get_uintah_field<SFCYVariable<double> >("surf_in_normY"));

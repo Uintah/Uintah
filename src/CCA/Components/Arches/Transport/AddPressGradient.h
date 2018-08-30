@@ -35,6 +35,10 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+  
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
 

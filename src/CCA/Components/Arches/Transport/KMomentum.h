@@ -55,6 +55,10 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+  
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( ArchesVIVector& variable_registry , const bool pack_tasks);
@@ -73,7 +77,7 @@ public:
     template <typename ExecutionSpace, typename MemorySpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
 
     template <typename ExecutionSpace, typename MemorySpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
@@ -182,8 +186,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace KMomentum<T>::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::BC
+    return create_portable_arches_tasks<TaskInterface::BC>( this
                                        , &KMomentum<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KMomentum<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &KMomentum<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -194,8 +197,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace KMomentum<T>::loadTaskInitializeFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::INITIALIZE
+    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &KMomentum<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KMomentum<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &KMomentum<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -206,12 +208,26 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace KMomentum<T>::loadTaskEvalFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::TIMESTEP_EVAL
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &KMomentum<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KMomentum<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &KMomentum<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
+  }
+
+  template <typename T>
+  TaskAssignedExecutionSpace KMomentum<T>::loadTaskTimestepInitFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                       , &KMomentum<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &KMomentum<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       );
+  }
+
+  template <typename T>
+  TaskAssignedExecutionSpace KMomentum<T>::loadTaskRestartInitFunctionPointers()
+  {
+    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //------------------------------------------------------------------------------------------------
@@ -458,8 +474,9 @@ private:
   }
 
   //------------------------------------------------------------------------------------------------
-  template <typename T> void
-  KMomentum<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T>
+  template<typename ExecutionSpace, typename MemSpace> void
+  KMomentum<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
     const int istart = 0;
     const int iend = m_eqn_names.size();

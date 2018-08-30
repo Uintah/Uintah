@@ -23,6 +23,10 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+  
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( VIVec& variable_registry , const bool pack_tasks);
@@ -41,9 +45,7 @@ public:
     template <typename ExecutionSpace, typename MemorySpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
-
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
 
     /** @details This model computes carbon monoxide as a sum of the equilibrum CO and a defect CO.
     CO = CO_equil + defect

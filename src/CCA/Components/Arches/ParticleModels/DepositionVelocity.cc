@@ -17,8 +17,7 @@ DepositionVelocity::~DepositionVelocity(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DepositionVelocity::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &DepositionVelocity::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &DepositionVelocity::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DepositionVelocity::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -28,8 +27,7 @@ TaskAssignedExecutionSpace DepositionVelocity::loadTaskComputeBCsFunctionPointer
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DepositionVelocity::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &DepositionVelocity::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &DepositionVelocity::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DepositionVelocity::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -39,12 +37,24 @@ TaskAssignedExecutionSpace DepositionVelocity::loadTaskInitializeFunctionPointer
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DepositionVelocity::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &DepositionVelocity::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &DepositionVelocity::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DepositionVelocity::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace DepositionVelocity::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &DepositionVelocity::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &DepositionVelocity::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace DepositionVelocity::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 void

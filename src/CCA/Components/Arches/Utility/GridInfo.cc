@@ -8,8 +8,7 @@ typedef ArchesFieldContainer AFC;
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GridInfo::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &GridInfo::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &GridInfo::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &GridInfo::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -19,8 +18,7 @@ TaskAssignedExecutionSpace GridInfo::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GridInfo::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &GridInfo::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &GridInfo::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &GridInfo::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -30,14 +28,25 @@ TaskAssignedExecutionSpace GridInfo::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GridInfo::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &GridInfo::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &GridInfo::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &GridInfo::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
+TaskAssignedExecutionSpace GridInfo::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &GridInfo::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &GridInfo::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace GridInfo::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
 //--------------------------------------------------------------------------------------------------
 void
 GridInfo::create_local_labels(){
@@ -124,8 +133,8 @@ GridInfo::register_timestep_init( std::vector<AFC::VariableInformation>& variabl
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& gridX = tsk_info->get_uintah_field_add<CCVariable<double>>( "gridX" );
   CCVariable<double>& gridY = tsk_info->get_uintah_field_add<CCVariable<double>>( "gridY" );

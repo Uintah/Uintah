@@ -34,6 +34,10 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+  
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
@@ -50,7 +54,7 @@ public:
     template <typename ExecutionSpace, typename MemorySpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
 
     template <typename ExecutionSpace, typename MemorySpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
@@ -203,8 +207,7 @@ CharOxidationps<T>::~CharOxidationps()
 template <typename T>
 TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &CharOxidationps<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &CharOxidationps<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CharOxidationps<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -215,8 +218,7 @@ TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskComputeBCsFunctionPointer
 template <typename T>
 TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &CharOxidationps<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &CharOxidationps<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CharOxidationps<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -227,12 +229,26 @@ TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskInitializeFunctionPointer
 template <typename T>
 TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &CharOxidationps<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &CharOxidationps<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      , &CharOxidationps<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+template <typename T>
+TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &CharOxidationps<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &CharOxidationps<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+template <typename T>
+TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -604,9 +620,10 @@ CharOxidationps<T>::register_timestep_init(       std::vector<ArchesFieldContain
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename T> void
+template<typename T>
+template<typename ExecutionSpace, typename MemSpace> void
 CharOxidationps<T>::timestep_init( const Patch                 * patch
-                                 ,       ArchesTaskInfoManager * tsk_info
+                                 ,       ArchesTaskInfoManager * tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject
                                  )
 {
 }

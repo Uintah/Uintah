@@ -11,8 +11,7 @@ InitLagrangianParticleVelocity::~InitLagrangianParticleVelocity(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &InitLagrangianParticleVelocity::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &InitLagrangianParticleVelocity::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &InitLagrangianParticleVelocity::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -22,8 +21,7 @@ TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskComputeBCsFun
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &InitLagrangianParticleVelocity::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &InitLagrangianParticleVelocity::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &InitLagrangianParticleVelocity::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -33,12 +31,25 @@ TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskInitializeFun
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &InitLagrangianParticleVelocity::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &InitLagrangianParticleVelocity::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &InitLagrangianParticleVelocity::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+
+TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &InitLagrangianParticleVelocity::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &InitLagrangianParticleVelocity::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 void
@@ -165,8 +176,8 @@ void
 InitLagrangianParticleVelocity::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 }
 
-void
-InitLagrangianParticleVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+template<typename ExecutionSpace, typename MemSpace> void
+InitLagrangianParticleVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
 
 //

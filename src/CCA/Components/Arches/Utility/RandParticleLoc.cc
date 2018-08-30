@@ -5,8 +5,7 @@ namespace Uintah {
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RandParticleLoc::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &RandParticleLoc::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &RandParticleLoc::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &RandParticleLoc::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -16,8 +15,7 @@ TaskAssignedExecutionSpace RandParticleLoc::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RandParticleLoc::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &RandParticleLoc::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &RandParticleLoc::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &RandParticleLoc::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -27,12 +25,24 @@ TaskAssignedExecutionSpace RandParticleLoc::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RandParticleLoc::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &RandParticleLoc::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &RandParticleLoc::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &RandParticleLoc::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace RandParticleLoc::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &RandParticleLoc::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &RandParticleLoc::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace RandParticleLoc::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -14,8 +14,7 @@ UFromRhoU::~UFromRhoU(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UFromRhoU::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &UFromRhoU::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &UFromRhoU::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UFromRhoU::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -25,8 +24,7 @@ TaskAssignedExecutionSpace UFromRhoU::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UFromRhoU::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &UFromRhoU::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &UFromRhoU::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UFromRhoU::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -36,12 +34,24 @@ TaskAssignedExecutionSpace UFromRhoU::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UFromRhoU::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &UFromRhoU::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &UFromRhoU::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UFromRhoU::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace UFromRhoU::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &UFromRhoU::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &UFromRhoU::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace UFromRhoU::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -110,7 +120,8 @@ void UFromRhoU::register_timestep_init( AVarInfo& variable_registry , const bool
 }
 
 //--------------------------------------------------------------------------------------------------
-void UFromRhoU::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+UFromRhoU::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 
   constSFCXVariable<double>& old_u = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);

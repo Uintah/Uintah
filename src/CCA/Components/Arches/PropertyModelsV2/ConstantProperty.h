@@ -24,6 +24,10 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+  
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels(){
@@ -46,9 +50,10 @@ public:
     template <typename ExecutionSpace, typename MemorySpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject  );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
 
     template <typename ExecutionSpace, typename MemorySpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
@@ -103,8 +108,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::BC
+    return create_portable_arches_tasks<TaskInterface::BC>( this
                                        , &ConstantProperty<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        //, &ConstantProperty<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &ConstantProperty<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -115,8 +119,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskInitializeFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::INITIALIZE
+    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &ConstantProperty<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &ConstantProperty<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &ConstantProperty<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -127,11 +130,28 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskEvalFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::TIMESTEP_EVAL
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &ConstantProperty<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        //, &ConstantProperty<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &ConstantProperty<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       );
+  }
+
+  template <typename T>
+  TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskTimestepInitFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                       , &ConstantProperty<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &ConstantProperty<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       );
+  }
+
+  template <typename T>
+  TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskRestartInitFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
+                                       , &ConstantProperty<T>::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &ConstantProperty<T>::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        );
   }
 
@@ -238,7 +258,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void ConstantProperty<T>::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void ConstantProperty<T>::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject  ){
 
     T& property = tsk_info->get_uintah_field_add<T>( _task_name );
     property.initialize(0.0);
@@ -293,7 +314,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void ConstantProperty<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template<typename ExecutionSpace, typename MemSpace> void
+  ConstantProperty<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     T& property = tsk_info->get_uintah_field_add<T>( _task_name );

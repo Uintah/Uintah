@@ -12,8 +12,7 @@ BoundaryInfo::~BoundaryInfo(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BoundaryInfo::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &BoundaryInfo::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &BoundaryInfo::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &BoundaryInfo::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -23,8 +22,7 @@ TaskAssignedExecutionSpace BoundaryInfo::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BoundaryInfo::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &BoundaryInfo::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &BoundaryInfo::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &BoundaryInfo::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -34,13 +32,25 @@ TaskAssignedExecutionSpace BoundaryInfo::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BoundaryInfo::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &BoundaryInfo::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &BoundaryInfo::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &BoundaryInfo::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
+
+  TaskAssignedExecutionSpace BoundaryInfo::loadTaskTimestepInitFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                       , &BoundaryInfo::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &BoundaryInfo::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       );
+  }
+
+  TaskAssignedExecutionSpace BoundaryInfo::loadTaskRestartInitFunctionPointers()
+  {
+   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
 
 
 void
@@ -95,8 +105,8 @@ BoundaryInfo::register_timestep_init( VarInfoVecT& variable_registry , const boo
 
 }
 
-void
-BoundaryInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+template<typename ExecutionSpace, typename MemSpace> void
+BoundaryInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject){}
 //
 //------------------------------------------------
 //------------- TIMESTEP WORK --------------------

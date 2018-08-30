@@ -16,8 +16,7 @@ GravityA::~GravityA()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GravityA::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &GravityA::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &GravityA::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &GravityA::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -27,8 +26,7 @@ TaskAssignedExecutionSpace GravityA::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GravityA::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &GravityA::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &GravityA::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &GravityA::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -38,12 +36,24 @@ TaskAssignedExecutionSpace GravityA::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GravityA::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &GravityA::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &GravityA::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &GravityA::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace GravityA::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &GravityA::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &GravityA::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace GravityA::loadTaskRestartInitFunctionPointers()
+{
+ return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -144,8 +154,9 @@ GravityA::register_timestep_init( std::vector<ArchesFieldContainer::VariableInfo
 }
 
 //--------------------------------------------------------------------------------------------------
+template<typename ExecutionSpace, typename MemSpace>
 void
-GravityA::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+GravityA::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 }
 

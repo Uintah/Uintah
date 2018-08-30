@@ -27,8 +27,7 @@ gasRadProperties::~gasRadProperties( )
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace gasRadProperties::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &gasRadProperties::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &gasRadProperties::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &gasRadProperties::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -38,8 +37,7 @@ TaskAssignedExecutionSpace gasRadProperties::loadTaskComputeBCsFunctionPointers(
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace gasRadProperties::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &gasRadProperties::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &gasRadProperties::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &gasRadProperties::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -49,12 +47,24 @@ TaskAssignedExecutionSpace gasRadProperties::loadTaskInitializeFunctionPointers(
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace gasRadProperties::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &gasRadProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &gasRadProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &gasRadProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace gasRadProperties::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &gasRadProperties::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &gasRadProperties::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace gasRadProperties::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //---------------------------------------------------------------------------
@@ -149,16 +159,14 @@ void gasRadProperties::register_restart_initialize( VIVec& variable_registry , c
 
 }
 
-void gasRadProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-}
 
 void gasRadProperties::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
 }
 
 
-void gasRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+gasRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 }
 

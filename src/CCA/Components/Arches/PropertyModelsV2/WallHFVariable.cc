@@ -21,8 +21,7 @@ WallHFVariable::~WallHFVariable(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WallHFVariable::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &WallHFVariable::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &WallHFVariable::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &WallHFVariable::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -32,8 +31,7 @@ TaskAssignedExecutionSpace WallHFVariable::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WallHFVariable::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &WallHFVariable::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &WallHFVariable::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &WallHFVariable::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -43,11 +41,26 @@ TaskAssignedExecutionSpace WallHFVariable::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WallHFVariable::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &WallHFVariable::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &WallHFVariable::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &WallHFVariable::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
+}
+
+TaskAssignedExecutionSpace WallHFVariable::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &WallHFVariable::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &WallHFVariable::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace WallHFVariable::loadTaskRestartInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
+                                     , &WallHFVariable::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &WallHFVariable::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
 
@@ -132,8 +145,8 @@ WallHFVariable::register_restart_initialize( std::vector<ArchesFieldContainer::V
 
 }
 
-void
-WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace> void 
+WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject  ){
 
   CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
   CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));

@@ -14,8 +14,7 @@ ConsScalarDiffusion::~ConsScalarDiffusion(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &ConsScalarDiffusion::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &ConsScalarDiffusion::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &ConsScalarDiffusion::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -25,8 +24,7 @@ TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskComputeBCsFunctionPointe
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &ConsScalarDiffusion::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &ConsScalarDiffusion::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &ConsScalarDiffusion::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -36,12 +34,24 @@ TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskInitializeFunctionPointe
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &ConsScalarDiffusion::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &ConsScalarDiffusion::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &ConsScalarDiffusion::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &ConsScalarDiffusion::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &ConsScalarDiffusion::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -96,7 +106,8 @@ void ConsScalarDiffusion::register_timestep_init( AVarInfo& variable_registry , 
 }
 
 //--------------------------------------------------------------------------------------------------
-void ConsScalarDiffusion::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+ConsScalarDiffusion::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 
 }

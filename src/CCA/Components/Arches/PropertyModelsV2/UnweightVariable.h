@@ -22,6 +22,10 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+  
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     class Builder : public TaskInterface::TaskBuilder {
@@ -57,7 +61,7 @@ public:
     template <typename ExecutionSpace, typename MemorySpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
 
     template <typename ExecutionSpace, typename MemorySpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
@@ -117,8 +121,7 @@ UnweightVariable<T>::~UnweightVariable()
 template <typename T>
 TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &UnweightVariable<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &UnweightVariable<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UnweightVariable<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -129,8 +132,7 @@ TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskComputeBCsFunctionPointe
 template <typename T>
 TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &UnweightVariable<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &UnweightVariable<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UnweightVariable<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -141,14 +143,27 @@ TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskInitializeFunctionPointe
 template <typename T>
 TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &UnweightVariable<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &UnweightVariable<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &UnweightVariable<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
+template <typename T>
+TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &UnweightVariable<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &UnweightVariable<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+template <typename T>
+TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){

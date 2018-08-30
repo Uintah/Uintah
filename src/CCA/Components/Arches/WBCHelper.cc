@@ -43,7 +43,7 @@
 #include <Core/Grid/Variables/ListOfCellsIterator.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Util/DOUT.hpp>
-
+#include <Core/Parallel/TaskDeclaration.h>
 //-- Debug Stream --//
 #include <Core/Util/DebugStream.h>
 
@@ -903,26 +903,33 @@ void WBCHelper::delete_area_labels(){
 void WBCHelper::sched_computeBCAreaHelper( SchedulerP& sched,
                                 const LevelP& level,
                                 const MaterialSet* matls ){
-    IntVector lo;
-    IntVector hi;
-    level->findInteriorCellIndexRange(lo,hi);
-
-    Task* tsk = scinew Task( "WBCHelper::computeBCAreaHelper", this,
-                             &WBCHelper::computeBCAreaHelper, lo, hi );
+  auto TaskDependencies = [&](Task* tsk) {
 
     for ( auto iter = m_area_labels.begin(); iter != m_area_labels.end(); iter++ ){
       tsk->computes( iter->second );
     }
+   };
 
-    sched->addTask( tsk, level->eachPatch(), matls );
+    IntVector lo;
+    IntVector hi;
+    level->findInteriorCellIndexRange(lo,hi);
+
+    create_portable_tasks(TaskDependencies, this,
+                          "WBCHelper::computeBCAreaHelper",
+                          &WBCHelper::computeBCAreaHelper<UINTAH_CPU_TAG>,
+                          &WBCHelper::computeBCAreaHelper<KOKKOS_OPENMP_TAG>,
+                          //&WBCHelperx::computeBCAreaHelper<KOKKOS_CUDA_TAG>,
+                          sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT, lo, hi);
 }
 
-
-void WBCHelper::computeBCAreaHelper( const ProcessorGroup*,
+template <typename ExecutionSpace, typename MemSpace> void
+WBCHelper::computeBCAreaHelper( 
                           const PatchSubset* patches,
                           const MaterialSubset*,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
+                          OnDemandDataWarehouse        * old_dw,
+                          OnDemandDataWarehouse        * new_dw,
+                          UintahParams& uintahParams,
+                          ExecutionObject<ExecutionSpace,MemSpace>& executionObject ,
                           const IntVector lo,
                           const IntVector hi ){
   for (int p = 0; p < patches->size(); p++) {

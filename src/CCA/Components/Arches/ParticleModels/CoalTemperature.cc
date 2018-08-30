@@ -7,8 +7,7 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CoalTemperature::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &CoalTemperature::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &CoalTemperature::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CoalTemperature::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -18,8 +17,7 @@ TaskAssignedExecutionSpace CoalTemperature::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CoalTemperature::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &CoalTemperature::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &CoalTemperature::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CoalTemperature::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -29,12 +27,24 @@ TaskAssignedExecutionSpace CoalTemperature::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CoalTemperature::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &CoalTemperature::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &CoalTemperature::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CoalTemperature::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace CoalTemperature::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &CoalTemperature::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &CoalTemperature::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace CoalTemperature::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 void
@@ -216,8 +226,8 @@ CoalTemperature::register_timestep_init( std::vector<ArchesFieldContainer::Varia
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-CoalTemperature::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+CoalTemperature::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 

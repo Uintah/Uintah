@@ -22,6 +22,10 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+  
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     class Builder : public TaskInterface::TaskBuilder {
@@ -59,7 +63,7 @@ protected:
     template <typename ExecutionSpace, typename MemorySpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
 
     template <typename ExecutionSpace, typename MemorySpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
@@ -121,8 +125,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace WDragModel<T>::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::BC
+    return create_portable_arches_tasks<TaskInterface::BC>( this
                                        , &WDragModel<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        //, &WDragModel<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &WDragModel<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -133,8 +136,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace WDragModel<T>::loadTaskInitializeFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::INITIALIZE
+    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &WDragModel<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        //, &WDragModel<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &WDragModel<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -145,13 +147,28 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace WDragModel<T>::loadTaskEvalFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::TIMESTEP_EVAL
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &WDragModel<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &WDragModel<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &WDragModel<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
+
+  template <typename T>
+  TaskAssignedExecutionSpace WDragModel<T>::loadTaskTimestepInitFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                       , &WDragModel<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &WDragModel<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       );
+  }
+
+  template <typename T>
+  TaskAssignedExecutionSpace WDragModel<T>::loadTaskRestartInitFunctionPointers()
+  {
+    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
 
   template <typename T>
   void WDragModel<T>::problemSetup( ProblemSpecP& db ){
@@ -251,7 +268,8 @@ private:
   }
 
   template <typename T>
-  void WDragModel<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+  template<typename ExecutionSpace, typename MemSpace> void
+  WDragModel<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
   //======TIME STEP EVALUATION:
   template <typename T>

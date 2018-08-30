@@ -44,8 +44,7 @@ if (_particle_calculator_type == "coal"){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace partRadProperties::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &partRadProperties::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &partRadProperties::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &partRadProperties::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -55,8 +54,7 @@ TaskAssignedExecutionSpace partRadProperties::loadTaskComputeBCsFunctionPointers
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace partRadProperties::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &partRadProperties::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &partRadProperties::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &partRadProperties::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -66,14 +64,26 @@ TaskAssignedExecutionSpace partRadProperties::loadTaskInitializeFunctionPointers
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace partRadProperties::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &partRadProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &partRadProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      , &partRadProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
+TaskAssignedExecutionSpace partRadProperties::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &partRadProperties::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &partRadProperties::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &partRadProperties::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::CUDA builds
+                                     );
+}
+
+TaskAssignedExecutionSpace partRadProperties::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
 //---------------------------------------------------------------------------
 //Method: Problem Setup
 //---------------------------------------------------------------------------
@@ -335,16 +345,13 @@ void partRadProperties::register_restart_initialize( VIVec& variable_registry , 
 
 }
 
-void partRadProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-}
-
 void partRadProperties::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
 }
 
 
-void partRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+partRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 }
 

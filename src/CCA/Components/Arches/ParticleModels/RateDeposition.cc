@@ -18,8 +18,7 @@ RateDeposition::~RateDeposition(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RateDeposition::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &RateDeposition::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &RateDeposition::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &RateDeposition::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -29,8 +28,7 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RateDeposition::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &RateDeposition::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &RateDeposition::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &RateDeposition::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -40,12 +38,24 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RateDeposition::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &RateDeposition::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &RateDeposition::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &RateDeposition::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace RateDeposition::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &RateDeposition::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &RateDeposition::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace RateDeposition::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -297,8 +307,8 @@ RateDeposition::register_timestep_init( std::vector<AFC_VI>& variable_registry ,
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-RateDeposition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+RateDeposition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   for ( int e=0; e< _Nenv;e++){
     const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);

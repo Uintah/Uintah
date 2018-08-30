@@ -18,8 +18,7 @@ AddPressGradient::~AddPressGradient()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace AddPressGradient::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &AddPressGradient::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &SampAddPressGradientleTask::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &AddPressGradient::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -29,8 +28,7 @@ TaskAssignedExecutionSpace AddPressGradient::loadTaskComputeBCsFunctionPointers(
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace AddPressGradient::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &AddPressGradient::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &AddPressGradient::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &AddPressGradient::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -40,14 +38,22 @@ TaskAssignedExecutionSpace AddPressGradient::loadTaskInitializeFunctionPointers(
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace AddPressGradient::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &AddPressGradient::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &AddPressGradient::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &AddPressGradient::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
+TaskAssignedExecutionSpace AddPressGradient::loadTaskTimestepInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+TaskAssignedExecutionSpace AddPressGradient::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
 //--------------------------------------------------------------------------------------------------
 void AddPressGradient::problemSetup( ProblemSpecP& db ){
 

@@ -292,10 +292,12 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         time_substep = 0;
         break;
       case (TaskInterface::RESTART_INITIALIZE):
+        temp = (*i_task)->loadTaskRestartInitFunctionPointers();
         (*i_task)->register_restart_initialize( variable_registry , pack_tasks);
         time_substep = 0;
         break;
       case (TaskInterface::TIMESTEP_INITIALIZE):
+        temp = (*i_task)->loadTaskTimestepInitFunctionPointers();
         (*i_task)->register_timestep_init( variable_registry, pack_tasks );
         time_substep = 0;
         break;
@@ -458,10 +460,10 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
           (*i_task)->initialize<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, executionObject );
           break;
         case (TaskInterface::RESTART_INITIALIZE):
-          (*i_task)->restart_initialize( patch, tsk_info_mngr );
+          (*i_task)->restart_initialize( patch, tsk_info_mngr, executionObject  );
           break;
         case (TaskInterface::TIMESTEP_INITIALIZE):
-          (*i_task)->timestep_init( patch, tsk_info_mngr );
+          (*i_task)->timestep_init( patch, tsk_info_mngr, executionObject  );
           time_substep = 0;
           break;
         case (TaskInterface::TIMESTEP_EVAL):

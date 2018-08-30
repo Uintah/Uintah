@@ -27,8 +27,7 @@ sootVolumeFrac::~sootVolumeFrac( )
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sootVolumeFrac::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &sootVolumeFrac::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &sootVolumeFrac::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &sootVolumeFrac::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -38,8 +37,7 @@ TaskAssignedExecutionSpace sootVolumeFrac::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sootVolumeFrac::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &sootVolumeFrac::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &sootVolumeFrac::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &sootVolumeFrac::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -49,12 +47,24 @@ TaskAssignedExecutionSpace sootVolumeFrac::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sootVolumeFrac::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &sootVolumeFrac::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &sootVolumeFrac::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &sootVolumeFrac::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+TaskAssignedExecutionSpace sootVolumeFrac::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &sootVolumeFrac::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &sootVolumeFrac::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace sootVolumeFrac::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //---------------------------------------------------------------------------
@@ -95,16 +105,13 @@ void sootVolumeFrac::register_restart_initialize( VIVec& variable_registry , con
 
 }
 
-void sootVolumeFrac::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-}
-
 void sootVolumeFrac::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
 }
 
 
-void sootVolumeFrac::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+sootVolumeFrac::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 }
 

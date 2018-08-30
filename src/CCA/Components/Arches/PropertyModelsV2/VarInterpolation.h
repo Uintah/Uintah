@@ -21,6 +21,10 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+  
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     class Builder : public TaskInterface::TaskBuilder {
@@ -56,7 +60,7 @@ public:
     template <typename ExecutionSpace, typename MemorySpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
 
     template <typename ExecutionSpace, typename MemorySpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
@@ -124,8 +128,7 @@ VarInterpolation<T, IT>::~VarInterpolation()
 template <typename T, typename IT>
 TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &VarInterpolation<T, IT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &VarInterpolation<T, IT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &VarInterpolation<T, IT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -136,8 +139,7 @@ TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskComputeBCsFunctionPo
 template <typename T, typename IT>
 TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &VarInterpolation<T, IT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &VarInterpolation<T, IT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &VarInterpolation<T, IT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -148,12 +150,26 @@ TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskInitializeFunctionPo
 template <typename T, typename IT>
 TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &VarInterpolation<T, IT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &VarInterpolation<T, IT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &VarInterpolation<T, IT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
+}
+
+template <typename T, typename IT>
+TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &VarInterpolation<T, IT>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &VarInterpolation<T, IT>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+template <typename T, typename IT>
+TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskRestartInitFunctionPointers()
+{
+  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -6,8 +6,7 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BurnsChriston::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::BC
+  return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &BurnsChriston::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &BurnsChriston::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &BurnsChriston::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -17,8 +16,7 @@ TaskAssignedExecutionSpace BurnsChriston::loadTaskComputeBCsFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BurnsChriston::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::INITIALIZE
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &BurnsChriston::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &BurnsChriston::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &BurnsChriston::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -28,13 +26,30 @@ TaskAssignedExecutionSpace BurnsChriston::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BurnsChriston::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks( this
-                                     , TaskInterface::TIMESTEP_EVAL
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &BurnsChriston::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &BurnsChriston::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &BurnsChriston::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
+
+TaskAssignedExecutionSpace BurnsChriston::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &BurnsChriston::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &BurnsChriston::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+
+TaskAssignedExecutionSpace BurnsChriston::loadTaskRestartInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
+                                     , &BurnsChriston::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &BurnsChriston::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
 
 //--------------------------------------------------------------------------------------------------
 void
@@ -137,7 +152,8 @@ void BurnsChriston::register_restart_initialize( VIVec& variable_registry , cons
 
 }
 
-void BurnsChriston::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemorySpace>
+void BurnsChriston::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){
@@ -194,7 +210,8 @@ void BurnsChriston::register_timestep_init( VIVec& variable_registry , const boo
 
 }
 
-void BurnsChriston::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace> void
+BurnsChriston::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskg_name));
   constCCVariable<double>& old_abskg = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_abskg_name));

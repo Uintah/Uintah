@@ -31,8 +31,7 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace SGSforTransport::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::BC
+    return create_portable_arches_tasks<TaskInterface::BC>( this
                                        , &SGSforTransport::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        //, &SGSforTransport::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &SGSforTransport::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -42,8 +41,7 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace SGSforTransport::loadTaskInitializeFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::INITIALIZE
+    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &SGSforTransport::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        //, &SGSforTransport::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &SGSforTransport::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
@@ -53,13 +51,25 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace SGSforTransport::loadTaskEvalFunctionPointers()
   {
-    return create_portable_arches_tasks( this
-                                       , TaskInterface::TIMESTEP_EVAL
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &SGSforTransport::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &SGSforTransport::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &SGSforTransport::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
+
+TaskAssignedExecutionSpace SGSforTransport::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &SGSforTransport::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &SGSforTransport::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
+
+TaskAssignedExecutionSpace SGSforTransport::loadTaskRestartInitFunctionPointers()
+{
+ return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
 
   //--------------------------------------------------------------------------------------------------
   void
@@ -128,8 +138,9 @@ namespace Uintah{
     }
 
   //--------------------------------------------------------------------------------------------------
+template<typename ExecutionSpace, typename MemSpace>
   void
-    SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+    SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
     
       SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
       SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
