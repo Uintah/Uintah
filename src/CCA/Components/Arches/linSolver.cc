@@ -175,8 +175,8 @@ linSolver::sched_buildAMatrix(SchedulerP& sched,
 
 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gn  = Ghost::None;
-  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  //Ghost::GhostType  gn  = Ghost::None;
+  //Ghost::GhostType  gaf = Ghost::AroundFaces;
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
   // get drhodt that goes in the rhs of the pressure equation
@@ -207,9 +207,9 @@ linSolver::buildAMatrix(const ProcessorGroup* pc,
     ArchesConstVariables constVars;
     ArchesVariables vars;
 
-    Ghost::GhostType  gn = Ghost::None;
+    //Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gaf = Ghost::AroundFaces;
+    //Ghost::GhostType  gaf = Ghost::AroundFaces;
 
     new_dw->get(constVars.cellType,     d_lab->d_cellTypeLabel,    d_indx, patch, gac, 1);
 
@@ -236,8 +236,8 @@ linSolver::buildAMatrix(const ProcessorGroup* pc,
       new_dw->get(constVars.voidFraction, d_lab->d_mmgasVolFracLabel, d_indx, patch,gac, 1);
     }
 
-    Vector Dx = patch->dCell();
-    double volume = Dx.x()*Dx.y()*Dx.z();
+    //Vector Dx = patch->dCell();
+    //double volume = Dx.x()*Dx.y()*Dx.z();
     
     d_boundaryCondition->mmpressureBC(new_dw, patch,
                                       &vars, &constVars);
@@ -305,8 +305,8 @@ linSolver::Update_preconditioner( const ProcessorGroup* pg,
              DataWarehouse* old_dw,
              DataWarehouse* new_dw
              ){
-    int archIndex = 0; // only one arches material
-    int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
+    //int archIndex = 0; // only one arches material
+    //int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
   for (unsigned int i=0;i<d_precMLabel.size();i++){
 
 //constCCVariable<double > x;
@@ -463,7 +463,7 @@ if (rb_iter == final_iter){
     }
 
     if (l>0){
-        int offset = 1;
+        //int offset = 1;
         task_multigrid_down->requires( Task::NewDW ,d_bigZLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::None, 0 );
     }
     
@@ -1129,7 +1129,7 @@ if(false){   // for debugging
   for ( int k=idxLo.z(); k< idxHi.z(); k++ ){
     for ( int j=idxLo.y(); j< idxHi.y(); j++ ){
       for ( int i=idxLo.x(); i< idxHi.x(); i++ ){  // move unpadded A matrix to padded space, we do this because it simplifies downstream logic
-              int dz = idxHi.z()-idxLo.z();
+              //int dz = idxHi.z()-idxLo.z();
               int dy = idxHi.y()-idxLo.y();
               int dx = idxHi.x()-idxLo.x();
              for (int ii=1; ii<4; ii++){
@@ -1310,7 +1310,7 @@ if(false){   // for debugging
   for ( int k=idxLo.z(); k< idxHi.z(); k++ ){
     for ( int j=idxLo.y(); j< idxHi.y(); j++ ){
       for ( int i=idxLo.x(); i< idxHi.x(); i++ ){  // move unpadded A matrix to padded space, we do this because it simplifies downstream logic
-              int dz = idxHi.z()-idxLo.z();
+              //int dz = idxHi.z()-idxLo.z();
               int dy = idxHi.y()-idxLo.y();
               int dx = idxHi.x()-idxLo.x();
              for (int ii=1; ii<4; ii++){
@@ -1369,8 +1369,8 @@ linSolver::cg_multigrid_down( const ProcessorGroup* pg,
   const Level* fineLevel = getLevel(patches);
   IntVector r_Ratio = fineLevel->getRefinementRatio();
   int  maxLevels=fineLevel->getGrid()->numLevels();
-   double  R_squared=0.0;
-   double  max_residual=0.0;
+   //double  R_squared=0.0;
+   //double  max_residual=0.0;
   for(int p=0;p<patches->size();p++){
     const Patch* fPatch = patches->get(p);
     IntVector idxLo(fPatch->getCellLowIndex());
@@ -1641,7 +1641,7 @@ linSolver::customSolve( const ProcessorGroup* pg,
     int archIndex = 0; // only one arches material
     int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
-  double R_squared=0.0;
+  //double R_squared=0.0;
 
   sum_vartype adjustReductionValue(0.0); 
 
@@ -1747,7 +1747,7 @@ if(false){
   for ( int k=idxLo.z(); k< idxHi.z(); k++ ){
     for ( int j=idxLo.y(); j< idxHi.y(); j++ ){
       for ( int i=idxLo.x(); i< idxHi.x(); i++ ){  // move unpadded A matrix to padded space, we do this because it simplifies downstream logic
-              int dz = idxHi.z()-idxLo.z();
+              //int dz = idxHi.z()-idxLo.z();
               int dy = idxHi.y()-idxLo.y();
               int dx = idxHi.x()-idxLo.x();
              for (int ii=0; ii<6; ii++){
