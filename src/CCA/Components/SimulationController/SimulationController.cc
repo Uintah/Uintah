@@ -74,9 +74,11 @@
 
 namespace {
 
-Uintah::Dout g_sim_stats(         "SimulationStats",            "SimulationController", "sim stats debug stream", true  );
-Uintah::Dout g_sim_mem_stats(     "SimulationMemStats",         "SimulationController", "memory stats debug stream", true  );
-Uintah::Dout g_sim_time_stats(    "SimulationTimeStats",        "SimulationController", "stats time debug stream", false );
+Uintah::Dout g_sim_current_delT( "SimulationStatsCurrentDelT",  "SimulationController", "Report the delta T used (instead of the next delta T)", false  );
+  
+Uintah::Dout g_sim_stats(         "SimulationStats",            "SimulationController", "sim general stats debug stream", true  );
+Uintah::Dout g_sim_stats_mem(     "SimulationStatsMem",         "SimulationController", "sim memory stats debug stream", true  );
+Uintah::Dout g_sim_stats_time(    "SimulationStatsTime",        "SimulationController", "sim time stats debug stream", false );
 Uintah::Dout g_sim_ctrl_dbg(      "SimulationController",       "SimulationController", "general debug stream", false );
 Uintah::Dout g_comp_timings(      "ComponentTimings",           "SimulationController", "aggregated component timing stats per timestep", false );
 Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", "SimulationController", "individual component timings", false );
@@ -636,8 +638,7 @@ SimulationController::timeStateSetup()
 
     // Set the next delta T which is immediately written to the DW.
 
-    // Note the old delta T is a default and normally would not be
-    // used.
+    // Note the old delta t is really the next delta t
     m_application->setNextDelT( m_restart_archive->getOldDelt( m_restart_index ) );
 
     // Tell the scheduler the generation of the re-started simulation.
@@ -760,7 +761,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
   // Reductions are only need if these are true.
   if( (m_regridder && m_regridder->useDynamicDilation()) ||
-      g_sim_mem_stats || g_comp_timings || g_indv_comp_timings ) {
+      g_sim_stats_mem || g_comp_timings || g_indv_comp_timings ) {
 
     m_runtime_stats.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   
@@ -791,11 +792,14 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
     message << std::left
             << "Timestep "   << std::setw(8)  << m_application->getTimeStep()
-            << "Time="       << std::setw(12) << m_application->getSimTime()
-            // << "delT="       << std::setw(12) << m_application->getDelT()
-            << "Next delT="  << std::setw(12) << m_application->getNextDelT()
+            << "Time="       << std::setw(12) << m_application->getSimTime();
+    
+    if( g_sim_current_delT && !header )
+      message << "Current delT="       << std::setw(12) << m_application->getDelT();
+    else
+      message << "Next delT="  << std::setw(12) << m_application->getNextDelT();
 
-            << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
+    message << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
             // << "All Time steps= " << std::setw(12) << m_wall_timers.TimeStep().seconds()
             // << "Current Time Step= " << std::setw(12) << timeStep.seconds()
             << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
@@ -803,7 +807,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
       ;
 
     // Report on the memory used.
-    if( g_sim_mem_stats ) {
+    if( g_sim_stats_mem ) {
       // With the sum reduces, use double, since with memory it is possible that
       // it will overflow
       double        avg_memused      = m_runtime_stats.getRankAverage( SCIMemoryUsed );
@@ -856,7 +860,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
   }
   
   // Report on the simulation time used.
-  if( d_myworld->myRank() == 0 && g_sim_time_stats && m_num_samples )
+  if( d_myworld->myRank() == 0 && g_sim_stats_time && m_num_samples )
   {
     // Ignore the first sample as that is for initialization.
     std::ostringstream message;
