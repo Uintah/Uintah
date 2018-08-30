@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-
 #ifndef UINTAH_HOMEBREW_ListOfCellsIterator_H
 #define UINTAH_HOMEBREW_ListOfCellsIterator_H
 
@@ -40,10 +39,11 @@
 #if defined( UINTAH_ENABLE_KOKKOS )
 #include <Kokkos_Core.hpp>
 #endif
+
 #include <Core/Parallel/LoopExecution.hpp>
+
 namespace Uintah {
 
-  
   /**************************************
 
     CLASS
@@ -78,13 +78,11 @@ namespace Uintah {
 
     public:
 
-
 #if defined( UINTAH_ENABLE_KOKKOS )
-    ListOfCellsIterator(int size) : mySize(0), index_(0), listOfCells_("primary_ListIterator_BCview",size+1) { listOfCells_(mySize)=int_3(INT_MAX,INT_MAX,INT_MAX);}
+    ListOfCellsIterator(int size) : mySize(0), index_(0), listOfCells_("primary_ListIterator_BCview",size+1) { listOfCells_( mySize ) = int_3( INT_MAX, INT_MAX, INT_MAX ); }
 #else
-    ListOfCellsIterator(int size) : mySize(0), index_(0), listOfCells_(size+1) { listOfCells_[mySize]=int_3(INT_MAX,INT_MAX,INT_MAX);}
+    ListOfCellsIterator(int size) : mySize(0), index_(0), listOfCells_(size+1) { listOfCells_[mySize] = int_3( INT_MAX, INT_MAX, INT_MAX ); }
 #endif
-
 
     ListOfCellsIterator(const ListOfCellsIterator &copy) :
                                                            mySize(copy.mySize), 
@@ -143,119 +141,108 @@ namespace Uintah {
     /**
      * prefix operator to move the iterator forward
      */
-    ListOfCellsIterator& operator++() {index_++; return *this;} 
+    ListOfCellsIterator& operator++() { index_++; return *this; }
 
     /**
      * postfix operator to move the iterator forward
      * does not return the iterator because of performance issues
      */
-    void operator++(int) {index_++;} 
+    void operator++( int ) { index_++; }
 
     /**
      * returns true if the iterator is done
      */    
-    bool done() const { return index_==mySize; }
+    bool done() const { return index_ == mySize; }
 
     /**
      * returns the IntVector that the current iterator is pointing at
      */
-    IntVector operator*() const { ASSERT(index_<mySize); return IntVector(listOfCells_[index_][0],listOfCells_[index_][1],listOfCells_[index_][2]); }
+    IntVector operator*() const { ASSERT(index_<mySize); return IntVector( listOfCells_[index_][0], listOfCells_[index_][1], listOfCells_[index_][2] ); }
 
-      /**
-       * Assignment operator - this is expensive as we have to allocate new memory
-       */
-      inline Uintah::ListOfCellsIterator& operator=( Uintah::Iterator& copy ) 
-      {
-        //delete old iterator
+    /**
+     * Assignment operator - this is expensive as we have to allocate new memory
+     */
+    inline Uintah::ListOfCellsIterator& operator=( Uintah::Iterator& copy )
+    {
+      //delete old iterator
 
-       int i=0; 
-       for (copy.reset(); !copy.done(); copy++) { // copy iterator into portable container
-          
-         listOfCells_[i]=int_3((*copy)[0],(*copy)[1],(*copy)[2]);
-         i++;
-       }
-       mySize=i;
-
-
-        return *this;
+      int i = 0;
+      for ( copy.reset(); !copy.done(); copy++ ) { // copy iterator into portable container
+        listOfCells_[i]=int_3((*copy)[0],(*copy)[1],(*copy)[2]);
+        i++;
       }
+
+      mySize=i;
+      return *this;
+    }
+
     /**
      * Return the first element of the iterator
      */
-    inline IntVector begin() const { return IntVector(listOfCells_[0][0],listOfCells_[0][1],listOfCells_[0][2]); }
+    inline IntVector begin() const { return IntVector( listOfCells_[0][0], listOfCells_[0][1], listOfCells_[0][2] ); }
 
     /**
      * Return one past the last element of the iterator
      */
-    inline IntVector end() const { return IntVector(listOfCells_[mySize][0],listOfCells_[mySize][1],listOfCells_[mySize][2]); }
+    inline IntVector end() const { return IntVector( listOfCells_[mySize][0], listOfCells_[mySize][1], listOfCells_[mySize][2] ); }
     
     /**
      * Return the number of cells in the iterator
      */
-    inline unsigned int size() const {return mySize;};
+    inline unsigned int size() const { return mySize; }
 
     /**
      * adds a cell to the list of cells
      */
-    inline void add(const IntVector& c) 
+    inline void add( const IntVector& c )
     {
-      listOfCells_[mySize]=int_3(c[0],c[1],c[2]);
+      listOfCells_[mySize] = int_3( c[0], c[1], c[2] );
       //place at back of list
       mySize++; 
-      //readd sentinal to list
-      listOfCells_[mySize]=int_3(INT_MAX,INT_MAX,INT_MAX);
+      //read sentinal to list
+      listOfCells_[mySize]=int_3( INT_MAX, INT_MAX, INT_MAX );
     }
-
 
     /**
      * resets the iterator
      */
-    inline void reset()
-    {
-      index_=0;
-    }
-#if defined( UINTAH_ENABLE_KOKKOS )
-template<typename MemSpace>
-inline
-typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, Kokkos::View<int_3*,Kokkos::HostSpace> >::type
-     get_ref_to_iterator(){
-      return listOfCells_;
-    }
-//template<typename MemSpace>  
-//inline
-//typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<IntVector*,Kokkos::HostSpace> >::type
-     //get_ref_to_iterator(){
-      //return listOfCells_;
-    //}
-#else
-template<typename MemSpace>
-inline
-typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,  std::vector<int_3>&>::type
-     get_ref_to_iterator(){
-      return listOfCells_;
-    }
+    inline void reset() { index_ = 0; }
 
+#if defined( UINTAH_ENABLE_KOKKOS )
+  #if defined ( KOKKOS_ENABLE_OPENMP )
+    template<typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, Kokkos::View<int_3*,Kokkos::HostSpace> >::type
+    get_ref_to_iterator(){ return listOfCells_; }
+  #else
+    template<typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<int_3*,Kokkos::HostSpace> >::type
+    get_ref_to_iterator(){ return listOfCells_; }
+  #endif
+#else
+    template<typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,  std::vector<int_3>&>::type
+    get_ref_to_iterator(){ return listOfCells_; }
 #endif
 
-
-#if defined( HAVE_CUDA )
-template<typename MemSpace>
-inline
-typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos::View<int_3*,Kokkos::CudaSpace> >::type
-     get_ref_to_iterator(){
-       if(copied_to_gpu){
-         return listOfCells_gpu;
-       }else{
-         listOfCells_gpu= Kokkos::View<int_3*,Kokkos::CudaSpace>("gpu_listOfCellsIterator",listOfCells_.size()); 
-         Kokkos::deep_copy(listOfCells_gpu,listOfCells_);
-         copied_to_gpu=true;
-         return listOfCells_gpu;
-       }
-
+#if defined( UINTAH_ENABLE_KOKKOS ) && defined( HAVE_CUDA )
+    template<typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos::View<int_3*,Kokkos::CudaSpace> >::type
+    get_ref_to_iterator()
+    {
+      if ( copied_to_gpu ) {
+        return listOfCells_gpu;
+      }
+      else {
+        listOfCells_gpu = Kokkos::View<int_3*,Kokkos::CudaSpace>( "gpu_listOfCellsIterator", listOfCells_.size() );
+        Kokkos::deep_copy( listOfCells_gpu, listOfCells_ );
+        copied_to_gpu = true;
+        return listOfCells_gpu;
+      }
     }
 #endif
 
     protected:
+
     /**
      * Returns a pointer to a deep copy of the virtual class
      * this should be used only by the Iterator class
@@ -265,7 +252,7 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos
       return scinew ListOfCellsIterator(*this);
 
     };
-    
+
     virtual std::ostream& put(std::ostream& out) const
     {
       out << *this;
@@ -281,16 +268,19 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos
     unsigned int mySize{0};
     //index into the iterator
     unsigned int index_{0};
+
 #if defined( UINTAH_ENABLE_KOKKOS )
     Kokkos::View<int_3*, Kokkos::HostSpace> listOfCells_;
-#if defined( HAVE_CUDA )
+  #if defined( HAVE_CUDA )
     Kokkos::View<int_3*, Kokkos::CudaSpace> listOfCells_gpu;
     bool copied_to_gpu{false}; 
-#endif
+  #endif
 #else
     std::vector<int_3> listOfCells_{};
 #endif
+
     private:
+
      // This old constructor has a static size for portability reasons.  It should be avoided since .
 #if defined( UINTAH_ENABLE_KOKKOS )
   ListOfCellsIterator() : mySize(0), index_(0), listOfCells_("priv_ListIterator_BCview",1000) { listOfCells_(mySize)=int_3(INT_MAX,INT_MAX,INT_MAX);
@@ -302,9 +292,7 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos
          }
 #endif
 
-    }; // end class ListOfCellsIterator
-
-
+  }; // end class ListOfCellsIterator
 } // End namespace Uintah
   
 #endif
