@@ -1968,7 +1968,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
 } // end writeto_xml_files()
 
 //______________________________________________________________________
-//  Update the xml file index.xml with any in-situ modified variables.
+//  Update the xml file index.xml with any in situ modified variables.
 
 void
 DataArchiver::writeto_xml_files( std::map< std::string,
@@ -4208,7 +4208,7 @@ DataArchiver::getTimeStepTopLevel()
 }
 
 //______________________________________________________________________
-// Called by In-situ VisIt to dump a time step's data.
+// Called by in situ VisIt to dump a time step's data.
 void
 DataArchiver::outputTimeStep( const GridP& grid,
                               SchedulerP& sched )
@@ -4218,18 +4218,12 @@ DataArchiver::outputTimeStep( const GridP& grid,
   DataWarehouse* oldDW = sched->get_dw(0);
   DataWarehouse* newDW = sched->getLastDW();
   
-  const int timeStep = m_application->getTimeStep();
-
-  // Save the var so to return to the normal output schedule.
-  int nextOutputTimeStep = m_nextOutputTimeStep;
-  int outputTimeStepInterval = m_outputTimeStepInterval;
-
-  m_nextOutputTimeStep = timeStep;
-  m_outputTimeStepInterval = 1;
-
   // Set up the inital bits including the flag m_isOutputTimeStep
   // which triggers most actions.
-  beginOutputTimeStep( grid );
+  setOutputTimeStep( true, grid );
+
+  // Sync up before every rank can use the time step dir
+  Uintah::MPI::Barrier( d_myworld->getComm() );
 
   // Update the main xml file and write the xml file for this
   // timestep.
@@ -4240,23 +4234,21 @@ DataArchiver::outputTimeStep( const GridP& grid,
   for( int i = 0; i < grid->numLevels(); ++i ) {
     const LevelP& level = grid->getLevel( i );
 
-    const PatchSet* patches = m_loadBalancer->getOutputPerProcessorPatchSet(level);
+    const PatchSet* patches =
+      m_loadBalancer->getOutputPerProcessorPatchSet(level);
 
-    outputVariables( nullptr, patches->getSubset(proc), nullptr, oldDW, newDW, OUTPUT );
-    outputVariables( nullptr, patches->getSubset(proc), nullptr, oldDW, newDW, CHECKPOINT );
+    outputVariables( nullptr, patches->getSubset(proc),
+                     nullptr, oldDW, newDW, OUTPUT );
+    
+    outputVariables( nullptr, patches->getSubset(proc),
+                     nullptr, oldDW, newDW, CHECKPOINT );
   }
 
-  // Restore the timestep vars so to return to the normal output
-  // schedule.
-  m_nextOutputTimeStep = nextOutputTimeStep;
-  m_outputTimeStepInterval = outputTimeStepInterval;
-
   m_isOutputTimeStep = false;
-  m_isCheckpointTimeStep = false;
 }
 
 //______________________________________________________________________
-// Called by In-situ VisIt to dump a checkpoint.
+// Called by in situ VisIt to dump a checkpoint.
 //
 void
 DataArchiver::checkpointTimeStep( const GridP& grid,
@@ -4267,29 +4259,12 @@ DataArchiver::checkpointTimeStep( const GridP& grid,
   DataWarehouse* oldDW = sched->get_dw(0);
   DataWarehouse* newDW = sched->getLastDW();
 
-  const int timeStep = m_application->getTimeStep();
-
-  // Save the vars so to return to the normal output schedule.
-  int nextCheckpointTimeStep = m_nextCheckpointTimeStep;
-  int checkpointTimeStepInterval = m_checkpointTimeStepInterval;
-
-  m_nextCheckpointTimeStep = timeStep;
-  m_checkpointTimeStepInterval = 1;
-
-  // If needed create checkpoints/index.xml
-  if( !m_checkpointsDir.exists()) {
-    if( proc == 0) {
-      m_checkpointsDir = m_dir.createSubdir("checkpoints");
-      createIndexXML( m_checkpointsDir );
-    }
-  }
+  // Set up the inital bits including the flag m_isCheckpointTimeStep
+  // which triggers most actions.
+  setCheckpointTimeStep( true, grid );
 
   // Sync up before every rank can use the checkpoints dir
   Uintah::MPI::Barrier( d_myworld->getComm() );
-
-  // Set up the inital bits including the flag m_isCheckpointTimeStep
-  // which triggers most actions.
-  beginOutputTimeStep( grid );
 
   // Update the main xml file and write the xml file for this
   // timestep.
@@ -4300,17 +4275,13 @@ DataArchiver::checkpointTimeStep( const GridP& grid,
   for( int i = 0; i < grid->numLevels(); ++i ) {
     const LevelP& level = grid->getLevel( i );
 
-    const PatchSet* patches = m_loadBalancer->getOutputPerProcessorPatchSet(level);
+    const PatchSet* patches =
+      m_loadBalancer->getOutputPerProcessorPatchSet(level);
 
     outputVariables( nullptr, patches->getSubset(proc),
                      nullptr, oldDW, newDW, CHECKPOINT );
   }
 
-  // Restore the vars so to return to the normal output schedule.
-  m_nextCheckpointTimeStep = nextCheckpointTimeStep;
-  m_checkpointTimeStepInterval = checkpointTimeStepInterval;
-
-  m_isOutputTimeStep = false;
   m_isCheckpointTimeStep = false;
 }
 
