@@ -156,38 +156,16 @@ MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     break;
   }
 }
-//--------------------------------------------------------------------------------------------------
-void
-MMS_scalar::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>&
-                                   variable_registry , const bool packed_tasks){
-
-  register_variable( m_MMS_label,        ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( m_MMS_source_label, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( m_MMS_source_diff_label, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( m_MMS_source_t_label, ArchesFieldContainer::COMPUTES, variable_registry );
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-MMS_scalar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-  // Nothing going on here...did we mean to initialize the variable? 
-  // CCVariable<double>& f_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_label));
-  // CCVariable<double>& s_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_label));
-  // CCVariable<double>& s_diff_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_diff_label));
-  // CCVariable<double>& s_t_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_t_label));
-
-}
 
 //--------------------------------------------------------------------------------------------------
 void
 MMS_scalar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
                                    variable_registry, const int time_substep , const bool packed_tasks){
 
-  register_variable( m_MMS_label,             ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-  register_variable( m_MMS_source_label,      ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-  register_variable( m_MMS_source_diff_label, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-  register_variable( m_MMS_source_t_label,    ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
+  register_variable( m_MMS_label,             ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
+  register_variable( m_MMS_source_label,      ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
+  register_variable( m_MMS_source_diff_label, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
+  register_variable( m_MMS_source_t_label,    ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
 
   register_variable(ind_var_name,     ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
 
@@ -197,13 +175,17 @@ MMS_scalar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 void
 MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& f_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_label));
-  CCVariable<double>& s_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_label));
-  CCVariable<double>& s_diff_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_diff_label));
-  CCVariable<double>& s_t_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_t_label));
+  CCVariable<double>& f_mms      = tsk_info->get_uintah_field_add<CCVariable<double> >(m_MMS_label);
+  CCVariable<double>& s_mms      = tsk_info->get_uintah_field_add<CCVariable<double> >(m_MMS_source_label);
+  CCVariable<double>& s_diff_mms = tsk_info->get_uintah_field_add<CCVariable<double> >(m_MMS_source_diff_label);
+  CCVariable<double>& s_t_mms    = tsk_info->get_uintah_field_add<CCVariable<double> >(m_MMS_source_t_label);
+
+  f_mms.initialize(0.0);
+  s_mms.initialize(0.0);
+  s_diff_mms.initialize(0.0);
+  s_t_mms.initialize(0.0);
 
   constCCVariable<double>& X  = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( ind_var_name ));
-
 
   double time_d      = tsk_info->get_time(); //_materialManager->getElapsedSimTime();
   int   time_substep = tsk_info->get_time_substep();
