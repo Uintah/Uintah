@@ -57,7 +57,7 @@ void visit_SetTimeValues( visit_simulation_data *sim )
     sim->simController->getApplicationInterface();
 
   VisItUI_setValueI("TimeStep",      sim->cycle, 0);
-  VisItUI_setValueI("TimeStepMax",   appInterface->getTimeStepsMax(), 1);
+  VisItUI_setValueI("TimeStepsMax",  appInterface->getTimeStepsMax(), 1);
 
   VisItUI_setValueD("SimTime",          sim->time, 0);
   VisItUI_setValueD("SimTimeMax",       appInterface->getSimTimeMax(), 1);
@@ -84,35 +84,35 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
 
   VisItUI_setTableValueS("DeltaTVariableTable", -1, -1, "CLEAR_TABLE", 0);
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaT", 0);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "Current", 0);
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, sim->delt, 0);
   ++row;
   
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTNext", 0);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "Next", 0);
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, sim->delt_next, 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMultiplier", 0);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "Multiplier", 0);
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTMultiplier(), 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxDeltaTIncrease", 0);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxIncrease", 0);
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTMaxIncrease(), 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMin", 0);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "Minimum", 0);
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTMin(), 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMax", 0);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "Maximum", 0);
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTMax(), 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTInitialMax", 0);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "InitialMaximum", 0);
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTInitialMax(), 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTInitialRange", 0);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "InitialRange", 0);
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTInitialRange(), 1);
   ++row;
 
