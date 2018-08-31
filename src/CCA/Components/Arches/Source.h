@@ -131,7 +131,7 @@ public:
 
   ////////////////////////////////////////////////////////////////////////
   // Add multimaterial source term
-  void computemmMomentumSource(
+  void computemmMomentumSource(const ProcessorGroup* pc,
                                const Patch* patch,
                                CellInformation* cellinfo,
                                ArchesVariables* vars,
