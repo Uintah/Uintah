@@ -17,7 +17,7 @@
     <postProcess_cmd>compare_cavityFlow.m -aDir 2 -mat 0 -plot true -Re 100</postProcess_cmd>
     <x>100</x>
     <replace_values>
-      /Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value : [0,0.02,0] 
+      <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value" value = '[0,0.02,0]'/> 
     </replace_values>
 </Test>
 <!--
@@ -27,7 +27,7 @@
     <postProcess_cmd>compare_cavityFlow.m -aDir 2 -mat 0 -plot true -Re 400</postProcess_cmd>
     <x>400</x>
     <replace_values>
-      /Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value : [0,0.08,0] 
+      <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value" value = '[0,0.08,0]' /> 
     </replace_values>
 </Test>
 -->
@@ -37,7 +37,7 @@
     <postProcess_cmd>compare_cavityFlow.m -aDir 2 -mat 0 -plot true -Re 1000</postProcess_cmd>
     <x>1000</x>
     <replace_values>
-      /Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value : [0,.2,0] 
+      <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value" value = '[0,.2,0]' /> 
     </replace_values>
 </Test>
 <!--
@@ -46,7 +46,7 @@
     <sus_cmd>mpirun -np 6 sus </sus_cmd>
     <postProcess_cmd>compare_cavityFlow.m -aDir 2 -mat 0 -plot true -Re 3200</postProcess_cmd>
     <replace_values>
-      /Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value : [0,.64,0]
+      <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value" value = '[0,.64,0]' />
     </replace_values>
 </Test>
 <Test>
@@ -57,7 +57,7 @@
       <maxTime>   20    </maxTime>
     </replace_lines>
     <replace_values>
-      /Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value : [0,1,0]
+      <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value" value = '[0,1,0]' />
     </replace_values>
 </Test>
 <Test>
@@ -68,7 +68,7 @@
       <maxTime>   15    </maxTime>
     </replace_lines>
     <replace_values>
-      /Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value : [0,1.5,0]
+      <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value" value = '[0,1.5,0]' />
     </replace_values>
 </Test>
 <Test>
@@ -79,7 +79,7 @@
       <maxTime>   10    </maxTime>
     </replace_lines>
     <replace_values>
-      /Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id='0' and @label='Velocity' and @var='Dirichlet']/value : [0,2,0] 
+      <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id='0' and @label='Velocity' and @var='Dirichlet']/value" value = '[0,2,0]' /> 
     </replace_values>
 </Test>
 -->

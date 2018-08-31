@@ -3,7 +3,7 @@
 
 #______________________________________________________________________
 #  run_tests.pl
-#  Perl script used to modify an input file and run the tests listed in 
+#  Perl script used to modify an input file and run the tests listed in
 #  the tst file.
 #
 # Algorithm
@@ -19,320 +19,178 @@
 #     - run the test
 #
 #     if(post Process cmd )
-#       -run analyze_results.pl <tst file> < test number> 
+#       -run analyze_results.pl <tst file> < test number>
 #     endif
 #   end Loop
 #
-#  Perl Dependencies:  
+#  Perl Dependencies:
 #    libxml-simple-perl
 #    libxml-dumper-perl
 #______________________________________________________________________
-
-use XML::Simple;
+use strict; 
+use warnings;
+use XML::LibXML;
 use Data::Dumper;
 use Time::HiRes qw/time/;
 use File::Basename;
+use File::Which;
 use Cwd;
 
 # removes white spaces from variable
 sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
 
+my $tstFile           = $ARGV[0];
+my $config_files_path = $ARGV[1];
 
-# create object
-$simple = new XML::Simple(forcearray => 1, suppressempty => "");
-$tstFile           = $ARGV[0];
-$config_files_path = $ARGV[1];
-
-# read XML file
-my $data = $simple->XMLin("$tstFile");
+# read XML file into a dom tree
+my $doc = XML::LibXML->load_xml(location => $tstFile);
 
 #__________________________________
 # copy gnuplot script   OPTIONAL
-my $gpFile = cleanStr( $data->{gnuplot}[0]->{script}[0] );
-
-if( length $gpFile ){  
-  chomp($gpFile);              
+my $gpFile = cleanStr( $doc->findvalue( '/start/gnuplot/script' ) );
+if( defined $gpFile ){
   $gpFile    = $config_files_path."/".$gpFile;
   system("cp -f $gpFile .");
+  print "  gnuplot script used in postProcess ($gpFile)\n";
 }
 
 #__________________________________
-# set exitOnCrash       OPTIONAL
-if ( length $data->{exitOnCrash}->[0] ){
-  $exitOnCrash = cleanStr( $data->{exitOnCrash}->[0] );
-}else{
-  $exitOnCrash = "true";
-}
+# set exitOnCrash flag    OPTIONAL
+my $exitOnCrash = "true";
+$exitOnCrash = cleanStr( $doc->findvalue( '/start/exitOnCrash' ) );
 $exitOnCrash = trim(uc($exitOnCrash));
 print "  Exit order of accuracy scripts on crash or timeout ($exitOnCrash)\n";
 
 
 #__________________________________
-# set timeout value       OPTIONAL
-if ( length $data->{susTimeout_minutes}->[0] ){
-  $timeout = cleanStr( $data->{susTimeout_minutes}->[0] );
-  $timeout = $timeout*60;                               # minutes-> seconds               
-}else{
-  $timeout = 24*60*60;                                  # default 24 hours
-}
+# set sus timeout value    OPTIONAL
+my $timeout = 24*60*60;
+$timeout = cleanStr( $doc->findvalue( '/start/susTimeout_minutes' ) );
 print "  Simulation timeout: $timeout seconds\n";
 
 
 #__________________________________
-# determing the ups basename
-$upsFile         = cleanStr( $data->{upsFile}->[0] );
+# determine the ups basename
+my $upsFile      = cleanStr( $doc->findvalue( '/start/upsFile' ) );
 $upsFile         = basename( $upsFile );
 my $ups_basename = basename( $upsFile, ".ups" );        # Removing the extension .ups so that we can use this to build our uda file names
 
-#__________________________________
-# Read in the test data from xml file
-my $i = 0;
-my @tests = @{$data->{Test}};
-
-#print Dumper(@tests);         #debugging
-       
-for($i = 0; $i<=$#tests; $i++){
-  my $test         = $tests[$i];
-  $test_title[$i]  = cleanStr( $test->{Title}[0] );     # test title
-  $sus_cmd[$i]     = $test->{sus_cmd}[0];               # sus command
-  
-  $postProc_cmd[$i] = "";
-  
-  if( length $test->{postProcess_cmd}[0] ){
-    $postProc_cmd[$i] = $test->{postProcess_cmd}[0];    # comparison utility command  OPTIONAL
-  }
-}
-
-$num_of_tests=$#tests;
-
-
-#__________________________________
-# make a symbolic link to the post processing command
-# Note Debian doesn't have the --skip-dot option
-
-for ($i=0;$i<=$num_of_tests;$i++){
-   if( length $postProc_cmd[$i] ){
-    my @stripped_cmd = split(/ /,$postProc_cmd[$i]);      # remove command options
-    my $cmd = `which --skip-dot $stripped_cmd[0] > /dev/null 2>&1`;
-    system("ln -fs $cmd > /dev/null 2>&1");
-  }
+if ( ! -e $upsFile ){
+  print "\n\nERROR(run_tests.pl): $upsFile, File Not Found";
+  print " Now exiting\n";
+  exit
 }
 
 #__________________________________
-# Read in all of the replacement patterns 
-# and store them in arrays.
-#   There can be global replacement lines and individual test replacement lines
-my $nTest=-1;
-my $line;
-my $insideTest=0;
-my $insideAllTest=0;
-my $insideComment=0;
+# Globally, replace lines & values in the main ups file before loop over tests.
 
-open(tstFile, "$ARGV[0]") or die("ERROR(run_tests.pl): $ARGV[0], File not found");
-
-while ($line=<tstFile>){
-  $blankLine=0;
-  
-  if($line=~ /\<!--/){
-    $insideComment=1;
-  }
-  if($line=~ /--\>/){
-    $insideComment=0;
-  }
-  if($line=~ /\<AllTests\>/){
-    $insideAllTest=1;
-  }
-  if($line=~ /\<\/AllTests\>/){
-    $insideAllTest=0;
-  }
-  if($line=~ /\<Test\>/){
-    $insideTest=1;
-    $nTest ++;
-  }
-  if($line=~ /\<\/Test\>/){
-    $insideTest=0;
-  }
-  if ($line=~ /^\s*$/ ) {
-    $blankLine=1;
-  }
-  
-  
-  # inside of <AllTests>
-  if($insideAllTest && !$insideComment && !$blankLine){
-    if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
-      $nLine=0;
-
-      while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
-        chomp($line);
-        
-        if ($line !~ /^\s*$/ ) {      # ignore blank lines
-          $global_replaceLines[$nLine]=$line;
-          $nLine++;
-        }
-      }
-    }
-    
-    if ($line=~ /\<replace_values\>/){       # find <replace_values>
-      $nLine=0;
-      while (($line=<tstFile>) !~ /\<\/replace_values\>/){
-        chomp($line);
-        
-        if ($line !~ /^\s*$/ ) {      # ignore blank lines
-          $global_replaceValues[$nLine]=$line;
-          $nLine++;
-        }
-      }
-    }
-  }
-  
-  # inside each <Test>
-  
-  if($insideTest && !$insideComment && !$blankLine){
-    if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
-      $nLine=0;
-
-      while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
-        chomp($line);
-        $replaceLines[$nTest][$nLine]=$line;
-        $nLine++;
-        #print "$nTest  $line\n"; 
-      }
-    }
-    
-    if ($line=~ /\<replace_values\>/){       # find <replace_values>
-      $nLine=0;
-      while (($line=<tstFile>) !~ /\<\/replace_values\>/){
-        chomp($line);
-        $replaceValues[$nTest][$nLine]=$line;
-        $nLine++;
-        #print "$nTest  $line\n";
-      }
-    } 
-  }
-}
-close(tstFile);
-#__________________________________
-# Globally, replace lines in the main ups file before each test.
-
-@replacementPatterns = (@global_replaceLines);
-foreach $rp (@global_replaceLines){
+foreach my $rp ( $doc->findnodes('/start/AllTests/replace_lines/*') ){
   system("replace_XML_line", "$rp", "$upsFile") ==0 ||  die("Error replacing_XML_line $rp in file $upsFile \n $@");
   print "\treplace_XML_line $rp\n";
 }
 
-# replace the values globally
-@replacementPatterns = (@global_replaceValues);
-foreach $rv (@global_replaceValues){
-  @tmp = split(/:/,$rv);
-  $xmlPath = $tmp[0];       # you must use a : to separate the xmlPath and value
-  $value   = $tmp[1];
-  system("replace_XML_value", "$xmlPath", "$value", "$upsFile")==0 ||  die("Error: replace_XML_value $xmlPath $value $upsFile \n $@");
+foreach my $X ($doc->findnodes('/start/AllTests/replace_values/entry')) {
+  my $xmlPath = $X->{path};
+  my $value   = $X->{value};
   print "\treplace_XML_value $xmlPath $value\n";
+  system("replace_XML_value", "$xmlPath", "$value", "$upsFile")==0 ||  die("Error: replace_XML_value $xmlPath $value $upsFile \n $@");  
 }
 
-open(statsFile,">out.stat");
 
 #__________________________________
-# Creating new ups files for each test
-for ($i=0;$i<=$num_of_tests;$i++){
-  if (! -e $upsFile ){
-    print "\n\nERROR(run_tests.pl): $upsFile, File Not Found";
-    print " Now exiting\n";
-    exit
-  }
-  
-  my $test_ups;
-  my $test_output;
+#     loop over tests
+my $statsFile;
+open( $statsFile,">out.stat");
 
-  $test_ups     = $ups_basename."_$test_title[$i]".".ups";
-  $udaFilename  = $ups_basename."_$test_title[$i]".".uda";
-  $test_output  = "out.".$test_title[$i];
+my $nTest = 0;
+foreach my $test_dom ($doc->findnodes('/start/Test')) {
 
+  my $test_title  = cleanStr( $test_dom->findvalue('Title') );
+  my $test_ups    = $ups_basename."_$test_title".".ups";
+  my $test_output = "out.".$test_title;    
+  my $udaFilename = $ups_basename."_$test_title".".uda";
 
+  #__________________________________
   # change the uda filename in each ups file
   print "\n--------------------------------------------------\n";
   print "Now modifying $test_ups\n";
-  
+
   system(" cp $upsFile $test_ups");
   my $fn = "<filebase>".$udaFilename."</filebase>";
   system("replace_XML_line", "$fn", "$test_ups")==0 ||  die("Error replace_XML_line $fn in file $test_ups \n $@");
   print "\treplace_XML_line $fn\n";
-  
-  # replace lines in the ups files
-  if( defined $replaceLines[$i] ){
-    @replacementPatterns = (@{$replaceLines[$i]});
-    foreach $rp (@replacementPatterns){
-      chomp($rp);
-      system("replace_XML_line", "$rp", "$test_ups")==0 ||  die("Error replacing_XML_line $rp in file $test_ups \n $@");
-      print "\treplace_XML_line $rp\n";
-    }
-  }
-  
-  # replace values in the ups files
-  if( defined $replaceValues[$i] ){
-    @replacementValues = (@{$replaceValues[$i]});
-    foreach $rv (@replacementValues){
 
-      if ($rv !~ /^\s*$/ ) {      # ignore blank lines
-        @tmp = split(/:/,$rv);
-        $xmlPath = $tmp[0];       # you must use a : to separate the xmlPath and value
-        $value   = $tmp[1];
-        system("replace_XML_value", "$xmlPath", "$value", "$test_ups")==0 ||  die("Error: replace_XML_value $xmlPath $value $test_ups \n $@");
-        print "\treplace_XML_value $xmlPath $value\n";
-      }
-    }
+  #__________________________________
+  # replace lines in test_ups
+  foreach my $rpl ( $test_dom->findnodes('replace_lines/*') ) {
+    print "\treplace_XML_line $rpl\n";
+    system("replace_XML_line", "$rpl", "$test_ups")==0 ||  die("Error replacing_XML_line $rpl in file $test_ups \n $@");
   }
-  
-  
+
+  #__________________________________
+  # replace any values in the ups files
+  foreach my $X ( $test_dom->findnodes('replace_values/entry') ) {
+    my $xmlPath = $X->{path};
+    my $value   = $X->{value};
+
+    print "\treplace_XML_value $xmlPath $value\n";
+    system("replace_XML_value", "$xmlPath", "$value", "$test_ups")==0 ||  die("Error: replace_XML_value $xmlPath $value $test_ups \n $@");
+  }
+
   #bulletproofing
   system("xmlstarlet val --err $test_ups") == 0 ||  die("\nERROR: $upsFile, contains errors.\n");
-  
-  #__________________________________
-  print statsFile "Test Name :       "."$test_title[$i]"."\n";
-  print statsFile "(ups) :         "."$test_ups"."\n";
-  print statsFile "(uda) :         "."$udaFilename"."\n";
-  print statsFile "output:         "."$test_output"."\n";
-  print statsFile "postProcessCmd: "."$postProc_cmd[$i]"."\n";
-  print statsFile "Command Used :  "."$sus_cmd[$i] $test_ups"."\n";
-  
-  $now = time();
-  @args = ("$sus_cmd[$i]","$test_ups","> $test_output 2>&1");
-  
-  my $rc = runSusCmd( $timeout, $exitOnCrash, statsFile, @args );
-  
-   
-  
-  $fin = time()-$now;
-  printf statsFile ("Running Time : %.3f [secs]\n", $fin);
-  print statsFile "---------------------------------------------\n";
 
   #__________________________________
-  # execute comparison
-  if( $rc == 0 && length $postProc_cmd[$i] ){
-    print "\nLaunching: analyze_results.pl $tstFile test $i\n";
-    @args = ("analyze_results.pl","$tstFile", "$i");
+  # print meta data and run sus command
+  my $sus_cmd = $test_dom->findnodes('sus_cmd');
+
+  print $statsFile "Test Name :     "."$test_title"."\n";
+  print $statsFile "(ups) :         "."$test_ups"."\n";
+  print $statsFile "(uda) :         "."$udaFilename"."\n";
+  print $statsFile "output:         "."$test_output"."\n";
+  print $statsFile "Command Used :  "."$sus_cmd $test_ups"."\n";
+
+  my $now = time();
+  my @args = ("$sus_cmd","$test_ups","> $test_output 2>&1");
+
+  my $rc = runSusCmd( $timeout, $exitOnCrash, $statsFile, @args );
+
+  my $fin = time()-$now;
+  printf $statsFile ("Running Time :  %.3f [secs]\n", $fin);
+
+  #__________________________________
+  #  execute post process command
+  my $postProc_cmd = undef;
+  $postProc_cmd = $test_dom->findvalue('postProcess_cmd');
+
+  if( $rc == 0 && length $postProc_cmd != 0){
+
+    print "\nLaunching: analyze_results.pl $tstFile test ($test_title)\n";
+    my @cmd = ("analyze_results.pl","$tstFile", "$nTest");
+    print $statsFile "postProcessCmd:  "."$postProc_cmd"."\n";
 
     if ( $exitOnCrash eq "TRUE" ) {
-      system("@args")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
+      system("@cmd")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@cmd)\n");
     }else{
-      system("@args");
+      system("@cmd");
     }
   }
-  
+  print $statsFile "---------------------------------------------\n";
+  $nTest++;
 }  # all tests loop
 
-close(statsFile);
+close($statsFile);
 
 
 #______________________________________________________________________
 #   subroutines
 #______________________________________________________________________
-  #  
+  #
 sub runSusCmd {
   my( $timeout, $exitOnCrash, $statsFile, @args ) = @_;
 
   print "\tLaunching: (@args)\n";
-  @cmd = (" timeout --preserve-status $timeout @args ");
+  my @cmd = (" timeout --preserve-status $timeout @args ");
 
   my $rc = -9;
   if ( $exitOnCrash eq "TRUE" ) {
@@ -349,38 +207,36 @@ sub runSusCmd {
   }
 
   #__________________________________
-  #  Warn user if sus didn't run successfully 
+  #  Warn user if sus didn't run successfully
   if( $rc == 36608 ) {
     print "\t\tERROR the simulation has timed out.\n";
     print $statsFile "\t\tERROR the simulation has timed out.\n";
-  } 
+  }
   elsif ($rc != 0 ){
     print "\t\tERROR the simulation crashed. (rc = $rc)\n";
     print $statsFile "\t\tERROR the simulation crashed. (rc = $rc)\n";
   }
 
-  return $rc;  
+  return $rc;
 
 };
 
 #______________________________________________________________________
-#   subroutines
-#______________________________________________________________________
-#  
+#
 #  Remove any white space or newlines in array elements or scalars
 #  (This belongs in a separate common module to avoid duplication -Todd)
 sub cleanStr {
 
   my @inputs = @_;
-  
+
   my $n   = scalar @inputs;           # number of array elements
   my $len = length $inputs[0];        # number of characters in first element
-  
+
   # if the first element is empty return ""
   if( $len == 0 ){
     return "";
   }
-  
+
   #__________________________________
   # if there is one array element return a scalar
   if( $n == 1 ){
@@ -393,15 +249,15 @@ sub cleanStr {
   #  Arrays
   my @result = ();
   my $i = 0;
-  
+
   foreach $i (@inputs){
     $i =~ s/\n//g;        # remove newlines
     $i =~ s/ //g;         # remove white spaces
     my $l = length $i;
-    
+
     if ($l > 0){
       push( @result, $i );
     }
   }
   return @result;
-}
+};

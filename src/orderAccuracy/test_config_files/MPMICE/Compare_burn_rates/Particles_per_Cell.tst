@@ -18,7 +18,7 @@
     <postProcess_cmd>compare_burn_rates.m -pDir 1 -mat 1 -rho_CC 1832</postProcess_cmd>
     <x>25</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material/geom_object/res :[2,2,2]
+         <entry path = "/Uintah_specification/MaterialProperties/MPM/material/geom_object/res" value = '[2,2,2]' />
     </replace_values>
 </Test>
 <Test>
@@ -27,7 +27,7 @@
     <postProcess_cmd>compare_burn_rates.m -pDir 1 -mat 1 -rho_CC 1832</postProcess_cmd>
     <x>25</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material/geom_object/res :[3,3,3]
+         <entry path = "/Uintah_specification/MaterialProperties/MPM/material/geom_object/res" value = '[3,3,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -36,7 +36,7 @@
     <postProcess_cmd>compare_burn_rates.m -pDir 1 -mat 1 -rho_CC 1832</postProcess_cmd>
     <x>25</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material/geom_object/res :[1,1,1]
+         <entry path = "/Uintah_specification/MaterialProperties/MPM/material/geom_object/res" value = '[1,1,1]' />
     </replace_values>
 </Test>
 </start>

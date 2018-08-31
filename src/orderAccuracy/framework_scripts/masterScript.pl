@@ -100,8 +100,6 @@ my @components        = cleanStr( @{$xml->{component}}   );
 my $sus_path          = cleanStr( $xml->{sus_path}[0]    );
 my $extraScripts_path = cleanStr( $xml->{scripts_path}[0]);
 
-
-
 #__________________________________
 # add compare_path:sus_path and framework_scripts to the path
 my $orgPath = $ENV{"PATH"};
@@ -164,6 +162,7 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
    
      my $test     = $tests[$i];
      my $testName = cleanStr( $test->{name}[0] );
+
      my $tstFile  = cleanStr( $test->{tst}[0] );
      $tstFile     = $fw_path."/".$tstFile;
      my $tst_basename = basename( $tstFile );
@@ -171,11 +170,11 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      my $tstData  = $simple->XMLin( "$tstFile" );
      
                     # Inputs directory default path (src/StandAlone/inputs)
-     my $inputs_path  = cleanStr( $tstData->{inputs_path}[0] );
-     if( ! length $inputs_path ){
-       $inputs_path = $src_path . "/StandAlone/inputs/";
-     }    
-
+     my $inputs_path = $src_path . "/StandAlone/inputs/";
+     
+     if ($tstData->{inputs_path}[0] ){
+       $inputs_path  = cleanStr( $tstData->{inputs_path}[0] );
+     }
                    # UPS file
      my $ups_tmp  = cleanStr( $tstData->{upsFile}[0] );
      my $upsFile  = $inputs_path.$component."/".$ups_tmp;
@@ -189,7 +188,7 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
                    # Other files needed
      if($test->{otherFilesToCopy}[0] ){ 
        $otherFiles= cleanStr( $test->{otherFilesToCopy}[0] );
-     }
+      }
     
                     # find a unique testname
      my $count = 0;
@@ -273,6 +272,8 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
 sub cleanStr {
 
   my @inputs = @_;
+  
+#  print Dumper (@inputs);
   
   my $n   = scalar @inputs;           # number of array elements
   my $len = length $inputs[0];        # number of characters in first element

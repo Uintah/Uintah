@@ -16,8 +16,8 @@
     <outputTimestepInterval>6</outputTimestepInterval>
   </replace_lines>
   <replace_values>
-    /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[33,33,33]
-    /Uintah_specification/Grid/Level/Box[@label=1]/resolution :[66,66,66]
+    <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/resolution" value ='[33,33,33]' />
+    <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/resolution" value ='[66,66,66]' />
   </replace_values>
 </AllTests>
 
@@ -27,8 +27,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>111.311</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,1]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,1,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,1]' />
     </replace_values>
 </Test>
 <Test>
@@ -37,8 +37,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>311.311</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,1,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,1]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,1,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,1]' />
     </replace_values>
 </Test>
 <Test>
@@ -47,8 +47,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>131.311</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,3,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,1]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,3,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,1]' />
     </replace_values>
 </Test>
 <Test>
@@ -57,8 +57,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>113.311</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,1]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,1,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,1]' />
     </replace_values>
 </Test>
 
@@ -68,8 +68,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>331.311</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,3,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,1]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,3,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,1]' />
     </replace_values>
 </Test>
 <Test>
@@ -78,8 +78,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>313.311</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,1,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,1]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,1,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,1]' />
     </replace_values>
 </Test>
 <Test>
@@ -88,8 +88,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>333.311</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,3,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,1]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,3,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,1]' />
     </replace_values>
 </Test>
 <!--__________________________________-->
@@ -100,8 +100,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>111.113</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,1,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[1,1,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -110,8 +110,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>113.113</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,1,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[1,1,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -120,8 +120,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>131.113</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,3,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,3,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[1,1,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -130,8 +130,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>113.113</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,1,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,1,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[1,1,3]' />
     </replace_values>
 </Test>
 
@@ -141,8 +141,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>331.113</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,3,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,3,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[1,1,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -151,8 +151,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>313.113</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,1,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,1,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[1,1,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -161,8 +161,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>333.113</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,3,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,3,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[1,1,3]' />
     </replace_values>
 </Test>
 
@@ -174,8 +174,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>111.313</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,1,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -184,8 +184,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>311.313</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,1,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,1,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -194,8 +194,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>131.313</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,3,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,3,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -204,8 +204,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>113.313</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,1,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,3]' />
     </replace_values>
 </Test>
 
@@ -215,8 +215,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>331.313</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,3,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,3,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -225,8 +225,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>313.313</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,1,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,1,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -235,8 +235,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>333.313</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,3,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,1,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,3,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,1,3]' />
     </replace_values>
 </Test>
 
@@ -248,8 +248,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>111.333</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,3,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,1,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,3,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -258,8 +258,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>313.333</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,1,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,3,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,1,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,3,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -268,8 +268,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>131.333</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,3,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,3,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,3,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,3,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -278,8 +278,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>113.333</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,3,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,1,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,3,3]' />
     </replace_values>
 </Test>
 
@@ -289,8 +289,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>331.333</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,3,1]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,3,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,3,1]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,3,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -299,8 +299,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>313.333</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,1,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,3,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,1,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,3,3]' />
     </replace_values>
 </Test>
 <Test>
@@ -309,8 +309,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>333.333</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,3,3]
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[3,3,3]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[3,3,3]' />
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[3,3,3]' />
     </replace_values>
 </Test>
 

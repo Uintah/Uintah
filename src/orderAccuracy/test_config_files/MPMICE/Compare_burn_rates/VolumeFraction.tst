@@ -18,8 +18,8 @@
     <postProcess_cmd>compare_burn_rates.m -pDir 1 -mat 1 -rho_CC 1832 </postProcess_cmd>
     <x>25</x>
     <replace_values>
-          /Uintah_specification/MaterialProperties/MPM/material/geom_object/volumeFraction :1.0
-          /Uintah_specification/MaterialProperties/ICE/material/geom_object/volumeFraction :0.0
+          <entry path = "/Uintah_specification/MaterialProperties/MPM/material/geom_object/volumeFraction" value ='1.0' />
+          <entry path = "/Uintah_specification/MaterialProperties/ICE/material/geom_object/volumeFraction" value ='0.0' />
     </replace_values>
 </Test>
 <Test>
@@ -28,8 +28,8 @@
     <postProcess_cmd>compare_burn_rates.m -pDir 1 -mat 1 -rho_CC 1832 </postProcess_cmd>
     <x>25</x>
     <replace_values>
-          /Uintah_specification/MaterialProperties/MPM/material/geom_object/volumeFraction :0.9
-          /Uintah_specification/MaterialProperties/ICE/material/geom_object/volumeFraction :0.1
+          <entry path = "/Uintah_specification/MaterialProperties/MPM/material/geom_object/volumeFraction" value ='0.9' />
+          <entry path = "/Uintah_specification/MaterialProperties/ICE/material/geom_object/volumeFraction" value ='0.1' />
     </replace_values>
 </Test>
 <Test>
@@ -38,8 +38,8 @@
     <postProcess_cmd>compare_burn_rates.m -pDir 1 -mat 1 -rho_CC 1832 </postProcess_cmd>
     <x>25</x>
     <replace_values>
-          /Uintah_specification/MaterialProperties/MPM/material/geom_object/volumeFraction :0.8
-          /Uintah_specification/MaterialProperties/ICE/material/geom_object/volumeFraction :0.2
+          <entry path = "/Uintah_specification/MaterialProperties/MPM/material/geom_object/volumeFraction" value ='0.8' />
+          <entry path = "/Uintah_specification/MaterialProperties/ICE/material/geom_object/volumeFraction" value ='0.2' />
     </replace_values>
 </Test>
 <Test>
@@ -48,8 +48,8 @@
     <postProcess_cmd>compare_burn_rates.m -pDir 1 -mat 1 -rho_CC 1832 </postProcess_cmd>
     <x>25</x>
     <replace_values>
-          /Uintah_specification/MaterialProperties/MPM/material/geom_object/volumeFraction :0.7
-          /Uintah_specification/MaterialProperties/ICE/material/geom_object/volumeFraction :0.3
+          <entry path = "/Uintah_specification/MaterialProperties/MPM/material/geom_object/volumeFraction" value ='0.7' />
+          <entry path = "/Uintah_specification/MaterialProperties/ICE/material/geom_object/volumeFraction" value ='0.3' />
     </replace_values>
 </Test>
 <Test>
@@ -58,8 +58,8 @@
     <postProcess_cmd>compare_burn_rates.m -pDir 1 -mat 1 -rho_CC 1832 </postProcess_cmd>
     <x>25</x>
     <replace_values>
-          /Uintah_specification/MaterialProperties/MPM/material/geom_object/volumeFraction :0.6
-          /Uintah_specification/MaterialProperties/ICE/material/geom_object/volumeFraction :0.4
+          <entry path = "/Uintah_specification/MaterialProperties/MPM/material/geom_object/volumeFraction" value ='0.6' />
+          <entry path = "/Uintah_specification/MaterialProperties/ICE/material/geom_object/volumeFraction" value ='0.4' />
     </replace_values>
 </Test>
 </start>

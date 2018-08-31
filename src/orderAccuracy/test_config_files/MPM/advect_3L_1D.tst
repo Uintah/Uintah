@@ -10,9 +10,9 @@
     <postProcess_cmd>pudaVarsummary -ts 5 -var p.stress</postProcess_cmd>
     <x>1</x>
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=2]/patches :[1,1,1]
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=0]' />/patches" value = '[1,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=1]' />/patches" value = '[1,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=2]' />/patches" value = '[1,1,1]' />
     </replace_values>
 </Test>
 
@@ -22,9 +22,9 @@
     <postProcess_cmd> pudaVarsummary -ts 5 -var p.stress  </postProcess_cmd>
     <x>2</x>
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=1]/patches :[2,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=2]/patches :[1,1,1]
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=0]' />/patches" value = '[1,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=1]' />/patches" value = '[2,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=2]' />/patches" value = '[1,1,1]' />
     </replace_values>
 </Test>
 
@@ -34,9 +34,9 @@
     <postProcess_cmd>  pudaVarsummary -ts 5 -var p.stress  </postProcess_cmd>
     <x>3</x>
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=1]/patches :[2,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=2]/patches :[1,1,1]
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=0]' />/patches" value = '[3,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=1]' />/patches" value = '[2,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=2]' />/patches" value = '[1,1,1]' />
     </replace_values>
 </Test>
 
