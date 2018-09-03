@@ -44,7 +44,7 @@ Uintah::Dout g_deltaT_major_warnings( "DeltaTMajorWarnings", "ApplicationCommon"
 
 Uintah::Dout g_deltaT_prevalidate_min( "DeltaTPreValidateMin", "ApplicationCommon", "Before reducing validate the next delta T w/minimal warnings", false );
 
-Uintah::Dout g_deltaT_prevalidate_max( "DeltaTPreValidateMax", "ApplicationCommon", "Before reducing validate the next delta T w/maximal warnings", true );
+Uintah::Dout g_deltaT_prevalidate_max( "DeltaTPreValidateMax", "ApplicationCommon", "Before reducing validate the next delta T w/maximal warnings", false );
 
 ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
                                       const MaterialManagerP   materialManager )
