@@ -23,9 +23,6 @@
 #     endif
 #   end Loop
 #
-#  Perl Dependencies:
-#    libxml-simple-perl
-#    libxml-dumper-perl
 #______________________________________________________________________
 use strict; 
 use warnings;
@@ -35,6 +32,8 @@ use Time::HiRes qw/time/;
 use File::Basename;
 use File::Which;
 use Cwd;
+use lib dirname (__FILE__);  # needed to find local Utilities.pm
+use Utilities 'cleanStr';
 
 # removes white spaces from variable
 sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
@@ -57,7 +56,9 @@ if( defined $gpFile ){
 #__________________________________
 # set exitOnCrash flag    OPTIONAL
 my $exitOnCrash = "true";
-$exitOnCrash = cleanStr( $doc->findvalue( '/start/exitOnCrash' ) );
+if( $doc->exists( '/start/exitOnCrash' ) ){
+  $exitOnCrash = cleanStr( $doc->findvalue( '/start/exitOnCrash' ) );
+}
 $exitOnCrash = trim(uc($exitOnCrash));
 print "  Exit order of accuracy scripts on crash or timeout ($exitOnCrash)\n";
 
@@ -65,8 +66,10 @@ print "  Exit order of accuracy scripts on crash or timeout ($exitOnCrash)\n";
 #__________________________________
 # set sus timeout value    OPTIONAL
 my $timeout = 24*60*60;
-$timeout = cleanStr( $doc->findvalue( '/start/susTimeout_minutes' ) );
-print "  Simulation timeout: $timeout seconds\n";
+if( $doc->exists( '/start/susTimeout_minutes' ) ){
+  $timeout = cleanStr( $doc->findvalue( '/start/susTimeout_minutes' ) );
+}
+print "  Simulation timeout: $timeout minutes\n";
 
 
 #__________________________________
@@ -164,8 +167,7 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
   $postProc_cmd = $test_dom->findvalue('postProcess_cmd');
 
   if( $rc == 0 && length $postProc_cmd != 0){
-
-    print "\nLaunching: analyze_results.pl $tstFile test ($test_title)\n";
+  
     my @cmd = ("analyze_results.pl","$tstFile", "$nTest");
     print $statsFile "postProcessCmd:  "."$postProc_cmd"."\n";
 
@@ -219,45 +221,4 @@ sub runSusCmd {
 
   return $rc;
 
-};
-
-#______________________________________________________________________
-#
-#  Remove any white space or newlines in array elements or scalars
-#  (This belongs in a separate common module to avoid duplication -Todd)
-sub cleanStr {
-
-  my @inputs = @_;
-
-  my $n   = scalar @inputs;           # number of array elements
-  my $len = length $inputs[0];        # number of characters in first element
-
-  # if the first element is empty return ""
-  if( $len == 0 ){
-    return "";
-  }
-
-  #__________________________________
-  # if there is one array element return a scalar
-  if( $n == 1 ){
-    $inputs[0] =~ s/\n//g;        # remove newlines
-    $inputs[0] =~ s/ //g;         # remove white spaces
-    return $inputs[0];
-  }
-
-  #__________________________________
-  #  Arrays
-  my @result = ();
-  my $i = 0;
-
-  foreach $i (@inputs){
-    $i =~ s/\n//g;        # remove newlines
-    $i =~ s/ //g;         # remove white spaces
-    my $l = length $i;
-
-    if ($l > 0){
-      push( @result, $i );
-    }
-  }
-  return @result;
 };

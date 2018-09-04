@@ -36,16 +36,16 @@ fit [4:512] f3(x) 'L2norm.dat' using 1:4 via a3, b3
 
 
 set label 'x_Error = a * (#Rays)^b' at screen 0.2,0.4
-set label 'a = %2.3g',a1      at screen 0.3,0.375
-set label 'b = %2.3g',b1      at screen 0.3,0.35
+set label sprintf( 'a = %2.3g',a1 ) at screen 0.3,0.375
+set label sprintf( 'b = %2.3g',b1 ) at screen 0.3,0.35
 
 set label 'y_Error = a * (#Rays)^b' at screen 0.2,0.3
-set label 'a = %2.3g',a2      at screen 0.3,0.275
-set label 'b = %2.3g',b2      at screen 0.3,0.25
+set label sprintf( 'a = %2.3g',a2 ) at screen 0.3,0.275
+set label sprintf( 'b = %2.3g',b2 ) at screen 0.3,0.25
 
 set label 'z_Error = a * (#Rays)^b' at screen 0.2,0.2
-set label 'a = %2.3g',a3      at screen 0.3,0.175
-set label 'b = %2.3g',b3      at screen 0.3,0.15
+set label sprintf( 'a = %2.3g',a3 ) at screen 0.3,0.175
+set label sprintf( 'b = %2.3g',b3 ) at screen 0.3,0.15
 
 set yrange [0.001:0.2]
 

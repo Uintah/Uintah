@@ -29,12 +29,12 @@ set style line 1  lt 1 lw 0.3 lc 8
 
 set label 'Error = a * (Spatial Resolution)^ b' at screen 0.2,0.42
 
-set label 'b'                           at screen 0.2,0.38
-set label '___________________________' at screen 0.2,0.36
-set label 'density     = %3.5g',b1      at screen 0.2,0.34
-set label 'velocity    = %3.5g',b2      at screen 0.2,0.30
-set label 'pressure    = %3.5g',b3      at screen 0.2,0.26
-set label 'Temperature = %3.5g',b4      at screen 0.2,0.22
+set label 'b'                                  at screen 0.2,0.38
+set label '___________________________'        at screen 0.2,0.36
+set label sprintf( 'density     = %3.5g',b1 )  at screen 0.2,0.34
+set label sprintf( 'velocity    = %3.5g',b2 )  at screen 0.2,0.30
+set label sprintf( 'pressure    = %3.5g',b3 )  at screen 0.2,0.26
+set label sprintf( 'Temperature = %3.5g',b4 )  at screen 0.2,0.22
 
 plot 'L2norm.dat' using 1:2 t 'Density' with linespoints,\
       f1(x) with l ls 1 title "",\
