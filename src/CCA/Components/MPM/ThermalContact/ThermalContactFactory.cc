@@ -23,8 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
-#include <CCA/Components/MPM/ThermalContact/STThermalContact.h>
-#include <CCA/Components/MPM/ThermalContact/NullThermalContact.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 using std::cerr;
 
@@ -37,11 +36,28 @@ ThermalContactFactory::create( const ProblemSpecP     & ps,
                                      MPMFlags         * flag )
 {
    ProblemSpecP mpm_ps = ps->findBlockWithOutAttribute( "MaterialProperties" )->findBlock( "MPM" );
+   if(!mpm_ps)
+     throw ProblemSetupException("Cannot find MPM material subsection.",
+                                 __FILE__, __LINE__);
 
-   for( ProblemSpecP child = mpm_ps->findBlock( "thermal_contact" ); child != nullptr; child = child->findNextBlock( "thermal_contact" ) ) {
-     return( scinew STThermalContact(child,d_sS,lb,flag) );
+   ProblemSpecP thermalContact_ps = mpm_ps->findBlock("thermal_contact");
+   std::string thermalContactType = "null";
+
+   if (thermalContact_ps) {
+     thermalContact_ps->getWithDefault("type", thermalContactType, "STThermalContact");
    }
 
-   ProblemSpecP child; 
-   return( scinew NullThermalContact( child, d_sS, lb, flag ) );
+   if (thermalContactType == "null")
+     return (scinew NullThermalContact(thermalContact_ps, d_sS, lb, flag));
+
+   if (thermalContactType == "STThermalContact")
+     return (scinew STThermalContact(thermalContact_ps, d_sS, lb, flag));
+
+   if (thermalContactType == "simple")
+     return (scinew SimpleThermalContact(thermalContact_ps, d_sS, lb, flag));
+
+
+   throw ProblemSetupException("Unknown thermal contact type ("
+                               +thermalContactType+")", __FILE__, __LINE__);
+
 }

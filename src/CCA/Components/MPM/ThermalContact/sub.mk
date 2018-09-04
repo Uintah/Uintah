@@ -33,5 +33,6 @@ SRCDIR   := CCA/Components/MPM/ThermalContact
 SRCS     += $(SRCDIR)/ThermalContact.cc \
 	$(SRCDIR)/STThermalContact.cc \
 	$(SRCDIR)/NullThermalContact.cc \
+	$(SRCDIR)/SimpleThermalContact.cc \
 	$(SRCDIR)/ThermalContactFactory.cc
 

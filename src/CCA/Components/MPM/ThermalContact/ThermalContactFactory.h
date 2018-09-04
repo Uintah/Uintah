@@ -28,6 +28,12 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/SimulationStateP.h>
 
+#include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <CCA/Components/MPM/ThermalContact/STThermalContact.h>
+#include <CCA/Components/MPM/ThermalContact/NullThermalContact.h>
+#include <CCA/Components/MPM/ThermalContact/SimpleThermalContact.h>
+
+
 namespace Uintah {
 
   class ThermalContact;

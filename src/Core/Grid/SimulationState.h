@@ -156,7 +156,7 @@ public:
   int getNumFVMMatls() const {
     return (int)fvm_matls.size();
   }
-  MaterialSubset* getAllInOneMatl() {
+  MaterialSubset* getAllInOneMatl() const {
     return allInOneMatl;
   }
   Material* getMaterial(int idx) const {
