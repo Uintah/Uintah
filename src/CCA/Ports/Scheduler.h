@@ -32,7 +32,7 @@
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Task.h>
@@ -98,13 +98,13 @@ class Scheduler : public UintahParallelPort {
     virtual ApplicationInterface *getApplication() = 0;
   
     virtual void problemSetup( const ProblemSpecP     & prob_spec
-			                       , const SimulationStateP & state
-			                       ) = 0;
+                                               , const MaterialManagerP & materialManager
+                                               ) = 0;
 
     virtual void checkMemoryUse( unsigned long & memUsed
-				                       , unsigned long & highwater
-				                       , unsigned long & maxMemUsed
-				                       ) = 0;
+                                                       , unsigned long & highwater
+                                                       , unsigned long & maxMemUsed
+                                                       ) = 0;
     
     virtual void setStartAddr( char * start ) = 0;  // sbrk memory start location (for memory tracking)
 
@@ -166,8 +166,6 @@ class Scheduler : public UintahParallelPort {
 
     virtual void replaceDataWarehouse( int index, const GridP & grid, bool initialization = false ) = 0;
 
-    virtual void setRestartable( bool restartable ) = 0;
-    
     virtual bool isRestartInitTimestep() = 0;
 
 //        protected:

@@ -46,7 +46,7 @@ namespace Uintah
     public:
        SimpleSDInterface(
                            ProblemSpecP     & probSpec  ,
-                           SimulationStateP & simState  ,
+                           MaterialManagerP & simState  ,
                            MPMFlags         * mFlags    ,
                            MPMLabel         * mpmLabel
                           );

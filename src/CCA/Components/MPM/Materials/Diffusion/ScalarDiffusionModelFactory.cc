@@ -38,7 +38,7 @@ using namespace std;
 using namespace Uintah;
 
 ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP      & ps    ,
-                                                          SimulationStateP  & ss    ,
+                                                          MaterialManagerP  & ss    ,
                                                           MPMFlags          * flags )
 {
   ProblemSpecP child = ps->findBlock("diffusion_model");

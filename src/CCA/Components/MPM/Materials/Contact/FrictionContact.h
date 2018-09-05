@@ -35,7 +35,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 
 namespace Uintah {
@@ -76,7 +76,7 @@ WARNING
          FrictionContact(const FrictionContact &con);
          FrictionContact& operator=(const FrictionContact &con);
          
-         SimulationStateP    d_sharedState;
+         MaterialManagerP    d_materialManager;
          
          // Coefficient of friction
          double d_mu;
@@ -89,7 +89,7 @@ WARNING
       public:
          // Constructor
          FrictionContact(const ProcessorGroup* myworld,
-                         ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* lb,
+                         ProblemSpecP& ps, MaterialManagerP& d_sS,MPMLabel* lb,
                          MPMFlags* MFlag);
          
          // Destructor

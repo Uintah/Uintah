@@ -183,7 +183,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
   DataWarehouse* parent_old_dw = 
     new_dw->getOtherDataWarehouse(Task::ParentOldDW);
   
-  // double simTime = d_sharedState->getElapsedSimTime();
+  // double simTime = d_materialManager->getElapsedSimTime();
 
   simTime_vartype simTime(0);
   old_dw->get( simTime, lb->simulationTimeLabel );
@@ -421,7 +421,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
 
 {
-  // double simTime = d_sharedState->getElapsedSimTime();
+  // double simTime = d_materialManager->getElapsedSimTime();
 
   simTime_vartype simTime(0);
   old_dw->get( simTime, lb->simulationTimeLabel );

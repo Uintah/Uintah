@@ -37,7 +37,7 @@ using namespace std;
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
-TableLookup::TableLookup( SimulationStateP& sharedState ) : m_sharedState(sharedState)
+TableLookup::TableLookup( MaterialManagerP& materialManager ) : m_materialManager(materialManager)
 {
 
 
@@ -74,19 +74,19 @@ TableLookup::problemSetup( const ProblemSpecP& params )
 
       if ( type == "classic") {
 
-        m_tables.insert(std::make_pair(label, scinew ClassicTableInterface( m_sharedState )));
+        m_tables.insert(std::make_pair(label, scinew ClassicTableInterface( m_materialManager )));
         m_tables[label]->problemSetup(db_tabs);
         m_table_type = CLASSIC;
 
       } else if ( type == "coldflow") {
 
-        m_tables.insert(std::make_pair(label, scinew ColdFlow( m_sharedState )));
+        m_tables.insert(std::make_pair(label, scinew ColdFlow( m_materialManager )));
         m_tables[label]->problemSetup(db_tabs);
         m_table_type = COLDFLOW;
 
       } else if ( type == "constant" ){
 
-        m_tables.insert(std::make_pair(label, scinew ConstantProps( m_sharedState )));
+        m_tables.insert(std::make_pair(label, scinew ConstantProps( m_materialManager )));
         m_tables[label]->problemSetup(db_tabs);
         m_table_type = CONSTANT;
 
@@ -144,7 +144,7 @@ TableLookup::sched_setDependBCs( const LevelP& level,
     tsk->modifies( i->second );
   }
 
-  sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
 
 }
 
@@ -161,16 +161,13 @@ TableLookup::setDependBCs( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = m_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     const BndMapT& bc_info = m_bcHelper->get_boundary_information();
 
     for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
       if (i_bc->second.has_patch(patch->getID()) ){
-
-        //Get the iterator
-        Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
         std::string facename = i_bc->second.name;
 
@@ -186,14 +183,13 @@ TableLookup::setDependBCs( const ProcessorGroup* pc,
 
           if ( spec != NULL ){
 
-            Uintah::Iterator cell_iter =
+            Uintah::ListOfCellsIterator& cell_iter =
               m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
             if ( (*spec).bcType == DIRICHLET ){
-              for (cell_iter.reset(); !cell_iter.done(); cell_iter++){
-                IntVector c = *cell_iter;
-                var[c] = (*spec).value;
-              }
+              parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+                var(i,j,k) = (*spec).value;
+              });
             } else {
               throw InvalidValue("Error: BC type for table variable not supported for variable: "+varname,__FILE__,__LINE__);
             }

@@ -95,14 +95,13 @@
       </PropertyModelsV2>
       <StateProperties> 
         <model label="density_model" type="constant">
-          <const_property label="density" value="1.18"/>
+          <const_property label="density" value="1.0"/>
         </model>
       </StateProperties>
       <KMomentum>
         <src_x label="FractalXSrc"/>
         <src_y label="FractalYSrc"/>
         <src_z label="FractalZSrc"/>
-        <convection scheme="fourth"/>
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
@@ -125,7 +124,6 @@
       </TurbulenceModels>
       <Initialization>
         <task task_label="uVel-init" variable_label="uVel"  type="input_file">
-          <!--filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename-->
           <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
           <vector index="0"/>
           <variable type="FX"/>

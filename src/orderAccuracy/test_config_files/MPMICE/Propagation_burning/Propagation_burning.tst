@@ -5,7 +5,7 @@
 <!-- NOTE....... plotScript is hard coded!!!!!-->
 
 <gnuplot>
-  <script>plotScript.gp</script>
+  <script>Compare_burn_rates/plotScript.gp</script>
   <title>Propagation Velocity vs Time</title>
   <ylabel>Instantaneous Velocity (m/s)</ylabel>
   <xlabel>Time (s)</xlabel>

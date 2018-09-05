@@ -39,22 +39,17 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
-    Uintah::Iterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
+    Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
     IntVector iDir = patch->faceDirection( i_bc->second.face );
     BndTypeEnum my_type = i_bc->second.type;
 
     if ( my_type == WALL || my_type == INLET ){
 
-      for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-
+      parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
         // enforce dp/dn = 0
+        p(i,j,k) = p(i-iDir[0],j-iDir[1],k-iDir[2]);
 
-        IntVector c = *cell_iter;
-        IntVector c_interior = c - iDir;
-
-        p[c] = p[c_interior];
-
-      }
+      });
 
     } else if ( my_type == OUTLET ||my_type == PRESSURE ) {
 
@@ -62,14 +57,9 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
       const double sign = -(iDir[0]+iDir[1]+iDir[2]);
 
-      for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-
-        IntVector c = *cell_iter;
-        IntVector c_interior = c - iDir;
-
-        p[c] = sign*p[c_interior];
-
-      }
+      parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+        p(i,j,k) = sign*p(i-iDir[0],j-iDir[1],k-iDir[2]);
+      });
     }
   }
 }

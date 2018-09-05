@@ -36,9 +36,9 @@ namespace Uintah {
   //______________________________________________________________________
   //
   Vector computeDensityGradientVector(IntVector *nodeIdx, 
-				      constNCVariable<double> &NCsolidMass, 
-				      constNCVariable<double> &NC_CCweight, 
-				      Vector &dx);
+                                      constNCVariable<double> &NCsolidMass, 
+                                      constNCVariable<double> &NC_CCweight, 
+                                      Vector &dx);
 }
 
 #endif

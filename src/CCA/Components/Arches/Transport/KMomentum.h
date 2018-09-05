@@ -35,7 +35,7 @@
 #define MOMCONVECTION() \
         Uintah::ComputeConvectiveFlux                                       \
           get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   \
-        Uintah::parallel_for( convection_range, get_flux, scheme );         
+        Uintah::parallel_for( convection_range, get_flux, scheme );
 
 namespace Uintah{
 
@@ -99,7 +99,7 @@ private:
     typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
     typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
     typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
-    
+
     //typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType CFXT;
     //typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType CFYT;
     //typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
@@ -479,12 +479,12 @@ private:
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
-    CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(m_x_velocity_name));
-    CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(m_y_velocity_name));
-    CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(m_z_velocity_name));
+    // CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(m_x_velocity_name));
+    // CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(m_y_velocity_name));
+    // CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(m_z_velocity_name));
     CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
-    constCCVariable<double>& mu = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_mu_name));
-    constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_rho_name));
+    // constCCVariable<double>& mu = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_mu_name));
+    // constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_rho_name));
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -514,12 +514,12 @@ private:
         IntVector low_patch_range  = patch->getCellLowIndex();
         IntVector high_patch_range = patch->getCellHighIndex();
 
-        //resolve the range: 
+        //resolve the range:
         if ( my_dir == ArchesCore::XDIR ){
           GET_WALL_BUFFERED_PATCH_RANGE( low_patch_range, high_patch_range, 1, 1, 0, 1, 0, 1 );
-        } else if ( my_dir == ArchesCore::YDIR ){ 
+        } else if ( my_dir == ArchesCore::YDIR ){
           GET_WALL_BUFFERED_PATCH_RANGE( low_patch_range, high_patch_range, 0, 1, 1, 1, 0, 1 );
-        } else { 
+        } else {
           GET_WALL_BUFFERED_PATCH_RANGE( low_patch_range, high_patch_range, 0, 1, 0, 1, 1, 1 );
         }
 
@@ -528,47 +528,47 @@ private:
         CT& u_fx = tsk_info->get_const_uintah_field_add<CT>(m_x_velocity_name);
         CT& v_fy = tsk_info->get_const_uintah_field_add<CT>(m_y_velocity_name);
         CT& w_fz = tsk_info->get_const_uintah_field_add<CT>(m_z_velocity_name);
-       
-        // switch between difference convection schemes: 
-        switch (m_conv_scheme[ieqn]){ 
+
+        // switch between difference convection schemes:
+        switch (m_conv_scheme[ieqn]){
           case CENTRAL:
-            { 
-            CentralConvection scheme; 
-            MOMCONVECTION(); 
-            }
-            break; 
-          case FOURTH: 
             {
-            FourthConvection scheme; 
-            MOMCONVECTION(); 
-            }
-            break; 
-          case VANLEER:
-            { 
-            VanLeerConvection scheme; 
-            MOMCONVECTION(); 
-            }
-            break; 
-          case SUPERBEE: 
-            {
-            SuperBeeConvection scheme; 
+            CentralConvection scheme;
             MOMCONVECTION();
-            } 
-            break; 
-          case ROE: 
-            {
-            RoeConvection scheme; 
-            MOMCONVECTION(); 
             }
-            break; 
-          case UPWIND: 
+            break;
+          case FOURTH:
             {
-            UpwindConvection scheme; 
-            MOMCONVECTION(); 
+            FourthConvection scheme;
+            MOMCONVECTION();
             }
-            break; 
-          default: 
-            throw InvalidValue("Error: Momentum convection scheme not recognized.", __FILE__, __LINE__); 
+            break;
+          case VANLEER:
+            {
+            VanLeerConvection scheme;
+            MOMCONVECTION();
+            }
+            break;
+          case SUPERBEE:
+            {
+            SuperBeeConvection scheme;
+            MOMCONVECTION();
+            }
+            break;
+          case ROE:
+            {
+            RoeConvection scheme;
+            MOMCONVECTION();
+            }
+            break;
+          case UPWIND:
+            {
+            UpwindConvection scheme;
+            MOMCONVECTION();
+            }
+            break;
+          default:
+            throw InvalidValue("Error: Momentum convection scheme not recognized.", __FILE__, __LINE__);
         }
       }
 

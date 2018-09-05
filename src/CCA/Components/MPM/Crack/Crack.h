@@ -39,7 +39,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Math/Matrix3.h>
@@ -61,7 +61,7 @@ class Crack
 {
  public:
     // Constructor
-    Crack(const ProblemSpecP& ps, SimulationStateP& d_sS,
+    Crack(const ProblemSpecP& ps, MaterialManagerP& d_sS,
           Output* dataArchiver,
           MPMLabel* lb,MPMFlags* MFlag);
 
@@ -182,7 +182,7 @@ class Crack
 
     // PRIVATE DATA MEMBERS
     MPI_Comm mpi_crack_comm;
-    SimulationStateP d_sharedState;
+    MaterialManagerP d_materialManager;
     MPMFlags* flag;
     int n8or27;
     int NGP;
@@ -329,7 +329,7 @@ class Crack
     short  PointInTriangle(const Point&,const Point&,const Point&,const Point&);
     void   GetPositionToComputeCOD(const int&,const Point&,const Matrix3&,double&);
     void   OutputCrackFrontResults(const int&,
-				   const int& timeStep, const double& simTime);
+                                   const int& timeStep, const double& simTime);
 
            // Private methods in CrackPropagation.cc
     void   TrimLineSegmentWithBox(const Point&,Point&,const Point&,const Point&);

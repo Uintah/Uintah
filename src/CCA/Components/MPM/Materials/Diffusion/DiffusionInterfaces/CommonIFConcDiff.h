@@ -32,7 +32,7 @@ namespace Uintah {
   class CommonIFConcDiff : public SDInterfaceModel {
   public:
     
-    CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS,
+    CommonIFConcDiff(ProblemSpecP& ps, MaterialManagerP& sS,
                      MPMFlags* mpm_flags, MPMLabel* mpm_lb);
 
     ~CommonIFConcDiff();

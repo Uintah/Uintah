@@ -33,8 +33,8 @@
 #include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Util/Timers/Timers.hpp>
 
@@ -100,7 +100,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual ApplicationInterface *getApplication() { return m_application; };
   
     virtual void problemSetup( const ProblemSpecP     & prob_spec,
-                               const SimulationStateP & state );
+                               const MaterialManagerP & materialManager );
 
     virtual void doEmitTaskGraphDocs();
 
@@ -167,8 +167,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                      , const GridP & grid
                                      , bool initialization = false
                                      );
-
-    virtual void setRestartable( bool restartable );
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing
@@ -326,7 +324,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
       , PRINT_AFTER_EXEC  = 4
     };
 
-    bool                                m_restartable{false};
     // Some places need to know if this is a copy data timestep or
     // a normal timestep.  (A copy data timestep is AMR's current 
     // method of getting data from an old to a new grid).
@@ -341,7 +338,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     LoadBalancer         * m_loadBalancer {nullptr};
     Output               * m_output       {nullptr};
   
-    SimulationStateP                    m_sharedState{nullptr};
+    MaterialManagerP                    m_materialManager{nullptr};
     std::vector<OnDemandDataWarehouseP> m_dws;
     std::vector<TaskGraph*>             m_task_graphs;
 

@@ -44,7 +44,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
@@ -68,9 +68,9 @@ static DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
 
 //______________________________________________________________________
 NonAdiabaticTable::NonAdiabaticTable(const ProcessorGroup* myworld, 
-                                     const SimulationStateP & sharedState,
+                                     const MaterialManagerP & materialManager,
                                      const ProblemSpecP& params)
-  : FluidsBasedModel(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   m_modelComputesThermoTransportProps = true;
 
@@ -128,7 +128,7 @@ NonAdiabaticTable::problemSetup( GridP &, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
 
-  d_matl = m_sharedState->parseAndLookupMaterial( d_params, "material" );
+  d_matl = m_materialManager->parseAndLookupMaterial( d_params, "material" );
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -382,7 +382,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
       } // Over cells
     } // regions
     
-    setBC( f, "scalar-f", patch, m_sharedState, indx, new_dw, isNotInitialTimeStep );
+    setBC( f, "scalar-f", patch, m_materialManager, indx, new_dw, isNotInitialTimeStep );
 
     //__________________________________
     // initialize other properties
@@ -437,7 +437,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
       else
         eReleased[c] = temp[c] * cp - ref_temp[c] * icp;
     }
-    setBC( eReleased, "cumulativeEnergyReleased", patch, m_sharedState,indx, new_dw, isNotInitialTimeStep );
+    setBC( eReleased, "cumulativeEnergyReleased", patch, m_materialManager,indx, new_dw, isNotInitialTimeStep );
 
     //__________________________________
     //  Dump out a header for the probe point files
@@ -809,7 +809,7 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
       //__________________________________
       //  dump out the probe points
       if (d_usingProbePts ) {
-        // double simTime = m_sharedState->getElapsedSimTime();
+        // double simTime = m_materialManager->getElapsedSimTime();
         double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
         
         if (simTime >= nextDumpTime){        // is it time to dump the points

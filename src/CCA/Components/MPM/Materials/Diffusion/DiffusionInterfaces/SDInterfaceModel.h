@@ -30,8 +30,8 @@
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/Materials/Contact/ContactMaterialSpec.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
@@ -42,7 +42,7 @@ namespace Uintah {
   public:
     
     SDInterfaceModel(       ProblemSpecP      & ps
-                    ,       SimulationStateP  & sS
+                    ,       MaterialManagerP  & sS
                     ,       MPMFlags          * mpm_flags
                     ,       MPMLabel          * mpm_lb    );
 
@@ -80,7 +80,7 @@ namespace Uintah {
                                              ,  const MaterialSubset  * matls);
 
     MPMLabel* d_mpm_lb;
-    SimulationStateP d_shared_state;
+    MaterialManagerP d_materialManager;
     ContactMaterialSpec d_materials_list;
     MPMFlags* d_mpm_flags;
 
@@ -89,8 +89,7 @@ namespace Uintah {
     VarLabel* sdInterfaceFlag; // True means interface at point
 
     SDInterfaceModel(const SDInterfaceModel&);
-    SDInterfaceModel& operator=(const SDInterfaceModel&);
-    
+    SDInterfaceModel& operator=(const SDInterfaceModel&);    
   };
   
 } // end namespace Uintah

@@ -44,7 +44,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Variables/Array3.h>
@@ -101,7 +101,7 @@ OdtClosure::initializeSmagCoeff( const ProcessorGroup*,
                                  const TimeIntegratorLabel* ) 
 {
   int archIndex = 0; // only one arches material
-  int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+  int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -143,7 +143,7 @@ OdtClosure::initializeOdtvariable( const ProcessorGroup*,
                                    const TimeIntegratorLabel* ) 
 {
   int archIndex = 0; // only one arches material
-  int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+  int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -292,7 +292,7 @@ OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     delt_vartype delT;
     new_dw->get(delT, d_lab->d_delTLabel, getLevel(patches));
     double deltaT_les = delT;
@@ -1152,7 +1152,7 @@ OdtClosure::computeScalarVariance(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
@@ -1279,7 +1279,7 @@ OdtClosure::computeScalarDissipation(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     
     constCCVariable<double> viscosity;
     constCCVariable<double> scalar;

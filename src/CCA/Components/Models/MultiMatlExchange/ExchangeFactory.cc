@@ -44,14 +44,14 @@ ExchangeFactory::~ExchangeFactory()
 //
 ExchangeModel*
 ExchangeFactory::create(const ProblemSpecP     & matl_ps,
-                        const SimulationStateP & sharedState)
+                        const MaterialManagerP & materialManager)
 {
-  int numMatls = sharedState->getNumMatls();
+  int numMatls = materialManager->getNumMatls();
   
   //__________________________________
   //    single matl 
   if( numMatls == 1){
-    return ( scinew ExchangeModels::ScalarExch( matl_ps, sharedState) );
+    return ( scinew ExchangeModels::ScalarExch( matl_ps, materialManager) );
   }
   
   ProblemSpecP exchg_ps = matl_ps->findBlock("exchange_properties");
@@ -60,7 +60,7 @@ ExchangeFactory::create(const ProblemSpecP     & matl_ps,
   //__________________________________
   //    default model
   if( model_ps == nullptr ) {
-    return ( scinew ExchangeModels::ScalarExch( matl_ps, sharedState ));
+    return ( scinew ExchangeModels::ScalarExch( matl_ps, materialManager ));
   }
   
   //__________________________________
@@ -70,7 +70,7 @@ ExchangeFactory::create(const ProblemSpecP     & matl_ps,
   std::string model = attributes["type"];
 
   if ( model == "slip" ) {
-    return ( scinew ExchangeModels::SlipExch( exchg_ps, sharedState ));
+    return ( scinew ExchangeModels::SlipExch( exchg_ps, materialManager ));
   }      
   else {
     throw ProblemSetupException("\nERROR: Unknown exchange model.  "+model,__FILE__, __LINE__);

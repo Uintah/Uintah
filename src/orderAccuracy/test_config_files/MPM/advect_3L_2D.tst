@@ -11,13 +11,13 @@
     <x>1</x>
     
     <replace_lines>
-      <gravity>[100,0,0]</gravity>
+      <gravity>[100,0,0]' /></gravity>
     </replace_lines>
     
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=2]/patches :[1,1,1]
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=0]' />/patches" value = '[1,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=1]' />/patches" value = '[1,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=2]' />/patches" value = '[1,1,1]' />
     </replace_values>
 </Test>
 
@@ -28,13 +28,13 @@
     <x>2</x>
     
     <replace_lines>
-      <gravity>[100,0,0]</gravity>
+      <gravity>[100,0,0]' /></gravity>
     </replace_lines>
     
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=1]/patches :[2,2,1]
-         /Uintah_specification/Grid/Level/Box[@label=2]/patches :[1,1,1]
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=0]' />/patches" value = '[1,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=1]' />/patches" value = '[2,2,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=2]' />/patches" value = '[1,1,1]' />
     </replace_values>
 </Test>
 
@@ -45,13 +45,13 @@
     <x>3</x>
     
     <replace_lines>
-      <gravity>[100,0,0]</gravity>
+      <gravity>[100,0,0]' /></gravity>
     </replace_lines>
     
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,3,1]
-         /Uintah_specification/Grid/Level/Box[@label=1]/patches :[2,2,1]
-         /Uintah_specification/Grid/Level/Box[@label=2]/patches :[1,1,1]
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=0]' />/patches" value = '[3,3,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=1]' />/patches" value = '[2,2,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=2]' />/patches" value = '[1,1,1]' />
     </replace_values>
 </Test>
 
@@ -63,13 +63,13 @@
     <x>4</x>
     
     <replace_lines>
-      <gravity>[100,100,0]</gravity>
+      <gravity>[100,100,0]' /></gravity>
     </replace_lines>
     
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=2]/patches :[1,1,1]
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=0]' />/patches" value = '[1,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=1]' />/patches" value = '[1,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=2]' />/patches" value = '[1,1,1]' />
     </replace_values>
 </Test>
 
@@ -80,13 +80,13 @@
     <x>5</x>
     
     <replace_lines>
-      <gravity>[100,100,0]</gravity>
+      <gravity>[100,100,0]' /></gravity>
     </replace_lines>
     
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
-         /Uintah_specification/Grid/Level/Box[@label=1]/patches :[2,2,1]
-         /Uintah_specification/Grid/Level/Box[@label=2]/patches :[1,1,1]
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=0]' />/patches" value = '[1,1,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=1]' />/patches" value = '[2,2,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=2]' />/patches" value = '[1,1,1]' />
     </replace_values>
 </Test>
 
@@ -97,13 +97,13 @@
     <x>6</x>
     
     <replace_lines>
-      <gravity>[100,100,0]</gravity>
+      <gravity>[100,100,0]' /></gravity>
     </replace_lines>
     
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/patches :[3,3,1]
-         /Uintah_specification/Grid/Level/Box[@label=1]/patches :[2,2,1]
-         /Uintah_specification/Grid/Level/Box[@label=2]/patches :[1,1,1]
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=0]' />/patches" value = '[3,3,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=1]' />/patches" value = '[2,2,1]' />
+         <entry path="/Uintah_specification/Grid/Level/Box[@label=2]' />/patches" value = '[1,1,1]' />
     </replace_values>
 </Test>
 

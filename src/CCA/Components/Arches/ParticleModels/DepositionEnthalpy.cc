@@ -7,8 +7,8 @@
 
 using namespace Uintah;
 
-DepositionEnthalpy::DepositionEnthalpy( std::string task_name, int matl_index, const int N, SimulationStateP shared_state  ) :
-TaskInterface( task_name, matl_index ), _Nenv(N),_shared_state(shared_state) {
+DepositionEnthalpy::DepositionEnthalpy( std::string task_name, int matl_index, const int N, MaterialManagerP materialManager  ) :
+TaskInterface( task_name, matl_index ), _Nenv(N),_materialManager(materialManager) {
 
 }
 
@@ -47,7 +47,7 @@ DepositionEnthalpy::problemSetup( ProblemSpecP& db ){
   // Need a density
   _density_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);
   double init_particle_density = ArchesCore::get_inlet_particle_density( db );
-  double ash_mass_frac = coal_helper.get_coal_db().ash_mf; 
+  double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
   double initial_diameter = 0.0;
   double p_volume = 0.0;
   for ( int i = 0; i < _Nenv; i++ ){
@@ -62,8 +62,6 @@ DepositionEnthalpy::problemSetup( ProblemSpecP& db ){
   } else {
     throw ProblemSetupException("Error: <Coal> is missing the <Properties> section.", __FILE__, __LINE__);
   }
-
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
 
 }
 

@@ -46,86 +46,86 @@ namespace PTR                   // Portable TongeRamesh
   const double sqtwthds = sqrt(2.0/3.0);
 
   struct Flags{
-	bool implicit;
-	bool useDamage;
-	bool usePlasticity;
-	bool useGranularPlasticity;
-	bool with_color;
-	bool useOldStress;
-	bool artificialViscosity;
-	bool artificialViscosityHeating;
-	
-	// Erosion Algorithms
-	bool doErosion;
-	bool allowNoTension;
-	bool allowNoShear;
-	
-	bool setStressToZero;
+        bool implicit;
+        bool useDamage;
+        bool usePlasticity;
+        bool useGranularPlasticity;
+        bool with_color;
+        bool useOldStress;
+        bool artificialViscosity;
+        bool artificialViscosityHeating;
+        
+        // Erosion Algorithms
+        bool doErosion;
+        bool allowNoTension;
+        bool allowNoShear;
+        
+        bool setStressToZero;
   };
 
   struct ArtificialViscosity{
-	double coeff1;
-	double coeff2;
+        double coeff1;
+        double coeff2;
   };
 
   // Create a datatype for the flaw distribution:
   struct flawDistributionData {
-	int numCrackFamilies;     // Number of families to discritize the distribution into
-	double meanFlawSize;      // Mean size of the flaws
-	double flawDensity;       // Mean flaw density in the sample
-	double stdFlawSize;       // Standard deviation of the flaw size
-	std::string type;              // Type of the distribution (delta, normal, pareto)
-	double minFlawSize;       // Minimum flaw for Pareto dist
-	double maxFlawSize;       // Maximum flaw for Pateto dist
-	double exponent;          // Exponent for Pateto dist
-	bool   randomizeDist;     // Make each particle have a unique distribution
-	int    randomSeed;        // Seed for random number generation
-	int    randomMethod;      // Method for selecting bin size and location
-	double binBias;           // Exponent for flaw distribution bin bias (1.0 for no bias)
-	bool   useEtaField;       // Flag for using a fourier field to define the local flaw density
-	std::string etaFilename;       // File name containing fourier data for flaw density
-	bool   useSizeField;      // Flag for using a fourier field to define the local flaw size shift
-	std::string sizeFilename;       // File name containing fourier data for flaw size
+        int numCrackFamilies;     // Number of families to discritize the distribution into
+        double meanFlawSize;      // Mean size of the flaws
+        double flawDensity;       // Mean flaw density in the sample
+        double stdFlawSize;       // Standard deviation of the flaw size
+        std::string type;              // Type of the distribution (delta, normal, pareto)
+        double minFlawSize;       // Minimum flaw for Pareto dist
+        double maxFlawSize;       // Maximum flaw for Pateto dist
+        double exponent;          // Exponent for Pateto dist
+        bool   randomizeDist;     // Make each particle have a unique distribution
+        int    randomSeed;        // Seed for random number generation
+        int    randomMethod;      // Method for selecting bin size and location
+        double binBias;           // Exponent for flaw distribution bin bias (1.0 for no bias)
+        bool   useEtaField;       // Flag for using a fourier field to define the local flaw density
+        std::string etaFilename;       // File name containing fourier data for flaw density
+        bool   useSizeField;      // Flag for using a fourier field to define the local flaw size shift
+        std::string sizeFilename;       // File name containing fourier data for flaw size
   };
 
   //Create datatype for brittle damage
   struct BrittleDamageData {
-	bool printDamage;    /* Flag to print damage */
+        bool printDamage;    /* Flag to print damage */
 
-	// used for Bhasker's damage model:
-	double KIc;               // Critical stress intensity factor
-	double mu;                // Crack face friction coefficient
-	double phi;               // angle between crack normal and max comp stress
-	double cgamma;            // Exponent for crack growth speed
-	double alpha;             // Multiplier for max crack velocity
-	double criticalDamage;    // Damage level to start granular flow or mark as failed
-	double maxDamage;         // Damage level to stop damage evolution
-	// Use plane strain assumption for SCM calculation
-	bool usePlaneStrain;
+        // used for Bhasker's damage model:
+        double KIc;               // Critical stress intensity factor
+        double mu;                // Crack face friction coefficient
+        double phi;               // angle between crack normal and max comp stress
+        double cgamma;            // Exponent for crack growth speed
+        double alpha;             // Multiplier for max crack velocity
+        double criticalDamage;    // Damage level to start granular flow or mark as failed
+        double maxDamage;         // Damage level to stop damage evolution
+        // Use plane strain assumption for SCM calculation
+        bool usePlaneStrain;
 
-	// Control damage evolution timestepping:
-	double maxDamageInc; /* Maximum damage increment in a time step */
-	bool   useDamageTimestep; // Control the global timestep with the damage timestep
-	bool   useOldStress;      // Compute the damage based on the stress from the previous timestep
-	double dt_increaseFactor;
-	bool   incInitialDamage; // Include the initial flaw as a part of the damage level
-	bool   doFlawInteraction; // do the ellipse calculation for flaw interactions
+        // Control damage evolution timestepping:
+        double maxDamageInc; /* Maximum damage increment in a time step */
+        bool   useDamageTimestep; // Control the global timestep with the damage timestep
+        bool   useOldStress;      // Compute the damage based on the stress from the previous timestep
+        double dt_increaseFactor;
+        bool   incInitialDamage; // Include the initial flaw as a part of the damage level
+        bool   doFlawInteraction; // do the ellipse calculation for flaw interactions
   };
 
   typedef enum GPModel {TwoSurface, SingleSurface} GPModel;
   struct granularPlasticityData {
-	double timeConstant;      // Time constant for viscoplastic update (0 is rate independent)
-	double JGP_loc;           // Value of JGP to trigure localized particles
+        double timeConstant;      // Time constant for viscoplastic update (0 is rate independent)
+        double JGP_loc;           // Value of JGP to trigure localized particles
 
-	// Parameters that define the Granular plastic yeild surface:
-	double A;                 // Damaged scale parameter
-	double B;                 // Damaged hydrostatic tensile strength
-	int    yeildSurfaceType;  // 1 for cone with hemispherical cap, 2 for parabola
+        // Parameters that define the Granular plastic yeild surface:
+        double A;                 // Damaged scale parameter
+        double B;                 // Damaged hydrostatic tensile strength
+        int    yeildSurfaceType;  // 1 for cone with hemispherical cap, 2 for parabola
 
-	// P-alpha compaction model parameters:
-	double Pc;                // Pressure (+ compression) for full compaction
-	double alpha_e;           // Distension corrisponding to elastic compaction pressure
-	double Pe;                // Pressure required to start compaction at J^{GP}=\alpha_e
+        // P-alpha compaction model parameters:
+        double Pc;                // Pressure (+ compression) for full compaction
+        double alpha_e;           // Distension corrisponding to elastic compaction pressure
+        double Pe;                // Pressure required to start compaction at J^{GP}=\alpha_e
     GPModel GPModelType;        // TwoSurface for the original implimentation, SingleSurface for the
     // new and imporved model.
     GFMS::solParam GFMSsolParams;
@@ -144,7 +144,7 @@ namespace PTR                   // Portable TongeRamesh
     double timeConstant;
   };
 
-  void computeIncStress(	const BrittleDamageData brittle_damage,
+  void computeIncStress(        const BrittleDamageData brittle_damage,
                             const double eta3d,
                             const double matrixStress[2],
                             double incStress[3],
@@ -152,7 +152,7 @@ namespace PTR                   // Portable TongeRamesh
                             const double parentDamage,
                             const PState state);
 
-  double calculateDamageGrowth(	const BrittleDamageData brittle_damage,
+  double calculateDamageGrowth( const BrittleDamageData brittle_damage,
                                 const Matrix3x3 stress,
                                 const double N[],
                                 const double s[],
@@ -193,29 +193,29 @@ namespace PTR                   // Portable TongeRamesh
                                  const double J = 1.0
                                  );
 
-  double calculateShearPrefactor(	const double currentDamage, 
+  double calculateShearPrefactor(       const double currentDamage, 
                                     const PState state
                                     );
 
-  double calc_yeildFunc_g_gs_gp(	const granularPlasticityData gpData,
+  double calc_yeildFunc_g_gs_gp(        const granularPlasticityData gpData,
                                     const double sigma_s,
                                     const double sigma_p,
                                     double *gs, 
                                     double *gp);
 
-  double artificialBulkViscosity(	const double Dkk, 
+  double artificialBulkViscosity(       const double Dkk, 
                                     const double c_bulk, 
                                     const double rho,
                                     const double dx,
                                     const ArtificialViscosity av
                                     );
 
-  double computeStableTimeStep(	const ModelData initialData,
+  double computeStableTimeStep( const ModelData initialData,
                                 const Vector3 pVelocity,
                                 const Vector3 dx,
                                 const double pMass,
                                 const double pVolume);
-								
+                                                                
   void ComputeStressTensorInnerLoop(
                                     // Data Structures
                                     const Flags flags,
@@ -400,6 +400,6 @@ namespace PTR                   // Portable TongeRamesh
                             const double dx_ave, unsigned long seedArray[],
                             unsigned long nSeedValues
                             );
-}	// end namespace PTR
+}       // end namespace PTR
 
 #endif /* TONGERAMESHPORTABLE_H */ 

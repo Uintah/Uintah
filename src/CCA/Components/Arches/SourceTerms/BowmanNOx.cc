@@ -1,6 +1,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -14,7 +14,7 @@ using namespace Uintah;
 
 BowmanNOx::BowmanNOx( std::string src_name, ArchesLabel* field_labels,
                             vector<std::string> req_label_names, std::string type )
-: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
+: SourceTermBase(src_name, field_labels->d_materialManager, req_label_names, type), _field_labels(field_labels)
 {
 
 
@@ -88,7 +88,7 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   tsk->requires( Task::OldDW, _temperature_label, gType, nGhosts );
   tsk->requires( Task::OldDW, _field_labels->d_volFractionLabel, gType, nGhosts );
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 //---------------------------------------------------------------------------
@@ -107,7 +107,7 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> rate;
     Ghost::GhostType  gType;
@@ -174,10 +174,10 @@ BowmanNOx::sched_initialize( const LevelP& level, SchedulerP& sched )
   tsk->computes(_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter, _shared_state->allArchesMaterials()->getUnion());
+    tsk->computes(*iter, _materialManager->allMaterials( "Arches" )->getUnion());
   }
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 void
@@ -192,7 +192,7 @@ BowmanNOx::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> src;
     new_dw->allocateAndPut( src, _src_label, matlIndex, patch );

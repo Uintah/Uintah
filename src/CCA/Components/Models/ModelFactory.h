@@ -26,7 +26,7 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_ModelFactory_h
 #define Packages_Uintah_CCA_Components_Examples_ModelFactory_h
 
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <vector>
@@ -71,9 +71,9 @@ namespace Uintah {
     
     static std::vector<ModelInterface*>
     makeModels(const ProcessorGroup   * myworld,
-	       const SimulationStateP   sharedState,
-	       const ProblemSpecP& orig_or_restart_ps, 
-	       const ProblemSpecP& prob_spec);
+               const MaterialManagerP   materialManager,
+               const ProblemSpecP& orig_or_restart_ps, 
+               const ProblemSpecP& prob_spec);
   };
 }
 

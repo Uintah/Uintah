@@ -40,7 +40,7 @@
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -61,18 +61,26 @@ static DebugStream dbg("ARCHES", false);
 
 //--------------------------------------------------------------------------------------------------
 Arches::Arches(const ProcessorGroup* myworld,
-               const SimulationStateP sharedState) :
-  ApplicationCommon(myworld, sharedState)
+               const MaterialManagerP materialManager) :
+  ApplicationCommon(myworld, materialManager)
 {
   m_MAlab               = 0;
   m_nlSolver            = 0;
   m_physicalConsts      = 0;
-  m_doing_restart        = false;
+  m_doing_restart       = false;
   m_with_mpmarches      = false;
 
   //lagrangian particles:
   m_particlesHelper = scinew ArchesParticlesHelper();
   m_particlesHelper->sync_with_arches(this);
+
+#ifdef OUTPUT_WITH_BAD_DELTA_T
+  // The other reduciton vars are set in the problem setup because the
+  // UPS file needs to be read first.
+  activateReductionVariable(     outputTimeStep_name, true );
+  activateReductionVariable( checkpointTimeStep_name, true );
+  activateReductionVariable(      endSimulation_name, true );
+#endif
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -102,7 +110,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
                             GridP            & grid )
 {
   ArchesMaterial* mat= scinew ArchesMaterial();
-  m_sharedState->registerArchesMaterial(mat);
+  m_materialManager->registerMaterial( "Arches", mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   m_arches_spec = db;
 
@@ -134,7 +142,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
   NonlinearSolver::NLSolverBuilder* builder;
   if (   db->findBlock("ExplicitSolver") ) {
 
-    builder = scinew ExplicitSolver::Builder( m_sharedState,
+    builder = scinew ExplicitSolver::Builder( m_materialManager,
                                               m_MAlab,
                                               m_physicalConsts,
                                               d_myworld,
@@ -144,7 +152,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
 
   } else if ( db->findBlock("KokkosSolver")) {
 
-    builder = scinew KokkosSolver::Builder( m_sharedState,
+    builder = scinew KokkosSolver::Builder( m_materialManager,
                                             d_myworld,
                                             m_solver,
                                             this );
@@ -158,7 +166,13 @@ Arches::problemSetup( const ProblemSpecP     & params,
   m_nlSolver = builder->build();
   delete builder;
 
-  m_nlSolver->problemSetup( db, m_sharedState, grid );
+  m_nlSolver->problemSetup( db, m_materialManager, grid );
+
+  // Must be set here rather than the constructor because the value
+  // is based on the solver being requested in the problem setup.
+  bool mayRecompute = m_nlSolver->mayRecomputeTimeStep();
+  activateReductionVariable( recomputeTimeStep_name, mayRecompute );
+  activateReductionVariable(     abortTimeStep_name, mayRecompute );
 
   // tell the infrastructure how many tasksgraphs are needed.
   int num_task_graphs=m_nlSolver->taskGraphsRequested();
@@ -173,7 +187,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
     }
 
     m_analysis_modules = AnalysisModuleFactory::create(d_myworld,
-                                                       m_sharedState,
+                                                       m_materialManager,
                                                        params);
 
     if(m_analysis_modules.size() != 0) {
@@ -181,8 +195,9 @@ Arches::problemSetup( const ProblemSpecP     & params,
       for( iter  = m_analysis_modules.begin();
            iter != m_analysis_modules.end(); iter++) {
         AnalysisModule* am = *iter;
+        std::vector<std::vector<const VarLabel* > > dummy;
         am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
-        am->problemSetup(params, materials_ps, grid);
+        am->problemSetup(params, materials_ps, grid, dummy, dummy);
       }
     }
   }
@@ -206,7 +221,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   //=========== NEW TASK INTERFACE ==============================
   if ( m_do_lagrangian_particles ) {
-    m_particlesHelper->set_materials(m_sharedState->allArchesMaterials());
+    m_particlesHelper->set_materials(m_materialManager->allMaterials( "Arches" ));
     m_particlesHelper->schedule_initialize(level, sched);
   }
 
@@ -330,11 +345,6 @@ int Arches::computeTaskGraphIndex( const int timeStep )
 //--------------------------------------------------------------------------------------------------
 double Arches::recomputeDelT(const double delT ) {
   return m_nlSolver->recomputeDelT( delT );
-}
-
-//--------------------------------------------------------------------------------------------------
-bool Arches::restartableTimeSteps() {
-  return m_nlSolver->restartableTimeSteps();
 }
 
 //-------------------------------------------------------------------------------------------------

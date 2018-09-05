@@ -5,8 +5,8 @@
 
 namespace Uintah{
 
-WallHFVariable::WallHFVariable( std::string task_name, int matl_index, SimulationStateP shared_state ) :
-  TaskInterface( task_name, matl_index ), _shared_state(shared_state) {
+WallHFVariable::WallHFVariable( std::string task_name, int matl_index, MaterialManagerP materialManager ) :
+  TaskInterface( task_name, matl_index ), _materialManager(materialManager) {
 
   _flux_x = task_name + "_x";
   _flux_y = task_name + "_y";
@@ -183,7 +183,7 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Vector DX = patch->dCell();
 
-//   int timeStep = _shared_state->getCurrentTopLevelTimeStep();
+//   int timeStep = _materialManager->getCurrentTopLevelTimeStep();
   int timeStep = tsk_info->get_timeStep();
  
   //if ( ( timeStep )%_f + 1 == 1 ){

@@ -4,8 +4,8 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 
@@ -31,7 +31,7 @@ class ModelBase{
 public: 
 
   ModelBase( std::string modelName, 
-             SimulationStateP& sharedState, 
+             MaterialManagerP& materialManager, 
              ArchesLabel* fieldLabels,
              std::vector<std::string> icLabelNames,
              std::vector<std::string> scalarLabelNames,
@@ -93,7 +93,7 @@ protected:
 
   std::string d_modelName; 
   
-  SimulationStateP& d_sharedState; 
+  MaterialManagerP& d_materialManager; 
 
   ArchesLabel* d_fieldLabels;
 

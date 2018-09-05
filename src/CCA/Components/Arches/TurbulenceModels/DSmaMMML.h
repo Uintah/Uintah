@@ -54,10 +54,10 @@ private:
   std::string m_u_vel_name;
   //int Type_filter;
   double m_epsilon;
-  Uintah::FILTER Type_filter;
+  Uintah::ArchesCore::FILTER Type_filter;
   std::string m_IsI_name;
   std::string m_volFraction_name;
-  FilterTest m_Filter;
+  Uintah::ArchesCore::TestFilter m_Filter;
   };
 
 //--------------------------------------------------------------------------------------------------
@@ -84,8 +84,8 @@ DSmaMMML<TT>::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP params_root = db->getRootNode();
   db->require("epsilon",m_epsilon);
-  
-  
+
+
   m_IsI_name = "strainMagnitudeLabel";
   m_volFraction_name = "volFraction";
 
@@ -163,7 +163,7 @@ DSmaMMML<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::Variable
   if (packed_tasks ){
    nG = 3;
    //nGrho = 2;
-  } 
+  }
  register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( "filterbeta11"  , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
@@ -257,7 +257,7 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::BlockRange range1(low_filter, high_filter );
 
   FieldTool< TT > c_field_tool(tsk_info);
-  
+
   //typedef typename ArchesCore::VariableHelper< TT >::ConstXFaceType TX;
   //typedef typename ArchesCore::VariableHelper< TT >::ConstYFaceType TY;
   //typedef typename ArchesCore::VariableHelper< TT >::ConstZFaceType TZ;
@@ -335,9 +335,10 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filters23.initialize(0.0);
   filters33.initialize(0.0);
 
-  computefilterIsInsijv2 get_filterIsIsij(filterIsI, filters11, filters22, 
-                                        filters33, filters12, filters13, 
-                                        filters23, (*filterRhoU), (*filterRhoV), (*filterRhoW), (*filterRho), Dx,vol_fraction);
+  Uintah::ArchesCore::computeFilterIsInsijv2 get_filterIsIsij(filterIsI, filters11, filters22,
+                                                              filters33, filters12, filters13,
+                                                              filters23, (*filterRhoU), (*filterRhoV),
+                                                              (*filterRhoW), (*filterRho), Dx,vol_fraction);
   Uintah::parallel_for(range1,get_filterIsIsij);
 
   CCVariable<double>& alpha11 = tsk_info->get_uintah_field_add< CCVariable<double> >("alpha11",nGhosts1 );

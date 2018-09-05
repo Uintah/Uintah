@@ -29,7 +29,7 @@
 
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <vector>
@@ -48,7 +48,7 @@ namespace Uintah {
   class ImplicitHeatConduction {
   public:
     
-    ImplicitHeatConduction(SimulationStateP& ss,MPMLabel* lb, MPMFlags* mflags);
+    ImplicitHeatConduction(MaterialManagerP& ss,MPMLabel* lb, MPMFlags* mflags);
     ~ImplicitHeatConduction();
 
     void problemSetup(std::string solver_type);
@@ -150,7 +150,7 @@ namespace Uintah {
 
     Solver* d_HC_solver;
 
-    SimulationStateP d_sharedState;
+    MaterialManagerP d_materialManager;
     int NGP, NGN;
 
     ImplicitHeatConduction(const ImplicitHeatConduction&);

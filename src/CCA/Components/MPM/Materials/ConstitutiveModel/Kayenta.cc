@@ -70,11 +70,11 @@ extern "C"{
 #endif
   void KAYENTA_CHECK_PARAMS(double UI[]);
   void KAYENTA_UPDATE_STATE(int &nblk, double &dt, double UI[],
-			    double D[], double stress[], double svarg[],
-			    double &USM);
+                            double D[], double stress[], double svarg[],
+                            double &USM);
   void KAYENTA_REQUEST_XTRA_VARS(double UI[], int &nx,
-				 char namea[], char keya[], double xinit[],
-				 double rdim[], int iadvct[], int itype[]);
+                                 char namea[], char keya[], double xinit[],
+                                 double rdim[], int iadvct[], int itype[]);
 }
 // End fortran functions.
 ////////////////////////////////////////////////////////////////////////////////

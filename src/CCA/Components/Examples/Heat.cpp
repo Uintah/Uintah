@@ -15,8 +15,8 @@
 using namespace Uintah;
 
 Heat::Heat(const ProcessorGroup* myworld,
-	   const SimulationStateP sharedState) :
-  ApplicationCommon(myworld, sharedState)
+	   const MaterialManagerP materialManager) :
+  ApplicationCommon(myworld, materialManager)
 {
   d_lb    = scinew ExamplesLabel();
   d_mat   = 0;
@@ -43,7 +43,7 @@ void Heat::problemSetup(const ProblemSpecP&     params,
   heat->require("R0", d_r0);
   heat->getWithDefault("gamma", d_gamma, 1.0);
 
-  m_sharedState->registerSimpleMaterial(d_mat);
+  m_materialManager->registerSimpleMaterial(d_mat);
 }
 
 void Heat::scheduleInitialize(const LevelP&     level,
@@ -51,7 +51,7 @@ void Heat::scheduleInitialize(const LevelP&     level,
 {
   Task *task = scinew Task("Heat::initialize", this, &Heat::initialize);
   task->computes(d_lb->temperature_nc);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 void Heat::initialize(const ProcessorGroup* pg,
@@ -104,7 +104,7 @@ void Heat::scheduleComputeStableTimeStep(const LevelP&     level,
   Task *task = scinew Task("Heat::computeStableTimeStep", this,
                            &Heat::computeStableTimeStep);
   task->computes(getDelTLabel(), level.get_rep());
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 void Heat::computeStableTimeStep(const ProcessorGroup* pg,
@@ -123,7 +123,7 @@ void Heat::scheduleTimeAdvance( const LevelP&     level,
   task->requires(Task::OldDW, d_lb->temperature_nc,
                  Ghost::AroundNodes, Ghost::AroundNodes, 1);
   task->computes(d_lb->temperature_nc);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
 }
 

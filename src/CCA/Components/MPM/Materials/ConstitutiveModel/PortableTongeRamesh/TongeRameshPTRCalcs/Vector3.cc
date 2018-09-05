@@ -33,21 +33,21 @@
 
 
 #include "Vector3.h"
-#include <stdexcept> 	// std::out_of_range
+#include <stdexcept>    // std::out_of_range
 
 Vector3::Vector3()
 {
-	_values[0] = _values[1] = _values[2] = 0.0;
+        _values[0] = _values[1] = _values[2] = 0.0;
 }
 
 Vector3::Vector3(const double val){
-	_values[0] = _values[1] = _values[2] = val;
+        _values[0] = _values[1] = _values[2] = val;
 }
 
 Vector3::Vector3(const double v1, const double v2, const double v3){
-	_values[0] = v1;
-	_values[1] = v2;
-	_values[2] = v3;
+        _values[0] = v1;
+        _values[1] = v2;
+        _values[2] = v3;
 }
 
 
@@ -57,31 +57,31 @@ Vector3::~Vector3()
 
 double& Vector3::operator[] (const int idx)
 {
-	if (idx < 0 || idx > 2)
-	{
-		throw std::out_of_range("Vector3::operator[]: Index must be in [0,2]");
-	}
-	return _values[idx];
+        if (idx < 0 || idx > 2)
+        {
+                throw std::out_of_range("Vector3::operator[]: Index must be in [0,2]");
+        }
+        return _values[idx];
 }
 
 double Vector3::operator[] (const int idx) const{
-	if (idx < 0 || idx > 2)
-	{
-		throw std::out_of_range("Vector3::operator[]: Index must be in [0,2]");
-	}
-	return _values[idx];
+        if (idx < 0 || idx > 2)
+        {
+                throw std::out_of_range("Vector3::operator[]: Index must be in [0,2]");
+        }
+        return _values[idx];
 }
 
 double Vector3::min() const
 {
-	double ans = _values[0];
-	if (_values[1] < ans)
-	{
-		ans = _values[1];
-	}
-	if (_values[2] < ans)
-	{
-		ans = _values[2];
-	}
-	return ans;
+        double ans = _values[0];
+        if (_values[1] < ans)
+        {
+                ans = _values[1];
+        }
+        if (_values[2] < ans)
+        {
+                ans = _values[2];
+        }
+        return ans;
 }

@@ -293,14 +293,13 @@ private:
       }
 
       if ( spec->bcType == CUSTOM ){
-        Uintah::Iterator cell_iter
+        Uintah::ListOfCellsIterator& cell_iter
           = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-        cell_iter.reset();
-        for (; !cell_iter.done(); cell_iter++){
-
-          IntVector ijk = *cell_iter;
-          IntVector orig_ijk = *cell_iter;
+        parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+           
+          IntVector ijk(i,j,k);
+          IntVector orig_ijk(i,j,k);
 
           ijk -= m_boundary_info.relative_ijk;
           ijk[0] = I;
@@ -314,7 +313,7 @@ private:
               var[orig_ijk+shift] = m_boundary_info.default_value * delta + default_var[orig_ijk];
             }
           }
-        }
+        });
       }
     }
   }

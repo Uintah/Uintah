@@ -283,7 +283,7 @@ namespace Uintah{
                                  void* stream,
                                  int deviceID,
                                  bool modifies_divQ,
-				 int timeStep,
+                                 int timeStep,
                                  Task::WhichDW which_abskg_dw,
                                  Task::WhichDW whichd_sigmaT4_dw,
                                  Task::WhichDW which_celltype_dw );

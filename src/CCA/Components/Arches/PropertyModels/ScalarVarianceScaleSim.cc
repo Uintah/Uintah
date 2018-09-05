@@ -7,14 +7,14 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 //Method: Constructor
 //---------------------------------------------------------------------------
-ScalarVarianceScaleSim::ScalarVarianceScaleSim( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
+ScalarVarianceScaleSim::ScalarVarianceScaleSim( std::string prop_name, MaterialManagerP& materialManager ) : PropertyModelBase( prop_name, materialManager )
 {
   _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() ); 
 
   // Evaluated before or after table lookup: 
   _before_table_lookup = true; 
 
-  _boundary_condition = scinew BoundaryCondition_new( shared_state->getArchesMaterial(0)->getDWIndex() ); 
+  _boundary_condition = scinew BoundaryCondition_new( materialManager->getMaterial( "Arches", 0)->getDWIndex() ); 
 
 }
 
@@ -104,7 +104,7 @@ void ScalarVarianceScaleSim::sched_computeProp( const LevelP& level, SchedulerP&
   tsk->requires( Task::NewDW, _filter_vol_label, Ghost::None, 0); 
   tsk->requires( Task::NewDW, _celltype_label,     Ghost::AroundCells, 1); 
 
-  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+  sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
 
 }
 
@@ -123,7 +123,7 @@ void ScalarVarianceScaleSim::computeProp(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     Array3<double> filterRho(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     Array3<double> filterRhoPhi(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
@@ -220,7 +220,7 @@ void ScalarVarianceScaleSim::sched_initialize( const LevelP& level, SchedulerP& 
   Task* tsk = scinew Task(taskname, this, &ScalarVarianceScaleSim::initialize);
   tsk->computes(_prop_label); 
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -237,7 +237,7 @@ void ScalarVarianceScaleSim::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> prop; 
 

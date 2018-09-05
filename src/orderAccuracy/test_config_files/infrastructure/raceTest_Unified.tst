@@ -1,15 +1,21 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <start>
-<upsFile>advect.ups</upsFile>
+
+ <!-- optional path to inputs directory 
+      default is src/StandAlone/inputs  -->
+<inputs_path></inputs_path>
+
+
+<upsFile>ICE/advect.ups</upsFile>
 
 <gnuplot>
 </gnuplot>
 
 <AllTests>
   <replace_lines>
-    <max_Timesteps>10</max_Timesteps>
+    <max_Timesteps>10           </max_Timesteps>
     <resolution> [100,100,100]  </resolution>
-    <patches>      [3,3,3]    </patches>
+    <patches>      [3,3,3]      </patches>
   </replace_lines>
 </AllTests>
 

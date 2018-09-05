@@ -26,7 +26,7 @@
 #define Models_MultiMatlExchange_ExchangeFactory_h
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 
 namespace Uintah {
@@ -39,7 +39,7 @@ namespace Uintah {
           
     public:      
       static ExchangeModel* create(const ProblemSpecP     & prob_spec,
-                                   const SimulationStateP & sharedState);
+                                   const MaterialManagerP & materialManager);
   };
 }
 

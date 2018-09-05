@@ -79,7 +79,7 @@ public:
                   THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
 
   Arches(const ProcessorGroup* myworld,
-	 const SimulationStateP sharedState);
+	 const MaterialManagerP materialManager);
 
   virtual ~Arches();
 
@@ -114,8 +114,6 @@ public:
   }
 
   virtual double recomputeDelT(const double delT);
-
-  virtual bool restartableTimeSteps();
 
   void setWithMPMARCHES() {
     m_with_mpmarches = true;

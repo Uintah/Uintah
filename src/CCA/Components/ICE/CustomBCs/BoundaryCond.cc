@@ -32,7 +32,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -402,7 +402,7 @@ void get_rho_micro(std::vector<CCVariable<double> >& rho_micro,
                    std::vector<constCCVariable<double> >& sp_vol_CC,
                    const Patch* patch,
                    const string& which_Var,
-                   SimulationStateP& sharedState,
+                   MaterialManagerP& materialManager,
                    DataWarehouse* new_dw,
                    customBC_globalVars* globalVars,
                    const bool isNotInitialTimeStep)
@@ -414,15 +414,15 @@ void get_rho_micro(std::vector<CCVariable<double> >& rho_micro,
   }
   
   Vector gravity = globalVars->d_gravity; 
-  int numICEMatls  = sharedState->getNumICEMatls();
+  int numICEMatls  = materialManager->getNumMatls( "ICE" );
     
 
 //  This doesn't work with AMR.  The refine/setBC_fineLevel task only
 //  refines ICE matls so we don't have access to sp_vol_mpm.
 //
-//   bool isNotInitialTimeStep = (sharedState->getCurrentTopLevelTimeStep() > 0)//
+//   bool isNotInitialTimeStep = (materialManager->getCurrentTopLevelTimeStep() > 0)//
 //  if (isNotInitialTimeStep) {
-//    numMatls += sharedState->getNumMPMMatls();
+//    numMatls += materialManager->getNumMatls( "MPM" );
 //  }
       
   //__________________________________
@@ -433,7 +433,7 @@ void get_rho_micro(std::vector<CCVariable<double> >& rho_micro,
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
     
-    if(is_LODI_face(patch, face, sharedState) || gravity.length() > 0) {
+    if(is_LODI_face(patch, face, materialManager) || gravity.length() > 0) {
       
       //__________________________________
       // Create an iterator that iterates over the face
@@ -455,7 +455,7 @@ void get_rho_micro(std::vector<CCVariable<double> >& rho_micro,
       CellIterator iterLimits(lo,hi);
       
       for (int m = 0; m < numICEMatls; m++) {
-        ICEMaterial* ice_matl = sharedState->getICEMaterial(m);
+        ICEMaterial* ice_matl = (ICEMaterial*) materialManager->getMaterial( "ICE", m);
         int matl= ice_matl->getDWIndex();
                 
         if (which_Var == "rho_micro") { 
@@ -560,7 +560,7 @@ void setBC(CCVariable<double>& press_CC,
            const string& which_Var,
            const string& kind, 
            const Patch* patch,
-           SimulationStateP& sharedState, 
+           MaterialManagerP& materialManager, 
            const int mat_id,
            DataWarehouse* new_dw,
            customBC_globalVars* globalVars,
@@ -574,8 +574,8 @@ void setBC(CCVariable<double>& press_CC,
   cout_BC_CC << "-------- setBC (press_CC) \t"<< kind <<" " << which_Var
             << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
 
-  int numALLMatls = sharedState->getNumMatls();
-  // bool isNotInitialTimeStep = (sharedState->getCurrentTopLevelTimeStep() > 0);  
+  int numALLMatls = materialManager->getNumMatls();
+  // bool isNotInitialTimeStep = (materialManager->getCurrentTopLevelTimeStep() > 0);  
   Vector gravity = globalVars->d_gravity;
   std::vector<CCVariable<double> > rho_micro(numALLMatls);
   
@@ -584,7 +584,7 @@ void setBC(CCVariable<double>& press_CC,
   }
   
   get_rho_micro(rho_micro, rho_micro_tmp, sp_vol_CC, 
-                patch, which_Var, sharedState,  new_dw, globalVars,
+                patch, which_Var, materialManager,  new_dw, globalVars,
                 isNotInitialTimeStep);
                 
   //__________________________________
@@ -610,7 +610,7 @@ void setBC(CCVariable<double>& press_CC,
        && isNotInitialTimeStep  && localVars->setLodiBcs){
        
        nCells_LODI[face] += 
-       FacePress_LODI(patch, press_CC, rho_micro, sharedState,face, localVars->lodi);
+       FacePress_LODI(patch, press_CC, rho_micro, materialManager,face, localVars->lodi);
     }
   }
 
@@ -656,7 +656,7 @@ void setBC(CCVariable<double>& press_CC,
         //  Custom Boundary Conditions
         else if (bc_kind == "MMS_1" && localVars->set_MMS_BCs) {
           nCells += set_MMS_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
-                                      sharedState, 
+                                      materialManager, 
                                       globalVars->mms,
                                       localVars->mms);
         }                    
@@ -664,7 +664,7 @@ void setBC(CCVariable<double>& press_CC,
         //  Sine
         else if (bc_kind == "Sine" && localVars->set_Sine_BCs) {
           nCells += set_Sine_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
-                                       sharedState, 
+                                       materialManager, 
                                        globalVars->sine,
                                        localVars->sine);
         }
@@ -710,7 +710,7 @@ void setBC(CCVariable<double>& var_CC,
            const CCVariable<double>& gamma,
            const CCVariable<double>& cv,
            const Patch* patch,
-           SimulationStateP& sharedState, 
+           MaterialManagerP& materialManager, 
            const int mat_id,
            DataWarehouse*,
            customBC_globalVars* globalVars,
@@ -724,7 +724,7 @@ void setBC(CCVariable<double>& var_CC,
   cout_BC_CC << "-------- setBC (double) \t"<< desc << " mat_id = " 
              << mat_id <<  ", Patch: "<< patch->getID() << endl;
   Vector cell_dx = patch->dCell();
-  // bool isNotInitialTimeStep = (sharedState->getCurrentTopLevelTimeStep() > 0);
+  // bool isNotInitialTimeStep = (materialManager->getCurrentTopLevelTimeStep() > 0);
 
   //__________________________________
   //  -Set the LODI BC's first, then let the other BC's wipe out what
@@ -747,7 +747,7 @@ void setBC(CCVariable<double>& var_CC,
     bool is_rhoBC_lodi =  patch->haveBC(face,mat_id,"LODI","Density");
     
     if( desc == "Temperature"  && is_tempBC_lodi  && isNotInitialTimeStep && localVars->setLodiBcs ){
-      nCells_LODI[face] += FaceTemp_LODI(patch, face, var_CC, localVars->lodi, cell_dx, sharedState);
+      nCells_LODI[face] += FaceTemp_LODI(patch, face, var_CC, localVars->lodi, cell_dx, materialManager);
     }   
     else if (desc == "Density"  && is_rhoBC_lodi  && isNotInitialTimeStep && localVars->setLodiBcs){
       nCells_LODI[face] += FaceDensity_LODI(patch, face, var_CC, localVars->lodi, cell_dx);
@@ -813,7 +813,7 @@ void setBC(CCVariable<double>& var_CC,
         // -Ignore this during intialization phase,
         //  since we backout the temperature field
         Vector gravity = globalVars->d_gravity;                        
-        Material *matl = sharedState->getMaterial(mat_id);
+        Material *matl = materialManager->getMaterial(mat_id);
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         int P_dir =  patch->getFaceAxes(face)[0];  // principal direction
         
@@ -869,7 +869,7 @@ void setBC(CCVariable<double>& var_CC,
 void setBC(CCVariable<Vector>& var_CC,
            const string& desc,
            const Patch* patch,
-           SimulationStateP& sharedState,
+           MaterialManagerP& materialManager,
            const int mat_id,
            DataWarehouse* ,
            customBC_globalVars* globalVars,
@@ -882,7 +882,7 @@ void setBC(CCVariable<Vector>& var_CC,
   cout_BC_CC <<"-------- setBC (Vector_CC) \t"<< desc <<" mat_id = " 
               <<mat_id<<  ", Patch: "<< patch->getID() << endl;
   
-  // bool isNotInitialTimeStep = (sharedState->getCurrentTopLevelTimeStep() > 0);
+  // bool isNotInitialTimeStep = (materialManager->getCurrentTopLevelTimeStep() > 0);
   Vector cell_dx = patch->dCell();
   //__________________________________
   //  -Set the LODI BC's first, then let the other BC's wipe out what
@@ -905,7 +905,7 @@ void setBC(CCVariable<Vector>& var_CC,
     if( desc == "Velocity"      && is_velBC_lodi 
         && isNotInitialTimeStep && localVars->setLodiBcs) {
         
-      nCells_LODI[face] += FaceVel_LODI( patch, face, var_CC, localVars->lodi, cell_dx, sharedState);
+      nCells_LODI[face] += FaceVel_LODI( patch, face, var_CC, localVars->lodi, cell_dx, materialManager);
     }
   }
   //__________________________________
@@ -956,13 +956,13 @@ void setBC(CCVariable<Vector>& var_CC,
         }
         else if ( localVars->set_MMS_BCs ) {
           nCells += set_MMS_Velocity_BC( patch, face, var_CC, desc,
-                                         bound_ptr, bc_kind, sharedState,
+                                         bound_ptr, bc_kind, materialManager,
                                          globalVars->mms,
                                          localVars->mms);
         }
         else if ( localVars->set_Sine_BCs ) {
           nCells += set_Sine_Velocity_BC( patch, face, var_CC, desc,
-                                          bound_ptr, bc_kind, sharedState,
+                                          bound_ptr, bc_kind, materialManager,
                                           globalVars->sine,
                                           localVars->sine );
         }
@@ -1016,7 +1016,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
                       constCCVariable<double> rho_CC,
                       constCCVariable<double> vol_frac,
                       const Patch* patch,
-                      SimulationStateP& sharedState,
+                      MaterialManagerP& materialManager,
                       const int mat_id)
 {
   if(patch->hasBoundaryFaces() == false){
@@ -1144,28 +1144,28 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
 /* --------------------------------------------------------------------- 
  Function~  BC_bulletproofing--  
  ---------------------------------------------------------------------  */
-void BC_bulletproofing(const ProblemSpecP& prob_spec,
-                       SimulationStateP& sharedState )
+void BC_bulletproofing(const ProblemSpecP & prob_spec,
+                       MaterialManagerP   & materialManager,
+                       GridP              & grid )
 {
-  Vector periodic;
-  ProblemSpecP grid_ps  = prob_spec->findBlock("Grid");
-  ProblemSpecP level_ps = grid_ps->findBlock("Level");
-  level_ps->getWithDefault("periodic", periodic, Vector(0,0,0));
+  LevelP L0 = grid->getLevel(0);
+  IntVector periodic_L0 = L0->getPeriodicBoundaries();
   
   Vector tagFace_minus(0,0,0);
   Vector tagFace_plus(0,0,0);
-                               
-  ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
-  int numAllMatls = sharedState->getNumMatls();
+  
+  ProblemSpecP grid_ps = prob_spec->findBlock("Grid");  
+  ProblemSpecP bc_ps   = grid_ps->findBlock("BoundaryConditions");
+  int numAllMatls = materialManager->getNumMatls();
   
   // If a face is periodic then is_press_BC_set = true
   map<string,int> is_press_BC_set;
-  is_press_BC_set["x-"] = (periodic.x() ==1) ? 1:0;
-  is_press_BC_set["x+"] = (periodic.x() ==1) ? 1:0;
-  is_press_BC_set["y-"] = (periodic.y() ==1) ? 1:0;
-  is_press_BC_set["y+"] = (periodic.y() ==1) ? 1:0;
-  is_press_BC_set["z-"] = (periodic.z() ==1) ? 1:0;
-  is_press_BC_set["z+"] = (periodic.z() ==1) ? 1:0;
+  is_press_BC_set["x-"] = (periodic_L0.x() ==1) ? 1:0;
+  is_press_BC_set["x+"] = (periodic_L0.x() ==1) ? 1:0;
+  is_press_BC_set["y-"] = (periodic_L0.y() ==1) ? 1:0;
+  is_press_BC_set["y+"] = (periodic_L0.y() ==1) ? 1:0;
+  is_press_BC_set["z-"] = (periodic_L0.z() ==1) ? 1:0;
+  is_press_BC_set["z+"] = (periodic_L0.z() ==1) ? 1:0;
   
   // Loop over all boundary conditions for a face...
   // this includes circles, rectangles, annulus
@@ -1210,11 +1210,11 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
             
       // valid user input      
       if( bc_type["label"] != "Pressure"      && bc_type["label"] != "Temperature" && 
-          bc_type["label"] != "SpecificVol"   && bc_type["label"] != "Velocity" &&
-          bc_type["label"] != "Density"       && bc_type["label"] != "Symmetric" &&
+          bc_type["label"] != "SpecificVol"   && bc_type["label"] != "Velocity"    &&
+          bc_type["label"] != "Density"       && bc_type["label"] != "Symmetric"   &&
           bc_type["label"] != "scalar-f"      && bc_type["label"] != "cumulativeEnergyReleased"){
         ostringstream warn;
-        warn <<"\n INPUT FILE ERROR:\n The boundary condition label ("<< bc_type["label"] <<") is not valid\n"
+        warn <<"\n   ERROR: ICE::\n   The boundary condition label ("<< bc_type["label"] <<") is not valid\n"
              << " Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }  
@@ -1223,10 +1223,10 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
       if (bc_type["id"] == "all" && numAllMatls == 1){
         ostringstream warn;
         warn <<"\n__________________________________\n"   
-             << "ERROR: This is a single material problem and you've specified 'BCType id = all' \n"
-             << "The boundary condition infrastructure treats 'all' and '0' as two separate materials, \n"
-             << "setting the boundary conditions twice on each face.  Set BCType id = '0' \n" 
-             << " Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
+             << "  ERROR: ICE: This is a single material problem and you've specified 'BCType id = all' \n"
+             << "  The boundary condition infrastructure treats 'all' and '0' as two separate materials, \n"
+             << "  setting the boundary conditions twice on each face.  Set BCType id = '0' \n" 
+             << "   Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
       
@@ -1235,9 +1235,9 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
         if (numAllMatls > 1 &&  bc_type["id"] != "all") {
           ostringstream warn;
           warn <<"\n__________________________________\n"   
-             << "ERROR: This is a multimaterial problem with a symmetric boundary condition\n"
-             << "You must have the id = all instead of id = "<<bc_type["id"]<<"\n"
-             << "Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
+             << "  ERROR: ICE: This is a multimaterial problem with a symmetric boundary condition\n"
+             << "  You must have the id = all instead of id = "<< bc_type["id"] <<"\n"
+             << "  Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
           throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
         }
       }  // symmetric 
@@ -1259,61 +1259,73 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
       if(isSymmetric == false && isSet == false && var != "Symmetric"){
         ostringstream warn;
         warn <<"\n__________________________________\n"   
-           << "INPUT FILE ERROR: \n"
-           << "The "<<var<<" boundary condition for one of the materials has not been set \n"
-           << "Face:  " << face["side"] <<  endl;
+           << "  ERROR: ICE: \n"
+           << "  The "<<var<<" boundary condition for one of the materials has not been set \n"
+           << "  Face:  " << face["side"] <<  endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
     }
     
     //__________________________________
-    //Has the pressure BC been set on this face;
+    //  Has the pressure BC been set on this face;
     int isSet  = is_press_BC_set.count( side );
 
     if(isSet != 1){
       ostringstream warn;
       warn <<"\n__________________________________\n"   
-         << "INPUT FILE ERROR: \n"
-         << "The pressure boundary condition has not been set OR has been set more than once \n"
-         << "Face:  " << side <<  endl;
+         << "  ERROR: ICE: \n"
+         << "  The pressure boundary condition has not been set OR has been set more than once \n"
+         << "  Face:  " << side <<  endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   } //face loop
+  
 
   //__________________________________
-  // Has each non-periodic face has been touched?
-  if (periodic.length() == 0){
-    if( (tagFace_minus != Vector(1,1,1)) ||
-        (tagFace_plus  != Vector(1,1,1)) ){
+  
+  for(int dir = 0; dir<3; dir++){
+
+    // Are boundary conditions set on a non-periodic face?
+    if( periodic_L0[dir] == 0 && ( tagFace_minus[dir] == 0 || tagFace_plus[dir] == 0)){
       ostringstream warn;
       warn <<"\n__________________________________\n "
-           << "ERROR: the boundary conditions on one of the faces of the computational domain has not been set \n"<<endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);  
+           << "ERROR: ICE: You must specify a boundary conditions in direction "<< dir << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);   
+    }
+
+    // Are boundary conditions set on a periodic face?
+    if( periodic_L0[dir] == 1 && ( tagFace_minus[dir] == 1 || tagFace_plus[dir] == 1)){
+      ostringstream warn;
+      warn <<"\n__________________________________\n "
+           << "ERROR: ICE: A periodic AND a normal boundary condition have been specifed for \n"
+           << " direction: "<< dir << "  You can only have on or the other"<< endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);   
     }
   }
   
-  // Periodic BC and missing BC's
-  if(periodic.length() != 0){
+  //__________________________________
+  //  Loop over all levels and verify that extra cells are 
+  //  specified on non-periodic faces
+  for (int L = 0; L < grid->numLevels(); L++) {
+    const LevelP level = grid->getLevel(L);
+    IntVector periodic   = level->getPeriodicBoundaries();
+    IntVector extraCells = level->getExtraCells();
+    
     for(int dir = 0; dir<3; dir++){
-      if( periodic[dir]==0 && ( tagFace_minus[dir] == 0 || tagFace_plus[dir] == 0)){
+      if (periodic[dir] == 1 && extraCells[dir] != 0 ){
         ostringstream warn;
         warn <<"\n__________________________________\n "
-             << "ERROR: You must specify a boundary condition in direction "<< dir << endl;
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);   
+             << "  ERROR: ICE:  A periodic boundary condition has been set in \n"
+             << " direction: "<< dir << "  and the extraCells are not 0."<< endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);    
       }
-    }
-  }
-  
-  // Duplicate periodic BC and normal BCs
-  if(periodic.length() != 0){
-    for(int dir = 0; dir<3; dir++){
-      if( periodic[dir]==1 && ( tagFace_minus[dir] == 1 || tagFace_plus[dir] == 1)){
+      
+      if (periodic[dir] == 0 && extraCells[dir] != 1 ){             // HARDWIRE:  Assume the number of extra cells = 1
         ostringstream warn;
         warn <<"\n__________________________________\n "
-             << "ERROR: A periodic AND a normal boundary condition have been specifed for \n"
-             << " direction: "<< dir << "  You can only have on or the other"<< endl;
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);   
-      }
+             << "  ERROR: ICE: The number of extra cells != 1, dir ("<< dir << ")\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);    
+      }  
     }
   }
 }
@@ -1326,6 +1338,7 @@ int numFaceCells(const Patch* patch,
 {
   IntVector lo = patch->getFaceIterator(face,type).begin();
   IntVector hi = patch->getFaceIterator(face,type).end();
+
   int numFaceCells = (hi.x()-lo.x())  *  (hi.y()-lo.y())  *  (hi.z()-lo.z());
   return numFaceCells;
 }
@@ -1337,7 +1350,7 @@ int numFaceCells(const Patch* patch,
 void setBC(CCVariable<double>& var,     
           const std::string& type,     // so gcc compiles
           const Patch* patch,  
-          SimulationStateP& sharedState,
+          MaterialManagerP& materialManager,
           const int mat_id,
           DataWarehouse* new_dw,
           const bool isNotInitialTimeStep)
@@ -1346,7 +1359,7 @@ void setBC(CCVariable<double>& var,
   customBC_localVars* localVars   = scinew customBC_localVars();
   constCCVariable<double> placeHolder;
   
-  setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
+  setBC(var, type, placeHolder, placeHolder, patch, materialManager, 
         mat_id, new_dw, globalVars, localVars,
         isNotInitialTimeStep );
   
@@ -1361,7 +1374,7 @@ void setBC(CCVariable<double>& press_CC,
          const std::string& whichVar, 
          const std::string& kind, 
          const Patch* p, 
-         SimulationStateP& sharedState,
+         MaterialManagerP& materialManager,
          const int mat_id, 
          DataWarehouse* new_dw,
          const bool isNotInitialTimeStep) {
@@ -1370,7 +1383,7 @@ void setBC(CCVariable<double>& press_CC,
   customBC_localVars* localVars   = scinew customBC_localVars();
   
   setBC(press_CC, rho_micro, sp_vol, surroundingMatl_indx,
-        whichVar, kind, p, sharedState, mat_id, new_dw, globalVars, localVars,
+        whichVar, kind, p, materialManager, mat_id, new_dw, globalVars, localVars,
         isNotInitialTimeStep); 
 
   delete globalVars;
@@ -1380,7 +1393,7 @@ void setBC(CCVariable<double>& press_CC,
 void setBC(CCVariable<Vector>& variable,
           const std::string& type,
           const Patch* p,
-          SimulationStateP& sharedState,
+          MaterialManagerP& materialManager,
           const int mat_id,
           DataWarehouse* new_dw,
           const bool isNotInitialTimeStep)
@@ -1388,7 +1401,7 @@ void setBC(CCVariable<Vector>& variable,
   customBC_globalVars* globalVars  = scinew customBC_globalVars();
   customBC_localVars* localVars    = scinew customBC_localVars();
    
-  setBC( variable, type, p, sharedState, mat_id, new_dw,globalVars, localVars,
+  setBC( variable, type, p, materialManager, mat_id, new_dw,globalVars, localVars,
          isNotInitialTimeStep);
   
   delete globalVars;

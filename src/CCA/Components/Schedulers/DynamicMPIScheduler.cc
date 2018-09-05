@@ -70,7 +70,7 @@ DynamicMPIScheduler::~DynamicMPIScheduler()
 //
 void
 DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
-                                 , const SimulationStateP& state
+                                 , const MaterialManagerP& materialManager
                                  )
 {
   std::string taskQueueAlg = "";
@@ -108,7 +108,7 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
     throw ProblemSetupException("Unknown task ready queue algorithm", __FILE__, __LINE__);
   }
 
-  SchedulerCommon::problemSetup(prob_spec, state);
+  SchedulerCommon::problemSetup(prob_spec, materialManager);
 }
 
 //______________________________________________________________________
@@ -118,7 +118,7 @@ DynamicMPIScheduler::createSubScheduler()
 {
   DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, this );
   newsched->setComponents( this );
-  newsched->m_sharedState = m_sharedState;
+  newsched->m_materialManager = m_materialManager;
   return newsched;
 }
 
@@ -339,11 +339,16 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
       }
     }
 
-    if (!abort && m_dws[m_dws.size() - 1] && m_dws[m_dws.size() - 1]->timestepAborted()) {
+    // ARS - FIXME CHECK THE WAREHOUSE
+    OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
+    if (!abort && dw && dw->abortTimeStep()) {
       // TODO - abort might not work with external queue...
       abort = true;
       abort_point = task->getTask()->getSortedOrder();
-      DOUT(g_dbg, "Aborting timestep after task: " << *task->getTask());
+
+      DOUT(g_dbg,  "Rank-" << d_myworld->myRank()
+	                   << "  WARNING: Aborting time step after task: "
+                           << task->getTask()->getName());
     }
   } // end while( numTasksDone < ntasks )
 

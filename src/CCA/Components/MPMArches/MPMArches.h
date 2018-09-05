@@ -93,7 +93,7 @@ namespace Uintah {
 class MPMArches : public ApplicationCommon {
 public:
   MPMArches(const ProcessorGroup* myworld,
-	    const SimulationStateP sharedState);
+	    const MaterialManagerP materialManager);
   
   virtual ~MPMArches();
 
@@ -234,8 +234,6 @@ public:
   ///////////////////////////////////////////////////////////////////////
   virtual double recomputeDelT(const double delT);
       
-  virtual bool restartableTimeSteps();
-
  protected:
 
     void initializeKStability(const ProcessorGroup*,

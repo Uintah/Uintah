@@ -459,7 +459,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
   }
 
   //*********Start - Used for testing purposes - CG *******
-  // int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  // int timestep = d_materialManager->getCurrentTopLevelTimeStep();
   //*********End   - Used for testing purposes - CG *******
 
   // General stuff
@@ -790,7 +790,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
         */
 
         //if (timestep == 10000)
-				//  cout << "Index: " << idx << ", Equiv: " << equivStress << endl;
+                                //  cout << "Index: " << idx << ", Equiv: " << equivStress << endl;
 
         if (flow_rule < 0.0) {
           // Set the deviatoric stress to the trial stress

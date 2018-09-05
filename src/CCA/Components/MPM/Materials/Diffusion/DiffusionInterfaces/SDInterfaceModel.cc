@@ -30,13 +30,13 @@
 using namespace Uintah;
 
 SDInterfaceModel::SDInterfaceModel(ProblemSpecP         & ps      ,
-                                   SimulationStateP     & sS      ,
+                                   MaterialManagerP     & sS      ,
                                    MPMFlags             * Mflag   ,
                                    MPMLabel             * mpm_lb  )
                                   : d_materials_list(ps)
 {
   d_mpm_lb = mpm_lb;
-  d_shared_state = sS;
+  d_materialManager = sS;
   d_mpm_flags = Mflag;
 
   sdInterfaceRate = VarLabel::create("g.dCdt_interface",
@@ -83,11 +83,11 @@ void SDInterfaceModel::setBaseComputesAndRequiresDivergence(        Task        
                                                            ,  const MaterialSubset  * matls )
 {
   task->computes(sdInterfaceRate, matls);
-  task->computes(sdInterfaceRate, d_shared_state->getAllInOneMatl(),
+  task->computes(sdInterfaceRate, d_materialManager->getAllInOneMatls(),
                  Task::OutOfDomain);
 
   task->computes(sdInterfaceFlag, matls);
-  task->computes(sdInterfaceFlag, d_shared_state->getAllInOneMatl(),
+  task->computes(sdInterfaceFlag, d_materialManager->getAllInOneMatls(),
                  Task::OutOfDomain);
 }
 
@@ -98,9 +98,6 @@ void SDInterfaceModel::sdInterfaceDivergence( const ProcessorGroup  *
                                             ,       DataWarehouse   * new_dw  )
 {
   // Set the interfacial flux rate to zero for the (default) null model.
-  Ghost::GhostType  typeGhost;
-  int               numGhost;
-  d_shared_state->getParticleGhostLayer(typeGhost, numGhost);
   for (int patchIdx = 0; patchIdx < patches->size(); ++patchIdx) {
     const Patch*  patch     = patches->get(patchIdx);
     int           numMatls  = matls->size();
@@ -109,10 +106,10 @@ void SDInterfaceModel::sdInterfaceDivergence( const ProcessorGroup  *
     NCVariable<int>     gInterfaceFlag_Total;
     // Initialize global references to interface flux and interface presence
     new_dw->allocateAndPut(gdCdt_interface_Total, sdInterfaceRate,
-                           d_shared_state->getAllInOneMatl()->get(0), patch);
+                           d_materialManager->getAllInOneMatls()->get(0), patch);
     gdCdt_interface_Total.initialize(0.0);
     new_dw->allocateAndPut(gInterfaceFlag_Total, sdInterfaceFlag,
-                           d_shared_state->getAllInOneMatl()->get(0), patch);
+                           d_materialManager->getAllInOneMatls()->get(0), patch);
     gInterfaceFlag_Total.initialize(false);
 
     std::vector<NCVariable<double> >  gdCdt_interface(numMatls);

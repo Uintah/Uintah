@@ -25,7 +25,7 @@
 
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 using namespace Uintah;
 
@@ -34,7 +34,7 @@ WallShearStress::WallShearStress()
 }
 
 WallShearStress::WallShearStress( ProblemSpecP& ps,
-                                  SimulationStateP& sharedState )
+                                  MaterialManagerP& materialManager )
 {
 }
 

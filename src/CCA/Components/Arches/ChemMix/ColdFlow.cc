@@ -36,7 +36,7 @@
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
@@ -50,8 +50,8 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 // Default Constructor
 //---------------------------------------------------------------------------
-ColdFlow::ColdFlow( SimulationStateP& sharedState ) :
-  MixingRxnModel( sharedState )
+ColdFlow::ColdFlow( MaterialManagerP& materialManager ) :
+  MixingRxnModel( materialManager )
 {
   d_coldflow = true;
 }
@@ -235,7 +235,7 @@ ColdFlow::sched_getState( const LevelP& level,
       tsk->computes( i->second );
       MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old");
       if ( check_iter != d_oldDvVarMap.end() ){
-        // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+        // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
 
         timeStep_vartype timeStep(0);
         if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
@@ -286,7 +286,7 @@ ColdFlow::sched_getState( const LevelP& level,
     tsk->requires( Task::NewDW, label, gn, 0 );
   }
 
-  sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
 }
 
 //---------------------------------------------------------------------------

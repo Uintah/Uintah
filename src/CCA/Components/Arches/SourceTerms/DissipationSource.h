@@ -1,11 +1,11 @@
 #ifndef Uintah_Component_Arches_DissipationSource_h
 #define Uintah_Component_Arches_DissipationSource_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
@@ -31,7 +31,7 @@ namespace Uintah{
   class DissipationSource: public SourceTermBase {
   public: 
     
-    DissipationSource( std::string srcName, SimulationStateP& shared_state, 
+    DissipationSource( std::string srcName, MaterialManagerP& materialManager, 
                        std::vector<std::string> reqLabelNames, std::string type );
     
     ~DissipationSource();
@@ -61,20 +61,20 @@ namespace Uintah{
       
     public: 
       
-      Builder( std::string name, std::vector<std::string> required_label_names, SimulationStateP& shared_state )
+      Builder( std::string name, std::vector<std::string> required_label_names, MaterialManagerP& materialManager )
       : _name(name), 
-      _shared_state(shared_state), 
+      _materialManager(materialManager), 
       _required_label_names(required_label_names)
       { _type = "dissipation_src"; };
       ~Builder(){}; 
       
       DissipationSource* build()
-      { return scinew DissipationSource( _name, _shared_state, _required_label_names, _type ); };
+      { return scinew DissipationSource( _name, _materialManager, _required_label_names, _type ); };
       
     private: 
       
       std::string _name; 
-      SimulationStateP& _shared_state; 
+      MaterialManagerP& _materialManager; 
       std::vector<std::string> _required_label_names;
       std::string _type;
       

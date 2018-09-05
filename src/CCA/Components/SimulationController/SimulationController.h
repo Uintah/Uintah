@@ -303,6 +303,10 @@ protected:
 #endif
 
 private:
+  // For reporting stats Frequency > OnTimeStep
+  unsigned int m_reportStatsFrequency {1};
+  unsigned int m_reportStatsOnTimeStep {0};
+  
   // Percent time in overhead samples
   double m_overhead_values[OVERHEAD_WINDOW];
   double m_overhead_weights[OVERHEAD_WINDOW];

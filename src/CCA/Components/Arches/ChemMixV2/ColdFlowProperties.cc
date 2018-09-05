@@ -146,7 +146,7 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
     //Get the iterator
-    Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+    Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
     std::string facename = i_bc->second.name;
 
     IntVector iDir = patch->faceDirection( i_bc->second.face );
@@ -156,20 +156,21 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
       CCVariable<double>& prop = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
       const SpeciesInfo info = i->second;
 
-      for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+      parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (int i,int j,int k) {
 
-        IntVector c = *cell_iter;
-        IntVector cp = *cell_iter - iDir;
+        int ip = i-iDir[0];
+        int jp = j-iDir[1];
+        int kp = k-iDir[2];
 
-        const double f_interp = 0.5 *( f[c] + f[cp] );
+        const double f_interp = 0.5 *( f(i,j,k) + f(ip,jp,kp) );
 
         const double value = ( info.volumetric ) ?
                              1./(f_interp / info.stream_1 + ( 1. - f_interp ) / info.stream_2) :
                              f_interp * info.stream_1 + ( 1. - f_interp ) * info.stream_2;
 
-        prop[c] = 2. * value - prop[cp];
+        prop(i,j,k) = 2. * value - prop(ip,jp,kp);
 
-      }
+      });
     }
   }
 }

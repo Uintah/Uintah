@@ -24,7 +24,7 @@
 
 #include <CCA/Components/ICE/WallShearStressModel/logLawModel.h>
 
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/DbgOutput.h>
@@ -46,10 +46,10 @@ static DebugStream dbg("ICE_DOING_COUT", false);
 //  118: 169-187
 //______________________________________________________________________
 
-logLawModel::logLawModel(ProblemSpecP& ps, SimulationStateP& sharedState)
-  : WallShearStress(ps, sharedState)
+logLawModel::logLawModel(ProblemSpecP& ps, MaterialManagerP& materialManager)
+  : WallShearStress(ps, materialManager)
 {
-  d_sharedState = sharedState;
+  d_materialManager = materialManager;
     
   string face;
   ps->require("domainFace", face);
@@ -111,7 +111,7 @@ void logLawModel::sched_Initialize(SchedulerP& sched,
                   this, &logLawModel::Initialize);
 
   t->computes(d_roughnessLabel);
-  sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
+  sched->addTask(t, level->eachPatch(), d_materialManager->allMaterials( "ICE" ));
 }
 //______________________________________________________________________
 //

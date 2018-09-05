@@ -14,9 +14,10 @@
       <maxTime> 20 </maxTime>
     </replace_lines>
     <replace_values>
-      /Uintah_specification/Grid/BoundaryConditions/Face[@side='y+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value : [1,0,0] 
+      <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='y+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value" value = '[1,0,0]' /> 
     </replace_values>
 </AllTests>
+
 <Test>
     <Title>16</Title>
     <sus_cmd>mpirun -np 6 sus -mpi </sus_cmd>

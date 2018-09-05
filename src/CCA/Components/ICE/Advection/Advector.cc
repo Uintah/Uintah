@@ -61,12 +61,11 @@ Advector::~Advector()
 //  
 namespace Uintah {
   //__________________________________
-  void  warning_restartTimestep( vector<IntVector> badCells,
-                                 vector<fflux> badOutFlux,
-                                 const double vol,
-                                 const int indx,
-                                 const Patch* patch,
-                                 DataWarehouse* new_dw)
+  void  warning_recomputeTimeStep( vector<IntVector> badCells,
+                                   vector<fflux> badOutFlux,
+                                   const double vol,
+                                   const int indx,
+                                   const Patch* patch)
   {
     cout << Parallel::getMPIRank() << " ERROR: ICE Advection operator: "
          << " Influx_outflux error detected, "
@@ -86,11 +85,6 @@ namespace Uintah {
         cout << " \t face: " << f << " (" << flux << ") ";
       }
       cout << " total_outflux: " << total_fluxout << endl;
-    }
-    
-    if (new_dw->timestepRestarted() == false){
-      cout << "\nA timestep restart has been requested \n " << endl;
-      new_dw->restartTimestep();
     }
   }
   

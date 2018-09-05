@@ -8,7 +8,7 @@ using namespace std;
 //---------------------------------------------------------------------------
 //Method: Constructor
 //---------------------------------------------------------------------------
-HeatLoss::HeatLoss( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
+HeatLoss::HeatLoss( std::string prop_name, MaterialManagerP& materialManager ) : PropertyModelBase( prop_name, materialManager )
 {
   _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() );
 
@@ -17,7 +17,7 @@ HeatLoss::HeatLoss( std::string prop_name, SimulationStateP& shared_state ) : Pr
 
   _constant_heat_loss = false;
 
-  _boundary_condition = scinew BoundaryCondition_new( shared_state->getArchesMaterial(0)->getDWIndex() );
+  _boundary_condition = scinew BoundaryCondition_new( materialManager->getMaterial( "Arches", 0)->getDWIndex() );
 
   _low_hl  = -1;
   _high_hl =  1;
@@ -141,7 +141,7 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
     _use_h_ad_lookup = true;
   }
 
-  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) );
 
 }
 
@@ -160,7 +160,7 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CellIterator iter = patch->getCellIterator();
 
@@ -322,7 +322,7 @@ void HeatLoss::sched_initialize( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task(taskname, this, &HeatLoss::initialize);
   tsk->computes(_prop_label);
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -339,7 +339,7 @@ void HeatLoss::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> prop;
 
@@ -366,7 +366,7 @@ void HeatLoss::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task(taskname, this, &HeatLoss::restartInitialize);
   tsk->computes(_prop_label);
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }
 void HeatLoss::restartInitialize( const ProcessorGroup * pc,
                                   const PatchSubset    * patches,
@@ -379,7 +379,7 @@ void HeatLoss::restartInitialize( const ProcessorGroup * pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> prop;
     //new_dw->getModifiable( prop, _prop_label, matlIndex, patch );

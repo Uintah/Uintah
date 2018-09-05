@@ -6,7 +6,7 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -23,27 +23,27 @@ ConstantModelBuilder::ConstantModelBuilder( const std::string         & modelNam
                                             const vector<std::string> & reqICLabelNames,
                                             const vector<std::string> & reqScalarLabelNames,
                                             ArchesLabel         * fieldLabels,
-                                            SimulationStateP          & sharedState,
+                                            MaterialManagerP          & materialManager,
                                             int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, materialManager, qn )
 {}
 
 ConstantModelBuilder::~ConstantModelBuilder(){}
 
 ModelBase* ConstantModelBuilder::build(){
-  return scinew ConstantModel( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return scinew ConstantModel( d_modelName, d_materialManager, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 
 // End Builder
 //---------------------------------------------------------------------------
 
 ConstantModel::ConstantModel( std::string           modelName, 
-                              SimulationStateP    & sharedState,
+                              MaterialManagerP    & materialManager,
                               ArchesLabel   * fieldLabels,
                               vector<std::string>   icLabelNames, 
                               vector<std::string>   scalarLabelNames,
                               int qn ) 
-: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+: ModelBase(modelName, materialManager, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Create a label for this model
   d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
@@ -83,7 +83,7 @@ ConstantModel::sched_initVars( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel);
   
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 }
 
 //-------------------------------------------------------------------------
@@ -100,7 +100,7 @@ ConstantModel::initVars( const ProcessorGroup * pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> model; 
     CCVariable<double> gas_source;
@@ -148,7 +148,7 @@ ConstantModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
     // require any scalars needed to compute the model
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 
 }
 //---------------------------------------------------------------------------
@@ -170,7 +170,7 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> model; 
     CCVariable<double> gas_source;

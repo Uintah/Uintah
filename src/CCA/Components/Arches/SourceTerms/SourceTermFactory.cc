@@ -206,7 +206,7 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
   // Get reference to the source factory
   SourceTermFactory& factory = SourceTermFactory::self();
 
-  SimulationStateP& shared_state = (*lab).d_sharedState;
+  MaterialManagerP& materialManager = (*lab).d_materialManager;
 
   if (srcs_db) {
     for (ProblemSpecP source_db = srcs_db->findBlock("src"); source_db != nullptr; source_db = source_db->findNextBlock("src")){
@@ -242,36 +242,36 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
       // The keys are currently strings which might be something we want to change if this becomes inefficient
       if ( src_type == "constant_src" ) {
         // Adds a constant to RHS
-        SourceTermBase::Builder* srcBuilder = scinew ConstSrcTerm::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew ConstSrcTerm::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "coal_gas_devol"){
         // Sums up the devol. model terms * weights
-        SourceTermBase::Builder* src_builder = scinew CoalGasDevol::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* src_builder = scinew CoalGasDevol::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, src_builder );
 
       } else if (src_type == "coal_gas_devol_mom"){
         // Sums up the devol. model terms * weights * vel
-        SourceTermBase::Builder* src_builder = scinew CoalGasDevolMom::Builder(src_name, required_varLabels, lab, shared_state);
+        SourceTermBase::Builder* src_builder = scinew CoalGasDevolMom::Builder(src_name, required_varLabels, lab, materialManager);
         factory.register_source_term( src_name, src_builder );
 
       } else if (src_type == "coal_gas_oxi"){
         // Sums up the devol. model terms * weights
-        SourceTermBase::Builder* src_builder = scinew CoalGasOxi::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* src_builder = scinew CoalGasOxi::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, src_builder );
 
       } else if (src_type == "coal_gas_oxi_mom"){
         // Sums up the devol. model terms * weights
-        SourceTermBase::Builder* src_builder = scinew CoalGasOxiMom::Builder(src_name, required_varLabels, lab, shared_state);
+        SourceTermBase::Builder* src_builder = scinew CoalGasOxiMom::Builder(src_name, required_varLabels, lab, materialManager);
         factory.register_source_term( src_name, src_builder );
 
       } else if (src_type == "coal_gas_heat"){
-        SourceTermBase::Builder* src_builder = scinew CoalGasHeat::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* src_builder = scinew CoalGasHeat::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, src_builder );
 
       } else if (src_type == "coal_gas_momentum"){
         // Momentum coupling for ??? (coal gas or the particle?)
-        SourceTermBase::Builder* srcBuilder = scinew CoalGasMomentum::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew CoalGasMomentum::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "westbrook_dryer") {
@@ -302,52 +302,52 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
 
       } else if (src_type == "mms1"){
         // MMS1 builder
-        SourceTermBase::Builder* srcBuilder = scinew MMS1::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew MMS1::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "cc_inject_src" ) {
         // Adds a constant to the RHS in specified geometric locations
-        SourceTermBase::Builder* srcBuilder = scinew Inject<CCVariable<double> >::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew Inject<CCVariable<double> >::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "fx_inject_src" ) {
         // Adds a constant to the RHS in specified geometric locations
-        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCXVariable<double> >::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCXVariable<double> >::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "fy_inject_src" ) {
         // Adds a constant to the RHS in specified geometric locations
-        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCYVariable<double> >::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCYVariable<double> >::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "fz_inject_src" ) {
         // Adds a constant to the RHS in specified geometric locations
-        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCZVariable<double> >::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew Inject<SFCZVariable<double> >::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "tab_rxn_rate" ) {
         // Adds the tabulated reaction rate
-        SourceTermBase::Builder* srcBuilder = scinew TabRxnRate::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew TabRxnRate::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "cc_intrusion_inlet" ) {
         // Adds a constant to the RHS in specified geometric locations
-        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<CCVariable<double> >::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<CCVariable<double> >::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "fx_intrusion_inlet" ) {
         // Adds a constant to the RHS in specified geometric locations
-        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCXVariable<double> >::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCXVariable<double> >::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "fy_intrusion_inlet" ) {
         // Adds a constant to the RHS in specified geometric locations
-        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCYVariable<double> >::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCYVariable<double> >::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "fz_intrusion_inlet" ) {
         // Adds a constant to the RHS in specified geometric locations
-        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCZVariable<double> >::Builder(src_name, required_varLabels, shared_state);
+        SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCZVariable<double> >::Builder(src_name, required_varLabels, materialManager);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "do_radiation" ) {
@@ -362,15 +362,15 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
 
       } else if ( src_type == "pc_transport" ) {
 
-        SourceTermBase::Builder* srcBuilder = scinew PCTransport::Builder( src_name, required_varLabels, shared_state );
+        SourceTermBase::Builder* srcBuilder = scinew PCTransport::Builder( src_name, required_varLabels, materialManager );
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "moment2_mixture_fraction_src" ) {
-        SourceTermBase::Builder* srcBuilder = scinew SecondMFMoment::Builder(src_name, required_varLabels, shared_state );
+        SourceTermBase::Builder* srcBuilder = scinew SecondMFMoment::Builder(src_name, required_varLabels, materialManager );
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "dissipation_src" ) {
-        SourceTermBase::Builder* srcBuilder = scinew DissipationSource::Builder(src_name, required_varLabels, shared_state );
+        SourceTermBase::Builder* srcBuilder = scinew DissipationSource::Builder(src_name, required_varLabels, materialManager );
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "manifold_rxn" ) {
@@ -378,15 +378,15 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "momentum_drag_src" ) {
-        SourceTermBase::Builder* srcBuilder = scinew MomentumDragSrc::Builder(src_name, required_varLabels, shared_state );
+        SourceTermBase::Builder* srcBuilder = scinew MomentumDragSrc::Builder(src_name, required_varLabels, materialManager );
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "shunn_moin_mf_mms" ) {
-        SourceTermBase::Builder* srcBuilder = scinew ShunnMoinMMSMF::Builder(src_name, required_varLabels, shared_state );
+        SourceTermBase::Builder* srcBuilder = scinew ShunnMoinMMSMF::Builder(src_name, required_varLabels, materialManager );
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "shunn_moin_cont_mms" ) {
-        SourceTermBase::Builder* srcBuilder = scinew ShunnMoinMMSCont::Builder(src_name, required_varLabels, shared_state );
+        SourceTermBase::Builder* srcBuilder = scinew ShunnMoinMMSCont::Builder(src_name, required_varLabels, materialManager );
         factory.register_source_term( src_name, srcBuilder );
 
       } else {
@@ -408,7 +408,7 @@ void SourceTermFactory::registerSources( ArchesLabel* lab, const bool do_dqmom, 
   //
   // Get reference to the source factory
   SourceTermFactory& factory = SourceTermFactory::self();
-  SimulationStateP& shared_state = (*lab).d_sharedState;
+  MaterialManagerP& materialManager = (*lab).d_materialManager;
 
   // Unweighted abscissa src term
   if ( do_dqmom ) {
@@ -429,7 +429,7 @@ void SourceTermFactory::registerSources( ArchesLabel* lab, const bool do_dqmom, 
           vector<std::string> required_varLabels;
           required_varLabels.push_back( eqn_name );
 
-          SourceTermBase::Builder* src_builder = scinew UnweightedSrcTerm::Builder( src_name, required_varLabels, shared_state );
+          SourceTermBase::Builder* src_builder = scinew UnweightedSrcTerm::Builder( src_name, required_varLabels, materialManager );
           factory.register_source_term( src_name, src_builder );
 
         }

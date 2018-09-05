@@ -67,4 +67,4 @@ WARNING
 
 } // End namespace Uintah
 
-#endif // __MPM_MATERIAL_H__
+#endif

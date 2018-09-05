@@ -611,7 +611,7 @@ ArchesTable::setup(const bool cerrSwitch)
   file_read_ = true;
 
   cerr_dbg << "Read and interpolated table in " << timer().seconds()
-	   << " seconds\n";
+           << " seconds\n";
 }
 
 void

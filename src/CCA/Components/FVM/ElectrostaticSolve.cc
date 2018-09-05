@@ -35,7 +35,7 @@
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
@@ -50,8 +50,8 @@
 using namespace Uintah;
 
 ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld,
-                                       const SimulationStateP sharedState)
-  : ApplicationCommon(myworld, sharedState)
+                                       const MaterialManagerP materialManager)
+  : ApplicationCommon(myworld, materialManager)
 {
   d_lb = scinew FVMLabel();
 
@@ -132,8 +132,8 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
 
     for ( ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
 
-      FVMMaterial *mat = scinew FVMMaterial(ps, m_sharedState, FVMMaterial::ESPotential);
-      m_sharedState->registerFVMMaterial(mat);
+      FVMMaterial *mat = scinew FVMMaterial(ps, m_materialManager, FVMMaterial::ESPotential);
+      m_materialManager->registerMaterial( "FVM", mat);
     }
   }
 }
@@ -150,7 +150,7 @@ void
 ElectrostaticSolve::scheduleInitialize( const LevelP     & level,
                                               SchedulerP & sched )
 {
-  const MaterialSet* fvm_matls = m_sharedState->allFVMMaterials();
+  const MaterialSet* fvm_matls = m_materialManager->allMaterials( "FVM" );
 
   Task* t = scinew Task("ElectrostaticSolve::initialize", this,
                         &ElectrostaticSolve::initialize);
@@ -174,15 +174,15 @@ void ElectrostaticSolve::scheduleComputeStableTimeStep(const LevelP& level,
   Task* task = scinew Task("computeStableTimeStep",this, 
                            &ElectrostaticSolve::computeStableTimeStep);
   task->computes(getDelTLabel(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), m_sharedState->allFVMMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials( "FVM" ));
 }
 //__________________________________
 //
 void
 ElectrostaticSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  const MaterialSet* fvm_matls = m_sharedState->allFVMMaterials();
-  // const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* fvm_matls = m_materialManager->allMaterials( "FVM" );
+  // const MaterialSet* all_matls = m_materialManager->allMaterials();
 
   scheduleComputeConductivity(   sched, level, fvm_matls);
   scheduleComputeFCConductivity( sched, level, d_es_matlset);
@@ -215,12 +215,12 @@ void ElectrostaticSolve::initialize(const ProcessorGroup*,
                        DataWarehouse*, DataWarehouse* new_dw)
 {
   FVMBoundCond bc;
-  int num_matls = m_sharedState->getNumFVMMatls();
+  int num_matls = m_materialManager->getNumMatls( "FVM" );
 
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     for(int m = 0; m < num_matls; m++){
-      FVMMaterial* fvm_matl = m_sharedState->getFVMMaterial(m);
+      FVMMaterial* fvm_matl = (FVMMaterial* ) m_materialManager->getMaterial( "FVM", m);
       int idx = fvm_matl->getDWIndex();
 
       CCVariable<double> conductivity;
@@ -258,7 +258,7 @@ void ElectrostaticSolve::computeConductivity(const ProcessorGroup* pg,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-  int num_matls = m_sharedState->getNumFVMMatls();
+  int num_matls = m_materialManager->getNumMatls( "FVM" );
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
 
@@ -269,7 +269,7 @@ void ElectrostaticSolve::computeConductivity(const ProcessorGroup* pg,
     grid_conductivity.initialize(0.0);
 
     for(int m = 0; m < num_matls; m++){
-      FVMMaterial* fvm_matl = m_sharedState->getFVMMaterial(m);
+      FVMMaterial* fvm_matl = (FVMMaterial* ) m_materialManager->getMaterial( "FVM", m);
       int idx = fvm_matl->getDWIndex();
 
       constCCVariable<double> old_conductivty;

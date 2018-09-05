@@ -55,7 +55,7 @@ void MPMArches::doMomExchange
     
     for (int m = 0; m < numMPMMatls; m++) {
       
-      Material* matl = d_sharedState->getMPMMaterial( m );
+      Material* matl = d_materialManager->getMaterial( "MPM",  m );
       int idx = matl->getDWIndex();
       
       // allocateAndPut instead:

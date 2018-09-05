@@ -59,7 +59,7 @@
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 
 #include <Core/Grid/Box.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
@@ -161,7 +161,7 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
 
   m_arches_spec = db_params;
 
-  d_newBC = scinew BoundaryCondition_new( d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex() );
+  d_newBC = scinew BoundaryCondition_new( d_lab->d_materialManager->getMaterial( "Arches", 0)->getDWIndex() );
 
   if ( db != nullptr ) {
 
@@ -890,7 +890,7 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                                     const double simTime,
                                     double time_shift)
 {
-  //double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  //double simTime = d_lab->d_materialManager->getElapsedSimTime();
   //double current_time = simTime + time_shift;
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getFortranCellLowIndex();
@@ -1858,7 +1858,7 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<Vector>   areaFraction;
     SFCXVariable<double> areaFractionFX;
@@ -2435,7 +2435,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     const Level* level = getLevel(patches);
     const int ilvl = level->getID();
     int archIndex = 0;
-    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matl_index = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<int> cellType;
     new_dw->allocateAndPut(cellType, d_lab->d_cellTypeLabel, matl_index, patch);
@@ -2634,7 +2634,7 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
     const LevelP level = patch->getLevelP();
     const int ilvl = level->getID();
     int archIndex = 0;
-    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matl_index = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     vector<Patch::FaceType>::const_iterator bf_iter;
     vector<Patch::FaceType> bf;
@@ -2873,7 +2873,7 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
     const LevelP level = patch->getLevelP();
     const int ilvl = level->getID();
     int archIndex = 0;
-    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matl_index = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     vector<Patch::FaceType>::const_iterator bf_iter;
     vector<Patch::FaceType> bf;
@@ -3082,8 +3082,8 @@ void BoundaryCondition::setTurbInlet( const Patch* patch, const Patch::FaceType&
   IntVector insideCellDir = patch->faceDirection(face);
 
   int j, k;
-  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-  // double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  // int timeStep = d_lab->d_materialManager->getCurrentTopLevelTimeStep();
+  // double simTime = d_lab->d_materialManager->getElapsedSimTime();
   int t = TurbInlet->getTimeIndex( timeStep, simTime);
 
   IntVector shiftVec;
@@ -4014,7 +4014,7 @@ BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
       const Level* level = patch->getLevel();
       const int ilvl = level->getID();
       int archIndex = 0; // only one arches material
-      int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+      int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
       CCVariable<double> density;
       constCCVariable<double> old_density;
@@ -4964,7 +4964,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     const Vector Dx = patch->dCell();
     double dx=0, dy=0;
 
@@ -5438,7 +5438,7 @@ BoundaryCondition::create_radiation_temperature( const ProcessorGroup* pc,
 
     int archIndex = 0;
 
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> radiation_temperature;
 

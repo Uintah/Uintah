@@ -33,8 +33,8 @@
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/OS/Dir.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -89,12 +89,11 @@ class LoadBalancer;
     static bool m_wereSavesAndCheckpointsInitialized;
 
     //! Sets up when the DataArchiver will output and what data, according
-    //! to params.  Also stores state to keep track of time and time steps
-    //! in the simulation.  (If you only need to use DataArchiver to copy 
-    //! data, then you can pass a nullptr SimulationState
+    //! to params.  If you only need to use DataArchiver to copy 
+    //! data, then MaterialManager can be a nullptr.
     virtual void problemSetup( const ProblemSpecP    & params,
                                const ProblemSpecP    & restart_prob_spec,
-                               const SimulationStateP& state );
+                               const MaterialManagerP& materialManager );
 
     virtual void outputProblemSpec( ProblemSpecP & root_ps );
 
@@ -141,7 +140,7 @@ class LoadBalancer;
                                        SchedulerP & /* scheduler */,
                                        bool         recompile = false );
                                       
-    //! Call this after a time step restart where delt is adjusted to
+    //! Call this after a time step recompute where delt is adjusted to
     //! make sure there still will be output and/or checkpoint time step
     virtual void reevaluate_OutputCheckPointTimeStep(const double simTime,
                                                      const double delT);
@@ -199,9 +198,11 @@ class LoadBalancer;
     virtual int    getNextCheckpointWallTime() const { return m_nextCheckpointWallTime; }
 
     //! Returns true if data will be output this time step
+    virtual void setOutputTimeStep( bool val, const GridP & grid );
     virtual bool isOutputTimeStep() const { return m_isOutputTimeStep; }
 
     //! Returns true if data will be checkpointed this time step
+    virtual void setCheckpointTimeStep( bool val, const GridP & grid );
     virtual bool isCheckpointTimeStep() const { return m_isCheckpointTimeStep; }
 
     //! Get the directory of the current time step for outputting info.
@@ -416,7 +417,7 @@ class LoadBalancer;
     LoadBalancer         * m_loadBalancer{nullptr};
     
     //! pointer to simulation state, to get time step and time info
-    SimulationStateP m_sharedState;
+    MaterialManagerP m_materialManager;
 
     // Only one of these should be non-zero.  The value is read
     // from the .ups file.

@@ -37,17 +37,11 @@ namespace Uintah{
           std::vector< std::vector<std::vector<double>>> &LegData )
       {  
         sums=0.0;
-        int  it=0;
-        int  jt=0;
-        int  kt=0;
         for(int kk:{-1,0,1} ){
           for(int jj:{-1,0,1}){
             for(int ii:{-1,0,1}){
               //index=index+1;
               //LegData[ii][jj][kk]=dum[index];
-              it=ii+1;
-              jt=jj+1;
-              kt=kk+1;
               sums =sums+LegData[ii+1][jj+1][kk+1]*Vel(i+ii,j+jj,k+kk); //UR at ctr
             } // end kk
           } // end jj

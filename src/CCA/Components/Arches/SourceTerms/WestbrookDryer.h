@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_WestbrookDryer_h
 #define Uintah_Component_Arches_WestbrookDryer_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
@@ -104,7 +104,7 @@ public:
 
       std::string _name;
       std::string _type;
-      //SimulationStateP& _shared_state;
+      //MaterialManagerP& _materialManager;
       ArchesLabel* _field_labels;
       std::vector<std::string> _required_label_names;
 

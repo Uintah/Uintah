@@ -29,8 +29,8 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <vector>
 #include <map>
 
@@ -97,6 +97,7 @@ namespace Uintah {
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
     ParticleVariable<double> pcolor,ptempPrevious,p_q;
     ParticleVariable<double> psurface;
+    ParticleVariable<Vector> psurfgrad;
     ParticleVariable<long64> pparticleID;
     ParticleVariable<Vector> pdisp,pTempGrad,parea;
     ParticleVariable<Vector> pfiberdir; 

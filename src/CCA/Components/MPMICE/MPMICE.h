@@ -84,13 +84,11 @@ class MPMICE : public ApplicationCommon {
 
 public:
   MPMICE(const ProcessorGroup* myworld,
-         const SimulationStateP sharedState,
+         const MaterialManagerP materialManager,
          MPMType type, const bool doAMR = false);
   
   virtual ~MPMICE();
   
-  virtual bool restartableTimeSteps();
-
   virtual double recomputeDelT(const double delT); 
           
   virtual void problemSetup(const ProblemSpecP& params, 
@@ -112,7 +110,7 @@ public:
   
   // scheduleTimeAdvance version called by the AMR simulation controller.
   virtual void scheduleTimeAdvance( const LevelP& level, 
-				    SchedulerP&);
+                                    SchedulerP&);
  
   virtual void scheduleFinalizeTimestep(const LevelP& level, 
                                         SchedulerP&);
@@ -289,7 +287,7 @@ public:
                             std::vector<constCCVariable<double> > & cv,
                             std::vector<constCCVariable<double> > & gamma,
                             double convergence_crit,
-                            int numALLMatls,
+                            unsigned int numALLMatls,
                             int & count,
                             double & sum,
                             IntVector c );                   

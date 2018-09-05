@@ -67,7 +67,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       if ( type == "wall_heatflux_variable" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
+        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _materialManager );
         register_task( name, tsk );
 
       } else if ( type == "Interpolation_var" ){
@@ -538,7 +538,7 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
 
       if ( type == "wall_heatflux_variable" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
+        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _materialManager );
         register_task( name, tsk );
 
       } else if ( type == "variable_stats" ){

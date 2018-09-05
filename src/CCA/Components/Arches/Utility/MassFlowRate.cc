@@ -192,7 +192,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
         if ( i_bc->second.type == INLET ){
 
           // Get the cell iterator - range of cellID:
-          Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+          Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
           // Get the face direction (this is the outward facing normal):
           IntVector normal     = patch->faceDirection(i_bc->second.face);
@@ -202,21 +202,26 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
           }
 
           //Now loop through the cells:
-          for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
-            IntVector extra_cell_index    = *cell_iter;
-            IntVector interior_cell_index = *cell_iter - normal;
-            IntVector interior_face_index = *cell_iter - normalFace;
+            const int ic = i - normal[0]; // interior cell index
+            const int jc = j - normal[1];
+            const int kc = k - normal[2];
 
-            double rho_interp  = 0.5 * ( density[extra_cell_index] + density[interior_cell_index] );
+            const int iF = i - normalFace[0]; // interior FACE index
+            const int jF = j - normalFace[1];
+            const int kF = k - normalFace[2];
 
-            double RCqn_interp = 0.5 * ( RCqn[extra_cell_index]    + RCqn[interior_cell_index] );
-            double CHqn_interp = 0.5 * ( CHqn[extra_cell_index]    + CHqn[interior_cell_index] );
-            double wqn_interp  = 0.5 * ( wqn[extra_cell_index]     + wqn[interior_cell_index] );
 
-            double uvel_p_interp  = 0.5 * ( uvel_p[extra_cell_index] + uvel_p[interior_cell_index] );
-            double vvel_p_interp  = 0.5 * ( vvel_p[extra_cell_index] + vvel_p[interior_cell_index] );
-            double wvel_p_interp  = 0.5 * ( wvel_p[extra_cell_index] + wvel_p[interior_cell_index] );
+            double rho_interp  = 0.5 * ( density(i,j,k) + density(ic,jc,kc) );
+
+            double RCqn_interp = 0.5 * ( RCqn(i,j,k)    + RCqn(ic,jc,kc) );
+            double CHqn_interp = 0.5 * ( CHqn(i,j,k)    + CHqn(ic,jc,kc) );
+            double wqn_interp  = 0.5 * ( wqn (i,j,k)    + wqn (ic,jc,kc) );
+
+            double uvel_p_interp  = 0.5 * ( uvel_p(i,j,k) + uvel_p(ic,jc,kc) );
+            double vvel_p_interp  = 0.5 * ( vvel_p(i,j,k) + vvel_p(ic,jc,kc) );
+            double wvel_p_interp  = 0.5 * ( wvel_p(i,j,k) + wvel_p(ic,jc,kc) );
 
             double uvel_p_i = uvel_p_interp * m_p_uVel_scaling_constant[i] / wqn_interp ;
             double vvel_p_i = vvel_p_interp * m_p_vVel_scaling_constant[i] / wqn_interp ;
@@ -227,19 +232,19 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
 
             if(i_bc->second.face == Patch::xminus || i_bc->second.face == Patch::xplus ){
 
-              m_dot_gas += (i==0) ? rho_interp * std::abs(uvel_g[interior_face_index]) * area_x : 0.0; // gas is only computed once
+              m_dot_gas += (i==0) ? rho_interp * std::abs(uvel_g(iF,jF,kF)) * area_x : 0.0; // gas is only computed once
               m_dot_coal += ( RCi + CHi ) * std::abs(uvel_p_i) * area_x;
             }
             else if(i_bc->second.face == Patch::yminus || i_bc->second.face == Patch::yplus ){
-              m_dot_gas += (i==0) ? rho_interp * std::abs(vvel_g[interior_face_index]) * area_y : 0.0;
+              m_dot_gas += (i==0) ? rho_interp * std::abs(vvel_g(iF,jF,kF)) * area_y : 0.0;
               m_dot_coal += ( RCi + CHi ) * std::abs(vvel_p_i) * area_y;
             }
             // i_bc->second.name == "z-" || i_bc->second.name == "z+"
             else{
-              m_dot_gas += (i==0) ? rho_interp * std::abs(wvel_g[interior_face_index]) * area_z : 0.0;
+              m_dot_gas += (i==0) ? rho_interp * std::abs(wvel_g(iF,jF,kF)) * area_z : 0.0;
               m_dot_coal += ( RCi + CHi ) * std::abs(wvel_p_i) * area_z;
             }
-          }
+          });
         }
       }
     }
@@ -263,7 +268,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
       if ( i_bc->second.type == INLET ){
 
         // Get the cell iterator - range of cellID:
-        Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+        Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
         // Get the face direction (this is the outward facing normal):
         IntVector normal     = patch->faceDirection(i_bc->second.face);
@@ -273,25 +278,29 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
         }
 
         //Now loop through the cells:
-        for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+        parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
-          IntVector extra_cell_index    = *cell_iter;
-          IntVector interior_cell_index = *cell_iter - normal;
-          IntVector interior_face_index = *cell_iter - normalFace;
+          const int ic = i - normal[0]; // interior cell index
+          const int jc = j - normal[1];
+          const int kc = k - normal[2];
 
-          double rho_interp  = 0.5 * ( density[extra_cell_index] + density[interior_cell_index] );
+          const int iF = i - normalFace[0]; // interior FACE index
+          const int jF = j - normalFace[1];
+          const int kF = k - normalFace[2];
+
+          double rho_interp  = 0.5 * ( density(i,j,k) + density(ic,jc,kc) );
 
           if(i_bc->second.face == Patch::xminus || i_bc->second.face == Patch::xplus ){
-            m_dot_gas += rho_interp * std::abs(uvel_g[interior_face_index]) * area_x;
+            m_dot_gas += rho_interp * std::abs(uvel_g(iF,jF,kF)) * area_x;
           }
           else if(i_bc->second.face == Patch::yminus || i_bc->second.face == Patch::yplus ){
-            m_dot_gas += rho_interp * std::abs(vvel_g[interior_face_index]) * area_y;
+            m_dot_gas += rho_interp * std::abs(vvel_g(iF,jF,kF)) * area_y;
           }
           // i_bc->second.name == "z-" || i_bc->second.name == "z+"
           else{
-            m_dot_gas += rho_interp * std::abs(wvel_g[interior_face_index]) * area_z;
+            m_dot_gas += rho_interp * std::abs(wvel_g(iF,jF,kF)) * area_z;
           }
-        }
+        });
       }
     }
     new_dw->put(sum_vartype(m_dot_gas), VarLabel::find("m_dot_g"));

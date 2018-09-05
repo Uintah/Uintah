@@ -42,7 +42,7 @@
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
@@ -271,7 +271,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   LoadBalancer* lb = sched->getLoadBalancer();
   d_perproc_patches = lb->getPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
-  //  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  //  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
 
 
   string taskname =  "EnthalpySolver::BuildCoeff" +
@@ -387,7 +387,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
                                        DataWarehouse* new_dw,
                                        const TimeIntegratorLabel* timelabels)
 {
-  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // int timeStep = d_lab->d_materialManager->getCurrentTopLevelTimeStep();
   timeStep_vartype timeStep;
   old_dw->get( timeStep, d_lab->d_timeStepLabel );
 
@@ -417,8 +417,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                    getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->
+                    getMaterial( "Arches", archIndex)->getDWIndex(); 
     ArchesVariables enthalpyVars;
     ArchesConstVariables constEnthalpyVars;
     
@@ -745,8 +745,8 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                    getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->
+                    getMaterial( "Arches", archIndex)->getDWIndex(); 
     ArchesVariables enthalpyVars;
     ArchesConstVariables constEnthalpyVars;
 

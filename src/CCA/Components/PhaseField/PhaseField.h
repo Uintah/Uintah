@@ -498,7 +498,7 @@ protected:
 
 public:
     PhaseField ( const ProcessorGroup * myworld,
-		 const SimulationStateP sharedState,
+		 const MaterialManagerP materialManager,
 		 int verbosity = 0 );
   
     virtual ~PhaseField();
@@ -549,8 +549,8 @@ using CCPhaseField3D = PhaseField <PF::CellCentered, 1, 3>;
 using NCPhaseField3D = PhaseField <PF::NodeCentered, 1, 3>;
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
-PhaseField<VariableType, NumGhosts, Dimension>::PhaseField ( ProcessorGroup const * myworld, const SimulationStateP sharedState, int verbosity )
-  : ApplicationCommon ( myworld, sharedState )
+PhaseField<VariableType, NumGhosts, Dimension>::PhaseField ( ProcessorGroup const * myworld, const MaterialManagerP materialManager, int verbosity )
+  : ApplicationCommon ( myworld, materialManager )
     , dbg_out1 ( "PhaseField", verbosity > 0 )
     , dbg_out2 ( "PhaseField", verbosity > 1 )
     , dbg_out3 ( "PhaseField", verbosity > 2 )
@@ -591,7 +591,7 @@ void PhaseField<VariableType, NumGhosts, Dimension>::problemSetup ( ProblemSpecP
 {
     setLockstepAMR( true );
 
-    m_sharedState->registerSimpleMaterial ( scinew SimpleMaterial() );
+    m_materialManager->registerSimpleMaterial ( scinew SimpleMaterial() );
 
     ProblemSpecP phase_field = params->findBlock ( "PhaseField" );
     phase_field->require ( "delt", delt );
@@ -618,7 +618,7 @@ void PhaseField<VariableType, NumGhosts, Dimension>::scheduleInitialize ( LevelP
         task->computes ( grad_psi_label[d] );
     for ( int d = 0; d < b_size; ++d )
         task->computes ( b_label[d] );
-    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
@@ -626,7 +626,7 @@ void PhaseField<VariableType, NumGhosts, Dimension>::scheduleComputeStableTimeSt
 {
     Task * task = scinew Task ( "PhaseField::task_compute_stable_timestep", this, &PhaseField::task_compute_stable_timestep );
     task->computes ( getDelTLabel(), level.get_rep() );
-    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
@@ -647,9 +647,9 @@ void PhaseField<VariableType, NumGhosts, Dimension>::scheduleTimeAdvance ( Level
     task_time_advance_current_solution_requires ( level, task_current_solution );
     task_time_advance_current_solution_computes ( task_current_solution );
 
-    sched->addTask ( task_psi_grad, level->eachPatch(), m_sharedState->allMaterials() );
-    sched->addTask ( task_anisotropy_terms, level->eachPatch(), m_sharedState->allMaterials() );
-    sched->addTask ( task_current_solution, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task_psi_grad, level->eachPatch(), m_materialManager->allMaterials() );
+    sched->addTask ( task_anisotropy_terms, level->eachPatch(), m_materialManager->allMaterials() );
+    sched->addTask ( task_current_solution, level->eachPatch(), m_materialManager->allMaterials() );
 
     dbg_out2 << std::endl;
 }

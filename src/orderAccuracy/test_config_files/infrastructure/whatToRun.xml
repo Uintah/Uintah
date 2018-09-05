@@ -5,7 +5,6 @@
 
 <test>
   <name>raceTest_Unified_ICE</name>
-  <ups>advect.ups</ups>
   <tst>raceTest_Unified.tst</tst>
 </test>
 

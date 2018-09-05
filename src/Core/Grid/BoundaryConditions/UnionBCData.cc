@@ -148,13 +148,14 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
 #if 0
   cout << "UnionBC determineIteratorLimits()" << endl;
 #endif
+std::cout << " \n\n You weren't suppose to get in UnionBCData::determineIteratorLimits! \n This function was determined to never be used, it was altered w/o being tested. To use, you may need to  pad iterators 'cells' and 'nodes' appropriately in source code\n";  
 
   for (std::vector<BCGeomBase*>::const_iterator bc = child.begin();
        bc != child.end(); ++bc) {
     (*bc)->determineIteratorLimits(face,patch,test_pts);
   }
-  
-  UnionIterator cells,nodes;
+
+  UnionIterator cells(0),nodes(0);   // to use properly, we must know the upper limit size of cells and nodes (untested)
 
   for (std::vector<BCGeomBase*>::const_iterator bc = child.begin();
        bc != child.end(); ++bc) {
@@ -168,6 +169,7 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
 
   d_cells = UnionIterator(cells);   
   d_nodes = UnionIterator(nodes); 
+
 
 
 #if 0

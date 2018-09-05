@@ -33,7 +33,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
@@ -56,9 +56,9 @@ static DebugStream cout_doing("VORTICITY_DOING_COUT", false);
 static DebugStream cout_dbg("VORTICITY_DBG_COUT", false);
 //______________________________________________________________________
 vorticity::vorticity(const ProcessorGroup* myworld,
-                     const SimulationStateP sharedState,
+                     const MaterialManagerP materialManager,
                      const ProblemSpecP& module_spec)
-  : AnalysisModule(myworld, sharedState, module_spec)
+  : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_matl_set = 0;
   v_lb = scinew vorticityLabel();
@@ -83,14 +83,16 @@ vorticity::~vorticity()
 //     P R O B L E M   S E T U P
 void vorticity::problemSetup(const ProblemSpecP& ,
                              const ProblemSpecP& ,
-                             GridP& grid)
+                             GridP& grid,
+                             std::vector<std::vector<const VarLabel* > > &PState,
+                             std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tvorticity" << endl;
   
   v_lb->vorticityLabel = VarLabel::create("vorticity", CCVariable<Vector>::getTypeDescription());
   
   // determine which material index to compute
-  d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
+  d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
   
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();

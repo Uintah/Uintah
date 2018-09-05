@@ -150,10 +150,10 @@ MPIScheduler::~MPIScheduler()
 //
 void
 MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                          , const SimulationStateP & state
+                          , const MaterialManagerP & materialManager
                           )
 {
-  SchedulerCommon::problemSetup(prob_spec, state);
+  SchedulerCommon::problemSetup(prob_spec, materialManager);
 }
 
 //______________________________________________________________________
@@ -164,7 +164,7 @@ MPIScheduler::createSubScheduler()
   MPIScheduler * newsched = scinew MPIScheduler( d_myworld, this );
 
   newsched->setComponents( this );
-  newsched->m_sharedState = m_sharedState;
+  newsched->m_materialManager = m_materialManager;
   return newsched;
 }
 
@@ -834,11 +834,16 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       printTaskLevels( d_myworld, g_task_level, dtask );
     }
 
-    if(!abort && m_dws[m_dws.size()-1] && m_dws[m_dws.size()-1]->timestepAborted()){
+    // ARS - FIXME CHECK THE WAREHOUSE
+    OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
+    if (!abort && dw && dw->abortTimeStep()) {
+      // TODO - abort might not work with external queue...
       abort = true;
       abort_point = dtask->getTask()->getSortedOrder();
 
-      DOUT(true, "  WARNING:  Aborting timestep after task: " << dtask->getTask()->getName());
+      DOUT(true,  "Rank-" << d_myworld->myRank()
+                          << "  WARNING: Aborting time step after task: "
+                          << dtask->getTask()->getName());
     }
 
   } // end while( numTasksDone < ntasks )
@@ -890,7 +895,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
         
         // Go through all materials since getting an MPMMaterial
         // correctly would depend on MPM
-        for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+        for (unsigned int m = 0; m < m_materialManager->getNumMatls(); m++) {
           if (dw->haveParticleSubset(m, patch)) {
             numParticles += dw->getParticleSubset(m, patch)->numParticles();
           }

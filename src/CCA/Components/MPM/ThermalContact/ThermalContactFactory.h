@@ -26,7 +26,7 @@
 #define __ThermalContactFactory__
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 namespace Uintah {
 
@@ -36,7 +36,7 @@ namespace Uintah {
 
   class ThermalContactFactory {
   public:
-   static ThermalContact* create(const ProblemSpecP& ps,SimulationStateP& d_sS,
+   static ThermalContact* create(const ProblemSpecP& ps,MaterialManagerP& d_sS,
                                  MPMLabel* lb,MPMFlags* flag);
 
   };

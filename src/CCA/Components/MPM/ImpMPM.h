@@ -85,7 +85,7 @@ WARNING
 class ImpMPM : public MPMCommon {
 public:
   ImpMPM(const ProcessorGroup* myworld,
-	 const SimulationStateP sharedStat);
+         const MaterialManagerP sharedStat);
   
   virtual ~ImpMPM();
 
@@ -126,7 +126,6 @@ public:
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                     SchedulerP& sched);
 
-  virtual bool restartableTimeSteps();
   virtual double recomputeDelT(const double delT);
 
   void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);

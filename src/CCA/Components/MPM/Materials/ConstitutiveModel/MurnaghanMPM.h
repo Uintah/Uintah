@@ -56,8 +56,8 @@ namespace Uintah {
     struct CMData {             // Assumed unit; Description
       double d_K;               // Pa^-1         Compressibility of the material
       double d_rho0;            // kg/m^3        Reference density of material in normal state
-      double d_Gamma;		// unitless      
-      double d_P0;		// Pa            Reference Pressure
+      double d_Gamma;           // unitless      
+      double d_P0;              // Pa            Reference Pressure
       double d_Viscosity;
     };
 

@@ -32,7 +32,7 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Parallel/Parallel.h>
@@ -59,9 +59,9 @@ static DebugStream cout_doing("LINEEXTRACT_DOING_COUT", false);
 static DebugStream cout_dbg("LINEEXTRACT_DBG_COUT", false);
 //______________________________________________________________________
 lineExtract::lineExtract(const ProcessorGroup* myworld,
-			 const SimulationStateP sharedState,
-			 const ProblemSpecP& module_spec )
-  : AnalysisModule(myworld, sharedState, module_spec)
+                         const MaterialManagerP materialManager,
+                         const ProblemSpecP& module_spec )
+  : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_matl_set = 0;
   d_zero_matl = 0;
@@ -94,11 +94,13 @@ lineExtract::~lineExtract()
 //     P R O B L E M   S E T U P
 void lineExtract::problemSetup(const ProblemSpecP& ,
                                const ProblemSpecP& ,
-                               GridP& grid)
+                               GridP& grid,
+                               std::vector<std::vector<const VarLabel* > > &PState,
+                               std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tlineExtract" << endl;
   
-  int numMatls  = m_sharedState->getNumMatls();
+  int numMatls  = m_materialManager->getNumMatls();
                                
   ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_lineE", 
                                             max_vartype::getTypeDescription());
@@ -123,13 +125,13 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
   //  <material>   atmosphere </material>
   //  <materialIndex> 1 </materialIndex>
   if(m_module_spec->findBlock("material") ){
-    d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
+    d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
   } else if (m_module_spec->findBlock("materialIndex") ){
     int indx;
     m_module_spec->get("materialIndex", indx);
-    d_matl = m_sharedState->getMaterial(indx);
+    d_matl = m_materialManager->getMaterial(indx);
   } else {
-    d_matl = m_sharedState->getMaterial(0);
+    d_matl = m_materialManager->getMaterial(0);
   }
   
   int defaultMatl = d_matl->getDWIndex();
@@ -442,7 +444,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  // double now = m_sharedState->getElapsedSimTime();
+  // double now = m_materialManager->getElapsedSimTime();
   
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);

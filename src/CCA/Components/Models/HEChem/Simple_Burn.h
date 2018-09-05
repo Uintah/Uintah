@@ -64,8 +64,8 @@ WARNING
   class Simple_Burn : public HEChemModel {
   public:
     Simple_Burn(const ProcessorGroup* myworld,
-		const SimulationStateP& sharedState,
-		const ProblemSpecP& params,
+                const MaterialManagerP& materialManager,
+                const ProblemSpecP& params,
                 const ProblemSpecP& prob_spec);
     
     virtual ~Simple_Burn();

@@ -10,7 +10,7 @@ namespace Uintah{
 
 public:
 
-    MMS_mom<T>( std::string task_name, int matl_index, SimulationStateP shared_state  );
+    MMS_mom<T>( std::string task_name, int matl_index, MaterialManagerP materialManager  );
     ~MMS_mom<T>();
 
     void problemSetup( ProblemSpecP& db );
@@ -20,19 +20,19 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, SimulationStateP shared_state ) :
-        _task_name(task_name), _matl_index(matl_index), _shared_state(shared_state){}
+      Builder( std::string task_name, int matl_index, MaterialManagerP materialManager ) :
+        _task_name(task_name), _matl_index(matl_index), _materialManager(materialManager){}
       ~Builder(){}
 
       MMS_mom* build()
-      { return scinew MMS_mom<T>( _task_name, _matl_index, _shared_state  ); }
+      { return scinew MMS_mom<T>( _task_name, _matl_index, _materialManager  ); }
 
       private:
 
       std::string _task_name;
       int _matl_index;
 
-      SimulationStateP _shared_state;
+      MaterialManagerP _materialManager;
     };
 
  protected:
@@ -74,7 +74,7 @@ private:
     std::string m_MMS_source_diff_label;
     std::string m_MMS_source_t_label;
 
-    SimulationStateP _shared_state;
+    MaterialManagerP _materialManager;
 
     void compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -82,8 +82,8 @@ private:
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-MMS_mom<T>::MMS_mom( std::string task_name, int matl_index, SimulationStateP shared_state ) :
-TaskInterface( task_name, matl_index ) , _shared_state(shared_state){
+MMS_mom<T>::MMS_mom( std::string task_name, int matl_index, MaterialManagerP materialManager ) :
+TaskInterface( task_name, matl_index ) , _materialManager(materialManager){
 
 }
 
@@ -190,12 +190,12 @@ void MMS_mom<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_
   T& f_mms = *(tsk_info->get_uintah_field<T>(m_MMS_label));
   T& s_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_label));
   T& s_diff_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_diff_label));
-  T& s_t_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_t_label));
+  // T& s_t_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_t_label));
 
   constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);
   constCCVariable<double>& y = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_y_name);
 
-//  double time_d      = _shared_state->getElapsedTime();
+//  double time_d      = _materialManager->getElapsedTime();
 //  int   time_substep = tsk_info->get_time_substep();
 //  double factor      = tsk_info->get_ssp_time_factor(time_substep);
 //  double dt          = tsk_info->get_dt();
@@ -221,14 +221,14 @@ void MMS_mom<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_
      });
   }  else if (m_which_vel == "p") {
      const double u_x = 1.0;
-     const double u_y = 1.0;      
+     const double u_y = 1.0;
      Uintah::parallel_for( range, [&](int i, int j, int k){
 
        f_mms(i,j,k) = 1.0  - m_amp * cos( m_two_pi * x(i,j,k) )
                                   * sin( m_two_pi * y(i,j,k) );
 
        s_mms(i,j,k) =  m_amp*m_two_pi*u_x*sin(m_two_pi*x(i,j,k))*sin(m_two_pi*y(i,j,k))
-                        - m_amp*m_two_pi*u_y*cos(m_two_pi*x(i,j,k))*cos(m_two_pi*y(i,j,k)); 
+                        - m_amp*m_two_pi*u_y*cos(m_two_pi*x(i,j,k))*cos(m_two_pi*y(i,j,k));
 
        s_diff_mms(i,j,k) = -2.0*m_amp*m_two_pi*m_two_pi*cos(m_two_pi*x(i,j,k))*sin(m_two_pi*y(i,j,k));
 

@@ -90,6 +90,7 @@ namespace Uintah {
       const VarLabel* pSurfLabel;
       const VarLabel* pSurfLabel_preReloc;
       const VarLabel* pSurfGradLabel;
+      const VarLabel* pSurfGradLabel_preReloc;
       const VarLabel* pLastLevelLabel;
       const VarLabel* pLastLevelLabel_preReloc;
       const VarLabel* pTemperatureLabel; //for heat conduction

@@ -59,7 +59,7 @@ WARNING
   class MPNP : public ApplicationCommon {
   public:
     MPNP(const ProcessorGroup* myworld,
-	 const SimulationStateP sharedState);
+	 const MaterialManagerP materialManager);
     
     virtual ~MPNP();
 

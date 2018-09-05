@@ -427,12 +427,12 @@ namespace Uintah{
       CT& charProdRate = *(tsk_info->get_const_uintah_field<CT>(particle_char_prod_name));
       CT& weight       = *(tsk_info->get_const_uintah_field<CT>(w_name));
 
-      CT* birthPtr;
-      if ( _base_birth_name != "none" ) {
-        const std::string birth_name = get_name( ienv, _base_birth_name );
-        birthPtr = tsk_info->get_const_uintah_field<CT>(birth_name);
-      }
-      CT& birth = *birthPtr;
+      //CT* birthPtr;
+      //if ( _base_birth_name != "none" ) {
+        //const std::string birth_name = get_name( ienv, _base_birth_name );
+        //birthPtr = tsk_info->get_const_uintah_field<CT>(birth_name);
+      //}
+      //CT& birth = *birthPtr; //not used
 
       Uintah::parallel_for( range, [&](int i, int j, int k){
 

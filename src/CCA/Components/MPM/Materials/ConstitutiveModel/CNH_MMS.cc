@@ -54,58 +54,58 @@ void CNH_MMS::initializeCMData(const Patch* patch,
 string mms_type = flag->d_mms_type;
 if(!mms_type.empty()) {
     if(mms_type == "GeneralizedVortex" || mms_type == "ExpandingRing"){
-//	cout << "Entered CM" << endl;
-  	initSharedDataForExplicit(patch, matl, new_dw);
-  	computeStableTimeStep(patch, matl, new_dw);
+//      cout << "Entered CM" << endl;
+        initSharedDataForExplicit(patch, matl, new_dw);
+        computeStableTimeStep(patch, matl, new_dw);
 
     } else if (mms_type == "AxisAligned" || mms_type == "AxisAligned3L" ){
-  	Matrix3 I; I.Identity();
-  	Matrix3 zero(0.);
-  	ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+        Matrix3 I; I.Identity();
+        Matrix3 zero(0.);
+        ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
                                                                                 
-  	ParticleVariable<double>  pdTdt;
-  	ParticleVariable<Matrix3> pDefGrad, pStress;
-  	constParticleVariable<Point>  px;
-  	constParticleVariable<Vector>  pdisp;
-  	double mu = d_initialData.Shear;
-  	double bulk = d_initialData.Bulk;
-  	double lambda = (3.*bulk-2.*mu)/3.;
+        ParticleVariable<double>  pdTdt;
+        ParticleVariable<Matrix3> pDefGrad, pStress;
+        constParticleVariable<Point>  px;
+        constParticleVariable<Vector>  pdisp;
+        double mu = d_initialData.Shear;
+        double bulk = d_initialData.Bulk;
+        double lambda = (3.*bulk-2.*mu)/3.;
 
-  	double A=0.05;
+        double A=0.05;
                                                                                 
-  	new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
-  	new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
-  	new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
-  	new_dw->get(px,                     lb->pXLabel,                  pset);
-  	new_dw->get(pdisp,                  lb->pDispLabel,               pset);
+        new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
+        new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
+        new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
+        new_dw->get(px,                     lb->pXLabel,                  pset);
+        new_dw->get(pdisp,                  lb->pDispLabel,               pset);
                                                                                 
-  	// To fix : For a material that is initially stressed we need to
-  	// modify the stress tensors to comply with the initial stress state
-  	ParticleSubset::iterator iter = pset->begin();
-  	for(; iter != pset->end(); iter++){
-    	particleIndex idx = *iter;
-    	pdTdt[idx] = 0.0;
-    	Point X=px[idx]-pdisp[idx];
-    	double Fxx=1.;
-    	double Fyy=1.+A*M_PI*cos(M_PI*X.y())*sin(2./3.*M_PI);
-    	double Fzz=1.+A*M_PI*cos(M_PI*X.z())*sin(4./3.*M_PI);
-    	pDefGrad[idx] = Matrix3(Fxx,0.,0.,0.,Fyy,0.,0.,0.,Fzz);
+        // To fix : For a material that is initially stressed we need to
+        // modify the stress tensors to comply with the initial stress state
+        ParticleSubset::iterator iter = pset->begin();
+        for(; iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        pdTdt[idx] = 0.0;
+        Point X=px[idx]-pdisp[idx];
+        double Fxx=1.;
+        double Fyy=1.+A*M_PI*cos(M_PI*X.y())*sin(2./3.*M_PI);
+        double Fzz=1.+A*M_PI*cos(M_PI*X.z())*sin(4./3.*M_PI);
+        pDefGrad[idx] = Matrix3(Fxx,0.,0.,0.,Fyy,0.,0.,0.,Fzz);
 
-    	double J=pDefGrad[idx].Determinant();
-    	Matrix3 Shear= (pDefGrad[idx]*pDefGrad[idx].Transpose() - I)*mu;
+        double J=pDefGrad[idx].Determinant();
+        Matrix3 Shear= (pDefGrad[idx]*pDefGrad[idx].Transpose() - I)*mu;
 
-    	double p = lambda*log(J);
-    	pStress[idx] = (I*p + Shear)/J;
-  	}
+        double p = lambda*log(J);
+        pStress[idx] = (I*p + Shear)/J;
+        }
 
-  	computeStableTimeStep(patch, matl, new_dw);
+        computeStableTimeStep(patch, matl, new_dw);
     }
 } 
 // Default Uintah case
-	else {
-		initSharedDataForExplicit(patch, matl, new_dw);
-  		computeStableTimeStep(patch, matl, new_dw);
-  	}
+        else {
+                initSharedDataForExplicit(patch, matl, new_dw);
+                computeStableTimeStep(patch, matl, new_dw);
+        }
 }
 
 void CNH_MMS::addParticleState(std::vector<const VarLabel*>& ,

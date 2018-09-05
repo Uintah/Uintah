@@ -6,7 +6,7 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -23,27 +23,27 @@ BadHawkDevolBuilder::BadHawkDevolBuilder( const std::string         & modelName,
                                                   const vector<std::string> & reqICLabelNames,
                                                   const vector<std::string> & reqScalarLabelNames,
                                                   ArchesLabel         * fieldLabels,
-                                                  SimulationStateP          & sharedState,
+                                                  MaterialManagerP          & materialManager,
                                                   int qn ) :
-  ModelBuilder( modelName, fieldLabels, reqICLabelNames, reqScalarLabelNames, sharedState, qn )
+  ModelBuilder( modelName, fieldLabels, reqICLabelNames, reqScalarLabelNames, materialManager, qn )
 {
 }
 
 BadHawkDevolBuilder::~BadHawkDevolBuilder(){}
 
 ModelBase* BadHawkDevolBuilder::build() {
-  return scinew BadHawkDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return scinew BadHawkDevol( d_modelName, d_materialManager, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
 BadHawkDevol::BadHawkDevol( std::string modelName, 
-                                    SimulationStateP& sharedState,
+                                    MaterialManagerP& materialManager,
                                     ArchesLabel* fieldLabels,
                                     vector<std::string> icLabelNames, 
                                     vector<std::string> scalarLabelNames,
                                     int qn ) 
-: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn), 
+: ModelBase(modelName, materialManager, fieldLabels, icLabelNames, scalarLabelNames, qn), 
   d_fieldLabels(fieldLabels)
 {
   d_quad_node = qn;
@@ -197,7 +197,7 @@ BadHawkDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
   std::string taskname = "BadHawkDevol::initVars";
   Task* tsk = scinew Task(taskname, this, &BadHawkDevol::initVars);
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 }
 
 //-------------------------------------------------------------------------
@@ -346,7 +346,7 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   } //end for
   */
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 
 }
 
@@ -368,7 +368,7 @@ BadHawkDevol::computeModel( const ProcessorGroup * pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> devol_rate;
     if( new_dw->exists( d_modelLabel, matlIndex, patch ) ) {

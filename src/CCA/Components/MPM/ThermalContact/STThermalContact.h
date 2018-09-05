@@ -27,11 +27,11 @@
 
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Ports/DataWarehouseP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 #include <cmath>
@@ -75,7 +75,7 @@ WARNING
   class STThermalContact : public ThermalContact {
     public:
     // Constructor
-    STThermalContact(ProblemSpecP& ps,SimulationStateP& d_sS, MPMLabel* lb,
+    STThermalContact(ProblemSpecP& ps,MaterialManagerP& d_sS, MPMLabel* lb,
                      MPMFlags* flag);
 
     // Destructor
@@ -98,7 +98,7 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
     private:
-      SimulationStateP d_sharedState;
+      MaterialManagerP d_materialManager;
       MPMLabel* lb;
       // Prevent copying of this class
       // copy constructor

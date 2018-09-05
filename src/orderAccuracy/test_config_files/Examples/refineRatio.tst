@@ -15,8 +15,8 @@
     <randomSeed> true </randomSeed>
   </replace_lines>
   <replace_values>
-       /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
-       /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,1]
+       <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/patches" value ='[1,1,1]' />
+       <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[1,1,1]' />
   </replace_values>
 </AllTests>
 
@@ -26,8 +26,8 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>1</x>
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[41,41,41]
-         /Uintah_specification/Grid/Level/Box[@label=1]/resolution :[41,41,41]
+         <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/resolution" value ='[41,41,41]' />
+         <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/resolution" value ='[41,41,41]' />
     </replace_values>
 </Test>
 
@@ -37,8 +37,8 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>2</x>
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[41,41,41]
-         /Uintah_specification/Grid/Level/Box[@label=1]/resolution :[82,82,82]
+         <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/resolution" value ='[41,41,41]' />
+         <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/resolution" value ='[82,82,82]' />
     </replace_values>
 </Test>
 <Test>
@@ -47,8 +47,8 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>4</x>
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[41,41,41]
-         /Uintah_specification/Grid/Level/Box[@label=1]/resolution :[164,164,164]
+         <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/resolution" value ='[41,41,41]' />
+         <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/resolution" value ='[164,164,164]' />
     </replace_values>
 </Test>
 
@@ -58,8 +58,8 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>8</x>
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[41,41,41]
-         /Uintah_specification/Grid/Level/Box[@label=1]/resolution :[328,328,328]
+         <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/resolution" value ='[41,41,41]' />
+         <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/resolution" value ='[328,328,328]' />
     </replace_values>
 </Test>
 <!--
@@ -69,8 +69,8 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>16</x>
     <replace_values>
-         /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[41,41,41]
-         /Uintah_specification/Grid/Level/Box[@label=1]/resolution :[656,656,656]
+         <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/resolution" value ='[41,41,41]' />
+         <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/resolution" value ='[656,656,656]' />
     </replace_values>
 </Test>
 -->

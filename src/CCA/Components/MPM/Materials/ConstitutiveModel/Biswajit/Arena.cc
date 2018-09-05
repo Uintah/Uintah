@@ -28,11 +28,11 @@ which has some of the basic features needed for modeling geomaterials.
 To better explain the source code, the comments in this file frequently refer
 to the equations in the following three references:
 1. The Arenisca manual,
-2. R.M.	Brannon and S. Leelavanichkul, "A multi-stage return algorithm for
+2. R.M. Brannon and S. Leelavanichkul, "A multi-stage return algorithm for
    solving the classical damage component of constitutive models for rocks,
    ceramics, and other rock-like media", International Journal of Fracture,
    163, pp.133-149, 2010, and
-3. R.M.	Brannon, "Elements of Phenomenological Plasticity: Geometrical Insight,
+3. R.M. Brannon, "Elements of Phenomenological Plasticity: Geometrical Insight,
    Computational Algorithms, and Topics in Shock Physics", Shock Wave Science
    and Technology Reference Library: Solids I, Springer 2: pp. 189-274, 2007.
 
@@ -1089,16 +1089,16 @@ void Arena::computeStressTensor(const PatchSubset* patches,
 
                 // Fast return algorithm in other cases (see "fig:ArenaYieldSurface"
                 // in the Arenisca manual). In this case, the radial fast returning is used.
-	        stress_iteration = stress_iteration + S_iteration*
+                stress_iteration = stress_iteration + S_iteration*
                                     ((peakI1_hardening-fSlope*I1_iteration)/
                                      sqrt(J2_iteration)-1);
 
               }
 
-	      // Compute the invariants of the fast returned stress in the loop
-	      computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
+              // Compute the invariants of the fast returned stress in the loop
+              computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
 
-	      if (I1_iteration>=kappa_loop){
+              if (I1_iteration>=kappa_loop){
 
                 // Compute the gradient of the yield surface and the unit tensor in the
                 // direction of the plastic strain at the fast returned stress for the case
@@ -1108,7 +1108,7 @@ void Arena::computeStressTensor(const PatchSubset* patches,
                 M = Identity*(-2.0)*fSlope_p*(fSlope*I1_iteration-peakI1_hardening) + S_iteration;
                 M = M/M.Norm();
 
-	      }else{
+              }else{
 
                 // Compute the gradient of the yield surface and the unit tensor in the
                 // direction of the plastic strain at the fast returned stress for the case
@@ -1129,7 +1129,7 @@ void Arena::computeStressTensor(const PatchSubset* patches,
                 }
                 M = M/M.Norm();
 
-	      }
+              }
 
               // Compute the back stress tensor
               double deltaBackStressIso_temp = exp(p3_crush_curve+pPlasticStrainVol_new[idx]);
@@ -1143,12 +1143,12 @@ void Arena::computeStressTensor(const PatchSubset* patches,
               double I1_M,J2_M;
               Matrix3 S_M;
               computeInvariants(M, S_M, I1_M, J2_M);
-	             P = (Identity*lame*(M.Trace()) + M*2.0*shear)
+                     P = (Identity*lame*(M.Trace()) + M*2.0*shear)
                   -deltaBackStressIso*M.Trace()-deltaBackStress*sqrt(J2_M);
 
               // Compute the multiplier Gamma
               // See Eq. 35 in 'Brannon & Leelavanichkul 2010'.
-	      gamma = ( G.Contract(trial_stress_loop-stress_iteration) )/( G.Contract(P) );
+              gamma = ( G.Contract(trial_stress_loop-stress_iteration) )/( G.Contract(P) );
 
               // Loop to apply hardening in calculation of multiplier Gamma
               int condGamma = 1;
@@ -1167,7 +1167,7 @@ void Arena::computeStressTensor(const PatchSubset* patches,
 
                 // Compute new trial stress for the current subcycle in the loop
                 // See Eq. 22 in 'Brannon & Leelavanichkul 2010'.
-	               stress_iteration = trial_stress_loop - P*gamma;
+                       stress_iteration = trial_stress_loop - P*gamma;
 
                 // Compute the un-shifted new trial stress for the current subcycle in the loop
                 stress_iteration = stress_iteration + pBackStress_loop;
@@ -1292,7 +1292,7 @@ void Arena::computeStressTensor(const PatchSubset* patches,
 
                 // Re-compute new trial stress for the current subcycle in the loop
                 // See Eq. 22 in 'Brannon & Leelavanichkul 2010'.
-	        stress_iteration = trial_stress_loop - P*gamma;
+                stress_iteration = trial_stress_loop - P*gamma;
 
                 // Update \kappa (= the position of the cap) see "eq:evolutionOfKappaFluidEffect"
                 // in the Arenisca manual
@@ -1392,7 +1392,7 @@ void Arena::computeStressTensor(const PatchSubset* patches,
 
               f_new_loop=sqrt(abs(f_new_loop));
 
-	    }
+            }
 
             // Transfer the back stress, \kappa, and final stress in the current subcycle
             // to the associated particle variables
@@ -1408,16 +1408,16 @@ void Arena::computeStressTensor(const PatchSubset* patches,
 
             // Compute two coefficients that are used in calculation of strain from stress
             double shear_inverse = 0.5/shear;
-	    double lame_inverse = (-1.0)*lame/(2.0*shear*(2.0*shear+3.0*lame));
+            double lame_inverse = (-1.0)*lame/(2.0*shear*(2.0*shear+3.0*lame));
 
             // Compute the difference between the stress tensor at the beginning and end of
             // the current subcycle
             Matrix3 diff_stress_iteration = trial_stress_loop - stress_new[idx];
-	    Matrix3 strain_iteration = (Identity*lame_inverse*(diff_stress_iteration.Trace()) +
+            Matrix3 strain_iteration = (Identity*lame_inverse*(diff_stress_iteration.Trace()) +
                                         diff_stress_iteration*shear_inverse);
 
             // Update the plastic strain magnitude
-	    pPlasticStrain_new[idx] = pPlasticStrain_new[idx] + strain_iteration.Norm();
+            pPlasticStrain_new[idx] = pPlasticStrain_new[idx] + strain_iteration.Norm();
 
             // Update the volumetric part of the plastic strain
             //cerr << " Before update plastic strain: eps_v_p[n+1][k] = " << pPlasticStrainVol_new[idx] 

@@ -28,7 +28,7 @@
 namespace Uintah
 {
 
-  UnionIterator::UnionIterator(Iterator iter1, Iterator iter2) : ListOfCellsIterator()
+  UnionIterator::UnionIterator(Iterator iter1, Iterator iter2) : ListOfCellsIterator(iter1.size()+iter2.size())
   {
     iter1.reset();
     iter2.reset();
@@ -72,7 +72,7 @@ namespace Uintah
   }
   std::ostream& operator<<(std::ostream& out, const Uintah::UnionIterator& b)
   {
-    out << "[UnionIterator at index" << b.index_ << " of " << b.listOfCells_.size() << "]" ;
+    out << "[UnionIterator at index" << b.index_ << " of " << b.size() << "]" ;
 
     return out;
 

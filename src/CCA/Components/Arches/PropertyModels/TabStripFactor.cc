@@ -5,7 +5,7 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 //Method: Constructor
 //---------------------------------------------------------------------------
-TabStripFactor::TabStripFactor( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
+TabStripFactor::TabStripFactor( std::string prop_name, MaterialManagerP& materialManager ) : PropertyModelBase( prop_name, materialManager )
 {
 
   _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() ); 
@@ -62,7 +62,7 @@ void TabStripFactor::sched_computeProp( const LevelP& level, SchedulerP& sched, 
   the_label = VarLabel::find(_f_label); 
   tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
 
-  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+  sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
     
 }
 
@@ -81,7 +81,7 @@ void TabStripFactor::computeProp(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> prop; 
     new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
@@ -127,7 +127,7 @@ void TabStripFactor::sched_initialize( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task(taskname, this, &TabStripFactor::initialize);
   tsk->computes(_prop_label); 
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -144,7 +144,7 @@ void TabStripFactor::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> prop; 
 

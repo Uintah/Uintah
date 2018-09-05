@@ -86,7 +86,7 @@ namespace Uintah {
     };
     typedef std::map<std::string, ConstVarContainer> StringToCCVar;
 
-    MixingRxnModel( SimulationStateP& sharedState );
+    MixingRxnModel( MaterialManagerP& materialManager );
 
     virtual ~MixingRxnModel();
 
@@ -1526,7 +1526,7 @@ namespace Uintah {
     /** @brief Common problem setup work */
     void problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* const model );
 
-    SimulationStateP& m_sharedState;        ///< Shared state
+    MaterialManagerP& m_materialManager;    ///< Material Manager
     int m_matl_index;                       ///< Arches material index
 
     bool d_coldflow;                        ///< Will not compute heat loss and will not initialized ethalpy

@@ -29,7 +29,6 @@
 
 #include <CCA/Components/Solvers/SolverCommon.h>
 
-#include <Core/Grid/SimulationState.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/RefCounted.h>
 
@@ -103,7 +102,7 @@ namespace Uintah {
     
     SolverType           solver_type;
     SolverType           precond_solver_type;
-    bool                 isRestartTimestep;
+    bool                 isRecomputeTimeStep;
     
     //  *_p = pointer
     HYPRE_StructSolver * solver_p = nullptr;
@@ -115,7 +114,7 @@ namespace Uintah {
     //__________________________________
     //
     hypre_solver_struct() {
-      isRestartTimestep    = false;
+      isRecomputeTimeStep  = false;
       solver_type          = smg;
       precond_solver_type  = diagonal;
       solver_p             = 0;

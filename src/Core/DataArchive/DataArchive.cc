@@ -267,14 +267,14 @@ DataArchive::queryTimesteps( vector<int>    & index,
 
           int          timestepNumber;
           double       currentTime;
-	  // Usually '.../timestep.xml'
+          // Usually '.../timestep.xml'
           string       ts_path_and_filename = d_filebase + "/" + tsfile;
           ProblemSpecP timestepDoc = 0;
 
-	  string::size_type deliminator_index = tsfile.find("/");
-	  string tnumber( tsfile, 0, deliminator_index );
-	  // Usually '.../grid.xml'
-	  string       grid_path_and_filename = d_filebase + "/" + tnumber + "/" + "grid.xml";
+          string::size_type deliminator_index = tsfile.find("/");
+          string tnumber( tsfile, 0, deliminator_index );
+          // Usually '.../grid.xml'
+          string       grid_path_and_filename = d_filebase + "/" + tnumber + "/" + "grid.xml";
 
           if( attributes["time"] == "" ) {
             // This block is for earlier versions of the index.xml file that did not
@@ -1180,7 +1180,7 @@ DataArchive::query(       Variable     & var,
     var.read( ic, dfi->end, timedata.d_swapBytes, timedata.d_nBytes, varinfo.compression );
 
     dbg << "DataArchive::query: time to read raw data: "
-	<< read_timer().seconds() << " seconds\n";
+        << read_timer().seconds() << " seconds\n";
 
     ASSERTEQ( dfi->end, ic.cur );
 
@@ -2260,12 +2260,12 @@ DataArchive::TimeData::parsePatch( const Patch * patch )
     // if( !patchinfo.parsed )
     // {
     //   throw InternalError( "DataArchive::parsePatch() - found patch processor "
-    // 			   "id but could find the data in the coresponding "
-    // 			   "processor data file. Check for zero length "
-    // 			   "processor data files and remove their reference "
-    // 			   "from the timestep.xml via this script: "
-    // 			   "sed -i.bak '/Datafile href=\"l0/d' t*/timestep.xml.",
-    // 			   __FILE__, __LINE__ );
+    //                     "id but could find the data in the coresponding "
+    //                     "processor data file. Check for zero length "
+    //                     "processor data files and remove their reference "
+    //                     "from the timestep.xml via this script: "
+    //                     "sed -i.bak '/Datafile href=\"l0/d' t*/timestep.xml.",
+    //                     __FILE__, __LINE__ );
     // }
   }
   else
@@ -2282,8 +2282,8 @@ DataArchive::TimeData::parsePatch( const Patch * patch )
     // Failed the guess - parse the entire dataset for this level
     if ( !patchinfo.parsed ) {
       for (unsigned proc = 0; proc < d_xmlFilenames[levelIndex].size(); proc++) {
-	parseFile( d_xmlFilenames[levelIndex][proc], levelIndex, levelBasePatchID );
-	d_xmlParsed[levelIndex][proc] = true;
+        parseFile( d_xmlFilenames[levelIndex][proc], levelIndex, levelBasePatchID );
+        d_xmlParsed[levelIndex][proc] = true;
       }
     }
   }

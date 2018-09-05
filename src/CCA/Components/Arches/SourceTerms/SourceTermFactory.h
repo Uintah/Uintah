@@ -4,7 +4,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <map>
 #include <vector>
 #include <string>

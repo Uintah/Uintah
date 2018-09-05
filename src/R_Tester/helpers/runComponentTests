@@ -2,7 +2,7 @@
 #______________________________________________________________________
 # run:  This shell script
 #         - runs a component's test
-# environmental Variables: $OS $BUILD_DIR, $BUILDROOT, $HTMLLOG, $PARALLELISM, $WEBLOG $LOCAL_OR_NIGHTLY_TEST $WHICH_TEST $COMMON_GROUP $SCI_MALLOC_ENABLED
+# environmental Variables: $OS $BUILD_DIR, $BUILDROOT, $HTMLLOG, $PARALLELISM, $PUBLIC_HTML $LOCAL_OR_NIGHTLY_TEST $WHICH_TEST $COMMON_GROUP $SCI_MALLOC_ENABLED
 
 mode=$1
 componentTest=$2

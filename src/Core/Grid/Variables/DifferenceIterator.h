@@ -77,7 +77,10 @@ namespace Uintah {
     }
 
     private:
-    DifferenceIterator() : ListOfCellsIterator() {}
+    
+    DifferenceIterator() : ListOfCellsIterator(0) {
+           std::cout<< "this Core/Grid/Variables/differenceiterator.h constructor should never be used \n";
+                 }
 
     }; // end class DifferenceIterator
 

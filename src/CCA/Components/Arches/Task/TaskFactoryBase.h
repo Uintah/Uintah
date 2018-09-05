@@ -1,7 +1,7 @@
 #ifndef UT_TaskFactoryBase_h
 #define UT_TaskFactoryBase_h
 
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
 #include <CCA/Components/Application/ApplicationCommon.h>
@@ -58,8 +58,8 @@ namespace Uintah{
     /** @brief Set the particle helper **/
     void set_particle_helper( ArchesParticlesHelper* part_helper ){ _part_helper = part_helper; }
 
-    /** @brief Set the shared state **/
-    void set_shared_state( SimulationStateP shared_state ){ _shared_state = shared_state; }
+    /** @brief Set the Material Manager **/
+    void set_materialManager( MaterialManagerP materialManager ){ _materialManager = materialManager; }
 
     TaskMap   _tasks;             ///< Task map
     ATaskMap   _atomic_tasks;      ///< Atomic Task map
@@ -218,7 +218,7 @@ namespace Uintah{
     std::vector<std::string> _active_tasks;        ///< Active tasks
     std::vector<std::string> _active_atomic_tasks; ///< Active atomic tasks
     TypeToTaskMap _type_to_tasks;                  ///< Collects all tasks of a common type
-    SimulationStateP _shared_state;                ///< Uintah SharedState
+    MaterialManagerP _materialManager;                ///< Uintah MaterialManager
     std::string _all_tasks_str{"all_tasks"};                    ///< Common name across all factories indicating _active_tasks
     std::string _factory_name;                     ///< Name of the factory
     std::vector<std::string> m_task_init_order;    ///< Allows a factory to set an execution order for the tasks

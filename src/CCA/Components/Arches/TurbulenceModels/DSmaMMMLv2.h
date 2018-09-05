@@ -54,10 +54,10 @@ private:
   std::string m_u_vel_name;
   //int Type_filter;
   double m_epsilon;
-  Uintah::FILTER Type_filter;
+  Uintah::ArchesCore::FILTER Type_filter;
   std::string m_IsI_name;
   std::string m_volFraction_name;
-  FilterTest m_Filter;
+  Uintah::ArchesCore::TestFilter m_Filter;
   };
 
 //--------------------------------------------------------------------------------------------------
@@ -83,8 +83,8 @@ DSmaMMMLv2<TT>::problemSetup( ProblemSpecP& db ){
   m_Filter.get_w(Type_filter);
   const ProblemSpecP params_root = db->getRootNode();
   db->require("epsilon",m_epsilon);
-  
-  
+
+
   m_IsI_name = "strainMagnitudeLabel";
   m_volFraction_name = "volFraction";
 
@@ -160,7 +160,7 @@ DSmaMMMLv2<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
   int nG = 1;
   if (packed_tasks ){
    nG = 3;
-  } 
+  }
  register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( "filterbeta11"  , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);

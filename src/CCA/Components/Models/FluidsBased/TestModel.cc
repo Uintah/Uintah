@@ -36,7 +36,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -45,10 +45,10 @@ using namespace Uintah;
 using namespace std;
 
 TestModel::TestModel(const ProcessorGroup* myworld,
-                     const SimulationStateP& sharedState,
+                     const MaterialManagerP& materialManager,
                      const ProblemSpecP& params)
   
-  : FluidsBasedModel(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   mymatls = 0;
   Ilb = scinew ICELabel();
@@ -81,8 +81,8 @@ void TestModel::problemSetup(GridP&,  const bool isRestart )
      throw ProblemSetupException("TestModel: Couldn't find <Test> tag", __FILE__, __LINE__);    
   }
   
-  matl0 = m_sharedState->parseAndLookupMaterial(test_ps, "fromMaterial");
-  matl1 = m_sharedState->parseAndLookupMaterial(test_ps, "toMaterial");
+  matl0 = m_materialManager->parseAndLookupMaterial(test_ps, "fromMaterial");
+  matl1 = m_materialManager->parseAndLookupMaterial(test_ps, "toMaterial");
   
   test_ps->require("rate", d_rate);
   test_ps->getWithDefault("startTime",   d_startTime, 0.0);
@@ -95,7 +95,7 @@ void TestModel::problemSetup(GridP&,  const bool isRestart )
   mymatls->addReference();
  
   // What flavor of matl it is.
-  Material* matl = m_sharedState->getMaterial( m[0] );
+  Material* matl = m_materialManager->getMaterial( m[0] );
   ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
   MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
   if (mpm_matl){
@@ -261,7 +261,7 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     //__________________________________
     //  Do some work
     
-    // double simTime  = m_sharedState->getElapsedSimTime();
+    // double simTime  = m_materialManager->getElapsedSimTime();
     
     if (simTime >= d_startTime){
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){

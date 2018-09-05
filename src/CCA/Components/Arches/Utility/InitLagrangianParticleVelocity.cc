@@ -93,8 +93,8 @@ InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoMa
   constParticleVariable<double>& py = *(std::get<0>(py_tup));
   constParticleVariable<double>& pz = *(std::get<0>(pz_tup));
 
-  ConstParticleTuple psize_tup = tsk_info->get_const_uintah_particle_field(_size_label);
-  constParticleVariable<double>& psize = *(std::get<0>(psize_tup));
+  // ConstParticleTuple psize_tup = tsk_info->get_const_uintah_particle_field(_size_label);
+  // constParticleVariable<double>& psize = *(std::get<0>(psize_tup));
 
   constSFCXVariable<double>& ug = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("uVelocitySPBC"));
   constSFCYVariable<double>& vg = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vVelocitySPBC"));

@@ -1,6 +1,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -16,7 +16,7 @@ using namespace Uintah;
 
 HTConvection::HTConvection( std::string src_name, ArchesLabel* field_labels,
     vector<std::string> req_label_names, std::string type ) 
-: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
+: SourceTermBase(src_name, field_labels->d_materialManager, req_label_names, type), _field_labels(field_labels)
 {
   _source_grid_type = CC_SRC;
 
@@ -103,7 +103,7 @@ HTConvection::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
   tsk->requires( Task::OldDW, _volFraction_varlabel,      gac, 1 ); 
   tsk->requires( which_dw,     _gas_temperature_varlabel, gac, 1 );
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" )); 
 
 }
 //---------------------------------------------------------------------------
@@ -126,7 +126,7 @@ HTConvection::computeSource( const ProcessorGroup* pc,
     Ghost::GhostType  gac = Ghost::AroundCells;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     constCCVariable<double> rho;
     constCCVariable<double> gasT;
@@ -352,7 +352,7 @@ HTConvection::sched_initialize( const LevelP& level, SchedulerP& sched )
   tsk->computes(_src_label);
   tsk->computes(ConWallHT_src_label);
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 void 
@@ -367,7 +367,7 @@ HTConvection::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> src;
     CCVariable<double> ConWallHT_src;

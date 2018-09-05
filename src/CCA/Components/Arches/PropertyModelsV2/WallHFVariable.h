@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_WallHFVariable_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 namespace Uintah{
 
@@ -10,7 +10,7 @@ namespace Uintah{
 
 public:
 
-    WallHFVariable( std::string task_name, int matl_index, SimulationStateP shared_state );
+    WallHFVariable( std::string task_name, int matl_index, MaterialManagerP materialManager );
     ~WallHFVariable();
 
     void problemSetup( ProblemSpecP& db );
@@ -43,18 +43,18 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, SimulationStateP shared_state )
-        : _task_name(task_name), _matl_index(matl_index), _shared_state(shared_state){}
+      Builder( std::string task_name, int matl_index, MaterialManagerP materialManager )
+        : _task_name(task_name), _matl_index(matl_index), _materialManager(materialManager){}
       ~Builder(){}
 
       WallHFVariable* build()
-      { return scinew WallHFVariable( _task_name, _matl_index, _shared_state ); }
+      { return scinew WallHFVariable( _task_name, _matl_index, _materialManager ); }
 
       private:
 
       std::string _task_name;
       int _matl_index;
-      SimulationStateP _shared_state;
+      MaterialManagerP _materialManager;
 
     };
 
@@ -70,7 +70,7 @@ private:
 
     int _f;
 
-    SimulationStateP _shared_state;
+    MaterialManagerP _materialManager;
 
     bool _new_variables;
 

@@ -52,6 +52,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include <Core/Grid/Variables/ListOfCellsIterator.h> // used for Uintah::PatchSet
 /**
  * \file WBCHelper.h
  */
@@ -85,6 +86,7 @@
  We support Dirichlet and Neumnann conditions on the boundary.
  */
 //****************************************************************************
+
 
 enum BndCondTypeEnum
 {
@@ -244,16 +246,22 @@ typedef std::map <std::string, BndSpec> BndMapT;
  near the boundary, NOT the particle ID (PID).
  */
 //****************************************************************************
+namespace Uintah{
 struct BoundaryIterators
 {
+  BoundaryIterators(int size) :  extraBndCellsUintah(size) , particleIdx(0){ }
+  BoundaryIterators(const BoundaryIterators& copyMe) :  extraBndCellsUintah(copyMe.extraBndCellsUintah) , particleIdx(copyMe.particleIdx){ }
+
   /**
    \brief Helper function to return the appropriate spatial mask given a field type
    */
-  Uintah::Iterator extraBndCellsUintah;                   // We still need the Unitah iterator
+
+  ListOfCellsIterator extraBndCellsUintah;                   // We still need the Unitah iterator
   const std::vector<int>* particleIdx;                    // list of particle indices near a given boundary. Given the memory of ALL particles on a given patch, this vector stores
                                                           // the indices of those particles that are near a boundary.
+                                                          
 };
-
+}
 
 //****************************************************************************
 /**
@@ -378,11 +386,46 @@ public:
                          const MaterialSubset*,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw );
+  // Adds elements from arg2 to arg1 if it is not already present in argument 1
+  void add_iterator_if_exluded_from_arg_1(Uintah::ListOfCellsIterator& arg1, Uintah::Iterator& arg2){
+
+    for ( arg2.reset(); !arg2.done(); arg2++ ){ 
+      int flag = 0;
+      for ( arg1.reset(); !arg1.done(); arg1++){ 
+        if( *arg1 == *arg2 ){
+          flag = 1;
+          break;
+        }
+      }
+      if ( flag == 0 ){
+        arg1.add(*arg2);
+      }
+    }
+  }
+
+
+  // upper limit estimation of the size needed for the portable iterator 
+  void add_counter_if_exluded_from_arg_1(Uintah::Iterator& arg1, Uintah::Iterator& arg2, int& i_size){
+
+    for ( arg2.reset(); !arg2.done(); arg2++ ){ 
+      int flag = 0;
+      for ( arg1.reset(); !arg1.done(); arg1++){ 
+        if( *arg1 == *arg2 ){
+          flag = 1;
+          break;
+        }
+      }
+      if ( flag == 0 ){
+        i_size++;
+      }
+    }
+  }
+
 
   /**
    \brief Returns the original Uintah boundary cell iterator.
    */
-  Uintah::Iterator& get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
+  Uintah::ListOfCellsIterator& get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
                                                const int& patchID );
 
   // Parse boundary conditions specified through the input file. This function does NOT need

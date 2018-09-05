@@ -69,7 +69,7 @@ public:
 
   void commonProblemSetup( ProblemSpecP db );
 
-  virtual void problemSetup( const ProblemSpecP& db, SimulationStateP&, GridP& ) = 0;
+  virtual void problemSetup( const ProblemSpecP& db, MaterialManagerP&, GridP& ) = 0;
 
   virtual int sched_nonlinearSolve( const LevelP& level,
                                     SchedulerP& sched ) = 0;
@@ -78,7 +78,7 @@ public:
 
   virtual double recomputeDelT(const double delT) = 0;
 
-  virtual bool restartableTimeSteps() = 0;
+  virtual bool mayRecomputeTimeStep() = 0;
 
   virtual void sched_initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
 

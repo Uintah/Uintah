@@ -125,11 +125,11 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
 
       if ( i_bc->second.type == WALL ){
         //Get the iterator
-        Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+         Uintah::ListOfCellsIterator& cell_iter  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-        for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-          cc_vf[*cell_iter] = 0.0;
-        }
+      parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (int i,int j,int k) {
+          cc_vf(i,j,k)= 0.0;
+        });
 
       }
     }

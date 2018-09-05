@@ -34,7 +34,6 @@
 #include <CCA/Components/SimulationController/SimulationController.h>
 
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationTime.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
@@ -54,17 +53,17 @@ namespace Uintah {
 //---------------------------------------------------------------------
 void visit_SetTimeValues( visit_simulation_data *sim )
 {
-  SimulationTime* simTime =
-    sim->simController->getApplicationInterface()->getSimulationTime();
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
 
   VisItUI_setValueI("TimeStep",      sim->cycle, 0);
-  VisItUI_setValueI("MaxTimeStep",   simTime->m_max_time_steps, 1);
+  VisItUI_setValueI("TimeStepsMax",  appInterface->getTimeStepsMax(), 1);
 
-  VisItUI_setValueD("Time",          sim->time, 0);
-  VisItUI_setValueD("MaxTime",       simTime->m_max_time, 1);
+  VisItUI_setValueD("SimTime",          sim->time, 0);
+  VisItUI_setValueD("SimTimeMax",       appInterface->getSimTimeMax(), 1);
 
-  VisItUI_setValueI("EndAtMaxTime",      simTime->m_end_at_max_time, 1);
-  VisItUI_setValueI("ClampTimeToOutput", simTime->m_clamp_time_to_output, 1);
+  VisItUI_setValueI("SimTimeEndAtMax",   appInterface->getSimTimeEndAtMax(), 1);
+  VisItUI_setValueI("ClampTimeToOutput", appInterface->getClampTimeToOutput(), 1);
 
   VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);
   VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);
@@ -78,47 +77,43 @@ void visit_SetTimeValues( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDeltaTValues( visit_simulation_data *sim )
 {
-  SimulationTime* simTime =
-    sim->simController->getApplicationInterface()->getSimulationTime();
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
 
   int row = 0;
 
   VisItUI_setTableValueS("DeltaTVariableTable", -1, -1, "CLEAR_TABLE", 0);
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaT", 0);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "Current", 0);
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, sim->delt, 0);
   ++row;
   
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTNext", 0);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "Next", 0);
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, sim->delt_next, 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTFactor", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_delt_factor, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "Multiplier", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTMultiplier(), 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxDeltaTIncrease", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_max_delt_increase, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxIncrease", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTMaxIncrease(), 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMin", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_delt_min, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "Minimum", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTMin(), 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMax", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_delt_max, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "Maximum", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTMax(), 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxInitialDeltaT", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_max_initial_delt, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "InitialMaximum", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTInitialMax(), 1);
   ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "InitialDeltaTRange", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_initial_delt_range, 1);
-  ++row;
-
-  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "OverrideRestartDeltaT", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_override_restart_delt, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "InitialRange", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, appInterface->getDelTInitialRange(), 1);
   ++row;
 
   visit_SetStripChartValue( sim, "DeltaT/Current", sim->delt );
@@ -131,9 +126,10 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetWallTimes( visit_simulation_data *sim )
 {
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
+
   WallTimers* walltimers  = sim->simController->getWallTimers();
-  SimulationTime* simTime =
-    sim->simController->getApplicationInterface()->getSimulationTime();
 
   double time = walltimers->GetWallTime();
 
@@ -159,7 +155,7 @@ void visit_SetWallTimes( visit_simulation_data *sim )
   ++row;
   VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "Maximum",  0);
   VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
-                         simTime->m_max_wall_time, 1);
+                         appInterface->getWallTimeMax(), 1);
   ++row;
 
   visit_SetStripChartValue( sim, "WallTimes/TimeStep",     walltimers->TimeStep().seconds() );
@@ -175,12 +171,10 @@ void visit_SetWallTimes( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOutputIntervals( visit_simulation_data *sim )
 {
-  // ApplicationInterface* appInterface =
-  //   sim->simController->getApplicationInterface();
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
 
-  // SimulationTime* simTime = appInterface->getSimulationTime();
-
-  Output          *output       = sim->simController->getOutput();
+  Output * output       = sim->simController->getOutput();
 
   VisItUI_setTableValueS("OutputIntervalVariableTable",
                          -1, -1, "CLEAR_TABLE", 0);
@@ -674,9 +668,9 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
     std::string name  = runtimeStats.getName(i);
     std::string units = runtimeStats.getUnits(i);
 
-    double  average = runtimeStats.getAverage(i);
-    double  maximum = runtimeStats.getMaximum(i);
-    int     rank    = runtimeStats.getRank(i);
+    double  average = runtimeStats.getRankAverage(i);
+    double  maximum = runtimeStats.getRankMaximum(i);
+    int     rank    = runtimeStats.getRankForMaximum(i);
 
     if( average > 0 && units == std::string("MBytes"))
     {
@@ -740,9 +734,9 @@ void visit_SetMPIStats( visit_simulation_data *sim )
       std::string name  = mpiStats.getName(i);
       std::string units = mpiStats.getUnits(i);
       
-      double  average = mpiStats.getAverage(i);
-      double  maximum = mpiStats.getMaximum(i);
-      int     rank    = mpiStats.getRank(i);
+      double  average = mpiStats.getRankAverage(i);
+      double  maximum = mpiStats.getRankMaximum(i);
+      int     rank    = mpiStats.getRankForMaximum(i);
       
       VisItUI_setTableValueS("MPIStatsTable", i, 0, name.c_str(), 0);
       VisItUI_setTableValueS("MPIStatsTable", i, 1, units.c_str(), 0);
@@ -787,9 +781,9 @@ void visit_SetApplicationStats( visit_simulation_data *sim )
       std::string name  = appInterface->getApplicationStats().getName(i);
       std::string units = appInterface->getApplicationStats().getUnits(i);
       
-      double  average = appInterface->getApplicationStats().getAverage(i);
-      double  maximum = appInterface->getApplicationStats().getMaximum(i);
-      int     rank    = appInterface->getApplicationStats().getRank(i);
+      double  average = appInterface->getApplicationStats().getRankAverage(i);
+      double  maximum = appInterface->getApplicationStats().getRankMaximum(i);
+      int     rank    = appInterface->getApplicationStats().getRankForMaximum(i);
       
       VisItUI_setTableValueS("ApplicationStatsTable", i, 0, name.c_str(), 0);
       VisItUI_setTableValueS("ApplicationStatsTable", i, 1, units.c_str(), 0);

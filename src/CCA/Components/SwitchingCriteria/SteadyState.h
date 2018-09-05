@@ -28,7 +28,7 @@
 #include <CCA/Ports/SwitchingCriteria.h>
 
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -47,7 +47,7 @@ namespace Uintah {
       
       virtual void problemSetup(const ProblemSpecP& ps, 
                                 const ProblemSpecP& restart_prob_spec, 
-                                SimulationStateP& sharedState);
+                                MaterialManagerP& materialManager);
 
       virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched);
       virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
@@ -73,7 +73,7 @@ namespace Uintah {
       const VarLabel* m_heatFluxSumTimeDerivativeLabel;
       const VarLabel* m_delTLabel;
       
-      SimulationStateP m_sharedState; 
+      MaterialManagerP m_materialManager; 
   };
 } // End namespace Uintah
 

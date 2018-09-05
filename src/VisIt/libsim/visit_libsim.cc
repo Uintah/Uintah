@@ -92,6 +92,8 @@ void visit_LibSimArguments(int argc, char **argv)
     }
     else if( strcmp( argv[i], "-visit_options" ) == 0 )
     {
+      // VisItGetVersion();
+
       VisItSetOptions(argv[++i]);
     }
     else if( strcmp( argv[i], "-visit_trace" ) == 0 )
@@ -242,6 +244,12 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->switchIndex = -1;
   sim->nodeIndex = -1;
 
+  std::string hostName = sim->myworld->myProcName();
+  std::string hostNode = sim->myworld->myProcName();
+  
+  hostName.erase(std::remove_if(hostName.begin(), hostName.end(), (int(*)(int))std::isdigit), hostName.end());
+  hostNode.erase(std::remove_if(hostNode.begin(), hostNode.end(), (int(*)(int))std::isalpha), hostNode.end());
+
   // Possible machine file names.
   const unsigned int nMachines = 1;
   std::string hostNames[ nMachines ] = { "ash" };
@@ -278,7 +286,9 @@ void visit_InitLibSim( visit_simulation_data *sim )
     std::string path = std::string( sci_getenv("SCIRUN_OBJDIR") ) +
       std::string("/../src/VisIt/libsim/");
 
-    std::ifstream infile(path + sim->hostName + "_layout.txt");
+    std::string filename = path + sim->hostName + "_layout.txt";
+
+    std::ifstream infile(filename);
 
     if( infile.is_open() )
     {
@@ -286,8 +296,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
       std::string line;
       while (std::getline(infile, line))
       {
-        // std::cerr << "Reading  " << line << std::endl;
-
         // Skip empty lines
         if( line.empty() )
         {
@@ -327,8 +335,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
           std::vector< unsigned int > nodes;
           
           sim->switchNodeList.push_back( nodes );
-          
-          // std::cerr << std::endl << "Switch " << sim->switchNodeList.size()-1 << " nodes: ";
         }
         // A switch connection
         else if( line.find("[") == 0 )
@@ -355,8 +361,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
               // Add this node to the list.
               sim->switchNodeList.back().push_back( node );
 
-              // std::cerr << node << "  ";
-
               // Get the maximum number of nodes on a switch.
               if( sim->maxNodes < sim->switchNodeList.back().size() )
                 sim->maxNodes = sim->switchNodeList.back().size();
@@ -374,23 +378,32 @@ void visit_InitLibSim( visit_simulation_data *sim )
         {
           std::stringstream msg;
           msg << "Visit libsim - "
-            << "Uintah machine parse error \"" << line << "\"  ";
+              << "Parse error \"" << line << "\" "
+              << "in the current network file: " << filename;
           
           VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
         }
       }
       
-      // std::cerr << std::endl;
-      
-      // std::cerr << sim->myworld->myProcName() << "  "
-      //        << sim->myworld->myNode_myRank() << "  "
-      //        << node << "  "
-      //        << sim->switchIndex << "  "
-      //        << sim->nodeIndex << "  " << std::endl;
+      if( sim->switchNodeList.size() &&
+          ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) )
+      {
+        std::stringstream msg;
+        msg << "Visit libsim - "
+            << "Can not find node " << sim->myworld->myProcName() << " "
+            << "in the current network file: " << filename;
+          
+        VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+      }
+
+      DOUT( (sim->switchNodeList.size() &&
+             ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) ),
+            "Visit libsim - "
+            << "Can not find node " << sim->myworld->myProcName() << " "
+            << "in the current network file: " << filename );
 
       infile.close();
-
-
+ 
       // Get the greatest common demoninator so to have multiple columns.
       unsigned int gcd = 2;
       
@@ -786,10 +799,10 @@ void visit_Initialize( visit_simulation_data *sim )
     VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
 
   
-  VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
-  VisItUI_textChanged("MaxTime",     visit_MaxTimeCallback,     (void*) sim);
-  VisItUI_valueChanged("EndOnMaxTime",
-                       visit_EndOnMaxTimeCallback, (void*) sim);
+  VisItUI_textChanged("TimeStepsMax", visit_TimeStepsMaxCallback, (void*) sim);
+  VisItUI_textChanged("SimTime",      visit_SimTimeMaxCallback,   (void*) sim);
+  VisItUI_valueChanged("SimTimeEndAtMax",
+                       visit_SimTimeEndAtMaxCallback, (void*) sim);
 
   VisItUI_cellChanged("DeltaTVariableTable",
                       visit_DeltaTVariableCallback,          (void*) sim);
@@ -799,8 +812,8 @@ void visit_Initialize( visit_simulation_data *sim )
                       visit_UPSVariableCallback,             (void*) sim);
   VisItUI_cellChanged("OutputIntervalVariableTable",
                       visit_OutputIntervalVariableCallback,  (void*) sim);
-  VisItUI_valueChanged("ClampTimeStepsToOutput",
-                       visit_ClampTimeStepsToOutputCallback, (void*) sim);
+  VisItUI_valueChanged("ClampTimeToOutput",
+                       visit_ClampTimeToOutputCallback,      (void*) sim);
         
   VisItUI_valueChanged("ImageGroupBox",
                        visit_ImageGenerateCallback, (void*) sim);

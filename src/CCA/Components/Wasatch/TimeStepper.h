@@ -29,7 +29,7 @@
 #include <list>
 #include <vector>
 
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Task.h>
 #include <expression/Tag.h>
 #include <expression/ExprFwd.h>

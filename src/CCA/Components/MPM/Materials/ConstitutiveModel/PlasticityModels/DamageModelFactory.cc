@@ -42,7 +42,7 @@ using namespace Uintah;
 //
 DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
                                         MPMFlags        * flags,
-                                        SimulationState * sharedState)
+                                        MaterialManager * materialManager)
 {   
   ProblemSpecP child = matl_ps->findBlock("damage_model");
   if(!child) {
@@ -82,7 +82,7 @@ DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
     return( scinew HancockMacKenzieDamage( child ) );
   }
   else if (dam_type == "Threshold") {
-    return( scinew ThresholdDamage( child, flags, sharedState ) );
+    return( scinew ThresholdDamage( child, flags, materialManager ) );
   }
   else if (dam_type == "Brittle") {
     return( scinew BrittleDamage( child ) );

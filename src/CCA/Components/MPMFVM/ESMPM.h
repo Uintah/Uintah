@@ -32,7 +32,7 @@
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
@@ -54,7 +54,7 @@ namespace Uintah {
   class ESMPM : public ApplicationCommon {
     public:
       ESMPM(const ProcessorGroup* myworld,
-	    const SimulationStateP sharedState);
+	    const MaterialManagerP materialManager);
     
       ~ESMPM();
 

@@ -38,8 +38,8 @@ using namespace std;
 
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-DynamicModel::DynamicModel(ProblemSpecP& ps, SimulationStateP& sharedState)
-  : Turbulence(ps, sharedState), d_smag() 
+DynamicModel::DynamicModel(ProblemSpecP& ps, MaterialManagerP& materialManager)
+  : Turbulence(ps, materialManager), d_smag() 
 { 
   //__________________________________ 
   //Filter_width=grid space(uniform) for implicit filter.
@@ -70,7 +70,7 @@ void DynamicModel::computeTurbViscosity(DataWarehouse* new_dw,
                                         constSFCZVariable<double>& wvel_FC,
                                         constCCVariable<double>& rho_CC,
                                         const int indx,
-                                        SimulationStateP&  d_sharedState,
+                                        MaterialManagerP&  d_materialManager,
                                         CCVariable<double>& turb_viscosity)
 {
   //-------- implicit filter, filter_width=(dx*dy*dz)**(1.0/3.0), 
@@ -87,7 +87,7 @@ void DynamicModel::computeTurbViscosity(DataWarehouse* new_dw,
   term.initialize(0.0);
  
   computeSmagCoeff(new_dw, patch, lb, vel_CC, uvel_FC, vvel_FC, wvel_FC, 
-                   indx, d_sharedState, term, meanSIJ);
+                   indx, d_materialManager, term, meanSIJ);
   
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {
@@ -182,7 +182,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
                                     constSFCYVariable<double>& vvel_FC,
                                     constSFCZVariable<double>& wvel_FC,
                                     const int indx,
-                                    SimulationStateP&  d_sharedState,
+                                    MaterialManagerP&  d_materialManager,
                                     CCVariable<double>& term,
                                     CCVariable<double>& meanSIJ)
 {
@@ -229,7 +229,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
   //__________________________________
   //  compute mean strain rate
   d_smag.computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, 
-                           indx, d_sharedState, new_dw, SIJ);
+                           indx, d_materialManager, new_dw, SIJ);
  
   int NGC =2;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
@@ -449,7 +449,7 @@ void DynamicModel::computeVariance(const ProcessorGroup*,
       }
       
       // I'm not sure if this is correct --Todd
-      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw, isNotInitialTimeStep);
+      setBC(fvar,s->scalarVariance->getName(),patch, d_materialManager, matl, new_dw, isNotInitialTimeStep);
     }
   }
 }

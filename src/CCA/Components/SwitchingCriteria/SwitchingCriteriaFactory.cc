@@ -66,7 +66,7 @@ SwitchingCriteria* SwitchingCriteriaFactory::create(ProblemSpecP& ps,
     switch_criteria = scinew None();
   }
   else if (criteria == "timestep" || criteria == "Timestep" || 
-	   criteria == "TIMESTEP")  {
+           criteria == "TIMESTEP")  {
     switch_criteria = scinew TimestepNumber(switch_ps);
   }
   else if (criteria == "SteadyState" || criteria == "steadystate")  {
@@ -75,11 +75,11 @@ SwitchingCriteria* SwitchingCriteriaFactory::create(ProblemSpecP& ps,
   
 #if !defined( NO_ICE ) && !defined( NO_ICE )
   else if (criteria == "SimpleBurn" || criteria == "Simple_Burn" || 
-	   criteria == "simpleBurn" || criteria == "simple_Burn")  {
+           criteria == "simpleBurn" || criteria == "simple_Burn")  {
     switch_criteria = scinew SimpleBurnCriteria(switch_ps);
   }
   else if (criteria == "SteadyBurn" || criteria == "Steady_Burn" || 
-	   criteria == "steadyBurn" || criteria == "steady_Burn")  {
+           criteria == "steadyBurn" || criteria == "steady_Burn")  {
     switch_criteria = scinew SteadyBurnCriteria(switch_ps);
   }
   else if (criteria == "DDT1")  {

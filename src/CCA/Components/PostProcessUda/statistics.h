@@ -61,7 +61,7 @@ WARNING
   class statistics : public Module {
   public:
     statistics(ProblemSpecP    & prob_spec,
-               SimulationStateP& sharedState,
+               MaterialManagerP& materialManager,
                Output          * dataArchiver,
                DataArchive     * dataArchive);
 

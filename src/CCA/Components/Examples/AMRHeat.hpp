@@ -9,7 +9,7 @@ namespace Uintah {
   class AMRHeat : public Heat {
   public:
     AMRHeat(const ProcessorGroup* world,
-	    const SimulationStateP sharedState);
+	    const MaterialManagerP materialManager);
     
     virtual ~AMRHeat();
 

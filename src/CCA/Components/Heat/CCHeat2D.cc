@@ -29,9 +29,9 @@
 using namespace Uintah;
 
 CCHeat2D::CCHeat2D ( const ProcessorGroup * myworld,
-		     const SimulationStateP sharedState,
+		     const MaterialManagerP materialManager,
 		     int verbosity )
-  : ApplicationCommon ( myworld, sharedState )
+  : ApplicationCommon ( myworld, materialManager )
     , dbg_out1 ( "CCHeat2D", verbosity > 0 )
     , dbg_out2 ( "CCHeat2D", verbosity > 1 )
     , dbg_out3 ( "CCHeat2D", verbosity > 2 )
@@ -72,7 +72,7 @@ void CCHeat2D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & 
 {
     setLockstepAMR( true );
 
-    m_sharedState->registerSimpleMaterial ( scinew SimpleMaterial() );
+    m_materialManager->registerSimpleMaterial ( scinew SimpleMaterial() );
 
     ProblemSpecP heat = params->findBlock ( "FDHeat" );
     std::string scheme;
@@ -99,14 +99,14 @@ void CCHeat2D::scheduleInitialize ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "CCHeat2D::task_initialize", this, &CCHeat2D::task_initialize );
     task->computes ( u_label );
-    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 void CCHeat2D::scheduleComputeStableTimeStep ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "CCHeat2D::task_compute_stable_timestep", this, &CCHeat2D::task_compute_stable_timestep );
     task->computes ( getDelTLabel(), level.get_rep() );
-    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 void CCHeat2D::scheduleTimeAdvance ( LevelP const & level, SchedulerP & sched )
@@ -130,7 +130,7 @@ void CCHeat2D::scheduleTimeAdvance_forward_euler ( LevelP const & level, Schedul
     Task * task = scinew Task ( "CCHeat2D::task_farward_euler_time_advance", this, &CCHeat2D::task_farward_euler_time_advance );
     task->requires ( Task::OldDW, u_label, Ghost::AroundCells, 1 );
     task->computes ( u_label );
-    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 void CCHeat2D::scheduleTimeAdvance_backward_euler_assemble ( LevelP const & level, SchedulerP & sched )
@@ -148,12 +148,12 @@ void CCHeat2D::scheduleTimeAdvance_backward_euler_assemble ( LevelP const & leve
     task->computes ( At_label );
     task->computes ( Ab_label );
 #endif
-    sched->addTask ( task, level->allPatches(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level->allPatches(), m_materialManager->allMaterials() );
 }
 
 void CCHeat2D::scheduleTimeAdvance_backward_euler_solve ( LevelP const & level, SchedulerP & sched )
 {
-    solver->scheduleSolve ( level, sched, m_sharedState->allMaterials(),
+    solver->scheduleSolve ( level, sched, m_materialManager->allMaterials(),
                             matrix_label, Task::NewDW, // A
                             u_label, false,            // x
                             rhs_label, Task::NewDW,    // b

@@ -32,7 +32,7 @@
 
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 #include <Core/Grid/Patch.h>
 #include <Core/Geometry/Vector.h>
@@ -50,7 +50,7 @@ namespace Uintah {
 
   public:
     WallShearStress();
-    WallShearStress( ProblemSpecP& ps, SimulationStateP& sharedState);
+    WallShearStress( ProblemSpecP& ps, MaterialManagerP& materialManager);
     virtual ~WallShearStress(); 
 
     virtual void sched_Initialize(SchedulerP& sched, 

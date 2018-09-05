@@ -28,7 +28,7 @@
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -48,10 +48,10 @@ DebugStream dbgExch("EXCHANGEMODELS", false);
 //______________________________________________________________________
 //
 ExchangeModel::ExchangeModel(const ProblemSpecP     & prob_spec,
-                             const SimulationStateP & sharedState )
+                             const MaterialManagerP & materialManager )
 {
-  d_sharedState = sharedState;
-  d_numMatls    = sharedState->getNumMatls();
+  d_materialManager = materialManager;
+  d_numMatls    = materialManager->getNumMatls();
   d_zero_matl   = scinew MaterialSubset();
   d_zero_matl->add(0);
   d_zero_matl->addReference();
@@ -88,7 +88,7 @@ void ExchangeModel::schedComputeSurfaceNormal( SchedulerP     & sched,
 
   printSchedule( patches, dbgExch, name );
 
-  const MaterialSet* mpm_ms       = d_sharedState->allMPMMaterials();
+  const MaterialSet* mpm_ms       = d_materialManager->allMaterials( "MPM" );
   const MaterialSubset* mpm_matls = mpm_ms->getUnion();
 
   Ghost::GhostType  gac  = Ghost::AroundCells;
@@ -127,10 +127,10 @@ void ExchangeModel::ComputeSurfaceNormal( const ProcessorGroup*,
 
     //__________________________________
     //    loop over MPM matls
-    int numMPM_matls = d_sharedState->getNumMPMMatls();
+    int numMPM_matls = d_materialManager->getNumMatls( "MPM" );
     
     for(int m=0; m<numMPM_matls; m++){
-      MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
+      MPMMaterial* matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM", m);
       int dwindex = matl->getDWIndex();
 
       CCVariable<Vector> surfaceNorm;

@@ -24,13 +24,16 @@
 
 #ifndef __MPM_FLAGS_H__
 #define __MPM_FLAGS_H__
-#include <CCA/Ports/Output.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/ParticleInterpolator.h>
+
 #include <string>
 #include <vector>
 
 namespace Uintah {
+
+class Output;
 
   /////////////////////////////////////////////////////////////////////////////
   /*!
@@ -52,6 +55,10 @@ namespace Uintah {
       Implicit,
       Fracture
     };
+
+    //! so all components can know how many particle ghost cells to ask for
+    Ghost::GhostType d_particle_ghost_type{Ghost::None};
+    int              d_particle_ghost_layer{0};
 
     Vector      d_gravity;
     int         d_8or27;                                       // Number of nodes a particle can interact with

@@ -39,7 +39,7 @@
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -284,7 +284,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
@@ -418,7 +418,7 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     // Variables
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
@@ -639,7 +639,7 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     // Variables
     constCCVariable<Vector> ccVel;
     constCCVariable<double> den;
@@ -955,7 +955,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     // Variables
     constCCVariable<double> IsI;

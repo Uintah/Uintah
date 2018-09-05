@@ -10,8 +10,8 @@
 
 #include <Core/Grid/Box.h>
 #include <Core/Grid/GridP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -42,7 +42,7 @@ class SourceTermBase{
 
 public:
 
-  SourceTermBase( std::string srcName, SimulationStateP& sharedState,
+  SourceTermBase( std::string srcName, MaterialManagerP& materialManager,
                   std::vector<std::string> reqLabelNames, std::string type );
 
   virtual ~SourceTermBase();
@@ -122,7 +122,7 @@ protected:
   const VarLabel* _src_label;                             ///< Source varlabel
   const VarLabel* _simulationTimeLabel;
   int _stage;                                             ///< At which stage should this be computed: 0) before table lookup 1) after table lookup 2) after RK ave
-  SimulationStateP& _shared_state;                        ///< Local copy of sharedState
+  MaterialManagerP& _materialManager;                        ///< Local copy of materialManager
   std::vector<std::string> _required_labels;              ///< Vector of required labels
   std::vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
   MY_GRID_TYPE _source_grid_type;                         ///< Source grid type

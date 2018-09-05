@@ -71,7 +71,7 @@ namespace WasatchCore{
      *  \param params Parser information for this momentum equation
      *  \param turbulenceParams
      *  \param linSolver the linear solver object for the pressure solve
-     *  \param sharedState contains useful stuff like the value of timestep, etc.
+     *  \param materialManager contains useful stuff like the value of timestep, etc.
      */
     LowMachMomentumTransportEquation( const Direction momComponent,
                                       const std::string velName,
@@ -84,7 +84,7 @@ namespace WasatchCore{
                                       Uintah::ProblemSpecP params,
                                       TurbulenceParameters turbulenceParams,
                                       Uintah::SolverInterface& linSolver,
-                                      Uintah::SimulationStateP sharedState );
+                                      Uintah::MaterialManagerP materialManager );
 
     ~LowMachMomentumTransportEquation();
 

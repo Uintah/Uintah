@@ -54,8 +54,8 @@ Uintah::MasterLock enthalpy_map_mutex{};
 //---------------------------------------------------------------------------
 // Default Constructor
 //---------------------------------------------------------------------------
-ClassicTableInterface::ClassicTableInterface( SimulationStateP& sharedState )
-  : MixingRxnModel( sharedState )
+ClassicTableInterface::ClassicTableInterface( MaterialManagerP& materialManager )
+  : MixingRxnModel( materialManager )
 {
   m_matl_index = 0;
 }
@@ -303,7 +303,7 @@ ClassicTableInterface::sched_getState( const LevelP& level,
       tsk->computes( i->second );
       MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old");
       if ( check_iter != d_oldDvVarMap.end() ){
-        // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+        // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
 
         timeStep_vartype timeStep(0);
         if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
@@ -354,7 +354,7 @@ ClassicTableInterface::sched_getState( const LevelP& level,
     tsk->requires( Task::NewDW, label, gn, 0 );
   }
 
-  sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
 }
 
 //---------------------------------------------------------------------------

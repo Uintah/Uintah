@@ -2,8 +2,8 @@
 #define Uintah_Component_Arches_ConstProperty_h
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 
 /** 
 * @class  ConstantProperty
@@ -26,7 +26,7 @@ namespace Uintah{
 
     public: 
 
-      ConstProperty<pT, constpT>( std::string prop_name, SimulationStateP& shared_state );
+      ConstProperty<pT, constpT>( std::string prop_name, MaterialManagerP& materialManager );
       ~ConstProperty<pT, constpT>(); 
 
       void problemSetup( const ProblemSpecP& db ); 
@@ -51,16 +51,16 @@ namespace Uintah{
 
         public: 
 
-          Builder( std::string name, SimulationStateP& shared_state ) : _name(name), _shared_state(shared_state){};
+          Builder( std::string name, MaterialManagerP& materialManager ) : _name(name), _materialManager(materialManager){};
           ~Builder(){}; 
 
           ConstProperty<pT, constpT>* build()
-          { return scinew ConstProperty<pT, constpT>( _name, _shared_state ); };
+          { return scinew ConstProperty<pT, constpT>( _name, _materialManager ); };
 
         private: 
 
           std::string _name; 
-          SimulationStateP& _shared_state; 
+          MaterialManagerP& _materialManager; 
 
       }; // class Builder 
 
@@ -73,7 +73,7 @@ namespace Uintah{
   // ===================================>>> Functions <<<========================================
   
   template <typename pT, typename constpT>
-  ConstProperty<pT, constpT>::ConstProperty( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
+  ConstProperty<pT, constpT>::ConstProperty( std::string prop_name, MaterialManagerP& materialManager ) : PropertyModelBase( prop_name, materialManager )
   {
     _prop_label = VarLabel::create( prop_name, pT::getTypeDescription() ); 
 
@@ -104,7 +104,7 @@ namespace Uintah{
 
     tsk->modifies( _prop_label ); 
 
-    sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+    sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
 
   }
 
@@ -121,7 +121,7 @@ namespace Uintah{
 
       const Patch* patch = patches->get(p);
       int archIndex = 0;
-      int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+      int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
       pT prop; 
       new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
@@ -139,7 +139,7 @@ namespace Uintah{
     Task* tsk = scinew Task(taskname, this, &ConstProperty::initialize);
     tsk->computes(_prop_label); 
 
-    sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+    sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
   }
 
   template <typename pT, typename constpT>
@@ -154,7 +154,7 @@ namespace Uintah{
   
       const Patch* patch = patches->get(p);
       int archIndex = 0;
-      int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+      int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
       pT prop; 
 

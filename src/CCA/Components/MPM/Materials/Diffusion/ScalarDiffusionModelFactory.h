@@ -26,7 +26,7 @@
 #define _SCALARDIFFUSIONMODELFACTORY_H_
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <string>
 
 namespace Uintah {
@@ -39,7 +39,7 @@ namespace Uintah {
     public:
       // Dispatch based on diffusion model.
       static ScalarDiffusionModel* create(ProblemSpecP      & ps    ,
-                                          SimulationStateP  & ss    ,
+                                          MaterialManagerP  & ss    ,
                                           MPMFlags          * flags );
 
   };

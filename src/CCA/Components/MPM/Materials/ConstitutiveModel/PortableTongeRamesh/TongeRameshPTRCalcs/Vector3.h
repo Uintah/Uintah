@@ -36,63 +36,63 @@
 
 class Vector3
 {
-	public:
-		Vector3();
-		Vector3(const double val);
-		Vector3(const double v1, const double v2, const double v3);
-		virtual ~Vector3();
+        public:
+                Vector3();
+                Vector3(const double val);
+                Vector3(const double v1, const double v2, const double v3);
+                virtual ~Vector3();
 
         /* throws std::out_of_range if idx <0 || idx>2 */
-		double& operator[] (const int idx);
-		double  operator[] (const int idx) const;
-		
-		inline void operator -= (const Vector3 rhs){
-			_values[0] -= rhs._values[0];
-			_values[1] -= rhs._values[1];
-			_values[2] -= rhs._values[2];
-		}
-		
-		inline Vector3 operator -(const Vector3 rhs){
-			Vector3 ans(*this);
-			ans -= rhs;
-			return ans;
-			
-		}
-		
-		inline void operator += (const Vector3 rhs){
-			_values[0] += rhs._values[0];
-			_values[1] += rhs._values[1];
-			_values[2] += rhs._values[2];
-		}
-		
-		inline Vector3 operator+ (const Vector3 rhs){
-			Vector3 ans(*this);
-			ans += rhs;
-			return ans;
-			
-		}
-		
-		inline void operator *= (const double rhs){
-			_values[0] *= rhs;
-			_values[1] *= rhs;
-			_values[2] *= rhs;
-		}
-		
-		inline Vector3 operator * (const double rhs){
-			Vector3 ans(*this);
-			ans *= rhs;
-			return ans;
-		}
-		
-		inline double x() const {return _values[0];}
-		inline double y() const {return _values[1];}
-		inline double z() const {return _values[2];}
+                double& operator[] (const int idx);
+                double  operator[] (const int idx) const;
+                
+                inline void operator -= (const Vector3 rhs){
+                        _values[0] -= rhs._values[0];
+                        _values[1] -= rhs._values[1];
+                        _values[2] -= rhs._values[2];
+                }
+                
+                inline Vector3 operator -(const Vector3 rhs){
+                        Vector3 ans(*this);
+                        ans -= rhs;
+                        return ans;
+                        
+                }
+                
+                inline void operator += (const Vector3 rhs){
+                        _values[0] += rhs._values[0];
+                        _values[1] += rhs._values[1];
+                        _values[2] += rhs._values[2];
+                }
+                
+                inline Vector3 operator+ (const Vector3 rhs){
+                        Vector3 ans(*this);
+                        ans += rhs;
+                        return ans;
+                        
+                }
+                
+                inline void operator *= (const double rhs){
+                        _values[0] *= rhs;
+                        _values[1] *= rhs;
+                        _values[2] *= rhs;
+                }
+                
+                inline Vector3 operator * (const double rhs){
+                        Vector3 ans(*this);
+                        ans *= rhs;
+                        return ans;
+                }
+                
+                inline double x() const {return _values[0];}
+                inline double y() const {return _values[1];}
+                inline double z() const {return _values[2];}
 
-		double min() const;
+                double min() const;
 
-	private:
-		double _values[3];
-		/* add your private declarations */
+        private:
+                double _values[3];
+                /* add your private declarations */
 };
 
 #endif /* VECTOR3_H */ 

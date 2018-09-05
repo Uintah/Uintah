@@ -28,8 +28,6 @@
 #include <vector>
 #include <iostream>
 
-#include <boost/foreach.hpp>
-
 //-- Uintah Includes --//
 #include <Core/Grid/Patch.h>
 #include <Core/Geometry/BBox.h>
@@ -412,14 +410,10 @@ namespace WasatchCore {
     // will just expose the dependencies advertised by the functor but will
     // accomplish nothing else because that functor doesn't have any bc points
     // associated with it.    
-    BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() )
-    {
-      BOOST_FOREACH( const int im, matSubSet->getVector() )
-      {
-        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
-        {
-          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
-          {
+    for( const Uintah::MaterialSubset* matSubSet: materials_->getVector() ){
+      for( const int im: matSubSet->getVector() ){
+        for( const Uintah::PatchSubset* const patches: localPatches_->getVector() ){
+          for( const Uintah::Patch* const patch: patches->getVector() ){
             const int patchID = patch->getID();
             BCFunctorMap::iterator iter = bcFunctorMap_.begin();
             while ( iter != bcFunctorMap_.end() ) {
@@ -443,18 +437,15 @@ namespace WasatchCore {
         } // localPatches_
       } // matSubSet
     } // materials_
-    
-    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
-    {
+
+    for( const BndMapT::value_type bndSpecPair: bndNameBndSpecMap_ ){
       const BndSpec& myBndSpec = bndSpecPair.second;
       const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(fieldName);
 
       if (myBndCondSpec) {
 
-        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
-        {
-          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
-          {
+        for( const Uintah::PatchSubset* const patches: localPatches_->getVector() ){
+          for( const Uintah::Patch* const patch: patches->getVector() ){
             const int patchID = patch->getID();
             //_____________________________________________________________________________________
             // check if we have this patchID in the list of patchIDs
@@ -536,9 +527,9 @@ namespace WasatchCore {
     Expr::ExpressionFactory& factory = *(grafCat_[ADVANCE_SOLUTION]->exprFactory);
     const Expr::Tag& pTag = TagNames::self().pressure;
     if (!factory.have_entry( pTag )) return;
-    BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() ) {
+    for( const Uintah::PatchSubset* const patches: localPatches_->getVector() ) {
       // loop over every patch in the patch subset
-      BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
+      for( const Uintah::Patch* const patch: patches->getVector() ) {
         const int patchID = patch->getID();
         // go through the patch ids and pass the WasatchBCHelper to the pressure expression
         Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pTag, patchID, true ) );
@@ -556,8 +547,7 @@ namespace WasatchCore {
     const int patchID = patch->getID();
     const Expr::Tag& pTag = TagNames::self().pressure;
 
-    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
-    {
+    for( const BndMapT::value_type bndSpecPair: bndNameBndSpecMap_ ){
       const BndSpec& myBndSpec = bndSpecPair.second; // get the boundary specification
       const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pTag.name()); // get the bc spec - we will check if the user specified anything for pressure here
       const Uintah::IntVector unitNormal = patch->getFaceDirection(myBndSpec.face);
@@ -620,8 +610,7 @@ namespace WasatchCore {
     const double dy = res[1];
     const double dz = res[2];
 
-    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
-    {
+    for( const BndMapT::value_type bndSpecPair: bndNameBndSpecMap_ ){
       const BndSpec& myBndSpec = bndSpecPair.second;
       const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pTag.name());
       
@@ -682,9 +671,8 @@ namespace WasatchCore {
     const double dx = res[0];
     const double dy = res[1];
     const double dz = res[2];
-    
-    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
-    {
+
+    for( const BndMapT::value_type bndSpecPair: bndNameBndSpecMap_ ){
       const BndSpec& myBndSpec = bndSpecPair.second;
       const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pTag.name());
       
@@ -782,10 +770,8 @@ namespace WasatchCore {
       gasConstant = 8314.459848;  // universal R = J/(kmol K).
       mw = {28.966}; // air
     }
-    BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
-    {
-      BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
-      {
+    for( const Uintah::PatchSubset* const patches: localPatches_->getVector() ){
+      for( const Uintah::Patch* const patch: patches->getVector() ){
         const int patchID = patch->getID();
         const string strPatchID = number_to_string(patchID) + number_to_string(jobid);
         //_____________________________________________________________________________________
@@ -832,24 +818,19 @@ namespace WasatchCore {
     typedef SVolField FieldT;
     const string& fieldName = varTag.name();
     Expr::ExpressionFactory& factory = *(grafCat_[taskCat]->exprFactory);
-    
-    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
-    {
-      const BndSpec& myBndSpec = bndSpecPair.second;      
-      {
-        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
-        {
-          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
-          {
-            const int patchID = patch->getID();
-            const string strPatchID = number_to_string(patchID);
-            //_____________________________________________________________________________________
-            // check if we have this patchID in the list of patchIDs
-            if( myBndSpec.has_patch(patchID) ) {
-              string bndName = myBndSpec.name;
-              NSCBC::BCBuilder<FieldT>* nscbc = nscbcBuildersMap_.find(bndName)->second.find(patchID)->second;
-              nscbc->attach_rhs_modifier( factory, varTag, quantity, speciesNumber );
-            }
+
+    for( const BndMapT::value_type bndSpecPair: bndNameBndSpecMap_ ){
+      const BndSpec& myBndSpec = bndSpecPair.second;
+      for( const Uintah::PatchSubset* const patches: localPatches_->getVector() ){
+        for( const Uintah::Patch* const patch: patches->getVector() ){
+          const int patchID = patch->getID();
+          const string strPatchID = number_to_string(patchID);
+          //_____________________________________________________________________________________
+          // check if we have this patchID in the list of patchIDs
+          if( myBndSpec.has_patch(patchID) ) {
+            string bndName = myBndSpec.name;
+            NSCBC::BCBuilder<FieldT>* nscbc = nscbcBuildersMap_.find(bndName)->second.find(patchID)->second;
+            nscbc->attach_rhs_modifier( factory, varTag, quantity, speciesNumber );
           }
         }
       }
@@ -886,14 +867,10 @@ namespace WasatchCore {
     // will just expose the dependencies advertised by the functor but will
     // accomplish nothing else because that functor doesn't have any bc points
     // associated with it.
-    BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() )
-    {
-      BOOST_FOREACH( const int im, matSubSet->getVector() )
-      {
-        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
-        {
-          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
-          {
+    for( const Uintah::MaterialSubset* matSubSet: materials_->getVector() ){
+      for( int im: matSubSet->getVector() ){
+        for( const Uintah::PatchSubset* const patches: localPatches_->getVector() ){
+          for( const Uintah::Patch* const patch: patches->getVector() ){
             const int patchID = patch->getID();
             DBGBC << "nscbc patchID = " << patchID << std::endl;
             BCFunctorMap::iterator iter = bcFunctorMap_.begin();

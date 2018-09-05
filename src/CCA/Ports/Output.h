@@ -30,7 +30,7 @@
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Grid/GridP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/OS/Dir.h>
@@ -91,7 +91,7 @@ WARNING
     // Insert Documentation Here:
     virtual void problemSetup( const ProblemSpecP     & params,
                                const ProblemSpecP     & restart_prob_spec,
-                               const SimulationStateP & sharedState ) = 0;
+                               const MaterialManagerP & materialManager ) = 0;
 
     virtual void initializeOutput( const ProblemSpecP & params,
                                    const GridP        & grid ) = 0;
@@ -161,9 +161,11 @@ WARNING
     virtual int    getNextCheckpointWallTime() const = 0; // integer - seconds
       
     // Returns true if data will be output this time step
+    virtual void setOutputTimeStep( bool val, const GridP& grid ) = 0;
     virtual bool isOutputTimeStep() const = 0;
 
     // Returns true if data will be checkpointed this time step
+    virtual void setCheckpointTimeStep( bool val, const GridP& grid ) = 0;
     virtual bool isCheckpointTimeStep() const = 0;
 
     // Returns true if the label is being saved

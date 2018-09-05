@@ -33,7 +33,7 @@
 #define UINTAH_CONSTANTRATE_H
 
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
@@ -56,7 +56,7 @@ namespace Uintah {
     
              ConstantRate(
                           ProblemSpecP      & ps,
-                          SimulationStateP  & sS,
+                          MaterialManagerP  & sS,
                           MPMFlags          * Mflag,
                           std::string         diff_type
                          );
