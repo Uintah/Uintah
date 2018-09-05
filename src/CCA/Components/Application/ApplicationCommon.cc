@@ -42,9 +42,9 @@ Uintah::Dout g_deltaT_minor_warnings( "DeltaTMinorWarnings", "ApplicationCommon"
 
 Uintah::Dout g_deltaT_major_warnings( "DeltaTMajorWarnings", "ApplicationCommon", "Report major warnings when validating the next delta T", true );
 
-Uintah::Dout g_deltaT_prevalidate_min( "DeltaTPreValidateMin", "ApplicationCommon", "Before reducing validate the next delta T w/minimal warnings", false );
+Uintah::Dout g_deltaT_prevalidate( "DeltaTPreValidate", "ApplicationCommon", "Before reducing validate the next delta T w/warnings for each rank ", false );
 
-Uintah::Dout g_deltaT_prevalidate_max( "DeltaTPreValidateMax", "ApplicationCommon", "Before reducing validate the next delta T w/maximal warnings", false );
+Uintah::Dout g_deltaT_prevalidate_sum( "DeltaTPreValidateSum", "ApplicationCommon", "Before reducing validate the next delta T w/summary warning over all ranks ", false );
 
 ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
                                       const MaterialManagerP   materialManager )
@@ -397,8 +397,9 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
         // Adjust the local next delT by the multiplier
         m_delTNext = delTvar * multiplier;
 
-        // Valiadate before the reduction.
-        if( g_deltaT_prevalidate_min || g_deltaT_prevalidate_max )
+        // Valiadate before the reduction. This assures that there will
+        // not be any possible round off error for the next delta T.
+        if( g_deltaT_prevalidate || g_deltaT_prevalidate_sum )
           validateNextDelT( m_delTNext, l );
 
         new_dw->put(delt_vartype(m_delTNext), m_delTLabel );
@@ -417,8 +418,10 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   new_dw->get(delTvar, m_delTLabel);
   m_delTNext = delTvar;
 
-  // Valiadate after the reduction.
-  if( !g_deltaT_prevalidate_min && !g_deltaT_prevalidate_max )
+  // Valiadate after the reduction. NOTE: Because each rank will
+  // independently modify delta T the resulting values may be
+  // different due to round off.
+  if( !g_deltaT_prevalidate && !g_deltaT_prevalidate_sum )
   {
     // Validate and put the value into the warehouse if it changed.
     if( validateNextDelT( m_delTNext, -1 ) )
@@ -810,14 +813,18 @@ ApplicationCommon::setNextDelT( double delT )
 unsigned int
 ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 {
-  unsigned int invalid = 0;
-
-  std::ostringstream message;
-      
   // NOTE: This check is performed BEFORE the simulation time is
   // updated. As such, being that the time step has completed, the
   // actual simulation time is the current simulation time plus the
   // current delta T.
+
+  std::ostringstream message;
+
+  // The invalid flag is a bitwise XOR for the local rank. Each bit
+  // represents which threshold was exceeded. It is reduced on all
+  // ranks if the pre-validating min flag is true (and the
+  // pre-validating maxflag is false).
+  unsigned int invalid = 0;
 
   // Check to see if the next delT is below the minimum delt
   if( delTNext < m_delTMin )
@@ -826,12 +833,11 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 
     if( g_deltaT_major_warnings )
     {
-      message << "raising the next delT from " << delTNext;
-      delTNext = m_delTMin;
-      message << " to the minimum: " << delTNext;
+      message << "raising the next delT from " << delTNext
+	      << " to the minimum: " << m_delTMin;
     }
-    else
-      delTNext = m_delTMin;      
+
+    delTNext = m_delTMin;      
   }
 
   // Check to see if the next delT was increased too much over the
@@ -846,14 +852,13 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 
     if( g_deltaT_major_warnings )
     {
-      message << "lowering the next delT from " << delTNext;
-      delTNext = delt_tmp;
-      message << " to the maxmimum: " << delTNext
+      message << "lowering the next delT from " << delTNext
+	      << " to the maxmimum: " << delt_tmp
               << " (maximum increase permitted is " << m_delTMaxIncrease
               << ")";
     }
-    else
-      delTNext = delt_tmp;
+
+    delTNext = delt_tmp;
   }
 
   // Check to see if the next delT exceeds the maximum initial delt
@@ -865,13 +870,12 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 
     if( g_deltaT_major_warnings )
     {
-      message << "for the initial timesteps lowering the next delT from "
-              << delTNext ;
-      delTNext = m_delTInitialMax;
-      message << " to the maximum: " << delTNext;
+      message << "for the initial time up to " << m_delTInitialRange
+	      << " lowering the next delT from " << delTNext
+	      << " to the maximum: " << m_delTInitialMax;
     }
-    else
-      delTNext = m_delTInitialMax;
+
+    delTNext = m_delTInitialMax;
   }
 
   // Check to see if the next delT exceeds the maximum delt
@@ -881,12 +885,11 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 
     if( g_deltaT_major_warnings )
     {
-      message << "lowering the next delT from " << delTNext;
-      delTNext = m_delTMax;
-      message << " to the maximum: " << delTNext;
+      message << "lowering the next delT from " << delTNext
+	      << " to the maximum: " << m_delTMax;
     }
-    else
-      delTNext = m_delTMax;
+
+    delTNext = m_delTMax;
   }
 
   // Adjust the next delT to clamp the simulation time to the requested
@@ -902,13 +905,12 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 
       if( g_deltaT_minor_warnings )
       {
-        message << "lowering the next delT from " << delTNext;
-        delTNext = nextOutput - (m_simTime+m_delT);
-        message << " to " << delTNext
+        message << "lowering the next delT from " << delTNext
+		<< " to " << nextOutput - (m_simTime+m_delT)
                 << " to line up with the output time";
       }
-      else
-        delTNext = nextOutput - (m_simTime+m_delT);
+
+      delTNext = nextOutput - (m_simTime+m_delT);
     }
 
     // Adjust the next delta T to clamp the simulation time to the
@@ -920,13 +922,12 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 
       if( g_deltaT_minor_warnings )
       {
-        message << "lowering the next delT from " << delTNext;
-        delTNext = nextCheckpoint - (m_simTime+m_delT);
-        message << " to " << delTNext
-              << " to line up with the checkpoint time";
+        message << "lowering the next delT from " << delTNext
+		<< " to " << nextCheckpoint - (m_simTime+m_delT)
+		<< " to line up with the checkpoint time";
       }
-      else
-        delTNext = nextCheckpoint - (m_simTime+m_delT);
+
+      delTNext = nextCheckpoint - (m_simTime+m_delT);
     }
   }
   
@@ -938,27 +939,31 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 
     if( g_deltaT_minor_warnings )
     {
-      message << "lowering the next delT from " << delTNext;
-      delTNext = m_simTimeMax - (m_simTime+m_delT);
-      message << " to " << delTNext
+      message << "lowering the next delT from " << delTNext
+	      << " to " << m_simTimeMax - (m_simTime+m_delT)
               << " to line up with the maximum simulation time";
     }
-    else
-      delTNext = m_simTimeMax - (m_simTime+m_delT);
+
+    delTNext = m_simTimeMax - (m_simTime+m_delT);
   }
-  
+
+  // Check for a message which indicates that delta T was adjusted and
+  // the user wants to be warned (see the g_deltaT_major_warnings and
+  // g_deltaT_minor_warnings flags).
   if( !message.str().empty() )
   {
-    // A pre-validate max so report for all ranks (regardless of pre-validate min)
-    // or if no pre-validating then a post-validate so reprort for rank 0 only
-    if( ( g_deltaT_prevalidate_max ) ||
-        (!g_deltaT_prevalidate_max && !g_deltaT_prevalidate_min && d_myworld->myRank() == 0 ) )
+    // The pre-validate flag is true but not the pre-validate sum flag
+    // report for all ranks or if no pre-validating flags are set
+    // then a post-validate (default) so reprort for rank 0 only.
+    if( ( g_deltaT_prevalidate && !g_deltaT_prevalidate_sum) ||
+        (!g_deltaT_prevalidate && !g_deltaT_prevalidate_sum && d_myworld->myRank() == 0 ) )
     {
       std::ostringstream header;
 
       header << "WARNING ";
 
-      if( g_deltaT_prevalidate_max )
+      // For the pre-validate report the rank and level.
+      if( g_deltaT_prevalidate )
         header << "Rank-" << d_myworld->myRank()
                << " for level " << level << " ";
       
@@ -969,13 +974,17 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     }
   }
 
-  // Only report if prevalidating min.
-  if( !g_deltaT_prevalidate_max && g_deltaT_prevalidate_min && level == 0 )
+  // Report if pre-validating sum flag is set and only for level zero
+  // as it is a summary.
+  if( g_deltaT_prevalidate_sum && level == 0 )
   {
-    int invalidall;
+    // Gather all of the bits where the threshold was exceeded.
+    int invalidAll;
     
-    Uintah::MPI::Reduce( &invalid, &invalidall, 1, MPI_INT, MPI_BOR, 0, d_myworld->getComm() );
+    Uintah::MPI::Reduce( &invalid, &invalidAll, 1, MPI_INT, MPI_BOR, 0, d_myworld->getComm() );
 
+    // Only report the summary on rank 0. One line for each instance
+    // where the threshold was exceeded.
     if( d_myworld->myRank() == 0 )
     {
       std::ostringstream header;
@@ -985,89 +994,93 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
       
       std::ostringstream message;
 
+      // Report the major warnings
       if( g_deltaT_major_warnings )
       {
-        if( invalidall & DELTA_T_MIN )
+        if( invalidAll & DELTA_T_MIN )
         {         
           if( !message.str().empty() )
             message << std::endl;
           
           message << header.str()
-                  << "one or more ranks the next delta T was "
+                  << "for one or more ranks the next delta T was "
                   << "raised to the minimum: "
                   << m_delTMin;
         }
 
-        if( invalidall & DELTA_T_MAX_INCREASE )
+        if( invalidAll & DELTA_T_MAX_INCREASE )
         {
           if( !message.str().empty() )
             message << std::endl;
           
           message << header.str()
-                  << "one or more ranks the next delta T was "
+                  << "for one or more ranks the next delta T was "
                   << "lowered. The maximum increase permitted is "
                   << m_delTMaxIncrease << std::endl;
         }
         
-        if( invalidall & DELTA_T_INITIAL_MAX )
+        if( invalidAll & DELTA_T_INITIAL_MAX )
         {
           if( !message.str().empty() )
             message << std::endl;
           
           message << header.str()
-                  << "one or more ranks "
-                  << "for the initial timesteps the next delT was lowered to "
+                  << "for one or more ranks "
+		  << "for the initial time up to " << m_delTInitialRange
+                  << " the next delT was lowered to "
                   << m_delTInitialMax << std::endl;;
         }
       }
 
+      // Report the minor warnigns
       if( g_deltaT_minor_warnings )
       {
-        if( invalidall & DELTA_T_MAX )
+        if( invalidAll & DELTA_T_MAX )
         {         
           if( !message.str().empty() )
             message << std::endl;
           
           message << header.str()
-                  << "one or more ranks the next delta T was "
+                  << "for one or more ranks the next delta T was "
                   << "lowered to the maximum: "
                   << m_delTMax;
         }
 
-        if( invalidall & CLAMP_TIME_TO_OUTPUT )
+        if( invalidAll & CLAMP_TIME_TO_OUTPUT )
         {         
           if( !message.str().empty() )
             message << std::endl;
           
           message << header.str()
-                  << "one or more ranks the next delta T was "
+                  << "for one or more ranks the next delta T was "
                   << "lowered to line up with the output time: "
                   << m_output->getNextOutputTime();
         }
 
-        if( invalidall & CLAMP_TIME_TO_CHECKPOINT )
+        if( invalidAll & CLAMP_TIME_TO_CHECKPOINT )
         {         
           if( !message.str().empty() )
             message << std::endl;
           
           message << header.str()
-                  << "one or more ranks the next delta T was "
+                  << "for one or more ranks the next delta T was "
                   << "lowered to line up with the checkpoint time: "
                   << m_output->getNextCheckpointTime();
         }
 
-        if( invalidall & CLAMP_TIME_TO_MAX )
+        if( invalidAll & CLAMP_TIME_TO_MAX )
         {         
           if( !message.str().empty() )
             message << std::endl;
           
           message << header.str()
-                  << "one or more ranks the next delta T was "
+                  << "for one or more ranks the next delta T was "
                   << "lowered to the maximum simulation time: "
                   << m_simTimeMax;
         }
       }
-      
+
+      // Finally, output the summary.
       if( !message.str().empty() )
       {
         DOUT( true, message.str() );
