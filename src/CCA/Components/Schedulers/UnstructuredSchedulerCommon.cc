@@ -753,11 +753,11 @@ UnstructuredSchedulerCommon::printTrackedVars( UnstructuredDetailedTask * dtask
         // pending the task that allocates the var, we may not have allocated it yet
         UnstructuredGridVariableBase* v;
         switch (td->getUnstructuredType()) {
-          case UnstructuredTypeDescription::CCVariable :
-          case UnstructuredTypeDescription::NCVariable :
-          case UnstructuredTypeDescription::SFCXVariable :
-          case UnstructuredTypeDescription::SFCYVariable :
-          case UnstructuredTypeDescription::SFCZVariable :
+          case UnstructuredTypeDescription::UnstructuredCCVariable :
+          case UnstructuredTypeDescription::UnstructuredNCVariable :
+          case UnstructuredTypeDescription::UnstructuredSFCXVariable :
+          case UnstructuredTypeDescription::UnstructuredSFCYVariable :
+          case UnstructuredTypeDescription::UnstructuredSFCZVariable :
             v = dynamic_cast<UnstructuredGridVariableBase*>(dw->d_varDB.get(label, m, patch));
             break;
           default :
@@ -1894,11 +1894,11 @@ UnstructuredSchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
             }
 
             switch (label->typeDescription()->getUnstructuredType()) {
-              case UnstructuredTypeDescription::NCVariable :
-              case UnstructuredTypeDescription::CCVariable :
-              case UnstructuredTypeDescription::SFCXVariable :
-              case UnstructuredTypeDescription::SFCYVariable :
-              case UnstructuredTypeDescription::SFCZVariable : {
+              case UnstructuredTypeDescription::UnstructuredNCVariable :
+              case UnstructuredTypeDescription::UnstructuredCCVariable :
+              case UnstructuredTypeDescription::UnstructuredSFCXVariable :
+              case UnstructuredTypeDescription::UnstructuredSFCYVariable :
+              case UnstructuredTypeDescription::UnstructuredSFCZVariable : {
                 // bulletproofing
                 if (!oldDataWarehouse->exists(label, matl, oldPatch)) {
                   SCI_THROW(

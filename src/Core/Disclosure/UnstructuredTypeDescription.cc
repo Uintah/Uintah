@@ -212,11 +212,11 @@ std::string
 UnstructuredTypeDescription::toString( UnstructuredType type )
 {
   switch( type ) {
-    case CCVariable:          return "CCVariable";
-    case NCVariable:          return "NCVariable";
-    case SFCXVariable:        return "SFCXVariable";
-    case SFCYVariable:        return "SFCYVariable";
-    case SFCZVariable:        return "SFCZVariable";
+    case UnstructuredCCVariable:          return "UnstructuredCCVariable";
+    case UnstructuredNCVariable:          return "UnstructuredNCVariable";
+    case UnstructuredSFCXVariable:        return "UnstructuredSFCXVariable";
+    case UnstructuredSFCYVariable:        return "UnstructuredSFCYVariable";
+    case UnstructuredSFCZVariable:        return "UnstructuredSFCZVariable";
     case ParticleVariable:    return "ParticleVariable";
     case UnstructuredParticleVariable:    return "UnstructuredParticleVariable";
     case UnstructuredPerPatch:            return "UnstructuredPerPatch";

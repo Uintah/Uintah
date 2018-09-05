@@ -664,11 +664,11 @@ UnstructuredOnDemandDataWarehouse::sendMPI(       UnstructuredDependencyBatch   
       }
     }
       break;
-    case UnstructuredTypeDescription::NCVariable :
-    case UnstructuredTypeDescription::CCVariable :
-    case UnstructuredTypeDescription::SFCXVariable :
-    case UnstructuredTypeDescription::SFCYVariable :
-    case UnstructuredTypeDescription::SFCZVariable : {
+    case UnstructuredTypeDescription::UnstructuredNCVariable :
+    case UnstructuredTypeDescription::UnstructuredCCVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCXVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCYVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCZVariable : {
       if (!d_varDB.exists(label, matlIndex, patch)) {
         std::cout << d_myworld->myRank() << "  Needed by " << *dep << " on task " << *dep->m_to_tasks.front() << std::endl;
         SCI_THROW(
@@ -899,11 +899,11 @@ UnstructuredOnDemandDataWarehouse::recvMPI(       UnstructuredDependencyBatch   
       }
     }
       break;
-    case UnstructuredTypeDescription::NCVariable :
-    case UnstructuredTypeDescription::CCVariable :
-    case UnstructuredTypeDescription::SFCXVariable :
-    case UnstructuredTypeDescription::SFCYVariable :
-    case UnstructuredTypeDescription::SFCZVariable : {
+    case UnstructuredTypeDescription::UnstructuredNCVariable :
+    case UnstructuredTypeDescription::UnstructuredCCVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCXVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCYVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCZVariable : {
 
       //allocate the variable
       UnstructuredGridVariableBase* var = dynamic_cast<UnstructuredGridVariableBase*>( label->typeDescription()->createInstance() );
@@ -2504,11 +2504,11 @@ UnstructuredOnDemandDataWarehouse::emit(       OutputContext& oc,
     // Save with the boundary layer, otherwise restarting from the DataArchive won't work.
     patch->computeVariableExtents(label->typeDescription()->getUnstructuredType(), label->getBoundaryLayer(), Ghost::None, 0, l, h);
     switch (label->typeDescription()->getUnstructuredType()) {
-      case UnstructuredTypeDescription::NCVariable :
-      case UnstructuredTypeDescription::CCVariable :
-      case UnstructuredTypeDescription::SFCXVariable :
-      case UnstructuredTypeDescription::SFCYVariable :
-      case UnstructuredTypeDescription::SFCZVariable :
+      case UnstructuredTypeDescription::UnstructuredNCVariable :
+      case UnstructuredTypeDescription::UnstructuredCCVariable :
+      case UnstructuredTypeDescription::UnstructuredSFCXVariable :
+      case UnstructuredTypeDescription::UnstructuredSFCYVariable :
+      case UnstructuredTypeDescription::UnstructuredSFCZVariable :
         //get list
       {
         std::vector<UnstructuredVariable*> varlist;
@@ -2570,11 +2570,11 @@ UnstructuredOnDemandDataWarehouse::emitPIDX(PIDXOutputContext& pc,
     patch->computeVariableExtents( label->typeDescription()->getType(), label->getBoundaryLayer(),
                                    Ghost::None, 0, l, h );
     switch ( label->typeDescription()->getType() ) {
-    case UnstructuredTypeDescription::NCVariable :
-    case UnstructuredTypeDescription::CCVariable :
-    case UnstructuredTypeDescription::SFCXVariable :
-    case UnstructuredTypeDescription::SFCYVariable :
-    case UnstructuredTypeDescription::SFCZVariable :
+    case UnstructuredTypeDescription::UnstructuredNCVariable :
+    case UnstructuredTypeDescription::UnstructuredCCVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCXVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCYVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCZVariable :
       //get list
       {
 	 std::vector<UnstructuredVariable*> varlist;
@@ -2707,11 +2707,11 @@ UnstructuredOnDemandDataWarehouse::decrementScrubCount( const UnstructuredVarLab
 
   int count = 0;
   switch (var->typeDescription()->getUnstructuredType()) {
-    case UnstructuredTypeDescription::NCVariable :
-    case UnstructuredTypeDescription::CCVariable :
-    case UnstructuredTypeDescription::SFCXVariable :
-    case UnstructuredTypeDescription::SFCYVariable :
-    case UnstructuredTypeDescription::SFCZVariable :
+    case UnstructuredTypeDescription::UnstructuredNCVariable :
+    case UnstructuredTypeDescription::UnstructuredCCVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCXVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCYVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCZVariable :
     case UnstructuredTypeDescription::UnstructuredPerPatch :
       //try {
       count = d_varDB.decrementScrubCount(var, matlIndex, patch);
@@ -2753,11 +2753,11 @@ UnstructuredOnDemandDataWarehouse::setScrubCount( const UnstructuredVarLabel* va
                                             int       count )
 {
   switch (var->typeDescription()->getUnstructuredType()) {
-    case UnstructuredTypeDescription::NCVariable :
-    case UnstructuredTypeDescription::CCVariable :
-    case UnstructuredTypeDescription::SFCXVariable :
-    case UnstructuredTypeDescription::SFCYVariable :
-    case UnstructuredTypeDescription::SFCZVariable :
+    case UnstructuredTypeDescription::UnstructuredNCVariable :
+    case UnstructuredTypeDescription::UnstructuredCCVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCXVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCYVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCZVariable :
     case UnstructuredTypeDescription::UnstructuredPerPatch :
     case UnstructuredTypeDescription::UnstructuredParticleVariable :
       d_varDB.setScrubCount(var, matlIndex, patch, count);
@@ -2780,11 +2780,11 @@ UnstructuredOnDemandDataWarehouse::scrub( const UnstructuredVarLabel* var,
                               const UnstructuredPatch*    patch )
 {
   switch (var->typeDescription()->getUnstructuredType()) {
-    case UnstructuredTypeDescription::NCVariable :
-    case UnstructuredTypeDescription::CCVariable :
-    case UnstructuredTypeDescription::SFCXVariable :
-    case UnstructuredTypeDescription::SFCYVariable :
-    case UnstructuredTypeDescription::SFCZVariable :
+    case UnstructuredTypeDescription::UnstructuredNCVariable :
+    case UnstructuredTypeDescription::UnstructuredCCVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCXVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCYVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCZVariable :
     case UnstructuredTypeDescription::UnstructuredPerPatch :
     case UnstructuredTypeDescription::UnstructuredParticleVariable :
       d_varDB.scrub(var, matlIndex, patch);
@@ -3175,11 +3175,11 @@ UnstructuredOnDemandDataWarehouse::transferFrom(       UnstructuredDataWarehouse
       int matl = matls->get( m );
       checkPutAccess( var, matl, patch, replace );
       switch ( var->typeDescription()->getUnstructuredType() ) {
-        case UnstructuredTypeDescription::NCVariable :
-        case UnstructuredTypeDescription::CCVariable :
-        case UnstructuredTypeDescription::SFCXVariable :
-        case UnstructuredTypeDescription::SFCYVariable :
-        case UnstructuredTypeDescription::SFCZVariable : {
+        case UnstructuredTypeDescription::UnstructuredNCVariable :
+        case UnstructuredTypeDescription::UnstructuredCCVariable :
+        case UnstructuredTypeDescription::UnstructuredSFCXVariable :
+        case UnstructuredTypeDescription::UnstructuredSFCYVariable :
+        case UnstructuredTypeDescription::UnstructuredSFCZVariable : {
           //See if it exists in the CPU or GPU
           bool found = false;
           if( fromDW->d_varDB.exists( var, matl, patch ) ) {

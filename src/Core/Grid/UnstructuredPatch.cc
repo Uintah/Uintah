@@ -1640,15 +1640,15 @@ UnstructuredPatch::VariableBasis UnstructuredPatch::translateTypeToBasis(Uintah:
                                                  bool mustExist)
 {
   switch(type){
-  case UnstructuredTypeDescription::CCVariable:
+  case UnstructuredTypeDescription::UnstructuredCCVariable:
     return CellBased;
-  case UnstructuredTypeDescription::NCVariable:
+  case UnstructuredTypeDescription::UnstructuredNCVariable:
     return NodeBased;
-  case UnstructuredTypeDescription::SFCXVariable:
+  case UnstructuredTypeDescription::UnstructuredSFCXVariable:
     return XFaceBased;
-  case UnstructuredTypeDescription::SFCYVariable:
+  case UnstructuredTypeDescription::UnstructuredSFCYVariable:
     return YFaceBased;
-  case UnstructuredTypeDescription::SFCZVariable:
+  case UnstructuredTypeDescription::UnstructuredSFCZVariable:
     return ZFaceBased;
   case UnstructuredTypeDescription::ParticleVariable:
   case UnstructuredTypeDescription::UnstructuredPerPatch:

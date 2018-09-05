@@ -355,24 +355,24 @@ void UnstructuredLevel::computeVariableExtents( const UnstructuredTypeDescriptio
   findCellIndexRange(CCLo, CCHi);
 
   switch (TD) {
-    case UnstructuredTypeDescription::CCVariable :
+    case UnstructuredTypeDescription::UnstructuredCCVariable :
     case UnstructuredTypeDescription::ParticleVariable :
       lo = CCLo;
       hi = CCHi;
       break;
-    case UnstructuredTypeDescription::SFCXVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCXVariable :
       lo = CCLo;
       hi = CCHi + IntVector(1, 0, 0);
       break;
-    case UnstructuredTypeDescription::SFCYVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCYVariable :
       lo = CCLo;
       hi = CCHi + IntVector(0, 1, 0);
       break;
-    case UnstructuredTypeDescription::SFCZVariable :
+    case UnstructuredTypeDescription::UnstructuredSFCZVariable :
       lo = CCLo;
       hi = CCHi + IntVector(0, 0, 1);
       break;
-    case UnstructuredTypeDescription::NCVariable :
+    case UnstructuredTypeDescription::UnstructuredNCVariable :
       findNodeIndexRange(lo, hi);
       break;
     default :
