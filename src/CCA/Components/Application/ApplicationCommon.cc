@@ -834,7 +834,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     if( g_deltaT_major_warnings )
     {
       message << "raising the next delT from " << delTNext
-	      << " to the minimum: " << m_delTMin;
+              << " to the minimum: " << m_delTMin;
     }
 
     delTNext = m_delTMin;      
@@ -853,7 +853,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     if( g_deltaT_major_warnings )
     {
       message << "lowering the next delT from " << delTNext
-	      << " to the maxmimum: " << delt_tmp
+              << " to the maxmimum: " << delt_tmp
               << " (maximum increase permitted is " << m_delTMaxIncrease
               << ")";
     }
@@ -871,8 +871,8 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     if( g_deltaT_major_warnings )
     {
       message << "for the initial time up to " << m_delTInitialRange
-	      << " lowering the next delT from " << delTNext
-	      << " to the maximum: " << m_delTInitialMax;
+              << " lowering the next delT from " << delTNext
+              << " to the maximum: " << m_delTInitialMax;
     }
 
     delTNext = m_delTInitialMax;
@@ -886,7 +886,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     if( g_deltaT_major_warnings )
     {
       message << "lowering the next delT from " << delTNext
-	      << " to the maximum: " << m_delTMax;
+              << " to the maximum: " << m_delTMax;
     }
 
     delTNext = m_delTMax;
@@ -906,7 +906,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
       if( g_deltaT_minor_warnings )
       {
         message << "lowering the next delT from " << delTNext
-		<< " to " << nextOutput - (m_simTime+m_delT)
+                << " to " << nextOutput - (m_simTime+m_delT)
                 << " to line up with the output time";
       }
 
@@ -923,8 +923,8 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
       if( g_deltaT_minor_warnings )
       {
         message << "lowering the next delT from " << delTNext
-		<< " to " << nextCheckpoint - (m_simTime+m_delT)
-		<< " to line up with the checkpoint time";
+                << " to " << nextCheckpoint - (m_simTime+m_delT)
+                << " to line up with the checkpoint time";
       }
 
       delTNext = nextCheckpoint - (m_simTime+m_delT);
@@ -940,7 +940,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     if( g_deltaT_minor_warnings )
     {
       message << "lowering the next delT from " << delTNext
-	      << " to " << m_simTimeMax - (m_simTime+m_delT)
+              << " to " << m_simTimeMax - (m_simTime+m_delT)
               << " to line up with the maximum simulation time";
     }
 
@@ -1026,7 +1026,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
           
           message << header.str()
                   << "for one or more ranks "
-		  << "for the initial time up to " << m_delTInitialRange
+                  << "for the initial time up to " << m_delTInitialRange
                   << " the next delT was lowered to "
                   << m_delTInitialMax << std::endl;;
         }
