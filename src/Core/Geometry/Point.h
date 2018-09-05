@@ -47,6 +47,7 @@
 namespace Uintah {
     
 class TypeDescription;
+class UnstructuredTypeDescription;
 class RigorousTest;
 class Vector;
 
@@ -329,6 +330,8 @@ inline double Dot(const Point& p1, const Point& p2)
 }
 
 const TypeDescription* get_type_description(Point*);
+
+const UnstructuredTypeDescription* get_unstructured_type_description(Point*);
 
 } // End namespace Uintah
 

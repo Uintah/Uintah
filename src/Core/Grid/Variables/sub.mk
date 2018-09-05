@@ -35,30 +35,46 @@ SRCS += \
         $(SRCDIR)/CellIterator.cc               \
         $(SRCDIR)/NodeIterator.cc               \
         $(SRCDIR)/GridIterator.cc               \
+        $(SRCDIR)/UnstructuredGridIterator.cc               \
         $(SRCDIR)/GridSurfaceIterator.cc        \
         $(SRCDIR)/ListOfCellsIterator.cc        \
+        $(SRCDIR)/UnstructuredListOfCellsIterator.cc        \
         $(SRCDIR)/DifferenceIterator.cc         \
         $(SRCDIR)/UnionIterator.cc              \
+        $(SRCDIR)/UnstructuredUnionIterator.cc              \
         $(SRCDIR)/ComputeSet.cc                 \
         $(SRCDIR)/ComputeSet_special.cc         \
         $(SRCDIR)/GridVariableBase.cc           \
+        $(SRCDIR)/UnstructuredGridVariableBase.cc           \
         $(SRCDIR)/LocallyComputedPatchVarMap.cc \
+        $(SRCDIR)/UnstructuredLocallyComputedPatchVarMap.cc \
         $(SRCDIR)/ParticleSubset.cc             \
+        $(SRCDIR)/UnstructuredParticleSubset.cc             \
         $(SRCDIR)/ParticleVariableBase.cc       \
+        $(SRCDIR)/UnstructuredParticleVariableBase.cc       \
         $(SRCDIR)/ParticleVariable_special.cc   \
+        $(SRCDIR)/UnstructuredParticleVariable_special.cc   \
         $(SRCDIR)/PerPatchBase.cc               \
+        $(SRCDIR)/UnstructuredPerPatchBase.cc               \
         $(SRCDIR)/PSPatchMatlGhost.cc           \
+        $(SRCDIR)/UnstructuredPSPatchMatlGhost.cc           \
         $(SRCDIR)/PSPatchMatlGhostRange.cc      \
+        $(SRCDIR)/UnstructuredPSPatchMatlGhostRange.cc      \
         $(SRCDIR)/ReductionVariableBase.cc      \
+        $(SRCDIR)/UnstructuredReductionVariableBase.cc      \
         $(SRCDIR)/ReductionVariable_special.cc  \
+        $(SRCDIR)/UnstructuredReductionVariable_special.cc  \
         $(SRCDIR)/SoleVariableBase.cc           \
+        $(SRCDIR)/UnstructuredSoleVariableBase.cc           \
         $(SRCDIR)/StaticInstantiate.cc          \
         $(SRCDIR)/Stencil7.cc                   \
         $(SRCDIR)/Stencil4.cc                   \
         $(SRCDIR)/Utils.cc                      \
         $(SRCDIR)/ugc_templates.cc              \
         $(SRCDIR)/VarLabel.cc                   \
-        $(SRCDIR)/Variable.cc                   
+        $(SRCDIR)/UnstructuredVarLabel.cc       \
+        $(SRCDIR)/Variable.cc			\
+        $(SRCDIR)/UnstructuredVariable.cc                   
 
 #HAVE_PIDX
 ifeq ($(HAVE_PIDX),yes)

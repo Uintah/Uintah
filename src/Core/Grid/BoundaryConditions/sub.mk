@@ -33,17 +33,28 @@ SRCDIR   := Core/Grid/BoundaryConditions
 SRCS     += \
 	$(SRCDIR)/BoundCondFactory.cc \
 	$(SRCDIR)/BoundCondReader.cc \
+	$(SRCDIR)/UnstructuredBoundCondReader.cc \
 	$(SRCDIR)/BCData.cc \
 	$(SRCDIR)/BCDataArray.cc \
+	$(SRCDIR)/UnstructuredBCDataArray.cc \
 	$(SRCDIR)/BCGeomBase.cc \
+	$(SRCDIR)/UnstructuredBCGeomBase.cc \
 	$(SRCDIR)/UnionBCData.cc \
+	$(SRCDIR)/UnstructuredUnionBCData.cc \
 	$(SRCDIR)/DifferenceBCData.cc \
+	$(SRCDIR)/UnstructuredDifferenceBCData.cc \
 	$(SRCDIR)/SideBCData.cc \
+	$(SRCDIR)/UnstructuredSideBCData.cc \
 	$(SRCDIR)/CircleBCData.cc \
+	$(SRCDIR)/UnstructuredCircleBCData.cc \
 	$(SRCDIR)/AnnulusBCData.cc \
+	$(SRCDIR)/UnstructuredAnnulusBCData.cc \
 	$(SRCDIR)/RectangulusBCData.cc \
+	$(SRCDIR)/UnstructuredRectangulusBCData.cc \
 	$(SRCDIR)/EllipseBCData.cc \
+	$(SRCDIR)/UnstructuredEllipseBCData.cc \
 	$(SRCDIR)/RectangleBCData.cc \
+	$(SRCDIR)/UnstructuredRectangleBCData.cc \
 	$(SRCDIR)/BCUtils.cc       
 
 PSELIBS := \

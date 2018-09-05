@@ -29,7 +29,7 @@
 #include <Core/Grid/Variables/Reductions.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
-#include <Core/Disclosure/TypeUtils.h>
+//#include <Core/Disclosure/TypeUtils.h>
 
 namespace Uintah {
    /**************************************

@@ -40,6 +40,7 @@ SRCS   += \
           $(SRCDIR)/InternalError.cc           \
           $(SRCDIR)/InvalidCompressionMode.cc  \
           $(SRCDIR)/InvalidGrid.cc             \
+          $(SRCDIR)/InvalidUnstructuredGrid.cc \
           $(SRCDIR)/InvalidState.cc            \
           $(SRCDIR)/InvalidValue.cc            \
           $(SRCDIR)/ParameterNotFound.cc       \

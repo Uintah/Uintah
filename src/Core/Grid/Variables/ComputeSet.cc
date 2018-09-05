@@ -25,6 +25,7 @@
 
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Grid/UnstructuredPatch.h>
 #include <iostream>
 
 
@@ -41,6 +42,24 @@ namespace Uintah {
       out << "Patches: {";
       for(int i=0;i<ps.size();i++){
         const PatchSubset* pss = ps.getSubset(i);
+        if(i != 0)
+          out << ", ";
+        out << *pss;
+      }
+      out << "}";
+    }
+    return out;
+  }
+
+
+  ostream& operator<<(ostream& out, const Uintah::UnstructuredPatchSet& ps)
+  {
+    if(&ps == 0)
+      out << "(null PatchSet)";
+    else {
+      out << "Patches: {";
+      for(int i=0;i<ps.size();i++){
+        const UnstructuredPatchSubset* pss = ps.getSubset(i);
         if(i != 0)
           out << ", ";
         out << *pss;
@@ -68,6 +87,25 @@ namespace Uintah {
     return out;
   }
 
+  ostream& operator<<(ostream& out, const Uintah::UnstructuredPatchSubset& pss)
+  {
+    if( &pss == 0 ) {
+      out << "(null UnstructuredPatchSubset)";
+    }
+    else {
+      out << "{";
+      for(int j=0;j<pss.size();j++){
+        if(j != 0)
+          out << ",";
+        const UnstructuredPatch* patch = pss.get(j);
+        out << patch->getID();
+      }
+      out << "}";
+    }
+    return out;
+  }
+
+  
   ostream& operator<<(ostream& out, const Uintah::MaterialSubset& mss)
   {
     if( &mss == 0 ) {

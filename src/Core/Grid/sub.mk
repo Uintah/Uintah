@@ -45,8 +45,11 @@ SRCS += \
         $(SRCDIR)/Box.cc                   \
         $(SRCDIR)/BSplineInterpolator.cc   \
         $(SRCDIR)/DbgOutput.cc             \
+        $(SRCDIR)/UnstructuredDbgOutput.cc \
         $(SRCDIR)/Ghost.cc                 \
         $(SRCDIR)/Grid.cc                  \
+        $(SRCDIR)/UnstructuredGrid.cc      \
+        $(SRCDIR)/UnstructuredLevel.cc     \
         $(SRCDIR)/Level.cc                 \
         $(SRCDIR)/LinearInterpolator.cc    \
         $(SRCDIR)/AxiLinearInterpolator.cc \
@@ -55,11 +58,13 @@ SRCS += \
         $(SRCDIR)/AxiGIMPInterpolator.cc   \
         $(SRCDIR)/PatchRangeTree.cc        \
         $(SRCDIR)/Patch.cc                 \
+        $(SRCDIR)/UnstructuredPatch.cc     \
         $(SRCDIR)/Region.cc                \
         $(SRCDIR)/SimpleMaterial.cc        \
         $(SRCDIR)/SimulationState.cc       \
         $(SRCDIR)/SimulationTime.cc        \
         $(SRCDIR)/Task.cc                  \
+        $(SRCDIR)/UnstructuredTask.cc      \
         $(SRCDIR)/TOBSplineInterpolator.cc \
         $(SRCDIR)/UnknownVariable.cc       \
         $(SRCDIR)/cptiInterpolator.cc      \

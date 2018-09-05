@@ -34,7 +34,11 @@ SRCS     += \
 	$(SRCDIR)/PatchBVHBase.cc \
 	$(SRCDIR)/PatchBVH.cc \
 	$(SRCDIR)/PatchBVHNode.cc \
-	$(SRCDIR)/PatchBVHLeaf.cc
+	$(SRCDIR)/PatchBVHLeaf.cc \
+	$(SRCDIR)/UnstructuredPatchBVHBase.cc \
+	$(SRCDIR)/UnstructuredPatchBVH.cc \
+	$(SRCDIR)/UnstructuredPatchBVHNode.cc \
+	$(SRCDIR)/UnstructuredPatchBVHLeaf.cc
 
 
 

@@ -48,6 +48,7 @@ namespace Uintah {
 
 class Point;
 class TypeDescription;
+class UnstructuredTypeDescription;
 
 class Vector {
   double x_,y_,z_;
@@ -512,6 +513,8 @@ inline Vector Max(const Vector &v1, const Vector &v2)
 }
 
 const TypeDescription* get_type_description(Vector*);
+
+const UnstructuredTypeDescription* get_unstructured_type_description(Vector*);
 
 } // End namespace Uintah
 

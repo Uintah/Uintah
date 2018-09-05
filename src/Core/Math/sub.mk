@@ -76,7 +76,9 @@ SRCS += \
         Core/Geometry/Vector.cc \
 	\
         Core/Disclosure/TypeDescription.cc \
-        Core/Disclosure/TypeUtils.cc 
+        Core/Disclosure/UnstructuredTypeDescription.cc \
+        Core/Disclosure/TypeUtils.cc \
+        Core/Disclosure/UnstructuredTypeUtils.cc 
 
 
 PSELIBS := \

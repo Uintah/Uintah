@@ -30,21 +30,34 @@ SRCDIR := CCA/Components/Schedulers
 
 SRCS += \
         $(SRCDIR)/DependencyBatch.cc          \
+        $(SRCDIR)/UnstructuredDependencyBatch.cc          \
         $(SRCDIR)/DependencyException.cc      \
+        $(SRCDIR)/UnstructuredDependencyException.cc      \
         $(SRCDIR)/DetailedDependency.cc       \
+        $(SRCDIR)/UnstructuredDetailedDependency.cc       \
         $(SRCDIR)/DetailedTask.cc             \
+        $(SRCDIR)/UnstructuredDetailedTask.cc             \
         $(SRCDIR)/DetailedTasks.cc            \
+        $(SRCDIR)/UnstructuredDetailedTasks.cc            \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
         $(SRCDIR)/KokkosOpenMPScheduler.cc    \
         $(SRCDIR)/MemoryLog.cc                \
+        $(SRCDIR)/UnstructuredMemoryLog.cc                \
         $(SRCDIR)/MPIScheduler.cc             \
+        $(SRCDIR)/UnstructuredMPIScheduler.cc             \
         $(SRCDIR)/OnDemandDataWarehouse.cc    \
+        $(SRCDIR)/UnstructuredOnDemandDataWarehouse.cc    \
         $(SRCDIR)/Relocate.cc                 \
+        $(SRCDIR)/UnstructuredRelocate.cc                 \
         $(SRCDIR)/RuntimeStats.cc             \
+        $(SRCDIR)/UnstructuredRuntimeStats.cc             \
         $(SRCDIR)/SchedulerCommon.cc          \
+        $(SRCDIR)/UnstructuredSchedulerCommon.cc          \
         $(SRCDIR)/SchedulerFactory.cc         \
         $(SRCDIR)/SendState.cc                \
+        $(SRCDIR)/UnstructuredSendState.cc                \
         $(SRCDIR)/TaskGraph.cc                \
+        $(SRCDIR)/UnstructuredTaskGraph.cc                \
         $(SRCDIR)/UnifiedScheduler.cc
         
 ifeq ($(HAVE_CUDA),yes)

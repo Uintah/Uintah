@@ -44,6 +44,8 @@ namespace Uintah {
 
   class Level; 
   class Patch;
+  class UnstructuredLevel; 
+  class UnstructuredPatch;
 
   class UnknownVariable : public Exception {
   public:
@@ -53,6 +55,13 @@ namespace Uintah {
     UnknownVariable(const std::string& varname, int dwid, const Level* level,
                     int matlIndex, const std::string& extramsg,
                     const char* file, int line);
+    UnknownVariable(const std::string& varname, int dwid, const UnstructuredPatch* patch,
+                    int matlIndex, const std::string& extramsg, 
+                    const char* file, int line);
+    UnknownVariable(const std::string& varname, int dwid, const UnstructuredLevel* level,
+                    int matlIndex, const std::string& extramsg,
+                    const char* file, int line);
+
     UnknownVariable(const UnknownVariable&);
     virtual ~UnknownVariable();
     virtual const char* message() const;

@@ -26,6 +26,8 @@
 #include <Core/Grid/UnknownVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Grid/UnstructuredLevel.h>
+#include <Core/Grid/UnstructuredPatch.h>
 #include <sstream>
 #include <iostream>
 
@@ -88,6 +90,64 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
    std::cout << d_msg << "\n";
 #endif
 }
+
+UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
+                                 const UnstructuredPatch* patch, int matlIndex,
+                                 const std::string& extramsg,
+                                 const char* file,
+                                 int line)
+{
+   std::ostringstream s;
+   s << "An UnknownVariable exception was thrown.\n";
+   s << file << ":" << line << "\n";
+
+   s << "Unknown variable: " << varname;
+
+   if (dwid!=-1) s << " requested from DW " << dwid;
+   if (patch != nullptr) {
+      s << ", Level "<< patch->getLevel()->getIndex()
+        << ", patch " << patch->getID()
+        << "(" << patch->toString() << ")";
+   }
+   
+   s << ", material index: " << matlIndex;
+
+   if(extramsg != "")
+      s << " (" << extramsg << ")";
+   d_msg = s.str();
+
+#ifdef EXCEPTIONS_CRASH
+   std::cout << d_msg << "\n";
+#endif
+}
+
+UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
+                                 const UnstructuredLevel* level, int matlIndex,
+                                 const std::string& extramsg,
+                                 const char* file,
+                                 int line)
+{
+   ostringstream s;
+   s << "Unknown variable: " << varname;
+
+   if (dwid!=-1) s << " requested from DW " << dwid;
+   if (level != nullptr) {
+     s << " on level " << level->getIndex();
+   }
+   
+   s << ", material index: " << matlIndex;
+
+   if(extramsg != "")
+      s << " (" << extramsg << ")";
+   d_msg = s.str();
+
+#ifdef EXCEPTIONS_CRASH
+   std::cout << "An UnknownVariable exception was thrown.\n";
+   std::cout << file << ":" << line << "\n";
+   std::cout << d_msg << "\n";
+#endif
+}
+
 
 UnknownVariable::UnknownVariable(const UnknownVariable& copy)
     : d_msg(copy.d_msg)

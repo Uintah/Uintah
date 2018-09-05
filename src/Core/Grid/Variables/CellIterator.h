@@ -160,6 +160,7 @@ WARNING
      friend std::ostream& operator<<( std::ostream& out, const CellIterator& b );
 
      friend class GridIterator;
+     friend class UnstructuredGridIterator;
 
      inline void reset()
      {

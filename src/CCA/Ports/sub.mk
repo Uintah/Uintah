@@ -33,13 +33,17 @@ SRCDIR   := CCA/Ports
 
 SRCS += \
         $(SRCDIR)/ApplicationInterface.cc \
+        $(SRCDIR)/UnstructuredApplicationInterface.cc \
         $(SRCDIR)/DataWarehouse.cc        \
+        $(SRCDIR)/UnstructuredDataWarehouse.cc        \
         $(SRCDIR)/LoadBalancer.cc     \
+        $(SRCDIR)/UnstructuredLoadBalancer.cc     \
         $(SRCDIR)/ModelInterface.cc       \
         $(SRCDIR)/Output.cc               \
         $(SRCDIR)/ProblemSpecInterface.cc \
         $(SRCDIR)/Regridder.cc            \
         $(SRCDIR)/Scheduler.cc            \
+        $(SRCDIR)/UnstructuredScheduler.cc            \
         $(SRCDIR)/SFC.cc                  \
         $(SRCDIR)/SolverInterface.cc      \
         $(SRCDIR)/SwitchingCriteria.cc    

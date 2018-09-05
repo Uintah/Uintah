@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Schedulers/MemoryLog.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Grid/UnstructuredPatch.h>
 
 #include <iostream>
 
@@ -61,6 +62,7 @@ void logMemory(       std::ostream  & out
   out << tab << material << tab << nelems << tab << size << tab << ptr << '\n';
   total += size;
 }
+
 
 } // namespace Uintah
 

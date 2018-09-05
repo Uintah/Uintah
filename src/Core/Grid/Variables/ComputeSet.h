@@ -71,12 +71,15 @@ namespace Uintah {
 ****************************************/
 
 class Patch;
+class UnstructuredPatch;
 template<class T> class ComputeSubset;
 template<class T> class ComputeSet;
 
 typedef ComputeSet<const Patch*>    PatchSet;
+typedef ComputeSet<const UnstructuredPatch*>    UnstructuredPatchSet;
 typedef ComputeSet<int>             MaterialSet;
 typedef ComputeSubset<const Patch*> PatchSubset;
+typedef ComputeSubset<const UnstructuredPatch*> UnstructuredPatchSubset;
 typedef ComputeSubset<int>          MaterialSubset;
 
 template<class T>
@@ -215,15 +218,19 @@ private:
   ComputeSet& operator=(const ComputeSet&);
 
   friend std::ostream& operator<<(std::ostream& out, const PatchSet&);
+  friend std::ostream& operator<<(std::ostream& out, const UnstructuredPatchSet&);
   friend std::ostream& operator<<(std::ostream& out, const MaterialSet&);
   friend std::ostream& operator<<(std::ostream& out, const PatchSubset&);
+  friend std::ostream& operator<<(std::ostream& out, const UnstructuredPatchSubset&);
   friend std::ostream& operator<<(std::ostream& out, const MaterialSubset&);
 
 };  // end class ComputeSet
 
 std::ostream& operator<<(std::ostream& out, const PatchSet&);
+std::ostream& operator<<(std::ostream& out, const UnstructuredPatchSet&);
 std::ostream& operator<<(std::ostream& out, const MaterialSet&);
 std::ostream& operator<<(std::ostream& out, const PatchSubset&);
+std::ostream& operator<<(std::ostream& out, const UnstructuredPatchSubset&);
 std::ostream& operator<<(std::ostream& out, const MaterialSubset&);
 
 template<class T>
@@ -349,6 +356,10 @@ template<>
 void
 ComputeSubset<const Patch*>::sort();
 
+template<>
+void
+ComputeSubset<const UnstructuredPatch*>::sort();
+
 template<class T>
 void
 ComputeSubset<T>::sort() { std::sort(items.begin(), items.end()); }
@@ -357,6 +368,11 @@ ComputeSubset<T>::sort() { std::sort(items.begin(), items.end()); }
 template<>  
 bool
 ComputeSubset<const Patch*>::compareElems( const Patch* e1, const Patch* e2 );
+
+
+template<>  
+bool
+ComputeSubset<const UnstructuredPatch*>::compareElems( const UnstructuredPatch* e1, const UnstructuredPatch* e2 );
 
 template<class T>
 bool

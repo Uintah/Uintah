@@ -148,6 +148,7 @@ namespace Uintah {
           }
 
         friend class GridIterator;
+	friend class UnstructuredGridIterator;
         
         inline NodeIterator& operator=( const NodeIterator& copy ) {
           d_s   = copy.d_s;
