@@ -88,12 +88,6 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         int jpp = j_f + iDir[1];
         int kpp = k_f + iDir[2];
 
-
-
-        IntVector cface = *cell_iter + move_to_face; // cell on the face
-        IntVector cint = *cell_iter - iDir; // first interior cell
-        IntVector cef = cface + iDir; // extra cell face in the last index (most outwardly position)
-
         if ( sign * (*var)(i_f,j_f,k_f) > possmall ){
           // du/dx = 0
           (*var)(i_f,j_f,k_f)= (*var)(im,jm,km);
