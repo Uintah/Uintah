@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <start>
-<upsFile>riemann.ups</upsFile>
+<upsFile>riemann_sm.ups</upsFile>
 
 <gnuplot>
   <script>plotRiemannTests.gp</script>
@@ -14,7 +14,7 @@
 <Test>
     <Title>100</Title>
     <sus_cmd>sus </sus_cmd>
-    <postProcess_cmd>compare_Riemann.m -test 1 -pDir 1 -var press_CC -mat 0</postProcess_cmd>
+  <!--  <postProcess_cmd>compare_Riemann.m -test 1 -pDir 1 -var press_CC -mat 0</postProcess_cmd> -->
     <x>100</x>
     <replace_lines>
       <resolution>   [100,1,1]          </resolution>

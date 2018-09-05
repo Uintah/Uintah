@@ -1,20 +1,19 @@
 package Utilities;
 use strict;
 use warnings;
+use XML::LibXML;
+use Data::Dumper;
 use Exporter 'import';
+
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(cleanStr);
+our @EXPORT_OK = qw(cleanStr print_XML_ElementTree get_XML_value);
+
 #______________________________________________________________________
 #  
 #  Remove any white space or newlines in array elements or scalars
-#  (This belongs in a separate common module to avoid duplication -Todd)
-
 sub cleanStr {
 
-  my @inputs = @_;
-  
-#  print Dumper (@inputs);
-  
+  my @inputs = @_;  
   my $n   = scalar @inputs;           # number of array elements
   my $len = length $inputs[0];        # number of characters in first element
   
@@ -48,4 +47,61 @@ sub cleanStr {
   return @result;
 }
 
+
+#______________________________________________________________________
+#   usage:  get_XML_value( elementList, <xmltag>, "defaultValue")
+#  This returns either an array or a scalar.  It returns the default value
+#  if the xml tag does not exist.
+
+sub get_XML_value{
+  my $elementList = $_[0];
+  my $xmltag      = $_[1];
+  my $defaultVal  = $_[2];
+  
+  if( ! $elementList->exists( $xmltag ) ){
+    return $defaultVal;
+  }
+  
+  my @result = ();
+  
+  foreach my $element ( $elementList->getElementsByTagName( $xmltag ) ) {
+    $element = cleanStr( $element->textContent() );
+    
+    if( length $element == 0 && defined $defaultVal){
+      $element = $defaultVal;
+    }
+    
+    push( @result, $element );
+    #print "xmlTag: ", $xmltag, " len: ", length $element, " (", $element, ")\n";
+  }
+  
+  my $len = scalar @result;
+
+  if ( $len == 1) {
+    return $result[0];
+  } 
+  else {
+    return @result;
+  }
+}
+
+
+#______________________________________________________________________
+#  Prints the element tree and the values for each element  
+#  It needs more work.
+sub print_XML_ElementTree{
+  my $input = $_[0];
+  
+  my @elements = grep { $_->nodeType == XML_ELEMENT_NODE } $input->childNodes;
+  my $count = @elements;
+
+  print "\$XML tree has $count child elements: \n";
+
+  my $i = 0;
+  foreach my $child (@elements) {
+    print "  ",$i++, ": is a ", ref($child), ', name = ', $child->nodeName;
+    print "     toLiterial: (", $child->to_literal(), ")  ";
+    print "textContent: (", $child->textContent(), ")\n";
+  }
+}
 1;

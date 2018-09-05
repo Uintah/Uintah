@@ -91,7 +91,7 @@ system("ln -fs $cmd > /dev/null 2>&1");
 my $comp_output = "out.$X.cmp";
 my $uda         = $ups_basename."_$testTitle".".uda";
 
-print "\nLaunching:  $cmd_basename -o $comp_output -uda $uda\n\n";
+print "\n\tLaunching: ($cmd_basename -o $comp_output -uda $uda)\n\n";
 `rm -f $comp_output`;
 
 my @args = ("$cmd_basename", "-o", "$comp_output", "-uda", "$uda");
