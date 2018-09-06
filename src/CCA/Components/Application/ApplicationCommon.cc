@@ -192,7 +192,7 @@ void ApplicationCommon::setReductionVariables( UintahParallelComponent *comp )
 
   // Get the reduction active flags from the child;
   for ( auto & var : m_appReductionVars )
-    var.second->active = child->m_appReductionVars[ var.first ]->active;
+    var.second->setActive( child->m_appReductionVars[ var.first ]->getActive() );
 }
 
 void ApplicationCommon::clearReductionVariables()
@@ -351,8 +351,8 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   // or aborted or the simulation end early.
   for ( auto & var : m_appReductionVars )
   {
-    if( var.second->active )
-      task->requires(Task::NewDW, var.second->label);
+    if( var.second->getActive() )
+      task->requires(Task::NewDW, var.second->getLabel());
   }
 
   // The above three tasks are on a per proc basis any rank can make
@@ -369,6 +369,8 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
                                            DataWarehouse  * old_dw,
                                            DataWarehouse  * new_dw )
 {
+  unsigned int validDelT = 0;
+  
   // The goal of this task is to line up the delT across all levels.
   // If the coarse delT already exists (the one without an associated
   // level), then the application is not doing AMR.
@@ -400,7 +402,7 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
         // Valiadate before the reduction. This assures that there will
         // not be any possible round off error for the next delta T.
         if( g_deltaT_prevalidate || g_deltaT_prevalidate_sum )
-          validateNextDelT( m_delTNext, l );
+          validDelT = validateNextDelT( m_delTNext, l );
 
         new_dw->put(delt_vartype(m_delTNext), m_delTLabel );
       }
@@ -424,52 +426,48 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   if( !g_deltaT_prevalidate && !g_deltaT_prevalidate_sum )
   {
     // Validate and put the value into the warehouse if it changed.
-    if( validateNextDelT( m_delTNext, -1 ) )
+    if( (validDelT = validateNextDelT( m_delTNext, -1 )) )
       new_dw->override(delt_vartype(m_delTNext), m_delTLabel);
   }
+
+  // If delta T has been changed and if requested, for that change
+  // output or checkpoint. Must be done before the redcution call.
+  if( validDelT & outputIfInvalidNextDelTFlag )
+    setReductionVariable( outputTimeStep_name, true );
+  
+  if( validDelT & checkpointIfInvalidNextDelTFlag )
+    setReductionVariable( checkpointTimeStep_name, true );
   
   // Reduce the application specific reduction variables. If no value
   // was computed on an MPI rank, a benign value will be set. If the
   // reduction result is also a benign value, that means no MPI rank
-  // wants to change the value and it will be ignored (if a double).
+  // wants to change the value and it will be ignored.
   for ( auto & var : m_appReductionVars )
     var.second->reduce( new_dw );
 
-  // Specific handling for bool reduction vars that need the grid.
+  // When checking a reduction var, if it is not a benign value then
+  // it was set at some point by at least one rank. Which is the only
+  // time the value should be use.
+
+  // Specific handling for reduction vars that need the grid.
   if (patches->size() != 0 )
   {
     const GridP grid = patches->get(0)->getLevel()->getGrid();
 
-    if( m_appReductionVars[outputTimeStep_name]->active )
-    {
-      if( !m_appReductionVars[outputTimeStep_name]->bool_var.isBenignValue() )
-      {
-        m_output->setOutputTimeStep( true, grid );
-      }
-    }
+    if( !isBenignReductionVariable( outputTimeStep_name ) )
+      m_output->setOutputTimeStep( true, grid );
 
-    if( m_appReductionVars[checkpointTimeStep_name]->active )
-    {
-      if( !m_appReductionVars[checkpointTimeStep_name]->bool_var.isBenignValue() )
-      {
-        m_output->setCheckpointTimeStep( true, grid );
-      }
-    }
-  }
-  
-  // Specific handling for double reduction vars.
-  if( m_appReductionVars[outputInterval_name]->active )
-  {
-    if( !m_appReductionVars[outputInterval_name]->min_var.isBenignValue() )
-      m_output->setOutputInterval( m_appReductionVars[outputInterval_name]->min_var );
+    if( !isBenignReductionVariable( checkpointTimeStep_name ) )
+      m_output->setCheckpointTimeStep( true, grid );
   }
 
-  if( m_appReductionVars[checkpointInterval_name]->active )
-  {
-    if( !m_appReductionVars[checkpointInterval_name]->min_var.isBenignValue() )
-      m_output->setCheckpointInterval( m_appReductionVars[checkpointInterval_name]->min_var );
-  }
-  
+  // Specific handling for other reduction vars.
+  if( !isBenignReductionVariable( outputInterval_name ) )
+    m_output->setOutputInterval( getReductionVariable( outputInterval_name ) );
+
+  if( !isBenignReductionVariable( checkpointInterval_name ) )
+    m_output->setCheckpointInterval( getReductionVariable( checkpointInterval_name ) );
+
 }  // end reduceSysVar()
 
 
@@ -551,8 +549,7 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
 {  
   // If recomuting a time step do not update the time step or the
   // simulation time.
-  bool val;
-  if ( !getReductionVariable( recomputeTimeStep_name, val ) )
+  if ( !getReductionVariable( recomputeTimeStep_name ) )
   {
     // Store the time step so it can be incremented at the top of the
     // time step where it is over written.
@@ -1079,7 +1076,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
                   << m_simTimeMax;
         }
       }
-
+      
       // Finally, output the summary.
       if( !message.str().empty() )
       {
@@ -1093,16 +1090,36 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 
 //______________________________________________________________________
 //
+// Flag for outputing or checkpointing if the next delta is invalid
+void
+ApplicationCommon::outputIfInvalidNextDelT( unsigned int flag )
+{
+  outputIfInvalidNextDelTFlag = flag;
+
+  if( flag )
+    activateReductionVariable(outputTimeStep_name, (bool) flag);
+}
+
+void
+ApplicationCommon::checkpointIfInvalidNextDelT( unsigned int flag )
+{
+  checkpointIfInvalidNextDelTFlag = flag;
+
+  if( flag )
+    activateReductionVariable(checkpointTimeStep_name, (bool) flag );
+ }
+
+
+//______________________________________________________________________
+//
 // Determines if the time step is the last one. 
 bool
 ApplicationCommon::isLastTimeStep( double walltime )
 {
-  bool val;
-
-  if( getReductionVariable( endSimulation_name, val ) )
+  if( getReductionVariable( endSimulation_name ) )
     return true;
   
-  if( getReductionVariable( abortTimeStep_name, val ) )
+  if( getReductionVariable( abortTimeStep_name ) )
     return true;
 
   if( m_simTime >= m_simTimeMax )

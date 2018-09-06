@@ -644,7 +644,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
 {
   // If the time step needs to be recomputed, this loop will execute
   // multiple times.
-  bool val, success = false;
+  bool success = false;
 
   int tg_index = m_application->computeTaskGraphIndex();
 
@@ -687,7 +687,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
     }
 
     //  If time step is to be recomputed adjust the delta T and recompute.
-    if ( m_application->getReductionVariable( recomputeTimeStep_name, val ) ) {
+    if ( m_application->getReductionVariable( recomputeTimeStep_name ) ) {
 
       for (int i = 1; i <= totalFine; ++i) {
         m_scheduler->replaceDataWarehouse(i, m_current_gridP);
@@ -702,7 +702,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
 
       success = false;
     }
-    else if (m_application->getReductionVariable( abortTimeStep_name, val ) ) {
+    else if (m_application->getReductionVariable( abortTimeStep_name ) ) {
       proc0cout << "Time step aborted and cannot recompute it. "
                 << "Ending the simulation." << std::endl;
       

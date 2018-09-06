@@ -31,6 +31,8 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/SolverInterface.h>
 
+#include <CCA/Components/Application/ApplicationReductionVariable.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -44,7 +46,7 @@
 
 namespace Uintah {
 
-  class DataWarehouse;  
+  class DataWarehouse;
   class Output;
   class Regridder;
 
@@ -67,7 +69,7 @@ GENERAL INFORMATION
   
    
 KEYWORDS
-   Simulation_Interface
+   Application Interface
 
 DESCRIPTION
    Long description...
@@ -75,89 +77,6 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-  class ApplicationReductionVariable
-  {
-  public:
-    ApplicationReductionVariable( std::string name,
-                                  const TypeDescription *varType,
-                                  bool varActive = false )
-    {
-      // Construct the label.
-      VarLabel* nonconstVar = VarLabel::create(name, varType);
-      nonconstVar->allowMultipleComputes();
-      label = nonconstVar;
-
-      active = varActive;      
-
-      setBenignValue();
-    };
-
-    virtual ~ApplicationReductionVariable()
-    {
-      VarLabel::destroy(label);
-    }
-    
-    const VarLabel *label{nullptr};
-
-    bool active{false};
-
-    // Because this class gets put into a map it can not be a
-    // template. As such, there are two storage variables. The user
-    // need to know which one to use. Which they should given the type
-    // description.
-    bool_or_vartype bool_var;
-    min_vartype min_var;
-
-    void setBenignValue()
-    {
-      bool_var.setBenignValue();
-      min_var.setBenignValue();
-    }
-    
-    void reduce( DataWarehouse * new_dw )
-    {
-      Patch* patch = nullptr;
-
-      bool_var.setBenignValue();
-      min_var.setBenignValue();
-
-      // Reduce only if active.
-      if (active) {
-
-        if( label->typeDescription() == bool_or_vartype::getTypeDescription() )
-        {
-          // If it does not exists put a benign value into the warehouse.
-          if (!new_dw->exists(label, -1, patch)) {
-            new_dw->put(bool_var, label);
-          }
-
-          // Only reduce if on more than one rank
-          if( Parallel::getMPISize() > 1 ) {
-            new_dw->reduceMPI(label, 0, 0, -1);
-          }
-
-          // Get the reduced value.
-          new_dw->get( bool_var, label );
-        }
-        else if( label->typeDescription() == min_vartype::getTypeDescription() )
-        {
-          // If it does not exists put a benign value into the warehouse.
-          if (!new_dw->exists(label, -1, patch)) {
-            new_dw->put(min_var, label);
-          }
-
-          // Only reduce if on more than one rank
-          if( Parallel::getMPISize() > 1 ) {
-            new_dw->reduceMPI(label, 0, 0, -1);
-          }
-
-          // Get the reduced value.
-          new_dw->get( min_var, label );
-        }
-      }      
-    }
-  };
-  
   class ApplicationCommon : public UintahParallelComponent,
                             public ApplicationInterface {
 
@@ -345,9 +264,15 @@ WARNING
     virtual int  getLastRegridTimeStep() { return m_lastRegridTimestep; }
 
     // Some applications can set reduction variables
-    virtual void activateReductionVariable(std::string name, bool val) { m_appReductionVars[name]->active = val; }
-    virtual bool activeReductionVariable(std::string name) { return m_appReductionVars[name]->active; }
+    virtual void activateReductionVariable(std::string name, bool val) { m_appReductionVars[name]->setActive( val ); }
+    virtual bool activeReductionVariable(std::string name) { return m_appReductionVars[name]->getActive(); }
 
+    virtual bool isBenignReductionVariable( std::string name ) { return m_appReductionVars[name]->isBenignValue(); }
+    virtual void setReductionVariable(std::string name,   bool val) { m_appReductionVars[name]->setValue( val ); }
+    virtual void setReductionVariable(std::string name, double val) { m_appReductionVars[name]->setValue( val ); }
+    // Get application specific reduction values all cast to doubles.
+    virtual double getReductionVariable( std::string name ) { return m_appReductionVars[name]->getValue(); }
+    
     // Access methods for member classes.
     virtual MaterialManagerP getMaterialManagerP() const { return m_materialManager; }
   
@@ -399,6 +324,9 @@ WARNING
     virtual void   setClampTimeToOutput( bool val ) { m_clampTimeToOutput = val; }
     virtual bool   getClampTimeToOutput() const { return m_clampTimeToOutput; }
 
+    virtual void     outputIfInvalidNextDelT( unsigned int flag );
+    virtual void checkpointIfInvalidNextDelT( unsigned int flag );
+
   private:
     // The classes are private because only the top level application
     // should be changing them. This only really matters when there are
@@ -406,13 +334,6 @@ WARNING
     // applications will not have valid values. They should ALWAYS get
     // the values via the data warehouse.
     
-    // get application specific reduction values
-    virtual bool_or_vartype getReductionVariable(std::string name, bool   &val ) { val = m_appReductionVars[name]->bool_var; return m_appReductionVars[name]->bool_var; }
-    virtual min_vartype     getReductionVariable(std::string name, double &val ) { val = m_appReductionVars[name]->min_var;  return m_appReductionVars[name]->min_var; }
-
-    // virtual void setReductionVariable(std::string name, bool   &val ) { m_appReductionVars[name]->bool_var = val; }
-    // virtual void setReductionVariable(std::string name, double &val ) { m_appReductionVars[name]->min_var  = val; }
-
     //////////
     virtual void   setDelT( double delT ) { m_delT = delT; }
     virtual double getDelT() const { return m_delT; }
@@ -423,7 +344,7 @@ WARNING
     virtual void         setNextDelT( double delT );
     virtual double       getNextDelT() const { return m_delTNext; }
     virtual unsigned int validateNextDelT( double &delTNext, unsigned int level );
-
+    
     //////////
     virtual   void setSimTime( double simTime );
     virtual double getSimTime() const { return m_simTime; };
@@ -462,6 +383,17 @@ WARNING
     // Use a map to store the reduction variables. 
     std::map< std::string, ApplicationReductionVariable* > m_appReductionVars;
     
+    enum VALIDATE
+    {
+      DELTA_T_INITIAL_MAX      = 0x0001,
+      DELTA_T_MAX_INCREASE     = 0x0002,
+      DELTA_T_MIN              = 0x0004,
+      DELTA_T_MAX              = 0x0008,
+      CLAMP_TIME_TO_OUTPUT     = 0x0010,
+      CLAMP_TIME_TO_CHECKPOINT = 0x0020,
+      CLAMP_TIME_TO_MAX        = 0x0040
+    };
+
   private:
     bool m_AMR {false};
     bool m_lockstepAMR {false};
@@ -508,18 +440,11 @@ WARNING
   
     bool m_clampTimeToOutput{false}; // Clamp the time to the next output or checkpoint
 
-    enum VALIDATE
-    {
-      DELTA_T_INITIAL_MAX      = 0x0001,
-      DELTA_T_MAX_INCREASE     = 0x0002,
-      DELTA_T_MIN              = 0x0004,
-      DELTA_T_MAX              = 0x0008,
-      CLAMP_TIME_TO_OUTPUT     = 0x0010,
-      CLAMP_TIME_TO_CHECKPOINT = 0x0020,
-      CLAMP_TIME_TO_MAX        = 0x0040
-    };
-      
+    unsigned int     outputIfInvalidNextDelTFlag{0};
+    unsigned int checkpointIfInvalidNextDelTFlag{0};
+
   protected:
+    
     MaterialManagerP m_materialManager{nullptr};
 
     ReductionInfoMapper< ApplicationStatsEnum,

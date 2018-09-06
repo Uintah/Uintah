@@ -101,7 +101,7 @@ WARNING
     friend class RegridderCommon;
 
     friend class Switcher;
-    
+
   public:
     ApplicationInterface();
     virtual ~ApplicationInterface();
@@ -259,6 +259,11 @@ WARNING
     // Some applications can set reduction variables
     virtual void activateReductionVariable(std::string name, bool val) = 0;
     virtual bool activeReductionVariable(std::string name) = 0;
+    virtual bool isBenignReductionVariable( std::string name ) = 0;
+    virtual void setReductionVariable(std::string name,   bool val) = 0;
+    virtual void setReductionVariable(std::string name, double val) = 0;
+    // Get application specific reduction values all cast to doubles.
+    virtual double getReductionVariable( std::string name ) = 0;
     
     // Access methods for member classes.
     virtual MaterialManagerP getMaterialManagerP() const = 0;
@@ -277,7 +282,6 @@ WARNING
       
     virtual void reduceApplicationStats( bool allReduce,
                                          const ProcessorGroup* myWorld ) = 0;
-
 
     virtual void   setDelTOverrideRestart( double val ) = 0;
     virtual double getDelTOverrideRestart() const = 0;
@@ -315,13 +319,12 @@ WARNING
     virtual void   setClampTimeToOutput( bool val ) = 0;
     virtual bool   getClampTimeToOutput() const = 0;
     
+    virtual void     outputIfInvalidNextDelT( unsigned int flag ) = 0;
+    virtual void checkpointIfInvalidNextDelT( unsigned int flag ) = 0;
+    
     // The member methods are private as the child application should
     // ONLY get/set these values via the data warehouse.
   private:
-
-    // get application specific reduction values
-    virtual bool_or_vartype getReductionVariable(std::string name, bool   &val ) = 0;
-    virtual min_vartype     getReductionVariable(std::string name, double &val ) = 0;
 
     // Delta T methods
     virtual   void setDelT( double delT ) = 0;
