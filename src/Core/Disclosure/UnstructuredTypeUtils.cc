@@ -94,7 +94,7 @@ const UnstructuredTypeDescription* fun_getUnstructuredTypeDescription(FILE**)
 {
   static UnstructuredTypeDescription* td;
   if(!td){
-    td = scinew UnstructuredTypeDescription( UnstructuredTypeDescription::ParticleVariable, "filePointer", true, MPI_BYTE );
+    td = scinew UnstructuredTypeDescription( UnstructuredTypeDescription::UnstructuredParticleVariable, "filePointer", true, MPI_BYTE );
   }
   return td;
 }

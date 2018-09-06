@@ -68,7 +68,6 @@ public:
   ,  UnstructuredSFCXVariable
   ,  UnstructuredSFCYVariable
   ,  UnstructuredSFCZVariable
-  ,  ParticleVariable
   ,  UnstructuredParticleVariable
   ,  UnstructuredPerPatch
   ,  Point

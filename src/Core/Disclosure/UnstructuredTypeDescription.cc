@@ -217,7 +217,6 @@ UnstructuredTypeDescription::toString( UnstructuredType type )
     case UnstructuredSFCXVariable:        return "UnstructuredSFCXVariable";
     case UnstructuredSFCYVariable:        return "UnstructuredSFCYVariable";
     case UnstructuredSFCZVariable:        return "UnstructuredSFCZVariable";
-    case ParticleVariable:    return "ParticleVariable";
     case UnstructuredParticleVariable:    return "UnstructuredParticleVariable";
     case UnstructuredPerPatch:            return "UnstructuredPerPatch";
     case Point:               return "Point";

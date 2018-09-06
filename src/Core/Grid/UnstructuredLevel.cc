@@ -356,7 +356,7 @@ void UnstructuredLevel::computeVariableExtents( const UnstructuredTypeDescriptio
 
   switch (TD) {
     case UnstructuredTypeDescription::UnstructuredCCVariable :
-    case UnstructuredTypeDescription::ParticleVariable :
+    case UnstructuredTypeDescription::UnstructuredParticleVariable :
       lo = CCLo;
       hi = CCHi;
       break;

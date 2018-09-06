@@ -711,7 +711,7 @@ UnstructuredDetailedTasks::possiblyCreateDependency(       UnstructuredDetailedT
     new_dep->m_to_tasks.splice(new_dep->m_to_tasks.begin(), matching_dep->m_to_tasks);
 
     // erase particle sends/recvs
-    if (req->m_var->typeDescription()->getUnstructuredType() == UnstructuredTypeDescription::ParticleVariable && req->m_whichdw == UnstructuredTask::OldDW) {
+    if (req->m_var->typeDescription()->getUnstructuredType() == UnstructuredTypeDescription::UnstructuredParticleVariable && req->m_whichdw == UnstructuredTask::OldDW) {
       UnstructuredPSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->m_low, matching_dep->m_high, (int)cond);
 
       if (req->m_var->getName() == "p.x") {
@@ -784,7 +784,7 @@ UnstructuredDetailedTasks::possiblyCreateDependency(       UnstructuredDetailedT
 
   //add communication for particle data
   // these are to post all the particle quantities up front - sort them in TG::createDetailedDepenedencies
-  if (req->m_var->typeDescription()->getUnstructuredType() == UnstructuredTypeDescription::ParticleVariable && req->m_whichdw == UnstructuredTask::OldDW) {
+  if (req->m_var->typeDescription()->getUnstructuredType() == UnstructuredTypeDescription::UnstructuredParticleVariable && req->m_whichdw == UnstructuredTask::OldDW) {
     UnstructuredPSPatchMatlGhostRange pmg = UnstructuredPSPatchMatlGhostRange(fromPatch, matl, new_dep->m_low, new_dep->m_high, (int)cond, 1);
 
     if (fromresource == my_rank) {

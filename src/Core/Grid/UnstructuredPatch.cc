@@ -1650,7 +1650,7 @@ UnstructuredPatch::VariableBasis UnstructuredPatch::translateTypeToBasis(Uintah:
     return YFaceBased;
   case UnstructuredTypeDescription::UnstructuredSFCZVariable:
     return ZFaceBased;
-  case UnstructuredTypeDescription::ParticleVariable:
+  case UnstructuredTypeDescription::UnstructuredParticleVariable:
   case UnstructuredTypeDescription::UnstructuredPerPatch:
   case UnstructuredTypeDescription::UnstructuredSoleVariable:
     return CellBased;
