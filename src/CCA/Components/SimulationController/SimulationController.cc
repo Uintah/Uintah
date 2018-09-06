@@ -74,8 +74,6 @@
 
 namespace {
 
-Uintah::Dout g_sim_current_delT( "SimulationStatsCurrentDelT",  "SimulationController", "Report the delta T used (instead of the next delta T)", false  );
-  
 Uintah::Dout g_sim_stats(         "SimulationStats",            "SimulationController", "sim general stats debug stream", true  );
 Uintah::Dout g_sim_stats_mem(     "SimulationStatsMem",         "SimulationController", "sim memory stats debug stream", true  );
 Uintah::Dout g_sim_stats_time(    "SimulationStatsTime",        "SimulationController", "sim time stats debug stream", false );
@@ -792,14 +790,12 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
     message << std::left
             << "Timestep "   << std::setw(8)  << m_application->getTimeStep()
-            << "Time="       << std::setw(12) << m_application->getSimTime();
+            << "Time="       << std::setw(12) << m_application->getSimTime()
     
-    if( g_sim_current_delT && !header )
-      message << "Current delT="       << std::setw(12) << m_application->getDelT();
-    else
-      message << "Next delT="  << std::setw(12) << m_application->getNextDelT();
+            // << "Current delT="       << std::setw(12) << m_application->getDelT()
+            << "Next delT="  << std::setw(12) << m_application->getNextDelT()
 
-    message << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
+            << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
             // << "All Time steps= " << std::setw(12) << m_wall_timers.TimeStep().seconds()
             // << "Current Time Step= " << std::setw(12) << timeStep.seconds()
             << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()

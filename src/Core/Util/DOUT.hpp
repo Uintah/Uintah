@@ -74,14 +74,14 @@
 
 //__________________________________
 //  For threads, Rank and thread reported
-#define TOUT( ... ) {					    \
-    std::ostringstream tout_msg;			    \
-    tout_msg << "Rank ";				    \
+#define TOUT( ... ) {                                       \
+    std::ostringstream tout_msg;                            \
+    tout_msg << "Rank ";                                    \
     tout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << "  "; \
-    tout_msg << "Thread ";			            \
-    tout_msg << MPI::Impl::tid() << ") ";		    \
-    tout_msg << __VA_ARGS__;				    \
-    printf("%s\n", tout_msg.str().c_str());		    \
+    tout_msg << "Thread ";                                  \
+    tout_msg << MPI::Impl::tid() << ") ";                   \
+    tout_msg << __VA_ARGS__;                                \
+    printf("%s\n", tout_msg.str().c_str());                 \
   }
 
 //__________________________________
@@ -162,7 +162,7 @@ public:
     std::stringstream message;
     message << std::setw(2)  << std::left << (m_active ? "+" : "-")
             << std::setw(30) << std::left << m_name.c_str()
-            << std::setw(60) << std::left << m_description.c_str()
+            << std::setw(75) << std::left << m_description.c_str()
             << std::setw(30) << std::left << m_component.c_str()
             << std::endl;
     printf("%s", message.str().c_str());

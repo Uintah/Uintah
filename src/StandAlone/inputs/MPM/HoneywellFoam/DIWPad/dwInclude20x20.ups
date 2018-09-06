@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title> 20 TPL DIW simulations.
+               Units are in micrograms, cm and microseconds
+       </title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>1700.0</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.00000001</delt_min>
+       <delt_max>0.1</delt_max>
+       <timestep_multiplier>0.3</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase>DW20X20.Include.PR584.uda</filebase>
+       <outputInterval>100.0</outputInterval>
+       <save label = "KineticEnergy"/>
+       <save label = "BndyForce_zminus"/>
+       <save label = "p.x"/>
+       <save label = "p.color"/>
+       <save label = "p.stress"/>
+       <save label = "p.velocity"/>
+       <save label = "p.displacement"/>
+       <save label = "p.scalefactor"/>
+       <save label = "p.particleID"/>
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>
+       <checkpoint cycle = "2" interval = "50.0"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator> explicit  </time_integrator>
+       <interpolator>    fast_cpdi </interpolator>
+       <withColor>       true      </withColor>
+       <XPIC2>           true      </XPIC2>
+       <use_load_curves> false          </use_load_curves>
+       <artificial_damping_coeff> 0.01   </artificial_damping_coeff>
+       <DoPressureStabilization>  false </DoPressureStabilization>
+       <DoExplicitHeatConduction> false </DoExplicitHeatConduction>
+       <boundary_traction_faces>[zminus]</boundary_traction_faces>
+       <computeColinearNormals> true    </computeColinearNormals>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material name="piston">
+              <density>1.0e6</density>
+              <constitutive_model type="rigid"> 
+                 <bulk_modulus>1.e3</bulk_modulus>
+                 <shear_modulus>5.e2</shear_modulus>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                 <cylinder label = "piston">
+                  <bottom>[.0,.0,.34]</bottom>
+                  <top>   [.0,.0,.36]</top>
+                  <radius> 1.25 </radius>
+                 </cylinder>
+               <res>[2,2,2]</res>
+	       <!-- 0.05 inches/minute = 0.127 cm/min
+                                       = 2.117e-3 cm/sec 
+                                       = 2.117e-9 cm/microsecond -->
+               <!-- experimental piston travels .1372 cm in loading phase -->
+               <velocity>[0.0,0.0,-0.000]</velocity>
+               <temperature>300</temperature>
+               <color>             0               </color>
+              </geom_object>
+              <geom_object>
+                 <box label = "position_monitor">
+                  <min>[0.0 , 0.0,  0.36] </min>
+                  <max>[0.005,0.005,0.365]</max>
+                 </box>
+               <res>[1,1,1]</res>
+               <velocity>[0.0,0.0,0.0]</velocity>
+               <temperature>300  </temperature>
+               <color>      0.2  </color>
+              </geom_object>
+           </material>
+
+           <material name="frictionlayer">
+              <density>1.0e8</density>
+              <constitutive_model type="comp_neo_hook">
+                 <bulk_modulus>1.e5</bulk_modulus>
+                 <shear_modulus>5.e4</shear_modulus>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                <difference>
+                 <cylinder label = "frictionlayer">
+                  <bottom>[.0,.0,.325]</bottom>
+                  <top>   [.0,.0,.360]</top>
+                  <radius> 1.27 </radius>
+                 </cylinder>
+                 <cylinder label = "piston"/>
+                </difference>
+               <res>[2,2,2]</res>
+               <velocity>[0.0,0.0,0.0]</velocity>
+               <temperature>300</temperature>
+               <color>             1               </color>
+              </geom_object>
+
+              <geom_object>
+               <box label = "bottom_frictionlayer">
+                <min>[0.0, 0.0, -.02] </min>
+                <max>[1.5, 1.5, 0.00] </max>
+               </box>
+               <res>[2,2,2]</res>
+               <velocity>[0.0,0.0,0.0]</velocity>
+               <temperature>300     </temperature>
+               <color>      1.2     </color>
+              </geom_object>
+           </material>
+
+           <material name="DWpad">
+              <density>1.0e6</density>
+              <constitutive_model type="visco_trans_iso_hyper"> 
+                 <bulk_modulus>1.e3</bulk_modulus>
+                 <c1>21.0</c1>
+                 <c2>0.14</c2>
+                 <c3>0.0</c3>
+                 <c4>0.0</c4>
+                 <c5>0.0</c5>
+                 <fiber_stretch>1000.0</fiber_stretch>
+                 <direction_of_symm>[1.0,0.0,0.0]</direction_of_symm>
+                 <failure_option> 0.0 </failure_option>
+                 <max_fiber_strain> 1.e9 </max_fiber_strain>
+                 <max_matrix_strain> 1.e9 </max_matrix_strain>
+                 <y1>5.e-0</y1>
+                 <y2>5.e-2</y2>
+                 <y3>5.e-2</y3>
+                 <y4>5.e-2</y4>
+                 <y5>5.e-2</y5>
+                 <y6>5.e-2</y6>
+                 <t1>0.0</t1>
+                 <t2>0.0</t2>
+                 <t3>0.0</t3>
+                 <t4>0.0</t4>
+                 <t5>0.0</t5>
+                 <t6>0.0</t6>
+              </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+               <!-- DW5x5 Build parameters
+                    Number of Layers:       10
+                    Thread Diameter:        0.355 mm
+                    Thread Spacing:         0.710 mm
+                    Layer Overlap:          10 %
+                    Structure:              BCC
+                 -->
+               <include href="DIWPad.NL10.TPL20.xml"/>
+               <res>[2,2,2]</res>
+               <velocity>[0.0,0.0,0]</velocity>
+               <temperature>300     </temperature>
+               <color>      2       </color>
+              </geom_object>
+           </material>
+
+           <contact>
+             <type>specified</type>
+             <filename> pistonVelDW5_1700.txt </filename>
+             <volume_constraint>0.0</volume_constraint>
+             <direction>[1,1,1]</direction>
+             <materials>[0,1,2]</materials>
+           </contact>
+
+           <contact>
+             <type>friction</type>
+             <mu> 0.5 </mu>
+             <volume_constraint>0.0</volume_constraint>
+             <separation_factor>0.9</separation_factor>
+             <materials>[1,2]</materials>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "y-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                  
+          <Face side = "y+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                    <value> [0.0,0.0,0.0] </value>
+             </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                           
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[0.0,  0.0,  -.02] </lower>
+              <upper>[1.60, 1.60, 0.48] </upper>
+              <resolution> [320,320,100]</resolution>
+              <patches>    [16,16,1]    </patches>
+              <extraCells> [1,1,1]      </extraCells>
+           </Box>
+       </Level>
+    </Grid>
+
+    <DataAnalysis>
+       <Module name="particleExtract">
+        <material>piston</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100000  </timeStop>
+        <colorThreshold>    0.1  </colorThreshold>
+        <Variables>
+          <analyze label="p.displacement"/>
+        </Variables>
+      </Module>
+    </DataAnalysis>
+<!--
+    <PhysicalBC>
+     <MPM>
+     </MPM>
+    </PhysicalBC>
+-->
+</Uintah_specification>

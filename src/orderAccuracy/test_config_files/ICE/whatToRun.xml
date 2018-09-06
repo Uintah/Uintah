@@ -13,23 +13,21 @@
 -->
 
 <!--__________________________________-->
-<!--
+
 <test>
   <name>advect_X_FO</name>
   <tst>advectScalar1D_dx.tst</tst>
 </test>
--->
+
 <test>
   <name>advect_Y_FO</name>
   <tst>advectScalar1D_dy.tst</tst>
 </test>
 
-<!--
 <test>
   <name>advect_Z_FO</name>
   <tst>advectScalar1D_dz.tst</tst>
 </test>
--->
 
 <!--__________________________________-->
 <!--

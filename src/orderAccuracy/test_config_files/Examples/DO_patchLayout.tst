@@ -16,8 +16,8 @@
     <halo>           [1,1,1]      </halo>
   </replace_lines>
   <replace_values>
-    /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[40,40,40]
-    /Uintah_specification/Grid/Level/Box[@label=1]/resolution :[80,80,80]
+    <entry path = "/Uintah_specification/Grid/Level/Box[@label=0]/resolution" value ='[40,40,40]' />
+    <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/resolution" value ='[80,80,80]' />
   </replace_values>
 </AllTests>
 
@@ -27,7 +27,7 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 1</postProcess_cmd>
     <x>8</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[2,2,2]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[2,2,2]' />
     </replace_values>
 </Test>
 <Test>
@@ -36,7 +36,7 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 1</postProcess_cmd>
     <x>16</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[2,4,2]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[2,4,2]' />
     </replace_values>
 </Test>
 <Test>
@@ -45,7 +45,7 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 1</postProcess_cmd>
     <x>32</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[4,4,2]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[4,4,2]' />
     </replace_values>
 </Test>
 <Test>
@@ -54,7 +54,7 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 1</postProcess_cmd>
     <x>64</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[4,4,4]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[4,4,4]' />
     </replace_values>
 </Test>
 <Test>
@@ -63,7 +63,7 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 1</postProcess_cmd>
     <x>128</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[4,8,4]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[4,8,4]' />
     </replace_values>
 </Test>
 <Test>
@@ -72,7 +72,7 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 1</postProcess_cmd>
     <x>256</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[8,8,4]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[8,8,4]' />
     </replace_values>
 </Test>
 <Test>
@@ -81,7 +81,7 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 1</postProcess_cmd>
     <x>512</x>
     <replace_values>
-      /Uintah_specification/Grid/Level/Box[@label=1]/patches :[8,8,8]
+      <entry path = "/Uintah_specification/Grid/Level/Box[@label=1]/patches" value ='[8,8,8]' />
     </replace_values>
 </Test>
 

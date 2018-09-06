@@ -28,12 +28,12 @@ FIT_LIMIT=1e-6
 fit f2(x) 'L2norm.dat' using 1:3 via a2, b2
 
 set label 'x_Error = a * (Timestep)^b' at screen 0.2,0.4
-set label 'a = %3.5g',a1      at screen 0.2,0.375
-set label 'b = %3.5g',b1      at screen 0.2,0.35
+set label sprintf( 'a = %3.5g',a1 )    at screen 0.2,0.375
+set label sprintf( 'b = %3.5g',b1 )    at screen 0.2,0.35
 
 set label 'y_Error = a * (Timestep)^b' at screen 0.2,0.3
-set label 'a = %3.5g',a2      at screen 0.2,0.275
-set label 'b = %3.5g',b2      at screen 0.2,0.25
+set label sprintf( 'a = %3.5g',a2 )    at screen 0.2,0.275
+set label sprintf( 'b = %3.5g',b2 )    at screen 0.2,0.25
 
 
 
