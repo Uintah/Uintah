@@ -130,7 +130,7 @@ WARNING
       void* src = (void*)(&value);
       size_t numBytes = getDataSize();
       void* retVal = std::memcpy(dst, src, numBytes);
-      return (retVal == dst) ? true : false;
+      return (retVal == dst);
     }
 
     //! Sets the value to a harmless value that will have no impact
@@ -141,10 +141,9 @@ WARNING
     }
 
     // check if the value is benign value
-    virtual bool isBenignValue() {
+    virtual bool isBenignValue() const {
       Op op;
-      if (value==op.getBenignValue()) return true;
-      else return false;
+      return (value == op.getBenignValue());
     }
 
   private:
