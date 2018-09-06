@@ -81,6 +81,13 @@ Arches::Arches(const ProcessorGroup* myworld,
   activateReductionVariable( checkpointTimeStep_name, true );
   activateReductionVariable(      endSimulation_name, true );
 #endif
+
+  // One can also output or checkpoint if one of the validate
+  // thresholds are met. This setting has the same affect as the above
+  // along with the puts in the data warehouse (see ExplicitSolve.cc).
+
+  //     outputIfInvalidNextDelT( DELTA_T_MIN | DELTA_T_MAX );
+  // checkpointIfInvalidNextDelT( DELTA_T_MIN );
 }
 
 //--------------------------------------------------------------------------------------------------
