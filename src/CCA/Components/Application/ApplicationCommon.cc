@@ -900,9 +900,9 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
         
       message << header.str()
               << "lowering the next delT from " << delTNext
-              << " to the maxmimum: " << delt_tmp
-              << " (maximum increase permitted is " << m_delTMaxIncrease
-              << ")";
+              << " to the maximum: " << delt_tmp
+              << " (maximum increase permitted is " << 1.0+m_delTMaxIncrease
+              << "x the previous)";
     }
     
     delTNext = delt_tmp;
@@ -1087,7 +1087,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
         message << header.str()
                 << "for one or more ranks the next delta T was "
                 << "lowered. The maximum increase permitted is "
-                << m_delTMaxIncrease << std::endl;
+                << 1.0+m_delTMaxIncrease << "x the previous";
       }
         
       if( g_deltaT_warn_initial && invalidAll & DELTA_T_INITIAL_MAX )
@@ -1099,7 +1099,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
                 << "for one or more ranks "
                   << "for the initial time up to " << m_delTInitialRange
                 << " the next delT was lowered to "
-                << m_delTInitialMax << std::endl;;
+                << m_delTInitialMax;
       }
 
       if( g_deltaT_warn_minimum && invalidAll & DELTA_T_MIN )
