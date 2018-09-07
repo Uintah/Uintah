@@ -39,7 +39,7 @@
 using namespace Uintah;
 
 Uintah::Dout g_deltaT_warn_initial ( "DeltaTWarnInitial",  "ApplicationCommon", "Warn if the next delta T is greater than the initial maximum", true );
-Uintah::Dout g_deltaT_warn_increase( "DeltaTWarnIncrease", "ApplicationCommon", "Warn if the next delta T is increases more than a faction of the previous", true );
+Uintah::Dout g_deltaT_warn_increase( "DeltaTWarnIncrease", "ApplicationCommon", "Warn if the next delta T is increases more than a fraction of the previous", true );
 Uintah::Dout g_deltaT_warn_minimum ( "DeltaTWarnMinimum",  "ApplicationCommon", "Warn if the next delta T is less than the minimum", true );
 Uintah::Dout g_deltaT_warn_maximum ( "DeltaTWarnMaximum",  "ApplicationCommon", "Warn if the next delta T is greater than the maximum", true );
 Uintah::Dout g_deltaT_warn_clamp   ( "DeltaTWarnClamp",    "ApplicationCommon", "Warn if the next delta T is clamped for output, checkpoint, or max time", true );
@@ -886,7 +886,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
   // Check to see if the next delT was increased too much over the
   // current delT
   double delt_tmp = (1.0+m_delTMaxIncrease) * m_delT;
-  
+
   if( m_delT > 0.0 &&
       m_delTMaxIncrease > 0 &&
       delTNext > delt_tmp )
@@ -978,7 +978,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     // output time.
     double nextOutput = m_output->getNextOutputTime();
     if (!m_output->isOutputTimeStep() &&
-	nextOutput != 0 && m_simTime + m_delT + delTNext > nextOutput)
+        nextOutput != 0 && m_simTime + m_delT + delTNext > nextOutput)
     {
       invalid |= CLAMP_TIME_TO_OUTPUT;
 
@@ -991,7 +991,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
                 << "lowering the next delT from " << delTNext
                 << " to " << nextOutput - (m_simTime+m_delT)
                 << " to line up with the next output time: "
-		<< nextOutput;
+                << nextOutput;
       }
       
       delTNext = nextOutput - (m_simTime+m_delT);
@@ -1001,8 +1001,8 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     // checkpoint time.
     double nextCheckpoint = m_output->getNextCheckpointTime();
     if (!m_output->isCheckpointTimeStep() &&
-	nextCheckpoint != 0 &&
-	m_simTime + m_delT + delTNext > nextCheckpoint)
+        nextCheckpoint != 0 &&
+        m_simTime + m_delT + delTNext > nextCheckpoint)
     {
       invalid |= CLAMP_TIME_TO_CHECKPOINT;
 
@@ -1015,7 +1015,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
                 << "lowering the next delT from " << delTNext
                 << " to " << nextCheckpoint - (m_simTime+m_delT)
                 << " to line up with the next checkpoint time: "
-		<< nextCheckpoint;
+                << nextCheckpoint;
       }
       
       delTNext = nextCheckpoint - (m_simTime+m_delT);
