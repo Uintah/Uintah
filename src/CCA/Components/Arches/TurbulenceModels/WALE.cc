@@ -41,7 +41,7 @@ TaskAssignedExecutionSpace WALE::loadTaskEvalFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &WALE::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &WALE::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &WALE::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &WALE::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -131,8 +131,8 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 }
 
 //---------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
   CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
@@ -182,35 +182,37 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
     register_variable( m_t_vis_name, AFC::MODIFIES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, AFC::MODIFIES ,  variable_registry, time_substep );
   }
+
 }
 
 //---------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
+  auto uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>,const double, MemSpace >(m_u_vel_name);
+  auto vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>,const double, MemSpace >(m_v_vel_name);
+  auto wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>,const double, MemSpace >(m_w_vel_name);
 
-  constCCVariable<double>& CCuVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_u_vel_name);
-  constCCVariable<double>& CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_v_vel_name);
-  constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
+  auto CCuVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_cc_u_vel_name);
+  auto CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_cc_v_vel_name);
+  auto CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_cc_w_vel_name);
 
-  CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_t_vis_name);
-  CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
-  CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >(m_IsI_name);
-  constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
-  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+  auto mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double>,double,MemSpace >(m_t_vis_name);
+  auto mu_turb = tsk_info->get_uintah_field_add<CCVariable<double> ,double,MemSpace >(m_turb_viscosity_name);
+  auto IsI = tsk_info->get_uintah_field_add< CCVariable<double>  ,double,MemSpace >(m_IsI_name);
+  auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_density_name);
+  auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_volFraction_name);
 
-  IsI.initialize(0.0);
-  mu_sgc.initialize(0.0);
+  parallel_initialize(exObj,0.0,IsI,mu_sgc);
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);
 
 //  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   const double SMALL = 1e-16;
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  const double local_Cs=m_Cs;
+  const double local_molecular_visc=m_molecular_visc;
+  Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
 
     double uep = 0.0;
     double uwp = 0.0;
@@ -314,14 +316,13 @@ void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
 
     const double fvis = pow(SijdSijd,1.5)/(pow(SijSij,2.5) + pow(SijdSijd,5./4.)+SMALL);
 
-    mu_sgc(i,j,k) = pow(m_Cs*delta,2.0)*fvis*rho(i,j,k)*vol_fraction(i,j,k) + m_molecular_visc;
-    IsI(i,j,k) = std::sqrt(2.0*SijSij)*vol_fraction(i,j,k) ;
-    mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; //
+    mu_sgc(i,j,k) = pow(local_Cs*delta,2.0)*fvis*rho(i,j,k)*vol_fraction(i,j,k) + local_molecular_visc;
+    IsI(i,j,k) = sqrt(2.0*SijSij)*vol_fraction(i,j,k) ;
+    mu_turb(i,j,k) = mu_sgc(i,j,k) - local_molecular_visc; //
   });
-
   Uintah::ArchesCore::BCFilter bcfilter;
-  bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,mu_sgc,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,mu_turb,vol_fraction);
 
 }
 } //namespace Uintah

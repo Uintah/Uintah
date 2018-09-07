@@ -135,8 +135,8 @@ spectralProperties::register_initialize( VIVec& variable_registry , const bool p
   }
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   for (int i=0; i< _nbands  ; i++){
     CCVariable<double>& abskg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abskg_name_vector[i]);
@@ -204,8 +204,8 @@ spectralProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Va
 }
 
 
-template<typename ExecutionSpace, typename MemorySpace>
-void spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 

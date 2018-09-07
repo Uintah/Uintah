@@ -44,19 +44,19 @@ public:
 
     void register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+    template <typename ExecutionSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+    template <typename ExecutionSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject  );
+    template <typename ExecutionSpace, typename MemSpace>
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject  );
 
     template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+    template <typename ExecutionSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
     //Build instructions for this (ConstantProperty) class.
     class Builder : public TaskInterface::TaskBuilder {
@@ -204,8 +204,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template<typename ExecutionSpace, typename MemorySpace>
-  void ConstantProperty<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void ConstantProperty<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
     T& property = tsk_info->get_uintah_field_add<T>( _task_name );
     property.initialize(0.0);

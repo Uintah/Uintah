@@ -102,8 +102,8 @@ PartVariablesDQMOM::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
   CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >("AreaSum",0);// temporal variable
@@ -175,8 +175,8 @@ PartVariablesDQMOM::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
   CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >("AreaSum",0);// temporal variable

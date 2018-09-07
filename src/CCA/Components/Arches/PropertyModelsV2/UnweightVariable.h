@@ -55,16 +55,16 @@ public:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+    template <typename ExecutionSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+    template <typename ExecutionSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
     template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+    template <typename ExecutionSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
     void create_local_labels();
 
@@ -287,8 +287,8 @@ void UnweightVariable<T>::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-template<typename ExecutionSpace, typename MemorySpace>
-void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>>(m_rho_name);
@@ -375,8 +375,8 @@ void UnweightVariable<T>::register_compute_bcs(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-template<typename ExecutionSpace, typename MemorySpace>
-void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   ArchesCore::VariableHelper<T> helper;
@@ -411,7 +411,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
             constCCVariable<double>& vol_fraction = 
             tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
           
-            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               un_var(i,j,k) = var(i,j,k)/(rho(i,j,k)+ SMALL)*vol_fraction(i,j,k);
             });
           }
@@ -419,7 +419,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
           for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
             Scaling_info info = ieqn->second;
             T&  un_var = tsk_info->get_uintah_field_add<T>(info.unscaled_var);
-            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               un_var(i,j,k) *= info.constant;
             });
           }
@@ -428,7 +428,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
             T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
             CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]);
           
-            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               int ip=i - iDir[0];
               int jp=j - iDir[1];
               int kp=k - iDir[2];
@@ -449,7 +449,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
       
             if ( dot == -1 ){
             // face (-) in Staggered Variablewe set BC at 0
-            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               const int ip=i - iDir[0];
               const int jp=j - iDir[1];
               const int kp=k - iDir[2];
@@ -459,7 +459,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
             });
           } else {
          // face (+) in Staggered Variablewe set BC at extra cell
-            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               const int ip=i - iDir[0];
               const int jp=j - iDir[1];
               const int kp=k - iDir[2];
@@ -477,7 +477,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
 
           if ( dot == -1 ){
             // face (-) in Staggered Variablewe set BC at 0
-            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               const int ip=i - iDir[0];
               const int jp=j - iDir[1];
               const int kp=k - iDir[2];
@@ -487,7 +487,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
             });
           } else {
          // face (+) in Staggered Variablewe set BC at extra cell
-            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               const int ip=i - iDir[0];
               const int jp=j - iDir[1];
               const int kp=k - iDir[2];
@@ -519,8 +519,8 @@ void UnweightVariable<T>::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-template<typename ExecutionSpace, typename MemorySpace>
-void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   ArchesCore::VariableHelper<T> helper;
 

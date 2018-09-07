@@ -48,7 +48,7 @@ TaskAssignedExecutionSpace StressTensor::loadTaskEvalFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &StressTensor::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &StressTensor::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &StressTensor::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &StressTensor::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -57,6 +57,7 @@ TaskAssignedExecutionSpace StressTensor::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &StressTensor::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &StressTensor::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &StressTensor::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
 
@@ -96,8 +97,8 @@ void StressTensor::register_initialize( AVarInfo& variable_registry , const bool
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void StressTensor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void StressTensor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 
   CCVariable<double>& sigma11 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]));
@@ -128,28 +129,23 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
-  constCCVariable<double>&     D  = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_t_vis_name);
+  auto uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
+  auto vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
+  auto wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
+  auto   D  = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_t_vis_name);
 
-  CCVariable<double>& sigma11 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[0]);
-  CCVariable<double>& sigma12 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[1]);
-  CCVariable<double>& sigma13 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[2]);
-  CCVariable<double>& sigma22 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[3]);
-  CCVariable<double>& sigma23 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[4]);
-  CCVariable<double>& sigma33 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[5]);
+  auto sigma11 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_sigma_t_names[0]);
+  auto sigma12 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_sigma_t_names[1]);
+  auto sigma13 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_sigma_t_names[2]);
+  auto sigma22 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_sigma_t_names[3]);
+  auto sigma23 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_sigma_t_names[4]);
+  auto sigma33 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_sigma_t_names[5]);
 
   // initialize all velocities
-  sigma11.initialize(0.0);
-  sigma12.initialize(0.0);
-  sigma13.initialize(0.0);
-  sigma22.initialize(0.0);
-  sigma23.initialize(0.0);
-  sigma33.initialize(0.0);
+  parallel_initialize(exObj,0.0, sigma11, sigma12, sigma13, sigma22, sigma23,sigma33);
 
   Vector Dx = patch->dCell();
 
@@ -158,8 +154,12 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
 
   GET_WALL_BUFFERED_PATCH_RANGE(low, high,0,1,0,1,0,1);  
   Uintah::BlockRange x_range(low, high);
+ 
+  auto apply_uVelStencil=functorCreationWrapper(  uVel,  Dx);
+  auto apply_vVelStencil=functorCreationWrapper(  vVel,  Dx);
+  auto apply_wVelStencil=functorCreationWrapper(  wVel,  Dx);
 
-  Uintah::parallel_for( x_range, [&](int i, int j, int k){
+  Uintah::parallel_for(exObj, x_range, KOKKOS_LAMBDA (int i, int j, int k){
 
     double dudx = 0.0;
     double dudy = 0.0;
@@ -190,9 +190,9 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     mu23 += 0.5*(D(i,j-1,k)+D(i,j-1,k-1));// Second interpolation at j-1
     mu23 *= 0.5;
 
-    VelocityDerivative_central(dudx,dudy,dudz,uVel,Dx,i,j,k);
-    VelocityDerivative_central(dvdx,dvdy,dvdz,vVel,Dx,i,j,k);
-    VelocityDerivative_central(dwdx,dwdy,dwdz,wVel,Dx,i,j,k);
+    apply_uVelStencil(dudx,dudy,dudz,i,j,k);
+    apply_vVelStencil(dvdx,dvdy,dvdz,i,j,k);
+    apply_wVelStencil(dwdx,dwdy,dwdz,i,j,k);
 
     sigma11(i,j,k) =  mu11 * 2.0*dudx;
     sigma12(i,j,k) =  mu12 * (dudy + dvdx );
@@ -202,23 +202,4 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     sigma33(i,j,k) =  mu33 * 2.0*dwdz;
 
   });
-}
-
-void StressTensor::VelocityDerivative_central(double &dudx, double &dudy, double &dudz, const Array3<double> &u, const Vector& Dx, int i, int j, int k)
-{
-
-  using namespace Uintah::ArchesCore;
-
-  {
-  STENCIL3_1D(0);
-    dudx = (u(IJK_) - u(IJK_M_))/Dx.x();
-  }
-  {
-  STENCIL3_1D(1);
-    dudy = (u(IJK_) - u(IJK_M_))/Dx.y();
-  }
-  {
-  STENCIL3_1D(2);
-    dudz = (u(IJK_) - u(IJK_M_))/Dx.z();
-  }
 }

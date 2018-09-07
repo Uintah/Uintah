@@ -100,8 +100,8 @@ DensityPredictor::register_initialize( std::vector<ArchesFieldContainer::Variabl
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& rho = *(tsk_info->get_uintah_field<CCVariable<double> >("new_densityGuess"));
   KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( rho, 0.0 );
@@ -152,8 +152,8 @@ DensityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& rho_guess = *(tsk_info->get_uintah_field<CCVariable<double> >( "new_densityGuess"));
   CCVariable<double>& rho_guess_a = *(tsk_info->get_uintah_field<CCVariable<double> >( "densityGuess"));

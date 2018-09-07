@@ -51,8 +51,9 @@ namespace Uintah { namespace ArchesCore {
         }
       }
     }
-    void apply_zero_neumann( const Patch* patch, CCVariable<double>& var,
-                             constCCVariable<double>& vol_fraction ){
+    template<typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT>
+    void apply_zero_neumann( ExecutionObject<ExecutionSpace,MemSpace>& exObj, const Patch* patch, grid_T& var,
+                             grid_CT& vol_fraction ){
 
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
@@ -65,9 +66,15 @@ namespace Uintah { namespace ArchesCore {
 
         for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
           IntVector c = *iter;
+          int i=c[0];
+          int j=c[1];
+          int k=c[2];
+          int im=i-f_dir[0];
+          int jm=j-f_dir[1];
+          int km=k-f_dir[2];
 
-          if ( vol_fraction[c] > 1e-10 ){
-            var[c] = var[c-f_dir];
+          if ( vol_fraction(i,j,k) > 1e-10 ){
+            var(i,j,k) = var(im,jm,km);
           }
         }
       }
@@ -95,33 +102,44 @@ namespace Uintah { namespace ArchesCore {
             //Face +
           for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
             IntVector c = *iter;
-
-            if ( vol_fraction[c] > 1e-10 ){
-              var[c-f_dir] = vel[c-f_dir]*(rho[c-f_dir]+rho[c])/2.;
-              var[c] = vel[c-f_dir];
+            int i=c[0];
+            int j=c[1];
+            int k=c[2];
+            int im=i-f_dir[0];
+            int jm=j-f_dir[1];
+            int km=k-f_dir[2];
+           
+            if ( vol_fraction(i,j,k) > 1e-10 ){
+              var(im,jm,km) = vel(im,jm,km)*(rho(im,jm,km)+rho(i,j,k))/2.;
+              var(i,j,k) = vel(im,jm,km);
             }
           }
           } else {
               // Face -
           for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
             IntVector c = *iter;
+            int i=c[0];
+            int j=c[1];
+            int k=c[2];
+            int im=i-f_dir[0];
+            int jm=j-f_dir[1];
+            int km=k-f_dir[2];
 
             if ( vol_fraction[c] > 1e-10 ){
-              var[c] = vel[c]*(rho[c-f_dir]+rho[c])/2.;
+              var(i,j,k) = vel(i,j,k)*(rho(im,jm,km)+rho(i,j,k))/2.;
             }
           }
        }
        }
       }
-    template <typename T>
-    void apply_zero_neumann( const Patch* patch, T& var,
-                             constCCVariable<double> vol_fraction  ){
+    template<typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT, typename VarHelper>
+    void apply_zero_neumann(ExecutionObject<ExecutionSpace,MemSpace>& exObj, const Patch* patch, grid_T& var,
+                             grid_CT& vol_fraction, VarHelper& var_help  ){ // NOT USED??
 
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
 
-      ArchesCore::VariableHelper<T> var_help;
       IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
       for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){

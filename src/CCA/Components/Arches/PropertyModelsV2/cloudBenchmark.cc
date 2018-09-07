@@ -91,8 +91,8 @@ cloudBenchmark::register_initialize( VIVec& variable_registry , const bool pack_
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){
@@ -140,8 +140,8 @@ void cloudBenchmark::register_restart_initialize( VIVec& variable_registry , con
   register_initialize(variable_registry, false);
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void cloudBenchmark::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void cloudBenchmark::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
   BBox domain(m_min,m_max); // when restart_init gets executionObject then remove this function and call initialize
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){
     const Level* level = patch->getLevel();

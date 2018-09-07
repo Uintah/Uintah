@@ -102,8 +102,8 @@ SurfaceNormals::register_initialize( VIVec& variable_registry , const bool packe
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1)
   GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1)

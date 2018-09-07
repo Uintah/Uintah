@@ -89,8 +89,8 @@ UpdateParticleVelocity::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void UpdateParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void UpdateParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   ParticleTuple pu_t = tsk_info->get_uintah_particle_field( _u_name );
   ParticleTuple pv_t = tsk_info->get_uintah_particle_field( _v_name );
@@ -127,8 +127,8 @@ UpdateParticleVelocity::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   ParticleTuple pu_t = tsk_info->get_uintah_particle_field( _u_name );
   ParticleTuple pv_t = tsk_info->get_uintah_particle_field( _v_name );

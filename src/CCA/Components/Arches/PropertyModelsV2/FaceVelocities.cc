@@ -118,8 +118,8 @@ void FaceVelocities::register_initialize( AVarInfo& variable_registry , const bo
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void FaceVelocities::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void FaceVelocities::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   SFCXVariable<double>& ucell_xvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xvel"));
   SFCXVariable<double>& ucell_yvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_yvel"));
@@ -155,8 +155,8 @@ void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   constSFCXVariable<double>& uVel = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(m_u_vel_name));
   constSFCYVariable<double>& vVel = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(m_v_vel_name));

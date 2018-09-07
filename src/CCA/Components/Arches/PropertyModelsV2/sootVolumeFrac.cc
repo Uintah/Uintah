@@ -95,8 +95,8 @@ sootVolumeFrac::register_initialize( VIVec& variable_registry , const bool pack_
   register_variable( _fvSoot, Uintah::ArchesFieldContainer::COMPUTES, variable_registry );
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void sootVolumeFrac::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void sootVolumeFrac::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
   CCVariable<double>& fvSoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( _fvSoot);
   fvSoot.initialize(0.0);
 }
@@ -122,8 +122,8 @@ sootVolumeFrac::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
   register_variable(_Ys_label_name , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void sootVolumeFrac::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void sootVolumeFrac::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& fvSoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( _fvSoot);
   fvSoot.initialize(0.0);

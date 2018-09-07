@@ -85,8 +85,8 @@ Drhodt::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& drhodt = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_drhodt );
   drhodt.initialize(0.0);
@@ -105,8 +105,8 @@ Drhodt::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInform
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density );
   constCCVariable<double>& old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density, ArchesFieldContainer::OLDDW);

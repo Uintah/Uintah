@@ -174,8 +174,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemorySpace>
-  void MultifractalSGS::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void MultifractalSGS::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
       // Subgrid stress
       SFCXVariable<double>& ucell_xSgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress"));
       SFCXVariable<double>& ucell_ySgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_ySgsStress"));
@@ -260,8 +260,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemorySpace>
-  void MultifractalSGS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void MultifractalSGS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
       Vector Dx=patch->dCell();
       double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();
 

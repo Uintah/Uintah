@@ -133,8 +133,8 @@ public:
     // Yes, it's ugly.  But it's the best least ugly solution I could find.  -- Brad Peterson
 
     //--------------------------------------------------------------------------------------------------
-    template<typename ExecutionSpace, typename MemorySpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemorySpace>& executionObject ) {
+    template<typename ExecutionSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& executionObject ) {
 
       archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
@@ -149,8 +149,8 @@ public:
       }
 
       // Found the compute_bcs() function pointer associated with the execution space.  Run it.
-      archesFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
-          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
+      archesFunctionPtr<ExecutionSpace, MemSpace> handler_ptr =
+          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemSpace > >(function_ptr);
 
       if ( handler_ptr ) {
         (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
@@ -158,14 +158,14 @@ public:
     }
 
     //--------------------------------------------------------------------------------------------------
-    template<typename ExecutionSpace, typename MemorySpace>
-    void addComputeBCsFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
+    template<typename ExecutionSpace, typename MemSpace>
+    void addComputeBCsFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemSpace> ep ) {
       computeBCsFunctionPtrs.emplace( ti, reinterpret_cast< archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
     }
 
     //--------------------------------------------------------------------------------------------------
-    template<typename ExecutionSpace, typename MemorySpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemorySpace>& executionObject ) {
+    template<typename ExecutionSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& executionObject ) {
 
       archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
@@ -176,12 +176,14 @@ public:
         function_ptr = handler->second;
       }
       else {
-        throw InternalError("Derived class version of Arches task initialize() not found!", __FILE__, __LINE__);
+        std::string eSpace_name=typeid(ExecutionSpace).name();
+        std::string mSpace_name=typeid(MemSpace).name();
+        throw InternalError("Derived class version of Arches task initialize() not found for"+_task_name+" in: "+eSpace_name+" with: "+mSpace_name, __FILE__, __LINE__);
       }
 
       // Found the initialize() function pointer associated with the execution space.  Run it.
-      archesFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
-          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
+      archesFunctionPtr<ExecutionSpace, MemSpace> handler_ptr =
+          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemSpace > >(function_ptr);
 
       if ( handler_ptr ) {
         (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
@@ -189,14 +191,14 @@ public:
     }
 
     //--------------------------------------------------------------------------------------------------
-    template<typename ExecutionSpace, typename MemorySpace>
-    void addInitializeFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
+    template<typename ExecutionSpace, typename MemSpace>
+    void addInitializeFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemSpace> ep ) {
       initializeFunctionPtrs.emplace( ti, reinterpret_cast< archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
     }
 
     //--------------------------------------------------------------------------------------------------
-    template<typename ExecutionSpace, typename MemorySpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemorySpace>& executionObject ) {
+    template<typename ExecutionSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& executionObject ) {
 
       archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
@@ -211,8 +213,8 @@ public:
       }
 
       // Found the eval() function pointer associated with the execution space.  Run it.
-      archesFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
-          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
+      archesFunctionPtr<ExecutionSpace, MemSpace> handler_ptr =
+          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemSpace > >(function_ptr);
 
       if ( handler_ptr ) {
         (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
@@ -220,14 +222,14 @@ public:
     }
 
     //--------------------------------------------------------------------------------------------------
-    template<typename ExecutionSpace, typename MemorySpace  >
+    template<typename ExecutionSpace, typename MemSpace  >
     void 
-    addEvalFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
+    addEvalFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemSpace> ep ) {
       evalFunctionPtrs.emplace( ti, reinterpret_cast< archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
     }
 
-    template<typename ExecutionSpace, typename MemorySpace>
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemorySpace>& executionObject ) {
+    template<typename ExecutionSpace, typename MemSpace>
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& executionObject ) {
 
       archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
@@ -242,22 +244,22 @@ public:
       }
 
       // Found the restart_initialize() function pointer associated with the execution space.  Run it.
-      archesFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
-          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
+      archesFunctionPtr<ExecutionSpace, MemSpace> handler_ptr =
+          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemSpace > >(function_ptr);
 
       if ( handler_ptr ) {
         (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
       }
     }
 
-    template<typename ExecutionSpace, typename MemorySpace  >
+    template<typename ExecutionSpace, typename MemSpace  >
     void 
-    addRestartInitFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
+    addRestartInitFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemSpace> ep ) {
       restartInitFunctionPtrs.emplace( ti, reinterpret_cast< archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
     }
 
-    template<typename ExecutionSpace, typename MemorySpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemorySpace>& executionObject ) {
+    template<typename ExecutionSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& executionObject ) {
 
       archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
@@ -272,8 +274,8 @@ public:
       }
 
       // Found the timestep_init() function pointer associated with the execution space.  Run it.
-      archesFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
-          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
+      archesFunctionPtr<ExecutionSpace, MemSpace> handler_ptr =
+          reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemSpace > >(function_ptr);
 
       if ( handler_ptr ) {
         (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
@@ -281,9 +283,9 @@ public:
     }
 
 
-    template<typename ExecutionSpace, typename MemorySpace  >
+    template<typename ExecutionSpace, typename MemSpace  >
     void 
-    addTimestepInitFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
+    addTimestepInitFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemSpace> ep ) {
       timestepInitFunctionPtrs.emplace( ti, reinterpret_cast< archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
     }
 
@@ -398,9 +400,9 @@ protected:
   // Template Specialization
   template< unsigned int arches_mode>
   struct ArchesSchedulingHelper{
-     template<typename ExecutionSpace, typename MemorySpace  >
+     template<typename ExecutionSpace, typename MemSpace  >
      void 
-     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI  ) {
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemSpace> ep, TaskInterface* ArchTI  ) {
         std::cout << "Invalid use of ArchesSchedulingHelper  \n";
      }
   };
@@ -408,46 +410,46 @@ protected:
 
   template< >
   struct ArchesSchedulingHelper<TaskInterface::INITIALIZE>{
-     template<typename ExecutionSpace, typename MemorySpace  >
+     template<typename ExecutionSpace, typename MemSpace  >
      void 
-     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI ) {
-       ArchTI->addInitializeFunctionPtr<ExecutionSpace,MemorySpace>(ti,ep);
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemSpace> ep, TaskInterface* ArchTI ) {
+       ArchTI->addInitializeFunctionPtr<ExecutionSpace,MemSpace>(ti,ep);
      }
   };
 
   template< >
   struct ArchesSchedulingHelper<TaskInterface::TIMESTEP_EVAL>{
-     template<typename ExecutionSpace, typename MemorySpace  >
+     template<typename ExecutionSpace, typename MemSpace  >
      void 
-     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI ) {
-       ArchTI->addEvalFunctionPtr<ExecutionSpace,MemorySpace>(ti,ep);
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemSpace> ep, TaskInterface* ArchTI ) {
+       ArchTI->addEvalFunctionPtr<ExecutionSpace,MemSpace>(ti,ep);
      }
   };
 
   template< >
   struct ArchesSchedulingHelper<TaskInterface::BC>{
-     template<typename ExecutionSpace, typename MemorySpace  >
+     template<typename ExecutionSpace, typename MemSpace  >
      void 
-     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI ) {
-       ArchTI->addComputeBCsFunctionPtr<ExecutionSpace,MemorySpace>(ti,ep);
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemSpace> ep, TaskInterface* ArchTI ) {
+       ArchTI->addComputeBCsFunctionPtr<ExecutionSpace,MemSpace>(ti,ep);
      }
   };
 
   template< >
   struct ArchesSchedulingHelper<TaskInterface::RESTART_INITIALIZE>{
-     template<typename ExecutionSpace, typename MemorySpace  >
+     template<typename ExecutionSpace, typename MemSpace  >
      void 
-     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI ) {
-       ArchTI->addRestartInitFunctionPtr<ExecutionSpace,MemorySpace>(ti,ep);
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemSpace> ep, TaskInterface* ArchTI ) {
+       ArchTI->addRestartInitFunctionPtr<ExecutionSpace,MemSpace>(ti,ep);
      }
   };
 
   template< >
   struct ArchesSchedulingHelper<TaskInterface::TIMESTEP_INITIALIZE>{
-     template<typename ExecutionSpace, typename MemorySpace  >
+     template<typename ExecutionSpace, typename MemSpace  >
      void 
-     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemorySpace> ep, TaskInterface* ArchTI ) {
-       ArchTI->addTimestepInitFunctionPtr<ExecutionSpace,MemorySpace>(ti,ep);
+     addFunctionPtr( std::type_index ti, archesFunctionPtr<ExecutionSpace, MemSpace> ep, TaskInterface* ArchTI ) {
+       ArchTI->addTimestepInitFunctionPtr<ExecutionSpace,MemSpace>(ti,ep);
      }
   };
 
@@ -555,14 +557,14 @@ protected:
       if ( std::is_same< Kokkos::Cuda , ES1 >::value || std::is_same< Kokkos::Cuda , ES2 >::value ) {
 
         if ( std::is_same< Kokkos::Cuda , ES1 >::value ) {        // Task supports Kokkos::Cuda builds
-            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
-          }
+          helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
         }
         else if (std::is_same< Kokkos::Cuda , ES2 >::value) {     // Task supports Kokkos::Cuda builds
-            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
+          helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
         }
         assignedTag = KOKKOS_CUDA;
       }
+    }
 
     if (assignedTag == TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE) {
 

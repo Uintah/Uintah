@@ -139,8 +139,8 @@ CO::register_initialize( VIVec& variable_registry , const bool pack_tasks){
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& CO      = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_model_name );
   CCVariable<double>& CO_diff = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_diff_name );
@@ -229,8 +229,8 @@ CO::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_regi
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 
   /* This model computes carbon monoxide as a sum of the equilibrum CO and a defect CO.

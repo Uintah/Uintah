@@ -174,8 +174,8 @@ DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::Varia
   }
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& deposit_velocity = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
   CCVariable<double>& ash_mass_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_mass_src);
@@ -229,8 +229,8 @@ DepositionVelocity::register_timestep_eval(
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   const int FLOW = -1;
   Vector Dx = patch->dCell(); // cell spacing

@@ -58,16 +58,16 @@ protected:
 
     void register_compute_bcs( std::vector<AFC::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+    template <typename ExecutionSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+    template <typename ExecutionSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
     template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+    template <typename ExecutionSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
     void create_local_labels(){};
 
@@ -177,8 +177,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template<typename ExecutionSpace, typename MemorySpace>
-  void AlmgrenMMS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void AlmgrenMMS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
     T& var = tsk_info->get_uintah_field_add<T>( m_var_name );
     constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);

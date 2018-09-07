@@ -57,16 +57,16 @@
 namespace Uintah {
 #ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
 
-template<typename MemorySpace>
-using tempTableContainer=Kokkos::View<double**,  Kokkos::LayoutLeft,MemorySpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
-template<typename MemorySpace>
-using tableContainer    =Kokkos::View< double**,   Kokkos::LayoutLeft,MemorySpace, Kokkos::MemoryTraits<Kokkos::RandomAccess>  >;
+template<typename MemSpace>
+using tempTableContainer=Kokkos::View<double**,  Kokkos::LayoutLeft,MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
+template<typename MemSpace>
+using tableContainer    =Kokkos::View< double**,   Kokkos::LayoutLeft,MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess>  >;
 
-template<typename MemorySpace>
-using intContainer   =Kokkos::View< int*,   Kokkos::LayoutLeft,MemorySpace, Kokkos::MemoryTraits<Kokkos::RandomAccess>  >;
+template<typename MemSpace>
+using intContainer   =Kokkos::View< int*,   Kokkos::LayoutLeft,MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess>  >;
 
-template<typename MemorySpace>
-using tempIntContainer   =Kokkos::View<int*,   Kokkos::LayoutLeft,MemorySpace, Kokkos::MemoryTraits<Kokkos::RandomAccess>  >;
+template<typename MemSpace>
+using tempIntContainer   =Kokkos::View<int*,   Kokkos::LayoutLeft,MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess>  >;
 #else
 typedef std::vector<int> tempIntContainer;
 typedef const std::vector<int> &intContainer;
@@ -173,8 +173,8 @@ struct ClassicTableInfo {
 
 
 // WORKING!!!!!!!!!!!!!!!!!!!
-  template<typename ExecutionSpace,typename MemorySpace ,class TYPE_1 , class TYPE_2  >
-  void getState(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, TYPE_1 &indep_storage,
+  template<typename ExecutionSpace,typename MemSpace ,class TYPE_1 , class TYPE_2  >
+  void getState(ExecutionObject<ExecutionSpace, MemSpace>& executionObject, TYPE_1 &indep_storage,
               TYPE_2 &dep_storage,
               const Patch* patch, const struct1DArray<int, max_dep_var>  depVar_indices=struct1DArray<int,max_dep_var>(0) ){
 
@@ -197,10 +197,10 @@ struct ClassicTableInfo {
       }
     }
      // TDMS - > template defined memoryspace
-      auto TDMS_d_allIndepVarNo=getInts<MemorySpace>();
-      auto TDMS_indep= getSecondaryVar<MemorySpace>();
-      auto TDMS_ind_1= getPrimaryVar<MemorySpace>();
-      auto TDMS_table2= getTable<MemorySpace>();
+      auto TDMS_d_allIndepVarNo=getInts<MemSpace>();
+      auto TDMS_indep= getSecondaryVar<MemSpace>();
+      auto TDMS_ind_1= getPrimaryVar<MemSpace>();
+      auto TDMS_table2= getTable<MemSpace>();
 
       const int nDim = TDMS_d_allIndepVarNo.size();   // Number of dimensions
       const int npts = std::exp2(nDim); // double to int (danerous?)?
@@ -218,9 +218,9 @@ struct ClassicTableInfo {
 
         struct1DArray<double,max_dep_var> var_values;
 
-        //find_val_wrapper<MemorySpace>(one_cell_iv1,depVarIndexes,depVarValues);
-        //find_val<MemorySpace>(one_cell_iv1,depVarIndexes,depVarValues, TDMS_table2, TDMS_d_allIndepVarNo, TDMS_indep, TDMS_ind_1);
-        //find_val_type_correct<MemorySpace>(one_cell_iv1,depVarIndexes,depVarValues, TDMS_table2, TDMS_d_allIndepVarNo, TDMS_indep, TDMS_ind_1);
+        //find_val_wrapper<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues);
+        //find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues, TDMS_table2, TDMS_d_allIndepVarNo, TDMS_indep, TDMS_ind_1);
+        //find_val_type_correct<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues, TDMS_table2, TDMS_d_allIndepVarNo, TDMS_indep, TDMS_ind_1);
         
        //COPY AND PASTE FIND_VAL DUE TO INTERNAL COMPILER ERROR?!!?!?  
      //////////////---------------------table constants ------------------------------//////
@@ -392,42 +392,42 @@ struct ClassicTableInfo {
 
 // DUE TO USING THE PORTABILITY API INCORRECTLY ( couldn't figure it out without c+= 14)
 #ifdef UINTAH_ENABLE_KOKKOS
-    template< typename MemorySpace, unsigned int numOfDep>
+    template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, void >::type
+    typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, void >::type
     find_val_type_correct( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues,
-   tableContainer<MemorySpace>  TDMS_table2,  
-   intContainer<MemorySpace>    TDMS_d_allIndepVarNo,
-   tableContainer<MemorySpace>  TDMS_indep,  
-   tableContainer<MemorySpace>  TDMS_ind_1 
+   tableContainer<MemSpace>  TDMS_table2,  
+   intContainer<MemSpace>    TDMS_d_allIndepVarNo,
+   tableContainer<MemSpace>  TDMS_indep,  
+   tableContainer<MemSpace>  TDMS_ind_1 
     ) const {
-       find_val<MemorySpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
+       find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
     }
 
 #if defined( HAVE_CUDA )
-    template< typename MemorySpace, unsigned int numOfDep>
+    template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION 
-    typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, void >::type
+    typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, void >::type
     find_val_type_correct( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues,
-   tableContainer<MemorySpace>  TDMS_table2,  
-   intContainer<MemorySpace>    TDMS_d_allIndepVarNo,
-   tableContainer<MemorySpace>  TDMS_indep,  
-   tableContainer<MemorySpace>  TDMS_ind_1 
+   tableContainer<MemSpace>  TDMS_table2,  
+   intContainer<MemSpace>    TDMS_d_allIndepVarNo,
+   tableContainer<MemSpace>  TDMS_indep,  
+   tableContainer<MemSpace>  TDMS_ind_1 
     ) const {
       //printf("GPU table reading is being done incorrectly by the Arches Developers; Use CPU for this application.\n");
-    find_val<MemorySpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
+    find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
     }
 #endif
 #endif
 
 
-    template< typename MemorySpace, unsigned int numOfDep>
+    template< typename MemSpace, unsigned int numOfDep>
 #ifdef UINTAH_ENABLE_KOKKOS
     KOKKOS_INLINE_FUNCTION 
 #else
    inline
 #endif
-    typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, void >::type
+    typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, void >::type
     find_val_type_correct( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues,
 #ifdef UINTAH_ENABLE_KOKKOS
    tableContainer<Kokkos::HostSpace>  TDMS_table2,  
@@ -450,32 +450,32 @@ struct ClassicTableInfo {
 
 
 #ifdef UINTAH_ENABLE_KOKKOS
-    template< typename MemorySpace, unsigned int numOfDep>
+    template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, void >::type
+    typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, void >::type
     find_val_wrapper( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues){
-       find_val<MemorySpace>(one_cell_iv1,depVarIndexes,depVarValues,table2,d_allIndepVarNo,indep,ind_1);
+       find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,table2,d_allIndepVarNo,indep,ind_1);
     }
 
 #if defined( HAVE_CUDA )
-    template< typename MemorySpace, unsigned int numOfDep>
+    template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION 
-    typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, void >::type
+    typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, void >::type
     find_val_wrapper( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues){
       //printf("GPU table reading is being done incorrectly by the Arches Developers; Use CPU for this application.\n");
-    find_val<MemorySpace>(one_cell_iv1,depVarIndexes,depVarValues,g_table2,g_d_allIndepVarNo,g_indep,g_ind_1);
+    find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,g_table2,g_d_allIndepVarNo,g_indep,g_ind_1);
     }
 #endif
 #endif
 
 
-    template< typename MemorySpace, unsigned int numOfDep>
+    template< typename MemSpace, unsigned int numOfDep>
 #ifdef UINTAH_ENABLE_KOKKOS
     KOKKOS_INLINE_FUNCTION 
 #else
    inline
 #endif
-    typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, void >::type
+    typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, void >::type
     find_val_wrapper( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues){
 #ifdef UINTAH_ENABLE_KOKKOS // We have to do this because we don't want to store the table in kokkos::hostSpace AND uintahSpaces::HostSpace
       find_val<Kokkos::HostSpace>(one_cell_iv1,depVarIndexes,depVarValues,table2,d_allIndepVarNo,indep,ind_1);
@@ -486,7 +486,7 @@ struct ClassicTableInfo {
 
     enum HighLow { iLow, iHigh};
 
-    template< typename MemorySpace, unsigned int numOfDep>
+    template< typename MemSpace, unsigned int numOfDep>
 #ifdef UINTAH_ENABLE_KOKKOS
     KOKKOS_INLINE_FUNCTION 
 #else
@@ -494,10 +494,10 @@ struct ClassicTableInfo {
 #endif
     void find_val( const struct1DArray<double,MAX_TABLE_DIMENSION>& iv, const struct1DArray<int,numOfDep>& var_index, struct1DArray<double,numOfDep>& var_values, 
 #ifdef UINTAH_ENABLE_KOKKOS
-   tableContainer<MemorySpace>  TDMS_table2,  
-   intContainer<MemorySpace>    TDMS_d_allIndepVarNo,
-   tableContainer<MemorySpace>  TDMS_indep,  
-   tableContainer<MemorySpace>  TDMS_ind_1 
+   tableContainer<MemSpace>  TDMS_table2,  
+   intContainer<MemSpace>    TDMS_d_allIndepVarNo,
+   tableContainer<MemSpace>  TDMS_indep,  
+   tableContainer<MemSpace>  TDMS_ind_1 
 #else
    tableContainer  TDMS_table2,  
    intContainer    TDMS_d_allIndepVarNo,
@@ -676,8 +676,8 @@ struct ClassicTableInfo {
 
 
 //I always thought these access functions were silly, but these actually does something; template meta progrimming
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, 
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
 #ifdef UINTAH_ENABLE_KOKKOS
 tableContainer<Kokkos::HostSpace>
 #else
@@ -689,8 +689,8 @@ tableContainer
   }
 
 
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, 
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
 #ifdef UINTAH_ENABLE_KOKKOS  
 intContainer<Kokkos::HostSpace>
 #else
@@ -703,8 +703,8 @@ intContainer
 
 
 
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, 
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
 #ifdef UINTAH_ENABLE_KOKKOS
 tableContainer<Kokkos::HostSpace>
 #else
@@ -715,8 +715,8 @@ tableContainer
     return indep;
   }
 
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, 
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
 #ifdef UINTAH_ENABLE_KOKKOS 
 tableContainer<Kokkos::HostSpace>
 #else
@@ -729,26 +729,26 @@ tableContainer
 
 
 #ifdef UINTAH_ENABLE_KOKKOS
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, tableContainer<Kokkos::HostSpace> >::type
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, tableContainer<Kokkos::HostSpace> >::type
   getPrimaryVar(){
     return ind_1;
   }
 
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, tableContainer<Kokkos::HostSpace> >::type
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, tableContainer<Kokkos::HostSpace> >::type
   getSecondaryVar(){
     return indep;
   }
 
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, intContainer<Kokkos::HostSpace> >::type
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, intContainer<Kokkos::HostSpace> >::type
   getInts(){
     return d_allIndepVarNo;
   }
 
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, tableContainer<Kokkos::HostSpace> >::type
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, tableContainer<Kokkos::HostSpace> >::type
   getTable(){
     return table2;
   }
@@ -756,26 +756,26 @@ typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, tab
 
 
 #if defined( HAVE_CUDA )
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
   getTable(){
     return g_table2;
   }
 
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, intContainer<Kokkos::CudaSpace> >::type
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, intContainer<Kokkos::CudaSpace> >::type
   getInts(){
     return g_d_allIndepVarNo;
   }
 
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
   getSecondaryVar(){
     return g_indep;
   }
 
-  template<typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
+  template<typename MemSpace>
+typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
   getPrimaryVar(){
     return g_ind_1;
   }

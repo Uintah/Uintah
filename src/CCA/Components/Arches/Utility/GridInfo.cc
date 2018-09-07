@@ -40,6 +40,7 @@ TaskAssignedExecutionSpace GridInfo::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &GridInfo::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &GridInfo::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &GridInfo::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
 
@@ -73,15 +74,15 @@ void GridInfo::register_initialize( std::vector<AFC::VariableInformation>& varia
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
-  CCVariable<double>& gridX = tsk_info->get_uintah_field_add<CCVariable<double> >( "gridX" );
-  CCVariable<double>& gridY = tsk_info->get_uintah_field_add<CCVariable<double> >( "gridY" );
-  CCVariable<double>& gridZ = tsk_info->get_uintah_field_add<CCVariable<double> >( "gridZ" );
-  CCVariable<double>& ucellX = tsk_info->get_uintah_field_add<CCVariable<double> >( "ucellX" );
-  CCVariable<double>& vcellY = tsk_info->get_uintah_field_add<CCVariable<double> >( "vcellY" );
-  CCVariable<double>& wcellZ = tsk_info->get_uintah_field_add<CCVariable<double> >( "wcellZ" );
+  auto gridX = tsk_info->get_uintah_field_add<CCVariable<double> , double, MemSpace>( "gridX" );
+  auto gridY = tsk_info->get_uintah_field_add<CCVariable<double> , double, MemSpace>( "gridY" );
+  auto gridZ = tsk_info->get_uintah_field_add<CCVariable<double> , double, MemSpace>( "gridZ" );
+  auto ucellX = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( "ucellX" );
+  auto vcellY = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( "vcellY" );
+  auto wcellZ = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( "wcellZ" );
 
   Vector Dx = patch->dCell();
   const double dx = Dx.x();
@@ -101,7 +102,7 @@ void GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
   const double lowz = domainBox.lower().z();
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
     gridX(i,j,k) = lowx + i * dx + dx2;
     gridY(i,j,k) = lowy + j * dy + dy2;
     gridZ(i,j,k) = lowz + k * dz + dz2;
@@ -136,22 +137,22 @@ GridInfo::register_timestep_init( std::vector<AFC::VariableInformation>& variabl
 template<typename ExecutionSpace, typename MemSpace> void
 GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
-  CCVariable<double>& gridX = tsk_info->get_uintah_field_add<CCVariable<double>>( "gridX" );
-  CCVariable<double>& gridY = tsk_info->get_uintah_field_add<CCVariable<double>>( "gridY" );
-  CCVariable<double>& gridZ = tsk_info->get_uintah_field_add<CCVariable<double>>( "gridZ" );
-  CCVariable<double>& ucellX = tsk_info->get_uintah_field_add<CCVariable<double>>( "ucellX" );
-  CCVariable<double>& vcellY = tsk_info->get_uintah_field_add<CCVariable<double>>( "vcellY" );
-  CCVariable<double>& wcellZ = tsk_info->get_uintah_field_add<CCVariable<double>>( "wcellZ" );
+  auto gridX = tsk_info->get_uintah_field_add<CCVariable<double> , double, MemSpace>( "gridX" );
+  auto gridY = tsk_info->get_uintah_field_add<CCVariable<double> , double, MemSpace>( "gridY" );
+  auto gridZ = tsk_info->get_uintah_field_add<CCVariable<double> , double, MemSpace>( "gridZ" );
+  auto ucellX = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( "ucellX" );
+  auto vcellY = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( "vcellY" );
+  auto wcellZ = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( "wcellZ" );
 
-  constCCVariable<double>& old_gridX = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "gridX" );
-  constCCVariable<double>& old_gridY = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "gridY" );
-  constCCVariable<double>& old_gridZ = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "gridZ" );
-  constCCVariable<double>& old_ucellX = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "ucellX" );
-  constCCVariable<double>& old_vcellY = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "vcellY" );
-  constCCVariable<double>& old_wcellZ = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "wcellZ" );
+  auto old_gridX = tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double, MemSpace>( "gridX" );
+  auto old_gridY = tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double, MemSpace>( "gridY" );
+  auto old_gridZ = tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double, MemSpace>( "gridZ" );
+  auto old_ucellX = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace>( "ucellX" );
+  auto old_vcellY = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace>( "vcellY" );
+  auto old_wcellZ = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace>( "wcellZ" );
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  Uintah::parallel_for(executionObject, range, KOKKOS_LAMBDA (int i, int j, int k){
     gridX(i,j,k) = old_gridX(i,j,k);
     gridY(i,j,k) = old_gridY(i,j,k);
     gridZ(i,j,k) = old_gridZ(i,j,k);

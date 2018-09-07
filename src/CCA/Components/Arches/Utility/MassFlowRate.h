@@ -40,8 +40,8 @@ namespace Uintah{
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+    template <typename ExecutionSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){};
 
@@ -49,13 +49,13 @@ namespace Uintah{
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+    template <typename ExecutionSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+    template <typename ExecutionSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
     class Builder : public TaskInterface::TaskBuilder {
 
@@ -109,8 +109,8 @@ namespace Uintah{
 
     void register_massFlowRate( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
 
-    template<typename ExecutionSpace, typename MemorySpace>
-    void eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info ,ExecutionObject<ExecutionSpace,MemorySpace>);
+    template<typename ExecutionSpace, typename MemSpace>
+    void eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info ,ExecutionObject<ExecutionSpace,MemSpace>);
 
   };
 

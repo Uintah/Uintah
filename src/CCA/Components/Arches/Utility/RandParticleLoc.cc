@@ -67,8 +67,8 @@ RandParticleLoc::register_initialize( std::vector<ArchesFieldContainer::Variable
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   typedef std::tuple<ParticleVariable<double>*, ParticleSubset*> PVarTuple;
 

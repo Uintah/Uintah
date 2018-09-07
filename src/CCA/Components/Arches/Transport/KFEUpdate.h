@@ -31,7 +31,7 @@
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <iomanip>
-
+#include <Core/Parallel/LoopExecution.hpp>
 #ifdef DO_TIMINGS
 #  include <spatialops/util/TimeLogger.h>
 #endif
@@ -80,6 +80,17 @@ public:
 
     };
 
+    template <typename ExecutionSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+
+    template <typename ExecutionSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
+
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
+
+    template <typename ExecutionSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+
 protected:
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool pack_tasks){}
@@ -90,16 +101,6 @@ protected:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
-
-    template <typename ExecutionSpace, typename MemorySpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
-
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
-
-    template <typename ExecutionSpace, typename MemorySpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
 private:
 
@@ -371,8 +372,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template<typename ExecutionSpace, typename MemorySpace>
-  void KFEUpdate<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void KFEUpdate<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
     const double dt = tsk_info->get_dt();
     Vector DX = patch->dCell();
@@ -385,14 +386,18 @@ private:
     int ceqn = 0;
     for ( SV::iterator ieqn = _eqn_names.begin(); ieqn != _eqn_names.end(); ieqn++){
 
-      T& phi = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]);
+      auto phi = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_transported_eqn_names[ceqn]);
       //T& rhs = tsk_info->get_uintah_field_add<T>(*ieqn+"_rhs");
-      T& rhs = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]+"_RHS");
-      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
+      auto rhs = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_transported_eqn_names[ceqn]+"_RHS");
+
+/////////////////////////// PORTABILITY FUNCTIONALITY MISSING//////////////////////////////
+      auto old_phi = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);  
+///////////////////////////////////////////////////////////////////////////////////////////
+
       ceqn +=1;
-      CFXT& x_flux = tsk_info->get_const_uintah_field_add<CFXT>(*ieqn+"_x_flux");
-      CFYT& y_flux = tsk_info->get_const_uintah_field_add<CFYT>(*ieqn+"_y_flux");
-      CFZT& z_flux = tsk_info->get_const_uintah_field_add<CFZT>(*ieqn+"_z_flux");
+      auto x_flux = tsk_info->get_const_uintah_field_add<CFXT, const double, MemSpace>(*ieqn+"_x_flux");
+      auto y_flux = tsk_info->get_const_uintah_field_add<CFYT, const double, MemSpace>(*ieqn+"_y_flux");
+      auto z_flux = tsk_info->get_const_uintah_field_add<CFZT, const double, MemSpace>(*ieqn+"_z_flux");
 
       Vector Dx = patch->dCell();
       double ax = Dx.y() * Dx.z();
@@ -406,64 +411,57 @@ private:
 
       if ( time_substep == 0 ){
 
-        auto fe_update = [&](int i, int j, int k){
-
-
+         BlockRange range;
+        if ( m_dir == ArchesCore::XDIR ){
+          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
+          range=Uintah::BlockRange(low_fx_patch_range, high_fx_patch_range);
+        } else if ( m_dir == ArchesCore::YDIR ){
+          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
+          range=Uintah::BlockRange(low_fy_patch_range, high_fy_patch_range);
+        } else if ( m_dir == ArchesCore::ZDIR ){
+          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
+          range=Uintah::BlockRange(low_fz_patch_range, high_fz_patch_range);
+        } else {
+          range=Uintah::BlockRange(patch->getCellLowIndex(), patch->getCellHighIndex());
+        }
+          Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
           rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                       az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
 
           phi(i,j,k) = phi(i,j,k) + dt/V * rhs(i,j,k);
-
-        };
-
-        if ( m_dir == ArchesCore::XDIR ){
-          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == ArchesCore::YDIR ){
-          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == ArchesCore::ZDIR ){
-          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else {
-          Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
-          Uintah::parallel_for( range, fe_update );
-        }
+        });
 
       } else {
 
-        auto fe_update = [&](int i, int j, int k){
 
+         BlockRange range2;
+        if ( m_dir == ArchesCore::XDIR ){
+          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
+          range2=Uintah::BlockRange(low_fx_patch_range, high_fx_patch_range);
+        } else if ( m_dir == ArchesCore::YDIR ){
+          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
+          range2=Uintah::BlockRange(low_fy_patch_range, high_fy_patch_range);
+        } else if ( m_dir == ArchesCore::ZDIR ){
+          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
+          range2=Uintah::BlockRange(low_fz_patch_range, high_fz_patch_range);
+        } else {
+          range2=Uintah::BlockRange(patch->getCellLowIndex(), patch->getCellHighIndex());
+        }
+          const double alpha=_alpha[time_substep];
+          const double beta=_beta[time_substep];
+
+          Uintah::parallel_for( range2, KOKKOS_LAMBDA (int i, int j, int k){
+         
           rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                       az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
 
           phi(i,j,k) = phi(i,j,k) + dt/V * rhs(i,j,k);
 
-          phi(i,j,k) = _alpha[time_substep] * old_phi(i,j,k) + _beta[time_substep] * phi(i,j,k);
+          phi(i,j,k) = alpha * old_phi(i,j,k) + beta * phi(i,j,k);
 
-        };
-
-        if ( m_dir == ArchesCore::XDIR ){
-          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == ArchesCore::YDIR ){
-          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == ArchesCore::ZDIR ){
-          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else {
-          Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
-          Uintah::parallel_for( range, fe_update );
-        }
+        });
       }
 
 #ifdef DO_TIMINGS
@@ -479,16 +477,16 @@ private:
       std::string varname = ieqn->first;
       Scaling_info info = ieqn->second;
       //const double scaling_constant = ieqn->second;
-      constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+      auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(m_volFraction_name);
 
-      T& phi = tsk_info->get_uintah_field_add<T>(varname);
-      T& phi_unscaled = tsk_info->get_uintah_field_add<T>(info.unscaled_var);
+      auto phi = tsk_info->get_uintah_field_add<T,double, MemSpace>(varname);
+      auto phi_unscaled = tsk_info->get_uintah_field_add<T,double,MemSpace>(info.unscaled_var);
 
-      Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+      Uintah::BlockRange range3( patch->getCellLowIndex(), patch->getCellHighIndex() );
+      const double ScalingConstant=info.constant  ;
+      Uintah::parallel_for( range3, KOKKOS_LAMBDA(int i, int j, int k){
 
-      Uintah::parallel_for( range, [&](int i, int j, int k){
-
-        phi_unscaled(i,j,k) = phi(i,j,k) * info.constant * vol_fraction(i,j,k);
+        phi_unscaled(i,j,k) = phi(i,j,k) * ScalingConstant* vol_fraction(i,j,k);
 
       });
     }
@@ -509,8 +507,8 @@ private:
   }
 //--------------------------------------------------------------------------------------------------
   template <typename T >
-  template<typename ExecutionSpace, typename MemorySpace>
-  void KFEUpdate<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void KFEUpdate<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   ArchesCore::VariableHelper<T> helper;
@@ -529,7 +527,7 @@ private:
       if ( on_this_patch ){
         Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
         
-            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
             phi_unscaled(i,j,k) = phi(i,j,k) * (ieqn->second).constant*vol_fraction(i,j,k) ;
           });
         }

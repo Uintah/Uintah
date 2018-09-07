@@ -102,8 +102,8 @@ OneDWallHT::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void OneDWallHT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void OneDWallHT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
 
   CCVariable<double>& Twall = *(tsk_info->get_uintah_field<CCVariable<double> >("Twall"));
@@ -145,8 +145,8 @@ OneDWallHT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void OneDWallHT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void OneDWallHT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& Twall = *(tsk_info->get_uintah_field<CCVariable<double> >( "Twall"));
   constCCVariable<double>& rad_q = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( _incident_hf_label ));

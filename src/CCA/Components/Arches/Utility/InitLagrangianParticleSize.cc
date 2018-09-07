@@ -103,8 +103,8 @@ InitLagrangianParticleSize::register_initialize( std::vector<ArchesFieldContaine
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   ParticleTuple dp_t = tsk_info->get_uintah_particle_field(_size_label);
   ParticleVariable<double>& dp = *(std::get<0>(dp_t));
@@ -149,7 +149,7 @@ InitLagrangianParticleSize::register_timestep_eval( std::vector<ArchesFieldConta
 }
 
 //This is the work for the task.  First, get the variables. Second, do the work!
-template<typename ExecutionSpace, typename MemorySpace>
-void InitLagrangianParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+template<typename ExecutionSpace, typename MemSpace>
+void InitLagrangianParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
 } //namespace Uintah

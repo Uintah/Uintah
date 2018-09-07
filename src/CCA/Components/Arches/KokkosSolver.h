@@ -102,21 +102,21 @@ namespace Uintah{
   /** @brief Schedule compute of a stable timestep **/
   void computeTimestep(const LevelP& level, SchedulerP& sched);
 
-  template <typename ExecutionSpace, typename MemorySpace>
+  template <typename ExecutionSpace, typename MemSpace>
   void computeStableTimeStep( const PatchSubset* patches,
                               const MaterialSubset* matls,
                               OnDemandDataWarehouse* old_dw,
                               OnDemandDataWarehouse* new_dw,
                               UintahParams& uintahParams,
-                              ExecutionObject<ExecutionSpace, MemorySpace>& executionObject);
+                              ExecutionObject<ExecutionSpace, MemSpace>& executionObject);
 
-  template <typename ExecutionSpace, typename MemorySpace>
+  template <typename ExecutionSpace, typename MemSpace>
   void setTimeStep( const PatchSubset* patches,
                     const MaterialSubset* matls,
                     OnDemandDataWarehouse* old_dw,
                     OnDemandDataWarehouse* new_dw,
                     UintahParams& uintahParams,
-                    ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+                    ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
   double recomputeDelT(const double delT) { return delT/2.0; };
 

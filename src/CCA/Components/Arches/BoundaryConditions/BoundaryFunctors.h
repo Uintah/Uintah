@@ -312,8 +312,8 @@ public:
              proper execution of the boundary condition. This may be a nullptr op. **/
   virtual void add_mod( std::vector<std::string>& master_mod ) = 0;
   /** @brief Actually evaluate the boundary condition **/
-    template <typename ExecutionSpace, typename MemorySpace>
-    void eval_bc( ExecutionObject<ExecutionSpace,MemorySpace> executionObject,
+    template <typename ExecutionSpace, typename MemSpace>
+    void eval_bc( ExecutionObject<ExecutionSpace,MemSpace> executionObject,
     std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
     const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter ) {
     if (BCFunctors<T>::Dirichlet*             child   = dynamic_cast<BCFunctors<T>::Dirichlet*           >(this)){

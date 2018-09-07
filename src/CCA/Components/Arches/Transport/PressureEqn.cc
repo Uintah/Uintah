@@ -26,7 +26,7 @@ TaskAssignedExecutionSpace PressureEqn::loadTaskComputeBCsFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &PressureEqn::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &PressureEqn::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &PressureEqn::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &PressureEqn::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -46,7 +46,7 @@ TaskAssignedExecutionSpace PressureEqn::loadTaskEvalFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &PressureEqn::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &PressureEqn::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &PressureEqn::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &PressureEqn::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -55,6 +55,7 @@ TaskAssignedExecutionSpace PressureEqn::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &PressureEqn::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &PressureEqn::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &PressureEqn::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
 
@@ -145,8 +146,8 @@ PressureEqn::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();
@@ -211,18 +212,21 @@ PressureEqn::register_timestep_init(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-PressureEqn::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+PressureEqn::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  CCVariable<Stencil7>& Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
-  constCCVariable<Stencil7>& old_Apress = tsk_info->get_const_uintah_field_add<constCCVariable<Stencil7> >("A_press");
-  CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
-  CCVariable<double>& x = tsk_info->get_uintah_field_add<CCVariable<double> >(m_pressure_name);
-  CCVariable<double>& guess = tsk_info->get_uintah_field_add<CCVariable<double> >("guess_press");
+ auto  Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace >("A_press");
+ auto  old_Apress = tsk_info->get_const_uintah_field_add<constCCVariable<Stencil7>, const Stencil7, MemSpace >("A_press");
+ auto  b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >("b_press");
+ auto  x = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_pressure_name);
+ auto  guess = tsk_info->get_uintah_field_add<CCVariable<double>,double,MemSpace >("guess_press");
 
-  b.initialize(0.0);
-  x.initialize(0.0);
-  guess.initialize(0.0);
-  Apress.copyData( old_Apress );
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+ parallel_for(exObj,range, KOKKOS_LAMBDA (int i, int j, int k){
+  b(i,j,k)=0.0;
+  x(i,j,k)=0.0;
+  guess(i,j,k)=0.0;
+  Apress(i,j,k)=old_Apress(i,j,k);
+});
 
 }
 
@@ -243,8 +247,8 @@ PressureEqn::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();
@@ -252,17 +256,17 @@ void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
   const double area_TB = DX.x()*DX.y();
   const double V       = DX.x()*DX.y()*DX.z();
 
-  CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
-  constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
-  constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
-  constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
-  constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
-  constCCVariable<double>& drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_drhodt_name);
+  auto b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >("b_press");
+  auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_eps_name);
+  auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>,const double, MemSpace >("x-mom");
+  auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >("y-mom");
+  auto zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace  >("z-mom");
+  auto drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace  >(m_drhodt_name);
 
   const double dt = tsk_info->get_dt();
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA(int i, int j, int k){
 
     b(i,j,k) = ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
                  area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) ) +
@@ -286,13 +290,13 @@ PressureEqn::register_compute_bcs(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
   //This only applies BCs to A. Boundary conditions to the RHS are handled upstream in RhoUHatBC
-  CCVariable<Stencil7>& A = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
-  CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
-  constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
+  auto A = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace >("A_press");
+  auto b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >("b_press");
+  auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_eps_name);
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -316,7 +320,7 @@ void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_in
       sign = 1.0;
     }
 
-    parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+    parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA(const int i,const int j,const int k) {
 
       const int im=i- iDir[0];
       const int jm=j- iDir[1];
@@ -328,56 +332,53 @@ void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_in
     });
   }
 
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+  parallel_for(exObj,range, KOKKOS_LAMBDA (const int i, const int j, const int k){ 
   //Now take care of intrusions:
-  for (CellIterator iter=patch->getCellIterator();
-    !iter.done(); iter++) {
+    A(i,j,k).e *= eps(i,j,k);
+    A(i,j,k).w *= eps(i,j,k);
+    A(i,j,k).n *= eps(i,j,k);
+    A(i,j,k).s *= eps(i,j,k);
+    A(i,j,k).t *= eps(i,j,k);
+    A(i,j,k).b *= eps(i,j,k);
 
-    IntVector c = *iter;
-
-    A[c].e *= eps[c];
-    A[c].w *= eps[c];
-    A[c].n *= eps[c];
-    A[c].s *= eps[c];
-    A[c].t *= eps[c];
-    A[c].b *= eps[c];
-
-    if ( eps[c] < 1.e-10 ){
-      A[c].p = 1.;
-      b[c] = 0.0;
+    if ( eps(i,j,k) < 1.e-10 ){
+      A(i,j,k).p = 1.;
+      b(i,j,k) = 0.0;
     }
 
     //east:
-    if ( eps[c + IntVector(1,0,0)] < 1.e-10 ){
-      A[c].p += A[c].e;
-      A[c].e = 0.0;
+    if ( eps(i+1,j,k) < 1.e-10 ){
+      A(i,j,k).p += A(i,j,k).e;
+      A(i,j,k).e = 0.0;
     }
     //west:
-    if ( eps[c - IntVector(1,0,0)] < 1.e-10 ){
-      A[c].p += A[c].w;
-      A[c].w = 0.0;
+    if ( eps(i-1,j,k) < 1.e-10 ){
+      A(i,j,k).p += A(i,j,k).w;
+      A(i,j,k).w = 0.0;
     }
     //north:
-    if ( eps[c + IntVector(0,1,0)] < 1.e-10 ){
-      A[c].p += A[c].n;
-      A[c].n = 0.0;
+    if ( eps(i,j+1,k)< 1.e-10 ){
+      A(i,j,k).p += A(i,j,k).n;
+      A(i,j,k).n = 0.0;
     }
     //south:
-    if ( eps[c - IntVector(0,1,0)] < 1.e-10 ){
-      A[c].p += A[c].s;
-      A[c].s = 0.0;
+    if ( eps(i,j-1,k) < 1.e-10 ){
+      A(i,j,k).p += A(i,j,k).s;
+      A(i,j,k).s = 0.0;
     }
     //top:
-    if ( eps[c + IntVector(0,0,1)] < 1.e-10 ){
-      A[c].p += A[c].t;
-      A[c].t = 0.0;
+    if ( eps(i,j,k+1) < 1.e-10 ){
+      A(i,j,k).p += A(i,j,k).t;
+      A(i,j,k).t = 0.0;
     }
     //bottom:
-    if ( eps[c - IntVector(0,0,1)] < 1.e-10 ){
-      A[c].p += A[c].b;
-      A[c].b = 0.0;
+    if ( eps(i,j,k-1) < 1.e-10 ){
+      A(i,j,k).p += A(i,j,k).b;
+      A(i,j,k).b = 0.0;
     }
 
-  }
+  });
 }
 
 void

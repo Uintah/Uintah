@@ -39,18 +39,44 @@ public:
 
     void register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+    template <typename ExecutionSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+    template <typename ExecutionSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
     template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+    template <typename ExecutionSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
-    void VelocityDerivative_central(double&, double&, double&, const Array3<double>&, const Vector&, int, int, int);
+
+   template< typename grid_CT>
+   struct VelocityDerivative_central{
+     VelocityDerivative_central( grid_CT &_u, const Vector& _Dx) : u(_u),Dx(_Dx){}
+       inline void operator()(double& dudx,double& dudy,double& dudz,int i, int j, int k)  const {
+         {
+           STENCIL3_1D(0);
+           dudx = (u(IJK_) - u(IJK_M_))/Dx.x();
+         }
+         {
+           STENCIL3_1D(1);
+           dudy = (u(IJK_) - u(IJK_M_))/Dx.y();
+         }
+         {
+           STENCIL3_1D(2);
+           dudz = (u(IJK_) - u(IJK_M_))/Dx.z();
+         }
+       };
+       const grid_CT& u;
+       const Vector  Dx;
+     };
+    
+     template< typename grid_CT> VelocityDerivative_central<grid_CT>
+     functorCreationWrapper( grid_CT &_u, const Vector& _Dx) {
+        return  VelocityDerivative_central<grid_CT>(_u,_Dx);
+     } // WE have to do this because of CCVariables
+
     //Build instructions for this class.
     class Builder : public TaskInterface::TaskBuilder {
 

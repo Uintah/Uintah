@@ -74,8 +74,8 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   SFCXVariable<double>* xmom = tsk_info->get_uintah_field<SFCXVariable<double> >( m_xmom );
   SFCYVariable<double>* ymom = tsk_info->get_uintah_field<SFCYVariable<double> >( m_ymom );
@@ -117,7 +117,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
 
     if ( my_type == OUTLET || my_type == PRESSURE ){
       // This applies the mostly in (pressure)/mostly out (outlet) boundary condition
-      parallel_for_unstructured(executionObject, cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+      parallel_for_unstructured(executionObject, cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
         int i_f = i + move_to_face[0]; // cell on the face
         int j_f = j + move_to_face[1];
         int k_f = k + move_to_face[2];

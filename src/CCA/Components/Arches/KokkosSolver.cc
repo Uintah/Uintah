@@ -302,14 +302,14 @@ KokkosSolver::computeTimestep( const LevelP     & level
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecutionSpace, typename MemorySpace>
+template <typename ExecutionSpace, typename MemSpace>
 void
 KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     OnDemandDataWarehouse* old_dw,
                                     OnDemandDataWarehouse* new_dw,
                                     UintahParams& uintahParams,
-                                    ExecutionObject<ExecutionSpace, MemorySpace>& executionObject)
+                                    ExecutionObject<ExecutionSpace, MemSpace>& executionObject)
 {
 
   const Level* level = getLevel(patches);
@@ -365,14 +365,14 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecutionSpace, typename MemorySpace>
+template <typename ExecutionSpace, typename MemSpace>
 void
 KokkosSolver::setTimeStep(const PatchSubset* patches,
                           const MaterialSubset* matls,
                           OnDemandDataWarehouse* old_dw,
                           OnDemandDataWarehouse* new_dw,
                           UintahParams& uintahParams,
-                          ExecutionObject<ExecutionSpace, MemorySpace>& executionObject)
+                          ExecutionObject<ExecutionSpace, MemSpace>& executionObject)
 {
   const Level* level = getLevel(patches);
   for (int p = 0; p < patches->size(); p++) {

@@ -276,11 +276,15 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
   const std::string type_string = TaskInterface::get_task_type_string(type);
   cout_archestaskdebug << " Scheduling the following task group with mode: "<< type_string << std::endl;
-  bool archesTasksMixMemorySpaces = false;
+  bool archesTasksMixMemSpaces = false;
   TaskAssignedExecutionSpace assignedExecutionSpace{};
 
-  for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
+  std::vector<std::string> taskNames(arches_tasks.size());
 
+  int icount=0;
+  for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
+    taskNames[icount]=(*i_task)->get_task_name();
+    icount++;
     cout_archestaskdebug << "   Task: " << (*i_task)->get_task_name() << std::endl;
 
     TaskAssignedExecutionSpace temp{};
@@ -319,7 +323,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     }
 
     if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE && assignedExecutionSpace != temp) {
-      archesTasksMixMemorySpaces = true;
+      archesTasksMixMemSpaces = true;
     } else {
       assignedExecutionSpace = temp;
     }
@@ -377,8 +381,11 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       delete tsk;
       tsk = nullptr;
     } else {
-      if (archesTasksMixMemorySpaces) {
+      if (archesTasksMixMemSpaces) {
         std::cout << std::endl << " WARNING Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space." << std::endl << std::endl;
+        for (int i=0; i<taskNames.size(); i++){
+            std::cout <<taskNames[i] << " \n";
+         } 
         throw InvalidValue("Error: Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space.",__FILE__,__LINE__);
       }
     }
@@ -411,13 +418,13 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecutionSpace, typename MemorySpace>
+template <typename ExecutionSpace, typename MemSpace>
 void TaskFactoryBase::do_task ( const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 OnDemandDataWarehouse* old_dw,
                                 OnDemandDataWarehouse* new_dw,
                                 UintahParams& uintahParams,
-                                ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                                ExecutionObject<ExecutionSpace, MemSpace>& executionObject,
                                 std::vector<ArchesFieldContainer::VariableInformation> variable_registry,
                                 std::vector<TaskInterface*> arches_tasks,
                                 TaskInterface::TASK_TYPE type,
@@ -454,10 +461,9 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
     tsk_info_mngr->set_field_container( field_container );
 
     for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
-
       switch( type ){
         case (TaskInterface::INITIALIZE):
-          (*i_task)->initialize<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, executionObject );
+          (*i_task)->initialize<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, executionObject );
           break;
         case (TaskInterface::RESTART_INITIALIZE):
           (*i_task)->restart_initialize( patch, tsk_info_mngr, executionObject  );
@@ -467,13 +473,13 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
           time_substep = 0;
           break;
         case (TaskInterface::TIMESTEP_EVAL):
-          (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, executionObject );
+          (*i_task)->eval<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, executionObject );
           break;
         case (TaskInterface::BC):
-          (*i_task)->compute_bcs<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, executionObject );
+          (*i_task)->compute_bcs<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, executionObject );
           break;
         case (TaskInterface::ATOMIC):
-          (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, executionObject );
+          (*i_task)->eval<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, executionObject );
           break;
         default:
           throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);

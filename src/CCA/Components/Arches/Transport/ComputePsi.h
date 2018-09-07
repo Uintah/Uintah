@@ -93,16 +93,16 @@ protected:
 
     void register_compute_bcs( AVarInfo& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+    template <typename ExecutionSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+    template <typename ExecutionSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
     template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
 
-    template <typename ExecutionSpace, typename MemorySpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
+    template <typename ExecutionSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
 private:
 
@@ -140,7 +140,6 @@ private:
         int buffer = 0;
         if ( tsk_info->packed_tasks() ) buffer = 1;
 
-        GetPsi get_psi( phi, psi, vel, eps, dir );
 
         IntVector low_patch_range(0,0,0), high_patch_range(0,0,0);
         IntVector lbuffer(0,0,0), hbuffer(0,0,0);
@@ -158,20 +157,20 @@ private:
         Uintah::BlockRange range(low_patch_range, high_patch_range);
 
         if ( lim_type == UPWIND ){
-          UpwindStruct up;
-          Uintah::parallel_for(range, get_psi, up);
+          GetPsi<Array3<double>, UpwindConvection > get_psi( phi, psi, vel, eps, dir );
+          Uintah::parallel_for(range, get_psi);
         } else if ( lim_type == CENTRAL ){
-          CentralStruct central;
-          Uintah::parallel_for(range, get_psi, central);
+          GetPsi<Array3<double>, CentralConvection > get_psi( phi, psi, vel, eps, dir );
+          Uintah::parallel_for(range, get_psi);
         } else if ( lim_type == SUPERBEE ){
-          SuperBeeStruct superbee;
-          Uintah::parallel_for(range, get_psi, superbee);
+          GetPsi<Array3<double>, SuperBeeConvection > get_psi( phi, psi, vel, eps, dir );
+          Uintah::parallel_for(range, get_psi);
         } else if ( lim_type == ROE ){
-          RoeStruct roe;
-          Uintah::parallel_for(range, get_psi, roe);
+          GetPsi<Array3<double>, RoeConvection >   get_psi( phi, psi, vel, eps, dir );
+          Uintah::parallel_for(range, get_psi);
         } else if ( lim_type == VANLEER ){
-          VanLeerStruct vl;
-          Uintah::parallel_for(range, get_psi, vl);
+          GetPsi<Array3<double>, VanLeerConvection> get_psi( phi, psi, vel, eps, dir );
+          Uintah::parallel_for(range, get_psi);
         } else {
 
         }
@@ -284,8 +283,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template<typename ExecutionSpace, typename MemorySpace>
-  void ComputePsi<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void ComputePsi<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
@@ -328,8 +327,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template<typename ExecutionSpace, typename MemorySpace>
-  void ComputePsi<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void ComputePsi<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
     CT& eps = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
 

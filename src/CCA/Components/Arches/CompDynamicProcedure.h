@@ -137,9 +137,10 @@ private:
   bool d_3d_periodic;
 
   const VarLabel* d_denRefArrayLabel;
-
-  void apply_zero_neumann( const Patch* patch, CCVariable<double>& var,
-                           CCVariable<double>& var2, constCCVariable<double> vol_fraction ){
+  
+  template< typename grid_T, typename grid_CT>
+  void apply_zero_neumann(  const Patch* patch, grid_T& var,
+                           grid_T& var2, grid_CT vol_fraction ){
 
     std::vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);

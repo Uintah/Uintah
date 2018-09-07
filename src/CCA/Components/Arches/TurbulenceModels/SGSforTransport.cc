@@ -117,8 +117,8 @@ TaskAssignedExecutionSpace SGSforTransport::loadTaskRestartInitFunctionPointers(
     }
 
   //--------------------------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemorySpace>
-  void SGSforTransport::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void SGSforTransport::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
       SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
       SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
       SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
@@ -164,8 +164,8 @@ template<typename ExecutionSpace, typename MemSpace>
     }
 
   //--------------------------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemorySpace>
-  void SGSforTransport::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void SGSforTransport::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
       Vector Dx=patch->dCell();
       //  double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();
       // double vol = Dx.x()*Dx.y()*Dx.z();

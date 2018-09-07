@@ -89,8 +89,8 @@ SampleTask::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   //CCVariable<double>& field  = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_sample_field" ));
   //CCVariable<double>& result = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_result_field" ));
@@ -148,8 +148,8 @@ SampleTask::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 //This is the work for the task.  First, get the variables. Second, do the work!
-template<typename ExecutionSpace, typename MemorySpace>
-void SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& field   = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_sample_field" );
   CCVariable<double>& result  = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_result_field" );

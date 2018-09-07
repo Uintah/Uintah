@@ -110,8 +110,8 @@ void ColdFlowProperties::register_initialize( VIVec& variable_registry , const b
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
@@ -173,8 +173,8 @@ void ColdFlowProperties::register_timestep_eval( VIVec& variable_registry, const
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   get_properties( patch, tsk_info );
 
@@ -191,8 +191,8 @@ void ColdFlowProperties::register_compute_bcs( VIVec& variable_registry, const i
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   constCCVariable<double> f = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_mixfrac_label );
 
@@ -210,7 +210,7 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
       CCVariable<double>& prop = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
       const SpeciesInfo info = i->second;
 
-      parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemorySpace>(),cell_iter.size(), [&] (int i,int j,int k) {
+      parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (int i,int j,int k) {
 
         int ip = i-iDir[0];
         int jp = j-iDir[1];

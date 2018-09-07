@@ -137,8 +137,8 @@ DSFT::register_initialize( std::vector<ArchesFieldContainer::VariableInformation
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void DSFT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void DSFT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho");
   SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrhou");
@@ -219,8 +219,8 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
   constSFCXVariable<double>& uVel = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(m_u_vel_name));
   constSFCYVariable<double>& vVel = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(m_v_vel_name));
@@ -304,12 +304,12 @@ void DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
   });
 
   ArchesCore::BCFilter bcfilter;
-  bcfilter.apply_zero_neumann(patch,Beta11,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,Beta22,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,Beta33,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,Beta12,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,Beta13,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,Beta23,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,Beta11,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,Beta22,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,Beta33,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,Beta12,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,Beta13,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,Beta23,vol_fraction);
   // Filter rho
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho", nGhosts2);
   filterRho.initialize(0.0);
@@ -399,15 +399,15 @@ void DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
     rhoV(i,j,k) = rho(i,j,k)*CCvVel(i,j,k);
     rhoW(i,j,k) = rho(i,j,k)*CCwVel(i,j,k);
   });
-  bcfilter.apply_zero_neumann(patch,rhoUU,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoVV,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoWW,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoUV,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoUW,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoVW,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoV,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoU,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoW,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,rhoUU,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,rhoVV,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,rhoWW,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,rhoUV,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,rhoUW,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,rhoVW,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,rhoV,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,rhoU,vol_fraction);
+  bcfilter.apply_zero_neumann(exObj,patch,rhoW,vol_fraction);
 }
 
 } //namespace Uintah

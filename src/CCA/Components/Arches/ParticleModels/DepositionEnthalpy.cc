@@ -127,8 +127,8 @@ DepositionEnthalpy::register_initialize( std::vector<ArchesFieldContainer::Varia
   register_variable( _ash_enthalpy_src, ArchesFieldContainer::COMPUTES, variable_registry );
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
   CCVariable<double>& ash_enthalpy_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_enthalpy_src);
@@ -169,8 +169,8 @@ DepositionEnthalpy::register_timestep_eval(
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   const int FLOW = -1;
   Vector Dx = patch->dCell(); // cell spacing

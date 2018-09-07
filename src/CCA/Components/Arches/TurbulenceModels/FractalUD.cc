@@ -199,8 +199,8 @@ TaskAssignedExecutionSpace FractalUD::loadTaskRestartInitFunctionPointers()
     }
 
   //---------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemorySpace>
-  void FractalUD::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void FractalUD::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
       // CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
       //mu_sgc.initialize(0.0);
@@ -295,8 +295,8 @@ template<typename ExecutionSpace, typename MemSpace>
     }
 
   //---------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemorySpace>
-  void FractalUD::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  template<typename ExecutionSpace, typename MemSpace>
+  void FractalUD::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
       constSFCXVariable<double>& uFaceX =tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(Ux_face_name);
       constSFCXVariable<double>& uFaceY =tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(Uy_face_name);

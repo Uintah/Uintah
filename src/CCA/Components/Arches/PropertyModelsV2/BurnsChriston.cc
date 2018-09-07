@@ -94,8 +94,8 @@ BurnsChriston::register_initialize( VIVec& variable_registry , const bool pack_t
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void BurnsChriston::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void BurnsChriston::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){
@@ -152,8 +152,8 @@ void BurnsChriston::register_restart_initialize( VIVec& variable_registry , cons
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void BurnsChriston::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void BurnsChriston::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){

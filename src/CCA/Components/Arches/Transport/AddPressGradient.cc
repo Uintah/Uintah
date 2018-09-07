@@ -79,8 +79,8 @@ void AddPressGradient::register_timestep_eval( std::vector<AFC::VariableInformat
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   const double dt = tsk_info->get_dt();
   Vector DX = patch->dCell();

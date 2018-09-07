@@ -111,8 +111,8 @@ GravityA::register_initialize( std::vector<ArchesFieldContainer::VariableInforma
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   constCCVariable<double>& density  = tsk_info->get_const_uintah_field_add<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -179,8 +179,8 @@ GravityA::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfo
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemorySpace>
-void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+template<typename ExecutionSpace, typename MemSpace>
+void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   constCCVariable<double>& density  = tsk_info->get_const_uintah_field_add<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );

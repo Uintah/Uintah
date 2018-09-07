@@ -84,8 +84,8 @@ BoundaryInfo::register_initialize( VarInfoVecT& variable_registry , const bool p
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+template<typename ExecutionSpace, typename MemSpace>
+void BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
 //
 //------------------------------------------------
@@ -119,5 +119,5 @@ BoundaryInfo::register_timestep_eval( VarInfoVecT& variable_registry,
 
 }
 
-template<typename ExecutionSpace, typename MemorySpace>
-void BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
+template<typename ExecutionSpace, typename MemSpace>
+void BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
