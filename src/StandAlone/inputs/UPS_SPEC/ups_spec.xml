@@ -194,7 +194,7 @@
 
     <plane_shell              spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
-      <center                    spec="REQUIRED VECTOR" />
+      <center                 spec="REQUIRED VECTOR" />
       <normal                 spec="REQUIRED VECTOR" />
       <radius                 spec="REQUIRED DOUBLE 'positive'" />
       <thickness              spec="REQUIRED DOUBLE 'positive'" />
@@ -437,18 +437,53 @@
 
                                                                                 
   <Time                      spec="REQUIRED NO_DATA">
-    <maxTime                 spec="REQUIRED DOUBLE  'positive'" />
-    <max_Timesteps           spec="OPTIONAL INTEGER 'positive'" />
-    <end_at_max_time_exactly spec="OPTIONAL BOOLEAN" />
+    <!-- Initial simulation time -->
     <initTime                spec="REQUIRED DOUBLE  'positive'" />
-    <delt_min                spec="REQUIRED DOUBLE  'positive'" />
-    <delt_max                spec="REQUIRED DOUBLE  'positive'" />
-    <delt_init               spec="OPTIONAL DOUBLE  'positive'" />
-    <max_delt_increase       spec="OPTIONAL DOUBLE  'positive'" />
-    <initial_delt_range      spec="OPTIONAL DOUBLE  'positive'" />
+    <!-- Maximum simulation time -->
+    <maxTime                 spec="REQUIRED DOUBLE  'positive'" />
+    <!-- End the simulation at exactly the maximum simulation time -->
+    <end_at_max_time_exactly spec="OPTIONAL BOOLEAN" />
+
+    <!-- Clamp the simulation time to match the output / checkpoint time -->
+    <clamp_time_to_output spec="OPTIONAL BOOLEAN" />
+
+    <!-- When restarting use this delta T value -->
     <override_restart_delt   spec="OPTIONAL DOUBLE  'positive'" />
+
+    <!-- Multiply the next delta T value by this value -->
     <timestep_multiplier     spec="REQUIRED DOUBLE  'positive'" />
+
+    <!-- The maximum delta T can increase as a percent over the previous value,
+	 optionally one can output or checkpoint if the value is exceeded -->
+    <max_delt_increase       spec="OPTIONAL DOUBLE  'positive'"
+                             attribute1="    output OPTIONAL STRING 'false, true'"
+                             attribute2="checkpoint OPTIONAL STRING 'false, true'" />
+    <!-- The maximum delta T for the initial simulation time until
+	 initial_delt_range is reached.
+	 optionally one can output or checkpoint if the value is exceeded -->
+    <delt_init               spec="OPTIONAL DOUBLE  'positive'"
+                             attribute1="    output OPTIONAL STRING 'false, true'"
+                             attribute2="checkpoint OPTIONAL STRING 'false, true'" />
+    <!-- The maximum simulation time which to enforce the delt_init -->
+    <initial_delt_range      spec="OPTIONAL DOUBLE  'positive'" />
+
+    <!-- The minimum delta T value,
+	 optionally one can output or checkpoint if the value is exceeded -->
+    <delt_min                spec="REQUIRED DOUBLE  'positive'"
+                             attribute1="    output OPTIONAL STRING 'false, true'"
+                             attribute2="checkpoint OPTIONAL STRING 'false, true'" />
+    <!-- The maximum delta T value,
+	 optionally one can output or checkpoint if the value is exceeded -->
+    <delt_max                spec="REQUIRED DOUBLE  'positive'"
+                             attribute1="    output OPTIONAL STRING 'false, true'"
+                             attribute2="checkpoint OPTIONAL STRING 'false, true'" />
+
+    <!-- Maximum number of time steps -->
+    <max_Timesteps           spec="OPTIONAL INTEGER 'positive'" />
+
+    <!-- Maximum wall time -->
     <max_wall_time           spec="OPTIONAL DOUBLE  'positive'" />
+
   </Time>
 
   <!--______________________________________________________________________-->
