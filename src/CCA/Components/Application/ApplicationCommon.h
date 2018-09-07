@@ -315,14 +315,14 @@ WARNING
     virtual void   setSimTimeMax( double val ) { m_simTimeMax = val; }
     virtual double getSimTimeMax() const { return m_simTimeMax; }
 
+    virtual void   setSimTimeClampToOutput( bool val ) { m_simTimeClampToOutput = val; }
+    virtual bool   getSimTimeClampToOutput() const { return m_simTimeClampToOutput; }
+
     virtual void   setTimeStepsMax( int val ) { m_timeStepsMax = val; }
     virtual int    getTimeStepsMax() const { return m_timeStepsMax; }
 
     virtual void   setWallTimeMax( double val ) { m_wallTimeMax = val; }
     virtual double getWallTimeMax() const { return m_wallTimeMax; }
-
-    virtual void   setClampTimeToOutput( bool val ) { m_clampTimeToOutput = val; }
-    virtual bool   getClampTimeToOutput() const { return m_clampTimeToOutput; }
 
     virtual void     outputIfInvalidNextDelT( unsigned int flag );
     virtual void checkpointIfInvalidNextDelT( unsigned int flag );
@@ -385,10 +385,11 @@ WARNING
     
     enum VALIDATE
     {
-      DELTA_T_INITIAL_MAX      = 0x0001,
-      DELTA_T_MAX_INCREASE     = 0x0002,
+      DELTA_T_MAX_INCREASE     = 0x0001,
+      DELTA_T_INITIAL_MAX      = 0x0002,
       DELTA_T_MIN              = 0x0004,
       DELTA_T_MAX              = 0x0008,
+
       CLAMP_TIME_TO_OUTPUT     = 0x0010,
       CLAMP_TIME_TO_CHECKPOINT = 0x0020,
       CLAMP_TIME_TO_MAX        = 0x0040
@@ -432,16 +433,16 @@ WARNING
     double m_simTimeStart{0.0};      // Starting sim time    
     double m_simTimeMax{0};          // Maximum simulation time
     bool   m_simTimeEndAtMax{false}; // End the simulation at exactly this sim time.
+    bool   m_simTimeClampToOutput{false}; // Clamp the simulation time to the next output or checkpoint
+
 
     int    m_timeStep{0};            // Current time step
     int    m_timeStepsMax{0};        // Maximum number of time steps to run.  
 
     double m_wallTimeMax{0};         // Maximum wall time.
   
-    bool m_clampTimeToOutput{false}; // Clamp the time to the next output or checkpoint
-
-    unsigned int     outputIfInvalidNextDelTFlag{0};
-    unsigned int checkpointIfInvalidNextDelTFlag{0};
+    unsigned int     m_outputIfInvalidNextDelTFlag{0};
+    unsigned int m_checkpointIfInvalidNextDelTFlag{0};
 
   protected:
     

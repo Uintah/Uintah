@@ -62,8 +62,8 @@ void visit_SetTimeValues( visit_simulation_data *sim )
   VisItUI_setValueD("SimTime",          sim->time, 0);
   VisItUI_setValueD("SimTimeMax",       appInterface->getSimTimeMax(), 1);
 
-  VisItUI_setValueI("SimTimeEndAtMax",   appInterface->getSimTimeEndAtMax(), 1);
-  VisItUI_setValueI("ClampTimeToOutput", appInterface->getClampTimeToOutput(), 1);
+  VisItUI_setValueI("SimTimeEndAtMax",      appInterface->getSimTimeEndAtMax(), 1);
+  VisItUI_setValueI("SimTimeClampToOutput", appInterface->getSimTimeClampToOutput(), 1);
 
   VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);
   VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);

@@ -310,15 +310,15 @@ WARNING
     virtual void   setSimTimeMax( double val ) = 0;
     virtual double getSimTimeMax() const = 0;
 
+    virtual void   setSimTimeClampToOutput( bool val ) = 0;
+    virtual bool   getSimTimeClampToOutput() const = 0;
+    
     virtual void   setTimeStepsMax( int val ) = 0;
     virtual int    getTimeStepsMax() const = 0;
 
     virtual void   setWallTimeMax( double val ) = 0;
     virtual double getWallTimeMax() const = 0;
 
-    virtual void   setClampTimeToOutput( bool val ) = 0;
-    virtual bool   getClampTimeToOutput() const = 0;
-    
     virtual void     outputIfInvalidNextDelT( unsigned int flag ) = 0;
     virtual void checkpointIfInvalidNextDelT( unsigned int flag ) = 0;
     
