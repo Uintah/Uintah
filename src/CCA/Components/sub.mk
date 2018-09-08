@@ -66,6 +66,11 @@ ifeq ($(BUILD_MPM),yes)
   MPM := $(SRCDIR)/MPM
 endif
 
+# DOUBLEMPM
+ifeq ($(BUILD_DOUBLEMPM),yes)
+  DOUBLEMPM := $(SRCDIR)/DOUBLEMPM
+endif
+
 # MPM-Arches
 ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
   MPMARCHES := $(SRCDIR)/MPMArches
@@ -98,6 +103,7 @@ SUBDIRS := \
         $(HEAT)                        \
         $(ICE)                         \
         $(MPM)                         \
+	$(DOUBLEMPM)                   \
         $(MPMARCHES)                   \
         $(MPMFVM)                      \
         $(MPMICE)                      \

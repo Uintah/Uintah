@@ -135,6 +135,11 @@ ifeq ($(BUILD_MPM),yes)
 #       $(MPM_DIR)/Crack
 endif
 
+# Double MPM
+ifeq ($(BUILD_DOUBLEMPM),yes)
+  DOUBLEMPM_LIB = $(COMPONENTS)/DOUBLEMPM
+endif
+
 # MPM-Arches
 ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
   MPMARCHES_LIB = $(COMPONENTS)/MPMArches
@@ -213,6 +218,7 @@ ALL_PSE_LIBS =                              \
         $(ICE_LIB)                          \
         $(ICE_SUB_LIBS)                     \
         $(MPM_LIB)                          \
+	$(DOUBLEMPM_LIB)                    \
         $(MPM_SUB_LIBS)                     \
         $(MPMARCHES_LIB)                    \
         $(MPMFVM_LIB)                       \

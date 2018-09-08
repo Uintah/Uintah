@@ -54,6 +54,7 @@ PSELIBS := \
         $(HEAT)                            \
         $(ICE)                             \
         $(MPM)                             \
+	$(DOUBLEMPM)                       \
         $(MPMARCHES)                       \
         $(MPMFVM)                          \
         $(MPMICE)                          \

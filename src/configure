@@ -34,23 +34,7 @@
 # ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # ## IN THE SOFTWARE.
 # ##
-
-##
-## IMPORTANT!!!  Configure developers, PLEASE READ:
-##
-## The following BULLET PROOFING needs to be placed manually into
-## configure every time after autoconf is run, and before configure is
-## checked in:
-##
-## To avoid allowing invalid arguments to configure, we have to manually
-## hack the 'configure' script after it has been 'autoconf'd, and add the
-## line "enable_option_checking=fatal".  There apparently is no way to do
-## this through autoconf macros... sigh.  Manually find this entire text
-## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
-## (just after the MIT license), and uncomment the following line:
-##
-enable_option_checking=fatal
-
+#
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -864,6 +848,7 @@ BUILD_UNIT_TESTS
 DEF_WASATCH
 DEF_PHASEFIELD
 DEF_MODELS_RADIATION
+DEF_DOUBLEMPM
 DEF_MPM
 DEF_ICE
 DEF_HEAT
@@ -872,6 +857,7 @@ DEF_EXAMPLES
 DEF_ARCHES
 BUILD_WASATCH
 BUILD_PHASEFIELD
+BUILD_DOUBLEMPM
 BUILD_MPM
 BUILD_MODELS_RADIATION
 BUILD_ICE
@@ -1034,6 +1020,7 @@ enable_fvm
 enable_heat
 enable_ice
 enable_mpm
+enable_doublempm
 enable_phasefield
 enable_wasatch
 enable_all_components
@@ -1710,6 +1697,7 @@ Optional Features:
 --enable-heat           Turn on the Heat component.
 --enable-ice            Turn on the Ice component.
 --enable-mpm            Turn on the Mpm component.
+--enable-doublempm      Turn on the doublempm component.
 --enable-phasefield     Turn on the PhaseField component.
 --enable-wasatch        Turn on the Wasatch component - and Radiation Model.
 --enable-all-components Turn on the all components.
@@ -3030,6 +3018,21 @@ fi
   sci_arg_var_list="$sci_arg_var_list NVCC_LDFLAGS"
 
 
+##
+## IMPORTANT!!!  Configure developers, PLEASE READ:
+##
+## The following BULLET PROOFING needs to be placed manually into
+## configure every time after autoconf is run, and before configure is
+## checked in:
+##
+## To avoid allowing invalid arguments to configure, we have to manually
+## hack the 'configure' script after it has been 'autoconf'd, and add the
+## line "enable_option_checking=fatal".  There apparently is no way to do
+## this through autoconf macros... sigh.  Manually find this entire text
+## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
+## (just after the MIT license), and uncomment the following line:
+##
+# enable_option_checking=fatal
 
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
@@ -6326,6 +6329,19 @@ fi
 
 
 
+  # Check whether --enable-doublempm was given.
+if test "${enable_doublempm+set}" = set; then :
+  enableval=$enable_doublempm; BUILD_DOUBLEMPM="yes"
+else
+  BUILD_DOUBLEMPM="no"
+   DEF_DOUBLEMPM="#define NO_DOUBLEMPM"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-doublempm --disable-doublempm"
+
+
+
+
   # Check whether --enable-phasefield was given.
 if test "${enable_phasefield+set}" = set; then :
   enableval=$enable_phasefield; BUILD_PHASEFIELD="yes"
@@ -6359,6 +6375,7 @@ if test "${enable_all_components+set}" = set; then :
    BUILD_HEAT="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
+   BUILD_DOUBLEMPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_EXAMPLES=
@@ -6366,6 +6383,7 @@ if test "${enable_all_components+set}" = set; then :
    DEF_HEAT=
    DEF_ICE=
    DEF_MPM=
+   DEF_DOUBLEMPM=
    DEF_UNIT_TESTS=
    DEF_WASATCH=
 
@@ -6396,6 +6414,7 @@ if test \( "$enable_arches"     = "yes" -o  \
            "$enable_heat"       = "yes" -o  \
            "$enable_ice"        = "yes" -o  \
            "$enable_mpm"        = "yes" -o  \
+           "$enable_doublempm"  = "yes" -o  \
            "$enable_phasefield" = "yes" -o  \
            "$enable_wasatch"    = "yes" \); then
   enabling_components=yes
@@ -8489,6 +8508,9 @@ fi
 if test "$USE_MPM" != ""; then
    as_fn_error $? "USE_MPM is deprecated.  Please use --enable-mpm. " "$LINENO" 5
 fi
+if test "$USE_DOUBLEMPM" != ""; then
+   as_fn_error $? "USE_DOUBLEMPM is deprecated.  Please use --enable-doublempm. " "$LINENO" 5
+fi
 if test "$USE_WASATCH" != ""; then
    as_fn_error $? "USE_WASATCH is deprecated.  Please use --enable-wasatch. " "$LINENO" 5
 fi
@@ -8503,6 +8525,8 @@ if test "$with_fortran" = "no"; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
+
+
 
 
 
@@ -39905,6 +39929,8 @@ if test "$with_boost" != NOT_SET -o "$with_boost_library" != NOT_SET; then
   # Note: [[[ (in configure.ac) is necessary because autoconf strips out one "["
 
   if [[ "$IS_OSX" = "no" ]]; then
+      # The outdated gcc environment that we are forced to use on ALCF's mira (BGQ) machine
+      # does not support the "sysroot" flag.
       if [[ "$USING_ICC" = "yes" ]] || ( [[ "$USING_GCC" = "yes" ]] && [[ `hostname` != mira* ]] ); then
           ignore_sys_libs="--sysroot=/junk"
       fi
