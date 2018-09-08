@@ -908,27 +908,6 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     delTNext = delt_tmp;
   }
 
-  // Check to see if the next delT exceeds the maximum initial delt
-  if( m_delTInitialMax > 0 &&
-      m_simTime+m_delT <= m_delTInitialRange &&
-      delTNext > m_delTInitialMax )
-  {
-    invalid |= DELTA_T_INITIAL_MAX;
-
-    if( g_deltaT_warn_initial )
-    {
-      if( !message.str().empty() )
-        message << std::endl;
-        
-      message << header.str()
-              << "for the initial time up to " << m_delTInitialRange
-              << " lowering the next delT from " << delTNext
-              << " to the maximum: " << m_delTInitialMax;
-    }
-    
-    delTNext = m_delTInitialMax;
-  }
-
   // Check to see if the next delT is below the minimum delt
   if( delTNext < m_delTMin )
   {
@@ -965,6 +944,28 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     delTNext = m_delTMax;
   }
   
+  // Check to see if the next delT exceeds the maximum initial delt
+  // This check shoud be last because it is for the initial time steps.
+  if( m_delTInitialMax > 0 &&
+      m_simTime+m_delT <= m_delTInitialRange &&
+      delTNext > m_delTInitialMax )
+  {
+    invalid |= DELTA_T_INITIAL_MAX;
+
+    if( g_deltaT_warn_initial )
+    {
+      if( !message.str().empty() )
+        message << std::endl;
+        
+      message << header.str()
+              << "for the initial time up to " << m_delTInitialRange
+              << " lowering the next delT from " << delTNext
+              << " to the maximum: " << m_delTInitialMax;
+    }
+    
+    delTNext = m_delTInitialMax;
+  }
+
   // Perform last so to possibly not cause other checks and warnings
   // as these checks may reduce the delta T to be smaller than the
   // minimums. Unless requested, no warning is issued as there is no
@@ -1090,18 +1091,6 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
                 << 1.0+m_delTMaxIncrease << "x the previous";
       }
         
-      if( g_deltaT_warn_initial && invalidAll & DELTA_T_INITIAL_MAX )
-      {
-        if( !message.str().empty() )
-          message << std::endl;
-        
-        message << header.str()
-                << "for one or more ranks "
-                  << "for the initial time up to " << m_delTInitialRange
-                << " the next delT was lowered to "
-                << m_delTInitialMax;
-      }
-
       if( g_deltaT_warn_minimum && invalidAll & DELTA_T_MIN )
       {         
         if( !message.str().empty() )
@@ -1122,6 +1111,18 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
                 << "for one or more ranks the next delta T was "
                 << "lowered to the maximum: "
                 << m_delTMax;
+      }
+
+      if( g_deltaT_warn_initial && invalidAll & DELTA_T_INITIAL_MAX )
+      {
+        if( !message.str().empty() )
+          message << std::endl;
+        
+        message << header.str()
+                << "for one or more ranks "
+                  << "for the initial time up to " << m_delTInitialRange
+                << " the next delT was lowered to "
+                << m_delTInitialMax;
       }
 
       if( g_deltaT_warn_clamp )

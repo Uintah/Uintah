@@ -386,9 +386,9 @@ WARNING
     enum VALIDATE
     {
       DELTA_T_MAX_INCREASE     = 0x0001,
-      DELTA_T_INITIAL_MAX      = 0x0002,
-      DELTA_T_MIN              = 0x0004,
-      DELTA_T_MAX              = 0x0008,
+      DELTA_T_MIN              = 0x0002,
+      DELTA_T_MAX              = 0x0004,
+      DELTA_T_INITIAL_MAX      = 0x0008,
 
       CLAMP_TIME_TO_OUTPUT     = 0x0010,
       CLAMP_TIME_TO_CHECKPOINT = 0x0020,
