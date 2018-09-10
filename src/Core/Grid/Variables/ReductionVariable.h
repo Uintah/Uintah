@@ -26,7 +26,6 @@
 #define UINTAH_HOMEBREW_ReductionVARIABLE_H
 
 #include <Core/Grid/Variables/ReductionVariableBase.h>
-#include <Core/Grid/Variables/DataItem.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/TypeMismatchException.h>
