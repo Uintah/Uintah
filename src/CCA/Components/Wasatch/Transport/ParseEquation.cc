@@ -409,8 +409,8 @@ namespace WasatchCore{
 
     const TagNames& tagNames = TagNames::self();
 
-    const Expr::Tag fStarTag(primVarName, Expr::STATE_NP1);
-    const Expr::Tag drhodfStarTag("drhod" + primVarName, Expr::STATE_NONE);
+    const Expr::Tag fNP1Tag(primVarName, Expr::STATE_NP1);
+    const Expr::Tag drhodfTag("drhod" + primVarName, Expr::STATE_NONE);
     const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
 
     for( Uintah::ProblemSpecP bcExprParams = wasatchParams->findBlock("BCExpression");
@@ -482,11 +482,11 @@ namespace WasatchCore{
     std::string densityName;
     densityParams->findBlock("NameTag")->getAttribute( "name", densityName );
     const Expr::Tag densityTag   = Expr::Tag(densityName, Expr::STATE_N  );
-    const Expr::Tag densStarTag  = Expr::Tag(densityName, Expr::STATE_NP1);
+    const Expr::Tag densNP1Tag  = Expr::Tag(densityName, Expr::STATE_NP1);
 
     // attach Sf_{n+1} to the scalar EOS coupling term
     const Expr::Tag mms_EOSMixFracSrcTag(tagNames.mms_mixfracsrc.name() + "_EOS", Expr::STATE_NONE);
-    factory.register_expression( new VarDenEOSCouplingMixFracSrc<SVolField>::Builder(mms_EOSMixFracSrcTag, mmsMixfracSrcNP1Tag, densStarTag, drhodfStarTag));
+    factory.register_expression( new VarDenEOSCouplingMixFracSrc<SVolField>::Builder(mms_EOSMixFracSrcTag, mmsMixfracSrcNP1Tag, densNP1Tag, drhodfTag));
 
     factory.attach_dependency_to_expression(mms_EOSMixFracSrcTag, scalarEOSCouplingTag);
 
@@ -506,7 +506,7 @@ namespace WasatchCore{
     else         velTags.push_back( Expr::Tag() );
 
     factory.register_expression( new VarDen1DMMSContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, rho0, rho1, tagNames.xsvolcoord, tagNames.time, tagNames.dt));
-    factory.register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, densStarTag, fStarTag, drhodfStarTag, tagNames.dt));
+    factory.register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, densNP1Tag, fNP1Tag, drhodfTag, tagNames.dt));
     factory.attach_dependency_to_expression(tagNames.mms_pressurecontsrc, scalarEOSCouplingTag);
 
     if (computeContinuityResidual)

@@ -422,11 +422,15 @@ namespace WasatchCore{
   {
     Expr::Tag fTag    = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
     const Expr::Tag rhofTag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
-    const Expr::Tag rhoTag  = parse_nametag( params->findBlock("Density")->findBlock("NameTag") );
+//    const Expr::Tag rhoTag  = parse_nametag( params->findBlock("Density")->findBlock("NameTag") );
+
+    std::string densityName;
+    params->findBlock("Density")->findBlock("NameTag")->getAttribute( "name", densityName );
+    const Expr::Tag rhoTag  = Expr::Tag(densityName, Expr::STATE_N  );
 
     // Lock the density because on initialization this may be an intermediate
     // quantity, but is always needed as a guess for the solver here.
-    //persistentFields.insert( rhoTag.name() );
+    persistentFields.insert( rhoTag.name() );
 
     double rho0, rho1;
     params->getAttribute("rho0",rho0);
@@ -444,11 +448,11 @@ namespace WasatchCore{
       gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(theTagList,fTag,rho0,rho1) ) );
 
       if( doDenstPlus ){
-        const Expr::Tag icRhoStarTag ( rhoTag.name() + TagNames::self().star,       Expr::STATE_NONE );
-        const Expr::Tag drhodfStarTag( "drhod" + fTag.name() + TagNames::self().star, Expr::STATE_NONE);
-        const Expr::TagList theTagStarList( tag_list( icRhoStarTag, drhodfStarTag ) );
-
-        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(theTagStarList, fTag,rho0,rho1) ) );
+//        const Expr::Tag icRhoStarTag ( rhoTag.name() + TagNames::self().star,       Expr::STATE_NONE );
+//        const Expr::Tag drhodfStarTag( "drhod" + fTag.name() + TagNames::self().star, Expr::STATE_NONE);
+//        const Expr::TagList theTagStarList( tag_list( icRhoStarTag, drhodfStarTag ) );
+//
+//        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(theTagStarList, fTag,rho0,rho1) ) );
       }
     }
 
@@ -462,24 +466,25 @@ namespace WasatchCore{
       fTag.reset_context( Expr::STATE_N );
       gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensFromFExpr(theTagList,fTag,rho0,rho1) );
     } else {
-      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofTag,rho0,rho1) );
+//      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofTag,rho0,rho1) );
+      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( new Expr::PlaceHolder<SVolField>::Builder(rhoTag) );
     }
     
 
     if( doDenstPlus ){
       const TagNames& names = TagNames::self();
 
-      Expr::Tag rhoStar  ( rhoTag .name() + names.star, rhoTag.context() );
-      Expr::Tag fStarTag ( fTag .name()   , Expr::STATE_NP1 );
-      Expr::Tag rhofStar ( rhofTag.name(), Expr::STATE_NP1 );
-      const Expr::Tag drhodfStarTag("drhod" + fTag.name() + names.star, Expr::STATE_NONE);
-      const Expr::TagList theTagList( tag_list( rhoStar, drhodfStarTag ));
+      Expr::Tag rhoNP1Tag ( rhoTag .name(), Expr::STATE_NP1 );
+      Expr::Tag fNP1Tag   ( fTag .name()  , Expr::STATE_NP1 );
+      Expr::Tag rhofNP1Tag( rhofTag.name(), Expr::STATE_NP1 );
+      const Expr::Tag drhodfStarTag("drhod" + fTag.name(), Expr::STATE_NONE);
+      const Expr::TagList theTagList( tag_list( rhoNP1Tag, drhodfStarTag ));
       Expr::ExpressionID id1;
       
       if (weakForm) {
-        id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensFromFExpr(theTagList,fStarTag,rho0,rho1) );
+        id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensFromFExpr(theTagList,fNP1Tag,rho0,rho1) );
       } else {
-        id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofStar,rho0,rho1) );
+        id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofNP1Tag,rho0,rho1) );
       }
       gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id1);
     }
