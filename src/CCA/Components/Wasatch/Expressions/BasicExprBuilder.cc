@@ -1450,9 +1450,22 @@ namespace WasatchCore{
       initGraphHelper->exprFactory->register_expression( scinew MixFracBuilder( mixFracTag, x1Tag, x2Tag, tagNames.time, rho0, rho1, w, k, uf, vf ) );
 
       const Expr::Tag diffCoefTag = parse_nametag(exprParams->findBlock("DiffusionCoefficient")->findBlock("NameTag"));
-      const Expr::Tag densityTag = parse_nametag( parser->findBlock("Density")->findBlock("NameTag") );
+
+      std::string densityName;
+      parser->findBlock("Density")->getAttribute( "name", densityName );
+      const Expr::Tag initDensityTag = Expr::Tag(densityName, Expr::STATE_NONE);
+
+      /* For the purpose of being consistent with the previous implementation, the field corresponding to 'difCoeffTag'
+       * will depend on density at STATE_N. Correct implementation should require the following:
+       * 1. register diffCoefTag at initialization (STATE_NONE)
+       * 2. register difCoefTag as a placeholder at STATE_N
+       * 3. register diffCoefTag at STATE_NP1; context of densityTag would need to change to STATE_NP1
+       */
+      const Expr::Tag densityTag = Expr::Tag(densityName, Expr::STATE_N);
+
       typedef DiffusiveConstant<SVolField>::Builder diffCoefBuilder;
-      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew diffCoefBuilder( diffCoefTag, densityTag, d ) );
+      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew diffCoefBuilder( diffCoefTag, initDensityTag, d ) );
+      gc[INITIALIZATION  ]->exprFactory->register_expression( scinew diffCoefBuilder( diffCoefTag, densityTag    , d ) );
     }  
     
     //___________________________________________________
