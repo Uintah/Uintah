@@ -486,7 +486,6 @@ namespace WasatchCore {
     : ScalarTransportEquation<SVolField>( rhoe0Name,
                                           energyEqnSpec,
                                           gc, densityTag,
-                                          false, /* variable density */
                                           turbulenceParams,
                                           false /* don't call setup */ ),
       wasatchSpec_( wasatchSpec ),

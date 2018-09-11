@@ -81,7 +81,6 @@ namespace WasatchCore{
   EqnTimestepAdaptorBase* parse_scalar_equation( Uintah::ProblemSpecP params,
                                                  TurbulenceParameters turbParams,
                                                  const Expr::Tag densityTag,
-                                                 const bool isConstDensity,
                                                  GraphCategories& gc,
                                                  WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo)
   {
@@ -106,7 +105,6 @@ namespace WasatchCore{
                                        params,
                                        gc,
                                        densityTag,
-                                       isConstDensity,
                                        turbParams );
       adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
 
@@ -119,7 +117,6 @@ namespace WasatchCore{
                                  params,
                                  gc,
                                  densityTag,
-                                 isConstDensity,
                                  turbParams );
       adaptor = scinew EqnTimestepAdaptor<SVolField>(transeqn);
     }
@@ -280,7 +277,7 @@ namespace WasatchCore{
         std::ostringstream msg;
         msg << e.what()
         << std::endl
-        << "ERORR while setting initial conditions on scalability test equation "
+        << "ERROR while setting initial conditions on scalability test equation "
         << scaltesteqn->solution_variable_name()
         << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
@@ -587,7 +584,6 @@ namespace WasatchCore{
                             const TurbulenceParameters turbParams,
                             const bool useAdaptiveDt,
                             const bool doParticles,
-                            const bool isConstDensity,
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
                             Uintah::SolverInterface& linSolver,
@@ -811,7 +807,7 @@ namespace WasatchCore{
        * requires solving for density at the next time level in order to obtain an estimate of the velocity
        * divergence field, which then becomes density at STATE_N for the time step that follows, etc, etc.
        */
-      Expr::Tag lowMachDensityTag = isConstDensity ?
+      Expr::Tag lowMachDensityTag = Wasatch::flow_treatment() == INCOMPRESSIBLE ?
                                     densityTag :
                                     Expr::Tag(densityTag.name(), Expr::STATE_N);
 
@@ -821,7 +817,6 @@ namespace WasatchCore{
         EquationBase* momtranseq = scinew MomTransEq( WasatchCore::XDIR, xvelname,
                                                       xmomname,
                                                       lowMachDensityTag,
-                                                      isConstDensity,
                                                       xBodyForceTag,
                                                       xSrcTermTag,
                                                       gc,
@@ -837,7 +832,6 @@ namespace WasatchCore{
         EquationBase* momtranseq = scinew MomTransEq( WasatchCore::YDIR, yvelname,
                                                       ymomname,
                                                       lowMachDensityTag,
-                                                      isConstDensity,
                                                       yBodyForceTag,
                                                       ySrcTermTag,
                                                       gc,
@@ -853,7 +847,6 @@ namespace WasatchCore{
         EquationBase* momtranseq = scinew MomTransEq( WasatchCore::ZDIR, zvelname,
                                                       zmomname,
                                                       lowMachDensityTag,
-                                                      isConstDensity,
                                                       zBodyForceTag,
                                                       zSrcTermTag,
                                                       gc,
@@ -953,7 +946,6 @@ namespace WasatchCore{
   std::vector<EqnTimestepAdaptorBase*>
   parse_moment_transport_equations( Uintah::ProblemSpecP params,
                                    Uintah::ProblemSpecP wasatchParams,
-                                   const bool isConstDensity,
                                    GraphCategories& gc )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
@@ -1001,7 +993,6 @@ namespace WasatchCore{
       EquationBase* momtranseq = scinew MomTransEq( thisPhiName,
                                                    gc,
                                                    momentID,
-                                                   isConstDensity,
                                                    params,
                                                    initialMoments[iMom] );
 

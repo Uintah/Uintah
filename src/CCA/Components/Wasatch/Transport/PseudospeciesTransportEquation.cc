@@ -64,8 +64,7 @@ namespace WasatchCore{
                                   const bool callSetup )
     : WasatchCore::TransportEquation( gc,
                                       "rho_" + pseudospeciesName,       // this will need changed if solving under constant density conditions is allowed
-                                      get_staggered_location<FieldT>(),
-                                      false ),
+                                      get_staggered_location<FieldT>() ),
       params_        ( params                                   ),
       psParams_      ( params->findBlock("TarAndSootEquations") ),
       solnVarName_   ( "rho_" + pseudospeciesName               ),

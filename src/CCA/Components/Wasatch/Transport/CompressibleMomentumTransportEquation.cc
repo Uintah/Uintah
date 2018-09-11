@@ -323,7 +323,6 @@ namespace WasatchCore{
                                               velName,
                                               momName,
                                               densityTag,
-                                              false,
                                               bodyForceTag,
                                               srcTermTag,
                                               gc,

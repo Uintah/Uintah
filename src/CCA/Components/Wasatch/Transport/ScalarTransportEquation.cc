@@ -60,13 +60,11 @@ namespace WasatchCore{
                            Uintah::ProblemSpecP params,
                            GraphCategories& gc,
                            const Expr::Tag densityTag,
-                           const bool isConstDensity,
                            const TurbulenceParameters& turbulenceParams,
                            const bool callSetup )
     : WasatchCore::TransportEquation( gc,
                                   solnVarName,
-                                  get_staggered_location<FieldT>(),
-                                  isConstDensity ),
+                                  get_staggered_location<FieldT>() ),
       params_( params ),
       hasConvection_( params_->findBlock("ConvectiveFlux") ),
       densityTag_( densityTag ),
@@ -242,9 +240,9 @@ namespace WasatchCore{
 
       if( hasConvection_ ){
         const Expr::Tag rhsStarTag     = tagNames.make_star_rhs(solnVarName_);
-        const Expr::Tag densityStarTag = Expr::Tag(densityTag_ .name(), vardenStarContext_);
-        const Expr::Tag primVarStarTag = Expr::Tag(primVarTag_ .name(), vardenStarContext_);
-        const Expr::Tag solnVarStarTag = Expr::Tag(solnVarName_       , vardenStarContext_);
+        const Expr::Tag densityStarTag = Expr::Tag(densityTag_.name(), vardenStarContext_);
+        const Expr::Tag primVarStarTag = Expr::Tag(primVarTag_.name(), vardenStarContext_);
+        const Expr::Tag solnVarStarTag = Expr::Tag(solnVarName_      , vardenStarContext_);
         infoStar_[PRIMITIVE_VARIABLE]  = primVarStarTag;
         
         EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();

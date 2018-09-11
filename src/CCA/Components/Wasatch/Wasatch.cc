@@ -652,7 +652,7 @@ namespace WasatchCore{
          transEqnParams != nullptr;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
     {
-      adaptors_.push_back( parse_scalar_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_, *dualTimeMatrixInfo_ ) );
+      adaptors_.push_back( parse_scalar_equation( transEqnParams, turbParams, densityTag, graphCategories_, *dualTimeMatrixInfo_ ) );
     }
 
     //
@@ -700,7 +700,6 @@ namespace WasatchCore{
                                                                       turbParams,
                                                                       useAdaptiveDt,
                                                                       doParticles_,
-                                                                      isConstDensity,
                                                                       densityTag,
                                                                       graphCategories_,
                                                                       *m_solver,
@@ -742,8 +741,7 @@ namespace WasatchCore{
       try{
         //For the Multi-Environment mixing model, the entire Wasatch Block must be passed to find values for initial moments
         const EquationAdaptors adaptors =
-            parse_moment_transport_equations( momEqnParams, wasatchSpec_, isConstDensity,
-                                              graphCategories_ );
+            parse_moment_transport_equations( momEqnParams, wasatchSpec_, graphCategories_ );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){

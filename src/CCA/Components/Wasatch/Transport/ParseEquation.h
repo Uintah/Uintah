@@ -52,7 +52,6 @@ namespace WasatchCore{
    *  \param densityTag a tag for the density to be passed to
    *         the scalar transport equations if it is needed.
    *         otherwise it will be an empty tag.
-   *  \param isConstDensity true if density is constant
    *  \param gc the GraphCategories.
    *  \param dualTimeMatrixInfo stores dual time matrix information (tags).
    *
@@ -63,7 +62,6 @@ namespace WasatchCore{
   parse_scalar_equation( Uintah::ProblemSpecP params,
                          TurbulenceParameters turbParams,
                          const Expr::Tag densityTag,
-                         const bool isConstDensity,
                          GraphCategories& gc,
                          WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo );
 
@@ -89,7 +87,6 @@ namespace WasatchCore{
    *  \param turbParams
    *  \param useAdaptiveDt true for variable dt
    *  \param doParticles true if particle transport is active
-   *  \param isConstDensity true if density is constant
    *  \param densityTag the tag for the mixture mass density
    *  \param gc The GraphCategories.
    *  \param linSolver
@@ -104,7 +101,6 @@ namespace WasatchCore{
                             const TurbulenceParameters turbParams,
                             const bool useAdaptiveDt,
                             const bool doParticles,
-                            const bool isConstDensity,
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
                             Uintah::SolverInterface& linSolver,
@@ -186,8 +182,6 @@ namespace WasatchCore{
    *  \param wasatchParams The XML block from the input file specifying the
    *         wasatch block.
    *
-   *  \param isConstDensity true for constant density problems
-   *
    *  \param gc The GraphCategories.
    *
    *  \return a vector of EqnTimestepAdaptorBase objects that can be used to
@@ -195,7 +189,6 @@ namespace WasatchCore{
    */
   std::vector<EqnTimestepAdaptorBase*> parse_moment_transport_equations( Uintah::ProblemSpecP params,
                                                                          Uintah::ProblemSpecP wasatchParams,
-                                                                         const bool isConstDensity,
                                                                          GraphCategories& gc);
 
 

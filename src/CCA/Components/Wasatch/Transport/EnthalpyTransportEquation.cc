@@ -107,9 +107,8 @@ namespace WasatchCore {
                              Uintah::ProblemSpecP params,
                              GraphCategories& gc,
                              const Expr::Tag densityTag,
-                             const bool isConstDensity,
                              const TurbulenceParameters& turbulenceParams )
-  : ScalarTransportEquation<SVolField>( enthalpyName, params, gc, densityTag, isConstDensity, turbulenceParams, false ),
+  : ScalarTransportEquation<SVolField>( enthalpyName, params, gc, densityTag, turbulenceParams ),
     diffCoeffTag_( enthalpyName+"_diffusivity", Expr::STATE_NONE )
   {
     const Expr::Tag turbViscTag = enableTurbulence_ ? TagNames::self().turbulentviscosity : Expr::Tag();

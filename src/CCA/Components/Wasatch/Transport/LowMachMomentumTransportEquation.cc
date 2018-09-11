@@ -82,7 +82,6 @@ namespace WasatchCore{
                                    const std::string velName,
                              const std::string momName,
                              const Expr::Tag densTag,
-                             const bool isConstDensity,
                              const Expr::Tag bodyForceTag,
                              const Expr::Tag srcTermTag,
                              GraphCategories& gc,
@@ -94,7 +93,6 @@ namespace WasatchCore{
                                             velName,
                          momName,
                          densTag,
-                         isConstDensity,
                          bodyForceTag,
                          srcTermTag,
                          gc,
@@ -108,6 +106,7 @@ namespace WasatchCore{
     doMom[1] = params->get( "Y-Momentum", ymomname );
     doMom[2] = params->get( "Z-Momentum", zmomname );
 
+    const bool isConstDensity = this->isConstDensity_;
     GraphHelper& graphHelper   = *(gc[ADVANCE_SOLUTION  ]);
     Expr::ExpressionFactory& factory = *(graphHelper.exprFactory);
 
@@ -128,10 +127,6 @@ namespace WasatchCore{
       if( !isConstDensity ) {
         psrcTagList.push_back(tagNames.drhodtstar );
       }
-//      Expr::TagList scalarEOSTagList;
-//      if(!isConstDensity){
-//        scalarEOSTagList.push_back(Expr::Tag("f*_EOS_Coupling",Expr::STATE_NONE));
-//      }
 
       // create an expression for divu. In the case of variable density flows, the scalar equations
       // will add their contributions to this expression

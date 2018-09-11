@@ -89,7 +89,7 @@ TarTransportEquation( Uintah::ProblemSpecP params,
 : PseudospeciesTransportEquation<SVolField>( TagNames::self().tar.name(),
                                              params, gc,
                                              densityTag,
-                                             turbulenceParams, false ),
+                                             turbulenceParams ),
   densityTag_     ( densityTag                         ),
   tarOxRateTag_   ( TagNames::self().tarOxidationRate  ),
   sootFormRateTag_( TagNames::self().sootFormationRate )
