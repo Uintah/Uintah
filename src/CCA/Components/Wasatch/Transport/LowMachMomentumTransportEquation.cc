@@ -116,6 +116,7 @@ namespace WasatchCore{
     //__________________
     // Pressure source term        
     if( !factory.have_entry( tagNames.pressuresrc ) ){
+      const Expr::Tag densNP1Tag  = Expr::Tag(densTag.name(), Expr::STATE_NP1);
       
       // register the expression for pressure source term
       Expr::TagList psrcTagList;
@@ -139,7 +140,7 @@ namespace WasatchCore{
                                                                                   tagNames.divu,
                                                                                   isConstDensity,
                                                                                   densTag,
-                                                                                  densNP1Tag_ ) );
+                                                                                  densNP1Tag ) );
       
       factory.cleave_from_parents( psrcID  );
       factory.cleave_from_children( psrcID  );
