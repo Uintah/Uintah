@@ -411,7 +411,7 @@ namespace WasatchCore{
     }
 
     const Expr::Tag fStarTag(primVarName, Expr::STATE_NP1);
-    const Expr::Tag drhodfStarTag("drhod" + primVarName + "*", Expr::STATE_NONE);
+    const Expr::Tag drhodfStarTag("drhod" + primVarName, Expr::STATE_NONE);
     const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
 
     for( Uintah::ProblemSpecP bcExprParams = wasatchParams->findBlock("BCExpression");
@@ -473,7 +473,7 @@ namespace WasatchCore{
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSTag);
 
 
-    const Expr::Tag mms_mixfracsrcPlusTag(tagNames.mms_mixfracsrc.name() + "*", Expr::STATE_NONE);
+    const  Expr::Tag mms_mixfracsrcPlusTag = tagNames.make_star(tagNames.mms_mixfracsrc);
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSMixFracSrc<SVolField>::Builder(mms_mixfracsrcPlusTag,tagNames.xsvolcoord, tagNames.time, tagNames.dt, D, rho0, rho1, true));
 
     Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
@@ -535,7 +535,7 @@ namespace WasatchCore{
 
 
     const Expr::Tag fStarTag(primVarName, Expr::STATE_NP1);
-    const Expr::Tag drhodfStarTag("drhod" + primVarName + "*", Expr::STATE_NONE);
+    const Expr::Tag drhodfStarTag("drhod" + primVarName, Expr::STATE_NONE);
     const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
 
     const TagNames& tagNames = TagNames::self();
@@ -544,7 +544,7 @@ namespace WasatchCore{
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
 
     const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-    const Expr::Tag densStarTag = tagNames.make_star( densityTag, Expr::STATE_NONE ); //todo: make NP1
+    const Expr::Tag densStarTag = Expr::Tag( densityTag.name(), Expr::STATE_NP1 ); //todo: make NP1
     const Expr::Tag solnVarRHSTag( solnVarName+"_rhs", Expr::STATE_NONE );
 
     std::string x1="X", x2="Y";

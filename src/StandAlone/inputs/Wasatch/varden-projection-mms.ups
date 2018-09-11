@@ -153,7 +153,7 @@
     </TransportEquation>
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f" state="STATE_NONE" />        
+        <NameTag name="f"/>        
       </FieldExpression>                    
     </FieldClipping>
         
@@ -207,7 +207,7 @@
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.001"/>
     <save label="density"/>    
-    <save label="density*"/>    
+<!--     <save label="density*"/>     -->
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>

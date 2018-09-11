@@ -172,8 +172,8 @@ namespace WasatchCore{
 
     std::string tagNameAppend, scalarTagNameAppend;
     switch (densLevel){
-      case NORMAL    : tagNameAppend=scalarTagNameAppend="";                          break;
-      case STAR      : tagNameAppend=TagNames::self().star; scalarTagNameAppend = ""; break;
+      case NORMAL    : tagNameAppend=scalarTagNameAppend = ""; break;
+      case STAR      : tagNameAppend=scalarTagNameAppend = ""; break;
     }
 
     double rtol = 1e-6;
@@ -197,7 +197,7 @@ namespace WasatchCore{
       typedef DensFromMixfrac<SVolField>::Builder DensCalc;
       
       const Expr::Tag unconvPts( TagNames::self().unconvergedpts.name() + tagNameAppend, TagNames::self().unconvergedpts.context() );
-      const Expr::Tag drhodfTag( "drhod" + fTag.name() + tagNameAppend, Expr::STATE_NONE);
+      const Expr::Tag drhodfTag( "drhod" + fTag.name(), Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( densityTag, unconvPts, drhodfTag ) );
       
       // register placeholder for the old density

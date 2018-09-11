@@ -236,6 +236,8 @@ namespace WasatchCore{
     // for variable density flows:
     if( !isConstDensity_ || !isStrong_ ){
       factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
+      factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder( Expr::Tag(primVarTag_.name(), Expr::STATE_N)   ) );
+      factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder( Expr::Tag(densityTag_.name(), Expr::STATE_NONE)) );
 
       if( hasConvection_ ){
         const Expr::Tag rhsStarTag     = tagNames.make_star_rhs(solnVarName_);
