@@ -33,7 +33,7 @@ use File::Basename;
 use File::Which;
 use Cwd;
 use lib dirname (__FILE__);  # needed to find local Utilities.pm
-use Utilities 'cleanStr';
+use Utilities qw( cleanStr modify_batchScript read_file write_file );
 
 # removes white spaces from variable
 sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
@@ -47,11 +47,28 @@ my $doc = XML::LibXML->load_xml(location => $tstFile);
 #__________________________________
 # copy gnuplot script   OPTIONAL
 my $gpFile = cleanStr( $doc->findvalue( '/start/gnuplot/script' ) );
-if( defined $gpFile ){
+
+if( length $gpFile > 0 ){
   $gpFile    = $config_files_path."/".$gpFile;
-  system("cp -f $gpFile .");
+  system("cp -f $gpFile . > /dev/null 2>&1");
   print "  gnuplot script used in postProcess ($gpFile)\n";
 }
+
+#__________________________________
+# copy batch script and modify the template  OPTIONAL
+
+my $batchCmd    = cleanStr( $doc->findvalue( '/start/batchScheduler/submissionCmd' ) );
+my $batchScript = cleanStr( $doc->findvalue( '/start/batchScheduler/template' ) );
+
+if( length $batchScript > 0 ){
+  my $cmd = "cp -f $config_files_path"."/"."$batchScript" . " . > /dev/null 2>&1";
+  system( $cmd );
+  print "  Batch script template used to submit jobs ($batchScript)\n";
+  
+  my @nodes = $doc->findnodes('/start/batchScheduler/batchReplace');
+  modify_batchScript( $batchScript, @nodes );
+}
+
 
 #__________________________________
 # set exitOnCrash flag    OPTIONAL
@@ -139,25 +156,42 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
     print "\treplace_XML_value $xmlPath $value\n";
     system("replace_XML_value", "$xmlPath", "$value", "$test_ups")==0 ||  die("Error: replace_XML_value $xmlPath $value $test_ups \n $@");
   }
+  
+  #__________________________________
+  #  replace any batch script values per test
+  my $test_batch = undef;
+  
+  if( length $batchScript > 0 ){
+    my ($basename, $parentdir, $ext) = fileparse($batchScript, qr/\.[^.]*$/);
+    $test_batch = "batch_$test_title$ext";
+    system(" cp $batchScript $test_batch" );
+    
+    modify_batchScript( $test_batch, $test_dom->findnodes('batchReplace') );
+  }
 
   #bulletproofing
   system("xmlstarlet val --err $test_ups") == 0 ||  die("\nERROR: $upsFile, contains errors.\n");
 
   #__________________________________
   # print meta data and run sus command
-  my $sus_cmd = $test_dom->findnodes('sus_cmd');
+  my $sus_cmd_0 = $test_dom->findnodes('sus_cmd');
 
   print $statsFile "Test Name :     "."$test_title"."\n";
   print $statsFile "(ups) :         "."$test_ups"."\n";
   print $statsFile "(uda) :         "."$udaFilename"."\n";
   print $statsFile "output:         "."$test_output"."\n";
-  print $statsFile "Command Used :  "."$sus_cmd $test_ups"."\n";
+  print $statsFile "Command Used :  "."$sus_cmd_0 $test_ups"."\n";
 
   my $now = time();
-  my @args = ("$sus_cmd","$test_ups","> $test_output 2>&1");
+  my @sus_cmd = ("$sus_cmd_0","$test_ups","> $test_output 2>&1");
 
-  my $rc = runSusCmd( $timeout, $exitOnCrash, $statsFile, @args );
-
+  my $rc = 0;
+  if( length $batchScript > 0 ){
+    submitBatchScript( $batchCmd, $test_batch, $statsFile, @sus_cmd ); 
+  }else{
+    $rc = runSusCmd( $timeout, $exitOnCrash, $statsFile, @sus_cmd );
+  }
+  
   my $fin = time()-$now;
   printf $statsFile ("Running Time :  %.3f [secs]\n", $fin);
 
@@ -189,10 +223,10 @@ close($statsFile);
 #______________________________________________________________________
   #
 sub runSusCmd {
-  my( $timeout, $exitOnCrash, $statsFile, @args ) = @_;
+  my( $timeout, $exitOnCrash, $statsFile, @sus_cmd ) = @_;
 
-  print "\tLaunching: (@args)\n";
-  my @cmd = (" timeout --preserve-status $timeout @args ");
+  print "\tLaunching: (@sus_cmd)\n";
+  my @cmd = (" timeout --preserve-status $timeout @sus_cmd ");
 
   my $rc = -9;
   if ( $exitOnCrash eq "TRUE" ) {
@@ -200,7 +234,7 @@ sub runSusCmd {
     $rc = system("@cmd");
 
     if ( $rc != 0 && $rc != 36608 ){
-      die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
+      die("ERROR(run_tests.pl): \t\tFailed running: (@sus_cmd)\n");
       return 1;
     }
 
@@ -221,4 +255,29 @@ sub runSusCmd {
 
   return $rc;
 
+};
+
+
+#______________________________________________________________________
+
+sub submitBatchScript{
+  my( $batchCmd, $test_batch, $statsFile, @sus_cmd ) = @_;
+  
+  print "submitBatchScript: ", $batchCmd, " ", $test_batch, " ", $statsFile, " ", @sus_cmd, "\n";
+  #__________________________________
+  # concatenate sus cmd to batch script
+  open(my $fh, '>>', $test_batch) or die "Could not open file '$test_batch' $!";
+  print $fh "\n ", @sus_cmd, "\n";
+  close $fh;
+  
+  my $data = read_file($test_batch);
+  print $data;
+  
+  #__________________________________
+  # concatenate postProcess cmd to batch script  TODO
+  
+  #__________________________________
+  # submit batch script
+  print $batchCmd, " " , $test_batch, "\n";
+  
 };

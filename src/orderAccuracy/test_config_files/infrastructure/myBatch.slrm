@@ -1,0 +1,14 @@
+#!/bin/csh
+#SBATCH --name="test"
+#SBATCH --time=[runTime]            # walltime, abbreviated by -t
+#SBATCH --output slurm-%j.out-%N      #  stdout, using the job number (%j) and the first node (%N)
+#SBATCH --error slurm-%j.err-%N       # name of the stderr, using job and first node values
+#SBATCH --ntasks=[mpiRanks]         # number of MPI tasks
+# additional information for allocated clusters
+#SBATCH --account=[acct]            # account
+#SBATCH --partition=[partition]     # partition
+
+#
+# load appropriate modules, in this case Intel compilers, MPICH2
+module load intel mpich2
+

@@ -6,7 +6,7 @@ use Data::Dumper;
 use Exporter 'import';
 
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(cleanStr print_XML_ElementTree get_XML_value);
+our @EXPORT_OK = qw(cleanStr print_XML_ElementTree get_XML_value modify_batchScript read_file write_file );
 
 #______________________________________________________________________
 #  
@@ -17,6 +17,10 @@ sub cleanStr {
   my $n   = scalar @inputs;           # number of array elements
   my $len = length $inputs[0];        # number of characters in first element
   
+  if( ! @inputs  ){
+    return undef;
+  }
+
   # if the first element is empty return ""
   if( $len == 0 ){
     return "";
@@ -104,4 +108,56 @@ sub print_XML_ElementTree{
     print "textContent: (", $child->textContent(), ")\n";
   }
 }
+
+
+#______________________________________________________________________
+
+sub modify_batchScript{
+  my ($filename, @xmlNodes ) = @_;
+
+  my $data = read_file($filename);
+  
+  foreach my $X ( @xmlNodes ){
+    my $tag   = $X->{tag};     
+    $tag      =~ s/\[/\\[/g;     # add escape chars to the metachars
+    $tag      =~ s/\]/\\]/g;     
+    my $value = $X->{value};   
+    
+    print "\tmodifying batch script  Changing ($tag) -> ($value)\n";
+    $data =~ s/$tag/$value/g;
+    
+    # bulletproofing
+    if( ! ($data=~/$value/) ){
+      print "\n\tERROR Modyify_batchScript, Could not find the tag ", $tag, "\n\n";
+      die "$!";
+    }
+  }
+   write_file($filename, $data);
+}
+
+#______________________________________________________________________
+
+sub read_file {
+    my ($filename) = @_;
+
+    open my $in, '<:encoding(UTF-8)', $filename or die "Could not open '$filename' for reading $!";
+    local $/ = undef;
+    my $all = <$in>;
+    close $in;
+ 
+    return $all;
+}
+
+#______________________________________________________________________
+ 
+sub write_file {
+    my ($filename, $content) = @_;
+   
+    open my $out, '>:encoding(UTF-8)', $filename or die "Could not open '$filename' for writing $!";;
+    print $out $content;
+    close $out;
+ 
+    return;
+}
+
 1;

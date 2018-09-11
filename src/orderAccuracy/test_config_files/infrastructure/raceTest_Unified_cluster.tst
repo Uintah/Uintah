@@ -8,6 +8,8 @@
 
 <upsFile>ICE/advect.ups</upsFile>
 
+<gnuplot> adfadfadf </gnuplot>
+
 <AllTests>
   <replace_lines>
     <max_Timesteps>10           </max_Timesteps>
@@ -16,11 +18,26 @@
   </replace_lines>
 </AllTests>
 
+<batchScheduler>
+  <template> myBatch.slrm   </template>
+  <submissionCmd> sbatch    </submissionCmd>
+  <batchReplace tag="[acct]"       value = "1" />
+  <batchReplace tag="[partition]"  value = "2" />
+</batchScheduler>
+
 <Test>
     <Title>1_2</Title>
-    <sus_cmd>mpirun -np 1 sus -mpi -nthreads 2</sus_cmd>
+    <sus_cmd>mpirun -np 16 sus -nthreads 2" </sus_cmd>
+    <postProcess_cmd>./tools/compare_mms/compare_scalar -v</postProcess_cmd>
+    <batchReplace tag="[mpiRanks]" value = "16" />
+    <batchReplace tag="[runTime]"  value = "30" />
 </Test>
 
+
+
+</start>
+
+<!--__________________________________
 <Test>
     <Title>1_4</Title>
     <sus_cmd>mpirun -np 1 sus -mpi -nthreads 4</sus_cmd>
@@ -41,7 +58,7 @@
     <Title>1_64</Title>
     <sus_cmd>mpirun -np 1 sus -mpi -nthreads 64</sus_cmd>
 </Test>
-<!--__________________________________-->
+
 
 <Test>
     <Title>2_2</Title>
@@ -68,8 +85,6 @@
     <Title>2_64</Title>
     <sus_cmd>mpirun -np 2 sus -mpi -nthreads 64</sus_cmd>
 </Test>
-
-<!--__________________________________-->
 
 <Test>
     <Title>4_2</Title>
@@ -98,3 +113,4 @@
 </Test>
 
 </start>
+-->
