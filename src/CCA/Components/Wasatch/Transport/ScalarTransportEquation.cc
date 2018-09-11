@@ -69,7 +69,7 @@ namespace WasatchCore{
       params_( params ),
       hasConvection_   ( params_->findBlock("ConvectiveFlux") ),
       densityInitTag_  ( densityTag.name(), Expr::STATE_NONE ),
-      densityTag_      ( flowTreatment_ == LOWMACH ? Expr::Tag(densityTag.name(), Expr::STATE_N) : Expr::Tag(densityTag.name(), Expr::STATE_NONE) ),
+      densityTag_      ( densityTag ),
       densityNP1Tag_   ( densityTag.name(), Expr::STATE_NP1 ),
       enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE) ),
       persistentFields_( persistentFields )
@@ -86,7 +86,6 @@ namespace WasatchCore{
       turbDiffNP1Tag_  = Expr::Tag( turbDiffInitTag_.name(), Expr::STATE_NP1 );
 
       Expr::ExpressionFactory& factory   = *gc_[ADVANCE_SOLUTION]->exprFactory;
-
       Expr::ExpressionFactory& icFactory = *gc_[INITIALIZATION  ]->exprFactory;
 
       typedef typename TurbulentDiffusivity::Builder TurbDiffT;
@@ -327,8 +326,7 @@ namespace WasatchCore{
 
     // for variable density flows:
     if( !isConstDensity_ || !isStrong_ ){
-
-      factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder( Expr::Tag(primVarTag_.name(), Expr::STATE_N)) );
+      factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
 
       if( hasConvection_ && flowTreatment_ == LOWMACH ){
         const Expr::Tag rhsNP1Tag     = Expr::Tag(rhsTag_    .name(), Expr::STATE_NP1);
@@ -347,11 +345,7 @@ namespace WasatchCore{
         }
         factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarNP1Tag, this->solnvar_np1_tag(), densityNP1Tag ) );
 
-        // this is used for temporal order verification for the low-Mach
-        const Expr::ExpressionID primVarStateNoneID =
-        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( Expr::Tag(primVarTag_.name(), Expr::STATE_NONE),
-                                                                                      Expr::Tag(solnVarName_      , Expr::STATE_N),
-                                                                                      Expr::Tag(densityTag_.name(), Expr::STATE_N) ) );
+        factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder( Expr::Tag(primVarTag_.name(), Expr::STATE_N)) );
 
         const Expr::Tag scalEOSTag (primVarNP1Tag.name() + "_EOS_Coupling", Expr::STATE_NONE);
         const Expr::Tag dRhoDfTag("drhod" + primVarNP1Tag.name(), Expr::STATE_NONE);
