@@ -291,8 +291,6 @@ template< typename FluxT >
         std::string dir(1,*it);
         const TagNames& tagNames = TagNames::self();
         diffFluxTag = Expr::Tag( primVarName + tagNames.diffusiveflux + dir, context );
-        // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
-        // is because we need the ScalarRHS at time step n+1 for our pressure projection method
         
         Expr::ExpressionBuilder* builder = nullptr;
         if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);

@@ -205,7 +205,7 @@ namespace WasatchCore{
                                                         infoInit,
                                                         initContext );
 
-               // set info for diffusive flux based on infoStar_, add tag names to set of persistent fields
+               // set info for diffusive flux based on infoNP1_, add tag names to set of persistent fields
                const std::vector<FieldSelector> fsVec = {DIFFUSIVE_FLUX_X, DIFFUSIVE_FLUX_Y, DIFFUSIVE_FLUX_Z};
                for( FieldSelector fs : fsVec ){
                 if( infoNP1_.find(fs) != infoNP1_.end() ){

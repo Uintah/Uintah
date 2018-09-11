@@ -481,7 +481,7 @@ namespace WasatchCore{
     Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
     std::string densityName;
     densityParams->findBlock("NameTag")->getAttribute( "name", densityName );
-    const Expr::Tag densityTag   = Expr::Tag(densityName, Expr::STATE_N  );
+    const Expr::Tag densityTag  = Expr::Tag(densityName, Expr::STATE_N  );
     const Expr::Tag densNP1Tag  = Expr::Tag(densityName, Expr::STATE_NP1);
 
     // attach Sf_{n+1} to the scalar EOS coupling term
@@ -538,14 +538,14 @@ namespace WasatchCore{
     const TagNames& tagNames = TagNames::self();
 
     const Expr::Tag fStarTag(primVarName, Expr::STATE_NP1);
-    const Expr::Tag drhodfStarTag("drhod" + primVarName, Expr::STATE_NONE);
+    const Expr::Tag drhodfTag("drhod" + primVarName, Expr::STATE_NONE);
     const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
 
     Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
 
     const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-    const Expr::Tag densStarTag = Expr::Tag( densityTag.name(), Expr::STATE_NP1 );
+    const Expr::Tag densNP1Tag = Expr::Tag( densityTag.name(), Expr::STATE_NP1 );
     const Expr::Tag solnVarRHSTag( solnVarName+"_rhs", Expr::STATE_NONE );
 
     std::string x1="X", x2="Y";
@@ -576,7 +576,7 @@ namespace WasatchCore{
 
     // attach Sf_{n+1} to the scalar EOS coupling term
     const Expr::Tag mms_EOSMixFracSrcTag(tagNames.mms_mixfracsrc.name() + "_EOS", Expr::STATE_NONE);
-    factory.register_expression( new VarDenEOSCouplingMixFracSrc<SVolField>::Builder(mms_EOSMixFracSrcTag, mmsMixfracSrcNP1Tag, densStarTag, drhodfStarTag));
+    factory.register_expression( new VarDenEOSCouplingMixFracSrc<SVolField>::Builder(mms_EOSMixFracSrcTag, mmsMixfracSrcNP1Tag, densNP1Tag, drhodfTag));
 
     factory.attach_dependency_to_expression(mms_EOSMixFracSrcTag, scalarEOSCouplingTag);
   }
