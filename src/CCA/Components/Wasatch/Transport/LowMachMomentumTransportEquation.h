@@ -124,6 +124,8 @@ namespace WasatchCore{
     Expr::ExpressionID setup_rhs( FieldTagInfo&,
                                   const Expr::TagList& srcTags  );    
 
+    const Expr::Context starContext_;
+
   };
 
 } // namespace WasatchCore

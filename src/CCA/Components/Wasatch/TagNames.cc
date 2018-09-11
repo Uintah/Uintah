@@ -145,6 +145,8 @@ namespace WasatchCore{
   drhodt         ( "drhodt"        , Expr::STATE_NONE ),
   drhodtnp1      ( "drhodt"        , Expr::STATE_NP1  ),
   unconvergedpts ( "UnconvergedPts", Expr::STATE_NONE ),
+  vardenStarContext( Expr::STATE_NP1 ),
+
   
   // mms varden
   mms_mixfracsrc( "mms_mixture_fraction_src", Expr::STATE_NONE ),

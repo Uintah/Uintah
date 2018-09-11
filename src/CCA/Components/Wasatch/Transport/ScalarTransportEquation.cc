@@ -70,7 +70,8 @@ namespace WasatchCore{
       params_( params ),
       hasConvection_( params_->findBlock("ConvectiveFlux") ),
       densityTag_( densityTag ),
-      enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE) )
+      enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE) ),
+      vardenStarContext_( TagNames::self().vardenStarContext )
   {
     //_____________
     // Turbulence
@@ -163,8 +164,8 @@ namespace WasatchCore{
         // predicted scalar values to approximate the density time derivatives
         if( params_->findBlock("ConvectiveFlux") ){
           
-          const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() , Expr::STATE_NP1);
-          const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() , Expr::STATE_NP1);
+          const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() , vardenStarContext_);
+          const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() , vardenStarContext_);
           
           setup_diffusive_flux_expression<FieldT>( diffFluxParams,
                                                    densityCorrectedTag,
@@ -241,9 +242,9 @@ namespace WasatchCore{
 
       if( hasConvection_ ){
         const Expr::Tag rhsStarTag     = tagNames.make_star_rhs(solnVarName_);
-        const Expr::Tag densityStarTag = Expr::Tag(densityTag_ .name(), Expr::STATE_NP1);
-        const Expr::Tag primVarStarTag = Expr::Tag(primVarTag_ .name(), Expr::STATE_NP1);
-        const Expr::Tag solnVarStarTag = Expr::Tag(solnVarName_       , Expr::STATE_NP1);
+        const Expr::Tag densityStarTag = Expr::Tag(densityTag_ .name(), vardenStarContext_);
+        const Expr::Tag primVarStarTag = Expr::Tag(primVarTag_ .name(), vardenStarContext_);
+        const Expr::Tag solnVarStarTag = Expr::Tag(solnVarName_       , vardenStarContext_);
         infoStar_[PRIMITIVE_VARIABLE]  = primVarStarTag;
         
         EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();

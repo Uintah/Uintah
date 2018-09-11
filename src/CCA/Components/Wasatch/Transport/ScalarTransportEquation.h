@@ -200,6 +200,8 @@ namespace WasatchCore{
     Expr::Tag turbDiffTag_;
     bool isStrong_;
     FieldTagInfo infoStar_;  // needed to form predicted scalar quantities
+    const Expr::Context vardenStarContext_;
+
   };
 
 } // namespace WasatchCore

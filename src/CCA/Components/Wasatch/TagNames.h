@@ -124,6 +124,9 @@ namespace WasatchCore{
     divu, drhodtstar, drhodtstarnp1,
     drhodt,drhodtnp1,unconvergedpts;
     
+    const Expr::Context
+    vardenStarContext;
+
     // mms varden
     const Expr::Tag
     mms_mixfracsrc, mms_continuitysrc,

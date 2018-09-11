@@ -410,7 +410,10 @@ namespace WasatchCore{
     varDensityParams->getAttribute("rho1",rho1);
     }
 
-    const Expr::Tag fStarTag(primVarName, Expr::STATE_NP1);
+    const TagNames& tagNames = TagNames::self();
+    const Expr::Context vardenStarContext = tagNames.vardenStarContext;
+
+    const Expr::Tag fStarTag(primVarName, vardenStarContext);
     const Expr::Tag drhodfStarTag("drhod" + primVarName, Expr::STATE_NONE);
     const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
 
@@ -464,7 +467,6 @@ namespace WasatchCore{
       }
     }
     varDensMMSParams->get("D",D);
-    const TagNames& tagNames = TagNames::self();
 
     const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
 
@@ -479,8 +481,8 @@ namespace WasatchCore{
     Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
     std::string densityName;
     densityParams->findBlock("NameTag")->getAttribute( "name", densityName );
-    const Expr::Tag densityTag   = Expr::Tag(densityName, Expr::STATE_N  );
-    const Expr::Tag densStarTag  = Expr::Tag(densityName, Expr::STATE_NP1);
+    const Expr::Tag densityTag   = Expr::Tag(densityName, Expr::STATE_N     );
+    const Expr::Tag densStarTag  = Expr::Tag(densityName, vardenStarContext );
 
     // attach Sf_{n+1} to the scalar EOS coupling term
     const Expr::Tag mms_EOSMixFracSrcTag(tagNames.mms_mixfracsrc.name() + "_EOS", Expr::STATE_NONE);
@@ -533,18 +535,18 @@ namespace WasatchCore{
     varDens2DMMSParams->getAttribute("w",w);
     varDens2DMMSParams->getAttribute("d",d);
 
+    const TagNames& tagNames = TagNames::self();
+    const Expr::Context vardenStarContext = tagNames.vardenStarContext;
 
-    const Expr::Tag fStarTag(primVarName, Expr::STATE_NP1);
+    const Expr::Tag fStarTag(primVarName, vardenStarContext);
     const Expr::Tag drhodfStarTag("drhod" + primVarName, Expr::STATE_NONE);
     const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
-
-    const TagNames& tagNames = TagNames::self();
 
     Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
 
     const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-    const Expr::Tag densStarTag = Expr::Tag( densityTag.name(), Expr::STATE_NP1 ); //todo: make NP1
+    const Expr::Tag densStarTag = Expr::Tag( densityTag.name(), vardenStarContext );
     const Expr::Tag solnVarRHSTag( solnVarName+"_rhs", Expr::STATE_NONE );
 
     std::string x1="X", x2="Y";
@@ -805,8 +807,8 @@ namespace WasatchCore{
     } // isCompressible
     else{ // low mach
 
-      /* Fix density context passed to Low-Mach constructor as STATE_N. This is done because the algorithm
-       * used requires solving for density at STATE_NP1 in order to obtain an estimate of the velocity
+      /* Fix density context passed to Low-Mach constructor as STATE_N. This is done because the algorithm used
+       * requires solving for density at the next time level in order to obtain an estimate of the velocity
        * divergence field, which then becomes density at STATE_N for the time step that follows, etc, etc.
        */
       Expr::Tag lowMachDensityTag = isConstDensity ?

@@ -155,12 +155,16 @@ namespace WasatchCore{
     if (cat == INITIALIZATION) {
       throw Uintah::ProblemSetupException( "You cannot currently use a density calculator for Initialization of the density. Please use ExtractVariable rather than ExtractDensity in your initial condition for TabProps.", __FILE__, __LINE__ );
     }
-
     Expr::ExpressionID densCalcID;  // BE SURE TO POPULATE THIS BELOW!
+
+    const TagNames& tagNames = TagNames::self();
 
     // Lock the density because on initialization this may be an intermediate
     // quantity, but is always needed as a guess for the solver here.
     persistentFields.insert( densityTag.name() );
+
+    // context for non-transported values for values at STATE_NP1.
+    const Expr::Context vardenStarContext = tagNames.vardenStarContext;
 
     const std::string densTableName = "Density";
     if( !table.has_depvar(densTableName) ){
@@ -186,11 +190,11 @@ namespace WasatchCore{
       persistentFields.insert( fTag.name() ); // ensure that Uintah knows about this field
 
       rhofTag.reset_context( Expr::STATE_NP1 );
-      if (weakForm) fTag.reset_context( Expr::STATE_NP1 );
+      if (weakForm) fTag.reset_context( vardenStarContext );
 
       typedef DensFromMixfrac<SVolField>::Builder DensCalc;
       
-      const Expr::Tag unconvPts( TagNames::self().unconvergedpts.name(), TagNames::self().unconvergedpts.context() );
+      const Expr::Tag unconvPts( TagNames::self().unconvergedpts.name(), tagNames.unconvergedpts.context() );
       const Expr::Tag drhodfTag( "drhod" + fTag.name(), Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( densityTag, unconvPts, drhodfTag ) );
       
@@ -343,10 +347,6 @@ namespace WasatchCore{
       case SVOL: {
         typedef TabPropsEvaluator<SpatialOps::SVolField>::Builder PropEvaluator;
         gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
-        if( doDenstPlus && dvarTableName=="Density" ){
-          const Expr::Tag densStarTag ( dvarTag.name()+TagNames::self().star,       dvarTag.context() );
-          gh.rootIDs.insert( gh.exprFactory->register_expression( scinew PropEvaluator( densStarTag,  *interp, ivarNames ) ) );
-        }
         break;
       }
       case XVOL: {
