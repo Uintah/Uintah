@@ -101,6 +101,7 @@ namespace WasatchCore{
     // turbulence related variables
     const Expr::Tag
     turbulentviscosity,
+    turbulentdiffusivity,
     straintensormag, vremantensormag,
     waletensormag, dynamicsmagcoef;
 

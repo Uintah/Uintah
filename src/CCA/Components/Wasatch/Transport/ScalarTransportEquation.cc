@@ -67,24 +67,39 @@ namespace WasatchCore{
                                   solnVarName,
                                   get_staggered_location<FieldT>() ),
       params_( params ),
-      hasConvection_( params_->findBlock("ConvectiveFlux") ),
-      densityTag_( densityTag ),
+      hasConvection_   ( params_->findBlock("ConvectiveFlux") ),
+      densityInitTag_  ( densityTag.name(), Expr::STATE_NONE ),
+      densityTag_      ( flowTreatment_ == LOWMACH ? Expr::Tag(densityTag.name(), Expr::STATE_N) : Expr::Tag(densityTag.name(), Expr::STATE_NONE) ),
+      densityNP1Tag_   ( densityTag.name(), Expr::STATE_NP1 ),
       enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE) ),
       persistentFields_( persistentFields )
   {
     //_____________
     // Turbulence
-    // todo: deal with turbulence releated tags for cases when flowTreatment_ == LOWMACH
+    // todo: deal with turbulence related tags for cases when flowTreatment_ == LOWMACH
+    const TagNames& tagNames = TagNames::self();
     if( enableTurbulence_ ){
-      Expr::Tag turbViscTag = TagNames::self().turbulentviscosity;
-      turbDiffTag_ = turbulent_diffusivity_tag();
+      Expr::Tag turbViscTag = tagNames.turbulentviscosity;
 
-      Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-      if( !factory.have_entry( turbDiffTag_ ) ){
-        typedef typename TurbulentDiffusivity::Builder TurbDiffT;
+      turbDiffInitTag_ = tagNames.turbulentdiffusivity;
+      turbDiffTag_     = Expr::Tag( turbDiffInitTag_.name(), flowTreatment_ == LOWMACH ? Expr::STATE_N : Expr::STATE_NONE );
+      turbDiffNP1Tag_  = Expr::Tag( turbDiffInitTag_.name(), Expr::STATE_NP1 );
+
+      Expr::ExpressionFactory& factory   = *gc_[ADVANCE_SOLUTION]->exprFactory;
+
+      Expr::ExpressionFactory& icFactory = *gc_[INITIALIZATION  ]->exprFactory;
+
+      typedef typename TurbulentDiffusivity::Builder TurbDiffT;
+
+      if( flowTreatment_ == LOWMACH ){
+        icFactory.register_expression( scinew TurbDiffT( turbDiffInitTag_, densityInitTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
+        factory  .register_expression( scinew TurbDiffT( turbDiffNP1Tag_ , densityNP1Tag_ , turbulenceParams.turbSchmidt, turbViscTag ) );
+        factory  .register_expression( scinew Expr::PlaceHolder<SVolField>::Builder( turbDiffTag_ ) );
+      }
+      else{
         factory.register_expression( scinew TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
       }
-    }
+    } // if(enableTurbulence_)
 
     // define the primitive variable and solution variable tags and trap errors
     std::string form = "strong"; // default to strong form
@@ -460,7 +475,7 @@ namespace WasatchCore{
     bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
 
-    if( !flowTreatment_ == LOWMACH && hasConvection_ ){
+    if( !(flowTreatment_ == LOWMACH) && hasConvection_ ){
       // set bcs for solution variable at STATE_NP1
       // todo: determine whether or not this is necessary.
 //      const Expr::Tag rhsNP1Tag     = Expr::Tag(rhsTag_.name(), Expr::STATE_NP1);

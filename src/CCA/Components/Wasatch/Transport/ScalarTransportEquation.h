@@ -194,10 +194,10 @@ namespace WasatchCore{
 
     Uintah::ProblemSpecP params_;
     const bool hasConvection_;
-    const Expr::Tag densityTag_;
+    const Expr::Tag densityInitTag_, densityTag_, densityNP1Tag_;
     const bool enableTurbulence_;
-    Expr::Tag primVarTag_;
-    Expr::Tag turbDiffTag_;
+    Expr::Tag primVarTag_, primVarNP1Tag_;
+    Expr::Tag turbDiffInitTag_, turbDiffTag_, turbDiffNP1Tag_;
     bool isStrong_;
     FieldTagInfo infoNP1_;  // needed to form predicted scalar quantities
     std::set<std::string>& persistentFields_;

@@ -78,8 +78,9 @@ namespace WasatchCore{
     //_____________
     // Turbulence
     if( enableTurbulence_ ){
-      Expr::Tag turbViscTag = TagNames::self().turbulentviscosity;
-      turbDiffTag_ = turbulent_diffusivity_tag();
+      const TagNames& tagNames = TagNames::self();
+      Expr::Tag turbViscTag = tagNames.turbulentviscosity;
+      turbDiffTag_ = tagNames.turbulentdiffusivity;
 
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       if( !factory.have_entry( turbDiffTag_ ) ){
