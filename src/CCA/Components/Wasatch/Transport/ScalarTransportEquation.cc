@@ -110,7 +110,7 @@ namespace WasatchCore{
       }
       else if( isStrong_ && existPrimVar ){
         const std::string primVarName = get_primvar_name( params );
-        primVarTag_ = Expr::Tag( primVarName, Expr::STATE_NONE );
+        primVarTag_ = Expr::Tag( primVarName, flowTreatment_==LOWMACH ? Expr::STATE_N : Expr::STATE_NONE );
       }
       else if( !isStrong_ && existPrimVar ){
         std::ostringstream msg;
@@ -312,9 +312,8 @@ namespace WasatchCore{
 
     // for variable density flows:
     if( !isConstDensity_ || !isStrong_ ){
-      factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
-      factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder( Expr::Tag(primVarTag_.name(), Expr::STATE_N)   ) );
-      factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder( Expr::Tag(densityTag_.name(), Expr::STATE_NONE)) );
+
+      factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder( Expr::Tag(primVarTag_.name(), Expr::STATE_N)) );
 
       if( hasConvection_ && flowTreatment_ == LOWMACH ){
         const Expr::Tag rhsNP1Tag     = Expr::Tag(rhsTag_    .name(), Expr::STATE_NP1);
@@ -331,8 +330,13 @@ namespace WasatchCore{
           infoNP1_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
           infoNP1_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
         }
-
         factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarNP1Tag, this->solnvar_np1_tag(), densityNP1Tag ) );
+
+        // this is used for temporal order verification for the low-Mach
+        const Expr::ExpressionID primVarStateNoneID =
+        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( Expr::Tag(primVarTag_.name(), Expr::STATE_NONE),
+                                                                                      Expr::Tag(solnVarName_      , Expr::STATE_N),
+                                                                                      Expr::Tag(densityTag_.name(), Expr::STATE_N) ) );
 
         const Expr::Tag scalEOSTag (primVarNP1Tag.name() + "_EOS_Coupling", Expr::STATE_NONE);
         const Expr::Tag dRhoDfTag("drhod" + primVarNP1Tag.name(), Expr::STATE_NONE);
@@ -479,8 +483,11 @@ namespace WasatchCore{
       // register expression to calculate the initial condition of the solution variable from the initial
       // conditions on primitive variable and density in the cases that we are solving for e.g. rho*phi
       typedef ExprAlgebra<SVolField> ExprAlgbr;
+      const Expr::Tag icPrimVarTag = Expr::Tag( primVarTag_.name(), Expr::STATE_NONE );
+      const Expr::Tag icDensityTag = Expr::Tag( densityTag_.name(), Expr::STATE_NONE );
+
       return icFactory.register_expression( new typename ExprAlgbr::Builder( initial_condition_tag(),
-                                                                             tag_list( primVarTag_, Expr::Tag(densityTag_.name(),Expr::STATE_NONE) ),
+                                                                             tag_list( icPrimVarTag, icDensityTag ),
                                                                              ExprAlgbr::PRODUCT ) );
     }
     return icFactory.get_id( initial_condition_tag() );
