@@ -196,6 +196,10 @@ namespace WasatchCore{
                                               factory,
                                               info );
   }
+
+
+  //------------------------------------------------------------------
+
 template< typename FluxT >
   Expr::ExpressionBuilder*
   build_diff_flux_expr( Uintah::ProblemSpecP diffFluxParams,
@@ -237,6 +241,9 @@ template< typename FluxT >
     }
     return nullptr;
   }
+
+
+  //------------------------------------------------------------------
   
   template< typename FieldT>
   void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
@@ -245,7 +252,8 @@ template< typename FluxT >
                                        const Expr::Tag turbDiffTag,
                                        Expr::ExpressionFactory& factory,
                                        FieldTagInfo& info,
-                                       const Expr::Context context )
+                                       const Expr::Context context,
+                                       const std::string suffix )
   {
     typedef typename FaceTypes<FieldT>::XFace XFaceT;
     typedef typename FaceTypes<FieldT>::YFace YFaceT;
@@ -290,7 +298,7 @@ template< typename FluxT >
       for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
         std::string dir(1,*it);
         const TagNames& tagNames = TagNames::self();
-        diffFluxTag = Expr::Tag( primVarName + tagNames.diffusiveflux + dir, context );
+        diffFluxTag = Expr::Tag( primVarName + tagNames.diffusiveflux + dir + suffix, context );
         
         Expr::ExpressionBuilder* builder = nullptr;
         if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
@@ -478,7 +486,8 @@ const Expr::Tag primVarTag,                              \
 const Expr::Tag turbDiffTag,                             \
 Expr::ExpressionFactory& factory,                        \
 FieldTagInfo& info,                                      \
-const Expr::Context context );                           \
+const Expr::Context context,                             \
+const std::string suffix );                              \
 \
 template void register_diffusive_flux_placeholders<FIELDT>(  \
 Expr::ExpressionFactory& factory,                        \

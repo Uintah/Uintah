@@ -40,7 +40,9 @@ namespace WasatchCore{
    * \param primVarTag The primitive variable, \f$\phi\f$.
    * \param turbDiffTag The scalar turbulent diffusivity
    * \param factory the factory to register the resulting expression on
-   * \param info the FieldTagInfo object that will be populated with the appropriate convective flux entry.
+   * \param info the FieldTagInfo object that will be populated with the appropriate diffusive flux entry.
+   * \param context context of diffusive flux tag
+   * \param suffix a string that is used in construction of name of the diffusive flux tag
    */
   template< typename FieldT>
   void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
@@ -49,7 +51,8 @@ namespace WasatchCore{
                                         const Expr::Tag turbDiffTag,
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info,
-                                        const Expr::Context context = Expr::STATE_NONE );
+                                        const Expr::Context context = Expr::STATE_NONE,
+                                        const std::string suffix = "");
 
   template< typename FieldT>
   void register_diffusive_flux_placeholders( Expr::ExpressionFactory& factory,
