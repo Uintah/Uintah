@@ -87,13 +87,14 @@
       </ConvectiveFlux>
 
     </TransportEquation>
+    
+    <ForceOnGraph tasklist="advance_solution">
+        <NameTag name="f" state="STATE_NP1"/>
+    </ForceOnGraph>
 
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f"/>
-      </FieldExpression>
-      <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f*"/>
+        <NameTag name="f" state="STATE_NP1"/>
       </FieldExpression>
       <FieldExpression type="SVOL" min="0.0" max="5.0">
         <NameTag name="rhof" state="STATE_NP1"/>
