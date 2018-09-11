@@ -537,7 +537,6 @@ namespace WasatchCore{
 
     const TagNames& tagNames = TagNames::self();
 
-    const Expr::Tag fStarTag(primVarName, Expr::STATE_NP1);
     const Expr::Tag drhodfTag("drhod" + primVarName, Expr::STATE_NONE);
     const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
 
