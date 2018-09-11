@@ -76,28 +76,16 @@ namespace WasatchCore{
   {
     //_____________
     // Turbulence
-    // todo: deal with turbulence related tags for cases when flowTreatment_ == LOWMACH
     const TagNames& tagNames = TagNames::self();
     if( enableTurbulence_ ){
       Expr::Tag turbViscTag = tagNames.turbulentviscosity;
 
-      turbDiffInitTag_ = tagNames.turbulentdiffusivity;
-      turbDiffTag_     = Expr::Tag( turbDiffInitTag_.name(), flowTreatment_ == LOWMACH ? Expr::STATE_N : Expr::STATE_NONE );
-      turbDiffNP1Tag_  = Expr::Tag( turbDiffInitTag_.name(), Expr::STATE_NP1 );
+      turbDiffTag_ = tagNames.turbulentdiffusivity;
 
       Expr::ExpressionFactory& factory   = *gc_[ADVANCE_SOLUTION]->exprFactory;
-      Expr::ExpressionFactory& icFactory = *gc_[INITIALIZATION  ]->exprFactory;
 
       typedef typename TurbulentDiffusivity::Builder TurbDiffT;
-
-      if( flowTreatment_ == LOWMACH ){
-        icFactory.register_expression( scinew TurbDiffT( turbDiffInitTag_, densityInitTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
-        factory  .register_expression( scinew TurbDiffT( turbDiffNP1Tag_ , densityNP1Tag_ , turbulenceParams.turbSchmidt, turbViscTag ) );
-        factory  .register_expression( scinew Expr::PlaceHolder<SVolField>::Builder( turbDiffTag_ ) );
-      }
-      else{
-        factory.register_expression( scinew TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
-      }
+      factory.register_expression( scinew TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
     } // if(enableTurbulence_)
 
     // define the primitive variable and solution variable tags and trap errors
@@ -136,6 +124,9 @@ namespace WasatchCore{
     }
     assert( primVarTag_ != Expr::Tag() );
 
+    primVarInitTag_ = Expr::Tag( primVarTag_.name(), Expr::STATE_NONE);
+    primVarNP1Tag_  = Expr::Tag( primVarTag_.name(), Expr::STATE_NP1);
+
     if( callSetup ) setup();
   }
 
@@ -154,10 +145,9 @@ namespace WasatchCore{
     // these expressions all get registered on the advance solution graph
     Expr::ExpressionFactory& factory  = *gc_[ADVANCE_SOLUTION]->exprFactory;
     Expr::ExpressionFactory& iFactory = *gc_[INITIALIZATION  ]->exprFactory;
-    Expr::Tag densityTag, primVarTag;
 
     switch(flowTreatment_){
-      case INCOMPRESSIBLE:
+      case INCOMPRESSIBLE: {
         for( Uintah::ProblemSpecP diffVelParams=params_->findBlock("DiffusiveFlux");
              diffVelParams != nullptr;
              diffVelParams=diffVelParams->findNextBlock("DiffusiveFlux") ) {
@@ -167,21 +157,15 @@ namespace WasatchCore{
                                                        factory,
                                                        info );
         } // loop over each flux specification
+      } // case INCOMPRESSIBLE
       break;
 
-      case LOWMACH:
+      case LOWMACH: {
        /* If scalars are being transported in strong form using the low-Mach algorithm, we need
-        * density and primitive scalars, and at old state (STATE_N) to calculate scalar RHS terms
+        * density and primitive scalar at the current state (STATE_N) to calculate scalar RHS terms
         * at the new state (STATE_NP1), and subsequently, div(u) at STATE_NP1. As a result,
         * expressions for diffusive fluxes at STATE_N are registered as placeholders.
         */
-        if (is_strong_form()) {
-          densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_N);
-          primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_N);
-        } else {
-          densityTag = densityTag_;
-          primVarTag = primVarTag_;
-        }
 
         for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
           diffFluxParams != nullptr;
@@ -190,64 +174,86 @@ namespace WasatchCore{
              // if doing convection, we will likely have a pressure solve that requires
              // predicted scalar values to approximate the density time derivatives
              if( params_->findBlock("ConvectiveFlux") ){
-               /* When using the low-Mach model
-                *
-                */
 
-               const Expr::Tag densityNP1Tag = Expr::Tag(densityTag.name() , Expr::STATE_NP1);
-               const Expr::Tag primVarNP1Tag = Expr::Tag(primVarTag.name() , Expr::STATE_NP1);
+              /* if the low-Mach algorithm is used with a turbulence model, we need to compute
+               * the diffusive flux at STATE_N and an estimate for diffusive flux at STATE_NP1.
+               * We cannot calculate the STATE_NP1 value exactly attempting to do so would
+               * induce a circular dependency like so:
+               * diffusive-flux_NP1 --> (...) --> velocity_NP1 --> (...) --> diffusive-flux_NP1
+               */
+               if(enableTurbulence_){
+                 setup_diffusive_flux_expression<FieldT>( diffFluxParams,
+                                                          densityTag_,
+                                                          primVarTag_,
+                                                          turbDiffTag_,
+                                                          factory,
+                                                          info );
 
-               setup_diffusive_flux_expression<FieldT>( diffFluxParams,
-                                                        densityNP1Tag,
-                                                        primVarNP1Tag,
-                                                        turbDiffTag_,
-                                                        factory,
-                                                        infoNP1_,
-                                                        Expr::STATE_NP1 );
+                 setup_diffusive_flux_expression<FieldT>( diffFluxParams,
+                                                          densityTag_,
+                                                          primVarTag_,
+                                                          turbDiffTag_,
+                                                          factory,
+                                                          infoNP1_,
+                                                          Expr::STATE_NONE,
+                                                          "-NP1-estimate");
+               } // if(enableTurbulence_)
 
-               // fieldTagInfo used for diffusive fluxes calculated at initialization
-               FieldTagInfo infoInit;
-               Expr::Context initContext = Expr::STATE_NONE;
-               const Expr::Tag densityInitTag = Expr::Tag(densityTag.name() , initContext);
-               const Expr::Tag primVarInitTag = Expr::Tag(primVarTag.name() , initContext);
+               else{
+                 assert(primVarNP1Tag_.context() == Expr::STATE_NP1);
+                 setup_diffusive_flux_expression<FieldT>( diffFluxParams,
+                                                          densityNP1Tag_,
+                                                          primVarNP1Tag_,
+                                                          turbDiffTag_,
+                                                          factory,
+                                                          infoNP1_,
+                                                          Expr::STATE_NP1 );
 
-               setup_diffusive_flux_expression<FieldT>( diffFluxParams,
-                                                        densityInitTag,
-                                                        primVarInitTag,
-                                                        turbDiffTag_,
-                                                        iFactory,
-                                                        infoInit,
-                                                        initContext );
+                 // fieldTagInfo used for diffusive fluxes calculated at initialization
+                 FieldTagInfo infoInit;
 
-               // set info for diffusive flux based on infoNP1_, add tag names to set of persistent fields
-               const std::vector<FieldSelector> fsVec = {DIFFUSIVE_FLUX_X, DIFFUSIVE_FLUX_Y, DIFFUSIVE_FLUX_Z};
-               for( FieldSelector fs : fsVec ){
-                if( infoNP1_.find(fs) != infoNP1_.end() ){
-                  const std::string diffFluxName = infoNP1_[fs].name();
-                  info[fs] = Expr::Tag(diffFluxName, Expr::STATE_N);
-                  persistentFields_.insert(diffFluxName);
+                 assert(primVarInitTag_.context() == Expr::STATE_NONE);
+                 setup_diffusive_flux_expression<FieldT>( diffFluxParams,
+                                                          densityInitTag_,
+                                                          primVarInitTag_,
+                                                          turbDiffTag_,
+                                                          iFactory,
+                                                          infoInit,
+                                                          primVarInitTag_.context() );
 
-                  // Force diffusive flux expression on initialization graph.
-                  const Expr::ExpressionID id = iFactory.get_id( infoInit[fs] );
-                  gc_[INITIALIZATION]->rootIDs.insert(id);
-                }
-               }
+                 // set info for diffusive flux based on infoNP1_, add tag names to set of persistent fields
+                 const std::vector<FieldSelector> fsVec = {DIFFUSIVE_FLUX_X, DIFFUSIVE_FLUX_Y, DIFFUSIVE_FLUX_Z};
+                 for( FieldSelector fs : fsVec ){
+                  if( infoNP1_.find(fs) != infoNP1_.end() ){
+                    const std::string diffFluxName = infoNP1_[fs].name();
+                    info[fs] = Expr::Tag(diffFluxName, Expr::STATE_N);
+                    persistentFields_.insert(diffFluxName);
 
-               // Register placeholders for diffusive flux parameters at STATE_N
-               register_diffusive_flux_placeholders<FieldT>( factory, info );
-             }
+                    // Force diffusive flux expression on initialization graph.
+                    const Expr::ExpressionID id = iFactory.get_id( infoInit[fs] );
+                    gc_[INITIALIZATION]->rootIDs.insert(id);
+                  }
+                 }
+
+                 // Register placeholders for diffusive flux parameters at STATE_N
+                 register_diffusive_flux_placeholders<FieldT>( factory, info );
+               } // else -- (enableTurbulence_ == false)
+             } //if( params_->findBlock("ConvectiveFlux") )
+
              else{
                setup_diffusive_flux_expression<FieldT>( diffFluxParams,
-                                                        densityTag,
-                                                        primVarTag,
+                                                        densityTag_,
+                                                        primVarTag_,
                                                         turbDiffTag_,
                                                         factory,
                                                         info );
              }
         } // loop over each flux specification
+      } // case LOWMACH
       break;
 
-      case COMPRESSIBLE:
+      case COMPRESSIBLE: {
+        Expr::Tag densityTag, primVarTag;
         if (is_strong_form()) {
           densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_NONE);
           primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_NONE);
@@ -267,6 +273,7 @@ namespace WasatchCore{
                                                       factory,
                                                       info );
         } // loop over each flux specification
+      } // case COMPRESSIBLE
       break;
 
       default:
@@ -324,42 +331,41 @@ namespace WasatchCore{
 
     info[PRIMITIVE_VARIABLE] = primVarTag_;
 
-    // for variable density flows:
-    if( !isConstDensity_ || !isStrong_ ){
+    if( flowTreatment_ == COMPRESSIBLE ){
       factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
+    }
 
-      if( hasConvection_ && flowTreatment_ == LOWMACH ){
-        const Expr::Tag rhsNP1Tag     = Expr::Tag(rhsTag_    .name(), Expr::STATE_NP1);
-        const Expr::Tag densityNP1Tag = Expr::Tag(densityTag_.name(), Expr::STATE_NP1);
-        const Expr::Tag primVarNP1Tag = Expr::Tag(primVarTag_.name(), Expr::STATE_NP1);
-        const Expr::Tag solnVarNP1Tag = Expr::Tag(solnVarName_      , Expr::STATE_NP1);
-        infoNP1_[PRIMITIVE_VARIABLE]  = primVarNP1Tag;
-        
-        EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
-        if( vNames.has_embedded_geometry() ){
-          infoNP1_
-          [VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
-          infoNP1_[AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
-          infoNP1_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
-          infoNP1_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
-        }
-        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarNP1Tag, this->solnvar_np1_tag(), densityNP1Tag ) );
+    // for variable density flows:
+    if( hasConvection_ && flowTreatment_ == LOWMACH ){
+      const Expr::Tag rhsNP1Tag     = Expr::Tag(rhsTag_.name(), Expr::STATE_NP1);
+      infoNP1_[PRIMITIVE_VARIABLE]  = primVarNP1Tag_;
 
-        factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder( Expr::Tag(primVarTag_.name(), Expr::STATE_N)) );
-
-        const Expr::Tag scalEOSTag (primVarNP1Tag.name() + "_EOS_Coupling", Expr::STATE_NONE);
-        const Expr::Tag dRhoDfTag("drhod" + primVarNP1Tag.name(), Expr::STATE_NONE);
-        factory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_, srcTags, densityNP1Tag, dRhoDfTag, isStrong_) );
-        
-        // register an expression for divu. divu is just a constant expression to which we add the
-        // necessary couplings from the scalars that represent the equation of state.
-        if( !factory.have_entry( tagNames.divu ) ) { // if divu has not been registered yet, then register it!
-          typedef typename Expr::ConstantExpr<SVolField>::Builder divuBuilder;
-          factory.register_expression( new divuBuilder(tagNames.divu, 0.0)); // set the value to zero so that we can later add sources to it
-        }
-
-        factory.attach_dependency_to_expression(scalEOSTag, tagNames.divu);
+      EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+      if( vNames.has_embedded_geometry() ){
+        infoNP1_
+        [VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
+        infoNP1_[AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
+        infoNP1_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
+        infoNP1_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
       }
+
+      if(isStrong_){
+        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarNP1Tag_, this->solnvar_np1_tag(), densityNP1Tag_ ) );
+        factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder(primVarTag_) );
+      }
+
+      const Expr::Tag scalEOSTag (primVarTag_.name() + "_EOS_Coupling", Expr::STATE_NONE);
+      const Expr::Tag dRhoDfTag("drhod" + primVarTag_.name(), Expr::STATE_NONE);
+      factory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_, srcTags, densityNP1Tag_, dRhoDfTag, isStrong_) );
+
+      // register an expression for divu. divu is just a constant expression to which we add the
+      // necessary couplings from the scalars that represent the equation of state.
+      if( !factory.have_entry( tagNames.divu ) ) { // if divu has not been registered yet, then register it!
+        typedef typename Expr::ConstantExpr<SVolField>::Builder divuBuilder;
+        factory.register_expression( new divuBuilder(tagNames.divu, 0.0)); // set the value to zero so that we can later add sources to it
+      }
+
+      factory.attach_dependency_to_expression(scalEOSTag, tagNames.divu);
     }
 
     return factory.register_expression( scinew RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.divrhou ) );
