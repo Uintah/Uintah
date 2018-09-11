@@ -92,7 +92,8 @@ namespace WasatchCore {
                                Uintah::ProblemSpecP params,
                                GraphCategories& gc,
                                const Expr::Tag densityTag,
-                               const TurbulenceParameters& turbulenceParams );
+                               const TurbulenceParameters& turbulenceParams,
+                               std::set<std::string>& persistentFields );
 
     ~EnthalpyTransportEquation();
 

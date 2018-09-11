@@ -482,11 +482,13 @@ namespace WasatchCore {
                                         const Expr::Tag& viscTag,
                                         const Expr::Tag& dilTag,
                                         const TurbulenceParameters& turbulenceParams,
-                                        WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo )
+                                        WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                                        std::set<std::string>& persistentFields )
     : ScalarTransportEquation<SVolField>( rhoe0Name,
                                           energyEqnSpec,
                                           gc, densityTag,
                                           turbulenceParams,
+                                          persistentFields,
                                           false /* don't call setup */ ),
       wasatchSpec_( wasatchSpec ),
       kineticEnergyTag_( "kinetic energy", Expr::STATE_NONE ),

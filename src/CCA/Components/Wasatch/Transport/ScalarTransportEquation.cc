@@ -61,6 +61,7 @@ namespace WasatchCore{
                            GraphCategories& gc,
                            const Expr::Tag densityTag,
                            const TurbulenceParameters& turbulenceParams,
+                           std::set<std::string>& persistentFields,
                            const bool callSetup )
     : WasatchCore::TransportEquation( gc,
                                   solnVarName,
@@ -69,6 +70,7 @@ namespace WasatchCore{
       hasConvection_( params_->findBlock("ConvectiveFlux") ),
       densityTag_( densityTag ),
       enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE) ),
+      persistentFields_( persistentFields ),
       vardenStarContext_( TagNames::self().vardenStarContext )
   {
     //_____________
@@ -136,55 +138,91 @@ namespace WasatchCore{
   ScalarTransportEquation<FieldT>::setup_diffusive_flux( FieldTagInfo& info )
   {
     // these expressions all get registered on the advance solution graph
-    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    Expr::ExpressionFactory& factory  = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    Expr::ExpressionFactory& iFactory = *gc_[INITIALIZATION  ]->exprFactory;
+    Expr::Tag densityTag, primVarTag;
 
-    if( !isConstDensity_ ){
-      for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
-           diffFluxParams != nullptr;
-           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") ) {
-        Expr::Tag densityTag, primVarTag;
-        if (is_strong_form()) { // todo: check if low-Mach is implemented and set tag context accordingly
+    switch(flowTreatment_){
+      case INCOMPRESSIBLE:
+        for( Uintah::ProblemSpecP diffVelParams=params_->findBlock("DiffusiveFlux");
+             diffVelParams != nullptr;
+             diffVelParams=diffVelParams->findNextBlock("DiffusiveFlux") ) {
+          setup_diffusive_velocity_expression<FieldT>( diffVelParams,
+                                                       primVarTag_,
+                                                       turbDiffTag_,
+                                                       factory,
+                                                       info );
+        } // loop over each flux specification
+      break;
+
+      case LOWMACH:
+       /* If scalars are being transported in strong form using the low-Mach algorithm, we need
+        * density and primitive scalars at old state (STATE_N) to calculate scalar RHS terms at
+        * the new state (STATE_NP1), and subsequently, div(u) at STATE_NP1.
+        */
+        if (is_strong_form()) {
           densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_N);
           primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_N);
         } else {
           densityTag = densityTag_;
           primVarTag = primVarTag_;
         }
-        
-        setup_diffusive_flux_expression<FieldT>( diffFluxParams,
-                                                 densityTag,
-                                                 primVarTag,
-                                                 turbDiffTag_,
-                                                 factory,
-                                                 info );
 
-        // if doing convection, we will likely have a pressure solve that requires
-        // predicted scalar values to approximate the density time derivatives
-        if( params_->findBlock("ConvectiveFlux") ){
-          
-          const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() , vardenStarContext_);
-          const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() , vardenStarContext_);
-          
-          setup_diffusive_flux_expression<FieldT>( diffFluxParams,
-                                                   densityCorrectedTag,
-                                                   primVarCorrectedTag,
-                                                   turbDiffTag_,
-                                                   factory,
-                                                   infoStar_,
-                                                   true );
+        for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
+          diffFluxParams != nullptr;
+          diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") ) {
+
+             setup_diffusive_flux_expression<FieldT>( diffFluxParams,
+                                                      densityTag,
+                                                      primVarTag,
+                                                      turbDiffTag_,
+                                                      factory,
+                                                      info );
+
+             // if doing convection, we will likely have a pressure solve that requires
+             // predicted scalar values to approximate the density time derivatives
+             if( params_->findBlock("ConvectiveFlux") ){
+
+               const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() , vardenStarContext_);
+               const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() , vardenStarContext_);
+
+               setup_diffusive_flux_expression<FieldT>( diffFluxParams,
+                                                        densityCorrectedTag,
+                                                        primVarCorrectedTag,
+                                                        turbDiffTag_,
+                                                        factory,
+                                                        infoStar_,
+                                                        true );
+           }
+        } // loop over each flux specification
+      break;
+
+      case COMPRESSIBLE:
+        if (is_strong_form()) {
+          densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_NONE);
+          primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_NONE);
+        } else {
+          densityTag = densityTag_;
+          primVarTag = primVarTag_;
         }
-      } // loop over each flux specification
-    }
-    else{ // constant density
-      for( Uintah::ProblemSpecP diffVelParams=params_->findBlock("DiffusiveFlux");
-           diffVelParams != nullptr;
-           diffVelParams=diffVelParams->findNextBlock("DiffusiveFlux") ) {
-        setup_diffusive_velocity_expression<FieldT>( diffVelParams,
-                                                     primVarTag_,
-                                                     turbDiffTag_,
-                                                     factory,
-                                                     info );
-      } // loop over each flux specification
+
+        for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
+          diffFluxParams != nullptr;
+          diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") ) {
+
+             setup_diffusive_flux_expression<FieldT>( diffFluxParams,
+                                                      densityTag,
+                                                      primVarTag,
+                                                      turbDiffTag_,
+                                                      factory,
+                                                      info );
+        } // loop over each flux specification
+      break;
+
+      default:
+        std::ostringstream msg;
+        msg << "ERROR: unhandled flow treatment." << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
   }
 

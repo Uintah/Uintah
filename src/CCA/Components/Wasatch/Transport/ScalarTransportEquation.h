@@ -131,6 +131,7 @@ namespace WasatchCore{
                              GraphCategories& gc,
                              const Expr::Tag densityTag,
                              const TurbulenceParameters& turbulenceParams,
+                             std::set<std::string>& persistentFields,
                              const bool callSetup=true );
 
     virtual ~ScalarTransportEquation();
@@ -199,6 +200,7 @@ namespace WasatchCore{
     Expr::Tag turbDiffTag_;
     bool isStrong_;
     FieldTagInfo infoStar_;  // needed to form predicted scalar quantities
+    std::set<std::string>& persistentFields_;
     const Expr::Context vardenStarContext_;
 
   };
