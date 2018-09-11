@@ -327,7 +327,7 @@ template< typename FluxT >
   {
     typedef typename Expr::PlaceHolder<typename FaceTypes<FieldT>::XFace>::Builder BuilderX;
     typedef typename Expr::PlaceHolder<typename FaceTypes<FieldT>::YFace>::Builder BuilderY;
-    typedef typename Expr::PlaceHolder<typename FaceTypes<FieldT>::XFace>::Builder BuilderZ;
+    typedef typename Expr::PlaceHolder<typename FaceTypes<FieldT>::ZFace>::Builder BuilderZ;
 
     bool hasDiffusiveFlux = false;
 
