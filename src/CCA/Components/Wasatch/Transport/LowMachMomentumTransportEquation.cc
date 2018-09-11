@@ -278,12 +278,9 @@ namespace WasatchCore{
       }
 
       if( !this->is_constant_density() ){
-        // Not sure what to do here. I'm pretty sure the BCs for density_NP1 shouldn't be set at initialization
-//        const Expr::Tag rhoTagInit(this->densityTag_.name(), Expr::STATE_NP1);
-        const Expr::Tag rhoStarTag = Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1); // get the tagname of rho*
-//        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagInit), INITIALIZATION);
-        const Expr::Tag rhoTagAdv(this->densityTag_.name(), Expr::STATE_NONE);
-        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagAdv), ADVANCE_SOLUTION);
+//        const Expr::Tag rhoTagAdv(this->densityTag_.name(), Expr::STATE_N);
+//        const Expr::Tag rhoStarTag = Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1); // get the tagname of rho*
+//        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(this->densityTag_), ADVANCE_SOLUTION);
       }
     }
     //
@@ -305,8 +302,8 @@ namespace WasatchCore{
         // check if this boundary applies a bc on the density
         if( myBndSpec.has_field(this->densityTag_.name()) ){
           // create a bc copier for the density estimate
-          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + "_NP1_" + bndName +"_bccopier", Expr::STATE_NONE);
-          BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name()+"_NP1", 0.0, DIRICHLET, FUNCTOR_TYPE};
+          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + bndName +"_bccopier", Expr::STATE_NONE);
+          BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
           if( !initFactory.have_entry(rhoStarBCTag) ){
             const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
             initFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
@@ -512,12 +509,12 @@ namespace WasatchCore{
       const TagNames& tagNames = TagNames::self();
 
       // set bcs for density
-      const Expr::Tag densTag( this->densityTag_.name(), Expr::STATE_NONE );
-      bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
+//      const Expr::Tag densTag( this->densityTag_.name(), Expr::STATE_NONE );
+//      bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
       // todo: check if this should be turned on or not.
-//      bcHelper.apply_boundary_condition<SVolField>( Expr::Tag(this->densityTag_.name(),Expr::STATE_NP1), taskCat );
+      bcHelper.apply_boundary_condition<SVolField>( Expr::Tag(this->densityTag_.name(),Expr::STATE_NP1), taskCat );
     }
   }
 

@@ -805,12 +805,20 @@ namespace WasatchCore{
     } // isCompressible
     else{ // low mach
 
+      /* Fix density context passed to Low-Mach constructor as STATE_N. This is done because the algorithm
+       * used requires solving for density at STATE_NP1 in order to obtain an estimate of the velocity
+       * divergence field, which then becomes density at STATE_N for the time step that follows, etc, etc.
+       */
+      Expr::Tag lowMachDensityTag = isConstDensity ?
+                                    densityTag :
+                                    Expr::Tag(densityTag.name(), Expr::STATE_N);
+
       if( doxvel && doxmom ){
         proc0cout << "Setting up X momentum transport equation" << std::endl;
         typedef LowMachMomentumTransportEquation< XVolField > MomTransEq;
         EquationBase* momtranseq = scinew MomTransEq( WasatchCore::XDIR, xvelname,
                                                       xmomname,
-                                                      densityTag,
+                                                      lowMachDensityTag,
                                                       isConstDensity,
                                                       xBodyForceTag,
                                                       xSrcTermTag,
@@ -826,7 +834,7 @@ namespace WasatchCore{
         typedef LowMachMomentumTransportEquation< YVolField > MomTransEq;
         EquationBase* momtranseq = scinew MomTransEq( WasatchCore::YDIR, yvelname,
                                                       ymomname,
-                                                      densityTag,
+                                                      lowMachDensityTag,
                                                       isConstDensity,
                                                       yBodyForceTag,
                                                       ySrcTermTag,
@@ -842,7 +850,7 @@ namespace WasatchCore{
         typedef LowMachMomentumTransportEquation< ZVolField > MomTransEq;
         EquationBase* momtranseq = scinew MomTransEq( WasatchCore::ZDIR, zvelname,
                                                       zmomname,
-                                                      densityTag,
+                                                      lowMachDensityTag,
                                                       isConstDensity,
                                                       zBodyForceTag,
                                                       zSrcTermTag,
