@@ -764,12 +764,88 @@ parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
-                     BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,  
+                     BlockRange const & r, const Functor & functor, ReductionType & red )
 {
+  ReductionType tmp = red;
+  unsigned int i_size = r.end(0) - r.begin(0);
+  unsigned int j_size = r.end(1) - r.begin(1);
+  unsigned int k_size = r.end(2) - r.begin(2);
+  unsigned int rbegin0 = r.begin(0);
+  unsigned int rbegin1 = r.begin(1);
+  unsigned int rbegin2 = r.begin(2);
 
-  printf("CUDA version of parallel_reduce_min not yet implemented\n");
-  exit(-1);
+  // The user has two partitions available.  1) One is the total number of streaming multiprocessors.  2) The other is
+  // splitting a task into multiple streams and execution units.
+
+  const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+
+  // Get the requested amount of threads per streaming multiprocessor (SM) and number of SMs totals.
+  const unsigned int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
+  const unsigned int cuda_blocks_per_loop     = executionObject.getCudaBlocksPerLoop();
+  const unsigned int streamPartitions = executionObject.getNumStreams();
+
+  // The requested range of data may not have enough work for the requested command line arguments, so shrink them if necessary.
+  const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_block * cuda_blocks_per_loop)
+                                    ? (cuda_threads_per_block * cuda_blocks_per_loop) : (numItems / streamPartitions);
+  const unsigned int actual_threads_per_block = (numItems / streamPartitions) > cuda_threads_per_block ? cuda_threads_per_block : (numItems / streamPartitions);
+  const unsigned int actual_cuda_blocks_per_loop = (actual_threads - 1) / cuda_threads_per_block + 1;
+  for (unsigned int i = 0; i < streamPartitions; i++) {
+
+#if defined(NO_STREAM)
+    Kokkos::Cuda instanceObject();
+    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
+#else
+    void* stream = executionObject.getStream(i);
+    if (!stream) {
+      std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
+      SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
+    }
+    Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+    //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1>  > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
+    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
+#endif
+    
+    // Use a Team Policy, this allows us to control how many threads per block and how many blocks are used.
+    typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
+    Kokkos::parallel_reduce ( reduce_tp, [=] __device__ ( typename policy_type::member_type thread, ReductionType& inner_min ) {
+
+
+      // We are within an SM, and all SMs share the same amount of assigned CUDA threads.
+      // Figure out which range of N items this SM should work on (as a multiple of 32).
+      const unsigned int currentPartition = i * actual_cuda_blocks_per_loop + thread.league_rank();
+      unsigned int estimatedThreadAmount = numItems * (currentPartition) / ( actual_cuda_blocks_per_loop * streamPartitions );
+      const unsigned int startingN =  estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
+      unsigned int endingN;
+      // Check if this is the last partition
+      if ( currentPartition + 1 == actual_cuda_blocks_per_loop * streamPartitions ) {
+        endingN = numItems;
+      } else {
+        estimatedThreadAmount = numItems * ( currentPartition + 1 ) / ( actual_cuda_blocks_per_loop * streamPartitions );
+        endingN = estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
+      }
+      const unsigned int totalN = endingN - startingN;
+      //printf("league_rank: %d, team_size: %d, team_rank: %d, startingN: %d, endingN: %d, totalN: %d\n", thread.league_rank(), thread.team_size(), thread.team_rank(), startingN, endingN, totalN);
+
+      Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, totalN), [&, startingN, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2] (const int& N) {
+        // Craft an i,j,k out of this range. 
+        // This approach works with row-major layout so that consecutive Cuda threads work along consecutive slots in memory.
+        //printf("reduce team demo - n is %d, league_rank is %d, true n is %d\n", N, thread.league_rank(), (startingN + N));
+        int k = (startingN + N) / (j_size * i_size) + rbegin2;
+        int j = ((startingN + N) / i_size) % j_size + rbegin1;
+        int i = (startingN + N) % i_size + rbegin0;
+        // Actually run the functor.
+        functor(i,j,k, inner_min );
+      });
+    }, Kokkos::Min<ReductionType>(tmp));
+
+    red = tmp;
+  }
+
+#if defined(NO_STREAM)
+  cudaDeviceSynchronize();
+#endif
+
 
 }
 #endif  //#if defined(HAVE_CUDA)
@@ -790,8 +866,8 @@ parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
   for (int j=jb; j<je; ++j) {
   for (int i=ib; i<ie; ++i) {
     functor(i,j,k,tmp);
+    red=min(tmp,red);
   }}}
-  red = tmp;
 }
 
 
@@ -904,11 +980,8 @@ typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, voi
 parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
              Kokkos::View<int_3*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
-  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, list_size).set_chunk_size(2), [=](int iblock) {
-    const int i =  iterSpace[iblock][0];
-    const int j =  iterSpace[iblock][1];
-    const int k =  iterSpace[iblock][2];
-    functor(i,j,k);
+  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, list_size).set_chunk_size(1), [=](const unsigned int & iblock) {
+    functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
   });
 }
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
@@ -928,7 +1001,7 @@ parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executio
   unsigned int cudaThreadsPerBlock = executionObject.getCudaThreadsPerBlock();
   unsigned int cudaBlocksPerLoop   = executionObject.getCudaBlocksPerLoop();
 
-  const unsigned int actualThreads = (int) list_size > cudaThreadsPerBlock ? cudaThreadsPerBlock : list_size;
+  const unsigned int actualThreads = list_size > cudaThreadsPerBlock ? cudaThreadsPerBlock : list_size;
 
 #if defined(NO_STREAM)
   Kokkos::Cuda instanceObject();
@@ -949,10 +1022,7 @@ parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executio
 
     const unsigned int currentBlock = thread.league_rank();
     Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, list_size), [&,iterSpace] (const unsigned int& iblock) {
-      const int i =  iterSpace[iblock][0];
-      const int j =  iterSpace[iblock][1];
-      const int k =  iterSpace[iblock][2];
-      functor(i,j,k);
+    functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
       });
     });
 #if defined(NO_STREAM)
@@ -1302,10 +1372,7 @@ parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executio
              Kokkos::View<int_3*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
   for (unsigned int iblock=0; iblock<list_size; ++iblock) {
-    const int i =  iterSpace[iblock][0];
-    const int j =  iterSpace[iblock][1];
-    const int k =  iterSpace[iblock][2];
-    functor(i,j,k);
+    functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
   };
 }
 #else
@@ -1315,10 +1382,7 @@ parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executio
              std::vector<int_3> &iterSpace ,const unsigned int list_size , const Functor & functor )
 {
   for (unsigned int iblock=0; iblock<list_size; ++iblock) {
-    const int i =  iterSpace[iblock][0];
-    const int j =  iterSpace[iblock][1];
-    const int k =  iterSpace[iblock][2];
-    functor(i,j,k);
+    functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
   };
 }
 #endif
