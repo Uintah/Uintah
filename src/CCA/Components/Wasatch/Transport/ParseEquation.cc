@@ -82,7 +82,8 @@ namespace WasatchCore{
                                                  TurbulenceParameters turbParams,
                                                  const Expr::Tag densityTag,
                                                  GraphCategories& gc,
-                                                 WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo)
+                                                 WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                                                 std::set<std::string>& persistentFields )
   {
     EqnTimestepAdaptorBase* adaptor = nullptr;
     EquationBase* transeqn = nullptr;
@@ -105,7 +106,8 @@ namespace WasatchCore{
                                        params,
                                        gc,
                                        densityTag,
-                                       turbParams );
+                                       turbParams,
+                                       persistentFields );
       adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
 
       dualTimeMatrixInfo.add_scalar_equation( transeqn->solution_variable_tag(), transeqn->rhs_tag() );
@@ -117,7 +119,8 @@ namespace WasatchCore{
                                  params,
                                  gc,
                                  densityTag,
-                                 turbParams );
+                                 turbParams,
+                                 persistentFields );
       adaptor = scinew EqnTimestepAdaptor<SVolField>(transeqn);
     }
     else {
@@ -591,7 +594,8 @@ namespace WasatchCore{
                             GraphCategories& gc,
                             Uintah::SolverInterface& linSolver,
                             Uintah::MaterialManagerP& materialManager,
-                            WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo )
+                            WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                            std::set<std::string>& persistentFields )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
@@ -800,7 +804,8 @@ namespace WasatchCore{
                                                                             viscTag,
                                                                             TagNames::self().dilatation,
                                                                             turbParams,
-                                                                            dualTimeMatrixInfo );
+                                                                            dualTimeMatrixInfo,
+                                                                            persistentFields );
       adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(totalEEq) );
 
     } // isCompressible

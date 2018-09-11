@@ -54,6 +54,7 @@ namespace WasatchCore{
    *         otherwise it will be an empty tag.
    *  \param gc the GraphCategories.
    *  \param dualTimeMatrixInfo stores dual time matrix information (tags).
+   *  \param persistentFields set of names that will be persistent in memory
    *
    *  \return an EqnTimestepAdaptorBase object that can be used to
    *          plug this transport equation into a TimeStepper.
@@ -63,7 +64,8 @@ namespace WasatchCore{
                          TurbulenceParameters turbParams,
                          const Expr::Tag densityTag,
                          GraphCategories& gc,
-                         WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo );
+                         WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                         std::set<std::string>& persistentFields );
 
   /**
    *  \brief Build the momentum equation specified by "params"
@@ -105,7 +107,8 @@ namespace WasatchCore{
                             GraphCategories& gc,
                             Uintah::SolverInterface& linSolver,
                             Uintah::MaterialManagerP& materialManager,
-                            WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo );
+                            WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                            std::set<std::string>& persistentFields );
 
   void parse_poisson_equation( Uintah::ProblemSpecP params,
                                GraphCategories& gc,

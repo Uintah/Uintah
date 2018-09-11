@@ -653,7 +653,12 @@ namespace WasatchCore{
          transEqnParams != nullptr;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
     {
-      adaptors_.push_back( parse_scalar_equation( transEqnParams, turbParams, densityTag, graphCategories_, *dualTimeMatrixInfo_ ) );
+      adaptors_.push_back( parse_scalar_equation( transEqnParams,
+                                                  turbParams,
+                                                  densityTag,
+                                                  graphCategories_,
+                                                  *dualTimeMatrixInfo_,
+                                                  persistentFields_ ) );
     }
 
     //
@@ -662,7 +667,14 @@ namespace WasatchCore{
     Uintah::ProblemSpecP specEqnParams = wasatchSpec_->findBlock("SpeciesTransportEquations");
     Uintah::ProblemSpecP momEqnParams = wasatchSpec_->findBlock("MomentumEquations");
     if( specEqnParams ){
-      EquationAdaptors specEqns = parse_species_equations( specEqnParams, wasatchSpec_, momEqnParams, turbParams, densityTag, graphCategories_, *dualTimeMatrixInfo_, dualTimeMatrixInfo_->doBlockImplicit );
+      EquationAdaptors specEqns = parse_species_equations( specEqnParams,
+                                                           wasatchSpec_,
+                                                           momEqnParams,
+                                                           turbParams,
+                                                           densityTag,
+                                                           graphCategories_,
+                                                           *dualTimeMatrixInfo_,
+                                                           dualTimeMatrixInfo_->doBlockImplicit );
       adaptors_.insert( adaptors_.end(), specEqns.begin(), specEqns.end() );
     }
 
@@ -705,7 +717,8 @@ namespace WasatchCore{
                                                                       graphCategories_,
                                                                       *m_solver,
                                                                       m_materialManager,
-                                                                      *dualTimeMatrixInfo_ );
+                                                                      *dualTimeMatrixInfo_,
+                                                                      persistentFields_ );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
