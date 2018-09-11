@@ -1452,7 +1452,7 @@ namespace WasatchCore{
       const Expr::Tag diffCoefTag = parse_nametag(exprParams->findBlock("DiffusionCoefficient")->findBlock("NameTag"));
 
       std::string densityName;
-      parser->findBlock("Density")->getAttribute( "name", densityName );
+      parser->findBlock("Density")->findBlock("NameTag")->getAttribute( "name", densityName );
       const Expr::Tag initDensityTag = Expr::Tag(densityName, Expr::STATE_NONE);
 
       /* For the purpose of being consistent with the previous implementation, the field corresponding to 'difCoeffTag'
@@ -1464,8 +1464,8 @@ namespace WasatchCore{
       const Expr::Tag densityTag = Expr::Tag(densityName, Expr::STATE_N);
 
       typedef DiffusiveConstant<SVolField>::Builder diffCoefBuilder;
-      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew diffCoefBuilder( diffCoefTag, initDensityTag, d ) );
-      gc[INITIALIZATION  ]->exprFactory->register_expression( scinew diffCoefBuilder( diffCoefTag, densityTag    , d ) );
+      gc[INITIALIZATION  ]->exprFactory->register_expression( scinew diffCoefBuilder( diffCoefTag, initDensityTag, d ) );
+      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew diffCoefBuilder( diffCoefTag, densityTag    , d ) );
     }  
     
     //___________________________________________________
