@@ -71,6 +71,7 @@ public:
 
 private:
 
+
     typedef std::vector<ArchesFieldContainer::VariableInformation> AVarInfo;
 
     std::string m_u_vel_name;
@@ -83,7 +84,8 @@ private:
 
     int m_ghost_cells;
 
-    void compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecutionSpace, typename MemSpace>
+    void compute_velocities(ExecutionObject<ExecutionSpace, MemSpace>& exObj, const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
   };
 }

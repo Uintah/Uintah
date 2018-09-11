@@ -16,8 +16,8 @@ TaskAssignedExecutionSpace CCVel::loadTaskComputeBCsFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &CCVel::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &CCVel::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &CCVel::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &CCVel::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &CCVel::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -27,7 +27,7 @@ TaskAssignedExecutionSpace CCVel::loadTaskInitializeFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &CCVel::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &CCVel::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &CCVel::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &CCVel::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -37,7 +37,7 @@ TaskAssignedExecutionSpace CCVel::loadTaskEvalFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &CCVel::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &CCVel::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &CCVel::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &CCVel::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -46,6 +46,7 @@ TaskAssignedExecutionSpace CCVel::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &CCVel::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &CCVel::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &CCVel::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
 
@@ -127,9 +128,9 @@ void CCVel::register_initialize( AVarInfo& variable_registry , const bool pack_t
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  compute_velocities( patch, tsk_info );
+  compute_velocities(exObj, patch, tsk_info );
 
 }
 
@@ -150,19 +151,22 @@ void CCVel::register_timestep_init( AVarInfo& variable_registry , const bool pac
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  constCCVariable<double>& old_u_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_u_vel_name_cc);
-  constCCVariable<double>& old_v_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_v_vel_name_cc);
-  constCCVariable<double>& old_w_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name_cc);
+  auto old_u_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_u_vel_name_cc);
+  auto old_v_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_v_vel_name_cc);
+  auto old_w_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_w_vel_name_cc);
 
-  CCVariable<double>& u_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_u_vel_name_cc);
-  CCVariable<double>& v_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_v_vel_name_cc);
-  CCVariable<double>& w_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_w_vel_name_cc);
+  auto u_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_u_vel_name_cc);
+  auto v_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_v_vel_name_cc);
+  auto w_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);
 
-  u_cc.copy(old_u_cc);
-  v_cc.copy(old_v_cc);
-  w_cc.copy(old_w_cc);
+  Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
+      u_cc(i,j,k)=old_u_cc(i,j,k);
+      v_cc(i,j,k)=old_v_cc(i,j,k);
+      w_cc(i,j,k)=old_w_cc(i,j,k);
+    });
 
 }
 
@@ -183,45 +187,29 @@ void CCVel::register_timestep_eval( VIVec& variable_registry, const int time_sub
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  compute_velocities( patch, tsk_info );
+  compute_velocities(exObj, patch, tsk_info );
 
 }
 
 //--------------------------------------------------------------------------------------------------
-void CCVel::compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template<typename ExecutionSpace, typename MemSpace>
+void CCVel::compute_velocities(ExecutionObject<ExecutionSpace, MemSpace>& exObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constSFCXVariable<double>& u = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& v = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& w = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
-  CCVariable<double>& u_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_u_vel_name_cc);
-  CCVariable<double>& v_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_v_vel_name_cc);
-  CCVariable<double>& w_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_w_vel_name_cc);
+  auto u = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >(m_u_vel_name);
+  auto v = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >(m_v_vel_name);
+  auto w = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace >(m_w_vel_name);
+  auto u_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_u_vel_name_cc);
+  auto v_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_v_vel_name_cc);
+  auto w_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);
 
-  u_cc.initialize(0.0);
-  v_cc.initialize(0.0);
-  w_cc.initialize(0.0);
+  parallel_initialize(exObj,0.0,u_cc,v_cc,w_cc);
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  ArchesCore::OneDInterpolator my_interpolant_centerx(u_cc, u , 1, 0, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_centery(v_cc, v , 0, 1, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_centerz(w_cc, w , 0, 0, 1 );
+  ArchesCore::doInterpolation(exObj, range, u_cc, u , 1, 0, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation(exObj, range, v_cc, v , 0, 1, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation(exObj, range, w_cc, w , 0, 0, 1 ,m_int_scheme);
 
-  if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
-
-    ArchesCore::SecondCentral ci;
-    Uintah::parallel_for( range, my_interpolant_centerx, ci );
-    Uintah::parallel_for( range, my_interpolant_centery, ci );
-    Uintah::parallel_for( range, my_interpolant_centerz, ci );
-
-  } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
-
-    ArchesCore::FourthCentral ci;
-    Uintah::parallel_for( range, my_interpolant_centerx, ci );
-    Uintah::parallel_for( range, my_interpolant_centery, ci );
-    Uintah::parallel_for( range, my_interpolant_centerz, ci );
-
-  }
 }

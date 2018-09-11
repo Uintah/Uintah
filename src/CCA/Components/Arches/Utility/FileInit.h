@@ -174,15 +174,12 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
-  void FileInit<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+  void FileInit<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-    T& phi = tsk_info->get_uintah_field_add<T>(m_var_name);
-
-    phi.initialize(0.0);
+    auto phi = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_var_name);
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-
+    Uintah::parallel_for( exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       IntVector loc(i,j,k);
       phi(i,j,k) = m_data[loc];
 

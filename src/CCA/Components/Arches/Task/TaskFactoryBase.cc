@@ -284,7 +284,6 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   int icount=0;
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
     taskNames[icount]=(*i_task)->get_task_name();
-    icount++;
     cout_archestaskdebug << "   Task: " << (*i_task)->get_task_name() << std::endl;
 
     TaskAssignedExecutionSpace temp{};
@@ -293,38 +292,44 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       case (TaskInterface::INITIALIZE):
         temp = (*i_task)->loadTaskInitializeFunctionPointers();
         (*i_task)->register_initialize( variable_registry, pack_tasks );
+        taskNames[icount]=taskNames[icount]+"::INITIALIZE";
         time_substep = 0;
         break;
       case (TaskInterface::RESTART_INITIALIZE):
         temp = (*i_task)->loadTaskRestartInitFunctionPointers();
         (*i_task)->register_restart_initialize( variable_registry , pack_tasks);
+        taskNames[icount]=taskNames[icount]+"::RESTART_INITIALIZE";
         time_substep = 0;
         break;
       case (TaskInterface::TIMESTEP_INITIALIZE):
         temp = (*i_task)->loadTaskTimestepInitFunctionPointers();
         (*i_task)->register_timestep_init( variable_registry, pack_tasks );
+        taskNames[icount]=taskNames[icount]+"::TIMESTEP_INITIALIZE";
         time_substep = 0;
         break;
       case (TaskInterface::TIMESTEP_EVAL):
         temp = (*i_task)->loadTaskEvalFunctionPointers();
         (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks);
+        taskNames[icount]=taskNames[icount]+"::EVAL";
         break;
       case (TaskInterface::BC):
         temp = (*i_task)->loadTaskComputeBCsFunctionPointers();
         (*i_task)->register_compute_bcs( variable_registry, time_substep , pack_tasks);
+        taskNames[icount]=taskNames[icount]+"::COMPUTE_BCS";
         break;
       case (TaskInterface::ATOMIC):
         temp = (*i_task)->loadTaskEvalFunctionPointers();
         (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks );
+        taskNames[icount]=taskNames[icount]+"::ATOMIC";
         break;
       default:
         throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
         break;
     }
-
-    if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE && assignedExecutionSpace != temp) {
+    icount++;
+    if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE && assignedExecutionSpace != temp && temp != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE) {
       archesTasksMixMemSpaces = true;
-    } else {
+    } else if(  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE != temp){
       assignedExecutionSpace = temp;
     }
   }

@@ -217,7 +217,7 @@ private:
 
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
-  void FaceParticleVel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+  void FaceParticleVel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -229,36 +229,22 @@ private:
     std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
     std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
 
-    FXT& up_f = tsk_info->get_uintah_field_add<FXT>(up_face_i);
-    FYT& vp_f = tsk_info->get_uintah_field_add<FYT>(vp_face_i);
-    FZT& wp_f = tsk_info->get_uintah_field_add<FZT>(wp_face_i);
+    auto up_f = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(up_face_i);
+    auto vp_f = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(vp_face_i);
+    auto wp_f = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(wp_face_i);
 
     std::string up_i = ArchesCore::append_env(up_root,ienv);
     std::string vp_i = ArchesCore::append_env(vp_root,ienv);
     std::string wp_i = ArchesCore::append_env(wp_root,ienv);
 
-    CT& up = tsk_info->get_const_uintah_field_add<CT>(up_i);
-    CT& vp = tsk_info->get_const_uintah_field_add<CT>(vp_i);
-    CT& wp = tsk_info->get_const_uintah_field_add<CT>(wp_i);
+    auto up = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(up_i);
+    auto vp = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(vp_i);
+    auto wp = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(wp_i);
 
-    ArchesCore::OneDInterpolator my_interpolant_up( up_f, up, -1, 0, 0 );
-    ArchesCore::OneDInterpolator my_interpolant_vp( vp_f, vp, 0, -1, 0 );
-    ArchesCore::OneDInterpolator my_interpolant_wp( wp_f, wp, 0, 0, -1 );
+    ArchesCore::doInterpolation(exObj, range, up_f, up , -1, 0, 0 ,m_int_scheme);
+    ArchesCore::doInterpolation(exObj, range, vp_f, vp , 0, -1, 0 ,m_int_scheme);
+    ArchesCore::doInterpolation(exObj, range, wp_f, wp , 0, 0, -1 ,m_int_scheme);
 
-    if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
-
-      ArchesCore::SecondCentral ci;
-      Uintah::parallel_for( range, my_interpolant_up, ci );
-      Uintah::parallel_for( range, my_interpolant_vp, ci );
-      Uintah::parallel_for( range, my_interpolant_wp, ci );
-
-    } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
-
-      ArchesCore::FourthCentral ci;
-      Uintah::parallel_for( range, my_interpolant_up, ci );
-      Uintah::parallel_for( range, my_interpolant_vp, ci );
-      Uintah::parallel_for( range, my_interpolant_wp, ci );
-    }
   }
   }
 
@@ -299,48 +285,31 @@ private:
 
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
-  void FaceParticleVel<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
-
+  void FaceParticleVel<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-
 
   for ( int ienv = 0; ienv < m_N; ienv++ ){
 
     std::string up_face_i = ArchesCore::append_env(up_face,ienv);
     std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
     std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
-    FXT& up_f = tsk_info->get_uintah_field_add<FXT>(up_face_i);
-    FYT& vp_f = tsk_info->get_uintah_field_add<FYT>(vp_face_i);
-    FZT& wp_f = tsk_info->get_uintah_field_add<FZT>(wp_face_i);
+
+    auto up_f = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(up_face_i);
+    auto vp_f = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(vp_face_i);
+    auto wp_f = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(wp_face_i);
 
     std::string up_i = ArchesCore::append_env(up_root,ienv);
     std::string vp_i = ArchesCore::append_env(vp_root,ienv);
     std::string wp_i = ArchesCore::append_env(wp_root,ienv);
 
-    CT& up = tsk_info->get_const_uintah_field_add<CT>(up_i);
-    CT& vp = tsk_info->get_const_uintah_field_add<CT>(vp_i);
-    CT& wp = tsk_info->get_const_uintah_field_add<CT>(wp_i);
+    auto up = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(up_i);
+    auto vp = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(vp_i);
+    auto wp = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(wp_i);
 
-    ArchesCore::OneDInterpolator my_interpolant_up( up_f, up, -1, 0, 0 );
-    ArchesCore::OneDInterpolator my_interpolant_vp( vp_f, vp, 0, -1, 0 );
-    ArchesCore::OneDInterpolator my_interpolant_wp( wp_f, wp, 0, 0, -1 );
-
-    if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
-
-      ArchesCore::SecondCentral ci;
-      Uintah::parallel_for( range, my_interpolant_up, ci );
-      Uintah::parallel_for( range, my_interpolant_vp, ci );
-      Uintah::parallel_for( range, my_interpolant_wp, ci );
-
-    } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
-
-      ArchesCore::FourthCentral ci;
-      Uintah::parallel_for( range, my_interpolant_up, ci );
-      Uintah::parallel_for( range, my_interpolant_vp, ci );
-      Uintah::parallel_for( range, my_interpolant_wp, ci );
-
-  }
+    ArchesCore::doInterpolation(exObj, range, up_f, up , -1, 0, 0 ,m_int_scheme);
+    ArchesCore::doInterpolation(exObj, range, vp_f, vp , 0, -1, 0 ,m_int_scheme);
+    ArchesCore::doInterpolation(exObj, range, wp_f, wp , 0, 0, -1 ,m_int_scheme);
 
 
   }

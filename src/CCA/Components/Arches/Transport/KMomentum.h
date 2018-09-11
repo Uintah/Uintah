@@ -240,7 +240,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::BC>( this
                                        , &KMomentum<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KMomentum<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &KMomentum<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KMomentum<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -251,7 +251,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &KMomentum<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KMomentum<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &KMomentum<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KMomentum<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -480,29 +480,28 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
-  void KMomentum<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+  void KMomentum<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      double scalar_init_value = m_init_value[ieqn];
+      const double scalar_init_value = m_init_value[ieqn];
 
-      T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
-      T& phi    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
-      T& rhs    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]+"_RHS");
+      auto u    = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_vel_name[ieqn]);
+      auto phi    = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_eqn_names[ieqn]);
+      auto rhs    = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
+
+      auto x_flux = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
+      auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
+      auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
+
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-      Uintah::parallel_for( range, [&](int i, int j, int k){
+
+      Uintah::parallel_for( exObj,range, KOKKOS_LAMBDA (int i, int j, int k){
         phi(i,j,k) = 0.0;
         rhs(i,j,k) = 0.0;
         u(i,j,k)   = scalar_init_value; // initial value for velocity, phi (rho_u) is computed in UnweightVariable task
-      });
-
-      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
-
-      Uintah::parallel_for( range, [&](int i, int j, int k){
         x_flux(i,j,k) = 0.0;
         y_flux(i,j,k) = 0.0;
         z_flux(i,j,k) = 0.0;

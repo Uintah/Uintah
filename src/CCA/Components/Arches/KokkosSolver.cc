@@ -271,6 +271,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
                           "KokkosSolver::computeStableTimeStep",
                           &KokkosSolver::computeStableTimeStep<UINTAH_CPU_TAG>,
                           &KokkosSolver::computeStableTimeStep<KOKKOS_OPENMP_TAG>,
+                          &KokkosSolver::computeStableTimeStep<KOKKOS_CUDA_TAG>,
                           sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 
   } else {
@@ -311,8 +312,10 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
                                     UintahParams& uintahParams,
                                     ExecutionObject<ExecutionSpace, MemSpace>& executionObject)
 {
-
   const Level* level = getLevel(patches);
+
+  double dt = m_dt_init;
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -321,29 +324,24 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
 
     Vector Dx = patch->dCell();
 
-    constSFCXVariable<double> u;
-    constSFCYVariable<double> v;
-    constSFCZVariable<double> w;
-    constCCVariable<double> rho;
-    constCCVariable<double> mu;
+    auto u   = new_dw->getConstGridVariable<constSFCXVariable<double>, double , MemSpace>(  m_uLabel    ,  indx, patch, Ghost::None, 0 );
+    auto v   = new_dw->getConstGridVariable<constSFCYVariable<double>, double , MemSpace>(  m_vLabel    ,  indx, patch, Ghost::None, 0 );
+    auto w   = new_dw->getConstGridVariable<constSFCZVariable<double>, double , MemSpace>(  m_wLabel    ,  indx, patch, Ghost::None, 0 );
+    auto rho = new_dw->getConstGridVariable<constCCVariable<double>  , double , MemSpace>(  m_rhoLabel  ,  indx, patch, Ghost::None, 0 );
+    auto mu  = new_dw->getConstGridVariable<constCCVariable<double>  , double , MemSpace>(  m_tot_muLabel, indx, patch, Ghost::None, 0 );
 
-    new_dw->get( u, m_uLabel, indx, patch, Ghost::None, 0 );
-    new_dw->get( v, m_vLabel, indx, patch, Ghost::None, 0 );
-    new_dw->get( w, m_wLabel, indx, patch, Ghost::None, 0 );
-    new_dw->get( rho, m_rhoLabel, indx, patch, Ghost::None, 0 );
-    new_dw->get( mu, m_tot_muLabel, indx, patch, Ghost::None, 0 );
-
-    double dt = m_dt_init;
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-    Uintah::parallel_reduce_min( executionObject, range, KOKKOS_LAMBDA ( int i, int j, int k, double & m_dt ) {
+    const double small_num = 1.e-10;
 
-      const double small_num = 1.e-10;
+    const double dx = Dx.x();
+    const double dy = Dx.y();
+    const double dz = Dx.z();
 
-      const double dx = Dx.x();
-      const double dy = Dx.y();
-      const double dz = Dx.z();
+    Uintah::parallel_reduce_min( executionObject, range, KOKKOS_LAMBDA ( const int i, const int j, const int k, double & m_dt ) {
+
+
 
       double denom_dt = std::fabs( u(i,j,k) ) / dx +
                         std::fabs( v(i,j,k) ) / dy +
@@ -352,11 +350,7 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
                         ( 1. / ( dx * dx ) + 1. / ( dy * dy ) + 1. / ( dz * dz ) ) +
                         small_num;
 
-#ifdef UINTAH_ENABLE_KOKKOS
-      m_dt = std::fmin( 1.0 / denom_dt, m_dt_init ); // m_dt reduced by Kokkos::parallel_reduce
-#else
-      m_dt = std::fmin( 1.0 / denom_dt, m_dt );      // m_dt reduced here
-#endif
+      m_dt =  1.0 / denom_dt; // m_dt reduced by Kokkos::parallel_reduce
 
     }, dt );
 

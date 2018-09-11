@@ -27,8 +27,8 @@ TaskAssignedExecutionSpace StressTensor::loadTaskComputeBCsFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &StressTensor::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &StressTensor::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &StressTensor::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &StressTensor::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &StressTensor::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -37,8 +37,8 @@ TaskAssignedExecutionSpace StressTensor::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &StressTensor::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &StressTensor::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &StressTensor::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &StressTensor::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &StressTensor::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -57,7 +57,7 @@ TaskAssignedExecutionSpace StressTensor::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &StressTensor::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &StressTensor::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &StressTensor::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &StressTensor::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
 
@@ -98,22 +98,22 @@ void StressTensor::register_initialize( AVarInfo& variable_registry , const bool
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void StressTensor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void StressTensor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
 
-  CCVariable<double>& sigma11 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]));
-  CCVariable<double>& sigma12 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[1]));
-  CCVariable<double>& sigma13 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[2]));
-  CCVariable<double>& sigma22 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[3]));
-  CCVariable<double>& sigma23 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[4]));
-  CCVariable<double>& sigma33 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[5]));
+  auto sigma11 = tsk_info->get_uintah_field_add<CCVariable<double>,double, MemSpace >(m_sigma_t_names[0]);
+  auto sigma12 = tsk_info->get_uintah_field_add<CCVariable<double>,double, MemSpace >(m_sigma_t_names[1]);
+  auto sigma13 = tsk_info->get_uintah_field_add<CCVariable<double>,double, MemSpace >(m_sigma_t_names[2]);
+  auto sigma22 = tsk_info->get_uintah_field_add<CCVariable<double>,double, MemSpace >(m_sigma_t_names[3]);
+  auto sigma23 = tsk_info->get_uintah_field_add<CCVariable<double>,double, MemSpace >(m_sigma_t_names[4]);
+  auto sigma33 = tsk_info->get_uintah_field_add<CCVariable<double>,double, MemSpace >(m_sigma_t_names[5]);
 
-  sigma11.initialize(0.0);
-  sigma12.initialize(0.0);
-  sigma13.initialize(0.0);
-  sigma22.initialize(0.0);
-  sigma23.initialize(0.0);
-  sigma33.initialize(0.0);
+  parallel_initialize(exObj,0.0,sigma11
+                               ,sigma12
+                               ,sigma13
+                               ,sigma22
+                               ,sigma23
+                               ,sigma33);
 }
 
 //--------------------------------------------------------------------------------------------------

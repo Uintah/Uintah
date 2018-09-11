@@ -130,8 +130,8 @@ TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskComputeBCsFunctionPo
 {
   return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &VarInterpolation<T, IT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &VarInterpolation<T, IT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &VarInterpolation<T, IT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &VarInterpolation<T, IT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &VarInterpolation<T, IT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -141,8 +141,8 @@ TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskInitializeFunctionPo
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &VarInterpolation<T, IT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &VarInterpolation<T, IT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &VarInterpolation<T, IT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &VarInterpolation<T, IT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &VarInterpolation<T, IT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -153,7 +153,7 @@ TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskEvalFunctionPointers
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &VarInterpolation<T, IT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &VarInterpolation<T, IT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &VarInterpolation<T, IT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &VarInterpolation<T, IT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -211,10 +211,10 @@ void VarInterpolation<T,IT>::register_initialize(
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
 template<typename ExecutionSpace, typename MemSpace>
-void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  IT& int_var = tsk_info->get_uintah_field_add<IT>(m_inter_var_name);
-  int_var.initialize(0.0);
+  auto int_var = tsk_info->get_uintah_field_add<IT, double, MemSpace>(m_inter_var_name);
+  parallel_initialize(exObj,0.0,int_var);
 
 }
 
@@ -233,29 +233,18 @@ void VarInterpolation<T,IT>::register_timestep_eval(
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
 template<typename ExecutionSpace, typename MemSpace>
-void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  IT& int_var = tsk_info->get_uintah_field_add<IT>(m_inter_var_name);
-  T& var = tsk_info->get_const_uintah_field_add<T >(m_var_name);
+  auto int_var = tsk_info->get_uintah_field_add<IT,  double, MemSpace>(m_inter_var_name);
+  auto var = tsk_info->get_const_uintah_field_add<T, const double, MemSpace >(m_var_name);
 
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];
   const int koff = m_ijk_off[2];
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-  ArchesCore::OneDInterpolator my_interpolant( int_var, var, ioff, joff, koff );
+  ArchesCore::doInterpolation(exObj, range, int_var, var, ioff, joff, koff, m_int_scheme);
 
-  if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
-
-    ArchesCore::SecondCentral ci;
-    Uintah::parallel_for( range, my_interpolant, ci );
-
-  } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
-
-    ArchesCore::FourthCentral ci;
-    Uintah::parallel_for( range, my_interpolant, ci );
-
-  }
 
 }
 }

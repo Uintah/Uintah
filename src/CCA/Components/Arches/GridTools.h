@@ -398,44 +398,22 @@ namespace Uintah{ namespace ArchesCore{
   };
 
 
-  //@brief Helper struct
-  struct SecondCentral{};
-  struct FourthCentral{};
-
-  /// @brief Functor for implementing various interpolation schemes.
-  struct OneDInterpolator{
-
-   OneDInterpolator( Array3<double>& i_u_interpolated, const Array3<double> &i_u, const int i_ioff,
-                     const int i_joff, const int i_koff ) :
-                     u_i(i_u_interpolated), u(i_u), ioff(i_ioff), joff(i_joff), koff(i_koff)
-    {}
-
-    void operator()(int i, int j, int k) const {
-      throw InvalidValue(
-        "Error: No implementation of this interpolation type",
-        __FILE__, __LINE__);
+  template<typename ExecutionSpace, typename MemSpace,  typename grid_T, typename grid_CT> 
+  void
+  doInterpolation( ExecutionObject<ExecutionSpace, MemSpace> exObj, Uintah::BlockRange& range,  grid_T& i_u_interpolated, grid_CT& i_u, const int &ioff, 
+                  const int &joff, const int &koff , unsigned int interpMode ){ // we need this wrapper, because we are supporting CCVariable data types
+    if (interpMode ==FOURTHCENTRAL){
+        Uintah::parallel_for(exObj, range,  KOKKOS_LAMBDA (int i, int j, int k) {
+      i_u_interpolated(i,j,k) = (9./16.)*(i_u(i,j,k) + i_u(i+ioff,j+joff,k+koff))
+                 - (1./16.)*(i_u(i+2*ioff,j+2*joff,k+2*koff) + i_u(i-ioff,j-joff,k-koff)) ;
+               } );
+    }else{
+        Uintah::parallel_for(exObj, range,  KOKKOS_LAMBDA (int i, int j, int k) {
+                i_u_interpolated(i,j,k) = 0.5 * ( i_u(i,j,k) + i_u(i+ioff,j+joff,k+koff) );
+               } );
     }
+  } // WE have to do this because of CCVariables
 
-    void operator()(const SecondCentral& op, int i, int j, int k) const {
-
-      u_i(i,j,k) = 0.5 * ( u(i,j,k) + u(i+ioff,j+joff,k+koff) );
-
-    }
-
-    void operator()(const FourthCentral& op, int i, int j, int k) const {
-
-      u_i(i,j,k) = (9./16.)*(u(i,j,k) + u(i+ioff,j+joff,k+koff))
-                 - (1./16.)*(u(i+2*ioff,j+2*joff,k+2*koff) + u(i-ioff,j-joff,k-koff)) ;
-
-    }
-
-  private:
-
-    Array3<double>& u_i;
-    const Array3<double>& u;
-    const int ioff, joff, koff;
-
-  };
 
   INTERPOLANT get_interpolant_from_string(const std::string value);
 
