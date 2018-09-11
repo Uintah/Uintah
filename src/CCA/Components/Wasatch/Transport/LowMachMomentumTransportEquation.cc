@@ -118,13 +118,11 @@ namespace WasatchCore{
     if( !factory.have_entry( tagNames.pressuresrc ) ){
       const Expr::Tag densNP1Tag  = Expr::Tag(densTag.name(), Expr::STATE_NP1);
       
-//      set_mom_tags( params, this->momTags_ );
-//      set_mom_tags( params, this->oldMomTags_, true );
       // register the expression for pressure source term
       Expr::TagList psrcTagList;
       psrcTagList.push_back(tagNames.pressuresrc);
       if( !isConstDensity ) {
-        psrcTagList.push_back(tagNames.drhodtstar );
+        psrcTagList.push_back(tagNames.drhodt );
       }
 
       // create an expression for divu. In the case of variable density flows, the scalar equations

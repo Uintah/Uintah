@@ -140,8 +140,6 @@ namespace WasatchCore{
   diffusiveflux  ( "_diffFlux_"),
   pressuresrc    ( "pressure_src"  , Expr::STATE_NONE ),
   divu           ( "divu"          , Expr::STATE_NONE ),
-  drhodtstar     ( "drhodt*"       , Expr::STATE_NONE ),
-  drhodtstarnp1  ( "drhodt*"       , Expr::STATE_NP1  ),
   drhodt         ( "drhodt"        , Expr::STATE_NONE ),
   drhodtnp1      ( "drhodt"        , Expr::STATE_NP1  ),
   unconvergedpts ( "UnconvergedPts", Expr::STATE_NONE ),

@@ -732,7 +732,7 @@ namespace WasatchCore{
         
         Expr::Tag drhodtTag = Expr::Tag();
         if( !this->is_constant_density() ){
-          drhodtTag = tagNames.drhodtstar;
+          drhodtTag = tagNames.drhodt;
         }
         Expr::ExpressionID contID = factory.register_expression( new ContResT(contTag, drhodtTag, this->momTags_) );
         graphHelper.rootIDs.insert(contID);

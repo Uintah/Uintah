@@ -120,8 +120,7 @@ namespace WasatchCore{
     convectiveflux, diffusiveflux;
     
     const Expr::Tag
-    pressuresrc,
-    divu, drhodtstar, drhodtstarnp1,
+    pressuresrc,divu,
     drhodt,drhodtnp1,unconvergedpts;
 
     // mms varden

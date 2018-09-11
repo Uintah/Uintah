@@ -511,7 +511,7 @@ namespace WasatchCore{
 
     if (computeContinuityResidual)
     {
-      factory.attach_dependency_to_expression(tagNames.mms_continuitysrc, tagNames.drhodtstar);
+      factory.attach_dependency_to_expression(tagNames.mms_continuitysrc, tagNames.drhodt);
     }
   }
 
