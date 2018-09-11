@@ -110,7 +110,7 @@ namespace WasatchCore{
   
   // turbulence related
   turbulentviscosity  ( "TurbulentViscosity",            Expr::STATE_NONE ),
-  turbulentdiffusivity( "TurbulentViscosity",            Expr::STATE_NONE ),
+  turbulentdiffusivity( "TurbulentDiffusivity",          Expr::STATE_NONE ),
   straintensormag     ( "StrainTensorMagnitude",         Expr::STATE_NONE ),
   vremantensormag     ( "VremanTensorMagnitude",         Expr::STATE_NONE ),
   waletensormag       ( "WaleTensorMagnitude",           Expr::STATE_NONE ),
