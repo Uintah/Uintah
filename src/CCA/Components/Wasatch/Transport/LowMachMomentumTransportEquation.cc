@@ -117,7 +117,7 @@ namespace WasatchCore{
     //__________________
     // Pressure source term        
     if( !factory.have_entry( tagNames.pressuresrc ) ){
-      const Expr::Tag densStarTag  = tagNames.make_star(densTag, Expr::STATE_NONE);
+      const Expr::Tag densStarTag  = Expr::Tag(densTag.name(), Expr::STATE_NP1);
       
 //      set_mom_tags( params, this->momTags_ );
 //      set_mom_tags( params, this->oldMomTags_, true );
@@ -198,7 +198,7 @@ namespace WasatchCore{
         Expr::TagList ptags;
         ptags.push_back( this->pressureTag_ );
         ptags.push_back( Expr::Tag( this->pressureTag_.name() + "_rhs", this->pressureTag_.context() ) );
-        const Expr::Tag rhoStarTag = isConstDensity ? this->densityTag_ : tagNames.make_star(this->densityTag_, this->densityTag_.context()); // get the tagname of rho*
+        const Expr::Tag rhoStarTag = isConstDensity ? this->densityTag_ : Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1); // get the tagname of rho*
         
         Expr::ExpressionBuilder* pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
                                                                             tagNames.pressuresrc, tagNames.dt, embedGeom.vol_frac_tag<SVolField>(), rhoStarTag,
@@ -278,9 +278,10 @@ namespace WasatchCore{
       }
 
       if( !this->is_constant_density() ){
-        const Expr::Tag rhoTagInit(this->densityTag_.name(), Expr::STATE_NONE);
-        const Expr::Tag rhoStarTag = tagNames.make_star(this->densityTag_); // get the tagname of rho*
-        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagInit), INITIALIZATION);
+        // Not sure what to do here. I'm pretty sure the BCs for density_NP1 shouldn't be set at initialization
+//        const Expr::Tag rhoTagInit(this->densityTag_.name(), Expr::STATE_NP1);
+        const Expr::Tag rhoStarTag = Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1); // get the tagname of rho*
+//        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagInit), INITIALIZATION);
         const Expr::Tag rhoTagAdv(this->densityTag_.name(), Expr::STATE_NONE);
         bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagAdv), ADVANCE_SOLUTION);
       }
@@ -300,7 +301,7 @@ namespace WasatchCore{
       // variable density: add bcopiers on all boundaries
       if( !this->is_constant_density() ){
         // if we are solving a variable density problem, then set bcs on density estimate rho*
-        const Expr::Tag rhoStarTag = tagNames.make_star(this->densityTag_); // get the tagname of rho*
+        const Expr::Tag rhoStarTag = Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1); // get the tagname of rho*
         // check if this boundary applies a bc on the density
         if( myBndSpec.has_field(this->densityTag_.name()) ){
           // create a bc copier for the density estimate
@@ -483,7 +484,7 @@ namespace WasatchCore{
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
-      const Expr::Tag densStarTag = tagNames.make_star(this->densityTag_, Expr::STATE_NONE);
+      const Expr::Tag densStarTag = Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1);
       bcHelper.apply_boundary_condition<SVolField>(densStarTag, taskCat);
     }
   }
@@ -514,7 +515,7 @@ namespace WasatchCore{
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
-      bcHelper.apply_boundary_condition<SVolField>( tagNames.make_star(this->densityTag_,Expr::STATE_NONE), taskCat );
+      bcHelper.apply_boundary_condition<SVolField>( Expr::Tag(this->densityTag_.name(),Expr::STATE_NP1), taskCat );
     }
   }
 

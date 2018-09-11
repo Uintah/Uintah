@@ -478,7 +478,7 @@ namespace WasatchCore{
 
     Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
     const Expr::Tag densityTag   = parse_nametag( densityParams->findBlock("NameTag") );
-    const Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::STATE_NONE);
+    const Expr::Tag densStarTag  = Expr::Tag(densityTag.name(), Expr::STATE_NP1);
 
     // attach Sf_{n+1} to the scalar EOS coupling term
     const Expr::Tag mms_EOSMixFracSrcTag(tagNames.mms_mixfracsrc.name() + "*_EOS", Expr::STATE_NONE);
@@ -542,7 +542,7 @@ namespace WasatchCore{
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
 
     const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-    const Expr::Tag densStarTag = tagNames.make_star( densityTag, Expr::STATE_NONE );
+    const Expr::Tag densStarTag = tagNames.make_star( densityTag, Expr::STATE_NONE ); //todo: make NP1
     const Expr::Tag solnVarRHSTag( solnVarName+"_rhs", Expr::STATE_NONE );
 
     std::string x1="X", x2="Y";

@@ -238,7 +238,7 @@ namespace WasatchCore{
 
       if( hasConvection_ ){
         const Expr::Tag rhsStarTag     = tagNames.make_star_rhs(solnVarName_);
-        const Expr::Tag densityStarTag = tagNames.make_star(densityTag_, Expr::STATE_NONE);
+        const Expr::Tag densityStarTag = Expr::Tag(densityTag_.name(), Expr::STATE_NP1);
         const Expr::Tag primVarStarTag = tagNames.make_star(primVarTag_);
         const Expr::Tag solnVarStarTag = tagNames.make_star(solnVarName_);
         infoStar_[PRIMITIVE_VARIABLE]  = primVarStarTag;
