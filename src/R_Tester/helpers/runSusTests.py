@@ -528,7 +528,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
 
   #______________________________________________________________________
   #  copy component tests results to web page
-  if  environ['OUTPUT_HTML'] == "yes":
+  if  getenv( 'OUTPUT_HTML' ) == "yes":
     web_result_dir = "%s/%s/%s-results" % (environ['PUBLIC_HTML'], dbg_opt, application)
     
     if path.exists( web_result_dir ) == False:
@@ -715,7 +715,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
 
   #__________________________________
   #  define failure messages
-  if environ['OUTPUT_HTML'] == "yes":
+  if getenv('OUTPUT_HTML') == "yes":
     logpath     =  "%s/%s/%s-results/%s" % (environ['RT_URL'],  dbg_opt, application, testname )
     sus_log_msg = '\t<A href=\"%s/sus.log.txt\">See sus.log</a> for details' % (logpath)
     compare_msg = '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</A> for more comparison information.' % (logpath)
