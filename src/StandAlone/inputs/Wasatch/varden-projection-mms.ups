@@ -207,7 +207,6 @@
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.001"/>
     <save label="density"/>    
-<!--     <save label="density*"/>     -->
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>

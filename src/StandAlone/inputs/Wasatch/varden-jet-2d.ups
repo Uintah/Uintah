@@ -124,20 +124,13 @@
     <save label="y-mom"/>
 <!--     <save label="y-mom_rhs"/> -->
      <save label="f"/>
-     <!-- save label="f*"/>
-     <save label="density*"/>
-    
     
     <save label="rhof**"/ -->
     <save label="density"/>
-    <!-- save label="drhodt*"/>
-    <save label="drhodt"/>
-    <save label="divmom*"/ -->
     <save label="rhof"/>
     <save label="u"/>
     <save label="v"/>
     <save label="viscosity"/>
-    <!-- save label="u*"/>
     
     <save label="w*"/ -->
     <save label="strain_xy"/>
