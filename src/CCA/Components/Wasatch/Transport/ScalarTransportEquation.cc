@@ -404,7 +404,7 @@ namespace WasatchCore{
     }
     
     if( !isConstDensity_ ){
-      bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
+      bcHelper.apply_boundary_condition<FieldT>( primVarInitTag_, taskCat );
     }
   }
 
@@ -482,8 +482,7 @@ namespace WasatchCore{
 //      const Expr::Tag solnVarNP1Tag = Expr::Tag(solnVarName_  , Expr::STATE_NP1);
 //      bcHelper.apply_boundary_condition<FieldT>( solnVarNP1Tag, taskCat );
 //      bcHelper.apply_boundary_condition<FieldT>( rhsNP1Tag, taskCat, true );
-
-      bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
+      bcHelper.apply_boundary_condition<FieldT>( primVarNP1Tag_, taskCat );
     }
   }
 
