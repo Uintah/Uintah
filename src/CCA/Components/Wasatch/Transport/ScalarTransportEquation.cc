@@ -471,18 +471,15 @@ namespace WasatchCore{
   apply_boundary_conditions( const GraphHelper& graphHelper,
                              WasatchBCHelper& bcHelper )
   {
+    // Should we always apply BCs to STATE_NP1 or STATE_N? Does it even matter?
     const Category taskCat = ADVANCE_SOLUTION;
-    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
+    const Expr::Tag solnVarTag = flowTreatment_==LOWMACH ? solnvar_np1_tag() : solution_variable_tag();
+    bcHelper.apply_boundary_condition<FieldT>( solnVarTag, taskCat );
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
 
-    if( !(flowTreatment_ == LOWMACH) && hasConvection_ ){
-      // set bcs for solution variable at STATE_NP1
-      // todo: determine whether or not this is necessary.
-//      const Expr::Tag rhsNP1Tag     = Expr::Tag(rhsTag_.name(), Expr::STATE_NP1);
-//      const Expr::Tag solnVarNP1Tag = Expr::Tag(solnVarName_  , Expr::STATE_NP1);
-//      bcHelper.apply_boundary_condition<FieldT>( solnVarNP1Tag, taskCat );
-//      bcHelper.apply_boundary_condition<FieldT>( rhsNP1Tag, taskCat, true );
-      bcHelper.apply_boundary_condition<FieldT>( primVarNP1Tag_, taskCat );
+    if( !isConstDensity_ && hasConvection_ ){
+      const Expr::Tag primVarTag = flowTreatment_==LOWMACH ? primVarNP1Tag_ : primVarTag_;
+      bcHelper.apply_boundary_condition<FieldT>( primVarTag, taskCat );
     }
   }
 
