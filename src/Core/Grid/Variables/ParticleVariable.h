@@ -34,7 +34,6 @@
 #include <Core/Grid/Variables/ParticleData.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ParticleVariableBase.h>
-#include <Core/IO/SpecializedRunLengthEncoder.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/Assert.h>
@@ -166,7 +165,6 @@ public:
                            const ProcessorGroup* pg,
                            ParticleSubset* pset);
   virtual void emitNormal( std::ostream& out, const IntVector&, const IntVector&, ProblemSpecP, bool outputDoubleAsFloat );
-  virtual bool emitRLE( std::ostream& out, const IntVector& l, const IntVector& h, ProblemSpecP varnode );
   virtual void emitPIDX(       PIDXOutputContext & oc,
                                unsigned char     * buffer,
                          const IntVector         & /* l */,
@@ -174,7 +172,6 @@ public:
                          const size_t              pidx_bufferSize ); // buffer size used for bullet proofing.
   
   virtual void readNormal(std::istream& in, bool swapBytes);
-  virtual void readRLE(std::istream& in, bool swapBytes, int nByteMode);
   
   virtual void* getBasePointer() const;
   virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -554,30 +551,6 @@ template<class T>
   }
 
   template<class T>
-  bool
-  ParticleVariable<T>::emitRLE(std::ostream& out, const IntVector& /*l*/,
-                               const IntVector& /*h*/, ProblemSpecP varnode)
-  {
-    const TypeDescription* td = fun_getTypeDescription((T*)0);
-    if ( varnode->findBlock( "numParticles" ) == nullptr ) {
-      varnode->appendElement( "numParticles", d_pset->numParticles() );
-    }
-    if( !td->isFlat() ){
-      SCI_THROW(InternalError( "Cannot yet write non-flat objects!\n", __FILE__, __LINE__) );
-    }
-    else {
-      // emit in runlength encoded format
-      RunLengthEncoder<T> rle;
-      ParticleSubset::iterator iter = d_pset->begin();
-      for ( ; iter != d_pset->end(); iter++) {
-        rle.addItem((*this)[*iter]);
-      }
-      rle.write(out);
-    }
-    return true;
-  }
-  
-  template<class T>
   void
   ParticleVariable<T>::emitPIDX(       PIDXOutputContext & oc,
                                        unsigned char     * buffer,
@@ -626,30 +599,6 @@ template<class T>
             swapbytes((*this)[idx]);
           }
         }
-      }
-    }
-  }
-
-  template<class T>
-  void
-  ParticleVariable<T>::readRLE(std::istream& in, bool swapBytes, int nByteMode)
-  {
-    const TypeDescription* td = fun_getTypeDescription((T*)0);
-    if(!td->isFlat()) {
-      SCI_THROW(InternalError("Cannot yet read non-flat objects!\n", __FILE__, __LINE__));
-    }
-    else {
-      RunLengthEncoder<T> rle;
-      rle.read(in, swapBytes, nByteMode);
-      ParticleSubset::iterator iter = d_pset->begin();
-      typename RunLengthEncoder<T>::iterator rle_iter = rle.begin();
-      for ( ; iter != d_pset->end() && rle_iter != rle.end();
-            iter++, rle_iter++) {
-        (*this)[*iter] = *rle_iter;
-      }
-
-      if ((rle_iter != rle.end()) || (iter != d_pset->end())) {
-        SCI_THROW(InternalError("ParticleVariable::read RLE data is not consistent with the particle subset size", __FILE__, __LINE__));
       }
     }
   }

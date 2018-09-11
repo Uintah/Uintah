@@ -527,23 +527,6 @@ SCI_ARG_WITH(kokkos,
   DIR,
   WITHOUT-IS-NOT-VALID)
 
-SCI_ARG_WITH(ipm,
-  AC_HELP_STRING(--with-ipm=DIR,
-                 Use the ipm installation in DIR),
-  [with_ipm="$withval"],
-  [with_ipm=NOT_SET],
-  DIR,
-  WITHOUT-IS-NOT-VALID)
-  
-SCI_ARG_WITH(magma,
-  AC_HELP_STRING(--with-magma=DIR,
-                 Use the MAGMA installation in DIR),
-  [with_magma="$withval"
-   sci_required_magma=yes],
-  [with_magma=NOT_SET],
-  DIR,
-  WITHOUT-IS-NOT-VALID)
-  
 SCI_ARG_WITH(zlib,
   AC_HELP_STRING(--with-zlib=DIR,
                  Use the zlib installation in DIR - checks that $DIR/lib[[64]] and $DIR/include exist),
@@ -3759,46 +3742,6 @@ AC_SUBST(KOKKOS_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/kokkos_testdefs.h"
 
-##  --  search for ipm stuff  -------------------------------------------
-_sci_lib=
-_sci_inc=
-_sci_optional=optional
-if test "$with_ipm" != NOT_SET; then
-
-  if test "$static" != "yes"; then
-    AC_MSG_ERROR( [Only use \"--with-ipm\" for static builds. For dynamic usage use: \"LD_PRELOAD=/path/to/ipm/lib/libipm.so\" ] )
-  fi
- 
-  _sci_optional=specific
-  _sci_lib="$with_ipm"
-  BASE_LIB_PATH(_sci_lib,$_sci_lib)
-  _sci_inc="$with_ipm/include"
- 
-  AC_LANG(C++)
-  SCI_TRY_LINK(IPM,
-               IPM library,
-               ,
-               ,
-               ipm,
-               $_sci_lib,
-               ,
-               [],
-               $_sci_optional)
-  AC_LANG(C)     
-  
-  DEF_IPM="#define USE_IPM 1"
-
-fi
-
-# these are all defined after the call to SCI_COMPILE_LINK_TEST
-AC_SUBST(HAVE_IPM)
-AC_SUBST(DEF_IPM)
-AC_SUBST(INC_IPM_H)
-AC_SUBST(IPM_LIB_DIR_FLAG)
-AC_SUBST(IPM_LIB_FLAG)
-
-sci_defs_files="$sci_defs_files include/sci_defs/ipm_testdefs.h"
-
 
 ##  --  search for cuda stuff  ------------------------------------------
 if test "$with_cuda" != NOT_SET; then
@@ -3912,62 +3855,6 @@ AC_SUBST(NVCC_LIBS)
 
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
-
-##  --  search for magma stuff  -------------------------------------------
-
-if test "$sci_required_magma" = "yes"; then
-  
-  # guard against building MAGMA without CUDA, need cublas, etc from CUDA installation
-  if test "$with_cuda" = NOT_SET; then
-    AC_MSG_ERROR( [Cannot build with MAGMA support without CUDA. Both --with-magma=DIR and --with-cuda=DIR must be specified.] )
-  fi
-
-  _sci_optional=required
-  _magma_lib=
-  _magma_inc=
-  _cuda_lib=
-  _cuda_inc=
-
-  # account for lib64 or lib32 or just lib...
-  BASE_LIB_PATH(_magma_lib,$with_magma)
-  BASE_LIB_PATH(_cuda_lib,$with_cuda)   
-  _magma_inc="$with_magma/include"
-  _cuda_inc="$with_cuda/include"
- 
-  AC_LANG(C++)
-  SCI_TRY_LINK(MAGMA, MAGMA libraries and headers,
-               magma.h,
-               $_magma_inc $_cuda_inc,
-               magma magmablas lapack cublas cudart,
-               $_magma_lib $_cuda_lib,
-               ,
-               [magma_init();
-                magma_finalize();],
-               $_sci_optional)
-  AC_LANG(C)     
-  
-  DEF_MAGMA="#define HAVE_MAGMA 1"
-
-#[aph] - debug
-#echo
-#echo "HAVE_MAGMA         = " $HAVE_MAGMA
-#echo "HAVE_MAGMA_H       = " $HAVE_MAGMA_H
-#echo "INC_MAGMA_H        = " $INC_MAGMA_H
-#echo "MAGMA_LIB_FLAG     = " $MAGMA_LIB_FLAG
-#echo "MAGMA_LIB_DIR      = " $MAGMA_LIB_DIR
-#echo "MAGMA_LIB_DIR_FLAG = " $MAGMA_LIB_DIR_FLAG
-#echo
-
-fi #end sci_required_magma
-
-# these are all defined after the call to SCI_COMPILE_LINK_TEST
-AC_SUBST(HAVE_MAGMA)
-AC_SUBST(DEF_MAGMA)
-AC_SUBST(INC_MAGMA_H)
-AC_SUBST(MAGMA_LIB_DIR_FLAG)
-AC_SUBST(MAGMA_LIB_FLAG)
-
-sci_defs_files="$sci_defs_files include/sci_defs/magma_testdefs.h"
 
 ##  --  search for visus  -------------------------------------------------
 AC_LANG(C++)

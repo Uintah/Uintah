@@ -44,6 +44,8 @@
 #include <iostream>
 #include <string>
 
+#include <unistd.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 // The following functions are found in fortran/*.F
 //SUBROUTINE YENTA_CALC( NBLK, NINSV, DT, PROP,

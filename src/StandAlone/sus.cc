@@ -103,6 +103,8 @@
 #include <vector>
 #include <stdexcept>
 
+#include <unistd.h>
+
 using namespace Uintah;
 
 

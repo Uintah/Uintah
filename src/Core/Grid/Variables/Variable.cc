@@ -30,7 +30,6 @@
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InvalidCompressionMode.h>
 #include <Core/Grid/Patch.h>
-#include <Core/IO/SpecializedRunLengthEncoder.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/FancyAssert.h>

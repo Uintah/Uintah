@@ -23,7 +23,10 @@
  */
 
 #include "FieldDumper.h"
+
+#include <Core/Exceptions/ErrnoException.h>
 #include <Core/OS/Dir.h>
+
 #include <iomanip>
 
 using namespace std;
