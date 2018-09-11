@@ -97,8 +97,7 @@ namespace WasatchCore{
                          srcTermTag,
                          gc,
                          params,
-                         turbulenceParams),
-      starContext_( TagNames::self().vardenStarContext )
+                         turbulenceParams)
   {
     std::string xmomname, ymomname, zmomname; // these are needed to construct fx, fy, and fz for pressure RHS
     bool doMom[3];
@@ -117,7 +116,7 @@ namespace WasatchCore{
     //__________________
     // Pressure source term        
     if( !factory.have_entry( tagNames.pressuresrc ) ){
-      const Expr::Tag densStarTag  = Expr::Tag(densTag.name(), starContext_);
+      const Expr::Tag densNP1Tag  = Expr::Tag(densTag.name(), Expr::STATE_NP1);
       
 //      set_mom_tags( params, this->momTags_ );
 //      set_mom_tags( params, this->oldMomTags_, true );
@@ -143,7 +142,7 @@ namespace WasatchCore{
                                                                                   tagNames.divu,
                                                                                   isConstDensity,
                                                                                   densTag,
-                                                                                  densStarTag ) );
+                                                                                  densNP1Tag ) );
       
       factory.cleave_from_parents( psrcID  );
       factory.cleave_from_children( psrcID  );
@@ -202,10 +201,10 @@ namespace WasatchCore{
         Expr::TagList ptags;
         ptags.push_back( this->pressureTag_ );
         ptags.push_back( Expr::Tag( this->pressureTag_.name() + "_rhs", this->pressureTag_.context() ) );
-        const Expr::Tag rhoStarTag = isConstDensity ? this->densityTag_ : Expr::Tag(this->densityTag_.name(), starContext_);
+        const Expr::Tag densityTag = isConstDensity ? this->densityTag_ : Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1);
         
         Expr::ExpressionBuilder* pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
-                                                                            tagNames.pressuresrc, tagNames.dt, embedGeom.vol_frac_tag<SVolField>(), rhoStarTag,
+                                                                            tagNames.pressuresrc, tagNames.dt, embedGeom.vol_frac_tag<SVolField>(), densityTag,
                                                                             embedGeom.has_moving_geometry(), usePressureRefPoint, refPressureValue,
                                                                             refPressureLocation, use3DLaplacian,
                                                                             enforceSolvability, this->is_constant_density(),
@@ -296,12 +295,12 @@ namespace WasatchCore{
       // variable density: add bcopiers on all boundaries
       if( !this->is_constant_density() ){
         // if we are solving a variable density problem, then set bcs on density estimate rho*
-        const Expr::Tag rhoStarTag = Expr::Tag(this->densityTag_.name(), starContext_); // get the tagname of rho*
+        const Expr::Tag densityNP1Tag = Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1); // get the tagname of rho*
         // check if this boundary applies a bc on the density
         if( myBndSpec.has_field(this->densityTag_.name()) ){
           // create a bc copier for the density estimate
-          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + bndName +"_bccopier", Expr::STATE_NONE);
-          BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+          const Expr::Tag rhoStarBCTag( densityNP1Tag.name() + bndName +"_bccopier", Expr::STATE_NONE);
+          BndCondSpec rhoStarBCSpec = {densityNP1Tag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
           if( !initFactory.have_entry(rhoStarBCTag) ){
             const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
             initFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
@@ -502,8 +501,8 @@ namespace WasatchCore{
       const TagNames& tagNames = TagNames::self();
 
       // set bcs for density
-      const Expr::Tag densStarTag( this->densityTag_.name(), starContext_ );
-      bcHelper.apply_boundary_condition<SVolField>( densStarTag, taskCat );
+      const Expr::Tag densityNP1Tag( this->densityTag_.name(), Expr::STATE_NP1 );
+      bcHelper.apply_boundary_condition<SVolField>( densityNP1Tag, taskCat );
     }
   }
 

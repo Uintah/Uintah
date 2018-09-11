@@ -408,9 +408,8 @@ namespace WasatchCore{
     }
 
     const TagNames& tagNames = TagNames::self();
-    const Expr::Context vardenStarContext = tagNames.vardenStarContext;
 
-    const Expr::Tag fStarTag(primVarName, vardenStarContext);
+    const Expr::Tag fStarTag(primVarName, Expr::STATE_NP1);
     const Expr::Tag drhodfStarTag("drhod" + primVarName, Expr::STATE_NONE);
     const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
 
@@ -482,8 +481,8 @@ namespace WasatchCore{
     Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
     std::string densityName;
     densityParams->findBlock("NameTag")->getAttribute( "name", densityName );
-    const Expr::Tag densityTag   = Expr::Tag(densityName, Expr::STATE_N     );
-    const Expr::Tag densStarTag  = Expr::Tag(densityName, vardenStarContext );
+    const Expr::Tag densityTag   = Expr::Tag(densityName, Expr::STATE_N  );
+    const Expr::Tag densStarTag  = Expr::Tag(densityName, Expr::STATE_NP1);
 
     // attach Sf_{n+1} to the scalar EOS coupling term
     const Expr::Tag mms_EOSMixFracSrcTag(tagNames.mms_mixfracsrc.name() + "_EOS", Expr::STATE_NONE);
@@ -537,9 +536,8 @@ namespace WasatchCore{
     varDens2DMMSParams->getAttribute("d",d);
 
     const TagNames& tagNames = TagNames::self();
-    const Expr::Context vardenStarContext = tagNames.vardenStarContext;
 
-    const Expr::Tag fStarTag(primVarName, vardenStarContext);
+    const Expr::Tag fStarTag(primVarName, Expr::STATE_NP1);
     const Expr::Tag drhodfStarTag("drhod" + primVarName, Expr::STATE_NONE);
     const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
 
@@ -547,7 +545,7 @@ namespace WasatchCore{
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
 
     const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-    const Expr::Tag densStarTag = Expr::Tag( densityTag.name(), vardenStarContext );
+    const Expr::Tag densStarTag = Expr::Tag( densityTag.name(), Expr::STATE_NP1 );
     const Expr::Tag solnVarRHSTag( solnVarName+"_rhs", Expr::STATE_NONE );
 
     std::string x1="X", x2="Y";

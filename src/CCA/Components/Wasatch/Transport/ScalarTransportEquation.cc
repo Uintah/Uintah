@@ -70,8 +70,7 @@ namespace WasatchCore{
       hasConvection_( params_->findBlock("ConvectiveFlux") ),
       densityTag_( densityTag ),
       enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE) ),
-      persistentFields_( persistentFields ),
-      vardenStarContext_( TagNames::self().vardenStarContext )
+      persistentFields_( persistentFields )
   {
     //_____________
     // Turbulence
@@ -181,16 +180,16 @@ namespace WasatchCore{
                 *
                 */
 
-               const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() , vardenStarContext_);
-               const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() , vardenStarContext_);
+               const Expr::Tag densityNP1Tag = Expr::Tag(densityTag.name() , Expr::STATE_NP1);
+               const Expr::Tag primVarNP1Tag = Expr::Tag(primVarTag.name() , Expr::STATE_NP1);
 
                setup_diffusive_flux_expression<FieldT>( diffFluxParams,
-                                                        densityCorrectedTag,
-                                                        primVarCorrectedTag,
+                                                        densityNP1Tag,
+                                                        primVarNP1Tag,
                                                         turbDiffTag_,
                                                         factory,
-                                                        infoStar_,
-                                                        vardenStarContext_ );
+                                                        infoNP1_,
+                                                        Expr::STATE_NP1 );
 
                // fieldTagInfo used for diffusive fluxes calculated at initialization
                FieldTagInfo infoInit;
@@ -209,8 +208,8 @@ namespace WasatchCore{
                // set info for diffusive flux based on infoStar_, add tag names to set of persistent fields
                const std::vector<FieldSelector> fsVec = {DIFFUSIVE_FLUX_X, DIFFUSIVE_FLUX_Y, DIFFUSIVE_FLUX_Z};
                for( FieldSelector fs : fsVec ){
-                if( infoStar_.find(fs) != infoStar_.end() ){
-                  const std::string diffFluxName = infoStar_[fs].name();
+                if( infoNP1_.find(fs) != infoNP1_.end() ){
+                  const std::string diffFluxName = infoNP1_[fs].name();
                   info[fs] = Expr::Tag(diffFluxName, Expr::STATE_N);
                   persistentFields_.insert(diffFluxName);
 
@@ -318,25 +317,26 @@ namespace WasatchCore{
       factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder( Expr::Tag(densityTag_.name(), Expr::STATE_NONE)) );
 
       if( hasConvection_ && flowTreatment_ == LOWMACH ){
-        const Expr::Tag rhsStarTag     = tagNames.make_star_rhs(solnVarName_);
-        const Expr::Tag densityStarTag = Expr::Tag(densityTag_.name(), vardenStarContext_);
-        const Expr::Tag primVarStarTag = Expr::Tag(primVarTag_.name(), vardenStarContext_);
-        const Expr::Tag solnVarStarTag = Expr::Tag(solnVarName_      , vardenStarContext_);
-        infoStar_[PRIMITIVE_VARIABLE]  = primVarStarTag;
+        const Expr::Tag rhsNP1Tag     = Expr::Tag(rhsTag_    .name(), Expr::STATE_NP1);
+        const Expr::Tag densityNP1Tag = Expr::Tag(densityTag_.name(), Expr::STATE_NP1);
+        const Expr::Tag primVarNP1Tag = Expr::Tag(primVarTag_.name(), Expr::STATE_NP1);
+        const Expr::Tag solnVarNP1Tag = Expr::Tag(solnVarName_      , Expr::STATE_NP1);
+        infoNP1_[PRIMITIVE_VARIABLE]  = primVarNP1Tag;
         
         EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
         if( vNames.has_embedded_geometry() ){
-          infoStar_[VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
-          infoStar_[AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
-          infoStar_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
-          infoStar_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
+          infoNP1_
+          [VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
+          infoNP1_[AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
+          infoNP1_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
+          infoNP1_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
         }
 
-        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, this->solnvar_np1_tag(), densityStarTag ) );
+        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarNP1Tag, this->solnvar_np1_tag(), densityNP1Tag ) );
 
-        const Expr::Tag scalEOSTag (primVarStarTag.name() + "_EOS_Coupling", Expr::STATE_NONE);
-        const Expr::Tag dRhoDfTag("drhod" + primVarStarTag.name(), Expr::STATE_NONE);
-        factory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoStar_, srcTags, densityStarTag, dRhoDfTag, isStrong_) );
+        const Expr::Tag scalEOSTag (primVarNP1Tag.name() + "_EOS_Coupling", Expr::STATE_NONE);
+        const Expr::Tag dRhoDfTag("drhod" + primVarNP1Tag.name(), Expr::STATE_NONE);
+        factory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_, srcTags, densityNP1Tag, dRhoDfTag, isStrong_) );
         
         // register an expression for divu. divu is just a constant expression to which we add the
         // necessary couplings from the scalars that represent the equation of state.
@@ -456,12 +456,14 @@ namespace WasatchCore{
     bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
 
-    if( !isConstDensity_ && hasConvection_ ){
-      // set bcs for solnVar_*
-      const TagNames& tagNames = TagNames::self();
-      const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
-      //bcHelper.apply_boundary_condition<FieldT>( solnVarStarTag, taskCat );
-      //bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(rhs_tag().name() + tagNames.star, Expr::STATE_NONE), taskCat, true );
+    if( !flowTreatment_ == LOWMACH && hasConvection_ ){
+      // set bcs for solution variable at STATE_NP1
+      // todo: determine whether or not this is necessary.
+//      const Expr::Tag rhsNP1Tag     = Expr::Tag(rhsTag_.name(), Expr::STATE_NP1);
+//      const Expr::Tag solnVarNP1Tag = Expr::Tag(solnVarName_  , Expr::STATE_NP1);
+//      bcHelper.apply_boundary_condition<FieldT>( solnVarNP1Tag, taskCat );
+//      bcHelper.apply_boundary_condition<FieldT>( rhsNP1Tag, taskCat, true );
+
       bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
     }
   }

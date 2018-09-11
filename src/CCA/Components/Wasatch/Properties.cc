@@ -163,9 +163,6 @@ namespace WasatchCore{
     // quantity, but is always needed as a guess for the solver here.
     persistentFields.insert( densityTag.name() );
 
-    // context for non-transported values for values at STATE_NP1.
-    const Expr::Context vardenStarContext = tagNames.vardenStarContext;
-
     const std::string densTableName = "Density";
     if( !table.has_depvar(densTableName) ){
       throw Uintah::ProblemSetupException( "Table has no density entry in it, but density was requested through your input file!", __FILE__, __LINE__ );
@@ -190,7 +187,7 @@ namespace WasatchCore{
       persistentFields.insert( fTag.name() ); // ensure that Uintah knows about this field
 
       rhofTag.reset_context( Expr::STATE_NP1 );
-      if (weakForm) fTag.reset_context( vardenStarContext );
+      if (weakForm) fTag.reset_context( Expr::STATE_NP1 );
 
       typedef DensFromMixfrac<SVolField>::Builder DensCalc;
       
