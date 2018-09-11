@@ -453,7 +453,7 @@ AMRSimulationController::run()
   }
   if (gheapchecker.active() && !gheapprofile.active()) {
     if (heap_checker && !heap_checker->NoLeaks()) {
-      cout << "HEAPCHECKER: MEMORY LEACK DETECTED!\n";
+      std::cout << "HEAPCHECKER: MEMORY LEACK DETECTED!\n";
     }
     delete heap_checker;
   }
