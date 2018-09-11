@@ -75,6 +75,7 @@ namespace WasatchCore{
   {
     //_____________
     // Turbulence
+    // todo: deal with turbulence releated tags for cases when flowTreatment_ == LOWMACH
     if( enableTurbulence_ ){
       Expr::Tag turbViscTag = TagNames::self().turbulentviscosity;
       turbDiffTag_ = turbulent_diffusivity_tag();
@@ -157,8 +158,9 @@ namespace WasatchCore{
 
       case LOWMACH:
        /* If scalars are being transported in strong form using the low-Mach algorithm, we need
-        * density and primitive scalars at old state (STATE_N) to calculate scalar RHS terms at
-        * the new state (STATE_NP1), and subsequently, div(u) at STATE_NP1.
+        * density and primitive scalars, and at old state (STATE_N) to calculate scalar RHS terms
+        * at the new state (STATE_NP1), and subsequently, div(u) at STATE_NP1. As a result,
+        * expressions for diffusive fluxes at STATE_N are registered as placeholders.
         */
         if (is_strong_form()) {
           densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_N);
@@ -172,16 +174,12 @@ namespace WasatchCore{
           diffFluxParams != nullptr;
           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") ) {
 
-             setup_diffusive_flux_expression<FieldT>( diffFluxParams,
-                                                      densityTag,
-                                                      primVarTag,
-                                                      turbDiffTag_,
-                                                      factory,
-                                                      info );
-
              // if doing convection, we will likely have a pressure solve that requires
              // predicted scalar values to approximate the density time derivatives
              if( params_->findBlock("ConvectiveFlux") ){
+               /* When using the low-Mach model
+                *
+                */
 
                const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() , vardenStarContext_);
                const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() , vardenStarContext_);
@@ -192,8 +190,47 @@ namespace WasatchCore{
                                                         turbDiffTag_,
                                                         factory,
                                                         infoStar_,
-                                                        true );
-           }
+                                                        vardenStarContext_ );
+
+               // fieldTagInfo used for diffusive fluxes calculated at initialization
+               FieldTagInfo infoInit;
+               Expr::Context initContext = Expr::STATE_NONE;
+               const Expr::Tag densityInitTag = Expr::Tag(densityTag.name() , initContext);
+               const Expr::Tag primVarInitTag = Expr::Tag(primVarTag.name() , initContext);
+
+               setup_diffusive_flux_expression<FieldT>( diffFluxParams,
+                                                        densityInitTag,
+                                                        primVarInitTag,
+                                                        turbDiffTag_,
+                                                        iFactory,
+                                                        infoInit,
+                                                        initContext );
+
+               // set info for diffusive flux based on infoStar_, add tag names to set of persistent fields
+               const std::vector<FieldSelector> fsVec = {DIFFUSIVE_FLUX_X, DIFFUSIVE_FLUX_Y, DIFFUSIVE_FLUX_Z};
+               for( FieldSelector fs : fsVec ){
+                if( infoStar_.find(fs) != infoStar_.end() ){
+                  const std::string diffFluxName = infoStar_[fs].name();
+                  info[fs] = Expr::Tag(diffFluxName, Expr::STATE_N);
+                  persistentFields_.insert(diffFluxName);
+
+                  // Force diffusive flux expression on initialization graph.
+                  const Expr::ExpressionID id = iFactory.get_id( infoInit[fs] );
+                  gc_[INITIALIZATION]->rootIDs.insert(id);
+                }
+               }
+
+               // Register placeholders for diffusive flux parameters at STATE_N
+               register_diffusive_flux_placeholders<FieldT>( factory, info );
+             }
+             else{
+               setup_diffusive_flux_expression<FieldT>( diffFluxParams,
+                                                        densityTag,
+                                                        primVarTag,
+                                                        turbDiffTag_,
+                                                        factory,
+                                                        info );
+             }
         } // loop over each flux specification
       break;
 
@@ -248,6 +285,10 @@ namespace WasatchCore{
   ScalarTransportEquation<FieldT>::setup_source_terms( FieldTagInfo& info,
                                                        Expr::TagList& srcTags )
   {
+    /* todo: Deal with source terms from input file properly when flowTreatment == LOWMACH
+     * and scalars are transported in strong form. This may be a bit tricky since we need
+     * source terms at both STATE_N and STATE_NP1 for this case.
+     */
     for( Uintah::ProblemSpecP sourceTermParams=params_->findBlock("SourceTermExpression");
          sourceTermParams != nullptr;
          sourceTermParams=sourceTermParams->findNextBlock("SourceTermExpression") ) {
@@ -276,7 +317,7 @@ namespace WasatchCore{
       factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder( Expr::Tag(primVarTag_.name(), Expr::STATE_N)   ) );
       factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder( Expr::Tag(densityTag_.name(), Expr::STATE_NONE)) );
 
-      if( hasConvection_ ){
+      if( hasConvection_ && flowTreatment_ == LOWMACH ){
         const Expr::Tag rhsStarTag     = tagNames.make_star_rhs(solnVarName_);
         const Expr::Tag densityStarTag = Expr::Tag(densityTag_.name(), vardenStarContext_);
         const Expr::Tag primVarStarTag = Expr::Tag(primVarTag_.name(), vardenStarContext_);
@@ -294,8 +335,8 @@ namespace WasatchCore{
         factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, this->solnvar_np1_tag(), densityStarTag ) );
 
         const Expr::Tag scalEOSTag (primVarStarTag.name() + "_EOS_Coupling", Expr::STATE_NONE);
-        const Expr::Tag dRhoDfStarTag("drhod" + primVarStarTag.name(), Expr::STATE_NONE);
-        factory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoStar_, srcTags, densityStarTag, dRhoDfStarTag, isStrong_) );
+        const Expr::Tag dRhoDfTag("drhod" + primVarStarTag.name(), Expr::STATE_NONE);
+        factory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoStar_, srcTags, densityStarTag, dRhoDfTag, isStrong_) );
         
         // register an expression for divu. divu is just a constant expression to which we add the
         // necessary couplings from the scalars that represent the equation of state.

@@ -49,7 +49,11 @@ namespace WasatchCore{
                                         const Expr::Tag turbDiffTag,
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info,
-                                        const bool makeStar = false );
+                                        const Expr::Context context = Expr::STATE_NONE );
+
+  template< typename FieldT>
+  void register_diffusive_flux_placeholders( Expr::ExpressionFactory& factory,
+                                               FieldTagInfo& info );
   template< typename FieldT>
   void setup_diffusive_velocity_expression( Uintah::ProblemSpecP diffVelParams,
                                             const Expr::Tag primVarTag,
