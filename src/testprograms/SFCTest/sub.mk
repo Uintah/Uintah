@@ -47,7 +47,6 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(SPATIALOPS_LIBRARY) \
           $(TABPROPS_LIBRARY)   \
           $(RADPROPS_LIBRARY)   \
-          $(PAPI_LIBRARY)       \
           $(M_LIBRARY)
 
 else

@@ -34,7 +34,6 @@ namespace Uintah {
   CLASS
        AMRSimulationController
       
-       Short description...
       
   GENERAL INFORMATION
       
@@ -51,9 +50,6 @@ namespace Uintah {
        Simulation_Controller
       
   DESCRIPTION
-       Long description...
-     
-  WARNING
       
 ****************************************/
 

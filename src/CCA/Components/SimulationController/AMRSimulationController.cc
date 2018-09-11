@@ -25,7 +25,6 @@
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 
 #include <CCA/Components/PostProcessUda/PostProcessUda.h>
-
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
@@ -62,13 +61,13 @@ using namespace Uintah;
 
 namespace {
 
-DebugStream amrout(      "AMR"                    , "AMRSimulationController", "AMR - report patch layout",false);
-DebugStream dbg(         "AMRSimulationController", "AMRSimulationController", "Task/Cycle debug stream",false);
-DebugStream dbg_barrier( "MPIBarriers"            , "AMRSimulationController", "MPIBarriers debug stream",false);
-DebugStream dbg_dwmem(   "LogDWMemory"            , "AMRSimulationController", "LogDWMemory debug stream",false);
-DebugStream gprofile(    "CPUProfiler"            , "AMRSimulationController", "Google Prof CPUProfiler",false);
-DebugStream gheapprofile("HeapProfiler"           , "AMRSimulationController", "Google Prof HeapProfiler",false);
-DebugStream gheapchecker("HeapChecker"            , "AMRSimulationController", "Google Prof HeapChecker",false);
+DebugStream amrout(       "AMR"                    , "AMRSimulationController", "AMR - report patch layout" , false );
+DebugStream dbg(          "AMRSimulationController", "AMRSimulationController", "Task/Cycle debug stream"   , false );
+DebugStream dbg_barrier(  "MPIBarriers"            , "AMRSimulationController", "MPIBarriers debug stream"  , false );
+DebugStream dbg_dwmem(    "LogDWMemory"            , "AMRSimulationController", "LogDWMemory debug stream"  , false );
+DebugStream gprofile(     "CPUProfiler"            , "AMRSimulationController", "Google Prof CPUProfiler"   , false );
+DebugStream gheapprofile( "HeapProfiler"           , "AMRSimulationController", "Google Prof HeapProfiler"  , false );
+DebugStream gheapchecker( "HeapChecker"            , "AMRSimulationController", "Google Prof HeapChecker"   , false );
 
 }
 
@@ -129,8 +128,8 @@ AMRSimulationController::run()
   }
 
   HeapLeakChecker * heap_checker=nullptr;
-  if (gheapchecker.active()){
-    if (!gheapprofile.active()){
+  if (gheapchecker.active()) {
+    if (!gheapprofile.active()) {
       char gheapchkname[512];
       sprintf(gheapchkname, "heapchk-rank%d", d_myworld->myRank());
       heap_checker= new HeapLeakChecker(gheapchkname);
@@ -214,32 +213,35 @@ AMRSimulationController::run()
   while( !m_application->isLastTimeStep( walltime ) ) {
 
     // Perform a bunch of housekeeping operations at the top of the
-    // loop. Performing them here asures that everything is ready
-    // after the inital time step. It also reduces duplicate code.
+    // loop. Performing them here assures that everything is ready
+    // after the initial time step. It also reduces duplicate code.
 
     // Before any work is done including incrementing the time step
     // check to see if this iteration may be the last one. The
     // DataArchiver uses it for determining whether to output or
-    // checkpoint the last time step. Maybelast uses the wall time and
-    // is sync'd across all ranks.
+    // checkpoint the last time step.
+    // "maybeLastTimeStep" uses the wall time and is sync'd across all ranks.
 
     // Get the wall time if is needed, otherwise ignore it.
     double predictedWalltime;
   
     // The predicted time is a best guess at what the wall time will be
     // when the time step is finished. It is currently used only for
-    // outputing and checkpointing. Both of which typically take much
+    // outputting and checkpointing. Both of which typically take much
     // longer than the simulation calculation.
-    if( m_application->getWallTimeMax() > 0 )
-      predictedWalltime = walltime +
-        1.5 * m_wall_timers.ExpMovingAverage().seconds();
-    else
+    if (m_application->getWallTimeMax() > 0) {
+      predictedWalltime = walltime + 1.5 * m_wall_timers.ExpMovingAverage().seconds();
+    }
+    else {
       predictedWalltime = 0;
+    }
 
-    if( m_application->maybeLastTimeStep( predictedWalltime ) )
-      m_output->maybeLastTimeStep( true );
-    else
-      m_output->maybeLastTimeStep( false );
+    if (m_application->maybeLastTimeStep(predictedWalltime)) {
+      m_output->maybeLastTimeStep(true);
+    }
+    else {
+      m_output->maybeLastTimeStep(false);
+    }
     
     // Set the current wall time for this rank (i.e. this value is
     // sync'd across all ranks). The Data Archive uses it for
@@ -293,20 +295,23 @@ AMRSimulationController::run()
       m_application->setRegridTimeStep( false );
 
       // If not the first time step or restarting check for regridding
-      if( (!first || m_restarting) && m_regridder->needsToReGrid(m_current_gridP) ) {
+      if ((!first || m_restarting) && m_regridder->needsToReGrid(m_current_gridP)) {
         
         proc0cout << " Need to regrid for next time step "
                   << m_application->getTimeStep() << " "
                   << "at current sim time " << m_application->getSimTime()
                   << std::endl;
+
         doRegridding( false );
       }
+
       // Covers single-level regridder case (w/ restarts)
       else if (m_regridder->doRegridOnce() && m_regridder->isAdaptive()) {
         proc0cout << " Regridding once for next time step "
                   << m_application->getTimeStep() << " "
                   << "at current sim time " << m_application->getSimTime()
                   << std::endl;
+
         m_scheduler->setRestartInitTimestep( false );
         doRegridding( false );
         m_regridder->setAdaptivity( false );
@@ -317,7 +322,7 @@ AMRSimulationController::run()
     // refinement ratio for each level.
     int totalFine = 1;
 
-    if( !m_application->isLockstepAMR() ) {
+    if (!m_application->isLockstepAMR()) {
       for (int i = 1; i < m_current_gridP->numLevels(); ++i) {
         totalFine *= m_current_gridP->getLevel(i)->getRefinementRatioMaxDim();
       }
@@ -351,7 +356,7 @@ AMRSimulationController::run()
 
     // After one step (either time step or initialization) and the
     // updating of delta T finalize the old time step, e.g. finalize
-    // and advance the Datawarehouse
+    // and advance the DataWarehouse
     m_scheduler->advanceDataWarehouse( m_current_gridP );
 
 #ifndef DISABLE_SCI_MALLOC
@@ -367,7 +372,7 @@ AMRSimulationController::run()
         m_loadBalancer->needRecompile( m_current_gridP ) ||
         (m_regridder && m_regridder->needRecompile( m_current_gridP )) );
 
-    if( m_recompile_taskgraph || first ) {
+    if (m_recompile_taskgraph || first) {
 
       // Recompile taskgraph, re-assign BCs, reset recompile flag.      
       if (m_recompile_taskgraph) {
@@ -416,7 +421,6 @@ AMRSimulationController::run()
 
     // ARS - CAN THIS BE SCHEDULED??
     m_output->writeto_xml_files( m_current_gridP );
-    // }
 
     // ARS - FIX ME - SCHEDULE INSTEAD
     ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, false );
@@ -427,7 +431,7 @@ AMRSimulationController::run()
     m_loadBalancer->finalizeContributions( m_current_gridP );
 
     // Done with the first time step.
-    if( first ) {
+    if (first) {
       m_scheduler->setRestartInitTimestep( false );
       m_application->setRestartTimeStep( false );
       
@@ -441,14 +445,14 @@ AMRSimulationController::run()
   // m_ups->releaseDocument();
 
 #ifdef USE_GPERFTOOLS
-  if (gprofile.active()){
+  if (gprofile.active()) {
     ProfilerStop();
   }
-  if (gheapprofile.active()){
+  if (gheapprofile.active()) {
     HeapProfilerStop();
   }
-  if( gheapchecker.active() && !gheapprofile.active() ) {
-    if( heap_checker && !heap_checker->NoLeaks() ) {
+  if (gheapchecker.active() && !gheapprofile.active()) {
+    if (heap_checker && !heap_checker->NoLeaks()) {
       cout << "HEAPCHECKER: MEMORY LEACK DETECTED!\n";
     }
     delete heap_checker;
@@ -469,7 +473,7 @@ AMRSimulationController::doInitialTimeStep()
   
   Timers::Simple taskGraphTimer;          // Task graph time
 
-  if( m_restarting ) {
+  if (m_restarting) {
 
     // for dynamic lb's, set up restart patch config
     m_loadBalancer->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancer::RESTART_LB );
@@ -620,7 +624,7 @@ AMRSimulationController::doInitialTimeStep()
           m_current_gridP->numLevels() < m_regridder->maxLevels() &&
           doRegridding( true ) );
 
-      if ( needNewLevel ) {
+      if (needNewLevel) {
         m_scheduler->initialize( 1, 1 );
         m_scheduler->advanceDataWarehouse( m_current_gridP, true );
       }
@@ -687,7 +691,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
     }
 
     //  If time step is to be recomputed adjust the delta T and recompute.
-    if ( m_application->getReductionVariable( recomputeTimeStep_name ) ) {
+    if (m_application->getReductionVariable(recomputeTimeStep_name)) {
 
       for (int i = 1; i <= totalFine; ++i) {
         m_scheduler->replaceDataWarehouse(i, m_current_gridP);
@@ -708,8 +712,9 @@ AMRSimulationController::executeTimeStep( int totalFine )
       
       success = true;
     }
-    else
+    else {
       success = true;
+    }
   } 
 }
 
@@ -745,13 +750,13 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
 
   int lbstate = initialTimeStep ? LoadBalancer::INIT_LB : LoadBalancer::REGRID_LB;
 
-  if( m_current_gridP != oldGrid ) {
+  if (m_current_gridP != oldGrid) {
 
     m_application->setRegridTimeStep( true );
      
     m_loadBalancer->possiblyDynamicallyReallocate(m_current_gridP, lbstate);
 
-    if( dbg_barrier.active() ) {
+    if (dbg_barrier.active()) {
       m_barrier_timer.reset( true );
       Uintah::MPI::Barrier(d_myworld->getComm());
       m_barrier_times[1] += m_barrier_timer().seconds();
@@ -855,10 +860,10 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   m_scheduler->mapDataWarehouse( Task::CoarseNewDW, totalFine );
   
   int my_rank = d_myworld->myRank();
-  if( m_do_multi_taskgraphing ) {
+  if (m_do_multi_taskgraphing) {
     for (int i = 0; i < m_current_gridP->numLevels(); i++) {
       // taskgraphs 0-numlevels-1
-      if( i > 0 ) {
+      if (i > 0) {
         // we have the first one already
         m_scheduler->addTaskGraph(Scheduler::NormalTaskGraph);
       }
@@ -876,7 +881,7 @@ AMRSimulationController::compileTaskGraph( int totalFine )
       }
 
       // schedule a coarsen from the finest level to this level
-      for( int j = m_current_gridP->numLevels() - 2; j >= i; j-- ) {
+      for (int j = m_current_gridP->numLevels() - 2; j >= i; j--) {
         dbg << my_rank << "   schedule coarsen on level " << j << "\n";
         m_application->scheduleCoarsen(m_current_gridP->getLevel(j),
                                        m_scheduler);
@@ -907,10 +912,10 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   }
 
   // If regridding schedule error estimates
-  for( int i = m_current_gridP->numLevels() - 1; i >= 0; i-- ) {
+  for (int i = m_current_gridP->numLevels() - 1; i >= 0; i--) {
     dbg << my_rank << "   final TG " << i << "\n";
 
-    if( m_regridder ) {
+    if (m_regridder) {
       m_regridder->scheduleInitializeErrorEstimate(m_current_gridP->getLevel(i));
       m_application->scheduleErrorEstimate(m_current_gridP->getLevel(i),
                                            m_scheduler);
@@ -1006,12 +1011,12 @@ AMRSimulationController::subCycleCompile( int startDW,
 
   m_application->scheduleTimeAdvance(fineLevel, m_scheduler);
 
-  if( m_application->isAMR() ) {
-    if( numLevel + 1 < m_current_gridP->numLevels() ) {
+  if (m_application->isAMR()) {
+    if (numLevel + 1 < m_current_gridP->numLevels()) {
       numFineSteps = m_application->isLockstepAMR() ? 1 : fineLevel->getFinerLevel()->getRefinementRatioMaxDim();
       int newStride = dwStride / numFineSteps;
 
-      for( int substep = 0; substep < numFineSteps; substep++ ) {
+      for (int substep = 0; substep < numFineSteps; substep++) {
         subCycleCompile(startDW + substep * newStride, newStride, numLevel + 1, substep);
       }
 
@@ -1045,15 +1050,13 @@ AMRSimulationController::subCycleCompile( int startDW,
       if (i == fineLevel->getIndex() && numLevel != 0) {
         m_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
         m_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
-        m_application->scheduleRefineInterface(fineLevel,
-                                               m_scheduler, true, true);
+        m_application->scheduleRefineInterface(fineLevel, m_scheduler, true, true);
       }
       else {
         // look in the NewDW all the way down
         m_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
         m_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
-        m_application->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i),
-                                               m_scheduler, false, true);
+        m_application->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), m_scheduler, false, true);
       }
     }
   }
@@ -1089,9 +1092,9 @@ AMRSimulationController::subCycleExecute( int startDW,
     DataWarehouse::ScrubNonPermanent : DataWarehouse::ScrubComplete;
 
   int curDW = startDW;
-  for( int step = 0; step < numSteps; step++ ) {
+  for (int step = 0; step < numSteps; step++) {
   
-    if( step > 0 ) {
+    if (step > 0) {
       curDW += newDWStride; // can't increment at the end, or the FINAL tg for L0 will use the wrong DWs
     }
 
@@ -1103,10 +1106,10 @@ AMRSimulationController::subCycleExecute( int startDW,
 
     // we really only need to pass in whether the current DW is mapped to 0 or not
     // TODO - fix inter-Taskgraph scrubbing
-    m_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing); // OldDW
+    m_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing);                                 // OldDW
     m_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
-    m_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing); // CoarseOldDW
-    m_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
+    m_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing);                               // CoarseOldDW
+    m_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent);  // CoarseNewDW
     
     // we need to unfinalize because execute finalizes all new DWs,
     // and we need to write into them still (even if we finalized only
@@ -1128,7 +1131,7 @@ AMRSimulationController::subCycleExecute( int startDW,
     
     m_scheduler->execute(levelNum, iteration);
     
-    if( levelNum + 1 < m_current_gridP->numLevels() ) {
+    if (levelNum + 1 < m_current_gridP->numLevels()) {
       ASSERT(newDWStride > 0);
       subCycleExecute(curDW, newDWStride, levelNum + 1, false);
     }
@@ -1145,10 +1148,10 @@ AMRSimulationController::subCycleExecute( int startDW,
       m_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
       m_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
 
-      m_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing); // OldDW
+      m_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing);                                 // OldDW
       m_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
-      m_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing); // CoarseOldDW
-      m_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
+      m_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing);                               // CoarseOldDW
+      m_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent);  // CoarseNewDW
 
       if (dbg.active()) {
         dbg << d_myworld->myRank()
@@ -1168,7 +1171,7 @@ AMRSimulationController::subCycleExecute( int startDW,
     }
   }
 
-  if( levelNum == 0 ) {
+  if (levelNum == 0) {
     // execute the final TG
     if (dbg.active()) {
       dbg << d_myworld->myRank() << "   Executing Final TG on level " << levelNum << " with old DW " << curDW << " = "

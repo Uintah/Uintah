@@ -503,14 +503,6 @@ SCI_ARG_WITH(zoltan,
   DIR,
   WITHOUT-IS-NOT-VALID)
   
-SCI_ARG_WITH(papi,
-  AC_HELP_STRING(--with-papi=DIR,
-                 Use the papi installation in DIR),
-  [with_papi="$withval"],
-  [with_papi=NOT_SET],
-  DIR,
-  WITHOUT-IS-NOT-VALID)
-  
 SCI_ARG_WITH(gperftools,
   AC_HELP_STRING(--with-gperftools=DIR,
                  Use the Google Perftools installation in DIR),
@@ -3587,43 +3579,6 @@ fi
 
 AC_SUBST(XALAN_PATH)
 
-##  --  search for papi stuff  -------------------------------------------
-
-if test "$with_papi" != NOT_SET; then
- 
-  _sci_optional=specific
-  _sci_lib="$with_papi"
-  BASE_LIB_PATH(_sci_lib,$_sci_lib)
-  _sci_inc="$with_papi/include"
- 
-  AC_LANG(C++)
-  SCI_TRY_LINK(PAPI, PAPI libraries and headers,
-               papi.h,
-               $_sci_inc,
-               papi,
-               $_sci_lib,
-               ,
-               [long long flops;
-               int event=PAPI_DP_OPS;
-               float x=0.0;
-               PAPI_start_counters(&event, 1);
-               x++;
-               PAPI_stop_counters(&flops, 1);],
-               $_sci_optional)
-  AC_LANG(C)     
-  
-  DEF_PAPI="#define USE_PAPI_COUNTERS 1"
-
-fi
-
-# these are all defined after the call to SCI_COMPILE_LINK_TEST
-AC_SUBST(HAVE_PAPI)
-AC_SUBST(DEF_PAPI)
-AC_SUBST(INC_PAPI_H)
-AC_SUBST(PAPI_LIB_DIR_FLAG)
-AC_SUBST(PAPI_LIB_FLAG)
-
-sci_defs_files="$sci_defs_files include/sci_defs/papi_testdefs.h"
 
 ##  --  search for google perftools stuff  -------------------------------------------
 

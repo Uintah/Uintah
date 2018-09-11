@@ -42,7 +42,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(BOOST_LIBRARY)         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
-          $(PAPI_LIBRARY) $(M_LIBRARY)
+          $(M_LIBRARY)
 
 else
   LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(CUDA_LIBRARY)

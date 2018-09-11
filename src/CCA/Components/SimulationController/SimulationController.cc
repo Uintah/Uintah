@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <sci_defs/malloc_defs.h>
-
 #include <CCA/Components/SimulationController/SimulationController.h>
 
 #include <Core/DataArchive/DataArchive.h>
@@ -38,10 +36,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DOUT.hpp>
 
-#ifdef USE_PAPI_COUNTERS
-  #include <Core/Exceptions/PapiInitializationError.h>
-#endif
-
+#include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
@@ -49,8 +44,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/ApplicationInterface.h>
 
-#include <CCA/Components/Schedulers/MPIScheduler.h>
 
+#include <sci_defs/malloc_defs.h>
 #include <sci_defs/visit_defs.h>
 
 
@@ -74,12 +69,12 @@
 
 namespace {
 
-Uintah::Dout g_sim_stats(         "SimulationStats",            "SimulationController", "sim general stats debug stream", true  );
-Uintah::Dout g_sim_stats_mem(     "SimulationStatsMem",         "SimulationController", "sim memory stats debug stream", true  );
-Uintah::Dout g_sim_stats_time(    "SimulationStatsTime",        "SimulationController", "sim time stats debug stream", false );
-Uintah::Dout g_sim_ctrl_dbg(      "SimulationController",       "SimulationController", "general debug stream", false );
-Uintah::Dout g_comp_timings(      "ComponentTimings",           "SimulationController", "aggregated component timing stats per timestep", false );
-Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", "SimulationController", "individual component timings", false );
+Uintah::Dout g_sim_stats(         "SimulationStats"           , "SimulationController", "sim general stats debug info"             , true  );
+Uintah::Dout g_sim_stats_mem(     "SimulationStatsMem"        , "SimulationController", "sim memory stats debug info"              , true  );
+Uintah::Dout g_sim_stats_time(    "SimulationStatsTime"       , "SimulationController", "sim time stats debug info"                , false );
+Uintah::Dout g_sim_ctrl_dbg(      "SimulationController"      , "SimulationController", "general debug info"                       , false );
+Uintah::Dout g_comp_timings(      "ComponentTimings"          , "SimulationController", "aggregated component timings per timestep", false );
+Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", "SimulationController", "individual component timings"             , false );
 
 }
 
@@ -92,7 +87,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   , m_ups( prob_spec )
 {
   //initialize the overhead percentage
-  for( int i = 0; i < OVERHEAD_WINDOW; ++i ) {
+  for (int i = 0; i < OVERHEAD_WINDOW; ++i) {
     double x = (double) i / (double) (OVERHEAD_WINDOW/2);
     m_overhead_values[i]  = 0;
     m_overhead_weights[i] = 8.0 - x*x*x;
@@ -102,154 +97,32 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
 
   ProblemSpecP simController_ps = m_ups->findBlock( "SimulationController" );
 
-  if( simController_ps )
-  {
+  if (simController_ps) {
     ProblemSpecP runtimeStats_ps = simController_ps->findBlock( "RuntimeStats" );
 
-    if( runtimeStats_ps )
-    {
+    if (runtimeStats_ps) {
       runtimeStats_ps->get("frequency", m_reportStatsFrequency);
       runtimeStats_ps->get("onTimeStep", m_reportStatsOnTimeStep);
 
-      if( m_reportStatsOnTimeStep >= m_reportStatsFrequency )
-      {
+      if (m_reportStatsOnTimeStep >= m_reportStatsFrequency) {
         proc0cout << "Error: the frequency of reporting the run time stats "
                   << m_reportStatsFrequency << " "
                   << "is less than or equal to the time step ordinality "
                   << m_reportStatsOnTimeStep << " "
                   << ". Resetting the ordinality to ";
 
-        if( m_reportStatsFrequency > 1 )
+        if (m_reportStatsFrequency > 1) {
           m_reportStatsOnTimeStep = 1;
-        else
+        }
+        else {
           m_reportStatsOnTimeStep = 0;
+        }
 
         proc0cout << m_reportStatsOnTimeStep << std::endl;
       }
     }
   }
   
-#ifdef USE_PAPI_COUNTERS
-  /*
-   * Setup PAPI events to track.
-   *
-   * Here and in printSimulationStats() are the only places code needs
-   * to be added for additional events to track. Everything is
-   * parameterized and hopefully robust enough to handle unsupported
-   * events on different architectures. Only supported events will
-   * report stats in printSimulationStats().
-   *
-   * NOTE: All desired events may not be supported for a particular
-   *       architecture and bad things, happen, e.g. misaligned
-   *       event value array indices when an event can be queried
-   *       but not added to an event set, hence the PapiEvent
-   *       struct, map and logic in printSimulationStats().
-   *
-   *       On some platforms, errors about resource limitations may be
-   *       encountered, and is why we limit this instrumentation to
-   *       four events now (seems stable). At some point we will look
-   *       into the cost of multiplexing with PAPI, which will allow a
-   *       user to count more events than total physical counters by
-   *       time sharing the existing counters. This comes at some loss
-   *       in precision.
-   *
-   */
-
-  // PAPI_FP_OPS - floating point operations executed
-  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", TotalFlops)));
-
-  // PAPI_DP_OPS - floating point operations executed; optimized to count scaled double precision vector operations
-  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", TotalVFlops)));
-
-  // PAPI_L2_TCM - level 2 total cache misses
-  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", L2Misses)));
-
-  // PAPI_L3_TCM - level 3 total cache misses
-  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", L3Misses)));
-
-  // PAPI_TLB_TL - Total translation lookaside buffer misses
-  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_TLB_TL, PapiEvent("PAPI_TLB_TL", TLBMisses)));
-
-  m_papi_event_values = scinew long long[m_papi_events.size()];
-  m_papi_event_set    = PAPI_NULL;
-  int retval          = PAPI_NULL;
-
-  // initialize the PAPI library
-  retval = PAPI_library_init(PAPI_VER_CURRENT);
-  if (retval != PAPI_VER_CURRENT) {
-    proc0cout << "Error: Cannot initialize PAPI library!\n"
-              << "       Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n";
-    throw PapiInitializationError("PAPI library initialization error occurred. Check that your PAPI library can be initialized correctly.", __FILE__, __LINE__);
-  }
-
-  // initialize thread support in the PAPI library
-  retval = PAPI_thread_init(pthread_self);
-  if (retval != PAPI_OK) {
-    proc0cout << "Error: Cannot initialize PAPI thread support!\n"
-              << "       Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n";
-    if (Parallel::getNumThreads() > 1) {
-      throw PapiInitializationError("PAPI Pthread initialization error occurred. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
-    }
-  }
-
-  // query all PAPI events - find which are supported, flag those that are unsupported
-  for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
-    retval = PAPI_query_event(iter->first);
-    if (retval != PAPI_OK) {
-      proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.m_name << "!\n"
-                << "          Error code = " << retval << " (" << PAPI_strerror(retval)<< ")\n"
-                << "          No stats will be printed for " << iter->second.m_sim_stat_name << std::endl;
-    }
-    else {
-      iter->second.m_is_supported = true;
-    }
-  }
-
-  // create a new empty PAPI event set
-  retval = PAPI_create_eventset(&m_papi_event_set);
-  if (retval != PAPI_OK) {
-    proc0cout << "Error: Cannot create PAPI event set!\n"
-              << "       Error code = " << retval << " (" << PAPI_strerror(retval)<< ")\n";
-    throw PapiInitializationError("PAPI event set creation error. Unable to create hardware counter event set.", __FILE__, __LINE__);
-  }
-
-  // Iterate through supported PAPI events, flag those that cannot be added.
-  //   There are situations where an event may be queried but not added to an event set.
-  int index = 0;
-  for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
-    if (iter->second.m_is_supported) {
-      retval = PAPI_add_event(m_papi_event_set, iter->first);
-      if (retval != PAPI_OK) { // this means the event queried OK but could not be added
-        proc0cout << "WARNNING: Cannot add PAPI event: " << iter->second.m_name << "!\n"
-                  << "          Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n"
-                  << "          No stats will be printed for " << iter->second.m_sim_stat_name << std::endl;
-        iter->second.m_is_supported = false;
-      }
-      else {
-        iter->second.m_event_value_idx = index;
-        index++;
-      }
-    }
-  }
-
-  // Start counting PAPI events
-  retval = PAPI_start(m_papi_event_set);
-  if (retval != PAPI_OK) {
-    proc0cout << "   ERROR: Cannot start PAPI event set!\n"
-              << "          Error code = " << retval << " (" << PAPI_strerror(retval)
-              << ")" << std::endl;
-
-    // PAPI_ENOCMP means component index isn't set because no tracked
-    // events supported on this platform, otherwise something
-    // potentially unreasonable happened, either way we should not
-    // continue
-    std::string error_message = "PAPI event set start error.";
-    std::string specific_message = error_message + ((retval == PAPI_ENOCMP) ? "  None of the PAPI events tracked by Uintah are available on this platform. " : "")
-                                                 + "Please recompile without PAPI enabled.";
-    throw PapiInitializationError(specific_message, __FILE__, __LINE__);
-  }
-#endif
-
   std::string timeStr("seconds");
   std::string bytesStr("MBytes");
 
@@ -288,14 +161,6 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   m_runtime_stats.insert( MemoryUsed,                std::string("MemoryUsed"),            bytesStr, 0 );
   m_runtime_stats.insert( MemoryResident,            std::string("MemoryResident"),        bytesStr, 0 );
 
-#ifdef USE_PAPI_COUNTERS
-  m_runtime_stats.insert( TotalFlops,  std::string("TotalFlops") , "FLOPS" , 0 );
-  m_runtime_stats.insert( TotalVFlops, std::string("TotalVFlops"), "FLOPS" , 0 );
-  m_runtime_stats.insert( L2Misses,    std::string("L2Misses")   , "misses", 0 );
-  m_runtime_stats.insert( L3Misses,    std::string("L3Misses")   , "misses", 0 );
-  m_runtime_stats.insert( TLBMisses,   std::string("TLBMisses")  , "misses", 0 );
-#endif
-
 #ifdef HAVE_VISIT
   m_visitSimData = scinew visit_simulation_data();
 #endif
@@ -309,10 +174,6 @@ SimulationController::~SimulationController()
   if (m_restart_archive) {
     delete m_restart_archive;
   }
-
-#ifdef USE_PAPI_COUNTERS
-  delete m_papi_event_values;
-#endif
 
 #ifdef HAVE_VISIT
   delete m_visitSimData;
@@ -445,15 +306,16 @@ SimulationController::restartArchiveSetup( void )
       m_restart_timestep = indices[indices.size() - 1]; // reset m_restart_timestep to what it really is
     }
     else {
-      for (int index = 0; index < (int)indices.size(); index++)
+      for (int index = 0; index < (int)indices.size(); index++) {
         if (indices[index] == m_restart_timestep) {
           m_restart_index = index;
           break;
         }
+      }
     }
       
-    if (m_restart_index == (int) indices.size()) {
-      // timestep not found
+    // timestep not found
+    if (m_restart_index == (int)indices.size()) {
       std::ostringstream message;
       message << "Restart time step " << m_restart_timestep << " not found";
       throw InternalError(message.str(), __FILE__, __LINE__);
@@ -461,8 +323,7 @@ SimulationController::restartArchiveSetup( void )
 
     // Do this call before calling DataArchive::restartInitialize,
     // because problemSetup() creates VarLabels the DataArchive needs.
-    m_restart_ps =
-      m_restart_archive->getTimestepDocForComponent( m_restart_index );
+    m_restart_ps = m_restart_archive->getTimestepDocForComponent( m_restart_index );
 
     proc0cout << "Restart directory: \t'" << restartFromDir.getName() << "'\n"
               << "Restart time step: \t" << m_restart_timestep << "\n";
@@ -499,8 +360,7 @@ SimulationController::gridSetup( void )
     // conditions. Once that is done, a legitimate load balancer will
     // be created later on - after which we use said balancer and
     // assign BCs to the grid.  NOTE the "false" argument below.
-    m_current_gridP =
-      m_restart_archive->queryGrid( m_restart_index, m_ups, false );
+    m_current_gridP = m_restart_archive->queryGrid( m_restart_index, m_ups, false );
   }
   else /* if( !m_restarting ) */ {
     m_current_gridP = scinew Grid();
@@ -648,8 +508,7 @@ SimulationController::timeStateSetup()
     // leaked, but sometimes if is called, then everything segfaults.
     // delete m_restart_archive;
   }
-  else
-  {
+  else {
     // Set the time step to 0 which is immediately written to the DW.
     m_application->setTimeStep( 0 );
 
@@ -712,8 +571,6 @@ SimulationController::ScheduleReportStats( bool header )
   m_scheduler->addTask(task,
                        m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                        m_application->getMaterialManagerP()->allMaterials() );
-
-  // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << header << std::endl;
 }
 
 void
@@ -728,26 +585,30 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
   // If the reporting frequency is greater than 1 check to see if
   // output is needed.
-  if( m_reportStatsFrequency == 1 )
+  if( m_reportStatsFrequency == 1 ) {
     reportStats = true;
+  }
+
   // Note: this check is split up so to be assured that the call to
-  // isLastTimeStep is last and called only when needed. Unfortuantely,
+  // isLastTimeStep is last and called only when needed. Unfortunately,
   // the greater the frequency the more often it will be called.
-  else
-  {
-    if( header )
+  else {
+    if( header ) {
       reportStats = true;
-    else if( m_application->getTimeStep()%m_reportStatsFrequency == m_reportStatsOnTimeStep )
+    }
+    else if( m_application->getTimeStep()%m_reportStatsFrequency == m_reportStatsOnTimeStep ) {
       reportStats = true;
-    else
-    {
+    }
+    else {
       // Get the wall time if is needed, otherwise ignore it.
       double walltime;
       
-      if( m_application->getWallTimeMax() > 0 )
+      if( m_application->getWallTimeMax() > 0 ) {
         walltime = m_wall_timers.GetWallTime();
-      else
+      }
+      else {
         walltime = 0;
+      }
       
       reportStats = m_application->isLastTimeStep( walltime );
     }
@@ -755,7 +616,6 @@ SimulationController::ReportStats(const ProcessorGroup*,
   
   // Get and reduce the performance runtime stats
   getMemoryStats();
-  getPAPIStats();
 
   // Reductions are only need if these are true.
   if( (m_regridder && m_regridder->useDynamicDilation()) ||
@@ -780,13 +640,14 @@ SimulationController::ReportStats(const ProcessorGroup*,
   if( d_myworld->myRank() == 0 && g_sim_stats ) {
     std::ostringstream message;
 
-    if( header )
+    if( header ) {
       message << std::endl
               << "Simulation and run time stats are reported "
               << "at the end of each time step" << std::endl
               << "EMA == Wall time as an exponential moving average "
               << "using a window of the last " << m_wall_timers.getWindow()
               << " time steps" << std::endl;
+    }
 
     message << std::left
             << "Timestep "   << std::setw(8)  << m_application->getTimeStep()
@@ -818,9 +679,10 @@ SimulationController::ReportStats(const ProcessorGroup*,
         message << "Memory Use=" << std::setw(8)
                 << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
 
-        if(avg_highwater)
+        if(avg_highwater) {
           message << "    Highwater Memory Use=" << std::setw(8)
                   << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
+        }
       }
       else {
         message << "Memory Used=" << std::setw(10)
@@ -829,12 +691,13 @@ SimulationController::ReportStats(const ProcessorGroup*,
                 << ProcessInfo::toHumanUnits(max_memused)
                 << " (max on rank: " << std::setw(6) << max_memused_rank << ")";
 
-        if (avg_highwater)
+        if (avg_highwater) {
           message << "    Highwater Memory Used=" << std::setw(10)
                   << ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
                   << " (avg) " << std::setw(10)
                   << ProcessInfo::toHumanUnits(max_highwater)
                   << " (max on rank: " << std::setw(6) << max_highwater_rank << ")";
+        }
       }
     }
     else {
@@ -844,9 +707,10 @@ SimulationController::ReportStats(const ProcessorGroup*,
       message << "Memory Use=" << std::setw(8)
               << ProcessInfo::toHumanUnits((unsigned long) memused );
 
-      if(highwater)
+      if(highwater) {
         message << "    Highwater Memory Use=" << std::setw(8)
                 << ProcessInfo::toHumanUnits((unsigned long) highwater);
+      }
 
       message << " (on rank 0 only)";
     }
@@ -856,14 +720,12 @@ SimulationController::ReportStats(const ProcessorGroup*,
   }
   
   // Report on the simulation time used.
-  if( d_myworld->myRank() == 0 && g_sim_stats_time && m_num_samples )
-  {
+  if( d_myworld->myRank() == 0 && g_sim_stats_time && m_num_samples ) {
     // Ignore the first sample as that is for initialization.
     std::ostringstream message;
 
     double realSecondsNow = timeStep.seconds() / m_application->getDelT();
-    double realSecondsAvg = m_wall_timers.TimeStep().seconds() /
-      (m_application->getSimTime()-m_application->getSimTimeStart());
+    double realSecondsAvg = m_wall_timers.TimeStep().seconds() / (m_application->getSimTime()-m_application->getSimTimeStart());
     
     message << "1 simulation second takes ";
     
@@ -1008,8 +870,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
   } 
 
   // Average proc runtime performance stats
-  if( d_myworld->myRank() == 0 && g_comp_timings && m_num_samples)
-  {
+  if( d_myworld->myRank() == 0 && g_comp_timings && m_num_samples) {
     // Ignore the first sample as that is for initialization.
     std::ostringstream message;
 
@@ -1026,7 +887,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
               << std::endl;
         
       for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
-        if( m_runtime_stats.getRankMaximum(i) != 0.0 )
+        if( m_runtime_stats.getRankMaximum(i) != 0.0 ) {
           message << "  " << std::left
                   << std::setw(21) << m_runtime_stats.getName(i)
                   << "[" << std::setw(10) << m_runtime_stats.getUnits(i) << "]"
@@ -1036,6 +897,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
                   << " : " << std::setw(10)
                   << (m_runtime_stats.getRankMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_runtime_stats.getRankAverage(i) / m_runtime_stats.getRankMaximum(i)))) : 0)
                   << std::endl;
+        }
       }
     }
     
@@ -1060,7 +922,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
               << std::endl;
 
       for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
-        if( m_application->getApplicationStats().getRankMaximum(i) != 0.0 )
+        if( m_application->getApplicationStats().getRankMaximum(i) != 0.0 ) {
           message << "  " << std::left
                   << std::setw(21) << m_application->getApplicationStats().getName(i)
                   << "["   << std::setw(10) << m_application->getApplicationStats().getUnits(i) << "]"
@@ -1070,6 +932,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
                   << " : " << std::setw(10)
                   << (m_application->getApplicationStats().getRankMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_application->getApplicationStats().getRankAverage(i) / m_application->getApplicationStats().getRankMaximum(i)))) : 0)
                   << std::endl;
+        }
       }
 
       message << std::endl;
@@ -1155,41 +1018,6 @@ SimulationController::getMemoryStats( bool create /* = false */ )
 
 //______________________________________________________________________
 //
-  
-void
-SimulationController::getPAPIStats( )
-{
-#ifdef USE_PAPI_COUNTERS
-  int retval = PAPI_read(m_papi_event_set, m_papi_event_values);
-
-  if (retval != PAPI_OK) {
-    proc0cout << "   Error: Cannot read PAPI event set!\n"
-              << "       Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n";
-    throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
-  }
-  else {
-    // query all PAPI events - find which are supported, flag those that are unsupported
-    for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
-      if (iter->second.m_is_supported) {
-        m_runtime_stats[ iter->second.m_sim_stat_name ] =
-                static_cast<double>(m_papi_event_values[m_papi_events.find(iter->first)->second.m_event_value_idx]);
-      }
-    }
-  }
-
-  // zero the values in the hardware counter event set array
-  retval = PAPI_reset(m_papi_event_set);
-  if (retval != PAPI_OK) {
-    proc0cout << "WARNNING: Cannot reset PAPI event set!\n"
-              << "          Error code = " << retval << " ("
-              << PAPI_strerror(retval) << ")\n";
-    throw PapiInitializationError( "PAPI reset error on hardware event set, unable to reset event set values.", __FILE__, __LINE__ );
-  }
-#endif
-}
-  
-//______________________________________________________________________
-//
 void
 SimulationController::ScheduleCheckInSitu( bool first )
 {
@@ -1218,12 +1046,13 @@ SimulationController::ScheduleCheckInSitu( bool first )
 //______________________________________________________________________
 //
 void
-SimulationController::CheckInSitu(const ProcessorGroup*,
-                                  const PatchSubset*,
-                                  const MaterialSubset*,
-                                        DataWarehouse*,
-                                        DataWarehouse*,
-                                        bool first)
+SimulationController::CheckInSitu( const ProcessorGroup *
+                                 , const PatchSubset    *
+                                 , const MaterialSubset *
+                                 ,       DataWarehouse  *
+                                 ,       DataWarehouse  *
+                                 ,       bool first
+                                 )
 {
 #ifdef HAVE_VISIT
   // If VisIt has been included into the build, check the lib sim
