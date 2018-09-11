@@ -144,9 +144,9 @@ namespace WasatchCore{
            diffFluxParams != nullptr;
            diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") ) {
         Expr::Tag densityTag, primVarTag;
-        if (is_strong_form()) {
-          densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_NONE);
-          primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_NONE);
+        if (is_strong_form()) { // todo: check if low-Mach is implemented and set tag context accordingly
+          densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_N);
+          primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_N);
         } else {
           densityTag = densityTag_;
           primVarTag = primVarTag_;
@@ -163,15 +163,16 @@ namespace WasatchCore{
         // predicted scalar values to approximate the density time derivatives
         if( params_->findBlock("ConvectiveFlux") ){
           
-          const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + TagNames::self().star, Expr::STATE_NONE);
-          const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + TagNames::self().star, Expr::STATE_NONE);
+          const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() , Expr::STATE_NP1);
+          const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() , Expr::STATE_NP1);
           
           setup_diffusive_flux_expression<FieldT>( diffFluxParams,
                                                    densityCorrectedTag,
                                                    primVarCorrectedTag,
                                                    turbDiffTag_,
                                                    factory,
-                                                   infoStar_ );
+                                                   infoStar_,
+                                                   true );
         }
       } // loop over each flux specification
     }
@@ -238,9 +239,9 @@ namespace WasatchCore{
 
       if( hasConvection_ ){
         const Expr::Tag rhsStarTag     = tagNames.make_star_rhs(solnVarName_);
-        const Expr::Tag densityStarTag = Expr::Tag(densityTag_.name(), Expr::STATE_NP1);
-        const Expr::Tag primVarStarTag = tagNames.make_star(primVarTag_);
-        const Expr::Tag solnVarStarTag = tagNames.make_star(solnVarName_);
+        const Expr::Tag densityStarTag = Expr::Tag(densityTag_ .name(), Expr::STATE_NP1);
+        const Expr::Tag primVarStarTag = Expr::Tag(primVarTag_ .name(), Expr::STATE_NP1);
+        const Expr::Tag solnVarStarTag = Expr::Tag(solnVarName_       , Expr::STATE_NP1);
         infoStar_[PRIMITIVE_VARIABLE]  = primVarStarTag;
         
         EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();

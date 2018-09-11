@@ -305,8 +305,8 @@ namespace WasatchCore{
         // check if this boundary applies a bc on the density
         if( myBndSpec.has_field(this->densityTag_.name()) ){
           // create a bc copier for the density estimate
-          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + "_" + bndName +"_bccopier", Expr::STATE_NONE);
-          BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + "_NP1_" + bndName +"_bccopier", Expr::STATE_NONE);
+          BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name()+"_NP1", 0.0, DIRICHLET, FUNCTOR_TYPE};
           if( !initFactory.have_entry(rhoStarBCTag) ){
             const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
             initFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
@@ -484,8 +484,9 @@ namespace WasatchCore{
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
-      const Expr::Tag densStarTag = Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1);
-      bcHelper.apply_boundary_condition<SVolField>(densStarTag, taskCat);
+      // todo: I don't think a BC on density at STATE_NP1 makes sense at initialization... make sure this is right
+//      const Expr::Tag densStarTag = Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1);
+//      bcHelper.apply_boundary_condition<SVolField>(densStarTag, taskCat);
     }
   }
 
@@ -515,7 +516,8 @@ namespace WasatchCore{
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
-      bcHelper.apply_boundary_condition<SVolField>( Expr::Tag(this->densityTag_.name(),Expr::STATE_NP1), taskCat );
+      // todo: check if this should be turned on or not.
+//      bcHelper.apply_boundary_condition<SVolField>( Expr::Tag(this->densityTag_.name(),Expr::STATE_NP1), taskCat );
     }
   }
 
@@ -561,8 +563,9 @@ namespace WasatchCore{
     return icFactory.get_id( this->initial_condition_tag() );
   }
 
-  //==================================================================
-  
+
+  //------------------------------------------------------------------
+
   //==================================================================  
   // Explicit template instantiation
   template class LowMachMomentumTransportEquation< XVolField >;

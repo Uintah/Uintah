@@ -176,8 +176,6 @@ namespace WasatchCore{
       case STAR      : tagNameAppend=TagNames::self().star; scalarTagNameAppend = ""; break;
     }
 
-    densityTag.reset_name( densityTag.name() + tagNameAppend );
-
     double rtol = 1e-6;
     int maxIter = 5;
     
@@ -189,6 +187,7 @@ namespace WasatchCore{
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFraction");
       Expr::Tag rhofTag = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
       Expr::Tag fTag = parse_nametag(modelParams->findBlock("MixtureFraction")->findBlock("NameTag"));
+      persistentFields.insert( fTag.name() ); // ensure that Uintah knows about this field
       if( densLevel != NORMAL ) {
         rhofTag.reset_context( Expr::STATE_NP1 );
         if (weakForm) fTag.reset_context( Expr::STATE_NP1 );
@@ -417,12 +416,10 @@ namespace WasatchCore{
     // create an expression specifically for density.
     const Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
     if( densityParams ){
-      const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-      parse_density_solver( densityParams, table, densityTag, NORMAL, gh, cat, persistentFields, weakForm );
-      if( doDenstPlus ){
-        const Expr::ExpressionID id1 = parse_density_solver( densityParams, table, densityTag, STAR, gh, cat, persistentFields, weakForm );
-        gh.exprFactory->cleave_from_children( id1 );
-      }
+      std::string densityName;
+      densityParams->findBlock("NameTag")->getAttribute( "name", densityName );
+      const Expr::Tag densityTag   = Expr::Tag(densityName, Expr::STATE_NP1  );
+      parse_density_solver( densityParams, table, densityTag, STAR, gh, cat, persistentFields, weakForm );
     }
 
   }

@@ -410,9 +410,9 @@ namespace WasatchCore{
     varDensityParams->getAttribute("rho1",rho1);
     }
 
-    const Expr::Tag fStarTag(primVarName + "*", Expr::STATE_NONE);
+    const Expr::Tag fStarTag(primVarName, Expr::STATE_NP1);
     const Expr::Tag drhodfStarTag("drhod" + primVarName + "*", Expr::STATE_NONE);
-    const Expr::Tag scalarEOSCouplingTag(primVarName + "*_EOS_Coupling", Expr::STATE_NONE);
+    const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
 
     for( Uintah::ProblemSpecP bcExprParams = wasatchParams->findBlock("BCExpression");
         bcExprParams != nullptr;
@@ -477,11 +477,13 @@ namespace WasatchCore{
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSMixFracSrc<SVolField>::Builder(mms_mixfracsrcPlusTag,tagNames.xsvolcoord, tagNames.time, tagNames.dt, D, rho0, rho1, true));
 
     Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
-    const Expr::Tag densityTag   = parse_nametag( densityParams->findBlock("NameTag") );
-    const Expr::Tag densStarTag  = Expr::Tag(densityTag.name(), Expr::STATE_NP1);
+    std::string densityName;
+    densityParams->findBlock("NameTag")->getAttribute( "name", densityName );
+    const Expr::Tag densityTag   = Expr::Tag(densityName, Expr::STATE_N  );
+    const Expr::Tag densStarTag  = Expr::Tag(densityName, Expr::STATE_NP1);
 
     // attach Sf_{n+1} to the scalar EOS coupling term
-    const Expr::Tag mms_EOSMixFracSrcTag(tagNames.mms_mixfracsrc.name() + "*_EOS", Expr::STATE_NONE);
+    const Expr::Tag mms_EOSMixFracSrcTag(tagNames.mms_mixfracsrc.name() + "_EOS", Expr::STATE_NONE);
     slngraphHelper->exprFactory->register_expression( new VarDenEOSCouplingMixFracSrc<SVolField>::Builder(mms_EOSMixFracSrcTag, mms_mixfracsrcPlusTag, densStarTag, drhodfStarTag));
 
     slngraphHelper->exprFactory->attach_dependency_to_expression(mms_EOSMixFracSrcTag, scalarEOSCouplingTag);
@@ -532,9 +534,9 @@ namespace WasatchCore{
     varDens2DMMSParams->getAttribute("d",d);
 
 
-    const Expr::Tag fStarTag(primVarName + "*", Expr::STATE_NONE);
+    const Expr::Tag fStarTag(primVarName, Expr::STATE_NP1);
     const Expr::Tag drhodfStarTag("drhod" + primVarName + "*", Expr::STATE_NONE);
-    const Expr::Tag scalarEOSCouplingTag(primVarName + "*_EOS_Coupling", Expr::STATE_NONE);
+    const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
 
     const TagNames& tagNames = TagNames::self();
 
@@ -566,11 +568,11 @@ namespace WasatchCore{
 
     // We need to compute the EOS coupling term at n+1. This term requires the mixture fraction src at n+1,
     // here we register that term: Sf_{n+1}
-    const Expr::Tag mms_mixfracsrcPlusTag(tagNames.mms_mixfracsrc.name() + "*", Expr::STATE_NONE);
+    const Expr::Tag mms_mixfracsrcPlusTag = tagNames.make_star(tagNames.mms_mixfracsrc, Expr::STATE_NONE);
     slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingMixFracSrc<SVolField>::Builder(mms_mixfracsrcPlusTag, x1Tag, x2Tag, tagNames.time, rho0, rho1, d, w, k, uf, vf, true));
 
     // attach Sf_{n+1} to the scalar EOS coupling term
-    const Expr::Tag mms_EOSMixFracSrcTag(tagNames.mms_mixfracsrc.name() + "*_EOS", Expr::STATE_NONE);
+    const Expr::Tag mms_EOSMixFracSrcTag(tagNames.mms_mixfracsrc.name() + "_EOS", Expr::STATE_NONE);
     slngraphHelper->exprFactory->register_expression( new VarDenEOSCouplingMixFracSrc<SVolField>::Builder(mms_EOSMixFracSrcTag, mms_mixfracsrcPlusTag, densStarTag, drhodfStarTag));
 
     slngraphHelper->exprFactory->attach_dependency_to_expression(mms_EOSMixFracSrcTag, scalarEOSCouplingTag);

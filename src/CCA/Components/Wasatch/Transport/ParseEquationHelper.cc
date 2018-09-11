@@ -164,6 +164,9 @@ namespace WasatchCore{
     info[ fs ] = convFluxTag;
   }
   
+
+  //-----------------------------------------------------------------
+
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag& solnVarTag,
@@ -193,10 +196,7 @@ namespace WasatchCore{
                                               factory,
                                               info );
   }
-  
-  //-----------------------------------------------------------------
-  
-  template< typename FluxT >
+template< typename FluxT >
   Expr::ExpressionBuilder*
   build_diff_flux_expr( Uintah::ProblemSpecP diffFluxParams,
                        const Expr::Tag& diffFluxTag,
@@ -244,7 +244,8 @@ namespace WasatchCore{
                                        const Expr::Tag primVarTag,
                                        const Expr::Tag turbDiffTag,
                                        Expr::ExpressionFactory& factory,
-                                       FieldTagInfo& info )
+                                       FieldTagInfo& info,
+                                       const bool makeStar )
   {
     typedef typename FaceTypes<FieldT>::XFace XFaceT;
     typedef typename FaceTypes<FieldT>::YFace YFaceT;
@@ -283,6 +284,7 @@ namespace WasatchCore{
         std::string dir(1,*it);
         const TagNames& tagNames = TagNames::self();
         diffFluxTag = Expr::Tag( primVarName + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
+        if( makeStar ){ diffFluxTag = tagNames.make_star(diffFluxTag); }
         // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
         // is because we need the ScalarRHS at time step n+1 for our pressure projection method
         
@@ -430,7 +432,8 @@ const Expr::Tag densityTag,                              \
 const Expr::Tag primVarTag,                              \
 const Expr::Tag turbDiffTag,                             \
 Expr::ExpressionFactory& factory,                        \
-FieldTagInfo& info );                                    \
+FieldTagInfo& info,                                      \
+const bool makeStar );                           \
 \
 template void setup_diffusive_velocity_expression<FIELDT>(  \
 Uintah::ProblemSpecP diffVelParams,                      \
