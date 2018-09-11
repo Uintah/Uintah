@@ -171,10 +171,6 @@ namespace WasatchCore{
     Expr::ExpressionFactory& factory = *gh.exprFactory;
 
     std::string tagNameAppend, scalarTagNameAppend;
-    switch (densLevel){
-      case NORMAL    : tagNameAppend=scalarTagNameAppend = ""; break;
-      case STAR      : tagNameAppend=scalarTagNameAppend = ""; break;
-    }
 
     double rtol = 1e-6;
     int maxIter = 5;
@@ -186,17 +182,15 @@ namespace WasatchCore{
 
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFraction");
       Expr::Tag rhofTag = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
-      Expr::Tag fTag = parse_nametag(modelParams->findBlock("MixtureFraction")->findBlock("NameTag"));
+      Expr::Tag fTag    = parse_nametag( modelParams->findBlock("MixtureFraction"               )->findBlock("NameTag") );
       persistentFields.insert( fTag.name() ); // ensure that Uintah knows about this field
-      if( densLevel != NORMAL ) {
-        rhofTag.reset_context( Expr::STATE_NP1 );
-        if (weakForm) fTag.reset_context( Expr::STATE_NP1 );
-      }
-      rhofTag.reset_name( rhofTag.name() + scalarTagNameAppend );
+
+      rhofTag.reset_context( Expr::STATE_NP1 );
+      if (weakForm) fTag.reset_context( Expr::STATE_NP1 );
 
       typedef DensFromMixfrac<SVolField>::Builder DensCalc;
       
-      const Expr::Tag unconvPts( TagNames::self().unconvergedpts.name() + tagNameAppend, TagNames::self().unconvergedpts.context() );
+      const Expr::Tag unconvPts( TagNames::self().unconvergedpts.name(), TagNames::self().unconvergedpts.context() );
       const Expr::Tag drhodfTag( "drhod" + fTag.name(), Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( densityTag, unconvPts, drhodfTag ) );
       
@@ -217,24 +211,21 @@ namespace WasatchCore{
 
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss");
       Expr::Tag rhofTag    = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
-      Expr::Tag rhohTag    = parse_nametag( modelParams->findBlock("DensityWeightedEnthalpy")->findBlock("NameTag") );
-      Expr::Tag heatLossTag= parse_nametag( modelParams->findBlock("HeatLoss")->findBlock("NameTag") );
+      Expr::Tag rhohTag    = parse_nametag( modelParams->findBlock("DensityWeightedEnthalpy"       )->findBlock("NameTag") );
+      Expr::Tag heatLossTag= parse_nametag( modelParams->findBlock("HeatLoss"                      )->findBlock("NameTag") );
 
       persistentFields.insert( heatLossTag.name() ); // ensure that Uintah knows about this field
 
       // modify name & context when we are calculating density at newer time
       // levels since this will be using STATE_NONE information as opposed to
       // potentially STATE_N information.
-      if( densLevel != NORMAL ){
-        rhofTag.reset( rhofTag.name() + scalarTagNameAppend, Expr::STATE_NP1 );
-        rhohTag.reset( rhohTag.name() + scalarTagNameAppend, Expr::STATE_NP1 );
-        heatLossTag.reset_name( heatLossTag.name() + scalarTagNameAppend );
-      }
+      rhofTag.reset_context( Expr::STATE_NP1 );
+      rhohTag.reset_context( Expr::STATE_NP1 );
 
       typedef Expr::PlaceHolder<SVolField>  PlcHolder;
-      const Expr::Tag rhoOldTag( densityTag.name(), Expr::STATE_N );
+      const Expr::Tag rhoOldTag     ( densityTag .name(), Expr::STATE_N );
       const Expr::Tag heatLossOldTag( heatLossTag.name(), Expr::STATE_N );
-      factory.register_expression( new PlcHolder::Builder(rhoOldTag), true );
+      factory.register_expression( new PlcHolder::Builder(rhoOldTag     ), true );
       factory.register_expression( new PlcHolder::Builder(heatLossOldTag), true );
 
       typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
