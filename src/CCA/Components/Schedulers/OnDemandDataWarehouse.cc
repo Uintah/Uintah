@@ -2560,10 +2560,10 @@ OnDemandDataWarehouse::emit(       OutputContext& oc,
   }
   else {
     l = h = IntVector(-1, -1, -1);
-
     const Level* level = patch ? patch->getLevel() : 0;
-    if (d_levelDB.exists(label, matlIndex, level))
+    if (d_levelDB.exists(label, matlIndex, level)) {
       var = d_levelDB.get(label, matlIndex, level);
+    }
   }
 
   if (var == nullptr) {
