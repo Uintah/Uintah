@@ -562,7 +562,7 @@ Ray::sched_rayTrace( const LevelP        & level
 
 //______________________________________________________________________
 //
-template <typename T, typename MemorySpace, typename RandomGenerator>
+template <typename T, typename MemSpace, typename RandomGenerator>
 struct rayTrace_solveDivQFunctor {
 
   typedef unsigned long int value_type;
@@ -576,12 +576,12 @@ struct rayTrace_solveDivQFunctor {
   double                              m_d_sigmaScat;
   double                              m_d_threshold;
   double                              m_d_maxRayLength;
-  KokkosView3<const T, MemorySpace>   m_abskg;
-  KokkosView3<const T, MemorySpace>   m_sigmaT4OverPi;
-  KokkosView3<const int, MemorySpace> m_celltype;
+  KokkosView3<const T, MemSpace>   m_abskg;
+  KokkosView3<const T, MemSpace>   m_sigmaT4OverPi;
+  KokkosView3<const int, MemSpace> m_celltype;
   bool                                m_d_allowReflect;
-  KokkosView3<double, MemorySpace>    m_divQ;
-  KokkosView3<double, MemorySpace>    m_radiationVolq;
+  KokkosView3<double, MemSpace>    m_divQ;
+  KokkosView3<double, MemSpace>    m_radiationVolq;
   RandomGenerator                     m_rand_pool;
 
 
@@ -593,12 +593,12 @@ struct rayTrace_solveDivQFunctor {
                            , double                              & d_sigmaScat
                            , double                              & d_threshold
                            , double                              & d_maxRayLength
-                           , KokkosView3<const T, MemorySpace>   & abskg
-                           , KokkosView3<const T, MemorySpace>   & sigmaT4OverPi
-                           , KokkosView3<const int, MemorySpace> & celltype
+                           , KokkosView3<const T, MemSpace>   & abskg
+                           , KokkosView3<const T, MemSpace>   & sigmaT4OverPi
+                           , KokkosView3<const int, MemSpace> & celltype
                            , bool                                & d_allowReflect
-                           , KokkosView3<double, MemorySpace>    & divQ
-                           , KokkosView3<double, MemorySpace>    & radiationVolq
+                           , KokkosView3<double, MemSpace>    & divQ
+                           , KokkosView3<double, MemSpace>    & radiationVolq
                            )
     : m_levelParams    ( levelParams )
     , m_RT_flags       ( RT_flags )
@@ -627,14 +627,14 @@ struct rayTrace_solveDivQFunctor {
 //---------------------------------------------------------------------------
 // Method: The actual work of the ray tracer
 //---------------------------------------------------------------------------
-template< class T , typename ExecutionSpace, typename MemorySpace>
+template< class T , typename ExecutionSpace, typename MemSpace>
 void
 Ray::rayTrace( const PatchSubset* patches,
                const MaterialSubset* matls,
                OnDemandDataWarehouse* old_dw,
                OnDemandDataWarehouse* new_dw,
                UintahParams& uintahParams,
-               ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+               ExecutionObject<ExecutionSpace, MemSpace>& executionObject,
                bool modifies_divQ,
                Task::WhichDW which_abskg_dw,
                Task::WhichDW which_sigmaT4_dw,
@@ -1093,7 +1093,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
 
 //______________________________________________________________________
 //
-template <typename T, typename MemorySpace, typename RandomGenerator, int m_maxLevels>
+template <typename T, typename MemSpace, typename RandomGenerator, int m_maxLevels>
 struct rayTrace_dataOnion_solveDivQFunctor {
 
   typedef unsigned long int value_type;
@@ -1107,13 +1107,13 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   int                                 m_fineLevel_ROI_Hi[3];
   //int                                 m_regionLo[m_maxLevels][3];
   //int                                 m_regionHi[m_maxLevels][3];
-  KokkosView3<const T, MemorySpace>   m_sigmaT4OverPi[m_maxLevels];
-  KokkosView3<const T, MemorySpace>   m_abskg[m_maxLevels];
-  KokkosView3<const int, MemorySpace> m_cellType[m_maxLevels];
-  KokkosView3<double, MemorySpace>    m_divQ_fine;
+  KokkosView3<const T, MemSpace>   m_sigmaT4OverPi[m_maxLevels];
+  KokkosView3<const T, MemSpace>   m_abskg[m_maxLevels];
+  KokkosView3<const int, MemSpace> m_cellType[m_maxLevels];
+  KokkosView3<double, MemSpace>    m_divQ_fine;
   //KokkosView3<const T>                m_abskg_fine;
   //KokkosView3<const T>                m_sigmaT4OverPi_fine;
-  KokkosView3<double, MemorySpace>    m_radiationVolq_fine;
+  KokkosView3<double, MemSpace>    m_radiationVolq_fine;
   double                              m_d_threshold;
   bool                                m_d_allowReflect;
   int                                 m_d_nDivQRays;
@@ -1127,13 +1127,13 @@ struct rayTrace_dataOnion_solveDivQFunctor {
                                      , int                                 fineLevel_ROI_Hi[3]
                                      //, int                               regionLo[m_maxLevels][3]
                                      //, int                               regionHi[m_maxLevels][3]
-                                     , KokkosView3<const T, MemorySpace>   sigmaT4OverPi[m_maxLevels]
-                                     , KokkosView3<const T, MemorySpace>   abskg[m_maxLevels]
-                                     , KokkosView3<const int, MemorySpace> cellType[m_maxLevels]
-                                     , KokkosView3<double, MemorySpace>    & divQ_fine
+                                     , KokkosView3<const T, MemSpace>   sigmaT4OverPi[m_maxLevels]
+                                     , KokkosView3<const T, MemSpace>   abskg[m_maxLevels]
+                                     , KokkosView3<const int, MemSpace> cellType[m_maxLevels]
+                                     , KokkosView3<double, MemSpace>    & divQ_fine
                                      //, KokkosView3<const T>              & abskg_fine
                                      //, KokkosView3<const T>              & sigmaT4OverPi_fine
-                                     , KokkosView3<double, MemorySpace>    & radiationVolq_fine
+                                     , KokkosView3<double, MemSpace>    & radiationVolq_fine
                                      , double                              & d_threshold
                                      , bool                                & d_allowReflect
                                      , int                                 & d_nDivQRays
@@ -1646,14 +1646,14 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 //---------------------------------------------------------------------------
 // Ray tracer using the multilevel "data onion" scheme
 //---------------------------------------------------------------------------
-template< typename T, typename ExecutionSpace, typename MemorySpace>
+template< typename T, typename ExecutionSpace, typename MemSpace>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
 Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          const MaterialSubset* matls,
                          OnDemandDataWarehouse* old_dw,
                          OnDemandDataWarehouse* new_dw,
                          UintahParams& uintahParams,
-                         ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                         ExecutionObject<ExecutionSpace, MemSpace>& executionObject,
                          bool modifies_divQ,
                          Task::WhichDW notUsed,
                          Task::WhichDW which_sigmaT4_dw,
@@ -1663,14 +1663,14 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 }
 
 //The Kokkos verison (e.g. NOT the same as UintahSpaces::CPU)
-template< typename T, typename ExecutionSpace, typename MemorySpace>
+template< typename T, typename ExecutionSpace, typename MemSpace>
 inline typename std::enable_if<!std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
 Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          const MaterialSubset* matls,
                          OnDemandDataWarehouse* old_dw,
                          OnDemandDataWarehouse* new_dw,
                          UintahParams& uintahParams,
-                         ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                         ExecutionObject<ExecutionSpace, MemSpace>& executionObject,
                          bool modifies_divQ,
                          Task::WhichDW notUsed,
                          Task::WhichDW which_sigmaT4_dw,
@@ -1681,23 +1681,23 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
   int maxLevels = fineLevel->getGrid()->numLevels();
   if (maxLevels == 2) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<2, T, ExecutionSpace, MemorySpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+    this->rayTrace_dataOnionLevels<2, T, ExecutionSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 3) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<3, T, ExecutionSpace, MemorySpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+    this->rayTrace_dataOnionLevels<3, T, ExecutionSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 4) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<4, T, ExecutionSpace, MemorySpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+    this->rayTrace_dataOnionLevels<4, T, ExecutionSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 5) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<5, T, ExecutionSpace, MemorySpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+    this->rayTrace_dataOnionLevels<5, T, ExecutionSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 6) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<7, T, ExecutionSpace, MemorySpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+    this->rayTrace_dataOnionLevels<7, T, ExecutionSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else {
     std::cerr << "Requested RMCRT Data Onion max level amount of " << maxLevels << " not yet supported.  Edit the code file to supply more possible levels." << std::endl;
@@ -1709,14 +1709,14 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 //---------------------------------------------------------------------------
 // Ray tracer using the multilevel "data onion" scheme
 //---------------------------------------------------------------------------
-template< int numLevels, typename T, typename ExecutionSpace, typename MemorySpace>
+template< int numLevels, typename T, typename ExecutionSpace, typename MemSpace>
 void
 Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
                                const MaterialSubset* matls,
                                OnDemandDataWarehouse* old_dw,
                                OnDemandDataWarehouse* new_dw,
                                UintahParams& uintahParams,
-                               ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                               ExecutionObject<ExecutionSpace, MemSpace>& executionObject,
                                bool modifies_divQ,
                                Task::WhichDW notUsed,
                                Task::WhichDW which_sigmaT4_dw,

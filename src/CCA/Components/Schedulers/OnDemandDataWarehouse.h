@@ -40,7 +40,7 @@
 #include <Core/Parallel/ExecutionObject.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/UintahMPI.h>
-#include <Core/Parallel/UintahMemorySpaces.h>
+#include <Core/Parallel/UintahMemSpaces.h>
 
 #include <iosfwd>
 #include <map>
@@ -523,14 +523,14 @@ class OnDemandDataWarehouse : public DataWarehouse {
     ScrubMode getScrubMode() const { return d_scrubMode; }
 
     // The following is for support of regriding
-    virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatlMemspace<Level, MemorySpace> >& vars) const;
+    virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatlMemspace<Level, MemSpace> >& vars) const;
 
     void allocateAndPutIfPossible(const VarLabel*          label,
                                   int                  matlIndex,
                                   const Patch*             patch,
                                   const IntVector&      lowIndex,
                                   const IntVector&     highIndex,
-                                  MemorySpace         memorySpace);
+                                  MemSpace         memorySpace);
 
 
     static bool d_combineMemory;
@@ -1104,12 +1104,12 @@ class OnDemandDataWarehouse : public DataWarehouse {
                               bool replace,
                               const PatchSubset* newPatches);
 
-    template <typename ExecutionSpace, typename MemorySpace>
+    template <typename ExecutionSpace, typename MemSpace>
     void transferFrom(DataWarehouse*,
                               const VarLabel*,
                               const PatchSubset* patches,
                               const MaterialSubset*,
-                              ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                              ExecutionObject<ExecutionSpace, MemSpace>& executionObject,
                               bool replace,
                               const PatchSubset* newPatches);
 
@@ -1228,8 +1228,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
     // The following is for support of regriding
     virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars) const;
 
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, NCVariable<T> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, NCVariable<T> >::type
     getNCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1241,8 +1241,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
     }
 
 
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, constNCVariable<T> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, constNCVariable<T> >::type
     getConstNCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1253,8 +1253,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
       return constVar;
     }
 
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, CCVariable<T> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, CCVariable<T> >::type
     getCCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1269,8 +1269,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
     }
 
 
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, constCCVariable<T> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, constCCVariable<T> >::type
     getConstCCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1285,8 +1285,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
     }
 
 #if defined(UINTAH_ENABLE_KOKKOS)
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
     getNCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1297,8 +1297,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
       return var.getKokkosView();
     }
 
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
     getConstNCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1311,8 +1311,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
 
 
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
     getCCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1326,8 +1326,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
       return var.getKokkosView();
     }
 
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
     getConstCCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1342,8 +1342,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
     }
 
 #if defined(HAVE_CUDA)
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
     getNCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1352,8 +1352,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
       return this->getGPUDW()->getKokkosView<T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
     }
 
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
     getConstNCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1362,8 +1362,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
       return this->getGPUDW()->getKokkosView<const T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
     }
 
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
     getCCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1377,8 +1377,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
       }
     }
 
-    template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
+    template <typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
     getConstCCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1393,6 +1393,111 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
 #endif //HAVE_CUDA
 #endif //UINTAH_ENABLE_KOKKOS
+
+
+
+    template <typename grid_T,typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, CCVariable<T> >::type
+    getGridVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype = Ghost::None,
+                                           int               numGhostCells = 0 ) {
+       
+      CCVariable<T> var;
+      if (matlIndex!=-999) {
+        this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+      }
+      return var;
+    }
+
+
+    template <typename grid_CT,typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, constCCVariable<T> >::type
+    getConstGridVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype,
+                                           int               numGhostCells ) {
+
+      constCCVariable<T> constVar;
+      if (matlIndex!=-999) {
+        this->get(constVar, label, matlIndex, patch, gtype, numGhostCells);
+      }
+      return constVar;
+    }
+
+#if defined(UINTAH_ENABLE_KOKKOS)
+
+
+
+    template <typename grid_T,typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
+    getGridVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype = Ghost::None,
+                                           int               numGhostCells = 0 ) {
+
+      grid_T var;
+      if (matlIndex!=-999) {
+        this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+      }
+      return var.getKokkosView();
+    }
+
+    template <typename grid_CT,typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
+    getConstGridVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype,
+                                           int               numGhostCells ) {
+
+      grid_CT constVar;
+      if (matlIndex!=-999) {
+        this->get(constVar, label, matlIndex, patch, gtype, numGhostCells);
+      }
+      return constVar.getKokkosView();
+    }
+
+#if defined(HAVE_CUDA)
+
+    template <typename grid_T,typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
+    getConstGridVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype,
+                                           int               numGhostCells ) {
+      if (matlIndex!=-999) {
+        return this->getGPUDW()->getKokkosView<const T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
+      } else {
+        return KokkosView3<T, Kokkos::CudaSpace>();
+      }
+    }
+
+    template <typename grid_CT,typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
+    getGridVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype = Ghost::None,
+                                           int               numGhostCells = 0 , bool allocate=true ) {
+
+      if (matlIndex!=-999) {
+        return this->getGPUDW()->getKokkosView<T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
+      } else {
+        return KokkosView3<T, Kokkos::CudaSpace>();
+      }
+    }
+
+
+#endif //HAVE_CUDA
+#endif //UINTAH_ENABLE_KOKKOS
+
+
+
     static bool d_combineMemory;
 
     friend class SchedulerCommon;

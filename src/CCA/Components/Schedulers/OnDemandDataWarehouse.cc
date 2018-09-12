@@ -3873,7 +3873,7 @@ OnDemandDataWarehouse::recomputeTimeStep()
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::getVarLabelMatlLevelTriples( std::vector<VarLabelMatlMemspace<Level, MemorySpace> >& vars ) const
+OnDemandDataWarehouse::getVarLabelMatlLevelTriples( std::vector<VarLabelMatlMemspace<Level, MemSpace> >& vars ) const
 {
   d_levelDB.getVarLabelMatlTriples( vars );
 }
@@ -3943,7 +3943,7 @@ void OnDemandDataWarehouse::allocateAndPutIfPossible(const VarLabel*          la
                                                      const Patch*             patch,
                                                      const IntVector&      lowIndex,
                                                      const IntVector&     highIndex,
-                                                     MemorySpace         memorySpace) {
+                                                     MemSpace         memorySpace) {
   //Determine the memory space.  If it's a host memory space, we need to allocate variables
   //through the legacy API where the vars themselves handle the allocation.  If it's a CUDA space,
   //the legacy system doesn't need to be used and this allows for more control/simplicity.

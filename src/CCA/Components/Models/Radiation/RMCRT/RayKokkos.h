@@ -353,53 +353,53 @@ private:
   // const VarLabel* d_boundFluxFiltLabel;
 
   //__________________________________
-  template<class T, typename ExecutionSpace, typename MemorySpace>
+  template<class T, typename ExecutionSpace, typename MemSpace>
   void rayTrace( const PatchSubset* patches,
                  const MaterialSubset* matls,
                  OnDemandDataWarehouse* old_dw,
                  OnDemandDataWarehouse* new_dw,
                  UintahParams& uintahParams,
-                 ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                 ExecutionObject<ExecutionSpace, MemSpace>& executionObject,
                  bool modifies_divQ,
                  Task::WhichDW which_abskg_dw,
                  Task::WhichDW which_sigmaT4_dw,
                  Task::WhichDW which_celltype_dw );
 
 //__________________________________
-  template< typename T, typename ExecutionSpace, typename MemorySpace>
+  template< typename T, typename ExecutionSpace, typename MemSpace>
   inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
   rayTrace_dataOnion( const PatchSubset* patches,
                       const MaterialSubset* matls,
                       OnDemandDataWarehouse* old_dw,
                       OnDemandDataWarehouse* new_dw,
                       UintahParams& uintahParams,
-                      ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                      ExecutionObject<ExecutionSpace, MemSpace>& executionObject,
                       bool modifies_divQ,
                       Task::WhichDW which_abskg_dw,
                       Task::WhichDW which_sigmaT4_dw,
                       Task::WhichDW which_celltype_dw );
 
-  template< typename T, typename ExecutionSpace, typename MemorySpace>
+  template< typename T, typename ExecutionSpace, typename MemSpace>
   inline typename std::enable_if<!std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
 rayTrace_dataOnion( const PatchSubset* patches,
                     const MaterialSubset* matls,
                     OnDemandDataWarehouse* old_dw,
                     OnDemandDataWarehouse* new_dw,
                     UintahParams& uintahParams,
-                    ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                    ExecutionObject<ExecutionSpace, MemSpace>& executionObject,
                     bool modifies_divQ,
                     Task::WhichDW which_abskg_dw,
                     Task::WhichDW which_sigmaT4_dw,
                     Task::WhichDW which_celltype_dw );
 
   //__________________________________
-  template< int numLevels, typename T, typename ExecutionSpace, typename MemorySpace>
+  template< int numLevels, typename T, typename ExecutionSpace, typename MemSpace>
   void rayTrace_dataOnionLevels( const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  OnDemandDataWarehouse* old_dw,
                                  OnDemandDataWarehouse* new_dw,
                                  UintahParams& uintahParams,
-                                 ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                                 ExecutionObject<ExecutionSpace, MemSpace>& executionObject,
                                  bool modifies_divQ,
                                  Task::WhichDW which_abskg_dw,
                                  Task::WhichDW which_sigmaT4_dw,

@@ -1,5 +1,5 @@
 namespace Uintah{
-template <typename T, typename MemorySpace, typename RandomGenerator, int m_maxLevels>
+template <typename T, typename MemSpace, typename RandomGenerator, int m_maxLevels>
 struct SlimRayTrace_dataOnion_solveDivQFunctor {
 
   typedef unsigned long int value_type;
@@ -10,9 +10,9 @@ struct SlimRayTrace_dataOnion_solveDivQFunctor {
   double                                 m_domain_BB_Hi[3];
   int                                    m_fineLevel_ROI_Lo[3];
   int                                    m_fineLevel_ROI_Hi[3];
-  KokkosView3<const double, MemorySpace> m_abskgSigmaT4CellType[m_maxLevels];
-  KokkosView3<double, MemorySpace>       m_divQ_fine;
-  KokkosView3<double, MemorySpace>       m_radiationVolq_fine;
+  KokkosView3<const double, MemSpace> m_abskgSigmaT4CellType[m_maxLevels];
+  KokkosView3<double, MemSpace>       m_divQ_fine;
+  KokkosView3<double, MemSpace>       m_radiationVolq_fine;
   double                                 m_d_threshold;
   bool                                   m_d_allowReflect;
   int                                    m_d_nDivQRays;
@@ -25,9 +25,9 @@ struct SlimRayTrace_dataOnion_solveDivQFunctor {
                                      , double                                   domain_BB_Hi[3]
                                      , int                                      fineLevel_ROI_Lo[3]
                                      , int                                      fineLevel_ROI_Hi[3]
-                                     , KokkosView3<const double, MemorySpace>   abskgSigmaT4CellType[m_maxLevels]
-                                     , KokkosView3<double, MemorySpace>       & divQ_fine
-                                     , KokkosView3<double, MemorySpace>       & radiationVolq_fine
+                                     , KokkosView3<const double, MemSpace>   abskgSigmaT4CellType[m_maxLevels]
+                                     , KokkosView3<double, MemSpace>       & divQ_fine
+                                     , KokkosView3<double, MemSpace>       & radiationVolq_fine
                                      , double                                 & d_threshold
                                      , bool                                   & d_allowReflect
                                      , int                                    & d_nDivQRays
