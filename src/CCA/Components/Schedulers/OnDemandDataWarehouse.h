@@ -40,7 +40,7 @@
 #include <Core/Parallel/ExecutionObject.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/UintahMPI.h>
-#include <Core/Parallel/UintahMemSpaces.h>
+#include <Core/Parallel/UintahMemorySpaces.h>
 
 #include <iosfwd>
 #include <map>
@@ -523,14 +523,14 @@ class OnDemandDataWarehouse : public DataWarehouse {
     ScrubMode getScrubMode() const { return d_scrubMode; }
 
     // The following is for support of regriding
-    virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatlMemspace<Level, MemSpace> >& vars) const;
+    virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatlMemoryspace<Level, MemorySpace> >& vars) const;
 
     void allocateAndPutIfPossible(const VarLabel*          label,
                                   int                  matlIndex,
                                   const Patch*             patch,
                                   const IntVector&      lowIndex,
                                   const IntVector&     highIndex,
-                                  MemSpace         memorySpace);
+                                  MemorySpace         memorySpace);
 
 
     static bool d_combineMemory;

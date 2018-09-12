@@ -625,7 +625,7 @@ KokkosOpenMPScheduler::allocateTaskComputesVariables( DetailedTask * dtask )
           OnDemandDataWarehouseP dw = m_dws[dwIndex];
 
           //TODO: Get the memory space
-          //MemSpace ms = dtask->getTask()->getMemSpace();
+          //MemorySpace ms = dtask->getTask()->getMemorySpace();
 
           dw->allocateAndPutIfPossible(computesVar->m_var, matlID, patch, low, high, ms);
 

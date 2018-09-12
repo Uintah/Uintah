@@ -154,9 +154,9 @@ namespace Uintah {
 //
 //
 //  //using keyDBtype = hashmap<VarLabelMatlMemspace<DomainType, int>, int>;
-//  using keyDBtype = std::unordered_map<VarLabelMatlMemspace<DomainType, MemSpace>,
+//  using keyDBtype = std::unordered_map<VarLabelMatlMemspace<DomainType, MemorySpace>,
 //                                       int,
-//                                       Uintah::VarLabelMatlMemspaceHasher<DomainType, MemSpace>newdi
+//                                       Uintah::VarLabelMatlMemspaceHasher<DomainType, MemorySpace>newdi
 //                                      >;
 //  keyDBtype m_keys;
 //
@@ -273,18 +273,18 @@ class DWDatabase {
                      ,       int             dwid
                      );
 
-    void getVarLabelMatlTriples(std::vector<VarLabelMatlMemspace<DomainType, MemSpace> >& vars) const;
+    void getVarLabelMatlTriples(std::vector<VarLabelMatlMemspace<DomainType, MemorySpace> >& vars) const;
 
 
     bool requestAllocationPrivilege( const VarLabel   * label,
                                      int                matlIndex,
                                      const DomainType * dom,
-                                     MemSpace        memorySpace);
+                                     MemorySpace        memorySpace);
 
     int lookup( const VarLabel   * label,
                                      int                matlIndex,
                                      const DomainType * dom,
-                                     MemSpace        memorySpace);
+                                     MemorySpace        memorySpace);
 
 
 
@@ -320,9 +320,9 @@ class DWDatabase {
     //A concurrent hash map.  The key is a 4-tuple (label, material, domain(usually patch), memory space).
     //The concurrent hash map
 
-    using varDBtype = cuckoohash_map<VarLabelMatlMemspace<DomainType, MemSpace>,
+    using varDBtype = cuckoohash_map<VarLabelMatlMemspace<DomainType, MemorySpace>,
                                    std::shared_ptr<DataItem>,
-                                   Uintah::VarLabelMatlMemspaceHasher<DomainType, MemSpace>
+                                   Uintah::VarLabelMatlMemspaceHasher<DomainType, MemorySpace>
                                     >;
     varDBtype varDB;
 
@@ -511,7 +511,7 @@ DWDatabase<DomainType>::initializeScrubs(       int                        dwid
 //    mvars_monitor mvars_lock{ Uintah::CrowdMonitor<mvars_tag>::WRITER };
 //
 //    if (m_vars[keyiter->second]) {
-//      VarLabelMatlMemspace<DomainType, MemSpace> vlm = keyiter->first;
+//      VarLabelMatlMemspace<DomainType, MemorySpace> vlm = keyiter->first;
 //      // See if it is in the scrubcounts map.
 //      ScrubItem key(vlm.label_, vlm.matlIndex_, vlm.domain_, dwid);
 //      ScrubItem* result = scrubcounts->lookup(&key);
@@ -553,7 +553,7 @@ DWDatabase<DomainType>::initializeScrubs(       int                        dwid
 //  //std::lock_guard<Uintah::MasterLock> lookup_lock(g_keyDB_mutex);
 //  keyDB_monitor keyDB_lock{ Uintah::CrowdMonitor<keyDB_tag>::READER };
 //
-//  VarLabelMatlMemspace<DomainType, MemSpace> v(label, matlIndex, getRealDomain(dom), MemSpace::HostSpace);
+//  VarLabelMatlMemspace<DomainType, MemorySpace> v(label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace);
 //  typename keyDBtype::const_iterator const_iter = m_keys.find(v);
 //  if (const_iter == m_keys.end()) {
 //    return -1;
@@ -575,7 +575,7 @@ DWDatabase<DomainType>::initializeScrubs(       int                        dwid
 //      const_keyiter++) {
 //    typename keyDBtype::const_iterator const_db_iter = m_keys.find(const_keyiter->first);
 //    if (const_db_iter == m_keys.end()) {
-//      m_keys.insert(std::pair<VarLabelMatlMemspace<DomainType, MemSpace>, int>(const_keyiter->first, m_key_count++));
+//      m_keys.insert(std::pair<VarLabelMatlMemspace<DomainType, MemorySpace>, int>(const_keyiter->first, m_key_count++));
 //    }
 //  }
 //}
@@ -591,10 +591,10 @@ DWDatabase<DomainType>::initializeScrubs(       int                        dwid
 //{
 //  keyDB_monitor keyDB_lock{ Uintah::CrowdMonitor<keyDB_tag>::WRITER };
 //
-//  VarLabelMatlMemspace<DomainType, MemSpace> v(label, matlIndex, getRealDomain(dom), MemSpace::HostSpace);
+//  VarLabelMatlMemspace<DomainType, MemorySpace> v(label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace);
 //  typename keyDBtype::const_iterator const_iter = m_keys.find(v);
 //  if (const_iter == m_keys.end()) {
-//    m_keys.insert(std::pair<VarLabelMatlMemspace<DomainType, MemSpace>, int>(v, m_key_count++));
+//    m_keys.insert(std::pair<VarLabelMatlMemspace<DomainType, MemorySpace>, int>(v, m_key_count++));
 //  }
 //}
 //
@@ -620,7 +620,7 @@ DWDatabase<DomainType>::initializeScrubs(       int                        dwid
 //  keyDB_monitor keyDB_lock{ Uintah::CrowdMonitor<keyDB_tag>::READER };
 //
 //  for (auto keyiter = m_keys.begin(); keyiter != m_keys.end(); keyiter++) {
-//    const VarLabelMatlMemspace<DomainType, MemSpace>& vlm = keyiter->first;
+//    const VarLabelMatlMemspace<DomainType, MemorySpace>& vlm = keyiter->first;
 //    const DomainType* dom = vlm.domain_;
 //    if (dom) {
 //      out << rank << " Name: " << vlm.label_->getName() << "  domain: " << *dom << "  matl:" << vlm.matlIndex_ << '\n';
@@ -671,7 +671,7 @@ DWDatabase<DomainType>::exists( const VarLabel   * label,
 //    return true;
 //  }
 
-  return (varDB.contains(VarLabelMatlMemspace<DomainType, MemSpace>(label, matlIndex, getRealDomain(dom), MemSpace::HostSpace)));
+  return (varDB.contains(VarLabelMatlMemspace<DomainType, MemorySpace>(label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace)));
 
 }
 
@@ -734,11 +734,11 @@ DWDatabase<DomainType>::put( const VarLabel   * label
     // we would need to start doing referencing counting on tasks using the variable.  For now, we're going to just replace and pray the
     // user isn't invoking replace while other tasks are simultaneously using this variable.
     varDB.insert_or_assign(
-        VarLabelMatlMemspace<DomainType, MemSpace>( label, matlIndex, getRealDomain(dom), MemSpace::HostSpace ),
+        VarLabelMatlMemspace<DomainType, MemorySpace>( label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace ),
         dataItem);
   } else {
     bool success = varDB.insert(
-        VarLabelMatlMemspace<DomainType, MemSpace>( label, matlIndex, getRealDomain(dom), MemSpace::HostSpace ),
+        VarLabelMatlMemspace<DomainType, MemorySpace>( label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace ),
         dataItem);
     if ( !success ) {
       //The key was already in here.  That shouldn't happen with this legacy put method.
@@ -768,7 +768,7 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
   dataItem->m_var = var;
   dataItem->statusInMemory = ALLOCATED & VALID;
 
-  auto key = VarLabelMatlMemspace<DomainType, MemSpace>( label, matlIndex, getRealDomain(dom), MemSpace::HostSpace );
+  auto key = VarLabelMatlMemspace<DomainType, MemorySpace>( label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace );
 
   bool success = varDB.insert(key, dataItem);
   if (!success) {
@@ -913,7 +913,7 @@ DWDatabase<DomainType>::print( std::ostream & out, int rank ) const
 
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
     if (m_vars[keyiter->second]) {
-      const VarLabelMatlMemspace<DomainType, MemSpace>& vlm = keyiter->first;
+      const VarLabelMatlMemspace<DomainType, MemorySpace>& vlm = keyiter->first;
       const DomainType* dom = vlm.domain_;
       if (dom) {
         out << rank << " Name: " << vlm.label_->getName() << "  domain: " << *dom << "  matl:" << vlm.matlIndex_ << '\n';
@@ -940,7 +940,7 @@ DWDatabase<DomainType>::logMemoryUse(       std::ostream  & out
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
     if (m_vars[keyiter->second]) {
       Variable* var = m_vars[keyiter->second]->m_var;
-      VarLabelMatlMemspace<DomainType, MemSpace> vlm = keyiter->first;
+      VarLabelMatlMemspace<DomainType, MemorySpace> vlm = keyiter->first;
       const VarLabel* label = vlm.label_;
       std::string elems;
       unsigned long totsize;
@@ -958,12 +958,12 @@ DWDatabase<DomainType>::logMemoryUse(       std::ostream  & out
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatlMemspace<DomainType, MemSpace> > & v) const
+DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatlMemspace<DomainType, MemorySpace> > & v) const
 {
   keyDB_monitor keyDB_lock{ Uintah::CrowdMonitor<keyDB_tag>::READER };
 
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
-    const VarLabelMatlMemspace<DomainType, MemSpace>& vlm = keyiter->first;
+    const VarLabelMatlMemspace<DomainType, MemorySpace>& vlm = keyiter->first;
     if (m_vars[keyiter->second]) {
       v.push_back(vlm);
     }
@@ -980,7 +980,7 @@ template<class DomainType>
 bool DWDatabase<DomainType>::requestAllocationPrivilege( const VarLabel   * label,
                                                          int                matlIndex,
                                                          const DomainType * dom,
-                                                         MemSpace        memorySpace)
+                                                         MemorySpace        memorySpace)
                                                          {
 
 }
