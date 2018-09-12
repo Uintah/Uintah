@@ -77,8 +77,9 @@ private:
     std::string m_var3_name;
 
     std::string m_filename;
-    typedef std::map<IntVector, double > CellToValues;
+    typedef std::vector<double> CellToValues;
     CellToValues m_data;
+    int nx,ny,nz;
 
     void readInputFile( std::string, const bool read_vector );
 
@@ -180,8 +181,7 @@ private:
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      IntVector loc(i,j,k);
-      phi(i,j,k) = m_data[loc];
+      phi(i,j,k) = m_data[i*ny*nz+j*nz+k];
 
     });
   }
@@ -197,11 +197,12 @@ private:
       throw ProblemSetupException("Unable to open the given input file: " + filename, __FILE__, __LINE__);
     }
 
-    int nx,ny,nz,N;
+    int N;
     nx = getInt(file);
     ny = getInt(file);
     nz = getInt(file);
     N = nx*ny*nz;
+    m_data=std::vector<double> (N);
 
     for ( int II = 0; II < N; II++ ){
 
@@ -231,7 +232,7 @@ private:
 
       }
 
-      m_data.insert(std::make_pair(IntVector(i,j,k), value));
+      m_data[i*ny*nz+j*nz+k]=value;
 
     }
 
