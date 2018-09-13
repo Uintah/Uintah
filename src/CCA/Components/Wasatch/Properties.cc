@@ -136,17 +136,10 @@ namespace WasatchCore{
 
   //====================================================================
 
-  enum DensityEvaluationLevel
-  {
-    NORMAL,
-    STAR
-  };
-
   Expr::ExpressionID
   parse_density_solver( const Uintah::ProblemSpecP& params,
                         const StateTable& table,
                         Expr::Tag densityTag,
-                        const DensityEvaluationLevel densLevel,
                         GraphHelper& gh,
                         const Category& cat,
                         std::set<std::string>& persistentFields,
@@ -407,7 +400,7 @@ namespace WasatchCore{
       std::string densityName;
       densityParams->findBlock("NameTag")->getAttribute( "name", densityName );
       const Expr::Tag densityTag   = Expr::Tag(densityName, Expr::STATE_NP1  );
-      parse_density_solver( densityParams, table, densityTag, STAR, gh, cat, persistentFields, weakForm );
+      parse_density_solver( densityParams, table, densityTag, gh, cat, persistentFields, weakForm );
     }
 
   }
@@ -435,13 +428,14 @@ namespace WasatchCore{
     params->getAttribute("rho0",rho0);
     params->getAttribute("rho1",rho1);
 
+    const Expr::Tag drhodfTag( "drhod" + fTag.name(), Expr::STATE_NONE);
     // initial conditions for density
+
     {
       GraphHelper& gh = *gc[INITIALIZATION];
       typedef TwoStreamDensFromMixfr<SVolField>::Builder ICDensExpr;
       
       const Expr::Tag icRhoTag( rhoTag.name(), Expr::STATE_NONE );
-      const Expr::Tag drhodfTag( "drhod" + fTag.name(), Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( icRhoTag, drhodfTag ) );
       
       gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(theTagList,fTag,rho0,rho1) ) );
@@ -452,9 +446,6 @@ namespace WasatchCore{
     
     Expr::ExpressionFactory& factory = *gc[ADVANCE_SOLUTION]->exprFactory;
 
-    const Expr::Tag drhodfTag("drhod" + fTag.name(), Expr::STATE_NONE);
-    const Expr::TagList theTagList( tag_list( rhoTag, drhodfTag ));
-    
     if (weakForm) {
       fTag.reset_context( Expr::STATE_N );
       factory.register_expression( new typename Expr::PlaceHolder<SVolField>::Builder(rhoTag) );
@@ -464,17 +455,14 @@ namespace WasatchCore{
     
 
     if( doDenstPlus ){
-      const TagNames& names = TagNames::self();
-
       Expr::Tag rhoNP1Tag ( rhoTag .name(), Expr::STATE_NP1 );
       Expr::Tag fNP1Tag   ( fTag   .name(), Expr::STATE_NP1 );
       Expr::Tag rhofNP1Tag( rhofTag.name(), Expr::STATE_NP1 );
-      const Expr::Tag drhodfStarTag("drhod" + fTag.name(), Expr::STATE_NONE);
-      const Expr::TagList theTagList( tag_list( rhoNP1Tag, drhodfStarTag ));
+
+      const Expr::TagList theTagList( tag_list( rhoNP1Tag, drhodfTag ));
       Expr::ExpressionID id1;
       
       if (weakForm) {
-        // todo: figure what 'fTag' needs to be. there's a problem for weak transport of f.
         id1 = factory.register_expression( scinew DensFromFExpr(theTagList,fTag,rho0,rho1) );
       } else {
         id1 = factory.register_expression( scinew DensExpr(theTagList,rhofNP1Tag,rho0,rho1) );
