@@ -55,6 +55,13 @@ using namespace Uintah;
 
 //______________________________________________________________________
 //
+namespace Uintah {
+  extern Dout g_task_dbg;
+}
+
+
+//______________________________________________________________________
+//
 namespace {
   Dout g_dbg(         "KokkosOMP_DBG"        , "KokkosOpenMPScheduler", "general debugging info for KokkosOpenMPScheduler"  , false );
   Dout g_queuelength( "KokkosOMP_QueueLength", "KokkosOpenMPScheduler", "report task queue length for KokkosOpenMPScheduler", false );
@@ -334,7 +341,8 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
   // See if we've consumed all tasks on this phase, if so, go to the next phase.
   while (m_phase_tasks[currphase] == m_phase_tasks_done[currphase] && currphase + 1 < numPhases) {
     currphase++;
-    DOUT(g_dbg, " switched to task phase " << currphase << ", total phase " << currphase << " tasks = " << m_phase_tasks[currphase]);
+    DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << "." << Kokkos::OpenMP::hardware_thread_id() << " switched to task phase " << currphase
+                                                                                                   << ", total phase " << currphase << " tasks = " << m_phase_tasks[currphase]);
   }
 }
 
@@ -417,6 +425,7 @@ KokkosOpenMPScheduler::runTasks()
           initTask = m_detailed_tasks->getNextInternalReadyTask();
           if (initTask != nullptr) {
             if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
+              DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << "." << Kokkos::OpenMP::hardware_thread_id() << " Task internal ready 1 " << *initTask);
               m_phase_sync_task[initTask->getTask()->m_phase] = initTask;
               ASSERT(initTask->getRequires().size() == 0)
               initTask = nullptr;
@@ -459,12 +468,13 @@ KokkosOpenMPScheduler::runTasks()
 
     if (initTask != nullptr) {
       MPIScheduler::initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration.load(std::memory_order_relaxed));
+      DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << "." << Kokkos::OpenMP::hardware_thread_id() << " Task internal ready 2 " << *initTask << " deps needed: " << initTask->getExternalDepCount());
       initTask->markInitiated();
       initTask->checkExternalDepCount();
     }
     else if (readyTask) {
 
-      DOUT(g_dbg, " Task now external ready: " << *readyTask);
+      DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << "." << Kokkos::OpenMP::hardware_thread_id() << " Task external ready " << *readyTask);
 
       if (readyTask->getTask()->getType() == Task::Reduction) {
         MPIScheduler::initiateReduction(readyTask);
