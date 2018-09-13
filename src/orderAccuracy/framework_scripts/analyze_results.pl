@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #______________________________________________________________________
 #  analyze_results.pl
 #  Perl script used to call the comparison utility for each test and plot the results

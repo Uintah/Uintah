@@ -8,8 +8,6 @@
 
 <upsFile>ICE/advect.ups</upsFile>
 
-<gnuplot> adfadfadf </gnuplot>
-
 <AllTests>
   <replace_lines>
     <max_Timesteps>10           </max_Timesteps>
@@ -21,19 +19,25 @@
 <batchScheduler>
   <template> myBatch.slrm   </template>
   <submissionCmd> sbatch    </submissionCmd>
-  <batchReplace tag="[acct]"       value = "1" />
-  <batchReplace tag="[partition]"  value = "2" />
+  <batchReplace tag="[acct]"       value = "efd-np" />
+  <batchReplace tag="[partition]"  value = "efd-np" />
+  <batchReplace tag="[runTime]"    value = "30" />
 </batchScheduler>
+
+<!--______________________________________________________________________-->
 
 <Test>
     <Title>1_2</Title>
-    <sus_cmd>mpirun -np 16 sus -nthreads 2" </sus_cmd>
-    <postProcess_cmd>./tools/compare_mms/compare_scalar -v</postProcess_cmd>
-    <batchReplace tag="[mpiRanks]" value = "16" />
-    <batchReplace tag="[runTime]"  value = "30" />
+    <sus_cmd>mpirun -np 1 sus -nthreads 2 </sus_cmd>
+    <batchReplace tag="[mpiRanks]" value = "1" />
+    
 </Test>
 
-
+<Test>
+    <Title>1_4</Title>
+    <sus_cmd>mpirun -np 1 sus -mpi -nthreads 4</sus_cmd>
+    <batchReplace tag="[mpiRanks]" value = "1" />
+</Test>
 
 </start>
 

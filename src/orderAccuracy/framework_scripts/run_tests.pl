@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
 
 #______________________________________________________________________
@@ -30,7 +30,6 @@ use XML::LibXML;
 use Data::Dumper;
 use Time::HiRes qw/time/;
 use File::Basename;
-use File::Which;
 use Cwd;
 use lib dirname (__FILE__);  # needed to find local Utilities.pm
 use Utilities qw( cleanStr modify_batchScript read_file write_file );
@@ -183,11 +182,11 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
   print $statsFile "Command Used :  "."$sus_cmd_0 $test_ups"."\n";
 
   my $now = time();
-  my @sus_cmd = ("$sus_cmd_0","$test_ups","> $test_output 2>&1");
+  my @sus_cmd = ("$sus_cmd_0 ","$test_ups ","> $test_output 2>&1");
 
   my $rc = 0;
   if( length $batchScript > 0 ){
-    submitBatchScript( $batchCmd, $test_batch, $statsFile, @sus_cmd ); 
+    submitBatchScript( $test_title, $batchCmd, $test_batch, $statsFile, @sus_cmd ); 
   }else{
     $rc = runSusCmd( $timeout, $exitOnCrash, $statsFile, @sus_cmd );
   }
@@ -261,23 +260,43 @@ sub runSusCmd {
 #______________________________________________________________________
 
 sub submitBatchScript{
-  my( $batchCmd, $test_batch, $statsFile, @sus_cmd ) = @_;
-  
-  print "submitBatchScript: ", $batchCmd, " ", $test_batch, " ", $statsFile, " ", @sus_cmd, "\n";
+  my( $test_title, $batchCmd, $test_batch, $statsFile, @sus_cmd ) = @_;
+
   #__________________________________
   # concatenate sus cmd to batch script
   open(my $fh, '>>', $test_batch) or die "Could not open file '$test_batch' $!";
   print $fh "\n ", @sus_cmd, "\n";
   close $fh;
   
-  my $data = read_file($test_batch);
-  print $data;
+  #__________________________________
+  # edit batch script
+  my $data  = read_file($test_batch);
+  
+  #  change job name
+  my $tag   = "\\[jobName\\]";
+  my $value = $test_title; 
+  $data     =~ s/$tag/"$value"/g;
+  
+  # change the job output name
+  $tag      = "\\[output\\]";
+  $value    = "job-". $test_title . ".out";
+  $data     =~ s/$tag/"$value"/g;
+  
+  # remove white spaces before and after "="
+  # Slurm doesn't like white spaces
+  $data     =~ s{\s+=}{=}g;
+  $data     =~ s{=\s+}{=}g;
+  
+  print "$data";
+  write_file($test_batch, $data);
   
   #__________________________________
   # concatenate postProcess cmd to batch script  TODO
   
   #__________________________________
   # submit batch script
-  print $batchCmd, " " , $test_batch, "\n";
   
+  print "\t Submitting batch script: ", $batchCmd, " " , $test_batch, "\n";
+  my @cmd = ( "$batchCmd", "$test_batch" );
+  system("@cmd")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@cmd)\n");
 };
