@@ -26,27 +26,28 @@
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/momentumAnalysis.h>
+#include <CCA/Components/OnTheFlyAnalysis/planeAverage.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/statistics.h>
 
 #include <sci_defs/uintah_defs.h>
 
 #if !defined( NO_ARCHES ) && !defined( NO_WASATCH ) && !defined( NO_EXAMPLES )
-#  include <CCA/Components/OnTheFlyAnalysis/radiometer.h>
+  #include <CCA/Components/OnTheFlyAnalysis/radiometer.h>
 #endif
 
 #if !defined( NO_ICE )
-# include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
-# include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
+  #include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
+  #include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
 #endif
 
 #if !defined( NO_MPM )
-#  include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
-#  include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
+  #include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
+  #include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
 #endif
 
 #if !defined( NO_ICE ) && !defined( NO_MPM )
-#  include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>
+  #include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>
 #endif
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -95,6 +96,9 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       }
       else if ( module == "lineExtract" ) {
         modules.push_back(scinew lineExtract(          myworld, materialManager, module_ps ) );
+      }
+      else if ( module == "planeAverage" ) {
+        modules.push_back( scinew planeAverage(        myworld, materialManager, module_ps ) );
       }
       else if ( module == "planeExtract" ) {
         modules.push_back( scinew planeExtract(        myworld, materialManager, module_ps ) );

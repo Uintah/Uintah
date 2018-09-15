@@ -804,7 +804,7 @@ KokkosOpenMPScheduler::myRankThread()
 {
   std::ostringstream out;
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef KOKKOS_ENABLE_OPENMP
   out << Uintah::Parallel::getMPIRank()<< "." << Kokkos::OpenMP::hardware_thread_id();
 #else
   out << Uintah::Parallel::getMPIRank();

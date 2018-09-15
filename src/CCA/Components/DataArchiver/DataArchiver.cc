@@ -262,8 +262,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     m_outputLastTimeStep = false; // default
   }
 
-  // set default compression mode - can be "tryall", "gzip", "rle",
-  // "rle, gzip", "gzip, rle", or "none"
+  // set default compression mode - can be "gzip" or ""
   string defaultCompressionMode = "";
   if (p->get("compression", defaultCompressionMode)) {
     VarLabel::setDefaultCompressionMode(defaultCompressionMode);
@@ -2653,8 +2652,7 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
                                    DataWarehouse        * old_dw,
                                    DataWarehouse        * new_dw )
 {
-  bool val;
-  if( m_application->getReductionVariable( recomputeTimeStep_name, val ) ||
+  if( m_application->getReductionVariable( recomputeTimeStep_name ) ||
       m_saveReductionLabels.empty() ) {
     return;
   }

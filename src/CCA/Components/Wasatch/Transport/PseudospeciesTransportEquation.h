@@ -81,8 +81,7 @@ namespace WasatchCore{
                                     Uintah::ProblemSpecP params,
                                     GraphCategories& gc,
                                     const Expr::Tag densityTag,
-                                    const TurbulenceParameters& turbulenceParams,
-                                    const bool callSetup=true );
+                                    const TurbulenceParameters& turbulenceParams );
 
     virtual ~PseudospeciesTransportEquation();
 

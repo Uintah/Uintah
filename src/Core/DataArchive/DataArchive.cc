@@ -35,6 +35,7 @@
 #endif
 
 #include <Core/Containers/OffsetArray1.h>
+#include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>

@@ -26,7 +26,6 @@
 #define UINTAH_HOMEBREW_SoleVARIABLE_H
 
 #include <Core/Grid/Variables/SoleVariableBase.h>
-#include <Core/Grid/Variables/DataItem.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/TypeMismatchException.h>

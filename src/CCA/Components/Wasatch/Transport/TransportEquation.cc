@@ -40,10 +40,10 @@ namespace WasatchCore{
   TransportEquation::
   TransportEquation( GraphCategories& gc,
                      const std::string& solnVarName,
-                     const Direction stagLoc,
-                     const bool isConstDensity )
+                     const Direction stagLoc )
   : EquationBase::EquationBase( gc, solnVarName, stagLoc ),
-    isConstDensity_ ( isConstDensity )
+    flowTreatment_  ( Wasatch::flow_treatment()        ),
+    isConstDensity_ ( flowTreatment_ == INCOMPRESSIBLE )
   {}
 
   //---------------------------------------------------------------------------

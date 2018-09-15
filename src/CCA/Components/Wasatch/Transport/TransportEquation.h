@@ -38,6 +38,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 //-- Wasatch includes --//
+#include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/PatchInfo.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
@@ -104,16 +105,19 @@ namespace WasatchCore{
      * @param stagLoc the direction that this equation is staggered
      * @param isConstDensity flag for constant density
      */
+
     TransportEquation( GraphCategories& gc,
                        const std::string& solnVarName,
-                       const Direction stagLoc,
-                       const bool isConstDensity );
+                       const Direction stagLoc );
 
     virtual ~TransportEquation(){}
 
+    inline FlowTreatment flow_treatment() const { return flowTreatment_; }
     inline bool is_constant_density() const { return isConstDensity_; }
 
+
   protected:
+    const FlowTreatment flowTreatment_;
     const bool isConstDensity_;
   };
 

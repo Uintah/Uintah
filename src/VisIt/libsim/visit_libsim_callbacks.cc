@@ -1017,7 +1017,7 @@ void visit_ClampTimeToOutputCallback(int val, void *cbdata)
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
-  appInterface->setClampTimeToOutput( val );
+  appInterface->setSimTimeClampToOutput( val );
 }
 
 

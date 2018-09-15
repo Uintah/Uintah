@@ -144,20 +144,20 @@
         </rect>
        </property>
        <property name="text">
-        <string>End execution at max sim time</string>
+        <string>End at max sim time exactly</string>
        </property>
       </widget>
-      <widget class="QCheckBox" name="ClampTimeToOutput">
+      <widget class="QCheckBox" name="SimTimeClampToOutput">
        <property name="geometry">
         <rect>
          <x>440</x>
          <y>30</y>
-         <width>181</width>
+         <width>211</width>
          <height>20</height>
         </rect>
        </property>
        <property name="text">
-        <string>Clamp time to output</string>
+        <string>Clamp sim time to output times</string>
        </property>
       </widget>
       <widget class="QLabel" name="StopATimeStepLabel">
@@ -970,7 +970,6 @@
   <tabstop>TimeStepsMax</tabstop>
   <tabstop>SimTime</tabstop>
   <tabstop>SimTimeMax</tabstop>
-  <tabstop>ClampTimeToOutput</tabstop>
   <tabstop>SimTimeEndAtMax</tabstop>
   <tabstop>StopAtTimeStep</tabstop>
   <tabstop>StopAtLastTimeStep</tabstop>

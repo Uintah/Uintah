@@ -532,7 +532,7 @@ LoadBalancerCommon::createPerProcessorPatchSet( const GridP & grid )
       // DEBUG: report patch level assignment
       if (g_patch_assignment) {
         std::ostringstream mesg;
-        mesg << "Patch: " << patch->getID() << " is on level:" << patch->getLevel()->getIndex();
+        mesg << "Patch: " << patch->getID() << " is on level: " << patch->getLevel()->getIndex();
         DOUT(d_myworld->myRank() == 0, mesg.str());
       }
     }

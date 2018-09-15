@@ -136,17 +136,10 @@ namespace WasatchCore{
 
   //====================================================================
 
-  enum DensityEvaluationLevel
-  {
-    NORMAL,
-    STAR
-  };
-
   Expr::ExpressionID
   parse_density_solver( const Uintah::ProblemSpecP& params,
                         const StateTable& table,
                         Expr::Tag densityTag,
-                        const DensityEvaluationLevel densLevel,
                         GraphHelper& gh,
                         const Category& cat,
                         std::set<std::string>& persistentFields,
@@ -155,8 +148,9 @@ namespace WasatchCore{
     if (cat == INITIALIZATION) {
       throw Uintah::ProblemSetupException( "You cannot currently use a density calculator for Initialization of the density. Please use ExtractVariable rather than ExtractDensity in your initial condition for TabProps.", __FILE__, __LINE__ );
     }
-
     Expr::ExpressionID densCalcID;  // BE SURE TO POPULATE THIS BELOW!
+
+    const TagNames& tagNames = TagNames::self();
 
     // Lock the density because on initialization this may be an intermediate
     // quantity, but is always needed as a guess for the solver here.
@@ -171,12 +165,6 @@ namespace WasatchCore{
     Expr::ExpressionFactory& factory = *gh.exprFactory;
 
     std::string tagNameAppend, scalarTagNameAppend;
-    switch (densLevel){
-      case NORMAL    : tagNameAppend=scalarTagNameAppend="";                          break;
-      case STAR      : tagNameAppend=TagNames::self().star; scalarTagNameAppend = ""; break;
-    }
-
-    densityTag.reset_name( densityTag.name() + tagNameAppend );
 
     double rtol = 1e-6;
     int maxIter = 5;
@@ -188,17 +176,16 @@ namespace WasatchCore{
 
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFraction");
       Expr::Tag rhofTag = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
-      Expr::Tag fTag = parse_nametag(modelParams->findBlock("MixtureFraction")->findBlock("NameTag"));
-      if( densLevel != NORMAL ) {
-        rhofTag.reset_context( Expr::STATE_NP1 );
-        if (weakForm) fTag.reset_context( Expr::STATE_NP1 );
-      }
-      rhofTag.reset_name( rhofTag.name() + scalarTagNameAppend );
+      Expr::Tag fTag    = parse_nametag( modelParams->findBlock("MixtureFraction"               )->findBlock("NameTag") );
+      persistentFields.insert( fTag.name() ); // ensure that Uintah knows about this field
+
+      rhofTag.reset_context( Expr::STATE_NP1 );
+      if (weakForm) fTag.reset_context( Expr::STATE_NP1 );
 
       typedef DensFromMixfrac<SVolField>::Builder DensCalc;
       
-      const Expr::Tag unconvPts( TagNames::self().unconvergedpts.name() + tagNameAppend, TagNames::self().unconvergedpts.context() );
-      const Expr::Tag drhodfTag( "drhod" + fTag.name() + tagNameAppend, Expr::STATE_NONE);
+      const Expr::Tag unconvPts( TagNames::self().unconvergedpts.name(), tagNames.unconvergedpts.context() );
+      const Expr::Tag drhodfTag( "drhod" + fTag.name(), Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( densityTag, unconvPts, drhodfTag ) );
       
       // register placeholder for the old density
@@ -218,24 +205,21 @@ namespace WasatchCore{
 
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss");
       Expr::Tag rhofTag    = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
-      Expr::Tag rhohTag    = parse_nametag( modelParams->findBlock("DensityWeightedEnthalpy")->findBlock("NameTag") );
-      Expr::Tag heatLossTag= parse_nametag( modelParams->findBlock("HeatLoss")->findBlock("NameTag") );
+      Expr::Tag rhohTag    = parse_nametag( modelParams->findBlock("DensityWeightedEnthalpy"       )->findBlock("NameTag") );
+      Expr::Tag heatLossTag= parse_nametag( modelParams->findBlock("HeatLoss"                      )->findBlock("NameTag") );
 
       persistentFields.insert( heatLossTag.name() ); // ensure that Uintah knows about this field
 
       // modify name & context when we are calculating density at newer time
       // levels since this will be using STATE_NONE information as opposed to
       // potentially STATE_N information.
-      if( densLevel != NORMAL ){
-        rhofTag.reset( rhofTag.name() + scalarTagNameAppend, Expr::STATE_NP1 );
-        rhohTag.reset( rhohTag.name() + scalarTagNameAppend, Expr::STATE_NP1 );
-        heatLossTag.reset_name( heatLossTag.name() + scalarTagNameAppend );
-      }
+      rhofTag.reset_context( Expr::STATE_NP1 );
+      rhohTag.reset_context( Expr::STATE_NP1 );
 
       typedef Expr::PlaceHolder<SVolField>  PlcHolder;
-      const Expr::Tag rhoOldTag( densityTag.name(), Expr::STATE_N );
+      const Expr::Tag rhoOldTag     ( densityTag .name(), Expr::STATE_N );
       const Expr::Tag heatLossOldTag( heatLossTag.name(), Expr::STATE_N );
-      factory.register_expression( new PlcHolder::Builder(rhoOldTag), true );
+      factory.register_expression( new PlcHolder::Builder(rhoOldTag     ), true );
       factory.register_expression( new PlcHolder::Builder(heatLossOldTag), true );
 
       typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
@@ -353,10 +337,6 @@ namespace WasatchCore{
       case SVOL: {
         typedef TabPropsEvaluator<SpatialOps::SVolField>::Builder PropEvaluator;
         gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
-        if( doDenstPlus && dvarTableName=="Density" ){
-          const Expr::Tag densStarTag ( dvarTag.name()+TagNames::self().star,       dvarTag.context() );
-          gh.rootIDs.insert( gh.exprFactory->register_expression( scinew PropEvaluator( densStarTag,  *interp, ivarNames ) ) );
-        }
         break;
       }
       case XVOL: {
@@ -417,12 +397,10 @@ namespace WasatchCore{
     // create an expression specifically for density.
     const Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
     if( densityParams ){
-      const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-      parse_density_solver( densityParams, table, densityTag, NORMAL, gh, cat, persistentFields, weakForm );
-      if( doDenstPlus ){
-        const Expr::ExpressionID id1 = parse_density_solver( densityParams, table, densityTag, STAR, gh, cat, persistentFields, weakForm );
-        gh.exprFactory->cleave_from_children( id1 );
-      }
+      std::string densityName;
+      densityParams->findBlock("NameTag")->getAttribute( "name", densityName );
+      const Expr::Tag densityTag   = Expr::Tag(densityName, Expr::STATE_NP1  );
+      parse_density_solver( densityParams, table, densityTag, gh, cat, persistentFields, weakForm );
     }
 
   }
@@ -437,66 +415,59 @@ namespace WasatchCore{
   {
     Expr::Tag fTag    = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
     const Expr::Tag rhofTag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
-    const Expr::Tag rhoTag  = parse_nametag( params->findBlock("Density")->findBlock("NameTag") );
+
+    std::string densityName;
+    params->findBlock("Density")->findBlock("NameTag")->getAttribute( "name", densityName );
+    const Expr::Tag rhoTag  = Expr::Tag( densityName, Expr::STATE_N  );
 
     // Lock the density because on initialization this may be an intermediate
     // quantity, but is always needed as a guess for the solver here.
-    //persistentFields.insert( rhoTag.name() );
+    persistentFields.insert( rhoTag.name() );
 
     double rho0, rho1;
     params->getAttribute("rho0",rho0);
     params->getAttribute("rho1",rho1);
 
+    const Expr::Tag drhodfTag( "drhod" + fTag.name(), Expr::STATE_NONE);
     // initial conditions for density
+
     {
       GraphHelper& gh = *gc[INITIALIZATION];
       typedef TwoStreamDensFromMixfr<SVolField>::Builder ICDensExpr;
       
       const Expr::Tag icRhoTag( rhoTag.name(), Expr::STATE_NONE );
-      const Expr::Tag drhodfTag( "drhod" + fTag.name(), Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( icRhoTag, drhodfTag ) );
       
       gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(theTagList,fTag,rho0,rho1) ) );
-
-      if( doDenstPlus ){
-        const Expr::Tag icRhoStarTag ( rhoTag.name() + TagNames::self().star,       Expr::STATE_NONE );
-        const Expr::Tag drhodfStarTag( "drhod" + fTag.name() + TagNames::self().star, Expr::STATE_NONE);
-        const Expr::TagList theTagStarList( tag_list( icRhoStarTag, drhodfStarTag ) );
-
-        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(theTagStarList, fTag,rho0,rho1) ) );
-      }
     }
 
     typedef TwoStreamMixingDensity<SVolField>::Builder DensExpr;
     typedef TwoStreamDensFromMixfr<SVolField>::Builder DensFromFExpr;
     
-    const Expr::Tag drhodfTag("drhod" + fTag.name(), Expr::STATE_NONE);
-    const Expr::TagList theTagList( tag_list( rhoTag, drhodfTag ));
-    
+    Expr::ExpressionFactory& factory = *gc[ADVANCE_SOLUTION]->exprFactory;
+
     if (weakForm) {
       fTag.reset_context( Expr::STATE_N );
-      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensFromFExpr(theTagList,fTag,rho0,rho1) );
+      factory.register_expression( new typename Expr::PlaceHolder<SVolField>::Builder(rhoTag) );
     } else {
-      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofTag,rho0,rho1) );
+      factory.register_expression( new Expr::PlaceHolder<SVolField>::Builder(rhoTag) );
     }
     
 
     if( doDenstPlus ){
-      const TagNames& names = TagNames::self();
+      Expr::Tag rhoNP1Tag ( rhoTag .name(), Expr::STATE_NP1 );
+      Expr::Tag fNP1Tag   ( fTag   .name(), Expr::STATE_NP1 );
+      Expr::Tag rhofNP1Tag( rhofTag.name(), Expr::STATE_NP1 );
 
-      Expr::Tag rhoStar  ( rhoTag .name() + names.star, rhoTag.context() );
-      Expr::Tag fStarTag ( fTag .name()   , Expr::STATE_NP1 );
-      Expr::Tag rhofStar ( rhofTag.name(), Expr::STATE_NP1 );
-      const Expr::Tag drhodfStarTag("drhod" + fTag.name() + names.star, Expr::STATE_NONE);
-      const Expr::TagList theTagList( tag_list( rhoStar, drhodfStarTag ));
+      const Expr::TagList theTagList( tag_list( rhoNP1Tag, drhodfTag ));
       Expr::ExpressionID id1;
       
       if (weakForm) {
-        id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensFromFExpr(theTagList,fStarTag,rho0,rho1) );
+        id1 = factory.register_expression( scinew DensFromFExpr(theTagList,fTag,rho0,rho1) );
       } else {
-        id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofStar,rho0,rho1) );
+        id1 = factory.register_expression( scinew DensExpr(theTagList,rhofNP1Tag,rho0,rho1) );
       }
-      gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id1);
+//      gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id1);
     }
   }
 

@@ -87,13 +87,14 @@
       </ConvectiveFlux>
 
     </TransportEquation>
+    
+    <ForceOnGraph tasklist="advance_solution">
+        <NameTag name="f" state="STATE_NP1"/>
+    </ForceOnGraph>
 
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f"/>
-      </FieldExpression>
-      <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f*"/>
+        <NameTag name="f" state="STATE_NP1"/>
       </FieldExpression>
       <FieldExpression type="SVOL" min="0.0" max="5.0">
         <NameTag name="rhof" state="STATE_NP1"/>
@@ -148,23 +149,14 @@
     <save label="y-mom"/>
 <!--     <save label="y-mom_rhs"/> -->
      <save label="f"/>
-     <!-- save label="f*"/>
-     <save label="density*"/>
     
-    
-    <save label="rhof**"/ -->
     <save label="density"/>
-    <!-- save label="drhodt*"/>
-    <save label="drhodt"/>
-    <save label="divmom*"/ -->
+
     <save label="rhof"/>
     <save label="u"/>
     <save label="v"/>
     <save label="w"/>
     <save label="viscosity"/>
-    <!-- save label="u*"/>
-    
-    <save label="w*"/ -->
     <save label="strain_xy"/>
     <save label="strain_yx"/>
     <save label="strain_zy"/>

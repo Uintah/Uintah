@@ -41,6 +41,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include <unistd.h>
+
 
 using namespace std;
 using namespace Uintah;

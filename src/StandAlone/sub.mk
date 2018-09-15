@@ -59,7 +59,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(BOOST_LIBRARY)         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
           $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY) \
-          $(PAPI_LIBRARY) $(M_LIBRARY) $(PIDX_LIBRARY) \
+          $(M_LIBRARY) $(PIDX_LIBRARY) \
           $(POKITT_LIBRARY)
 else
   LIBS := $(MPI_LIBRARY) $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)  \
@@ -69,7 +69,7 @@ else
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                      \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)                       \
           $(BOOST_LIBRARY) $(CUDA_LIBRARY)                              \
-          $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY) $(PIDX_LIBRARY)         \
+          $(GPERFTOOLS_LIBRARY) $(PIDX_LIBRARY)         \
           $(KOKKOS_LIBRARY)
 endif
 
@@ -196,10 +196,10 @@ link_scripts:
 	       ln -sf $(SRCTOP_ABS)/scripts StandAlone/scripts; \
 	   fi )
 
-link_orderAccuracy:
-	@( if ! test -L StandAlone/orderAccuracy; then \
-               echo "Creating link to orderAccuracy directory." ; \
-	       ln -sf $(SRCTOP_ABS)/orderAccuracy StandAlone; \
+link_parametricStudies:
+	@( if ! test -L StandAlone/parametricStudies; then \
+               echo "Creating link to parametricStudies directory." ; \
+	       ln -sf $(SRCTOP_ABS)/parametricStudies StandAlone; \
 	   fi )          
 
 link_tools:

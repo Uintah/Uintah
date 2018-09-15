@@ -104,6 +104,8 @@
 #include <stdexcept>
 #include <Core/Parallel/KokkosTools.h>
 
+#include <unistd.h>
+
 using namespace Uintah;
 
 

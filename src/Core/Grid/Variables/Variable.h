@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_Variable_H
-#define UINTAH_HOMEBREW_Variable_H
+#ifndef CORE_GRID_VARIABLES_VARIABLE_H
+#define CORE_GRID_VARIABLES_VARIABLE_H
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 
@@ -34,19 +34,22 @@
 
 namespace Uintah {
 
-  class TypeDescription;
-  class InputContext;
-  class OutputContext;
-  class Patch;
-  class RefCounted;
-  class VarLabel;
+// forward decls
+class TypeDescription;
+class InputContext;
+class OutputContext;
+class Patch;
+class PIDXOutputContext;
+class RefCounted;
+class VarLabel;
+class PIDXOutputContext;
 
 /**************************************
      
   CLASS
+
     Variable
 
-    Short Description...
 
   GENERAL INFORMATION
 
@@ -60,72 +63,72 @@ namespace Uintah {
       
       
   KEYWORDS
+
     Variable
-      
-  DESCRIPTION
-    Long description...
-      
-  WARNING
       
   ****************************************/
     
-class PIDXOutputContext; // Forward Declaration
 
 class Variable {
 
 public:
+
   virtual ~Variable();
   
   virtual const TypeDescription* virtualGetTypeDescription() const = 0;
 
   void setForeign();
 
-  bool isForeign() const {
-    return d_foreign;
-  }
+  bool isForeign() const { return d_foreign; }
 
-  //marks a variable as invalid (for example, it is in the process of receiving mpi)
-  void setValid() { d_valid=true;}
+  // marks a variable as valid (for example, it has received all requires via MPI)
+  void setValid() { d_valid = true;}
 
-  void setInvalid() { d_valid=false;} 
+  // marks a variable as invalid (for example, it is still in the process of receiving MPI)
+  void setInvalid() { d_valid = false; }
 
   //returns if a variable is marked valid or invalid
-  bool isValid() const {return d_valid;}
+  bool isValid() const { return d_valid; }
 
-  size_t emit(OutputContext&, const IntVector& l, const IntVector& h,
-            const std::string& compressionModeHint);
+  size_t emit(       OutputContext &
+             , const IntVector     & l
+             , const IntVector     & h
+             , const std::string   & compressionModeHint
+             );
 
-  void read(InputContext&, long end, bool swapbytes, int nByteMode,
-            const std::string& compressionMode);
+  void read(       InputContext &
+           ,       long           end
+           ,       bool           swapbytes
+           ,       int            nByteMode
+           , const std::string  & compressionMode
+           );
 
 #if HAVE_PIDX
-  virtual void emitPIDX(       PIDXOutputContext & oc,
-                               unsigned char     * buffer,
-                         const IntVector         & l,
-                         const IntVector         & h,
-                         const size_t              pidx_bufferSize ); // buffer size used for bullet proofing.
-                
-  void readPIDX( const unsigned char * pidx_buffer,
-                 const size_t        & pidx_bufferSize,
-                 const bool            swapBytes );
+  virtual void emitPIDX(       PIDXOutputContext & oc
+                       ,       unsigned char     * buffer
+                       , const IntVector         & l
+                       , const IntVector         & h
+                       , const size_t              pidx_bufferSize // buffer size used for bullet proofing.
+                       );
+
+  void readPIDX( const unsigned char * pidx_buffer
+               , const size_t        & pidx_bufferSize
+               , const bool            swapBytes
+               );
 #endif
 
-  virtual void emitNormal(       std::ostream & out,
-                           const IntVector    & l,
-                           const IntVector    & h,
-                                 ProblemSpecP   varnode,
-                                 bool           outputDoubleAsFloat ) = 0;
+  virtual void emitNormal(       std::ostream & out
+                         , const IntVector    & l
+                         , const IntVector    & h
+                         ,       ProblemSpecP   varnode
+                         ,       bool           outputDoubleAsFloat
+                         ) = 0;
 
   virtual void readNormal( std::istream& in, bool swapbytes ) = 0;
 
-  virtual bool emitRLE(std::ostream& /*out*/, const IntVector& l,
-                       const IntVector& h, ProblemSpecP /*varnode*/);
+  virtual void allocate( const Patch* patch, const IntVector& boundary ) = 0;
 
-  virtual void readRLE(std::istream& /*in*/, bool swapbytes, int nByteMode);
-  
-  virtual void allocate(const Patch* patch, const IntVector& boundary) = 0;
-
-  virtual void getSizeInfo(std::string& elems, unsigned long& totsize, void*& ptr) const = 0;
+  virtual void getSizeInfo( std::string& elems, unsigned long& totsize, void*& ptr ) const = 0;
 
   // used to get size info of the underlying data; this is for host-->device variable copy
   virtual size_t getDataSize() const = 0;
@@ -133,30 +136,41 @@ public:
   // used to copy Variables to contiguous buffer prior to bulk host-->device copy
   virtual bool copyOut(void* dst) const = 0;
 
-  virtual void copyPointer(Variable&) = 0;
+  virtual void copyPointer( Variable& ) = 0;
 
   // Only affects grid variables
-  virtual void offsetGrid(const IntVector& /*offset*/);
+  virtual void offsetGrid( const IntVector& /*offset*/ );
 
   virtual RefCounted* getRefCounted() = 0;
 
+
 protected:
+
   Variable();
 
-private:    
-  Variable(const Variable&);
-  Variable& operator=(const Variable&);
 
-  // Compresses the string pointed to by pUncompressed and but the
-  // resulting compressed data into the string pointed to by pBuffer.
-  // Returns the pointer to whichever one is shortest and erases the
-  // other one.
-  std::string* gzipCompress(std::string* pUncompressed, std::string* pBuffer);
-  bool d_foreign;
-  //signals of the variable is valid, an mpi variable is not valid until mpi has been recieved
-  bool d_valid;
+private:
+
+  // eliminate copy, assignment and move
+  Variable( const Variable & )            = delete;
+  Variable& operator=( const Variable & ) = delete;
+  Variable( Variable && )                 = delete;
+  Variable& operator=( Variable && )      = delete;
+
+  // Compresses the string pointed to by pUncompressed and but the resulting
+  // compressed data into the string pointed to by pBuffer.
+  // Returns the pointer to whichever one is shortest and erases the  other one.
+  std::string* gzipCompress( std::string* pUncompressed
+                           , std::string* pBuffer
+                           );
+
+  // states that the variable is from another node - these variables (ghost cells, slabs, corners) are communicated via MPI
+  bool d_foreign {false};
+
+  // signals that the variable is valid, an MPI variable is not valid until MPI has been received
+  bool d_valid {true};
 };
 
-} // End namespace Uintah
+} // namespace Uintah
 
-#endif
+#endif // CORE_GRID_VARIABLES_VARIABLE_H

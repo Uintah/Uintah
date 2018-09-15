@@ -22,15 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef SCI_GPERFTOOLS_DEFS_H
-#define SCI_GPERFTOOLS_DEFS_H
+#ifndef UINTAH_GPERFTOOLS_DEFS_H
+#define UINTAH_GPERFTOOLS_DEFS_H
 
 @DEF_GPERFTOOLS@
 
 #ifdef USE_GPERFTOOLS
-#  include <google/profiler.h>
-#  include <google/heap-profiler.h>
-#  include <google/heap-checker.h>
+#  include <gperftools/profiler.h>
+#  include <gperftools/heap-profiler.h>
+#  include <gperftools/heap-checker.h>
 #endif
 
 #endif
