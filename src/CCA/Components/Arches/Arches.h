@@ -66,7 +66,6 @@ namespace Uintah {
   class PhysicalConstants;
   class NonlinearSolver;
   class MPMArchesLabel;
-  class ArchesLabel;
   class ArchesParticlesHelper;
 
 class Arches : public ApplicationCommon {
@@ -77,7 +76,7 @@ public:
   enum STENCILNAME { AP, AE, AW, AN, AS, AT, AB };
   enum NUMGHOSTS {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
                   THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
-
+  
   Arches(const ProcessorGroup* myworld,
 	 const MaterialManagerP materialManager);
 
@@ -97,9 +96,6 @@ public:
 
   virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                              SchedulerP&);
-  void
-  MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched,
-                                    bool& recompile, bool doing_restart );
 
   virtual void scheduleTimeAdvance( const LevelP& level,
                                     SchedulerP&);
@@ -165,7 +161,6 @@ private:
 
   std::vector<AnalysisModule*> m_analysis_modules;
 
-  bool m_doing_restart;
   bool m_with_mpmarches;
 
   bool m_do_lagrangian_particles;

@@ -23,15 +23,15 @@
  */
 
 //----- Arches.cc ----------------------------------------------
-#include <CCA/Components/Arches/ArchesParticlesHelper.h>
-#include <Core/IO/UintahZlibUtil.h>
 #include <CCA/Components/Arches/Arches.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Arches/ArchesParticlesHelper.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/ArchesStatsEnum.h>
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <CCA/Components/Arches/KokkosSolver.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SolverInterface.h>
@@ -45,8 +45,9 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/IO/UintahZlibUtil.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DOUT.hpp>
@@ -67,7 +68,6 @@ Arches::Arches(const ProcessorGroup* myworld,
   m_MAlab               = 0;
   m_nlSolver            = 0;
   m_physicalConsts      = 0;
-  m_doing_restart       = false;
   m_with_mpmarches      = false;
 
   //lagrangian particles:
@@ -88,6 +88,12 @@ Arches::Arches(const ProcessorGroup* myworld,
 
   //     outputIfInvalidNextDelT( DELTA_T_MIN | DELTA_T_MAX );
   // checkpointIfInvalidNextDelT( DELTA_T_MIN );
+
+#ifdef ADD_PERFORMANCE_STATS 
+  m_application_stats.insert( (ApplicationStatsEnum) StableTimeStep, std::string("StableTimeStep"), "seconds", 0 );
+  
+  m_application_stats.insert( (ApplicationStatsEnum) StableTimeStepUnderflow, std::string("StableTimeStepUnderflow"), "seconds", 0 );
+#endif
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -134,8 +140,6 @@ Arches::problemSetup( const ProblemSpecP     & params,
       db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions");
     assign_unique_boundary_names( bcProbSpec );
   }
-
-  db->getWithDefault("recompileTaskgraph",  m_recompile, false);       // Is this needed? -Todd
 
   // physical constant
   m_physicalConsts = scinew PhysicalConstants();
@@ -230,7 +234,7 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   //=========== END NEW TASK INTERFACE ==============================
-  m_nlSolver->sched_initialize( level, sched, m_doing_restart );
+  m_nlSolver->sched_initialize( level, sched, isRestartTimeStep() );
 
   if( level->getIndex() != m_arches_level_index )
     return;
@@ -265,7 +269,6 @@ Arches::scheduleRestartInitialize( const LevelP& level,
 void
 Arches::restartInitialize()
 {
-  m_doing_restart = true;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -274,16 +277,6 @@ Arches::scheduleComputeStableTimeStep(const LevelP& level,
                                       SchedulerP& sched)
 {
   m_nlSolver->computeTimestep(level, sched );
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-Arches::MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched,
-                                          bool& recompile, bool doing_restart )
-{
-  if ( doing_restart ) {
-    recompile = true;
-  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -299,21 +292,11 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
   if( isRegridTimeStep() ) { // Needed for single level regridding on restarts.
-    m_doing_restart = true;  // Note, this task is called twice on a regrid.
-    m_recompile = true;
-  }
-
-  if ( m_doing_restart ) {
-    if( m_recompile ) {
-      m_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
-    }
+                             // Note, this task is called twice on a regrid.
+    m_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
   }
 
   m_nlSolver->sched_nonlinearSolve(level, sched);
-
-  if( m_doing_restart ) {
-    m_doing_restart = false;
-  }
 }
 
 //--------------------------------------------------------------------------------------------------
