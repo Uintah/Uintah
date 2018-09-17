@@ -364,11 +364,10 @@ AMRSimulationController::run()
     AllocatorSetDefaultTagLineNumber( m_application->getTimeStep() );
 #endif
 
-    // Various components can request a recompile including the
-    // in-situ which will set the m_recompile_taskgraph flag.
-    m_recompile_taskgraph =
-      ( m_recompile_taskgraph ||
-        m_application->needRecompile( m_current_gridP ) ||
+    // Various components can request a recompile including the in
+    // situ which will set the m_recompile_taskgraph flag directly.
+    m_recompile_taskgraph |=
+      ( m_application->needRecompile( m_current_gridP ) ||
         m_output->needRecompile( m_current_gridP ) ||
         m_loadBalancer->needRecompile( m_current_gridP ) ||
         (m_regridder && m_regridder->needRecompile( m_current_gridP )) );
@@ -420,7 +419,7 @@ AMRSimulationController::run()
         DOUT(dbg_barrier, mesg.str())
       }
     }
-
+   
     // ARS - CAN THIS BE SCHEDULED??
     m_output->writeto_xml_files( m_current_gridP );
 

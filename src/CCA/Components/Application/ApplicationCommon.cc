@@ -121,7 +121,7 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   m_appReductionVars[ endSimulation_name ] = new
     ApplicationReductionVariable( endSimulation_name, bool_or_vartype::getTypeDescription() );
  
-  m_application_stats.insert( CarcassCount, std::string("CarcassCount"), "Carcasses", 0 );
+  // m_application_stats.insert( DummyEnum, std::string("DummyEnum"), "DummyEnum", 0 );
 }
 
 ApplicationCommon::~ApplicationCommon()
@@ -271,7 +271,7 @@ void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
   ProblemSpecP tmp_ps;
   std::string flag;
 
-  unsigned int output = 0, checkpoint = 0;
+  ValidateFlag output = 0, checkpoint = 0;
 
   // When restarting use this delta T value
   if( !time_ps->get( "override_restart_delt", m_delTOverrideRestart) ) {
@@ -419,7 +419,7 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
                                            DataWarehouse  * old_dw,
                                            DataWarehouse  * new_dw )
 {
-  unsigned int validDelT = 0;
+  ValidateFlag validDelT = 0;
   
   // The goal of this task is to line up the delT across all levels.
   // If the coarse delT already exists (the one without an associated
@@ -734,35 +734,6 @@ ApplicationCommon::recomputeDelT(const double delT)
 
 //______________________________________________________________________
 //
-bool
-ApplicationCommon::needRecompile( const GridP& /*grid*/)
-{
-#ifdef HAVE_VISIT
-  // Check all of the application variables that might require the task
-  // graph to be recompiled.
-  for( unsigned int i=0; i<getUPSVars().size(); ++i )
-  {
-    ApplicationInterface::interactiveVar &var = getUPSVars()[i];
-    
-    if( var.modified && var.recompile )
-    {
-      m_recompile = true;
-      break;
-    }
-  }
-#endif
-  
-  if( m_recompile ) {
-    m_recompile = false;
-    return true;
-  }
-  else {
-    return false;
-  }
-}
-
-//______________________________________________________________________
-//
 void
 ApplicationCommon::prepareForNextTimeStep()
 {
@@ -857,7 +828,7 @@ ApplicationCommon::setNextDelT( double delT )
 
 //______________________________________________________________________
 //
-unsigned int
+ValidateFlag
 ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 {
   // NOTE: This check is performed BEFORE the simulation time is
@@ -881,7 +852,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
   header << "at time step " << m_timeStep
          << " and sim time " << m_simTime + m_delT << " : ";
       
-  unsigned int invalid = 0;
+  ValidateFlag invalid = 0;
 
   // Check to see if the next delT was increased too much over the
   // current delT
@@ -1064,9 +1035,10 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
   if( g_deltaT_prevalidate_sum && level == 0 )
   {
     // Gather all of the bits where the threshold was exceeded.
-    int invalidAll;
+    ValidateFlag invalidAll;
     
-    Uintah::MPI::Reduce( &invalid, &invalidAll, 1, MPI_INT, MPI_BOR, 0, d_myworld->getComm() );
+    Uintah::MPI::Reduce( &invalid, &invalidAll, 1, MPI_UNSIGNED_CHAR, MPI_BOR,
+			 0, d_myworld->getComm() );
 
     // Only report the summary on rank 0. One line for each instance
     // where the threshold was exceeded.
@@ -1176,7 +1148,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 //
 // Flag for outputing or checkpointing if the next delta is invalid
 void
-ApplicationCommon::outputIfInvalidNextDelT( unsigned int flag )
+ApplicationCommon::outputIfInvalidNextDelT( ValidateFlag flag )
 {
   m_outputIfInvalidNextDelTFlag = flag;
 
@@ -1185,7 +1157,7 @@ ApplicationCommon::outputIfInvalidNextDelT( unsigned int flag )
 }
 
 void
-ApplicationCommon::checkpointIfInvalidNextDelT( unsigned int flag )
+ApplicationCommon::checkpointIfInvalidNextDelT( ValidateFlag flag )
 {
   m_checkpointIfInvalidNextDelTFlag = flag;
 

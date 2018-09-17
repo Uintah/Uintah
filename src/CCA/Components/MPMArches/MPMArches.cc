@@ -97,8 +97,6 @@ MPMArches::MPMArches(const ProcessorGroup* myworld,
 #endif
   d_arches      = scinew Arches(myworld, m_materialManager);
   d_SMALL_NUM = 1.e-100;
-  nofTimesteps = 0;
-  d_doingRestart = false;
 }
 
 // ****************************************************************************
@@ -263,7 +261,6 @@ void MPMArches::outputProblemSpec(ProblemSpecP& root_ps)
 void
 MPMArches::restartInitialize()
 {
-  d_doingRestart = true;
   d_arches->restartInitialize();
 }
 
@@ -1099,17 +1096,6 @@ void MPMArches::scheduleTimeAdvance( const LevelP & level,
   //   sched->get_dw(1)->get( simTimeVar, Mlb->simulationTimeLabel );
   // int simTime = simTimeVar;
 
-  nofTimesteps++ ;
-  // note: this counter will only get incremented each
-  // time the taskgraph is recompiled
-
-  //  //  if (nofTimesteps < 2 && !d_restart) {
-  //  if (simTime < 1.0E-10) {
-  //    m_recompile = true;
-  //  }
-  //  else
-  //    m_recompile = false;
-
   d_mpm->scheduleApplyExternalLoads(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
   d_mpm->scheduleComputeHeatExchange(       sched, patches, mpm_matls);
@@ -1154,11 +1140,6 @@ void MPMArches::scheduleTimeAdvance( const LevelP & level,
   // to proceed independently with their solution
   // Arches steps are identical with those in single-material code
   // once exchange terms are determined
-
-  if ( d_doingRestart ) {
-    d_arches->MPMArchesIntrusionSetupForResart( level, sched, m_recompile, d_doingRestart );
-    d_doingRestart = false;
-  }
 
   d_arches->scheduleTimeAdvance( level, sched );
 
@@ -1602,18 +1583,6 @@ void MPMArches::scheduleComputeVoidFracMPM(SchedulerP& sched,
 
   int zeroGhostCells = 0;
 
-  //  double simTime = m_materialManager->getElapsedSimTime();
-
-  // simTime_vartype simTimeVar(0);
-  // if( sched->get_dw(0) && sched->get_dw(0)->exists( Mlb->simulationTimeLabel ) )
-  //   sched->get_dw(0)->get( simTimeVar, Mlb->simulationTimeLabel );
-  // else if( sched->get_dw(1) && sched->get_dw(1)->exists( Mlb->simulationTimeLabel ) )
-  //   sched->get_dw(1)->get( simTimeVar, Mlb->simulationTimeLabel );
-  // int simTime = simTimeVar;
-
-  //  bool recalculateVoidFrac = false;
-  //  if (simTime < 1.0e-10 || !d_stationarySolid) recalculateVoidFrac = true;
-
   t->requires(Task::OldDW, Mlb->simulationTimeLabel);
   
   t->requires(Task::NewDW, d_MAlb->cVolumeLabel,
@@ -1622,9 +1591,6 @@ void MPMArches::scheduleComputeVoidFracMPM(SchedulerP& sched,
               arches_matls->getUnion(), Ghost::None, zeroGhostCells);
   t->requires(Task::OldDW, d_MAlb->solid_fraction_CCLabel,
               mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
-
-  //  if (simTime < 1.0E-10)
-  //    m_recompile = true;
 
   t->computes(d_MAlb->solid_fraction_CCLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->void_frac_MPM_CCLabel, arches_matls->getUnion());
@@ -1993,18 +1959,6 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
                       this, &MPMArches::computeVoidFrac);
 
   int zeroGhostCells = 0;
-
-  //  double simTime = m_materialManager->getElapsedSimTime();
-
-  // simTime_vartype simTimeVar(0);
-  // if( sched->get_dw(0) && sched->get_dw(0)->exists( Mlb->simulationTimeLabel ) )
-  //   sched->get_dw(0)->get( simTimeVar, Mlb->simulationTimeLabel );
-  // else if( sched->get_dw(1) && sched->get_dw(1)->exists( Mlb->simulationTimeLabel ) )
-  //   sched->get_dw(1)->get( simTimeVar, Mlb->simulationTimeLabel );
-  // int simTime = simTimeVar;
-
-  // if (simTime < 1.0E-10)
-  //   m_recompile = true;
 
   if (d_useCutCell)
     t->requires(Task::NewDW, d_MAlb->void_frac_CutCell_CCLabel,

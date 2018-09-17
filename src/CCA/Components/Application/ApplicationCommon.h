@@ -228,7 +228,7 @@ WARNING
     virtual void prepareForNextTimeStep();
 
     // Asks the application if it needs to be recompiled.
-    virtual bool needRecompile( const GridP & grid );
+    virtual bool needRecompile( const GridP & grid ) { return false; };
 
     // Labels for access value in the data warehouse.
     virtual const VarLabel* getTimeStepLabel() const { return m_timeStepLabel; }
@@ -324,8 +324,8 @@ WARNING
     virtual void   setWallTimeMax( double val ) { m_wallTimeMax = val; }
     virtual double getWallTimeMax() const { return m_wallTimeMax; }
 
-    virtual void     outputIfInvalidNextDelT( unsigned int flag );
-    virtual void checkpointIfInvalidNextDelT( unsigned int flag );
+    virtual void     outputIfInvalidNextDelT( ValidateFlag flag );
+    virtual void checkpointIfInvalidNextDelT( ValidateFlag flag );
 
   private:
     // The classes are private because only the top level application
@@ -343,7 +343,7 @@ WARNING
 
     virtual void         setNextDelT( double delT );
     virtual double       getNextDelT() const { return m_delTNext; }
-    virtual unsigned int validateNextDelT( double &delTNext, unsigned int level );
+    virtual ValidateFlag validateNextDelT( double &delTNext, unsigned int level );
     
     //////////
     virtual   void setSimTime( double simTime );
@@ -378,21 +378,19 @@ WARNING
     Regridder       * m_regridder    {nullptr};
     Output          * m_output       {nullptr};
 
-    bool m_recompile {false};
-
     // Use a map to store the reduction variables. 
     std::map< std::string, ApplicationReductionVariable* > m_appReductionVars;
     
-    enum VALIDATE
+    enum VALIDATE_ENUM  // unsigned char
     {
-      DELTA_T_MAX_INCREASE     = 0x0001,
-      DELTA_T_MIN              = 0x0002,
-      DELTA_T_MAX              = 0x0004,
-      DELTA_T_INITIAL_MAX      = 0x0008,
+      DELTA_T_MAX_INCREASE     = 0x01,
+      DELTA_T_MIN              = 0x02,
+      DELTA_T_MAX              = 0x04,
+      DELTA_T_INITIAL_MAX      = 0x08,
 
-      CLAMP_TIME_TO_OUTPUT     = 0x0010,
-      CLAMP_TIME_TO_CHECKPOINT = 0x0020,
-      CLAMP_TIME_TO_MAX        = 0x0040
+      CLAMP_TIME_TO_OUTPUT     = 0x10,
+      CLAMP_TIME_TO_CHECKPOINT = 0x20,
+      CLAMP_TIME_TO_MAX        = 0x40
     };
 
   private:
@@ -441,15 +439,15 @@ WARNING
 
     double m_wallTimeMax{0};         // Maximum wall time.
   
-    unsigned int     m_outputIfInvalidNextDelTFlag{0};
-    unsigned int m_checkpointIfInvalidNextDelTFlag{0};
+    ValidateFlag     m_outputIfInvalidNextDelTFlag{0};
+    ValidateFlag m_checkpointIfInvalidNextDelTFlag{0};
 
   protected:
     
     MaterialManagerP m_materialManager{nullptr};
 
     ReductionInfoMapper< ApplicationStatsEnum,
-                         double > m_application_stats;    
+                         double > m_application_stats;
     
   private:
     ApplicationCommon(const ApplicationCommon&);

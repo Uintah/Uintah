@@ -79,7 +79,8 @@ WARNING
   class DebugStream;
   class Dout;
   
-
+  typedef unsigned char ValidateFlag;
+  
   class ApplicationInterface : public UintahParallelPort {
 
     // NOTE: ONLY CS infrasture should be a friend class - the actual
@@ -272,7 +273,7 @@ WARNING
     enum ApplicationStatsEnum {
       // Add additional stat enums that are used outside of the
       // infrastructure (i.e. the models or applications).
-      CarcassCount = 99
+      DummyEnum = 999
     };
 
     virtual ReductionInfoMapper< ApplicationStatsEnum,
@@ -319,8 +320,8 @@ WARNING
     virtual void   setWallTimeMax( double val ) = 0;
     virtual double getWallTimeMax() const = 0;
 
-    virtual void     outputIfInvalidNextDelT( unsigned int flag ) = 0;
-    virtual void checkpointIfInvalidNextDelT( unsigned int flag ) = 0;
+    virtual void     outputIfInvalidNextDelT( ValidateFlag flag ) = 0;
+    virtual void checkpointIfInvalidNextDelT( ValidateFlag flag ) = 0;
     
     // The member methods are private as the child application should
     // ONLY get/set these values via the data warehouse.
