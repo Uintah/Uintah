@@ -321,14 +321,14 @@ KOKKOSTESTS = [
    ("kokkos-xy-scalar"                  , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar.ups"                    , 1   , "All"   , ["exactComparison"]),
    ("kokkos-xy-scalar-MMSBC"            , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar-MMSBC.ups"              , 1   , "All"   , ["exactComparison"]),
    ("kokkos-xy-scalar-handoff"          , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar-handoff.ups"            , 1   , "All"   , ["exactComparison"]),
-   ("problem3_Shunn_mms-x"              , "kokkos_solver_tests/Verification/variableDensity/problem3_Shunn_mms-x.ups"           , 1   , "All"   , ["exactComparison"]),
+   ("problem3_Shunn_mms-x"              , "kokkos_solver_tests/Verification/variableDensity/problem3_Shunn_mms-x.ups"           , 4   , "All"   , ["exactComparison"]),
    ("isotropic_kokkos_wale"             , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_wale.ups"             , 1   , "All"   , ["exactComparison", "no_restart"]),
    ("isotropic_kokkos_dynSmag_packed"   , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_packed.ups"   , 1   , "All"   , ["exactComparison", "no_restart"]),
    ("isotropic_kokkos_dynSmag_unpacked" , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_unpacked.ups" , 1   , "All"   , ["exactComparison", "no_restart"]),
    ("char_modelps"                      , "kokkos_solver_tests/Verification/particleModels/char_modelps.ups"                    , 1   , "All"   , ["exactComparison"]),
    ("dqmom_example_char"                , "kokkos_solver_tests/Verification/particleModels/dqmom_example_char.ups"              , 1   , "All"   , ["exactComparison"]),
    ("dqmom_example"                     , "kokkos_solver_tests/dqmom_example.ups"                                               , 1   , "All"   , ["exactComparison"]),
-   ("OFC_mom"                           , "kokkos_solver_tests/Verification/intrusions/OFC_mom.ups"                             , 1   , "All"   , ["exactComparison"]),
+   ("OFC_mom"                           , "kokkos_solver_tests/Verification/intrusions/OFC_mom.ups"                             , 3   , "All"   , ["exactComparison"]),
 ]
 
 KOKKOSCOALTESTS = [
