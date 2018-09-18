@@ -19,8 +19,8 @@ TaskAssignedExecutionSpace DensityStar::loadTaskComputeBCsFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &DensityStar::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &DensityStar::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DensityStar::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &DensityStar::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &DensityStar::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -30,7 +30,7 @@ TaskAssignedExecutionSpace DensityStar::loadTaskInitializeFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &DensityStar::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &DensityStar::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DensityStar::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &DensityStar::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -40,7 +40,7 @@ TaskAssignedExecutionSpace DensityStar::loadTaskEvalFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &DensityStar::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &DensityStar::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DensityStar::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &DensityStar::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -49,6 +49,7 @@ TaskAssignedExecutionSpace DensityStar::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &DensityStar::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &DensityStar::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &DensityStar::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
 
@@ -140,13 +141,13 @@ DensityStar::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  CCVariable<double>& rhoStar = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_densityStar );
-  constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density );
+  auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_label_densityStar );
+  auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double, MemSpace>( m_label_density );
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
     rhoStar(i,j,k)   = rho(i,j,k);
   });
 
@@ -164,11 +165,15 @@ DensityStar::register_timestep_init( std::vector<ArchesFieldContainer::VariableI
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-DensityStar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+DensityStar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  CCVariable<double>& rhoStar = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_densityStar );
-  constCCVariable<double>& old_rhoStar = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_densityStar );
-  rhoStar.copyData(old_rhoStar);
+  auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_label_densityStar );
+  auto old_rhoStar = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >( m_label_densityStar );
+
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for(exObj,range, KOKKOS_LAMBDA(int i, int j, int k){
+  rhoStar(i,j,k)=old_rhoStar(i,j,k);
+  });
 
 }
 
@@ -191,15 +196,15 @@ DensityStar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
-  constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
-  constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
+  auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >("x-mom");
+  auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >("y-mom");
+  auto zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace >("z-mom");
 
-  constCCVariable<double>& old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density,ArchesFieldContainer::OLDDW);
-  CCVariable<double>& rho = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_density );
-  CCVariable<double>& rhoStar = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_densityStar );
+  auto old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace  >( m_label_density,ArchesFieldContainer::OLDDW);
+  auto rho = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace  >( m_label_density );
+  auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace  >( m_label_densityStar );
 
   const int time_substep = tsk_info->get_time_substep();
   const double dt = tsk_info->get_dt();
@@ -209,15 +214,17 @@ void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
   const double area_NS = DX.x()*DX.z();
   const double area_TB = DX.x()*DX.y();
   const double vol       = DX.x()*DX.y()*DX.z();
+  const double alpha =_alpha[time_substep];
+  const double beta = _beta[time_substep];
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  Uintah::parallel_for(exObj,range, KOKKOS_LAMBDA(int i, int j, int k){
 
     rhoStar(i,j,k)   = rho(i,j,k) - ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
                                       area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
                                       area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) )) * dt / vol;
 
-    rhoStar(i,j,k) = _alpha[time_substep] * old_rho(i,j,k) + _beta[time_substep] * rhoStar(i,j,k);
+    rhoStar(i,j,k) =  alpha * old_rho(i,j,k) +  beta * rhoStar(i,j,k);
 
     rho(i,j,k)  = rhoStar(i,j,k); // I am copy density guess in density
 

@@ -157,6 +157,7 @@ TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskTimestepInitFunctionPoin
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &UnweightVariable<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &UnweightVariable<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &UnweightVariable<T>::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
 

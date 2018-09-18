@@ -280,6 +280,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   TaskAssignedExecutionSpace assignedExecutionSpace{};
 
   std::vector<std::string> taskNames(arches_tasks.size());
+  std::vector<int> taskExecSpace(arches_tasks.size());
 
   int icount=0;
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
@@ -326,6 +327,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
         break;
     }
+    taskExecSpace[icount]=temp;
     icount++;
     if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE && assignedExecutionSpace != temp && temp != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE) {
       archesTasksMixMemSpaces = true;
@@ -389,7 +391,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       if (archesTasksMixMemSpaces) {
         std::cout << std::endl << " WARNING Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space." << std::endl << std::endl;
         for (int i=0; i<taskNames.size(); i++){
-            std::cout <<taskNames[i] << " \n";
+            std::cout <<taskNames[i] << " using execution space enum ->  "<< taskExecSpace[i]   <<" \n";
          } 
         throw InvalidValue("Error: Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space.",__FILE__,__LINE__);
       }

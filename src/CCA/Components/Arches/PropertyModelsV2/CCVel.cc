@@ -162,7 +162,7 @@ CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execu
   auto w_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);
 
   Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
+    Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       u_cc(i,j,k)=old_u_cc(i,j,k);
       v_cc(i,j,k)=old_v_cc(i,j,k);
       w_cc(i,j,k)=old_w_cc(i,j,k);

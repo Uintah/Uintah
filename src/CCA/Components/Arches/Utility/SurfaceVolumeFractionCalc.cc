@@ -9,8 +9,8 @@ TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskComputeBCsFunction
 {
   return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &SurfaceVolumeFractionCalc::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &SurfaceVolumeFractionCalc::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &SurfaceVolumeFractionCalc::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &SurfaceVolumeFractionCalc::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &SurfaceVolumeFractionCalc::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -29,8 +29,8 @@ TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskEvalFunctionPointe
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &SurfaceVolumeFractionCalc::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &SurfaceVolumeFractionCalc::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &SurfaceVolumeFractionCalc::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &SurfaceVolumeFractionCalc::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &SurfaceVolumeFractionCalc::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -106,21 +106,19 @@ SurfaceVolumeFractionCalc::register_initialize( ArchesVIVector& variable_registr
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
   typedef CCVariable<double> T;
 
-  T& cc_vf = tsk_info->get_uintah_field_add<T>("volFraction");
-  SFCXVariable<double>& fx_vf = tsk_info->get_uintah_field_add<SFCXVariable<double> >("fx_volume_fraction");
-  SFCYVariable<double>& fy_vf = tsk_info->get_uintah_field_add<SFCYVariable<double> >("fy_volume_fraction");
-  SFCZVariable<double>& fz_vf = tsk_info->get_uintah_field_add<SFCZVariable<double> >("fz_volume_fraction");
+  auto cc_vf = tsk_info->get_uintah_field_add<T, double, MemSpace>("volFraction");
+  auto fx_vf = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace >("fx_volume_fraction");
+  auto fy_vf = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace >("fy_volume_fraction");
+  auto fz_vf = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >("fz_volume_fraction");
 
-  cc_vf.initialize(1.0);
-  fx_vf.initialize(1.0);
-  fy_vf.initialize(1.0);
-  fz_vf.initialize(1.0);
+  parallel_initialize(exObj,1.0, cc_vf,fx_vf,fy_vf,fz_vf);
 
   //Clean out all intrusions that don't intersect with this patch:
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   for ( auto i = m_intrusions.begin(); i != m_intrusions.end(); i++ ){
 
     std::vector<GeometryPieceP> intersecting_geometry;
@@ -139,19 +137,13 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
       if ( !intersecting_box.degenerate() ){
 
         intersecting_geometry.push_back(geom);
-
-        for ( CellIterator icell = patch->getExtraCellIterator(); !icell.done(); icell++ ){
-
-          IntVector c = *icell;
-
-          Point p = patch->cellPosition( *icell );
-          if ( geom->inside(p) ){
-
+        parallel_for(exObj,range, KOKKOS_LAMBDA (int i,int j,int k){
+            Point p = patch->cellPosition(IntVector(i,j,k) );
+            if ( geom->inside(p) ){ // GPU portability challenge
             //PCELL
-            cc_vf[c] = 0.0;
-
-          }
-        }
+            cc_vf(i,j,k) = 0.0;
+            }
+        });
       }
     }
 
@@ -172,7 +164,7 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
         //Get the iterator
          Uintah::ListOfCellsIterator& cell_iter  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-      parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           cc_vf(i,j,k)= 0.0;
         });
 
@@ -193,7 +185,7 @@ SurfaceVolumeFractionCalc::register_timestep_init( ArchesVIVector& variable_regi
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject){
+SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj){
 
   auto cc_vol_frac = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("volFraction");
   auto cc_vol_frac_old = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >("volFraction");
@@ -208,7 +200,7 @@ SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoMana
   auto fz_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace >("fz_volume_fraction");
   
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-  parallel_for( executionObject, range, KOKKOS_LAMBDA (int i,int j,int k){
+  parallel_for( exObj, range, KOKKOS_LAMBDA (int i,int j,int k){
   cc_vol_frac(i,j,k)=cc_vol_frac_old(i,j,k);
   fx_vol_frac(i,j,k)=fx_vol_frac_old(i,j,k);
   fy_vol_frac(i,j,k)=fy_vol_frac_old(i,j,k);

@@ -36,7 +36,7 @@ TaskAssignedExecutionSpace PressureEqn::loadTaskInitializeFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &PressureEqn::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &PressureEqn::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &PressureEqn::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &PressureEqn::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -147,27 +147,25 @@ PressureEqn::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();
   const double area_NS = DX.x()*DX.z();
   const double area_TB = DX.x()*DX.y();
 
-  CCVariable<Stencil7>& Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
-  CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
-  CCVariable<double>& x = tsk_info->get_uintah_field_add<CCVariable<double> >(m_pressure_name);
-  CCVariable<double>& guess = tsk_info->get_uintah_field_add<CCVariable<double> >("guess_press");
+  auto Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace >("A_press");
+  auto b = tsk_info->get_uintah_field_add<CCVariable<double>,double , MemSpace>("b_press");
+  auto x = tsk_info->get_uintah_field_add<CCVariable<double>,double , MemSpace>(m_pressure_name);
+  auto guess = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >("guess_press");
 
-  b.initialize(0.0);
-  x.initialize(0.0);
-  guess.initialize(0.0);
+
 
 
 
   //const double dt = tsk_info->get_dt();
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  Uintah::parallel_for( exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
     Stencil7& A = Apress(i,j,k);
     A.e = 0.0;
     A.w = 0.0;
@@ -175,11 +173,14 @@ void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
     A.s = 0.0;
     A.t = 0.0;
     A.b = 0.0;
+    b(i,j,k)=0.0;
+    x(i,j,k)=0.0;
+    guess(i,j,k)=0.0;
 
   });
 
    Uintah::BlockRange range2(patch->getCellLowIndex(), patch->getCellHighIndex() );
-   Uintah::parallel_for( range2, [&](int i, int j, int k){
+   Uintah::parallel_for(exObj, range2, KOKKOS_LAMBDA(int i, int j, int k){
 
    Stencil7& A = Apress(i,j,k);
 

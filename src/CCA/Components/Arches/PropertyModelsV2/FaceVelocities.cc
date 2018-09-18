@@ -59,6 +59,7 @@ TaskAssignedExecutionSpace FaceVelocities::loadTaskTimestepInitFunctionPointers(
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &FaceVelocities::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &FaceVelocities::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &FaceVelocities::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
    //return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE ; // No task (not supported currently)
 }
