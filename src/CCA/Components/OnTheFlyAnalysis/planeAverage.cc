@@ -45,9 +45,6 @@
 #include <Core/OS/Dir.h> // for MKDIR
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Util/Timers/Timers.hpp>
-
-#include <sci_defs/visit_defs.h>
 
 #include <dirent.h>
 #include <iostream>
@@ -66,7 +63,6 @@ static DebugStream do_cout("planeAverage", "OnTheFlyAnalysis", "planeAverage deb
 //______________________________________________________________________
 /*
      This module computes the spatial average of a variable over a plane
-
 TO DO:
 
 
@@ -77,15 +73,15 @@ planeAverage::planeAverage( const ProcessorGroup    * myworld,
                             const ProblemSpecP      & module_spec )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
-  d_matl_set = nullptr;
+  d_matl_set  = nullptr;
   d_zero_matl = nullptr;
-  d_lb = scinew planeAverageLabel();
+  d_lb        = scinew planeAverageLabel();
 }
 
 //__________________________________
 planeAverage::~planeAverage()
 {
-  do_cout << " Doing: destorying MinMax " << endl;
+  do_cout << " Doing: destorying planeAverage " << endl;
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
@@ -95,12 +91,6 @@ planeAverage::~planeAverage()
 
   VarLabel::destroy(d_lb->lastCompTimeLabel);
   VarLabel::destroy(d_lb->fileVarsStructLabel);
-
-  // delete min/max reduction variables
-  for ( unsigned int i =0 ; i < d_analyzeVars.size(); i++ ) {
-    VarLabel::destroy( d_analyzeVars[i].reductionMinLabel );
-    VarLabel::destroy( d_analyzeVars[i].reductionMaxLabel );
-  }
 
   delete d_lb;
 }
@@ -113,14 +103,14 @@ void planeAverage::problemSetup(const ProblemSpecP&,
                                 std::vector<std::vector<const VarLabel* > > &PState,
                                 std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  do_cout << "Doing problemSetup \t\t\t\tMinMax" << endl;
+  do_cout << "Doing problemSetup \t\t\t\tplaneAverage" << endl;
 
   int numMatls  = m_materialManager->getNumMatls();
 
-  d_lb->lastCompTimeLabel =  VarLabel::create("lastCompTime_minMax",
+  d_lb->lastCompTimeLabel =  VarLabel::create("lastCompTime_planeAvg",
                                               max_vartype::getTypeDescription() );
 
-  d_lb->fileVarsStructLabel = VarLabel::create("FileInfo_minMax",
+  d_lb->fileVarsStructLabel = VarLabel::create("FileInfo_planeAvg",
                                                PerPatch<FileInfoP>::getTypeDescription() );
 
   //__________________________________
@@ -131,9 +121,10 @@ void planeAverage::problemSetup(const ProblemSpecP&,
 
   ProblemSpecP vars_ps = m_module_spec->findBlock("Variables");
   if (!vars_ps){
-    throw ProblemSetupException("MinMax: Couldn't find <Variables> tag", __FILE__, __LINE__);
+    throw ProblemSetupException("planeAverage: Couldn't find <Variables> tag", __FILE__, __LINE__);
   }
 
+  //__________________________________
   // find the material to extract data from.  Default is matl 0.
   // The user can use either
   //  <material>   atmosphere </material>
@@ -156,6 +147,19 @@ void planeAverage::problemSetup(const ProblemSpecP&,
   m.push_back(defaultMatl);
   map<string,string> attribute;
 
+
+  //__________________________________
+  //  Plane orientation
+  string orient;
+  m_module_spec->require("planeOrientation", orient);
+  if ( orient == "XY" ){
+    d_planeOrientation = XY;
+  } else if ( orient == "XZ" ) {
+    d_planeOrientation = XZ;
+  } else if ( orient == "YZ" ) {
+    d_planeOrientation = YZ;
+  }
+
   //__________________________________
   //  Now loop over all the variables to be analyzed
 
@@ -168,13 +172,13 @@ void planeAverage::problemSetup(const ProblemSpecP&,
     string labelName = attribute["label"];
     VarLabel* label = VarLabel::find(labelName);
     if( label == nullptr ){
-      throw ProblemSetupException("MinMax: analyze label not found: " + labelName , __FILE__, __LINE__);
+      throw ProblemSetupException("planeAverage: analyze label not found: " + labelName , __FILE__, __LINE__);
     }
 
     // Bulletproofing - The user must specify the matl for single matl
     // variables
     if ( labelName == "press_CC" && attribute["matl"].empty() ){
-      throw ProblemSetupException("MinMax: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
+      throw ProblemSetupException("planeAverage: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
     }
 
     // Read in the optional level index
@@ -193,7 +197,7 @@ void planeAverage::problemSetup(const ProblemSpecP&,
 
     // Bulletproofing
     if(matl < 0 || matl > numMatls){
-      throw ProblemSetupException("MinMax: analyze: Invalid material index specified for a variable", __FILE__, __LINE__);
+      throw ProblemSetupException("planeAverage: Invalid material index specified for a variable", __FILE__, __LINE__);
     }
 
     m.push_back(matl);
@@ -237,37 +241,27 @@ void planeAverage::problemSetup(const ProblemSpecP&,
 
     if(throwException){
       ostringstream warn;
-      warn << "ERROR:AnalysisModule:MinMax: ("<<label->getName() << " "
+      warn << "ERROR:AnalysisModule:planeAverage: ("<<label->getName() << " "
            << td->getName() << " ) has not been implemented" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
 
     //__________________________________
-    //  Create the min and max VarLabels for the reduction variables
-    string VLmax = labelName + "_max";
-    string VLmin = labelName + "_min";
-    VarLabel* meMax = nullptr;
-    VarLabel* meMin = nullptr;
-
+    //  Create the max VarLabels for the reduction variables
+   
     // double
     if( subType == TypeDescription::double_type ) {
-      meMax = VarLabel::create( VLmax, max_vartype::getTypeDescription() );
-      meMin = VarLabel::create( VLmin, min_vartype::getTypeDescription() );
     }
     // Vectors
     if( subType == TypeDescription::Vector ) {
-      meMax = VarLabel::create( VLmax, maxvec_vartype::getTypeDescription() );
-      meMin = VarLabel::create( VLmin, minvec_vartype::getTypeDescription() );
     }
 
     varProperties me;
     me.label = label;
     me.matl  = matl;
     me.level = level;
-    me.reductionMaxLabel = meMax;
-    me.reductionMinLabel = meMin;
     d_analyzeVars.push_back(me);
-
+    
   }
 
   //__________________________________
@@ -301,6 +295,7 @@ void planeAverage::scheduleInitialize(SchedulerP   & sched,
   t->computes(d_lb->fileVarsStructLabel, d_zero_matl);
   sched->addTask(t, level->eachPatch(),  d_matl_set);
 }
+
 //______________________________________________________________________
 void planeAverage::initialize(const ProcessorGroup  *,
                               const PatchSubset     * patches,
@@ -323,14 +318,14 @@ void planeAverage::initialize(const ProcessorGroup  *,
 
     new_dw->put(fileInfo,    d_lb->fileVarsStructLabel, 0, patch);
 
-    if(patch->getGridIndex() == 0){   // only need to do this once
+    if( patch->getGridIndex() == 0 ){   // only need to do this once
       string udaDir = m_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
       if ( check == nullptr){
         ostringstream warn;
-        warn << "ERROR:MinMax  The main uda directory does not exist. ";
+        warn << "ERROR:planeAverage  The main uda directory does not exist. ";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
       closedir(check);
@@ -341,25 +336,23 @@ void planeAverage::initialize(const ProcessorGroup  *,
 //
 void planeAverage::restartInitialize()
 {
-// need to do something here
-//  new_dw->put(max_vartype(0.0), d_lb->lastCompTimeLabel);
 }
 
 //______________________________________________________________________
-void planeAverage::scheduleDoAnalysis(SchedulerP    & sched,
-                                      const LevelP  & level)
+void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
+                                      const LevelP & level)
 {
   printSchedule(level,do_cout,"planeAverage::scheduleDoAnalysis");
 
   // Tell the scheduler to not copy this variable to a new AMR grid and
   // do not checkpoint it.
-  sched->overrideVariableBehavior("FileInfo_minMax", false, false, false, true, true);
+  sched->overrideVariableBehavior("FileInfo_planeAvg", false, false, false, true, true);
 
   Ghost::GhostType gn = Ghost::None;
   const int L_indx = level->getIndex();
 
   //__________________________________
-  //  computeMinMax task;
+  //  compute the planar average task;
   Task* t0 = scinew Task( "planeAverage::computeAverage",
                      this,&planeAverage::computeAverage );
 
@@ -376,7 +369,7 @@ void planeAverage::scheduleDoAnalysis(SchedulerP    & sched,
       // bulletproofing
       if( label == nullptr ){
         string name = label->getName();
-        throw InternalError("MinMax: scheduleDoAnalysis label not found: "
+        throw InternalError("planeAverage: scheduleDoAnalysis label not found: "
                            + name , __FILE__, __LINE__);
       }
 
@@ -385,9 +378,6 @@ void planeAverage::scheduleDoAnalysis(SchedulerP    & sched,
       matSubSet->addReference();
 
       t0->requires( Task::NewDW, label, matSubSet, gn, 0 );
-
-      t0->computes( d_analyzeVars[i].reductionMinLabel, level.get_rep(), matSubSet );
-      t0->computes( d_analyzeVars[i].reductionMaxLabel, level.get_rep(), matSubSet );
 
       if(matSubSet && matSubSet->removeReference()){
         delete matSubSet;
@@ -398,7 +388,7 @@ void planeAverage::scheduleDoAnalysis(SchedulerP    & sched,
   sched->addTask( t0, level->eachPatch(), d_matl_set );
 
   //__________________________________
-  //  Write min/max to a file
+  //  Write max to a file
   // Only write data on patch 0 on each level
 
   Task* t1 = scinew Task( "planeAverage::doAnalysis",
@@ -416,9 +406,6 @@ void planeAverage::scheduleDoAnalysis(SchedulerP    & sched,
       MaterialSubset* matSubSet = scinew MaterialSubset();
       matSubSet->add( d_analyzeVars[i].matl );
       matSubSet->addReference();
-
-      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMinLabel, level.get_rep(), matSubSet );
-      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMaxLabel, level.get_rep(), matSubSet );
     }
   }
 
@@ -443,8 +430,6 @@ void planeAverage::computeAverage(const ProcessorGroup * pg,
                                   DataWarehouse        * old_dw,
                                   DataWarehouse        * new_dw)
 {
-  Timers::Simple timer;
-  timer.start();
 
   // the user may want to restart from an uda that wasn't using the DA module
   // This logic allows that.
@@ -461,11 +446,14 @@ void planeAverage::computeAverage(const ProcessorGroup * pg,
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
 
-  // Get the delta t from the warehouse so time includes the current
+  // Get the delta T from the warehouse so time includes the current
   // time step.
   DataWarehouse * dw = m_scheduler->get_dw(0);
 
   delt_vartype delt_var;
+
+cout << " now: " << now << " delT: " << delt_var << endl;
+
   if( dw->exists( m_delTLabel ) ) {
     m_scheduler->get_dw(0)->get( delt_var, m_delTLabel );
     now += delt_var;
@@ -477,7 +465,7 @@ void planeAverage::computeAverage(const ProcessorGroup * pg,
 
   double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
   //__________________________________
-  // compute min/max if it's time to write
+  // compute plane average if it's time to write
   if( now >= nextWriteTime){
 
     const LevelP level = getLevelP(patches);
@@ -494,7 +482,7 @@ void planeAverage::computeAverage(const ProcessorGroup * pg,
 
         // bulletproofing
         if( label == nullptr ){
-          throw InternalError("MinMax: analyze label not found: "
+          throw InternalError("planeAverage: analyze label not found: "
                                + labelName , __FILE__, __LINE__);
         }
 
@@ -504,7 +492,7 @@ void planeAverage::computeAverage(const ProcessorGroup * pg,
           continue;
         }
 
-        printTask(patches, patch,do_cout,"Doing planeAverage::computeMinMax");
+        printTask(patches, patch,do_cout,"Doing planeAverage::computeAverage");
 
         const TypeDescription* td = label->typeDescription();
         const TypeDescription* subtype = td->getSubType();
@@ -526,7 +514,7 @@ void planeAverage::computeAverage(const ProcessorGroup * pg,
               break;
             }
             default:
-              throw InternalError("MinMax: invalid data type", __FILE__, __LINE__);
+              throw InternalError("planeAverage: invalid data type", __FILE__, __LINE__);
             }
             break;
 
@@ -544,7 +532,7 @@ void planeAverage::computeAverage(const ProcessorGroup * pg,
               break;
             }
             default:
-              throw InternalError("MinMax: invalid data type", __FILE__, __LINE__);
+              throw InternalError("planeAverage: invalid data type", __FILE__, __LINE__);
             }
             break;
           case TypeDescription::SFCXVariable: {         // SFCX double
@@ -564,28 +552,23 @@ void planeAverage::computeAverage(const ProcessorGroup * pg,
           }
           default:
             ostringstream warn;
-            warn << "ERROR:AnalysisModule:MinMax: ("<< label->getName() << " "
+            warn << "ERROR:AnalysisModule:planeAverage: ("<< label->getName() << " "
                  << td->getName() << " ) has not been implemented" << endl;
             throw InternalError(warn.str(), __FILE__, __LINE__);
         }
       }  // VarLabel loop
     }  // patches
   }  // time to write data
-
-  // m_materialManager->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
 }
 
 //______________________________________________________________________
-//  This task writes out the min/max of each VarLabel to a separate file.
+//  This task writes out the plane average of each VarLabel to a separate file.
 void planeAverage::doAnalysis(const ProcessorGroup* pg,
                               const PatchSubset   * patches,
                               const MaterialSubset*,
                               DataWarehouse       * old_dw,
                               DataWarehouse       * new_dw)
 {
-  Timers::Simple timer;
-  timer.start();
-
   const Level* level = getLevel(patches);
   const LevelP levelP = getLevelP(patches);
   int L_indx = level->getIndex();
@@ -597,14 +580,11 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  // double now = m_materialManager->getElapsedSimTime();
-
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
 
-  // Get the delta t from the warehouse so time includes the current
-  // time step.
+  // Get the delta t from the warehouse so time includes the current time step.
   DataWarehouse * dw = m_scheduler->get_dw(0);
 
   delt_vartype delt_var;
@@ -657,7 +637,7 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
 
         // bulletproofing
         if(label == nullptr){
-          throw InternalError("MinMax: analyze label not found: "
+          throw InternalError("planeAverage: analyze label not found: "
                           + labelName , __FILE__, __LINE__);
         }
 
@@ -669,51 +649,50 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
         }
 
         //__________________________________
-        // create the directory structure
-        string minmaxDir = m_output->getOutputLocation() + "/MinMax";
+        //
+        // create the directory structure including sub directories
+        string udaDir = m_output->getOutputLocation();
+   
+        timeStep_vartype timeStep_var;      
+        old_dw->get( timeStep_var, m_timeStepLabel );
+        int ts = timeStep_var;
 
-        if( d_isDirCreated.count(minmaxDir) == 0){
-          createDirectory(minmaxDir);
-          d_isDirCreated.insert(minmaxDir);
-        }
-
+        ostringstream tname;
+        tname << "t" << std::setw(5) << std::setfill('0') << ts;
+        string timestep = tname.str();
+        
         ostringstream li;
-        li<<"l"<<level->getIndex();
+        li<<"L-"<<level->getIndex();
         string levelIndex = li.str();
-        string levelDir = minmaxDir + "/" + levelIndex;
-
-        if( d_isDirCreated.count(levelDir) == 0){
-          createDirectory(levelDir);
-          d_isDirCreated.insert(levelDir);
-        }
-
+        
+        string path = "planeAverage/" + timestep + "/" + levelIndex;
+        
+        if( d_isDirCreated.count( path ) == 0 ){
+          createDirectory( 0777, udaDir,  path );
+          d_isDirCreated.insert( path );
+        } 
+        
         ostringstream fname;
-        fname << levelDir << "/" << labelName << "_" << d_analyzeVars[i].matl;
+        fname << udaDir << "/" << path << "/" << labelName << "_" << d_analyzeVars[i].matl;
         string filename = fname.str();
-
+        
         //__________________________________
         //  Open the file pointer
         //  if it's not in the fileInfo struct then create it
         FILE *fp;
-
         if( myFiles.count(filename) == 0 ){
-          createFile(filename, fp, levelIndex);
+          createFile( filename, fp, levelIndex );
           myFiles[filename] = fp;
 
         } else {
           fp = myFiles[filename];
         }
         if (!fp){
-          throw InternalError("\nERROR:dataAnalysisModule:MinMax:  failed opening file"+filename,__FILE__, __LINE__);
+          throw InternalError("\nERROR:dataAnalysisModule:planeAverage:  failed opening file: "+filename,__FILE__, __LINE__);
         }
-
 
         //__________________________________
         //  Now get the data from the DW and write it to the file
-        string VLmax = labelName + "_max";
-        string VLmin = labelName + "_min";
-        const VarLabel* meMin = d_analyzeVars[i].reductionMinLabel;
-        const VarLabel* meMax = d_analyzeVars[i].reductionMaxLabel;
 
         int indx = d_analyzeVars[i].matl;
 
@@ -723,32 +702,20 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
         switch(subtype->getType()) {
 
           case TypeDescription::double_type:{
-            max_vartype maxQ;
-            min_vartype minQ;
+            double aveQ;
 
-            new_dw->get( maxQ, meMax, level, indx);
-            new_dw->get( minQ, meMin, level, indx);
-
-            fprintf( fp, "%16.15E     %16.15E    %16.15E\n",now, (double)minQ, (double)maxQ );
+            fprintf( fp, "%16.15E     %16.15E    %16.15E\n",now, (double)aveQ );
            break;
           }
           case TypeDescription::Vector: {
-            maxvec_vartype maxQ;
-            minvec_vartype minQ;
-
-            new_dw->get( maxQ, meMax, level, indx);
-            new_dw->get( minQ, meMin, level, indx);
-
-            Vector maxQ_V = maxQ;
-            Vector minQ_V = minQ;
-
-            fprintf( fp, "%16.15E     [%16.15E %16.15E %16.15E]   [%16.15E %16.15E %16.15E]\n",now,
-                          minQ_V.x(), minQ_V.y(), minQ_V.z(),maxQ_V.x(), maxQ_V.y(), maxQ_V.z() );
+           
+            fprintf( fp, "%16.15E     [%16.15E %16.15E %16.15E] \n",now,
+                          aveQ_V.x(), aveQ_V.y(), aveQ_V.z() );
 
             break;
           }
         default:
-          throw InternalError("MinMax: invalid data type", __FILE__, __LINE__);
+          throw InternalError("planeAverage: invalid data type", __FILE__, __LINE__);
         }
         fflush(fp);
       }  // label names
@@ -764,68 +731,75 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
     new_dw->put(fileInfo,                   d_lb->fileVarsStructLabel, 0, patch);
     new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel );
   }  // patches
-
-  // m_materialManager->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
 }
 
-
 //______________________________________________________________________
-//  Find the average of the VarLabel 
+//  Find the average of the VarLabel
 template <class Tvar, class Ttype>
-void planeAverage::findAverage( DataWarehouse*  new_dw,
+void planeAverage::findAverage( DataWarehouse * new_dw,
                                 const VarLabel* varLabel,
                                 const int       indx,
-                                const Patch*    patch,
+                                const Patch   * patch,
                                 GridIterator    iter )
 {
+  cout <<"   " << varLabel->getName() << endl;
 
-  const Level* level = patch->getLevel();
   Tvar Q_var;
-  Ttype Q;
   new_dw->get(Q_var, varLabel, indx, patch, Ghost::None, 0);
+  
+  IntVector lo;
+  IntVector hi;
+  planeIterator( iter, lo, hi );
 
-  Ttype maxQ( Q_var[*iter] );  // initial values
-  Ttype minQ( maxQ );
-
-  IntVector maxIndx( *iter );
-  IntVector minIndx( *iter );
-
-  for (;!iter.done();iter++) {
-    IntVector c = *iter;
-    Q = Q_var[c];
-
-    // use Max & Min instead of std::max & min
-    // These functions can handle Vectors
-    maxQ = Max(maxQ,Q);
-    minQ = Min(minQ,Q);
-
-    if ( Q == maxQ ){
-      maxIndx = c;
+  cout <<"   iter.begin: " << iter.begin() << " lo: " << lo << endl;
+  cout <<"   iter.end:   " << iter.end() <<   " hi: " << hi << endl;
+  
+  for ( auto z = lo.z(); z<hi.z(); z++ ) {          // This is the loop over planes
+  
+    Ttype sum( 0 );  // initial values
+      
+    for ( auto y = lo.y(); y<hi.y(); y++ ) {        // cells in the plane
+      for ( auto x = lo.x(); x<hi.x(); x++ ) {
+        IntVector c(x,y,z);
+        
+        switch( d_planeOrientation ){
+          case XY:{
+            c = IntVector(x,y,z);
+            break;
+          }
+          case XZ:{
+            c = IntVector(x,z,y);
+            break;
+          }
+          case YZ:{
+            c = IntVector(y,z,x);
+            break;
+          }
+          default:
+            break;
+        }
+//        cout << "   c: " << c << endl;
+        sum = sum + Q_var[c];
+      }
     }
-    if (Q == minQ ){
-      minIndx = c;
-    }
+
+    const string labelName = varLabel->getName();
+    do_cout << labelName << "plane: " << z << " sum: " <<sum << endl;
+    
+    
+//    string VLmax = labelName + "_max";
+//    const VarLabel* meMax = VarLabel::find( VLmax );
+
+//    new_dw->put( ReductionVariable<Ttype, Reductions::Max<Ttype> >(maxQ), meMax, level, indx );
+
   }
-
-  //Point maxPos = level->getCellPosition(maxIndx);
-  //Point minPos = level->getCellPosition(minIndx);
-
-  // do_cout << varLabel->getName() << " max: " << maxQ << " " << maxIndx << " maxPos " << maxPos << endl;
-  // do_cout << "         min: " << minQ << " " << minIndx << " minPos " << minPos << endl;
-
-  const string labelName = varLabel->getName();
-  string VLmax = labelName + "_max";
-  string VLmin = labelName + "_min";
-  const VarLabel* meMin = VarLabel::find( VLmin );
-  const VarLabel* meMax = VarLabel::find( VLmax );
-
-  new_dw->put( ReductionVariable<Ttype, Reductions::Max<Ttype> >(maxQ), meMax, level, indx );
-  new_dw->put( ReductionVariable<Ttype, Reductions::Min<Ttype> >(minQ), meMin, level, indx );
 }
 
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
-void planeAverage::createFile(string& filename,  FILE*& fp, string& levelIndex)
+void planeAverage::createFile(string  & filename,  
+                              FILE*   & fp, 
+                              string  & levelIndex)
 {
   // if the file already exists then exit.  The file could exist but not be owned by this processor
   ifstream doExists( filename.c_str() );
@@ -835,26 +809,68 @@ void planeAverage::createFile(string& filename,  FILE*& fp, string& levelIndex)
   }
 
   fp = fopen(filename.c_str(), "w");
-  fprintf( fp,"#The reported min & max values are for this level %s \n", levelIndex.c_str() );
-  fprintf( fp,"#Time                      min                       max\n" );
-
-  do_cout << d_myworld->myRank() << " MinMax:Created file " << filename << endl;
-
-  cout << "OnTheFlyAnalysis MinMax results are located in " << filename << endl;
-}
-//______________________________________________________________________
-// create the directory structure   dirName/LevelIndex
-void
-planeAverage::createDirectory(string& dirName)
-{
-  DIR *check = opendir(dirName.c_str());
-  if ( check == nullptr ) {
-    do_cout << d_myworld->myRank() << " MinMax:Making directory " << dirName << endl;
-    MKDIR( dirName.c_str(), 0777 );
-  } else {
-    closedir(check);
+  
+  if (!fp){
+    perror("Error opening file:");
+    throw InternalError("\nERROR:dataAnalysisModule:planeAverage:  failed opening file: " + filename,__FILE__, __LINE__);
   }
+  
+  fprintf( fp,"# Level-%s \n", levelIndex.c_str() );
+  fprintf( fp,"# Time            Plane location            Average\n" );
+  cout << "OnTheFlyAnalysis planeAverage results are located in " << filename << endl;
 }
+
+//______________________________________________________________________
+// create a series of sub directories below the rootpath.
+int
+planeAverage::createDirectory( mode_t mode, 
+                               const std::string & rootPath,  
+                               std::string       & subDirs )
+{
+  struct stat st;
+
+  do_cout << d_myworld->myRank() << " planeAverage:Making directory " << subDirs << endl;
+  
+  for( std::string::iterator iter = subDirs.begin(); iter != subDirs.end(); ){
+
+    string::iterator newIter = std::find( iter, subDirs.end(), '/' );
+    std::string newPath = rootPath + "/" + std::string( subDirs.begin(), newIter);
+
+    // does path exist
+    if( stat( newPath.c_str(), &st) != 0 ){ 
+    
+      int rc = mkdir( newPath.c_str(), mode);
+      
+      // bulletproofing     
+      if(  rc != 0 && errno != EEXIST ){
+        cout << "cannot create folder [" << newPath << "] : " << strerror(errno) << endl;
+        throw InternalError("\nERROR:dataAnalysisModule:planeAverage:  failed creating dir: "+newPath,__FILE__, __LINE__);
+      }
+    }
+    else {      
+      if( !S_ISDIR( st.st_mode ) ){
+        errno = ENOTDIR;
+        cout << "path [" << newPath << "] not a dir " << endl;
+        return -1;
+      } else {
+        cout << "path [" << newPath << "] already exists " << endl;
+      }
+    }
+
+    iter = newIter;
+    if( newIter != subDirs.end() ){
+      ++ iter;
+    }
+  }
+  return 0;
+}
+
+
+
+
+
+
+
 //______________________________________________________________________
 //
 bool planeAverage::isRightLevel(const int myLevel, const int L_indx, const LevelP& level)
@@ -867,5 +883,44 @@ bool planeAverage::isRightLevel(const int myLevel, const int L_indx, const Level
     return true;
   }else{
     return false;
+  }
+}
+//______________________________________________________________________
+//
+void planeAverage::planeIterator( const GridIterator& patchIter,
+                                  IntVector & lo,
+                                  IntVector & hi )
+{
+  IntVector patchLo = patchIter.begin();
+  IntVector patchHi = patchIter.end();
+
+  switch( d_planeOrientation ){
+    case XY:{
+      lo = patchLo;
+      hi = patchHi;
+      break;
+    }
+    case XZ:{
+      lo.x( patchLo.x() );
+      lo.y( patchLo.z() );
+      lo.z( patchLo.y() );
+
+      hi.x( patchHi.x() );
+      hi.y( patchHi.z() );
+      hi.z( patchHi.y() );
+      break;
+    }
+    case YZ:{
+      lo.x( patchLo.y() );
+      lo.y( patchLo.z() );
+      lo.z( patchLo.x() );
+
+      hi.x( patchHi.y() );
+      hi.y( patchHi.z() );
+      hi.z( patchHi.x() );
+      break;
+    }
+    default:
+      break;
   }
 }

@@ -117,8 +117,10 @@ ______________________________________________________________________*/
     void createFile(std::string & filename,
                     FILE*       & fp,
                     std::string & levelIndex);
-
-    void createDirectory(std::string& lineName);
+    
+    int createDirectory( mode_t mode, 
+                    const std::string & rootPath, 
+                    std::string       & path );
 
     template <class Tvar, class Ttype>
     void findAverage( DataWarehouse  * new_dw,
@@ -126,6 +128,11 @@ ______________________________________________________________________*/
                       const int        indx,
                       const Patch    * patch,
                       GridIterator     iter );
+
+
+    void planeIterator( const GridIterator& patchIter,
+                        IntVector & lo,
+                        IntVector & hi );
 
 
     // general labels
@@ -145,8 +152,6 @@ ______________________________________________________________________*/
 
     struct varProperties {
       VarLabel* label;
-      VarLabel* reductionMinLabel;
-      VarLabel* reductionMaxLabel;
       int matl;
       int level;
     };
@@ -158,6 +163,9 @@ ______________________________________________________________________*/
     std::set<std::string> d_isDirCreated;
     MaterialSubset*  d_zero_matl;
     PatchSet*        d_zeroPatch;
+
+    enum orientation { XY, XZ, YZ };        // plane orientation
+    orientation d_planeOrientation;
   };
 }
 
