@@ -741,21 +741,23 @@ inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::val
 parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
                      BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
-  ReductionType tmp = red;
+  ReductionType tmp0 = red;
 
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
   const int kb = r.begin(2); const int ke = r.end(2);
 
   // Manual approach
-  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), [=](int k, ReductionType & tmp) {
+  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(1), [=](int k, ReductionType & tmp1) {
+    ReductionType tmp2;
     for (int j=jb; j<je; ++j) {
     for (int i=ib; i<ie; ++i) {
-      functor(i,j,k,tmp);
+      functor(i,j,k,tmp2);
+      tmp1=min(tmp2,tmp1);
     }}
-  }, Kokkos::Experimental::Min<ReductionType>(tmp));
+  }, Kokkos::Experimental::Min<ReductionType>(tmp0));
 
-  red = tmp;
+  red = tmp0;
 
 }
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
