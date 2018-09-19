@@ -568,7 +568,7 @@ void visit_SimTimeMaxCallback(char *val, void *cbdata)
   float oldValue = appInterface->getSimTimeMax();
   float newValue = atof(val);
 
-  if( newValue <= sim->time )
+  if( newValue <= appInterface->getSimTime() )
   {
     std::stringstream msg;
     msg << "Visit libsim - the value (" << newValue << ") for "
@@ -626,7 +626,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = appInterface->getDelTMin();
       double maxValue = appInterface->getDelTMax();
-      oldValue = sim->delt_next;
+      oldValue = appInterface->getNextDelT();
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -639,8 +639,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
         return;
       }
 
-      dw->override(delt_vartype(newValue), appInterface->getDelTLabel());
-      visit_VarModifiedMessage( sim, "DeltaTNext", oldValue, newValue );
+      appInterface->setNextDelT( newValue );
     }
     break;
   case 2:  // DeltaTFactor

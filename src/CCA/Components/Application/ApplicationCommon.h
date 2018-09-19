@@ -341,21 +341,13 @@ WARNING
                                         const GridP & grid,
                                         const int totalFine );
 
-    virtual void         setNextDelT( double delT );
+    virtual void         setNextDelT( double delT, bool restart = false );
     virtual double       getNextDelT() const { return m_delTNext; }
     virtual ValidateFlag validateNextDelT( double &delTNext, unsigned int level );
     
     //////////
     virtual   void setSimTime( double simTime );
     virtual double getSimTime() const { return m_simTime; };
-
-    virtual   void setSimTimeStart( double simTime )
-    {
-      m_simTimeStart = simTime;
-      setSimTime(simTime);
-    }
-    
-    virtual double getSimTimeStart() const { return m_simTimeStart; }
     
     // Returns the integer time step index of the simulation.  All
     // simulations start with a time step number of 0.  This value is
@@ -428,7 +420,6 @@ WARNING
     double m_delTMaxIncrease{0};     // Maximum delta T increase.
 
     double m_simTime{0.0};           // Current sim time
-    double m_simTimeStart{0.0};      // Starting sim time    
     double m_simTimeMax{0};          // Maximum simulation time
     bool   m_simTimeEndAtMax{false}; // End the simulation at exactly this sim time.
     bool   m_simTimeClampToOutput{false}; // Clamp the simulation time to the next output or checkpoint

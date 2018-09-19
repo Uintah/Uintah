@@ -80,6 +80,10 @@ WARNING
   class Dout;
   
   typedef unsigned char ValidateFlag;
+
+#ifdef HAVE_VISIT
+  struct visit_simulation_data;
+#endif
   
   class ApplicationInterface : public UintahParallelPort {
 
@@ -103,6 +107,17 @@ WARNING
 
     friend class Switcher;
 
+#ifdef HAVE_VISIT
+    friend void visit_UpdateSimData( visit_simulation_data *sim, 
+                                     GridP currentGrid,
+                                     bool first, bool last );
+    
+    friend void visit_SetTimeValues( visit_simulation_data *sim );
+    friend void visit_SetDeltaTValues( visit_simulation_data *sim );
+    friend void visit_SimTimeMaxCallback(char *val, void *cbdata);
+    friend void visit_DeltaTVariableCallback(char *val, void *cbdata);
+#endif
+    
   public:
     ApplicationInterface();
     virtual ~ApplicationInterface();
@@ -334,14 +349,11 @@ WARNING
                                         const GridP & grid,
                                         const int totalFine ) = 0;
 
-    virtual   void setNextDelT( double delT ) = 0;
+    virtual   void setNextDelT( double delT, bool restart = false ) = 0;
     virtual double getNextDelT() const = 0;
     
     virtual   void setSimTime( double simTime ) = 0;
     virtual double getSimTime() const = 0;
-    
-    virtual   void setSimTimeStart( double simTime ) = 0;
-    virtual double getSimTimeStart() const = 0;
     
     // Returns the integer time step index of the simulation.  All
     // simulations start with a time step number of 0.  This value is

@@ -710,20 +710,16 @@ bool visit_CheckState( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
-                          double time,  unsigned int cycle,
-                          double delt, double delt_next,
                           bool first, bool last )
 {
-  // ApplicationInterface* appInterface =
-  //   sim->simController->getApplicationInterface();
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
 
   // Update all of the simulation grid and time dependent variables.
   sim->gridP     = currentGrid;
 
-  sim->time      = time;
-  sim->cycle     = cycle;
-  sim->delt      = delt;
-  sim->delt_next = delt_next;
+  sim->time      = appInterface->getSimTime();
+  sim->cycle     = appInterface->getTimeStep();
   
   sim->first     = first;
 

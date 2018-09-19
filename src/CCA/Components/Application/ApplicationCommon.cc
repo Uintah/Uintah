@@ -253,15 +253,18 @@ void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
 
   // Sim time limits
 
-  // Initial simulation time
-  time_ps->require( "initTime", m_simTimeStart );
+  // Initial simulation time - will be written to the data warehouse
+  // when SimulationController::timeStateSetup() is called.
+  time_ps->require( "initTime", m_simTime );
+
   // Maximum simulation time
   time_ps->require( "maxTime",  m_simTimeMax );
+
   // End the simulation at exactly the maximum simulation time
   if ( !time_ps->get( "end_at_max_time_exactly", m_simTimeEndAtMax ) ) {
     m_simTimeEndAtMax = false;
   }
-    
+
   // Output time
   if ( !time_ps->get( "clamp_time_to_output", m_simTimeClampToOutput ) ) {
     m_simTimeClampToOutput = false;
@@ -793,32 +796,34 @@ ApplicationCommon::setDelTForAllLevels( SchedulerP& scheduler,
 
 //______________________________________________________________________
 //
-// This method is called only at restart -
-// see SimulationController::timeStateSetup().
+// This method is called only at restart - see
+// SimulationController::timeStateSetup()  or by the in situ - see
+// visit_DeltaTVariableCallback().
 
 void
-ApplicationCommon::setNextDelT( double delT )
+ApplicationCommon::setNextDelT( double delT, bool restart )
 {
   // Restart - Check to see if the user has set a restart delT.
-  if (m_delTOverrideRestart != 0)
+  if( restart && m_delTOverrideRestart )
   {
     proc0cout << "Overriding restart delT " << m_delT << " with "
-              << m_delTOverrideRestart << "\n";
+	      << m_delTOverrideRestart << "\n";
     
     m_delTNext = m_delTOverrideRestart;
-
+    
     m_scheduler->getLastDW()->override(delt_vartype(m_delTNext), m_delTLabel);
   }
-
+    
   // Restart - Otherwise get the next delta T from the archive.
-  else if( m_scheduler->getLastDW()->exists( m_delTLabel ) )
+  else if( restart && m_scheduler->getLastDW()->exists( m_delTLabel ) )
   {
     delt_vartype delt_var;
     m_scheduler->getLastDW()->get( delt_var, m_delTLabel );
     m_delTNext = delt_var;
   }
-
-  // Restart - All else fails use the previous delta T.
+  
+  // All else fails use the delta T passed in. If from a restart it
+  // would be the value used at the last time step. 
   else
   {
     m_delTNext = delT;

@@ -60,24 +60,16 @@
 
 #include <pwd.h>
 
-#define SECONDS_PER_MINUTE        60.0
-#define SECONDS_PER_HOUR        3600.0
-#define SECONDS_PER_DAY        86400.0
-#define SECONDS_PER_WEEK      604800.0
-#define SECONDS_PER_YEAR    31536000.0
-
-
 namespace {
 
 Uintah::Dout g_sim_stats(         "SimulationStats"           , "SimulationController", "sim general stats debug info"             , true  );
 Uintah::Dout g_sim_stats_mem(     "SimulationStatsMem"        , "SimulationController", "sim memory stats debug info"              , true  );
-Uintah::Dout g_sim_stats_time(    "SimulationStatsTime"       , "SimulationController", "sim time stats debug info"                , false );
-Uintah::Dout g_sim_ctrl_dbg(      "SimulationController"      , "SimulationController", "general debug info"                       , false );
+
 Uintah::Dout g_comp_timings(      "ComponentTimings"          , "SimulationController", "aggregated component timings per timestep", false );
 Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", "SimulationController", "individual component timings"             , false );
 
-Uintah::Dout g_app_timings(      "ApplicationTimings"          , "SimulationController", "aggregated application timing stats per timestep", true );
-Uintah::Dout g_indv_app_timings( "IndividualApplicationTimings", "SimulationController", "individual application timings"                  , true );
+Uintah::Dout g_app_timings(      "ApplicationTimings"          , "SimulationController", "aggregated application timing stats per timestep", false );
+Uintah::Dout g_indv_app_timings( "IndividualApplicationTimings", "SimulationController", "individual application timings"                  , false );
 
 }
 
@@ -479,15 +471,13 @@ SimulationController::timeStateSetup()
   // Restarting so initialize time state using the archive data.
   if( m_restarting ) {
 
-    DOUT(g_sim_ctrl_dbg, "Restarting... loading data");
-
-    double simTimeStart;
+    double simTime;
     
     m_restart_archive->restartInitialize( m_restart_index,
                                           m_current_gridP,
                                           m_scheduler->get_dw(1),
                                           m_loadBalancer,
-                                          &simTimeStart );
+                                          &simTime );
 
     // Set the time step to the restart time step which is immediately
     // written to the DW.
@@ -495,12 +485,12 @@ SimulationController::timeStateSetup()
 
     // Set the simulation time to the restart simulation time which is
     // immediately written to the DW.
-    m_application->setSimTimeStart( simTimeStart );
+    m_application->setSimTime( simTime );
 
     // Set the next delta T which is immediately written to the DW.
 
-    // Note the old delta t is really the next delta t
-    m_application->setNextDelT( m_restart_archive->getOldDelt( m_restart_index ) );
+    // Note the old delta t is the delta t used for that time step.
+    m_application->setNextDelT( m_restart_archive->getOldDelt( m_restart_index ), m_restarting );
 
     // Tell the scheduler the generation of the re-started simulation.
     // (Add +1 because the scheduler will be starting on the next
@@ -512,11 +502,17 @@ SimulationController::timeStateSetup()
     // delete m_restart_archive;
   }
   else {
-    // Set the time step to 0 which is immediately written to the DW.
-    m_application->setTimeStep( 0 );
+    // Set the default time step to which is immediately written to the DW.
+    m_application->setTimeStep( m_application->getTimeStep() );
 
-    // Set the simulation time to 0 which is immediately written to the DW.
-    m_application->setSimTimeStart( 0 );
+    // Set the default simulation time which is immediately written to the DW.
+    m_application->setSimTime( m_application->getSimTime() );
+
+    // Note the above seems back asswards but the initial sim time
+    // must be set in the UPS file, the time step will always default
+    // to 0. However, it is read in the problem setup stage and the
+    // data warehouse is not yet available. So the above gets the
+    // values in the data warehouse.
   }
 }
 
@@ -537,7 +533,7 @@ SimulationController::finalSetup()
   if( m_restarting ) {
     Dir dir( m_from_dir );
     m_output->restartSetup( dir, 0, m_restart_timestep,
-                            m_application->getSimTimeStart(),
+                            m_application->getSimTime(),
                             m_restart_from_scratch, m_restart_remove_old_dir );
   }
 
@@ -639,7 +635,8 @@ SimulationController::ReportStats(const ProcessorGroup*,
   }
   
   // Update the moving average and get the wall time for this time step.
-  Timers::nanoseconds timeStep = m_wall_timers.updateExpMovingAverage();
+  // Timers::nanoseconds timeStepTime =
+    m_wall_timers.updateExpMovingAverage();
 
   // Print the stats for this time step
   if( d_myworld->myRank() == 0 && g_sim_stats ) {
@@ -663,7 +660,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
             << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
             // << "All Time steps= " << std::setw(12) << m_wall_timers.TimeStep().seconds()
-            // << "Current Time Step= " << std::setw(12) << timeStep.seconds()
+            // << "Current Time Step= " << std::setw(12) << timeStepTime.seconds()
             << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
            // << "In-situ Time = " << std::setw(12) << walltimers.InSitu().seconds()
       ;
@@ -718,62 +715,6 @@ SimulationController::ReportStats(const ProcessorGroup*,
       }
 
       message << " (on rank 0 only)";
-    }
-
-    DOUT(reportStats, message.str());
-    std::cout.flush();
-  }
-  
-  // Report on the simulation time used.
-  if( d_myworld->myRank() == 0 && g_sim_stats_time && m_num_samples ) {
-    // Ignore the first sample as that is for initialization.
-    std::ostringstream message;
-
-    double realSecondsNow = timeStep.seconds() / m_application->getDelT();
-    double realSecondsAvg = m_wall_timers.TimeStep().seconds() / (m_application->getSimTime()-m_application->getSimTimeStart());
-    
-    message << "1 simulation second takes ";
-    
-    message << std::left << std::showpoint << std::setprecision(3) << std::setw(4);
-    
-    if (realSecondsNow < SECONDS_PER_MINUTE) {
-      message << realSecondsNow << " seconds (now), ";
-    }
-    else if (realSecondsNow < SECONDS_PER_HOUR) {
-      message << realSecondsNow / SECONDS_PER_MINUTE << " minutes (now), ";
-    }
-    else if (realSecondsNow < SECONDS_PER_DAY) {
-      message << realSecondsNow / SECONDS_PER_HOUR << " hours (now), ";
-    }
-    else if (realSecondsNow < SECONDS_PER_WEEK) {
-      message << realSecondsNow / SECONDS_PER_DAY << " days (now), ";
-    }
-    else if (realSecondsNow < SECONDS_PER_YEAR) {
-      message << realSecondsNow / SECONDS_PER_WEEK << " weeks (now), ";
-    }
-    else {
-      message << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
-    }
-
-    message << std::setw(4);
-
-    if (realSecondsAvg < SECONDS_PER_MINUTE) {
-      message << realSecondsAvg << " seconds (avg) ";
-    }
-    else if (realSecondsAvg < SECONDS_PER_HOUR) {
-      message << realSecondsAvg / SECONDS_PER_MINUTE << " minutes (avg) ";
-    }
-    else if (realSecondsAvg < SECONDS_PER_DAY) {
-      message << realSecondsAvg / SECONDS_PER_HOUR << " hours (avg) ";
-    }
-    else if (realSecondsAvg < SECONDS_PER_WEEK) {
-      message << realSecondsAvg / SECONDS_PER_DAY << " days (avg) ";
-    }
-    else if (realSecondsAvg < SECONDS_PER_YEAR) {
-      message << realSecondsAvg / SECONDS_PER_WEEK << " weeks (avg) ";
-    }
-    else {
-      message << realSecondsAvg / SECONDS_PER_YEAR << " years (avg) ";
     }
 
     DOUT(reportStats, message.str());
@@ -843,7 +784,10 @@ SimulationController::ReportStats(const ProcessorGroup*,
   {
     // Ignore the first sample as that is for initialization.
     std::ostringstream message;
-    message << "Runtime performance stats" << std::endl
+    message << "Runtime performance summary stats for "
+            << "time step " << m_application->getTimeStep()
+            << " at time="  << m_application->getSimTime()
+            << std::endl
             << "  " << std::left
             << std::setw(21) << "Description"
             << std::setw(15) << "Units"
@@ -883,15 +827,18 @@ SimulationController::ReportStats(const ProcessorGroup*,
   {
     std::ostringstream message;
 
-    if( d_myworld->myRank() == 0 )
-      message << "Per proc runtime performance stats";
+    message << "--" << std::left
+            << "Rank: " << std::setw(5) << d_myworld->myRank() << " "
+            << "Runtime performance stats for "
+            << "time step " << m_application->getTimeStep()
+            << " at time="  << m_application->getSimTime();
     
-    for (unsigned int i = 0; i < m_runtime_stats.size(); ++i) {
+    for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
       if (m_runtime_stats[i] > 0) {
         if( message.str().size() )
           message << std::endl;
         message << "  " << std::left
-                << "rank: " << std::setw(5) << d_myworld->myRank() << " "
+                << "Rank: " << std::setw(5) << d_myworld->myRank() << " "
                 << std::left << std::setw(19) << m_runtime_stats.getName(i) << " ["
                 << m_runtime_stats.getUnits(i) << "]: " << m_runtime_stats[i];
       }
@@ -905,7 +852,10 @@ SimulationController::ReportStats(const ProcessorGroup*,
       g_app_timings && m_application->getApplicationStats().size() )
   {
     std::ostringstream message;
-    message << "Application performance stats" << std::endl
+    message << "Application performance summary stats for "
+            << "time step " << m_application->getTimeStep()
+            << " at time="  << m_application->getSimTime()
+            << std::endl
             << "  " << std::left
             << std::setw(21) << "Description"
             << std::setw(15) << "Units"
@@ -937,10 +887,13 @@ SimulationController::ReportStats(const ProcessorGroup*,
   {
     std::ostringstream message;
 
-    if( d_myworld->myRank() == 0 )
-      message << "Application per proc performance stats";
+    message << "--" << std::left
+            << "Rank: " << std::setw(5) << d_myworld->myRank() << " "
+            << "Application performance stats for "
+            << "time step " << m_application->getTimeStep()
+            << " at time="  << m_application->getSimTime();
     
-    for (unsigned int i = 0; i < m_application->getApplicationStats().size(); ++i) {
+    for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
       if (m_application->getApplicationStats()[i] > 0) {
         if( message.str().size() )
           message << std::endl;
@@ -1050,8 +1003,6 @@ SimulationController::ScheduleCheckInSitu( bool first )
     m_scheduler->addTask(task,
                          m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                          m_application->getMaterialManagerP()->allMaterials() );
-
-    // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << first << std::endl;
   }
 #endif      
 }
@@ -1088,24 +1039,14 @@ SimulationController::CheckInSitu( const ProcessorGroup *
     
     // Update all of the simulation grid and time dependent variables.
     visit_UpdateSimData( m_visitSimData, m_current_gridP,
-                         m_application->getSimTime(),
-                         m_application->getTimeStep(),
-                         m_application->getDelT(),
-                         m_application->getNextDelT(),
-                         first,
-                         m_application->isLastTimeStep(walltime) );
+                         first, m_application->isLastTimeStep(walltime) );
 
     // Check the state - if the return value is true the user issued
     // a termination.
     if( visit_CheckState( m_visitSimData ) ) {
-      // nothing to do ...
+      // Nothing to do because the in situ will have changed the
+      // max cycles to the current time step so Uintah will terminate.
     }
-
-    // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  "
-    //        << first << "  "
-    //        << m_application->getSimTime() << "  "
-    //        << m_application->getTimeStep() << "  "
-    //        << std::endl;
 
     // This function is no longer used as last is now used in the
     // UpdateSimData which in turn will flip the state.
