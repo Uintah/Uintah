@@ -704,11 +704,12 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
           case TypeDescription::double_type:{
             double aveQ;
 
-            fprintf( fp, "%16.15E     %16.15E    %16.15E\n",now, (double)aveQ );
+            fprintf( fp, "%16.15E     %16.15E \n",now, (double)aveQ );
            break;
           }
           case TypeDescription::Vector: {
-           
+            Vector aveQ_V;
+
             fprintf( fp, "%16.15E     [%16.15E %16.15E %16.15E] \n",now,
                           aveQ_V.x(), aveQ_V.y(), aveQ_V.z() );
 
