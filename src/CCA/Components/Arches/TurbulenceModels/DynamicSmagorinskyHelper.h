@@ -51,34 +51,41 @@ namespace Uintah { namespace ArchesCore {
         }
       }
     }
+
     template<typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT>
     void apply_zero_neumann( ExecutionObject<ExecutionSpace,MemSpace>& exObj, const Patch* patch, grid_T& var,
                              grid_CT& vol_fraction ){
 
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
-      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+      IntVector dcdp=(patch->getCellHighIndex()-patch->getCellLowIndex()); // delta cells / delta patch
 
       for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
 
         Patch::FaceType face = *itr;
         IntVector f_dir = patch->getFaceDirection(face);
 
-        for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
-          IntVector c = *iter;
-          int i=c[0];
-          int j=c[1];
-          int k=c[2];
+        // FACE EXTRA CELLS ONLY, not edge cells, not corner cells  (invalid for faces that don't have extra cells)
+        int pom=f_dir[0]+f_dir[1]+f_dir[2]; // plus or minus
+        IntVector cutEdges=IntVector(pom,pom,pom)-f_dir;
+        IntVector loVal  = (pom < 0) ?patch->getCellLowIndex()  + f_dir: patch->getCellLowIndex()  + f_dir*dcdp ; 
+        IntVector HiVal  = (pom < 0) ?patch->getCellHighIndex() + f_dir*dcdp: patch->getCellHighIndex() +f_dir; 
+
+
+        parallel_for(exObj, BlockRange(loVal,HiVal), KOKKOS_LAMBDA (int i, int j, int k){
+
           int im=i-f_dir[0];
           int jm=j-f_dir[1];
           int km=k-f_dir[2];
 
-          if ( vol_fraction(i,j,k) > 1e-10 ){
+          if ( vol_fraction(i,j,k) > 1e-10 ){ // This loop only executes over extra cells
             var(i,j,k) = var(im,jm,km);
           }
-        }
+        });
+
       }
     }
+
     template <typename T, typename CT>
     void apply_BC_rhou( const Patch* patch, T& var, CT& vel,
                           constCCVariable<double> rho, constCCVariable<double> vol_fraction  ){

@@ -20,8 +20,8 @@ TaskAssignedExecutionSpace WALE::loadTaskComputeBCsFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &WALE::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &WALE::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &WALE::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &WALE::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &WALE::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -30,8 +30,8 @@ TaskAssignedExecutionSpace WALE::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &WALE::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &WALE::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &WALE::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &WALE::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &WALE::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -50,6 +50,7 @@ TaskAssignedExecutionSpace WALE::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &WALE::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &WALE::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &WALE::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
 
@@ -127,17 +128,18 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 
   register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
   register_variable( m_turb_viscosity_name, AFC::COMPUTES, variable_registry );
+  register_variable( m_IsI_name, AFC::COMPUTES ,  variable_registry );
 
 }
 
 //---------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
-  CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
-  mu_sgc.initialize(0.0);
-  mu_turb.initialize(0.0);
+  auto mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_t_vis_name);
+  auto mu_turb = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_turb_viscosity_name);
+  auto IsI = tsk_info->get_uintah_field_add< CCVariable<double>  ,double,MemSpace >(m_IsI_name);
+  parallel_initialize(exObj,0.0, mu_sgc, mu_turb);
 
 }
 
@@ -162,8 +164,7 @@ WALE::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
 //---------------------------------------------------------------------------------
 void
 WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
-                              variable_registry, const int time_substep , const bool packed_tasks){
-
+                              variable_registry, const int time_substep, const bool packed_tasks){
   register_variable( m_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
   register_variable( m_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
   register_variable( m_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
@@ -173,8 +174,7 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_cc_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
   register_variable( m_density_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_volFraction_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-
-  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  register_variable( m_IsI_name, AFC::COMPUTES ,  variable_registry, time_substep );
   if (m_create_labels_IsI_t_viscosity) {
     register_variable( m_t_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, AFC::COMPUTES ,  variable_registry, time_substep );
@@ -241,7 +241,7 @@ void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
     double wtp = 0.0;
     double wbp = 0.0;
 
-    // x-dir
+//     x-dir
     {
       STENCIL3_1D(0);
       uep = uVel(IJK_P_);

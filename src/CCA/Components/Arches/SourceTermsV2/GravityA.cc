@@ -18,8 +18,8 @@ TaskAssignedExecutionSpace GravityA::loadTaskComputeBCsFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &GravityA::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &GravityA::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &GravityA::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &GravityA::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &GravityA::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -29,7 +29,7 @@ TaskAssignedExecutionSpace GravityA::loadTaskInitializeFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &GravityA::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &GravityA::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &GravityA::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &GravityA::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -112,34 +112,39 @@ GravityA::register_initialize( std::vector<ArchesFieldContainer::VariableInforma
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  constCCVariable<double>& density  = tsk_info->get_const_uintah_field_add<constCCVariable<double > >( m_density_label );
+  auto density  = tsk_info->get_const_uintah_field_add<constCCVariable<double >,const double, MemSpace >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
 
-  if (m_gravity[0] != 0.0) {
-    SFCXVariable<double>& gx = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_gx_label);
-    gx.initialize(0.0);
 
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - m_ref_density )*m_gravity[0];    
+  const double ref_density= m_ref_density;
+  if (m_gravity[0] != 0.0) {
+    double aGravity=m_gravity[0]; // acceleration due to gravity
+    auto gx = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace >(m_gx_label);
+    parallel_initialize(exObj,0.0,gx);
+
+    Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - ref_density )*aGravity;    
     });
 
   } else if (m_gravity[1] != 0.0) {
-    SFCYVariable<double>& gy = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_gy_label);
-    gy.initialize(0.0);
+    double aGravity=m_gravity[1]; // acceleration due to gravity
+    auto gy = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace >(m_gy_label);
+    parallel_initialize(exObj,0.0,gy);
 
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - m_ref_density )*m_gravity[1];    
+    Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - ref_density )*aGravity;    
     });
 
   } else if (m_gravity[2] != 0.0) {
-    SFCZVariable<double>& gz = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_gz_label);
-    gz.initialize(0.0);
+    double aGravity=m_gravity[2]; // acceleration due to gravity
+    auto gz = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >(m_gz_label);
+    parallel_initialize(exObj,0.0,gz);
 
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - m_ref_density )*m_gravity[2];    
+    Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - ref_density )*aGravity;    
     });
 
   }
@@ -180,34 +185,36 @@ GravityA::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  constCCVariable<double>& density  = tsk_info->get_const_uintah_field_add<constCCVariable<double > >( m_density_label );
+  auto density  = tsk_info->get_const_uintah_field_add<constCCVariable<double >, const double, MemSpace >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-
+  const double ref_density= m_ref_density;
   if (m_gravity[0] != 0.0) {
-    SFCXVariable<double>& gx = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_gx_label);
-    gx.initialize(0.0);
-
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - m_ref_density )*m_gravity[0];    
+    double aGravity=m_gravity[0]; // acceleration due to gravity
+    auto gx = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace >(m_gx_label);
+    parallel_initialize(exObj,0.0,gx);
+    Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
+      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - ref_density )*aGravity;    
     });
 
   } else if (m_gravity[1] != 0.0) {
-    SFCYVariable<double>& gy = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_gy_label);
-    gy.initialize(0.0);
+    double aGravity=m_gravity[1]; // acceleration due to gravity
+    auto gy = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace >(m_gy_label);
+    parallel_initialize(exObj,0.0,gy);
 
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - m_ref_density )*m_gravity[1];    
+    Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
+      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - ref_density )*aGravity;    
     });
 
   } else if (m_gravity[2] != 0.0) {
-    SFCZVariable<double>& gz = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_gz_label);
-    gz.initialize(0.0);
+    double aGravity=m_gravity[2]; // acceleration due to gravity
+    auto gz = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >(m_gz_label);
+    parallel_initialize(exObj,0.0,gz);
 
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - m_ref_density )*m_gravity[2];    
+    Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
+      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - ref_density )*aGravity;    
     });
 
   }
