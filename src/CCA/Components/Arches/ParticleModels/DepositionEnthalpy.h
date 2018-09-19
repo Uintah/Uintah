@@ -48,16 +48,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, const int N, MaterialManagerP materialManager ) : _task_name(task_name), _matl_index(matl_index), _Nenv(N), _materialManager(materialManager){}
+      Builder( std::string task_name, int matl_index, const int N, MaterialManagerP materialManager ) : m_task_name(task_name), m_matl_index(matl_index), _Nenv(N), _materialManager(materialManager){}
       ~Builder(){}
 
       DepositionEnthalpy* build()
-      { return scinew DepositionEnthalpy( _task_name, _matl_index, _Nenv, _materialManager ); }
+      { return scinew DepositionEnthalpy( m_task_name, m_matl_index, _Nenv, _materialManager ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
       int _Nenv;
       MaterialManagerP _materialManager;
 

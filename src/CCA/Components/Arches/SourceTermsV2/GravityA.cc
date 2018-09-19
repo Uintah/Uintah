@@ -25,9 +25,9 @@ GravityA::problemSetup( ProblemSpecP& db ){
   } else {
     throw InvalidValue("Error: Missing <PhysicalConstants> section in input file required for gravity",__FILE__,__LINE__);
   }
-  m_gx_label             = _task_name+"_x";
-  m_gy_label             = _task_name+"_y";
-  m_gz_label             = _task_name+"_z";
+  m_gx_label             = m_task_name+"_x";
+  m_gy_label             = m_task_name+"_y";
+  m_gz_label             = m_task_name+"_z";
 
   db->findBlock("reference_density")->getAttribute("value", m_ref_density);
   using namespace ArchesCore;

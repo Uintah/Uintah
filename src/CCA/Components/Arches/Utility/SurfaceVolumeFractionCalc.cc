@@ -55,7 +55,7 @@ void
 SurfaceVolumeFractionCalc::register_initialize( ArchesVIVector& variable_registry , const bool packed_tasks){
 
   for ( auto i = m_var_names.begin(); i != m_var_names.end(); i++ ){
-    register_variable( *i, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+    register_variable( *i, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
   }
 }
 
@@ -141,8 +141,8 @@ void
 SurfaceVolumeFractionCalc::register_timestep_init( ArchesVIVector& variable_registry , const bool packed_tasks){
 
   for ( auto i = m_var_names.begin(); i != m_var_names.end(); i++ ){
-    register_variable( *i, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
-    register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, _task_name );
+    register_variable( *i, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
+    register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, m_task_name );
   }
 }
 

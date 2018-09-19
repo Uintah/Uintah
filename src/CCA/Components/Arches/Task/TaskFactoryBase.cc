@@ -4,7 +4,7 @@
 
 namespace {
 
-  Uintah::Dout dbg_arches_task{"Arches_Task_DBG", "TaskFactoryBase", "print information about the scheduling and execution of Arches tasks.", false };
+  Uintah::Dout dbg_arches_task{"Arches_Task_DBG", "TaskFactoryBase", "Scheduling and execution information of Arches tasks.", false };
 
 }
 
@@ -13,7 +13,7 @@ using namespace Uintah;
 //--------------------------------------------------------------------------------------------------
 TaskFactoryBase::TaskFactoryBase( const ApplicationCommon* arches ) : m_arches(arches)
 {
-  _matl_index = 0; //Arches material
+  m_matl_index = 0; //Arches material
   _tasks.clear();
 }
 
@@ -403,7 +403,7 @@ void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index,
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, m_matl_index,
                                             variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;

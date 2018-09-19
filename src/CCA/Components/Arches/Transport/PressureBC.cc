@@ -27,7 +27,7 @@ void PressureBC::create_local_labels()
 void PressureBC::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_registry,
                                  const int time_substep, const bool pack_tasks ){
 
-  register_variable( m_press, AFC::MODIFIES, variable_registry, _task_name );
+  register_variable( m_press, AFC::MODIFIES, variable_registry, m_task_name );
 
 }
 

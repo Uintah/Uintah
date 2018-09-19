@@ -24,16 +24,16 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index, std::string var_name ) :
-        _task_name(task_name), _matl_index(matl_index), _var_name(var_name){}
+        m_task_name(task_name), m_matl_index(matl_index), _var_name(var_name){}
       ~Builder(){}
 
       WaveFormInit* build()
-      { return scinew WaveFormInit<T,CT>( _task_name, _matl_index, _var_name ); }
+      { return scinew WaveFormInit<T,CT>( m_task_name, m_matl_index, _var_name ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
       std::string _var_name;
 
     };

@@ -25,16 +25,16 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index, int Nenv ) :
-        _task_name(task_name), _matl_index(matl_index), _Nenv(Nenv){}
+        m_task_name(task_name), m_matl_index(matl_index), _Nenv(Nenv){}
       ~Builder(){}
 
       WDragModel* build()
-      { return scinew WDragModel<T>( _task_name, _matl_index, _Nenv ); }
+      { return scinew WDragModel<T>( m_task_name, m_matl_index, _Nenv ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
       int _Nenv;
 
     };
@@ -113,8 +113,8 @@ private:
   template <typename T>
   void WDragModel<T>::problemSetup( ProblemSpecP& db ){
 
-    m_model_name     = _task_name; 
-    m_gasSource_name = _task_name + "_gasSource";
+    m_model_name     = m_task_name; 
+    m_gasSource_name = m_task_name + "_gasSource";
 
     m_density_gas_name = ArchesCore::parse_ups_for_role( ArchesCore::DENSITY,   db, "density" );
     m_cc_u_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::CCUVELOCITY, db, "CCUVelocity" );
@@ -185,8 +185,8 @@ private:
   template <typename T>
   void WDragModel<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
-  register_variable( m_model_name, ArchesFieldContainer::COMPUTES, variable_registry, _task_name  );
-  register_variable( m_gasSource_name, ArchesFieldContainer::COMPUTES, variable_registry, _task_name  );
+  register_variable( m_model_name, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name  );
+  register_variable( m_gasSource_name, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name  );
 
   }
 
@@ -213,8 +213,8 @@ private:
   template <typename T>
   void WDragModel<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
-  register_variable( m_model_name, ArchesFieldContainer::COMPUTES, variable_registry, _task_name  );
-  register_variable( m_gasSource_name, ArchesFieldContainer::COMPUTES, variable_registry, _task_name  );
+  register_variable( m_model_name, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name  );
+  register_variable( m_gasSource_name, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name  );
 
   register_variable( m_cc_u_vel_name,    ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
   register_variable( m_cc_v_vel_name,    ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );

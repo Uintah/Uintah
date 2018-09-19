@@ -27,7 +27,7 @@ WallHFVariable::problemSetup( ProblemSpecP& db ){
   if ( db->findBlock("new_model"))
     _new_variables = true;
 
-  _area = _task_name + "_area";
+  _area = m_task_name + "_area";
 
 }
 
@@ -38,7 +38,7 @@ WallHFVariable::create_local_labels(){
   register_new_variable<CCVariable<double> >( _flux_y );
   register_new_variable<CCVariable<double> >( _flux_z );
   register_new_variable<CCVariable<double> >( _net_power );
-  register_new_variable<CCVariable<double> >( _task_name );
+  register_new_variable<CCVariable<double> >( m_task_name );
   register_new_variable<CCVariable<double> >( _area );
 
 }
@@ -56,7 +56,7 @@ WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableI
   register_variable( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _flux_z, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _net_power, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _area, ArchesFieldContainer::COMPUTES, variable_registry );
 
 }
@@ -68,7 +68,7 @@ WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
   CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
   CCVariable<double>& flux_z = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_z));
   CCVariable<double>& power  = *(tsk_info->get_uintah_field<CCVariable<double> >(_net_power));
-  CCVariable<double>& total  = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
+  CCVariable<double>& total  = *(tsk_info->get_uintah_field<CCVariable<double> >(m_task_name));
   CCVariable<double>& area   = *(tsk_info->get_uintah_field<CCVariable<double> >(_area));
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -92,7 +92,7 @@ WallHFVariable::register_restart_initialize( std::vector<ArchesFieldContainer::V
     register_variable( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( _flux_z, ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( _net_power, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( _area, ArchesFieldContainer::COMPUTES, variable_registry );
 
   }
@@ -106,7 +106,7 @@ WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* t
   CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
   CCVariable<double>& flux_z = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_z));
   CCVariable<double>& power  = *(tsk_info->get_uintah_field<CCVariable<double> >(_net_power));
-  CCVariable<double>& total  = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
+  CCVariable<double>& total  = *(tsk_info->get_uintah_field<CCVariable<double> >(m_task_name));
   CCVariable<double>& area   = *(tsk_info->get_uintah_field<CCVariable<double> >(_area));
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -134,7 +134,7 @@ WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
   register_variable( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _flux_z, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _net_power, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _area, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "radiationFluxE", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
   register_variable( "radiationFluxW", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
@@ -148,7 +148,7 @@ WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
   register_variable( _flux_y, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
   register_variable( _flux_z, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
   register_variable( _net_power, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( _task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
   register_variable( _area, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
 }
@@ -171,7 +171,7 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>* flux_y = tsk_info->get_uintah_field<CCVariable<double> >(_flux_y);
   CCVariable<double>* flux_z = tsk_info->get_uintah_field<CCVariable<double> >(_flux_z);
   CCVariable<double>* power  = tsk_info->get_uintah_field<CCVariable<double> >(_net_power);
-  CCVariable<double>* total  = tsk_info->get_uintah_field<CCVariable<double> >(_task_name);
+  CCVariable<double>* total  = tsk_info->get_uintah_field<CCVariable<double> >(m_task_name);
   CCVariable<double>* area   = tsk_info->get_uintah_field<CCVariable<double> >(_area);
 
   (*flux_x).initialize(0.0);
@@ -322,7 +322,7 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     constCCVariable<double>* old_flux_y = tsk_info->get_const_uintah_field<constCCVariable<double> >(_flux_y);
     constCCVariable<double>* old_flux_z = tsk_info->get_const_uintah_field<constCCVariable<double> >(_flux_z);
     constCCVariable<double>* old_power  = tsk_info->get_const_uintah_field<constCCVariable<double> >(_net_power);
-    constCCVariable<double>* old_total  = tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name);
+    constCCVariable<double>* old_total  = tsk_info->get_const_uintah_field<constCCVariable<double> >(m_task_name);
     constCCVariable<double>* old_area   = tsk_info->get_const_uintah_field<constCCVariable<double> >(_area);
 
     (*flux_x).copyData(*old_flux_x);

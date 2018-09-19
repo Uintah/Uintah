@@ -346,7 +346,7 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
   const VarLabel* x = NULL;
   const VarLabel* guess = NULL;
 
-  for ( auto i = _local_labels.begin(); i != _local_labels.end(); i++ ){
+  for ( auto i = m_local_labels.begin(); i != m_local_labels.end(); i++ ){
     if ( (*i)->getName() == "A_press" ){
       A = *i;
     } else if ( (*i)->getName() == "b_press" ){

@@ -22,16 +22,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       UnweightVariable* build()
-      { return scinew UnweightVariable<T>( _task_name, _matl_index ); }
+      { return scinew UnweightVariable<T>( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
     };
 
@@ -161,26 +161,26 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
 
   }
   //m_compute_mom = false;
-  if (_task_name == "uVel"){
+  if (m_task_name == "uVel"){
     m_eqn_class = ArchesCore::MOMENTUM;
     m_var_name = "x-mom";
-    m_un_var_name = _task_name;
+    m_un_var_name = m_task_name;
     m_un_eqn_names.push_back(m_un_var_name);
     m_eqn_names.push_back(m_var_name);
     //m_compute_mom = true;
 
-  } else if (_task_name == "vVel"){
+  } else if (m_task_name == "vVel"){
     m_eqn_class = ArchesCore::MOMENTUM;
     m_var_name = "y-mom";
-    m_un_var_name = _task_name;
+    m_un_var_name = m_task_name;
     m_un_eqn_names.push_back(m_un_var_name);
     m_eqn_names.push_back(m_var_name);
     //m_compute_mom = true;
 
-  } else if (_task_name == "wVel"){
+  } else if (m_task_name == "wVel"){
     m_eqn_class = ArchesCore::MOMENTUM;
     m_var_name = "z-mom";
-    m_un_var_name = _task_name;
+    m_un_var_name = m_task_name;
     m_un_eqn_names.push_back(m_un_var_name);
     m_eqn_names.push_back(m_var_name);
     //m_compute_mom = true;
@@ -291,7 +291,7 @@ void UnweightVariable<T>::register_compute_bcs(
     // scalar at cc
     
     if (m_eqn_class ==ArchesCore::DQMOM) {
-      register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name  );
+      register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
       for (int ieqn = istart; ieqn < iend; ieqn++ ){
         register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
         register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );

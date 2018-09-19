@@ -39,16 +39,16 @@ namespace Uintah{
     public:
 
       Builder( std::string task_name, int matl_index, std::string base_var_name, const int N ) :
-      _task_name(task_name), _matl_index(matl_index), _base_var_name(base_var_name), _N(N){}
+      m_task_name(task_name), m_matl_index(matl_index), _base_var_name(base_var_name), _N(N){}
       ~Builder(){}
 
       Constant* build()
-      { return scinew Constant<T>( _task_name, _matl_index, _base_var_name, _N ); }
+      { return scinew Constant<T>( m_task_name, m_matl_index, _base_var_name, _N ); }
 
     private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
       std::string _base_var_name;
       const int _N;
 

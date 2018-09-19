@@ -70,7 +70,7 @@ void FaceVelocities::create_local_labels(){
 //--------------------------------------------------------------------------------------------------
 void FaceVelocities::register_initialize( AVarInfo& variable_registry , const bool pack_tasks){
   for (auto iter = m_vel_names.begin(); iter != m_vel_names.end(); iter++ ){
-    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
   }
 }
 
@@ -103,11 +103,11 @@ void FaceVelocities::initialize( const Patch*, ArchesTaskInfoManager* tsk_info )
 //--------------------------------------------------------------------------------------------------
 void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
   for (auto iter = m_vel_names.begin(); iter != m_vel_names.end(); iter++ ){
-    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
+    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
   }
-  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
-  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
-  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
+  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
 }
 
 //--------------------------------------------------------------------------------------------------

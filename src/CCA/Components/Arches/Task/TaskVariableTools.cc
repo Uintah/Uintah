@@ -2,9 +2,11 @@
 #include <CCA/Components/Arches/Task/TaskVariableTools.h>
 #include <Core/Util/DebugStream.h>
 
-static Uintah::DebugStream taskvar_dbgstream("ARCHES_TASK_VARS", false);
-#define DBG_ON  taskvar_dbgstream.active()
-#define DBG_STREAM  if( DBG_ON  ) taskvar_dbgstream
+namespace {
+
+  Uintah::Dout dbg_arches_task{"Arches_Task_Var_DBG", "TaskVariableTools", "Information regarding the variable registration per task.", false };
+
+}
 
 namespace Uintah {
 
@@ -18,12 +20,13 @@ namespace Uintah {
                                 const std::string task_name )
   {
 
-    DBG_STREAM << " For task: " << task_name << " registering: " << std::endl;
-    DBG_STREAM << "             name: " << name << std::endl;
-    DBG_STREAM << "              dep: " << dep << std::endl;
-    DBG_STREAM << "           nGhost: " << nGhost << std::endl;
-    DBG_STREAM << "         which dw: " << dw << std::endl;
-    DBG_STREAM << "     time_substep: " << time_substep << std::endl;
+    DOUT( dbg_arches_task, " FOR TASK: " << task_name <<
+                           "    \n registering " << name <<
+                           "    \n         dep " << dep <<
+                           "    \n      nGhost " << nGhost <<
+                           "    \n    which dw " << dw <<
+                           "   \n time_substep " << time_substep
+    );
 
     if ( dw == ArchesFieldContainer::LATEST ){
       if ( time_substep == 0 ){

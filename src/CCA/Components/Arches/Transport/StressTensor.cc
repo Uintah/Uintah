@@ -47,7 +47,7 @@ void StressTensor::create_local_labels(){
 //--------------------------------------------------------------------------------------------------
 void StressTensor::register_initialize( AVarInfo& variable_registry , const bool pack_tasks){
   for (auto iter = m_sigma_t_names.begin(); iter != m_sigma_t_names.end(); iter++ ){
-    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
   }
 }
 
@@ -74,7 +74,7 @@ void StressTensor::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
 void StressTensor::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
   // time_substep?
   for (auto iter = m_sigma_t_names.begin(); iter != m_sigma_t_names.end(); iter++ ){
-    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
   }
   register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
   register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
