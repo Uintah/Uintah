@@ -404,10 +404,10 @@ namespace Uintah{
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, void >::type
         get_unmanaged_uintah_field( const std::string name,
                                           KokkosView3<double, MemSpace>&          field ){
-          if (time_substep == 0) {
-            field = getOldDW()->getGPUDW(0)->getKokkosView<ElemType>( name.c_str(),_field_container->getPatch()->getID() patch, _field_container->getMaterialIndex() , 0 );
+          if (_tsk_info.time_substep == 0) {
+            field = getOldDW()->getGPUDW(0)->getKokkosView<ElemType>( name.c_str(),_field_container->getPatch()->getID(), _field_container->getMaterialIndex() , 0 );
           } else {
-            field = getNewDW()->getGPUDW(0)->getKokkosView<ElemType>( name.c_str(),_field_container->getPatch()->getID() patch, _field_container->getMaterialIndex() , 0 );
+            field = getNewDW()->getGPUDW(0)->getKokkosView<ElemType>( name.c_str(),_field_container->getPatch()->getID(), _field_container->getMaterialIndex() , 0 );
           }
         }
 #endif
