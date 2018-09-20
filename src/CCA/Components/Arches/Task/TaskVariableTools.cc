@@ -6,10 +6,33 @@ namespace {
 
   Uintah::Dout dbg_arches_task{"Arches_Task_Var_DBG", "TaskVariableTools", "Information regarding the variable registration per task.", false };
 
+  std::string get_var_depend_string( Uintah::ArchesFieldContainer::VAR_DEPEND dep ){
+    if ( dep == Uintah::ArchesFieldContainer::COMPUTES ){
+      return "computes";
+    } else if ( dep == Uintah::ArchesFieldContainer::MODIFIES ){
+      return "modifies";
+    } else if ( dep == Uintah::ArchesFieldContainer::REQUIRES ){
+      return "requires";
+    } else {
+      throw Uintah::InvalidValue("Error: VAR_DEPEND enum not recognized.", __FILE__, __LINE__ );
+    }
+  }
+
+  std::string get_which_dw_string( Uintah::ArchesFieldContainer::WHICH_DW dw ){
+    if ( dw == Uintah::ArchesFieldContainer::OLDDW ){
+      return "old DW";
+    } else if ( dw == Uintah::ArchesFieldContainer::NEWDW ){
+      return "new DW";
+    } else if ( dw == Uintah::ArchesFieldContainer::LATEST ){
+      return "latest DW";
+    } else {
+      throw Uintah::InvalidValue("Error: VAR_DEPEND enum not recognized.", __FILE__, __LINE__ );
+    }
+  }
+
 }
 
 namespace Uintah {
-
 
    void register_variable_work( std::string name,
                                 ArchesFieldContainer::VAR_DEPEND dep,
@@ -21,11 +44,11 @@ namespace Uintah {
   {
 
     DOUT( dbg_arches_task, " FOR TASK: " << task_name <<
-                           "    \n registering " << name <<
-                           "    \n         dep " << dep <<
-                           "    \n      nGhost " << nGhost <<
-                           "    \n    which dw " << dw <<
-                           "   \n time_substep " << time_substep
+                           "    \n registering: " << name <<
+                           "    \n     var dep: " << get_var_depend_string(dep) <<
+                           "    \n      nGhost: " << nGhost <<
+                           "    \n    which dw: " << get_which_dw_string(dw) <<
+                           "   \n time_substep: " << time_substep
     );
 
     if ( dw == ArchesFieldContainer::LATEST ){
