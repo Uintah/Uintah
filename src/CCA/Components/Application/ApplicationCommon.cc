@@ -863,8 +863,8 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
   // current delT
   double delt_tmp = (1.0+m_delTMaxIncrease) * m_delT;
 
-  if( m_delT > 0.0 &&
-      m_delTMaxIncrease > 0 &&
+  if( m_delTMaxIncrease > 0 &&
+      delt_tmp > 0 &&
       delTNext > delt_tmp )
   {
     invalid |= DELTA_T_MAX_INCREASE;
@@ -885,7 +885,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
   }
 
   // Check to see if the next delT is below the minimum delt
-  if( delTNext < m_delTMin )
+  if( m_delTMin > 0 && delTNext < m_delTMin )
   {
     invalid |= DELTA_T_MIN;
 
@@ -903,7 +903,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
   }
 
   // Check to see if the next delT exceeds the maximum delt
-  if( delTNext > m_delTMax )
+  if( m_delTMax > 0 && delTNext > m_delTMax )
   {
     invalid |= DELTA_T_MAX;
 
@@ -1183,7 +1183,8 @@ ApplicationCommon::isLastTimeStep( double walltime )
   if( getReductionVariable( abortTimeStep_name ) )
     return true;
 
-  if( m_simTime >= m_simTimeMax )
+  if( m_simTimeMax > 0 &&
+      m_simTime >= m_simTimeMax )
     return true;
 
   if( m_timeStepsMax > 0 &&
@@ -1215,7 +1216,8 @@ ApplicationCommon::isLastTimeStep( double walltime )
 bool
 ApplicationCommon::maybeLastTimeStep( double walltime ) const
 {  
-  if( m_simTime + m_delT >= m_simTimeMax )
+  if( m_simTimeMax > 0 &&
+      m_simTime + m_delT >= m_simTimeMax )
     return true;
            
   if( m_timeStepsMax > 0 &&
