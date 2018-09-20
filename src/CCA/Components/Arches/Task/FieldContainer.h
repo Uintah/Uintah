@@ -478,7 +478,7 @@ namespace Uintah{
       const Patch* getPatch(){
            return _patch;
       }
-      const int getMaterialIndex(){
+      int getMaterialIndex(){
           return _matl_index;
       }
 
