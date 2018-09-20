@@ -280,15 +280,11 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   ArchesFieldContainer::VariableRegistry variable_registry;
 
   const std::string type_string = TaskInterface::get_task_type_string(type);
-  std::stringstream dout_task_mode;
-  dout_task_mode << "Scheduling the following task group with mode: " << type_string;
-  DOUT( dbg_arches_task, dout_task_mode.str() );
+  DOUT( dbg_arches_task, "Scheduling the following task group with mode: " << type_string );
 
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
 
-    std::stringstream dout_task_name;
-    dout_task_name << "    Task: " << (*i_task)->get_task_name();
-    DOUT( dbg_arches_task, dout_task_name.str() );
+    DOUT( dbg_arches_task, "    Task: " << (*i_task)->get_task_name() );
 
     switch( type ){
 
@@ -332,45 +328,41 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     ArchesFieldContainer::VariableInformation& ivar = *pivar;
 
     switch(ivar.depend) {
-    case ArchesFieldContainer::COMPUTES:{
-      if ( time_substep == 0 ) {
-        if ( reinitialize ){
-          std::stringstream dout_msg;
-          dout_msg << "    modifying: " << ivar.name;
-          DOUT( dbg_arches_task, dout_msg.str() );
-          tsk->modifies( ivar.label );   // was computed upstream
+    case ArchesFieldContainer::COMPUTES:
+      {
+        if ( time_substep == 0 ) {
+          if ( reinitialize ){
+            DOUT( dbg_arches_task, "    modifying: " << ivar.name );
+            tsk->modifies( ivar.label );   // was computed upstream
+          } else {
+            DOUT( dbg_arches_task, "    computing: " << ivar.name );
+            tsk->computes( ivar.label );   //only compute on the zero time substep
+          }
         } else {
-          std::stringstream dout_msg;
-          dout_msg << "    computing: " << ivar.name;
-          DOUT( dbg_arches_task, dout_msg.str() );
-          tsk->computes( ivar.label );   //only compute on the zero time substep
-        }
-      } else {
-        std::stringstream dout_msg;
-        dout_msg << "    modifying: " << ivar.name;
-        DOUT( dbg_arches_task, dout_msg.str() );
+          DOUT( dbg_arches_task, "    modifying: " << ivar.name );
+          tsk->modifies( ivar.label );
+      }}
+      break;
+    case ArchesFieldContainer::MODIFIES:
+      {
+        DOUT( dbg_arches_task, "    modifying: " << ivar.name );
         tsk->modifies( ivar.label );
       }
-      break;}
-    case ArchesFieldContainer::MODIFIES:{
-      std::stringstream dout_msg;
-      dout_msg << "    modifying: " << ivar.name;
-      DOUT( dbg_arches_task, dout_msg.str() );
-      tsk->modifies( ivar.label );
-      break;}
-    case ArchesFieldContainer::REQUIRES:{
-      std::stringstream dout_msg;
-      dout_msg << "    requiring: " << ivar.name << "with ghosts: " << ivar.nGhost;
-      DOUT( dbg_arches_task, dout_msg.str() );
-      tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
-      break;}
-    default:{
-      std::stringstream msg;
-      msg << "Arches Task Error: Cannot schedule task because "
-          << "of incomplete variable dependency. \n";
-      throw InvalidValue(msg.str(), __FILE__, __LINE__);
-      break;}
-
+      break;
+    case ArchesFieldContainer::REQUIRES:
+      {
+        DOUT( dbg_arches_task, "    requiring: " << ivar.name << "with ghosts: " << ivar.nGhost);
+        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
+      }
+      break;
+    default:
+      {
+        std::stringstream msg;
+        msg << "Arches Task Error: Cannot schedule task because "
+            << "of incomplete variable dependency. \n";
+        throw InvalidValue(msg.str(), __FILE__, __LINE__);
+      }
+      break;
     }
   }
 
@@ -432,48 +424,42 @@ void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
 
       switch( type ){
         case (TaskInterface::INITIALIZE):
-          { std::stringstream msg;
-          msg << " Executing " << (*i_task)->get_task_name() << " INITIALIZE ";
-          DOUT( dbg_arches_task, msg.str() );
-          (*i_task)->initialize( patch, tsk_info_mngr );
-          break;
+          {
+            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " INITIALIZE " );
+            (*i_task)->initialize( patch, tsk_info_mngr );
           }
+          break;
         case (TaskInterface::RESTART_INITIALIZE):
-          { std::stringstream msg;
-          msg << " Executing " << (*i_task)->get_task_name() << " RESTART_INITIALIZE ";
-          DOUT( dbg_arches_task, msg.str() );
-          (*i_task)->restart_initialize( patch, tsk_info_mngr );
-          break;
+          {
+            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " RESTART_INITIALIZE " );
+            (*i_task)->restart_initialize( patch, tsk_info_mngr );
           }
+          break;
         case (TaskInterface::TIMESTEP_INITIALIZE):
-          { std::stringstream msg;
-          msg << " Executing " << (*i_task)->get_task_name() << " TIMESTEP_INITIALIZE ";
-          DOUT( dbg_arches_task, msg.str() );
-          (*i_task)->timestep_init( patch, tsk_info_mngr );
-          time_substep = 0;
-          break;
+          {
+            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " TIMESTEP_INITIALIZE " );
+            (*i_task)->timestep_init( patch, tsk_info_mngr );
+            time_substep = 0;
           }
+          break;
         case (TaskInterface::TIMESTEP_EVAL):
-          { std::stringstream msg;
-          msg << " Executing " << (*i_task)->get_task_name() << " EVAL ";
-          DOUT( dbg_arches_task, msg.str() );
-          (*i_task)->eval( patch, tsk_info_mngr );
-          break;
+          {
+            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " EVAL " );
+            (*i_task)->eval( patch, tsk_info_mngr );
           }
+          break;
         case (TaskInterface::BC):
-          { std::stringstream msg;
-          msg << " Executing " << (*i_task)->get_task_name() << " BC ";
-          DOUT( dbg_arches_task, msg.str() );
-          (*i_task)->compute_bcs( patch, tsk_info_mngr );
-          break;
+          {
+            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " BC " );
+            (*i_task)->compute_bcs( patch, tsk_info_mngr );
           }
+          break;
         case (TaskInterface::ATOMIC):
-          { std::stringstream msg;
-          msg << " Executing " << (*i_task)->get_task_name() << " ATOMIC ";
-          DOUT( dbg_arches_task, msg.str() );
-          (*i_task)->eval( patch, tsk_info_mngr);
-          break;
+          {
+            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " ATOMIC " );
+            (*i_task)->eval( patch, tsk_info_mngr);
           }
+          break;
         default:
           throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
           break;
