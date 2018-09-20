@@ -122,8 +122,11 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
   SchedulerP     schedulerP = sim->simController->getSchedulerP();
   LoadBalancer * lb         = sim->simController->getLoadBalancer();
+  Output       * output     = sim->simController->getOutput();
   GridP          gridP      = sim->gridP;
       
   if( !schedulerP.get_rep() || !gridP.get_rep() )
@@ -1107,13 +1110,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     // md->AddDefaultSILRestrictionDescription(std::string("!TurnOnAll"));
 
     /* Add some commands. */
-    // const char *cmd_names[] = {"Stop", "Step", "Run",
-    //                            "Save", "Checkpoint", "Unused",
-    //                            "Finish", "Terminate", "Abort"};
-
     const char *cmd_names[] = {"Stop", "Step", "Run",
-                               "Save", "Checkpoint", "Unused",
-                               "Terminate", "Abort"};
+                               "Output", "Output Previous", "Terminate",
+                               "Checkpoint", "Checkpoint Previous", "Abort"};
 
     unsigned int numNames = sizeof(cmd_names) / sizeof(const char *);
 
@@ -1121,13 +1120,26 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     {
       bool enabled;
 
-      if(strcmp( "Save", cmd_names[i] ) == 0 )
-        enabled = (!sim->first &&
-                   !sim->simController->getOutput()->isOutputTimeStep());
-
+      // Do not output or checkpoint if has already happened.
+      if(strcmp( "Output", cmd_names[i] ) == 0 )
+        enabled = (!output->outputTimeStepExists( sim->cycle ));
       else if(strcmp( "Checkpoint", cmd_names[i] ) == 0 )
-        enabled = (!sim->first &&
-                   !sim->simController->getOutput()->isCheckpointTimeStep());
+        enabled = (!output->checkpointTimeStepExists( sim->cycle ));
+      // Do not allow the previous time step to outputed or
+      // checkpointed if the current step was regridded as the grid
+      // will have changed and the patches will align with the data.
+
+      // Do not allow the previous time step to outputed or
+      // checkpointed if the current time step was already outputed or
+      // checkpointed already so to prevent out of order time steps.
+      else if(strcmp( "Output Previous", cmd_names[i] ) == 0 )
+        enabled = (appInterface->getLastRegridTimeStep() < sim->cycle &&
+                   !output->outputTimeStepExists( sim->cycle ) &&
+                   !output->outputTimeStepExists( sim->cycle-1));
+      else if(strcmp( "Checkpoint Previous", cmd_names[i] ) == 0 )
+        enabled = (appInterface->getLastRegridTimeStep() < sim->cycle &&
+                   !output->checkpointTimeStepExists( sim->cycle ) &&
+                   !output->checkpointTimeStepExists( sim->cycle-1));
       else
         enabled = true;
 

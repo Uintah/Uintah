@@ -84,8 +84,7 @@ typedef struct visit_simulation_data
   
   TimeStepInfo* stepInfo;
 
-  int cycle;
-
+  int    cycle;
   double time;
 
   // UDA archive variables.

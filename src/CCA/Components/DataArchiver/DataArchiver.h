@@ -125,7 +125,7 @@ class LoadBalancer;
     void copySection( const Dir & fromDir, const Dir & toDir, const std::string & file, const std::string & section );
 
     //! Copy a section from another uda's to our index.xml.
-    void copySection( Dir & fromDir, const std::string & section ) { copySection( fromDir, m_dir, "index.xml", section ); }
+    void copySection( Dir & fromDir, const std::string & section ) { copySection( fromDir, m_outputDir, "index.xml", section ); }
 
     //! Checks to see if this is an output time step. 
     //! If it is, setup directories and xml files that we need to output.
@@ -231,12 +231,14 @@ class LoadBalancer;
     void   setSaveAsUDA()  { m_outputFileFormat = UDA; }
     void   setSaveAsPIDX() { m_outputFileFormat = PIDX; }
 
-    //! Called by In-situ VisIt to force the dump of a time step's data.
+    //! Called by in situ VisIt to force the dump of a time step's data.
     void outputTimeStep( const GridP& grid,
-                         SchedulerP& sched );
+                         SchedulerP& sched,
+                         bool previous );
 
     void checkpointTimeStep( const GridP& grid,
-                             SchedulerP& sched );
+                             SchedulerP& sched,
+                             bool previous );
 
     void maybeLastTimeStep( bool val ) { m_maybeLastTimeStep = val; };
     bool maybeLastTimeStep() { return m_maybeLastTimeStep; };
@@ -255,8 +257,10 @@ class LoadBalancer;
      
     void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { m_runtimeStats = runtimeStats; };
      
-  public:
-
+    // Returns trus if an output or checkpoint exists for the time step
+    bool outputTimeStepExists( unsigned int ts );
+    bool checkpointTimeStepExists( unsigned int ts );
+    
     //! problemSetup parses the ups file into a list of these
     //! (m_saveLabelNames)
     struct SaveNameItem {
@@ -351,11 +355,12 @@ class LoadBalancer;
                                        SchedulerP            & sched,
                                        bool                    isThisACheckpoint );
 
-    // Timestep # of the last time we saved "timestep.xml". -1 == not yet saved...
-    // We only save timestep.xml as needed (ie, when a regrid occurs), otherwise
-    // a given timestep will refer (symlink) to the last time it was saved.
-    // Note, this is in reference to IO timesteps.  We always generate and
-    // save timestep.xml for Checkpoint output.
+    // Timestep # of the last time we saved "timestep.xml". -1 == not
+    // yet saved. Only save timestep.xml as needed (ie, when a
+    // regrid occurs), otherwise a given timestep will refer (symlink)
+    // to the last time it was saved.  Note, this is in reference to
+    // IO timesteps.  We always generate and save timestep.xml for
+    // Checkpoint output.
 #endif
     int m_lastOutputOfTimeStepXML = -1; 
 
@@ -398,13 +403,14 @@ class LoadBalancer;
     //! add saved global (reduction) variables to index.xml
     void indexAddGlobals();
 
-    // setupLocalFileSystems() and setupSharedFileSystem() are used to 
-    // create the UDA (versioned) directory.  setupLocalFileSystems() is
-    // old method of determining which ranks should output UDA
-    // metadata and handles the case when each node has its own local file system
-    // (as opposed to a shared file system across all nodes). setupLocalFileSystems()
-    // will only be used if specifically turned on via a
-    // command line arg to sus when running using MPI.
+    // setupLocalFileSystems() and setupSharedFileSystem() are used to
+    // create the UDA (versioned) directory.  setupLocalFileSystems()
+    // is old method of determining which ranks should output UDA
+    // metadata and handles the case when each node has its own local
+    // file system (as opposed to a shared file system across all
+    // nodes). setupLocalFileSystems() will only be used if
+    // specifically turned on via a command line arg to sus when
+    // running using MPI.
     void setupLocalFileSystems();
     void setupSharedFileSystem(); // Verifies that all ranks see a shared FS.
     void saveSVNinfo();
@@ -429,8 +435,7 @@ class LoadBalancer;
 
     bool   m_outputLastTimeStep {false}; // Output the last time step.
      
-    //int m_currentTimeStep;
-    Dir    m_dir;                    //!< top of uda dir
+    Dir    m_outputDir;                    //!< top of uda dir
 
     //! Represents whether this proc will output non-processor-specific
     //! files
@@ -441,6 +446,10 @@ class LoadBalancer;
 
     //! last timestep dir (filebase.000/t#)
     std::string m_lastTimeStepLocation {"invalid"};
+
+    //! List of current output dirs
+    std::list<std::string> m_outputTimeStepDirs;
+    
     bool m_isOutputTimeStep {false};      //!< set if an output time step
     bool m_isCheckpointTimeStep {false};  //!< set if a checkpoint time step
 
@@ -501,6 +510,7 @@ class LoadBalancer;
 
     //! List of current checkpoint dirs
     std::list<std::string> m_checkpointTimeStepDirs;
+    
     //!< used when m_checkpointInterval != 0. Simulation time in seconds.
     double m_nextCheckpointTime {0};
     //!< used when m_checkpointTimeStepInterval != 0.  Integer - time step
@@ -508,6 +518,10 @@ class LoadBalancer;
     //!< used when m_checkpointWallTimeInterval != 0.  Integer seconds.
     int    m_nextCheckpointWallTime {0};
 
+    // 
+    bool m_outputPreviousTimeStep     {false};
+    bool m_checkpointPreviousTimeStep {false};
+    
     //-----------------------------------------------------------
     // RNJ - 
     //
@@ -545,10 +559,10 @@ class LoadBalancer;
     std::map< int, ProblemSpecP > m_XMLDataDocs;
     std::map< int, ProblemSpecP > m_CheckpointXMLDataDocs;
 
-
-    // Hacky variable to ensure that PIDX checkpoint and IO tasks that happen to fall on the
-    // same time step run in a serialized manner (as it appears that PIDX is not thread safe).
-    // If there was a better way to synchronize tasks, we should do that...
+    // Hacky variable to ensure that PIDX checkpoint and IO tasks that
+    // happen to fall on the same time step run in a serialized manner
+    // (as it appears that PIDX is not thread safe).  If there was a
+    // better way to synchronize tasks, we should do that...
     VarLabel * m_sync_io_label;
 
     //__________________________________
@@ -560,7 +574,7 @@ class LoadBalancer;
     Dir m_fromDir {""};              // keep track of the original uda
     void copy_outputProblemSpec(Dir& fromDir, Dir& toDir);
        
-    // returns either the top level time step or if postProcessUda is used
+    // Returns either the top level time step or if postProcessUda is used
     // a value from the index.xml file
     int getTimeStepTopLevel();
 
@@ -582,7 +596,6 @@ class LoadBalancer;
 
     std::string TranslateVariableType( std::string type, bool isThisCheckpoint );
 
-
     //-----------------------------------------------------------
     // RNJ - 
     //
@@ -592,7 +605,6 @@ class LoadBalancer;
     //-----------------------------------------------------------
 
     int m_fileSystemRetrys {10};
-
 
     //! This is if you want to pass in the uda extension on the command line
     int m_udaSuffix {-1};

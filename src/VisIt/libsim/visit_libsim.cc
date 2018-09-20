@@ -497,9 +497,9 @@ bool visit_CheckState( visit_simulation_data *sim )
         // VisItUI_setValueS("SIMULATION_MESSAGE", sim->message.c_str(), 1);
 
         std::stringstream msg;
-        msg << "Visit libsim - Completed simulation "
-            << "timestep " << sim->cycle << ",  "
-            << "Time = "   << sim->time;
+        msg << "Visit libsim - Completed the simulation at "
+            << "time step " << sim->cycle << ",  "
+            << "time = "   << sim->time;
         
         // DOUT( visitdbg, msg.str().c_str() );
         
@@ -562,8 +562,8 @@ bool visit_CheckState( visit_simulation_data *sim )
               
             std::stringstream msg;
             msg << "Visit libsim - Stopped the simulation at "
-                << "timestep " << sim->cycle << ",  "
-                << "Time = " << sim->time;
+                << "time step " << sim->cycle << ",  "
+                << "time = " << sim->time;
             
             DOUT( visitdbg, msg.str().c_str() );
  

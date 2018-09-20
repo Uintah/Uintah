@@ -293,38 +293,48 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     // visit_SimGetMetaData(cbdata);
     // visit_SimGetDomainList(nullptr, cbdata);
   }
-  else if(strcmp(cmd, "Save") == 0)
+  else if(strncmp(cmd, "Output", 6) == 0)
   {
     // Do not call unless the simulation is stopped or finished as it
     // will interfer with the task graph.
     if(sim->simMode == VISIT_SIMMODE_STOPPED ||
        sim->simMode == VISIT_SIMMODE_FINISHED)
     {
-      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Save", 0);
+      // Disable the button so to prevent outputing the same time step
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", cmd, 0);
 
+      // Do not allow out of order output files.
+      if( strlen(cmd) == 6 )
+        VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Output Previous", 0);
+        
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->outputTimeStep( sim->gridP, schedulerP );
+      output->outputTimeStep( sim->gridP, schedulerP, strlen(cmd) > 6 );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
                         "Can not save a timestep unless the simulation has "
                         "run for at least one time step and is stopped.", 0);
   }
-  else if(strcmp(cmd, "Checkpoint") == 0)
+  else if(strncmp(cmd, "Checkpoint", 10) == 0)
   {
     // Do not call unless the simulation is stopped or finished as it
     // will interfer with the task graph.
     if(sim->simMode == VISIT_SIMMODE_STOPPED ||
        sim->simMode == VISIT_SIMMODE_FINISHED)
     {
-      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Checkpoint", 0);
+      // Disable the button so to prevent checkpointing the same time step
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", cmd, 0);
 
+      // Do not allow out of order checkpoint files.
+      if( strlen(cmd) == 10 )
+        VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Checkpoint Previous", 0);
+        
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->checkpointTimeStep( sim->gridP, schedulerP );
+      output->checkpointTimeStep( sim->gridP, schedulerP, strlen(cmd) > 10 );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
