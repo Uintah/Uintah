@@ -2540,7 +2540,9 @@ DataArchiver::scheduleOutputTimeStep(       vector<SaveItem> & saveLabels,
         task->requires( Task::NewDW, (*saveIter).label, matls, Task::OutOfDomain, Ghost::None, 0, true );
 
         // Do not scrub any variables that are saved so they can be
-        // access at any time after all of the tasks a finished.
+        // accessed at any time after all of the tasks are finished.
+        // This is needed when saving the old data warehouse as well
+        // as the new data warehouse after the tasks are finished.
         sched->overrideVariableBehavior( (*saveIter).label->getName(),
                                          false, false, true, false, false );
 
