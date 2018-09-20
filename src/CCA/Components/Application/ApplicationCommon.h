@@ -415,7 +415,7 @@ WARNING
     double m_delTInitialRange{0};    // Simulation time range for the initial delta T
 
     double m_delTMin{0};             // Minimum delta T
-    double m_delTMax{1};             // Maximum delta T
+    double m_delTMax{0};             // Maximum delta T
     double m_delTMultiplier{1.0};    // Multiple for increasing delta T
     double m_delTMaxIncrease{0};     // Maximum delta T increase.
 
