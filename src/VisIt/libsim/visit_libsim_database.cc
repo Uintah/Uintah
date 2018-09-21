@@ -396,7 +396,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         }
 
         std::string mesh_name[2] = {mesh_for_this_var,
-                                    ("Machine_" + sim->hostName + "/Local") };
+                                    ("Machine_" + sim->hostName + "/Patch") };
 
         std::string mesh_layout[2] = {"/Sim", "/"+sim->hostName};
 
