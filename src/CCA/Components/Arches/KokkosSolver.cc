@@ -324,11 +324,11 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
 
     Vector Dx = patch->dCell();
 
-    auto u   = new_dw->getConstGridVariable<constSFCXVariable<double>,const double , MemSpace>(  m_uLabel    ,  indx, patch, Ghost::None, 0 );
-    auto v   = new_dw->getConstGridVariable<constSFCYVariable<double>,const double , MemSpace>(  m_vLabel    ,  indx, patch, Ghost::None, 0 );
-    auto w   = new_dw->getConstGridVariable<constSFCZVariable<double>,const double , MemSpace>(  m_wLabel    ,  indx, patch, Ghost::None, 0 );
-    auto rho = new_dw->getConstGridVariable<constCCVariable<double>  ,const double , MemSpace>(  m_rhoLabel  ,  indx, patch, Ghost::None, 0 );
-    auto mu  = new_dw->getConstGridVariable<constCCVariable<double>  ,const double , MemSpace>(  m_tot_muLabel, indx, patch, Ghost::None, 0 );
+    auto u   = new_dw->getConstGridVariable<constSFCXVariable<double>, double , MemSpace>(  m_uLabel    ,  indx, patch, Ghost::None, 0 );
+    auto v   = new_dw->getConstGridVariable<constSFCYVariable<double>, double , MemSpace>(  m_vLabel    ,  indx, patch, Ghost::None, 0 );
+    auto w   = new_dw->getConstGridVariable<constSFCZVariable<double>, double , MemSpace>(  m_wLabel    ,  indx, patch, Ghost::None, 0 );
+    auto rho = new_dw->getConstGridVariable<constCCVariable<double>  , double , MemSpace>(  m_rhoLabel  ,  indx, patch, Ghost::None, 0 );
+    auto mu  = new_dw->getConstGridVariable<constCCVariable<double>  , double , MemSpace>(  m_tot_muLabel, indx, patch, Ghost::None, 0 );
 
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );

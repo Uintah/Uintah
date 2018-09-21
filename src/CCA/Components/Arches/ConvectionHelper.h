@@ -328,10 +328,10 @@ namespace Uintah {
   //functors by value.  Maybe we wouldn't need to do this if we had had passed kokkosViews     //
   //by reference everywhere, but we have been passing them by value, since when moving          //
   //memoryspaces you need to pass by value.........
+  
+#if defined(UINTAH_ENABLE_KOKKOS)
     template< typename ExecutionSpace, typename MemSpace , unsigned int Cscheme>
     struct ComputeConvectiveFlux1D_val{
-
-       
  void get_flux(ExecutionObject<ExecutionSpace,MemSpace> exObj, BlockRange& range,KokkosView3<const double, MemSpace> phi,
           KokkosView3<const double, MemSpace>u,
           KokkosView3<double, MemSpace>flux,
@@ -492,7 +492,7 @@ namespace Uintah {
     }
   };
 
-
+#endif
 
 
 

@@ -619,7 +619,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
       auto  z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
        
-      auto rho_phi = createContainer<T,double, imax,MemSpace>(m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ?  0 : 1);
+      auto rho_phi = createContainer<T,double, imax,MemSpace>(m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ?  1 : 0);
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
          tsk_info->get_unmanaged_uintah_field<T, double, MemSpace>(m_transported_eqn_names[ieqn],rho_phi[0] );
       }
