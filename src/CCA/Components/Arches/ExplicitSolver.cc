@@ -111,6 +111,7 @@
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/ArchesStatsEnum.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/MomentumSolver.h>
@@ -135,6 +136,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <CCA/Components/Arches/Filter.h>
 
 #include <cmath>
@@ -154,7 +156,7 @@ ExplicitSolver(MaterialManagerP& materialManager,
                const ProcessorGroup* myworld,
                ArchesParticlesHelper* particle_helper,
                SolverInterface* hypreSolver,
-               const ApplicationCommon* arches ):
+               ApplicationCommon* arches ):
                NonlinearSolver(myworld, arches),
                d_materialManager(materialManager),
                d_MAlab(MAlb),
@@ -946,12 +948,18 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
+#ifdef ADD_PERFORMANCE_STATS
+   Timers::Simple tmpTimer;
+#endif
   const Level* level = getLevel(patches);
   // You have to compute it on every level but
   // only computethe real delT on the archesLevel
   if( level->getIndex() == d_archesLevelIndex ) {
 
     for (int p = 0; p < patches->size(); p++) {
+#ifdef ADD_PERFORMANCE_STATS
+      tmpTimer.reset( true );
+#endif
       const Patch* patch = patches->get(p);
       int archIndex = 0; // only one arches material
       int indx = d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
@@ -1071,7 +1079,16 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
         }
       }
 
+#ifdef ADD_PERFORMANCE_STATS
+ 
+      tmpTimer.stop();
+
+      m_arches->getApplicationStats()[ (ApplicationCommon::ApplicationStatsEnum) StableTimeStep ] += tmpTimer().seconds();    
+#endif
       if (d_underflow) {
+#ifdef ADD_PERFORMANCE_STATS 
+	tmpTimer.reset( true );
+#endif
         indexLow = patch->getFortranCellLowIndex();
         indexHigh = patch->getFortranCellHighIndex();
 
@@ -1104,8 +1121,13 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
             }
           }
         }
-      }
 
+#ifdef ADD_PERFORMANCE_STATS
+ 	tmpTimer.stop();
+
+	m_arches->getApplicationStats()[ (ApplicationCommon::ApplicationStatsEnum) StableTimeStepUnderflow ] += tmpTimer().seconds();
+#endif
+      }
 
       delta_t = delta_t2;
       new_dw->put(delt_vartype(delta_t), d_lab->d_delTLabel, level);
@@ -1130,7 +1152,7 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
         new_dw->put( bool_or_vartype(true), VarLabel::find(checkpointTimeStep_name) );
         new_dw->put( bool_or_vartype(true), VarLabel::find(     endSimulation_name) );
       }
-#endif      
+#endif
     }
   } else { // if not on the arches level
 

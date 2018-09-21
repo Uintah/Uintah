@@ -121,7 +121,7 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   m_appReductionVars[ endSimulation_name ] = new
     ApplicationReductionVariable( endSimulation_name, bool_or_vartype::getTypeDescription() );
  
-  m_application_stats.insert( CarcassCount, std::string("CarcassCount"), "Carcasses", 0 );
+  // m_application_stats.insert( DummyEnum, std::string("DummyEnum"), "DummyEnum", 0 );
 }
 
 ApplicationCommon::~ApplicationCommon()
@@ -253,15 +253,18 @@ void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
 
   // Sim time limits
 
-  // Initial simulation time
-  time_ps->require( "initTime", m_simTimeStart );
+  // Initial simulation time - will be written to the data warehouse
+  // when SimulationController::timeStateSetup() is called.
+  time_ps->require( "initTime", m_simTime );
+
   // Maximum simulation time
   time_ps->require( "maxTime",  m_simTimeMax );
+
   // End the simulation at exactly the maximum simulation time
   if ( !time_ps->get( "end_at_max_time_exactly", m_simTimeEndAtMax ) ) {
     m_simTimeEndAtMax = false;
   }
-    
+
   // Output time
   if ( !time_ps->get( "clamp_time_to_output", m_simTimeClampToOutput ) ) {
     m_simTimeClampToOutput = false;
@@ -271,7 +274,7 @@ void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
   ProblemSpecP tmp_ps;
   std::string flag;
 
-  unsigned int output = 0, checkpoint = 0;
+  ValidateFlag output = 0, checkpoint = 0;
 
   // When restarting use this delta T value
   if( !time_ps->get( "override_restart_delt", m_delTOverrideRestart) ) {
@@ -419,7 +422,7 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
                                            DataWarehouse  * old_dw,
                                            DataWarehouse  * new_dw )
 {
-  unsigned int validDelT = 0;
+  ValidateFlag validDelT = 0;
   
   // The goal of this task is to line up the delT across all levels.
   // If the coarse delT already exists (the one without an associated
@@ -734,35 +737,6 @@ ApplicationCommon::recomputeDelT(const double delT)
 
 //______________________________________________________________________
 //
-bool
-ApplicationCommon::needRecompile( const GridP& /*grid*/)
-{
-#ifdef HAVE_VISIT
-  // Check all of the application variables that might require the task
-  // graph to be recompiled.
-  for( unsigned int i=0; i<getUPSVars().size(); ++i )
-  {
-    ApplicationInterface::interactiveVar &var = getUPSVars()[i];
-    
-    if( var.modified && var.recompile )
-    {
-      m_recompile = true;
-      break;
-    }
-  }
-#endif
-  
-  if( m_recompile ) {
-    m_recompile = false;
-    return true;
-  }
-  else {
-    return false;
-  }
-}
-
-//______________________________________________________________________
-//
 void
 ApplicationCommon::prepareForNextTimeStep()
 {
@@ -822,32 +796,34 @@ ApplicationCommon::setDelTForAllLevels( SchedulerP& scheduler,
 
 //______________________________________________________________________
 //
-// This method is called only at restart -
-// see SimulationController::timeStateSetup().
+// This method is called only at restart - see
+// SimulationController::timeStateSetup()  or by the in situ - see
+// visit_DeltaTVariableCallback().
 
 void
-ApplicationCommon::setNextDelT( double delT )
+ApplicationCommon::setNextDelT( double delT, bool restart )
 {
   // Restart - Check to see if the user has set a restart delT.
-  if (m_delTOverrideRestart != 0)
+  if( restart && m_delTOverrideRestart )
   {
     proc0cout << "Overriding restart delT " << m_delT << " with "
-              << m_delTOverrideRestart << "\n";
+	      << m_delTOverrideRestart << "\n";
     
     m_delTNext = m_delTOverrideRestart;
-
+    
     m_scheduler->getLastDW()->override(delt_vartype(m_delTNext), m_delTLabel);
   }
-
+    
   // Restart - Otherwise get the next delta T from the archive.
-  else if( m_scheduler->getLastDW()->exists( m_delTLabel ) )
+  else if( restart && m_scheduler->getLastDW()->exists( m_delTLabel ) )
   {
     delt_vartype delt_var;
     m_scheduler->getLastDW()->get( delt_var, m_delTLabel );
     m_delTNext = delt_var;
   }
-
-  // Restart - All else fails use the previous delta T.
+  
+  // All else fails use the delta T passed in. If from a restart it
+  // would be the value used at the last time step. 
   else
   {
     m_delTNext = delT;
@@ -857,7 +833,7 @@ ApplicationCommon::setNextDelT( double delT )
 
 //______________________________________________________________________
 //
-unsigned int
+ValidateFlag
 ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 {
   // NOTE: This check is performed BEFORE the simulation time is
@@ -881,14 +857,14 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
   header << "at time step " << m_timeStep
          << " and sim time " << m_simTime + m_delT << " : ";
       
-  unsigned int invalid = 0;
+  ValidateFlag invalid = 0;
 
   // Check to see if the next delT was increased too much over the
   // current delT
   double delt_tmp = (1.0+m_delTMaxIncrease) * m_delT;
 
-  if( m_delT > 0.0 &&
-      m_delTMaxIncrease > 0 &&
+  if( m_delTMaxIncrease > 0 &&
+      delt_tmp > 0 &&
       delTNext > delt_tmp )
   {
     invalid |= DELTA_T_MAX_INCREASE;
@@ -909,7 +885,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
   }
 
   // Check to see if the next delT is below the minimum delt
-  if( delTNext < m_delTMin )
+  if( m_delTMin > 0 && delTNext < m_delTMin )
   {
     invalid |= DELTA_T_MIN;
 
@@ -927,7 +903,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
   }
 
   // Check to see if the next delT exceeds the maximum delt
-  if( delTNext > m_delTMax )
+  if( m_delTMax > 0 && delTNext > m_delTMax )
   {
     invalid |= DELTA_T_MAX;
 
@@ -1064,9 +1040,10 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
   if( g_deltaT_prevalidate_sum && level == 0 )
   {
     // Gather all of the bits where the threshold was exceeded.
-    int invalidAll;
+    ValidateFlag invalidAll;
     
-    Uintah::MPI::Reduce( &invalid, &invalidAll, 1, MPI_INT, MPI_BOR, 0, d_myworld->getComm() );
+    Uintah::MPI::Reduce( &invalid, &invalidAll, 1, MPI_UNSIGNED_CHAR, MPI_BOR,
+			 0, d_myworld->getComm() );
 
     // Only report the summary on rank 0. One line for each instance
     // where the threshold was exceeded.
@@ -1176,7 +1153,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 //
 // Flag for outputing or checkpointing if the next delta is invalid
 void
-ApplicationCommon::outputIfInvalidNextDelT( unsigned int flag )
+ApplicationCommon::outputIfInvalidNextDelT( ValidateFlag flag )
 {
   m_outputIfInvalidNextDelTFlag = flag;
 
@@ -1185,7 +1162,7 @@ ApplicationCommon::outputIfInvalidNextDelT( unsigned int flag )
 }
 
 void
-ApplicationCommon::checkpointIfInvalidNextDelT( unsigned int flag )
+ApplicationCommon::checkpointIfInvalidNextDelT( ValidateFlag flag )
 {
   m_checkpointIfInvalidNextDelTFlag = flag;
 
@@ -1206,7 +1183,8 @@ ApplicationCommon::isLastTimeStep( double walltime )
   if( getReductionVariable( abortTimeStep_name ) )
     return true;
 
-  if( m_simTime >= m_simTimeMax )
+  if( m_simTimeMax > 0 &&
+      m_simTime >= m_simTimeMax )
     return true;
 
   if( m_timeStepsMax > 0 &&
@@ -1238,7 +1216,8 @@ ApplicationCommon::isLastTimeStep( double walltime )
 bool
 ApplicationCommon::maybeLastTimeStep( double walltime ) const
 {  
-  if( m_simTime + m_delT >= m_simTimeMax )
+  if( m_simTimeMax > 0 &&
+      m_simTime + m_delT >= m_simTimeMax )
     return true;
            
   if( m_timeStepsMax > 0 &&

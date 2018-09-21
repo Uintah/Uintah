@@ -121,7 +121,7 @@ CoalDensity::create_local_labels(){
 
   for ( int i = 0; i < _Nenv; i++ ){
 
-    const std::string rho_name = get_env_name( i, _task_name );
+    const std::string rho_name = get_env_name( i, m_task_name );
     register_new_variable<CCVariable<double> >( rho_name );
 
   }
@@ -133,7 +133,7 @@ CoalDensity::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
 
   for ( int i = 0; i < _Nenv; i++ ){
 
-    const std::string rho_name  = get_env_name( i, _task_name );
+    const std::string rho_name  = get_env_name( i, m_task_name );
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
@@ -156,7 +156,7 @@ void CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
-    const std::string rho_name  = get_env_name( ienv, _task_name );
+    const std::string rho_name  = get_env_name( ienv, m_task_name );
     const std::string char_name = get_env_name( ienv, _char_base_name );
     const std::string rc_name   = get_env_name( ienv, _rawcoal_base_name );
 
@@ -228,7 +228,7 @@ CoalDensity::register_timestep_eval(
 
   for ( int i = 0; i < _Nenv; i++ ){
 
-    const std::string rho_name  = get_env_name( i, _task_name );
+    const std::string rho_name  = get_env_name( i, m_task_name );
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
@@ -251,7 +251,7 @@ void CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
-    const std::string rho_name  = get_env_name( ienv, _task_name );
+    const std::string rho_name  = get_env_name( ienv, m_task_name );
     const std::string char_name = get_env_name( ienv, _char_base_name );
     const std::string rc_name   = get_env_name( ienv, _rawcoal_base_name );
 

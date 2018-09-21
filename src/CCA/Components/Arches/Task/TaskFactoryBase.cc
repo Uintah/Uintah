@@ -5,7 +5,7 @@
 
 namespace {
 
-  Uintah::Dout dbg_arches_task{"Arches_Task_DBG", "TaskFactoryBase", "print information about the scheduling and execution of Arches tasks.", false };
+  Uintah::Dout dbg_arches_task{"Arches_Task_DBG", "TaskFactoryBase", "Scheduling and execution information of Arches tasks.", false };
 
 }
 
@@ -14,7 +14,7 @@ using namespace Uintah;
 //--------------------------------------------------------------------------------------------------
 TaskFactoryBase::TaskFactoryBase( const ApplicationCommon* arches ) : m_arches(arches)
 {
-  _matl_index = 0; //Arches material
+  m_matl_index = 0; //Arches material
   _tasks.clear();
 }
 
@@ -292,7 +292,6 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   int icount=0;
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
     taskNames[icount]=(*i_task)->get_task_name();
-    cout_archestaskdebug << "   Task: " << (*i_task)->get_task_name() << std::endl;
 
     TaskAssignedExecutionSpace temp{};
 
@@ -369,18 +368,19 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
       switch(ivar.depend) {
       case ArchesFieldContainer::COMPUTES:
-        if ( time_substep == 0 ) {
-          if ( reinitialize ){
-            DOUT( dbg_arches_task, "    modifying: " << ivar.name );
-            tsk->modifies( ivar.label );   // was computed upstream
+        {
+          if ( time_substep == 0 ) {
+            if ( reinitialize ){
+              DOUT( dbg_arches_task, "    modifying: " << ivar.name );
+              tsk->modifies( ivar.label );   // was computed upstream
+            } else {
+              DOUT( dbg_arches_task, "    computing: " << ivar.name );
+              tsk->computes( ivar.label );   //only compute on the zero time substep
+            }
           } else {
-            DOUT( dbg_arches_task, "    computing: " << ivar.name );
-            tsk->computes( ivar.label );   //only compute on the zero time substep
-          }
-        } else {
-          DOUT( dbg_arches_task, "    modifying: " << ivar.name );
-          tsk->modifies( ivar.label );
-        }
+            DOUT( dbg_arches_task, "    modifying: " << ivar.name );
+            tsk->modifies( ivar.label );
+        }}
         break;
       case ArchesFieldContainer::MODIFIES:
         {
@@ -395,11 +395,13 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         }
         break;
       default:
-        std::stringstream msg;
-        msg << "Arches Task Error: Cannot schedule task because "
-            << "of incomplete variable dependency. \n";
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
-
+        {
+          std::stringstream msg;
+          msg << "Arches Task Error: Cannot schedule task because "
+              << "of incomplete variable dependency. \n";
+          throw InvalidValue(msg.str(), __FILE__, __LINE__);
+        }
+        break;
       }
     }
 
@@ -468,7 +470,7 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
 
     const Patch* patch = patches->get(p);
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index,
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, m_matl_index,
                                             variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;

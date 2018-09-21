@@ -126,6 +126,8 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
     proc0cout << " *** Label: " << varNames[i] << endl;
   }
 
+  proc0cout << "\n";
+
   //__________________________________
   //  create the analysis modules
   d_Modules = ModuleFactory::create(prob_spec, m_materialManager, m_output, d_dataArchive);
@@ -137,16 +139,8 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   // Adjust the time state - done after it is read.
-  m_simTime         = d_udaTimes[0];
-  m_simTimeMax      = d_udaTimes[d_udaTimes.size()-1];
-
-  m_delTInitialMax  = 1e99;
-  m_delTMin         = 0.0;
-  m_delTMax         = 1e99;
-  m_delTMultiplier  = 1.0;
-  m_delTMaxIncrease = 1e99;
-
-  proc0cout << "\n";
+  m_timeStepsMax = d_udaTimes.size();
+  m_simTimeMax   = d_udaTimes[d_udaTimes.size()-1];
 }
 
 //______________________________________________________________________

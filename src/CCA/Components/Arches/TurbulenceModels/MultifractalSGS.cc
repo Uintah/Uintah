@@ -168,7 +168,7 @@ namespace Uintah{
         variable_registry , const bool packed_tasks){
 
       for (auto iter = m_SgsStress_names.begin(); iter != m_SgsStress_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
       }
 
     }
@@ -207,7 +207,7 @@ namespace Uintah{
         variable_registry , const bool packed_tasks){
 
       for (auto iter = m_SgsStress_names.begin(); iter != m_SgsStress_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
       }
 
     }
@@ -249,12 +249,12 @@ namespace Uintah{
       // UPDATE USER DEFINE VARIABLES
       // register Velocity Delta
       for (auto iter = m_VelDelta_names.begin(); iter != m_VelDelta_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry, _task_name );
+        register_variable( *iter, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry, m_task_name );
 
       }
 
       for (auto iter = m_SgsStress_names.begin(); iter != m_SgsStress_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
+        register_variable( *iter, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
       }
 
     }

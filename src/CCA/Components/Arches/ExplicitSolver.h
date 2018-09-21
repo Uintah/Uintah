@@ -55,6 +55,7 @@ DESCRIPTION
 WARNING
    none
 ****************************************/
+//#define ADD_PERFORMANCE_STATS
 
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Components/Arches/MomentumSolver.h>
@@ -100,7 +101,7 @@ public:
              const ProcessorGroup* myworld,
              ArchesParticlesHelper* particle_helper,
              SolverInterface* hypreSolver,
-             const ApplicationCommon* arches ) :
+             ApplicationCommon* arches ) :
              _materialManager(materialManager),
              _MAlb(MAlb),
              _physConst(physConst),
@@ -130,8 +131,7 @@ public:
     const ProcessorGroup* _myworld;
     ArchesParticlesHelper* _particle_helper;
     SolverInterface* _hypreSolver;
-    const ApplicationCommon* _arches;
-
+    ApplicationCommon* _arches;
   };
 
   ExplicitSolver( MaterialManagerP& materialManager,
@@ -140,7 +140,7 @@ public:
                   const ProcessorGroup* myworld,
                   ArchesParticlesHelper* particle_helper,
                   SolverInterface* hypreSolver,
-                  const ApplicationCommon* arches );
+                  ApplicationCommon* arches );
 
   virtual ~ExplicitSolver();
 

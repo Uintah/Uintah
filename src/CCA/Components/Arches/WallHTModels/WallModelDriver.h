@@ -108,7 +108,7 @@ namespace Uintah{
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency
       std::string _T_label_name;         ///< Temperature label name
       MaterialManagerP& _materialManager;
-      int _matl_index;                   ///< Material index
+      int m_matl_index;                   ///< Material index
 
       const VarLabel* _timeStepLabel;
       const VarLabel* _simulationTimeLabel;

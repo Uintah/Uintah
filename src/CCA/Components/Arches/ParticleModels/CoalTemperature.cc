@@ -151,7 +151,7 @@ CoalTemperature::create_local_labels(){
 
   for ( int i = 0; i < _Nenv; i++ ){
 
-    const std::string temperature_name = get_env_name( i, _task_name );
+    const std::string temperature_name = get_env_name( i, m_task_name );
     register_new_variable<CCVariable<double> >( temperature_name );
     const std::string dTdt_name = get_env_name( i, _dTdt_base_name );
     register_new_variable<CCVariable<double> >( dTdt_name );
@@ -165,7 +165,7 @@ CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::Variable
 
   for ( int i = 0; i < _Nenv; i++ ){
 
-    const std::string temperature_name  = get_env_name( i, _task_name );
+    const std::string temperature_name  = get_env_name( i, m_task_name );
     const std::string dTdt_name  = get_env_name( i, _dTdt_base_name );
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
@@ -195,7 +195,7 @@ void CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
-    const std::string temperature_name = get_env_name( ienv, _task_name );
+    const std::string temperature_name = get_env_name( ienv, m_task_name );
     const std::string dTdt_name = get_env_name( ienv, _dTdt_base_name );
     CCVariable<double>& temperature = *(tsk_info->get_uintah_field<CCVariable<double> >( temperature_name ));
     CCVariable<double>& dTdt = *(tsk_info->get_uintah_field<CCVariable<double> >( dTdt_name ));
@@ -215,8 +215,8 @@ CoalTemperature::register_timestep_init( std::vector<ArchesFieldContainer::Varia
 
   for ( int i = 0; i < _Nenv; i++ ){
 
-    const std::string temperature_name  = get_env_name( i, _task_name );
-    const std::string temperatureold_name  = get_env_name( i, _task_name );
+    const std::string temperature_name  = get_env_name( i, m_task_name );
+    const std::string temperatureold_name  = get_env_name( i, m_task_name );
 
     register_variable( temperature_name , ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( temperatureold_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
@@ -231,8 +231,8 @@ CoalTemperature::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
-    const std::string temperature_name  = get_env_name( ienv, _task_name );
-    const std::string temperatureold_name  = get_env_name( ienv, _task_name );
+    const std::string temperature_name  = get_env_name( ienv, m_task_name );
+    const std::string temperatureold_name  = get_env_name( ienv, m_task_name );
 
     CCVariable<double>& temperature   = *(tsk_info->get_uintah_field<CCVariable<double> >( temperature_name ));
     constCCVariable<double>& temperature_old   = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( temperatureold_name ));
@@ -251,7 +251,7 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
   for ( int i = 0; i < _Nenv; i++ ){
 
     const std::string dTdt_name  = get_env_name( i, _dTdt_base_name );
-    const std::string temperature_name  = get_env_name( i, _task_name );
+    const std::string temperature_name  = get_env_name( i, m_task_name );
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
@@ -286,7 +286,7 @@ void CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   for ( int ix = 0; ix < _Nenv; ix++ ){
 
-    const std::string temperature_name = get_env_name( ix, _task_name );
+    const std::string temperature_name = get_env_name( ix, m_task_name );
     const std::string dTdt_name        = get_env_name( ix, _dTdt_base_name );
     const std::string char_name        = get_env_name( ix, _char_base_name );
     const std::string enthalpy_name    = get_env_name( ix, _enthalpy_base_name );

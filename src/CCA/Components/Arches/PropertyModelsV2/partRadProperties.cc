@@ -392,14 +392,14 @@ void partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_inf
   auto scatkt =  createContainer<CCVariable<double>, double, 1 , MemSpace>(_scatteringOn ? 1 :0);
   auto asymm   =  createContainer<CCVariable<double>, double, 1 , MemSpace>(_scatteringOn ? 1 :0);
   const int TSS = tsk_info->get_time_substep();
-  //auto abskp           = tsk_info->get_uintah_field_add<T, double, MemSpace>(_abskp_name, abskp, _matl_index, _new_dw_time_substep);
-  tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(abskp[0] ,_abskp_name,patch->getID(),_matl_index,1);
+  //auto abskp           = tsk_info->get_uintah_field_add<T, double, MemSpace>(_abskp_name, abskp, m_matl_index, _new_dw_time_substep);
+  tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(abskp[0] ,_abskp_name,patch->getID(),m_matl_index,1);
   if (_scatteringOn){
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(scatkt[0],_scatkt_name,patch->getID(),_matl_index,TSS);
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(asymm[0],_asymmetryParam_name,patch->getID(),_matl_index,TSS);
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(scatkt[0],_scatkt_name,patch->getID(),m_matl_index,TSS);
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(asymm[0],_asymmetryParam_name,patch->getID(),m_matl_index,TSS);
   }
 
-  auto vol_fraction   = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace>("volFraction",patch->getID() , _matl_index, 1);
+  auto vol_fraction   = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace>("volFraction",patch->getID() , m_matl_index, 1);
 
   auto RC_mass =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemSpace>(_nQn_part);
   auto Char_mass =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemSpace>(_nQn_part);
@@ -409,26 +409,26 @@ void partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_inf
 
   for (int ix=0; ix< _nQn_part ; ix++){
     if (_isCoal){
-      RC_mass[ix]  =tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(_RC_name_v[ix]  ,patch->getID(),_matl_index,TSS);
-      Char_mass[ix]=tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(_Char_name_v[ix],patch->getID(),_matl_index,TSS);
+      RC_mass[ix]  =tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(_RC_name_v[ix]  ,patch->getID(),m_matl_index,TSS);
+      Char_mass[ix]=tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(_Char_name_v[ix],patch->getID(),m_matl_index,TSS);
     }
-      weightQuad[ix]  = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(_weight_name_v[ix],patch->getID(),_matl_index,1);
-      temperatureQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(_temperature_name_v[ix],patch->getID(),_matl_index,1);
-      sizeQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(_size_name_v[ix],patch->getID(),_matl_index,1);
+      weightQuad[ix]  = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(_weight_name_v[ix],patch->getID(),m_matl_index,1);
+      temperatureQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(_temperature_name_v[ix],patch->getID(),m_matl_index,1);
+      sizeQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(_size_name_v[ix],patch->getID(),m_matl_index,1);
   }
 
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   auto abskpQuad =  createContainer<CCVariable<double>, double, MAX_DQMOM_ENV , MemSpace>(_nQn_part);
   for (int i=0; i< _nQn_part ; i++){
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(abskpQuad[i],_abskp_name_vector[i],patch->getID(),_matl_index,1);
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(abskpQuad[i],_abskp_name_vector[i],patch->getID(),m_matl_index,1);
   }
 
 
   parallel_initialize(executionObject,0.0,abskp[0],scatkt,asymm,abskpQuad);
   auto abs_scat_coeff =  createContainer<CCVariable<double>, double,DEP_VAR_SIZE, MemSpace>(_nDVs); // no need to initialize;
   for (int i=0; i<_nDVs; i++){
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(abs_scat_coeff[i],"partRadProps_temporary_"+std::to_string(i),patch->getID(),_matl_index,1);
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(abs_scat_coeff[i],"partRadProps_temporary_"+std::to_string(i),patch->getID(),m_matl_index,1);
   } 
 
   const double  portable_absorption_modifier =_absorption_modifier;
@@ -472,8 +472,8 @@ void partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_inf
         enum independentVariables{ en_size, en_temp};
         enum DependentVariables{ abs_coef, sca_coef};
         auto IV =  createContainer<constCCVariable<double>, const double, IND_VAR_SIZE , MemSpace>(_nIVs);
-        IV[en_size]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(_size_name_v[ix],patch->getID(),_matl_index,1);
-        IV[en_temp]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(_temperature_name_v[ix],patch->getID(),_matl_index,1);
+        IV[en_size]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(_size_name_v[ix],patch->getID(),m_matl_index,1);
+        IV[en_temp]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(_temperature_name_v[ix],patch->getID(),m_matl_index,1);
         parallel_initialize(executionObject,0.0,abs_scat_coeff);
         myTable->getState(executionObject,IV, abs_scat_coeff, patch); // indepvar)names diameter, size
         Uintah::parallel_for( executionObject,range,  KOKKOS_LAMBDA(int i, int j, int k) {

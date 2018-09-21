@@ -497,9 +497,9 @@ bool visit_CheckState( visit_simulation_data *sim )
         // VisItUI_setValueS("SIMULATION_MESSAGE", sim->message.c_str(), 1);
 
         std::stringstream msg;
-        msg << "Visit libsim - Completed simulation "
-            << "timestep " << sim->cycle << ",  "
-            << "Time = "   << sim->time;
+        msg << "Visit libsim - Completed the simulation at "
+            << "time step " << sim->cycle << ",  "
+            << "time = "   << sim->time;
         
         // DOUT( visitdbg, msg.str().c_str() );
         
@@ -562,8 +562,8 @@ bool visit_CheckState( visit_simulation_data *sim )
               
             std::stringstream msg;
             msg << "Visit libsim - Stopped the simulation at "
-                << "timestep " << sim->cycle << ",  "
-                << "Time = " << sim->time;
+                << "time step " << sim->cycle << ",  "
+                << "time = " << sim->time;
             
             DOUT( visitdbg, msg.str().c_str() );
  
@@ -710,20 +710,16 @@ bool visit_CheckState( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
-                          double time,  unsigned int cycle,
-                          double delt, double delt_next,
                           bool first, bool last )
 {
-  // ApplicationInterface* appInterface =
-  //   sim->simController->getApplicationInterface();
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
 
   // Update all of the simulation grid and time dependent variables.
   sim->gridP     = currentGrid;
 
-  sim->time      = time;
-  sim->cycle     = cycle;
-  sim->delt      = delt;
-  sim->delt_next = delt_next;
+  sim->time      = appInterface->getSimTime();
+  sim->cycle     = appInterface->getTimeStep();
   
   sim->first     = first;
 

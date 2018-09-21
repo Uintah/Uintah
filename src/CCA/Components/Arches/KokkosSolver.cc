@@ -60,7 +60,7 @@ typedef std::vector<std::string> SVec;
 KokkosSolver::KokkosSolver( MaterialManagerP& materialManager,
                             const ProcessorGroup* myworld,
                             SolverInterface* solver,
-                            const ApplicationCommon* arches )
+                            ApplicationCommon* arches )
   : NonlinearSolver ( myworld, arches )
   , m_materialManager   ( materialManager )
   , m_hypreSolver   ( solver )

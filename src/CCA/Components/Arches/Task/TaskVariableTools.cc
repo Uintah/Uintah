@@ -34,7 +34,6 @@ namespace {
 
 namespace Uintah {
 
-
    void register_variable_work( std::string name,
                                 ArchesFieldContainer::VAR_DEPEND dep,
                                 int nGhost,

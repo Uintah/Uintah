@@ -245,7 +245,7 @@ namespace Uintah{
   private:
 
     ArchesParticlesHelper* _part_helper;          ///< Particle Helper
-    int _matl_index;
+    int m_matl_index;
 
   };
 

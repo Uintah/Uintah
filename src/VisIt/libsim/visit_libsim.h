@@ -74,7 +74,7 @@ class SimulationController;
 #define VISIT_SIMMODE_TERMINATED 5
 
 
-typedef struct
+typedef struct visit_simulation_data
 {
   const ProcessorGroup* myworld;
 
@@ -84,11 +84,8 @@ typedef struct
   
   TimeStepInfo* stepInfo;
 
-  int cycle;
-
+  int    cycle;
   double time;
-  double delt;
-  double delt_next;
 
   // UDA archive variables.
   int  loadExtraElements;
@@ -157,8 +154,6 @@ bool visit_CheckState(visit_simulation_data *sim);
 
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
-                          double time,  unsigned int cycle,
-                          double delt,  double delt_next,
                           bool first, bool last );
 
 void visit_Initialize( visit_simulation_data *sim );

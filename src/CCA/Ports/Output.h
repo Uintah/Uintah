@@ -192,12 +192,14 @@ WARNING
     virtual void   setSaveAsUDA() = 0;
     virtual void   setSaveAsPIDX() = 0;
 
-    //! Called by In-situ VisIt to force the dump of a time step's data.
+    //! Called by yn situ VisIt to force the dump of a time step's data.
     virtual void outputTimeStep( const GridP& grid,
-                                 SchedulerP& sched ) = 0;
+                                 SchedulerP& sched,
+                                 bool previous ) = 0;
 
     virtual void checkpointTimeStep( const GridP& grid,
-                                     SchedulerP& sched ) = 0;
+                                     SchedulerP& sched,
+                                     bool previous ) = 0;
 
     virtual void maybeLastTimeStep( bool val ) = 0;
     virtual bool maybeLastTimeStep() = 0;
@@ -220,6 +222,10 @@ WARNING
     
     virtual void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) = 0;
 
+    // Returns trus if an output or checkpoint exists for the time step
+    virtual bool outputTimeStepExists( unsigned int ts ) = 0;
+    virtual bool checkpointTimeStepExists( unsigned int ts ) = 0;
+    
   private:
     
     Output( const Output& );

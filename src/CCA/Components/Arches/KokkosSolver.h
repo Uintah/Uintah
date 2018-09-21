@@ -49,7 +49,7 @@ namespace Uintah{
     Builder( MaterialManagerP& materialManager,
              const ProcessorGroup* myWorld,
              SolverInterface* solver,
-             const ApplicationCommon* arches ) :
+             ApplicationCommon* arches ) :
              m_materialManager(materialManager),
              m_myWorld(myWorld),
              m_solver(solver),
@@ -69,14 +69,14 @@ namespace Uintah{
     MaterialManagerP& m_materialManager;
     const ProcessorGroup* m_myWorld;
     SolverInterface* m_solver;
-    const ApplicationCommon* m_arches;
+    ApplicationCommon* m_arches;
 
   };
 
   KokkosSolver( MaterialManagerP& materialManager,
                 const ProcessorGroup* myworld,
                 SolverInterface* solver,
-                const ApplicationCommon* arches );
+		ApplicationCommon* arches );
 
   virtual ~KokkosSolver();
 

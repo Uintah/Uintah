@@ -99,11 +99,11 @@ public:
 
     /** @brief Print task name. **/
     void print_task_name(){
-      std::cout << "Task: " << _task_name << std::endl;
+      std::cout << "Task: " << m_task_name << std::endl;
     }
 
     /** @brief Get task name **/
-    const std::string get_task_name(){ return _task_name; }
+    const std::string get_task_name(){ return m_task_name; }
 
     /** @brief Input file interface **/
     virtual void problemSetup( ProblemSpecP& db ) = 0;
@@ -178,7 +178,7 @@ public:
       else {
         std::string eSpace_name=typeid(ExecutionSpace).name();
         std::string mSpace_name=typeid(MemSpace).name();
-        throw InternalError("Derived class version of Arches task initialize() not found for"+_task_name+" in: "+eSpace_name+" with: "+mSpace_name, __FILE__, __LINE__);
+        throw InternalError("Derived class version of Arches task initialize() not found for"+m_task_name+" in: "+eSpace_name+" with: "+mSpace_name, __FILE__, __LINE__);
       }
 
       // Found the initialize() function pointer associated with the execution space.  Run it.
@@ -352,9 +352,9 @@ protected:
 
     WBCHelper* m_bcHelper;
 
-    std::string                  _task_name;
-    const int                    _matl_index;
-    std::vector<const VarLabel*> _local_labels;
+    std::string                  m_task_name;
+    const int                    m_matl_index;
+    std::vector<const VarLabel*> m_local_labels;
 
     /** @brief A helper struct for creating new varlabels as requested by the task **/
     template <typename T>
@@ -390,7 +390,7 @@ protected:
     void register_new_variable(const std::string name){
 
       RegisterNewVariableHelper<T>* helper = scinew RegisterNewVariableHelper<T>();
-      helper->create_variable( name, _local_labels );
+      helper->create_variable( name, m_local_labels );
       delete helper;
 
     }

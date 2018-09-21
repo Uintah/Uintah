@@ -22,32 +22,39 @@
  * IN THE SOFTWARE.
  */
 
-//----- NonlinearSolver.cc ----------------------------------------------
+#ifndef CCA_COMPONENTS_ARCHES_STATS_ENUMS_H
+#define CCA_COMPONENTS_ARCHES_STATS_ENUMS_H
 
-#include <CCA/Components/Arches/NonlinearSolver.h>
 
-using namespace Uintah;
+namespace Uintah {
 
-NonlinearSolver::NonlinearSolver( const ProcessorGroup* myworld,
-                                  ApplicationCommon* arches )
-   : d_myworld(myworld), m_arches(arches)
-{}
+/**************************************
+      
+    CLASS
+      ArchesStatsEnum
+      
+      
+    GENERAL INFORMATION
+      
+      ArchesStatsEnum.h
+      
+      
+    KEYWORDS
+      Arches Runtime Stats Enumerations
+      
+    DESCRIPTION
+      Arches Runtime Stats Enums to be used by Arches.
+      
+      
+****************************************/
 
-NonlinearSolver::~NonlinearSolver()
-{}
+  // timing statistics to test load balance
+  enum ArchesStatsEnum
+  {
+    StableTimeStep,
+    StableTimeStepUnderflow,
+  };
 
-void
-NonlinearSolver::commonProblemSetup( ProblemSpecP db ){
+} // end namespace Uintah
 
-  //The underflow uses a different method to compute the CFL
-  // dt = dx * rho / (div(rhou)) about the CC.
-  // otherwise, it is the standard conv/diff CFL.
-  d_underflow = false;
-  if ( db->findBlock("scalarUnderflowCheck") ){
-    d_underflow = true;
-  }
-
-  db->getWithDefault("initial_dt",d_initial_dt,1.0);
-
-  m_arches_spec = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
-}
+#endif // CCA_COMPONENTS_ARCHES_STATS_ENUMS_H
