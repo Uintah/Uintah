@@ -39,7 +39,7 @@ TaskAssignedExecutionSpace GravityA::loadTaskEvalFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &GravityA::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &GravityA::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &GravityA::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &GravityA::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -195,7 +195,7 @@ void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
     double aGravity=m_gravity[0]; // acceleration due to gravity
     auto gx = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace >(m_gx_label);
     parallel_initialize(exObj,0.0,gx);
-    Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
+    Uintah::parallel_for( exObj,range, KOKKOS_LAMBDA (int i, int j, int k){
       gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - ref_density )*aGravity;    
     });
 
@@ -204,7 +204,7 @@ void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
     auto gy = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace >(m_gy_label);
     parallel_initialize(exObj,0.0,gy);
 
-    Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
+    Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - ref_density )*aGravity;    
     });
 
@@ -213,7 +213,7 @@ void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
     auto gz = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >(m_gz_label);
     parallel_initialize(exObj,0.0,gz);
 
-    Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
+    Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - ref_density )*aGravity;    
     });
 

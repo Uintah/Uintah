@@ -172,7 +172,7 @@ DensityStar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for(exObj,range, KOKKOS_LAMBDA(int i, int j, int k){
-  rhoStar(i,j,k)=old_rhoStar(i,j,k);
+    rhoStar(i,j,k)=old_rhoStar(i,j,k);
   });
 
 }

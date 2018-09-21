@@ -77,6 +77,23 @@ public:
         return  VelocityDerivative_central<grid_CT>(_u,_Dx);
      } // WE have to do this because of CCVariables
 
+
+
+#define dVeldDir(u, Dx, dudx, dudy, dudz, i,  j, k ) \
+         {                                           \
+           STENCIL3_1D(0);                           \
+           dudx = (u(IJK_) - u(IJK_M_))/Dx.x();      \
+         }                                           \
+         {                                           \
+           STENCIL3_1D(1);                           \
+           dudy = (u(IJK_) - u(IJK_M_))/Dx.y();      \
+         }                                           \
+         {                                           \
+           STENCIL3_1D(2);                           \
+           dudz = (u(IJK_) - u(IJK_M_))/Dx.z();      \
+         }    
+
+
     //Build instructions for this class.
     class Builder : public TaskInterface::TaskBuilder {
 

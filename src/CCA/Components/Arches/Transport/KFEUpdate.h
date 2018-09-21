@@ -163,7 +163,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::BC>( this
                                        , &KFEUpdate<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KFEUpdate<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &KFEUpdate<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KFEUpdate<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -173,8 +173,8 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &KFEUpdate<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &KFEUpdate<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &KFEUpdate<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KFEUpdate<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       , &KFEUpdate<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -185,7 +185,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &KFEUpdate<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KFEUpdate<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &KFEUpdate<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KFEUpdate<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -378,7 +378,7 @@ private:
 
     const double dt = tsk_info->get_dt();
     Vector DX = patch->dCell();
-    const double V = DX.x()*DX.y()*DX.z();
+    const double Vol = DX.x()*DX.y()*DX.z();
 
     typedef std::vector<std::string> SV;
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
@@ -430,7 +430,7 @@ private:
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                       az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
 
-          phi(i,j,k) = phi(i,j,k) + dt/V * rhs(i,j,k);
+          phi(i,j,k) = phi(i,j,k) + dt/Vol * rhs(i,j,k);
         });
 
       } else {
@@ -452,13 +452,13 @@ private:
           const double alpha=_alpha[time_substep];
           const double beta=_beta[time_substep];
 
-          Uintah::parallel_for( range2, KOKKOS_LAMBDA (int i, int j, int k){
+          Uintah::parallel_for(exObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
          
           rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                       az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
 
-          phi(i,j,k) = phi(i,j,k) + dt/V * rhs(i,j,k);
+          phi(i,j,k) = phi(i,j,k) + dt/Vol * rhs(i,j,k);
 
           phi(i,j,k) = alpha * old_phi(i,j,k) + beta * phi(i,j,k);
 
@@ -471,13 +471,12 @@ private:
 
     }
 
-    // unscaling
-    // work in progress
+     //unscaling
+     //work in progress
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
 
       std::string varname = ieqn->first;
       Scaling_info info = ieqn->second;
-      //const double scaling_constant = ieqn->second;
       auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(m_volFraction_name);
 
       auto phi = tsk_info->get_uintah_field_add<T,double, MemSpace>(varname);
@@ -485,7 +484,7 @@ private:
 
       Uintah::BlockRange range3( patch->getCellLowIndex(), patch->getCellHighIndex() );
       const double ScalingConstant=info.constant  ;
-      Uintah::parallel_for( range3, KOKKOS_LAMBDA(int i, int j, int k){
+      Uintah::parallel_for(exObj, range3, KOKKOS_LAMBDA(int i, int j, int k){
 
         phi_unscaled(i,j,k) = phi(i,j,k) * ScalingConstant* vol_fraction(i,j,k);
 
@@ -509,17 +508,18 @@ private:
 //--------------------------------------------------------------------------------------------------
   template <typename T >
   template<typename ExecutionSpace, typename MemSpace>
-  void KFEUpdate<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+  void KFEUpdate<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+
+  auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_volFraction_name);
   
 
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
-    CT& phi = tsk_info->get_const_uintah_field_add<CT>(ieqn->first);
-    T& phi_unscaled = tsk_info->get_uintah_field_add<T>((ieqn->second).unscaled_var);
+    auto phi = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(ieqn->first);
+    auto phi_unscaled = tsk_info->get_uintah_field_add<T, double, MemSpace>((ieqn->second).unscaled_var);
     
     for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
       const bool on_this_patch = i_bc->second.has_patch(patch->getID());
@@ -527,9 +527,9 @@ private:
 
       if ( on_this_patch ){
         Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-        
-            parallel_for_unstructured(executionObject,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
-            phi_unscaled(i,j,k) = phi(i,j,k) * (ieqn->second).constant*vol_fraction(i,j,k) ;
+        const double scalConstant=(ieqn->second).constant;
+            parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+            phi_unscaled(i,j,k) = phi(i,j,k) *scalConstant *vol_fraction(i,j,k) ;
           });
         }
     }

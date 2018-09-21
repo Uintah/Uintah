@@ -103,8 +103,8 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::BC>( this
                                        , &Diffusion<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &Diffusion<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &Diffusion<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &Diffusion<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       , &Diffusion<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -114,8 +114,8 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &Diffusion<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &Diffusion<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &Diffusion<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &Diffusion<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       , &Diffusion<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -216,18 +216,15 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
-  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
     for (int ieqn = 0; ieqn < int(m_eqn_names.size()); ieqn++ ){
 
       if ( m_do_diff[ieqn] ){
-        FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_dflux");
-        FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_dflux");
-        FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_dflux");
-
-        x_flux.initialize(0.0);
-        y_flux.initialize(0.0);
-        z_flux.initialize(0.0);
+        auto x_flux = tsk_info->get_uintah_field_add<FXT,double,MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
+        auto y_flux = tsk_info->get_uintah_field_add<FYT,double,MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
+        auto z_flux = tsk_info->get_uintah_field_add<FZT,double,MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
+        parallel_initialize(exObj, 0.0, x_flux,y_flux,z_flux);
       }
     }
   }
@@ -280,10 +277,10 @@ private:
 
         auto D = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_D_name);
 
-        // x - Direction
+         //x - Direction
         GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
         Uintah::BlockRange xrange(low_fx_patch_range, high_fx_patch_range);
-        Uintah::parallel_for( xrange, KOKKOS_LAMBDA (int i, int j, int k){
+        Uintah::parallel_for(exObj, xrange, KOKKOS_LAMBDA (int i, int j, int k){
 
           const double afx  = ( eps(i,j,k) + eps(i-1,j,k) ) / 2. < 0.51 ? 0.0 : 1.0;
 
@@ -295,7 +292,7 @@ private:
         // y - Direction
         GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
         Uintah::BlockRange yrange(low_fy_patch_range, high_fy_patch_range);
-        Uintah::parallel_for( yrange, KOKKOS_LAMBDA (int i, int j, int k){
+        Uintah::parallel_for(exObj, yrange, KOKKOS_LAMBDA (int i, int j, int k){
 
           const double afy  = ( eps(i,j,k) + eps(i,j-1,k) ) / 2. < 0.51 ? 0.0 : 1.0;
 
@@ -307,7 +304,7 @@ private:
         // z - Direction
         GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
         Uintah::BlockRange zrange(low_fz_patch_range, high_fz_patch_range);
-        Uintah::parallel_for( zrange, KOKKOS_LAMBDA (int i, int j, int k){
+        Uintah::parallel_for(exObj, zrange, KOKKOS_LAMBDA (int i, int j, int k){
 
           const double afz  = ( eps(i,j,k) + eps(i,j,k-1) ) / 2. < 0.51 ? 0.0 : 1.0;
 

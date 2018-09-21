@@ -53,7 +53,8 @@ public:
     template <typename ExecutionSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
-    void get_properties( const Patch* patch, ArchesTaskInfoManager* tsk_info ); 
+    template <typename ExecutionSpace, typename MemSpace>
+    void get_properties( ExecutionObject<ExecutionSpace, MemSpace>& exObj, const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     //Build instructions for this (ColdFlowProperties) class.
     class Builder : public TaskInterface::TaskBuilder {
