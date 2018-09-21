@@ -19,8 +19,8 @@ TaskAssignedExecutionSpace VelRhoHatBC::loadTaskComputeBCsFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::BC>( this
                                      , &VelRhoHatBC::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &VelRhoHatBC::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &VelRhoHatBC::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &VelRhoHatBC::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &VelRhoHatBC::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -29,8 +29,8 @@ TaskAssignedExecutionSpace VelRhoHatBC::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &VelRhoHatBC::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &VelRhoHatBC::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &VelRhoHatBC::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &VelRhoHatBC::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &VelRhoHatBC::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -39,8 +39,8 @@ TaskAssignedExecutionSpace VelRhoHatBC::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &VelRhoHatBC::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &VelRhoHatBC::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &VelRhoHatBC::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &VelRhoHatBC::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &VelRhoHatBC::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -73,51 +73,16 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_zmom, AFC::MODIFIES, variable_registry, m_task_name );
 }
 
-//--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+// wrapper templated function to deal with different types
+template<typename ExecutionSpace, typename MemSpace, typename grid_T>
+void VelRhoHatBC::set_mom_bc( ExecutionObject<ExecutionSpace,MemSpace> &exObj,grid_T& var, IntVector& iDir,  const double &possmall , const int sign, ListOfCellsIterator& cell_iter){
+     int move_to_face_value = ( (iDir[0]+iDir[1]+iDir[2]) < 1 ) ? 1 : 0;
 
-  SFCXVariable<double>* xmom = tsk_info->get_uintah_field<SFCXVariable<double> >( m_xmom );
-  SFCYVariable<double>* ymom = tsk_info->get_uintah_field<SFCYVariable<double> >( m_ymom );
-  SFCZVariable<double>* zmom = tsk_info->get_uintah_field<SFCZVariable<double> >( m_zmom );
+     IntVector move_to_face(std::abs(iDir[0])*move_to_face_value,
+                            std::abs(iDir[1])*move_to_face_value,
+                            std::abs(iDir[2])*move_to_face_value);
 
-  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
-  const double possmall = 1e-16;
-
-  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-
-    Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
-    IntVector iDir = patch->faceDirection( i_bc->second.face );
-    Patch::FaceType face = i_bc->second.face;
-    BndTypeEnum my_type = i_bc->second.type;
-    int sign = iDir[0] + iDir[1] + iDir[2];
-    int bc_sign = 0;
-    int move_to_face_value = ( sign < 1 ) ? 1 : 0;
-
-    IntVector move_to_face(std::abs(iDir[0])*move_to_face_value,
-                           std::abs(iDir[1])*move_to_face_value,
-                           std::abs(iDir[2])*move_to_face_value);
-
-    Array3<double>* var = NULL;
-    if ( face == Patch::xminus || face == Patch::xplus ){
-      var = xmom;
-    }  else if ( face == Patch::yminus || face == Patch::yplus ){
-      var = ymom;
-    } else {
-      var = zmom;
-    }
-
-    if ( my_type == OUTLET ){
-      bc_sign = 1.;
-    } else if ( my_type == PRESSURE){
-      bc_sign = -1.;
-    }
-
-    sign = bc_sign * sign;
-
-    if ( my_type == OUTLET || my_type == PRESSURE ){
-      // This applies the mostly in (pressure)/mostly out (outlet) boundary condition
-      parallel_for_unstructured(executionObject, cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+      parallel_for_unstructured(exObj, cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
         int i_f = i + move_to_face[0]; // cell on the face
         int j_f = j + move_to_face[1];
         int k_f = k + move_to_face[2];
@@ -130,17 +95,60 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
         int jpp = j_f + iDir[1];
         int kpp = k_f + iDir[2];
 
-        if ( sign * (*var)(i_f,j_f,k_f) > possmall ){
+        if ( sign * var(i_f,j_f,k_f) > possmall ){
           // du/dx = 0
-          (*var)(i_f,j_f,k_f)= (*var)(im,jm,km);
+          var(i_f,j_f,k_f)= var(im,jm,km);
         } else {
           // shut off the hatted value to encourage the mostly-* condition
-          (*var)(i_f,j_f,k_f) = 0.0;
+          var(i_f,j_f,k_f) = 0.0;
         }
-
-        (*var)(ipp,jpp,kpp) = (*var)(i_f,j_f,k_f);
+          var(ipp,jpp,kpp) = var(i_f,j_f,k_f); 
 
       });
+  }
+
+//--------------------------------------------------------------------------------------------------
+template<typename ExecutionSpace, typename MemSpace>
+void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+
+  auto xmom = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace >( m_xmom );
+  auto ymom = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace >( m_ymom );
+  auto zmom = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >( m_zmom );
+
+  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
+  const double possmall = 1e-16;
+
+  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+
+    Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
+    IntVector iDir = patch->faceDirection( i_bc->second.face );
+    Patch::FaceType face = i_bc->second.face;
+    BndTypeEnum my_type = i_bc->second.type;
+    int sign = iDir[0] + iDir[1] + iDir[2];
+    int bc_sign = 0;
+
+    if ( my_type == OUTLET ){
+      bc_sign = 1.;
+    } else if ( my_type == PRESSURE){
+      bc_sign = -1.;
+    }
+
+    sign = bc_sign * sign;
+
+    if ( my_type == OUTLET || my_type == PRESSURE ){
+      if ( face == Patch::xminus || face == Patch::xplus ){
+        set_mom_bc(exObj, xmom, iDir, possmall , sign, cell_iter);
+      }else if ( face == Patch::yminus || face == Patch::yplus ){
+        set_mom_bc(exObj, ymom, iDir, possmall , sign, cell_iter);
+      }else {
+        set_mom_bc(exObj, zmom, iDir, possmall , sign, cell_iter);
+      }
+      // This applies the mostly in (pressure)/mostly out (outlet) boundary condition
     }
   }
 }
+
+
+
+
+

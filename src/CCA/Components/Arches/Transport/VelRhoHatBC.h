@@ -76,6 +76,9 @@ public:
 
     };
 
+template<typename ExecutionSpace, typename MemSpace, typename grid_T>
+void set_mom_bc( ExecutionObject<ExecutionSpace,MemSpace>& exObj,grid_T& var, IntVector& iDir,  const double &possmall , const int sign, ListOfCellsIterator& cell_iter);
+
 private:
 
     std::string m_xmom;
