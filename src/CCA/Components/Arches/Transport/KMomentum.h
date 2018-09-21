@@ -158,41 +158,56 @@ private:
         switch (m_conv_scheme[ieqn]){
           case CENTRAL:
             {
-            Uintah::ComputeConvectiveFlux<grid_T,grid_CT,CentralConvection  >              
-                get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
-            Uintah::parallel_for(exObj, convection_range, get_flux );
+            //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,CentralConvection  >              
+                //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            //Uintah::parallel_for(exObj, convection_range, get_flux );
+            Uintah::ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,CentralConvection> partiallySpecializedTemplateStruct; 
+                partiallySpecializedTemplateStruct.get_flux(exObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
             }
             break;
           case FOURTH:
             {
-              Uintah::ComputeConvectiveFlux<grid_T,grid_CT,FourthConvection  >              
-                  get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
-              Uintah::parallel_for(exObj, convection_range, get_flux );
+            //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,FourthConvection  >              
+                //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            //Uintah::parallel_for(exObj, convection_range, get_flux );
+              Uintah::ComputeConvectiveFlux3D<ExecutionSpace, MemSpace,grid_T,grid_CT,FourthConvection  > partiallySpecializedTemplateStruct;           
+                partiallySpecializedTemplateStruct.get_flux(exObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
             }
             break;
           case VANLEER:
             {
-              Uintah::ComputeConvectiveFlux<grid_T,grid_CT,VanLeerConvection  >              
-                   get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
-              Uintah::parallel_for(exObj, convection_range, get_flux );
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,VanLeerConvection  >              
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::parallel_for(exObj, convection_range, get_flux );
+              Uintah::ComputeConvectiveFlux3D<ExecutionSpace, MemSpace,grid_T,grid_CT,VanLeerConvection  > partiallySpecializedTemplateStruct;              
+                partiallySpecializedTemplateStruct.get_flux(exObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
             }
             break;
           case SUPERBEE:
             {
-              Uintah::ComputeConvectiveFlux<grid_T,grid_CT,SuperBeeConvection  >              
-                   get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,SuperBeeConvection  >              
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::parallel_for(exObj, convection_range, get_flux );
+              Uintah::ComputeConvectiveFlux3D<ExecutionSpace, MemSpace,grid_T,grid_CT,SuperBeeConvection  > partiallySpecializedTemplateStruct;          
+                partiallySpecializedTemplateStruct.get_flux(exObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
             }
             break;
           case ROE:
             {
-              Uintah::ComputeConvectiveFlux<grid_T,grid_CT,RoeConvection  >              
-                   get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,RoeConvection  >              
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::parallel_for(exObj, convection_range, get_flux );
+              Uintah::ComputeConvectiveFlux3D<ExecutionSpace, MemSpace,grid_T,grid_CT,RoeConvection  > partiallySpecializedTemplateStruct;             
+                partiallySpecializedTemplateStruct.get_flux(exObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
             }
             break;
           case UPWIND:
             {
-              Uintah::ComputeConvectiveFlux<grid_T,grid_CT,UpwindConvection  >              
-                   get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,UpwindConvection  >              
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::parallel_for(exObj, convection_range, get_flux );
+              Uintah::ComputeConvectiveFlux3D<ExecutionSpace, MemSpace,grid_T,grid_CT,UpwindConvection  > partiallySpecializedTemplateStruct;
+                partiallySpecializedTemplateStruct.get_flux(exObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
             }
             break;
           default:
@@ -617,15 +632,7 @@ private:
       auto y_flux = tsk_info->get_uintah_field_add<FYT,double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
       auto z_flux = tsk_info->get_uintah_field_add<FZT,double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
-      Uintah::BlockRange init_range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-      Uintah::parallel_for( init_range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        rhs(i,j,k) = 0.;
-        x_flux(i,j,k) = 0.;
-        y_flux(i,j,k) = 0.;
-        z_flux(i,j,k) = 0.;
-
-      });
+      parallel_initialize(exObj,0.0,rhs,x_flux,y_flux,z_flux);
 
       //convection
       if ( m_conv_scheme[ieqn] != NOCONV ){
@@ -649,43 +656,6 @@ private:
         auto w_fz = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_z_velocity_name);
 
         doConvection(exObj,convection_range, phi, u_fx, v_fy , w_fz , x_flux , y_flux , z_flux , eps, ieqn);
-        //doConvection(exObj);
-
-        // switch between difference convection schemes:
-        //switch (m_conv_scheme[ieqn]){
-          //case CENTRAL:
-            //{
-            //MOMCONVECTION(CentralConvection);
-            //}
-            //break;
-          //case FOURTH:
-            //{
-            //MOMCONVECTION(FourthConvection);
-            //}
-            //break;
-          //case VANLEER:
-            //{
-            //MOMCONVECTION(VanLeerConvection);
-            //}
-            //break;
-          //case SUPERBEE:
-            //{
-            //MOMCONVECTION(SuperBeeConvection);
-            //}
-            //break;
-          //case ROE:
-            //{
-            //MOMCONVECTION(RoeConvection);
-            //}
-            //break;
-          //case UPWIND:
-            //{
-            //MOMCONVECTION(UpwindConvection);
-            //}
-            //break;
-          //default:
-            //throw InvalidValue("Error: Momentum convection scheme not recognized.", __FILE__, __LINE__);
-        //}
       }
 
       //Stress
@@ -696,11 +666,11 @@ private:
 
         ArchesCore::VariableHelper<T> var_help;
 
-        constCCVariable<double>& sigma1 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmax_name));
-        constCCVariable<double>& sigma2 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmay_name));
-        constCCVariable<double>& sigma3 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmaz_name));
+        auto sigma1 = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double,MemSpace>(m_sigmax_name);
+        auto sigma2 = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double,MemSpace>(m_sigmay_name);
+        auto sigma3 = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double,MemSpace>(m_sigmaz_name);
 
-        auto stressTensor = [&] (int i, int j, int k){
+        auto stressTensor = KOKKOS_LAMBDA (int i, int j, int k){
           double div_sigma1 = (sigma1(i+1,j,k) - sigma1(i,j,k))*areaEW +
                               (sigma2(i,j+1,k) - sigma2(i,j,k))*areaNS +
                               (sigma3(i,j,k+1) - sigma3(i,j,k))*areaTB;
@@ -712,15 +682,15 @@ private:
         if ( my_dir == ArchesCore::XDIR ){
           GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1, 0)
           Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
-          Uintah::parallel_for( range, stressTensor );
+          Uintah::parallel_for(exObj, range, stressTensor );
         } else if ( my_dir == ArchesCore::YDIR ){
           GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1, 0);
           Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
-          Uintah::parallel_for( range, stressTensor );
+          Uintah::parallel_for(exObj, range, stressTensor );
         } else {
           GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1, 0);
           Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
-          Uintah::parallel_for( range, stressTensor );
+          Uintah::parallel_for(exObj, range, stressTensor );
         }
       }
 
@@ -728,26 +698,26 @@ private:
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator isrc = m_source_info[ieqn].begin(); isrc != m_source_info[ieqn].end(); isrc++){
 
-        CT& src = *(tsk_info->get_const_uintah_field<CT>((*isrc).name));
+        auto src = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>((*isrc).name);
         double weight = (*isrc).weight;
 
         if ( my_dir == ArchesCore::XDIR ){
           GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1, 0)
           Uintah::BlockRange range_x(low_fx_patch_range, high_fx_patch_range);
-          Uintah::parallel_for( range_x, [&](int i, int j, int k){
+          Uintah::parallel_for(exObj, range_x, KOKKOS_LAMBDA (int i, int j, int k){
             rhs(i,j,k) += weight * src(i,j,k) * V;
 
           });
         } else if ( my_dir == ArchesCore::YDIR ){
           GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1, 0);
           Uintah::BlockRange range_y(low_fy_patch_range, high_fy_patch_range);
-          Uintah::parallel_for( range_y, [&](int i, int j, int k){
+          Uintah::parallel_for(exObj, range_y, KOKKOS_LAMBDA (int i, int j, int k){
             rhs(i,j,k) += weight * src(i,j,k) * V;
           });
         } else {
           GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1, 0);
           Uintah::BlockRange range_z(low_fz_patch_range, high_fz_patch_range);
-          Uintah::parallel_for( range_z, [&](int i, int j, int k){
+          Uintah::parallel_for(exObj, range_z, KOKKOS_LAMBDA (int i, int j, int k){
             rhs(i,j,k) += weight * src(i,j,k) * V;
           });
         }

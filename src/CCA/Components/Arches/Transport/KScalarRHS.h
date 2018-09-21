@@ -220,13 +220,11 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
              Array3<double>& xyzFlux,
              const Array3<double>& eps, unsigned int xyzDir, int& ieqn ){
              if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { 
-               Uintah::ComputeConvectiveFlux1D<Array3<double>,Array3<double>, Cscheme >                
-                 get_flux( rho_phi, xyzVel, xyzFlux, eps, xyzDir );                
-               Uintah::parallel_for(exObj, range_conv, get_flux );    // for weighted scalars
+               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,Array3<double>,const Array3<double>, Cscheme >  partiallySpecializedTemplatedStruct;
+               partiallySpecializedTemplatedStruct.get_flux( exObj,range_conv,rho_phi, xyzVel, xyzFlux, eps, xyzDir );                
              } else {                                                    
-               Uintah::ComputeConvectiveFlux1D<Array3<double>,Array3<double>, Cscheme >                             
-                 get_flux( phi, xyzVel, xyzFlux, eps, xyzDir);               
-               Uintah::parallel_for(exObj, range_conv, get_flux  ); // for scalars
+               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,Array3<double>,const Array3<double>, Cscheme >  partiallySpecializedTemplatedStruct;
+               partiallySpecializedTemplatedStruct.get_flux( exObj, range_conv,   phi,xyzVel, xyzFlux, eps, xyzDir);               
              }
           }
 
@@ -243,11 +241,11 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
              KokkosView3<double,Kokkos::HostSpace> xyzFlux,
              KokkosView3<const double, Kokkos::HostSpace> eps, unsigned int xyzDir, int& ieqn ){
              if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { 
-               Uintah::ComputeConvectiveFlux1D_val<ExecutionSpace,MemSpace, Cscheme >               x ;
-                 x.get_flux(exObj, range_conv, rho_phi, xyzVel, xyzFlux, eps, xyzDir );                
+               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,KokkosView3<double, Kokkos::HostSpace>,KokkosView3<const double, Kokkos::HostSpace>, Cscheme >  partiallySpecializedTemplatedStruct;
+               partiallySpecializedTemplatedStruct.get_flux(exObj, range_conv, rho_phi, xyzVel, xyzFlux, eps, xyzDir );                
              } else {                                                    
-               Uintah::ComputeConvectiveFlux1D_val<ExecutionSpace,MemSpace, Cscheme >               x ;
-                 x.get_flux(exObj, range_conv, phi, xyzVel, xyzFlux, eps, xyzDir);               
+               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,KokkosView3<double, Kokkos::HostSpace>,KokkosView3<const double, Kokkos::HostSpace>, Cscheme >  partiallySpecializedTemplatedStruct;
+               partiallySpecializedTemplatedStruct.get_flux(exObj, range_conv, phi, xyzVel, xyzFlux, eps, xyzDir);               
              }
           }
 
@@ -263,11 +261,11 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
              KokkosView3<double,Kokkos::CudaSpace> xyzFlux,
              KokkosView3<const double, Kokkos::CudaSpace> eps, unsigned int xyzDir, int& ieqn ){
              if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { 
-               Uintah::ComputeConvectiveFlux1D_val<ExecutionSpace,MemSpace, Cscheme >              x;
-                 x.get_flux(exObj, range_conv, rho_phi, xyzVel, xyzFlux, eps, xyzDir );                
+               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,KokkosView3<double, Kokkos::CudaSpace>,KokkosView3<const double, Kokkos::CudaSpace>, Cscheme >  partiallySpecializedTemplatedStruct;
+                 partiallySpecializedTemplatedStruct.get_flux(exObj, range_conv, rho_phi, xyzVel, xyzFlux, eps, xyzDir );                
              } else {                                                    
-               Uintah::ComputeConvectiveFlux1D_val<ExecutionSpace,MemSpace, Cscheme >             x;              
-                 x.get_flux(exObj, range_conv, phi, xyzVel, xyzFlux, eps, xyzDir);               
+               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,KokkosView3<double, Kokkos::CudaSpace>,KokkosView3<const double, Kokkos::CudaSpace>, Cscheme >  partiallySpecializedTemplatedStruct;
+                 partiallySpecializedTemplatedStruct.get_flux(exObj, range_conv, phi, xyzVel, xyzFlux, eps, xyzDir);               
              }
           }
 
