@@ -146,7 +146,7 @@ void ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   const double vol     = DX.x()*DX.y()*DX.z();
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
     Balance(i,j,k) = vol*drho_dt(i,j,k) + ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
                                             area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
                                             area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) ));
