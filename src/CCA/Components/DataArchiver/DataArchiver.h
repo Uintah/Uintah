@@ -161,7 +161,12 @@ class LoadBalancer;
     //! Returns as a string the name of the top of the output directory.
     virtual const std::string getOutputLocation() const;
 
-    //! Asks if we need to recompile the task graph.
+    //! Normally saved vars are scrubbed if not needed for the next
+    //! time step. By pass scubbing when running in situ or if wanting
+    //! to save the previous time step.
+    virtual void setScrubSavedVariables( bool val ) { scrubSavedVariables = val; };
+
+    //! Asks if the task graph needs to be recompiled.
     virtual bool needRecompile( const GridP & grid );
 
     virtual void recompile(const GridP& grid);
@@ -578,6 +583,11 @@ class LoadBalancer;
     // a value from the index.xml file
     int getTimeStepTopLevel();
 
+    //! Normally saved vars are scrubbed if not needed for the next
+    //! time step. By pass scubbing when running in situ or if wanting
+    //! to save the previous time step.
+    bool scrubSavedVariables { true };
+    
     //-----------------------------------------------------------
     // RNJ - 
     //

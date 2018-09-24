@@ -335,6 +335,12 @@ SimulationController::outputSetup( void )
 
   m_output->problemSetup( m_ups, m_restart_ps,
                           m_application->getMaterialManagerP() );
+
+#ifdef HAVE_VISIT
+  if( getVisIt() ) {
+    m_output->setScrubSavedVariables( false );
+  }
+#endif
 }
 
 //______________________________________________________________________
