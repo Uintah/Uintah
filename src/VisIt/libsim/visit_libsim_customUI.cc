@@ -222,10 +222,10 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     
     // This var must be in the row specified by OutputIntervalRow
     VisItUI_setTableValueS("OutputIntervalVariableTable",
-                           OutputIntervalRow+2, 0, "isOutputTimeStep",  0);
+                           OutputIntervalRow+2, 0, "Output Written",  0);
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            OutputIntervalRow+2, 1,
-                           (output->isOutputTimeStep() ? "Yes" : "No"), 0);
+                           (output->outputTimeStepExists( sim->cycle ) ? "Yes" : "No"), 0);
     
     // Checkpoint interval based on sim time.
     if( output->getCheckpointInterval() > 0 )
@@ -267,10 +267,10 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
 
     // This var must be in the row specified by CheckpointIntervalRow
     VisItUI_setTableValueS("OutputIntervalVariableTable",
-                           CheckpointIntervalRow+2, 0, "isCheckpointTimeStep", 0);
+                           CheckpointIntervalRow+2, 0, "Checkpoint Written", 0);
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            CheckpointIntervalRow+2, 1,
-                           (output->isCheckpointTimeStep() ? "Yes" : "No"), 0);
+                           (output->checkpointTimeStepExists( sim->cycle ) ? "Yes" : "No"), 0);
 
 
     // This var must be in row specified by CheckpointCyclelRow
