@@ -46,7 +46,7 @@
 #______________________________________________________________________
 #
 # Have the user choose a try server(s)
-set possibleServers = ("Linux-Optimize-Test-try" "Linux-Debug-Test-try" "Linux-Optimize-GPU-try")
+set possibleServers = ("Optimize-Test-try" "Debug-Test-try" "Optimize-GPU-try")
 
 set BUILDERS = ""
 set CREATE_PATCH = false
@@ -65,11 +65,11 @@ else
         set BUILDERS = "$BUILDERS --builder=$server"
       end
     else if( $arg == "opt" ) then 
-        set BUILDERS = "$BUILDERS --builder=Linux-Optimize-Test-try"
+        set BUILDERS = "$BUILDERS --builder=Optimize-Test-try"
     else if( $arg == "debug" ) then
-        set BUILDERS = "$BUILDERS --builder=Linux-Debug-Test-try"
+        set BUILDERS = "$BUILDERS --builder=Debug-Test-try"
     else if( $arg == "gpu" ) then
-        set BUILDERS = "$BUILDERS --builder=Linux-Optimize-GPU-Test-try"
+        set BUILDERS = "$BUILDERS --builder=Optimize-GPU-Test-try"
     else # gui
       set list = ""
       foreach comp ( $possibleServers[*] )
