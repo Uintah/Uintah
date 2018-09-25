@@ -127,11 +127,8 @@ namespace Uintah {
 
     int                    d_simTimestep = 0;
 
-    const VarLabel       * delt_label;
     std::vector<Module*> d_Modules;
   };
 } // End namespace Uintah
-
-
 
 #endif
