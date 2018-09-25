@@ -373,7 +373,21 @@ MPIScheduler::postMPISends( DetailedTask * dtask
      }
 
      // if we send/recv to an output task, don't send/recv if not an output timestep
-     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
+
+     // ARS NOTE: Outputing and Checkpointing may be done out of snyc
+     // now. I.e. turned on just before it happens rather than turned
+     // on before the task graph execution.  As such, one should also
+     // be checking:
+     
+     // m_application->activeReductionVariable( "outputInterval" );
+     // m_application->activeReductionVariable( "checkpointInterval" );
+      
+     // However, if active the code below would be called regardless
+     // if an output or checkpoint time step or not. Not sure that is
+     // desired but not sure of the effect of not calling it and doing
+     // an out of sync output or checkpoint.
+     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output &&
+         !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
        DOUT(g_dbg, "Rank-" << my_rank << "   Ignoring non-output-timestep send for " << *req);
        continue;
      }
@@ -563,6 +577,19 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
+
+        // ARS NOTE: Outputing and Checkpointing may be done out of
+        // snyc now. I.e. turned on just before it happens rather than
+        // turned on before the task graph execution.  As such, one
+        // should also be checking:
+        
+        // m_application->activeReductionVariable( "outputInterval" );
+        // m_application->activeReductionVariable( "checkpointInterval" );
+        
+        // However, if active the code below would be called regardless
+        // if an output or checkpoint time step or not. Not sure that is
+        // desired but not sure of the effect of not calling it and doing
+        // an out of sync output or checkpoint.
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep()
             && !m_output->isCheckpointTimeStep()) {
           DOUT(g_dbg, "Rank-" << my_rank << "   Ignoring non-output-timestep receive for " << *req);

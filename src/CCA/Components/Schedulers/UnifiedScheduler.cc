@@ -1208,6 +1208,19 @@ UnifiedScheduler::runTasks( int thread_id )
           // it wasn't going to output data, but that would require more task graph recompilations,
           // which can be even costlier overall.  So we do the check here.)
 
+          // ARS NOTE: Outputing and Checkpointing may be done out of
+          // snyc now. I.e. turned on just before it happens rather
+          // than turned on before the task graph execution.  As such,
+          // one should also be checking:
+
+          // m_application->activeReductionVariable( "outputInterval" );
+          // m_application->activeReductionVariable( "checkpointInterval" );
+
+          // However, if active the code below would be called regardless
+          // if an output or checkpoint time step or not. Not sure that is
+          // desired but not sure of the effect of not calling it and doing
+          // an out of sync output or checkpoint.
+
           if ((m_output->isOutputTimeStep() || m_output->isCheckpointTimeStep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
@@ -4326,7 +4339,22 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           }
           continue;
         }
+
         // if we send/recv to an output task, don't send/recv if not an output timestep
+
+        // ARS NOTE: Outputing and Checkpointing may be done out of
+        // snyc now. I.e. turned on just before it happens rather than
+        // turned on before the task graph execution.  As such, one
+        // should also be checking:
+        
+        // m_application->activeReductionVariable( "outputInterval" );
+        // m_application->activeReductionVariable( "checkpointInterval" );
+        
+        // However, if active the code below would be called regardless
+        // if an output or checkpoint time step or not. Not sure that is
+        // desired but not sure of the effect of not calling it and doing
+        // an out of sync output or checkpoint.
+        
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
