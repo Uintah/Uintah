@@ -145,7 +145,7 @@ namespace Uintah{
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<ElemType, Kokkos::CudaSpace> >::type
         get_const_uintah_field_add( const std::string& name, const int patch, const int matl_indx, const int time_substep ){
-          if (_tsk_info.time_substep == 0) {
+          if (time_substep == 0) {
             return getOldDW()->getGPUDW(0)->getKokkosView<ElemType>( name.c_str(), patch, matl_indx, 0 );
           } else {
             return getNewDW()->getGPUDW(0)->getKokkosView<ElemType>( name.c_str(), patch, matl_indx, 0 );
