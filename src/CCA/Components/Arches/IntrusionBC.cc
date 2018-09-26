@@ -525,8 +525,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
           IntVector c = *i;
           iv.clear();
 
-          DOUT( dbg_intrusion, "IntrusionBC::  For Intrusion named: " << iIntrusion->second.name );
-          DOUT( dbg_intrusion, "IntrusionBC::  At location: " << c );
+          DOUT( dbg_intrusion, "[IntrusionBC]  For Intrusion named: " << iIntrusion->second.name );
+          DOUT( dbg_intrusion, "[IntrusionBC]  At location: " << c );
 
           for ( unsigned int niv = 0; niv < iv_var_names.size(); niv++ ){
 
@@ -537,7 +537,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
             iv.push_back(scalar_var);
 
-            DOUT( dbg_intrusion, "IntrusionBC::  For independent variable " << iv_var_names[niv]
+            DOUT( dbg_intrusion, "[IntrusionBC]  For independent variable " << iv_var_names[niv]
               << ". Using value = " << scalar_var );
 
           }
@@ -550,7 +550,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
           if ( does_post_mix ){
 
-            DOUT( dbg_intrusion, "IntrusionBC::  Using inert stream mixing to look up properties");
+            DOUT( dbg_intrusion, "[IntrusionBC]  Using inert stream mixing to look up properties");
 
             typedef std::map<std::string, DMap > IMap;
             IMap inert_map = mixingTable->getInertMap();
@@ -567,7 +567,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
               inert_list.insert(std::make_pair(name,inert_value));
 
-              DOUT( dbg_intrusion, "IntrusionBC::  For inert variable " << name
+              DOUT( dbg_intrusion, "[IntrusionBC]  For inert variable " << name
                 << ". Using value = " << inert_value );
 
             }
@@ -587,7 +587,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
                 double lookup_value = mixingTable->getTableValue(iv, lookup_name, inert_list);
 
-                DOUT( dbg_intrusion, "IntrusionBC::  Setting scalar " << iter_lookup->first
+                DOUT( dbg_intrusion, "[IntrusionBC]  Setting scalar " << iter_lookup->first
                   << " to a lookup value of: " << lookup_value );
 
                 tab_scalar.set_scalar_constant( c, lookup_value );
@@ -597,10 +597,10 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
           } else {
 
-            DOUT( dbg_intrusion, "IntrusionBC::  NOT using inert stream mixing to look up properties" );
+            DOUT( dbg_intrusion, "[IntrusionBC]  NOT using inert stream mixing to look up properties" );
 
             density = mixingTable->getTableValue(iv, "density");
-            DOUT( dbg_intrusion, "IntrusionBC::  Got a value for density = " << density );
+            DOUT( dbg_intrusion, "[IntrusionBC]  Got a value for density = " << density );
 
             //get values for all other scalars that depend on a table lookup:
             for (std::map<std::string, scalarInletBase*>::iterator iter_lookup = iIntrusion->second.scalar_map.begin();
@@ -615,8 +615,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
                 double lookup_value = mixingTable->getTableValue(iv, lookup_name);
 
-                DOUT( dbg_intrusion, "IntrusionBC::  Got a value for  " << lookup_name << " = " << lookup_value );
-                DOUT( dbg_intrusion, "IntrusionBC::  Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value );
+                DOUT( dbg_intrusion, "[IntrusionBC]  Got a value for  " << lookup_name << " = " << lookup_value );
+                DOUT( dbg_intrusion, "[IntrusionBC]  Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value );
 
                 tab_scalar.set_scalar_constant( c, lookup_value );
 
@@ -627,7 +627,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
           iIntrusion->second.density_map.insert(std::make_pair(c, density));
 
-          DOUT( dbg_intrusion, "IntrusionBC::  Got a value for density = " << density );
+          DOUT( dbg_intrusion, "[IntrusionBC]  Got a value for density = " << density );
 
           //
           //Note: Using the last value of density to set the total intrusion density.

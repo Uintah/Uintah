@@ -183,8 +183,8 @@ void pack_uintah_iterator( const Uintah::Patch::FaceType& face,
   // native uintah iterators, such as the pressure expression.
   myBndIters.extraBndCellsUintah = bndIter;
 
-  DOUT( dbgbc_new, "WBCHelper::  ---------------------------------------------------\n");
-  DOUT( dbgbc_new, "WBCHelper::  Face = " << face << std::endl );
+  DOUT( dbgbc_new, "[WBCHelper]  ---------------------------------------------------\n");
+  DOUT( dbgbc_new, "[WBCHelper]  Face = " << face << std::endl );
 
   // MAJOR WARNING HERE - WHEN WE MOVE TO RUNTIME GHOST CELLS, WE NEED TO USE THE APPROPRIATE PATCH OFFSET
   const Uintah::IntVector patchCellOffset = patch->getExtraCellLowIndex(1);
@@ -360,13 +360,13 @@ void WBCHelper::add_boundary_condition( const std::string& bndName,
     vector<BndCondSpec>& bcSpecVec = existingBCSpec.bcSpecVec;
     vector<BndCondSpec>::iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), bcSpec);
     if ( it == bcSpecVec.end() ) {
-      DOUT( dbgbc_new, "WBCHelper::  adding bc " << bcSpec.varName << " on " << bndName << " \n");
+      DOUT( dbgbc_new, "[WBCHelper]  adding bc " << bcSpec.varName << " on " << bndName << " \n");
       bcSpecVec.push_back(bcSpec);
     } else {
-      DOUT( dbgbc_new, "WBCHelper::  bc " << bcSpec.varName << " already exists on " << bndName << ". skipping \n" )
+      DOUT( dbgbc_new, "[WBCHelper]  bc " << bcSpec.varName << " already exists on " << bndName << ". skipping \n" )
     }
   } else {
-    DOUT( dbgbc_new, "WBCHelper::   ERROR! boundary face " << bndName << " does not exist!!! \n");
+    DOUT( dbgbc_new, "[WBCHelper]   ERROR! boundary face " << bndName << " does not exist!!! \n");
   }
 }
 
@@ -389,7 +389,7 @@ void WBCHelper::add_boundary( const std::string&     bndName,
                              const int               patchID,
                              const Uintah::BCGeomBase::ParticleBndSpec pBndSpec)
 {
-  DOUT( dbgbc_new, "WBCHelper::  adding boundary " << bndName << " of type " << bndType << " on patch " << patchID << std::endl );
+  DOUT( dbgbc_new, "[WBCHelper]  adding boundary " << bndName << " of type " << bndType << " on patch " << patchID << std::endl );
 
   // if this boundary is a wall AND no particle boundaries have been specified, then default
   // the particle boundary to a fully elastic wall.
@@ -401,11 +401,11 @@ void WBCHelper::add_boundary( const std::string&     bndName,
   }
   if ( bndNameBndSpecMap_.find(bndName) != bndNameBndSpecMap_.end() ) {
 
-    DOUT( dbgbc_new, "WBCHelper::   adding to existing \n");
+    DOUT( dbgbc_new, "[WBCHelper]   adding to existing \n");
     BndSpec& existingBndSpec = (*bndNameBndSpecMap_.find(bndName)).second;
     existingBndSpec.patchIDs.push_back(patchID);
   } else {
-    DOUT( dbgbc_new, "WBCHelper::   adding new \n")
+    DOUT( dbgbc_new, "[WBCHelper]   adding new \n")
     // this is the first time that we are adding this boundary. create the necessary info to store this
     BndSpec myBndSpec = {bndName, face, bndType, bndEdgeType, 0.0, std::vector<int>(1, patchID), myPBndSpec };
     bndNameBndSpecMap_.insert( BndMapT::value_type(bndName, myBndSpec) );
@@ -481,12 +481,12 @@ void WBCHelper::add_boundary_mask( const BoundaryIterators& myIters,
 {
   using namespace std;
   if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
-    DOUT( dbgbc_new,"WBCHelper::  BC " << bndName << " already exists in list of Iterators. Adding new iterator for " << bndName << " on patchID " << patchID << std::endl )
+    DOUT( dbgbc_new,"[WBCHelper]  BC " << bndName << " already exists in list of Iterators. Adding new iterator for " << bndName << " on patchID " << patchID << std::endl )
     (*bndNamePatchIDMaskMap_.find(bndName)).second.insert(pair<int, BoundaryIterators>(patchID, myIters));
     //(*bndNamePatchIDMaskMap_.find(bndName)).second.emplace( patchID, myIters );
     //(*bndNamePatchIDMaskMap_.find(bndName)).second.emplace( piecewise_construct, make_tuple(patchID), make_tuple(myIters) );
   } else {
-    DOUT( dbgbc_new, "WBCHelper::  BC " << bndName << " does NOT Exist in list of Iterators. Adding new iterator for " << bndName << " on patchID " << patchID << std::endl)
+    DOUT( dbgbc_new, "[WBCHelper]  BC " << bndName << " does NOT Exist in list of Iterators. Adding new iterator for " << bndName << " on patchID " << patchID << std::endl)
     PatchIDBndItrMapT patchIDIterMap;
     //patchIDIterMap.insert(pair<int, BoundaryIterators>(patchID, myIters));
 
@@ -563,7 +563,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
           const Patch* patch = *i_patch;
 
           const int patchID = patch->getID();
-          DOUT( dbgbc_new, "WBCHelper::  Patch ID = " << patchID << std::endl);
+          DOUT( dbgbc_new, "[WBCHelper]  Patch ID = " << patchID << std::endl);
 
           std::vector<Uintah::Patch::FaceType> bndFaces;
           patch->getBoundaryFaces(bndFaces);
@@ -581,13 +581,13 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
             // Grab the number of children on this boundary face
             const int numChildren = bcDataArray->getNumberChildren(materialID);
 
-            DOUT( dbgbc_new, "WBCHelper::  Face = " << face << std::endl);
+            DOUT( dbgbc_new, "[WBCHelper]  Face = " << face << std::endl);
             //bcDataArray->print();
 
             // now go over every child-boundary (sub-boundary) specified on this domain boundary face
             for( int chid = 0; chid<numChildren; ++chid ) {
 
-              DOUT( dbgbc_new,"WBCHelper::   child ID = " << chid << std::endl )
+              DOUT( dbgbc_new,"[WBCHelper]   child ID = " << chid << std::endl )
 
               // here is where the fun starts. Now we can get information about this boundary condition.
               // The BCDataArray stores information related to its children as BCGeomBase objects.
@@ -603,11 +603,11 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                     << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
                 throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
               }
-              DOUT( dbgbc_new, "WBCHelper::   boundary name = " << bndName << std::endl );
-              DOUT( dbgbc_new, "WBCHelper::   geom bndtype  = " << thisGeom->getBndType() << std::endl);
+              DOUT( dbgbc_new, "[WBCHelper]   boundary name = " << bndName << std::endl );
+              DOUT( dbgbc_new, "[WBCHelper]   geom bndtype  = " << thisGeom->getBndType() << std::endl);
               BndTypeEnum bndType = select_bnd_type_enum(thisGeom->getBndType());
               add_boundary( bndName, face, bndType, EDGE, patchID, thisGeom->getParticleBndSpec() );
-              DOUT( dbgbc_new, "WBCHelper::   boundary type = " << bndType << std::endl);
+              DOUT( dbgbc_new, "[WBCHelper]   boundary type = " << bndType << std::endl);
 
               //__________________________________________________________________________________
               Uintah::Iterator bndIter; // allocate iterator
@@ -661,7 +661,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
               //
 
               BoundaryIterators myIters(i_size+bndIter.size());
-              DOUT( dbgbc_new, "WBCHelper::   Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl);
+              DOUT( dbgbc_new, "[WBCHelper]   Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl);
               pack_uintah_iterator(face, patch, bndIter, myIters); // store uintah iterator
               // store a pointer to the list of particle index that are near this boundary.
               //myIters.particleIdx = Uintah::ParticlesHelper::get_boundary_particles(bndName,patchID);
@@ -682,7 +682,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                 const std::string varName     = bndCondBase->getBCVariable();
                 const BndCondTypeEnum atomBCTypeEnum = select_bc_type_enum(bndCondBase->getBCType());
 
-                DOUT( dbgbc_new,"WBCHelper::   bc variable = " << varName << std::endl
+                DOUT( dbgbc_new,"[WBCHelper]   bc variable = " << varName << std::endl
                 << " bc type = "     << atomBCTypeEnum << std::endl );
 
                 double doubleVal=0.0;
@@ -706,13 +706,13 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                     functorName = new_bc->getType();
                     bcValType = FUNCTOR_TYPE;
 
-                    DOUT( dbgbc_new,"WBCHelper::   functor name = " << functorName << std::endl );
+                    DOUT( dbgbc_new,"[WBCHelper]   functor name = " << functorName << std::endl );
                   } else if ( bndCondBase->getValueType() == Uintah::BoundCondBase::STRING_TYPE ){
                     const Uintah::BoundCond<std::string>* const new_bc = dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
                     functorName = new_bc->getType();
                     bcValType = FUNCTOR_TYPE;
 
-                    DOUT( dbgbc_new,"WBCHelper::   functor name = " << functorName << std::endl );
+                    DOUT( dbgbc_new,"[WBCHelper]   functor name = " << functorName << std::endl );
                   } else if ( bndCondBase->getValueType() == Uintah::BoundCondBase::VECTOR_TYPE ){
 
                     // do nothing currently... need to evaluate?
@@ -754,7 +754,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
               // now go over every child-boundary (sub-boundary) specified on this domain boundary face
               for( int chid = 0; chid<numChildren; ++chid ) {
 
-                DOUT( dbgbc_new, "WBCHelper::   child ID = " << chid << std::endl);
+                DOUT( dbgbc_new, "[WBCHelper]   child ID = " << chid << std::endl);
 
                 // here is where the fun starts. Now we can get information about this boundary condition.
                 // The BCDataArray stores information related to its children as BCGeomBase objects.
@@ -767,11 +767,11 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                       << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
                   throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
                 }
-                DOUT( dbgbc_new, "WBCHelper::   boundary name = " << bndName << std::endl );
-                DOUT( dbgbc_new, "WBCHelper::   geom bndtype  = " << thisGeom->getBndType() << std::endl );
+                DOUT( dbgbc_new, "[WBCHelper]   boundary name = " << bndName << std::endl );
+                DOUT( dbgbc_new, "[WBCHelper]   geom bndtype  = " << thisGeom->getBndType() << std::endl );
                 BndTypeEnum bndType = select_bnd_type_enum(thisGeom->getBndType());
                 add_boundary( bndName, face_side, bndType, INTERIOR, patchID, thisGeom->getParticleBndSpec() );
-                DOUT( dbgbc_new, "WBCHelper::   boundary type = " << bndType << std::endl);
+                DOUT( dbgbc_new, "[WBCHelper]   boundary type = " << bndType << std::endl);
 
                 //__________________________________________________________________________________
                 Uintah::Iterator bndIter; // allocate iterator
@@ -779,7 +779,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                 thisGeom->getCellFaceIterator(bndIter);
 
                 BoundaryIterators myIters(bndIter.size());
-                DOUT( dbgbc_new, "WBCHelper::   Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl );
+                DOUT( dbgbc_new, "[WBCHelper]   Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl );
                 pack_uintah_iterator(face_side, patch, bndIter, myIters); // store uintah iterator
                 // store a pointer to the list of particle index that are near this boundary.
                 //myIters.particleIdx = Uintah::ParticlesHelper::get_boundary_particles(bndName,patchID);
@@ -800,7 +800,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                   const std::string varName     = bndCondBase->getBCVariable();
                   const BndCondTypeEnum atomBCTypeEnum = select_bc_type_enum(bndCondBase->getBCType());
 
-                  DOUT( dbgbc_new, "WBCHelper::   bc variable = " << varName << std::endl
+                  DOUT( dbgbc_new, "[WBCHelper]   bc variable = " << varName << std::endl
                         << " bc type = "     << atomBCTypeEnum << std::endl);
 
                   double doubleVal=0.0;
@@ -824,13 +824,13 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                       functorName = new_bc->getType();
                       bcValType = FUNCTOR_TYPE;
 
-                      DOUT( dbgbc_new, "WBCHelper::   functor name = " << functorName << std::endl );
+                      DOUT( dbgbc_new, "[WBCHelper]   functor name = " << functorName << std::endl );
                     } else if ( bndCondBase->getValueType() == Uintah::BoundCondBase::STRING_TYPE ){
                       const Uintah::BoundCond<std::string>* const new_bc = dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
                       functorName = new_bc->getType();
                       bcValType = FUNCTOR_TYPE;
 
-                      DOUT( dbgbc_new, "WBCHelper::   functor name = " << functorName << std::endl );
+                      DOUT( dbgbc_new, "[WBCHelper]   functor name = " << functorName << std::endl );
                     } else if ( bndCondBase->getValueType() == Uintah::BoundCondBase::VECTOR_TYPE ){
 
                       // do nothing currently... need to evaluate?

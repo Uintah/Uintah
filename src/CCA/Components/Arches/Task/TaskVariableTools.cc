@@ -43,7 +43,7 @@ namespace Uintah {
                                 const std::string task_name )
   {
 
-    DOUT( dbg_arches_task, "TaskVariableTools::   FOR TASK: " << task_name <<
+    DOUT( dbg_arches_task, "[TaskVariableTools]   FOR TASK: " << task_name <<
                            "      \n registering: " << name <<
                            "      \n     var dep: " << get_var_depend_string(dep) <<
                            "      \n      nGhost: " << nGhost <<
@@ -57,6 +57,7 @@ namespace Uintah {
       } else {
         dw = ArchesFieldContainer::NEWDW;
       }
+      DOUT( dbg_arches_task, " latest DW is: " << get_which_dw_string(dw) ); 
     }
 
     /// ERROR CHECKING ///
