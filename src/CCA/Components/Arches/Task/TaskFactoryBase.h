@@ -12,8 +12,6 @@
 
 namespace Uintah{
 
-  static DebugStream cout_archestaskdebug("ArchesTaskDBG",false);
-
   class ArchesParticlesHelper;
   class ArchesFieldContainer;
 

@@ -4,7 +4,7 @@
 
 namespace {
 
-  Uintah::Dout dbg_arches_task{"Arches_Task_Var_DBG", "TaskVariableTools", "Information regarding the variable registration per task.", false };
+  Uintah::Dout dbg_arches_task{"Arches_Task_Var_DBG", "Arches::TaskVariableTools", "Information regarding the variable registration per task.", false };
 
   std::string get_var_depend_string( Uintah::ArchesFieldContainer::VAR_DEPEND dep ){
     if ( dep == Uintah::ArchesFieldContainer::COMPUTES ){
@@ -43,12 +43,12 @@ namespace Uintah {
                                 const std::string task_name )
   {
 
-    DOUT( dbg_arches_task, " FOR TASK: " << task_name <<
-                           "    \n registering: " << name <<
-                           "    \n     var dep: " << get_var_depend_string(dep) <<
-                           "    \n      nGhost: " << nGhost <<
-                           "    \n    which dw: " << get_which_dw_string(dw) <<
-                           "   \n time_substep: " << time_substep
+    DOUT( dbg_arches_task, "TaskVariableTools::   FOR TASK: " << task_name <<
+                           "      \n registering: " << name <<
+                           "      \n     var dep: " << get_var_depend_string(dep) <<
+                           "      \n      nGhost: " << nGhost <<
+                           "      \n    which dw: " << get_which_dw_string(dw) <<
+                           "     \n time_substep: " << time_substep
     );
 
     if ( dw == ArchesFieldContainer::LATEST ){

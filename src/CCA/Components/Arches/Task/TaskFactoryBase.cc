@@ -4,7 +4,8 @@
 
 namespace {
 
-  Uintah::Dout dbg_arches_task{"Arches_Task_DBG", "TaskFactoryBase", "Scheduling and execution information of Arches tasks.", false };
+  Uintah::Dout dbg_arches_task{"Arches_Task_DBG", "Arches::TaskFactoryBase",
+    "Scheduling and execution information of Arches tasks.", false };
 
 }
 
@@ -280,11 +281,11 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   ArchesFieldContainer::VariableRegistry variable_registry;
 
   const std::string type_string = TaskInterface::get_task_type_string(type);
-  DOUT( dbg_arches_task, "Scheduling the following task group with mode: " << type_string );
+  DOUT( dbg_arches_task, "TaskFactoryBase::  Scheduling the following task group with mode: " << type_string );
 
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
 
-    DOUT( dbg_arches_task, "    Task: " << (*i_task)->get_task_name() );
+    DOUT( dbg_arches_task, "TaskFactoryBase::      Task: " << (*i_task)->get_task_name() );
 
     switch( type ){
 
@@ -332,26 +333,26 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       {
         if ( time_substep == 0 ) {
           if ( reinitialize ){
-            DOUT( dbg_arches_task, "    modifying: " << ivar.name );
+            DOUT( dbg_arches_task, "TaskFactoryBase::      modifying: " << ivar.name );
             tsk->modifies( ivar.label );   // was computed upstream
           } else {
-            DOUT( dbg_arches_task, "    computing: " << ivar.name );
+            DOUT( dbg_arches_task, "TaskFactoryBase::      computing: " << ivar.name );
             tsk->computes( ivar.label );   //only compute on the zero time substep
           }
         } else {
-          DOUT( dbg_arches_task, "    modifying: " << ivar.name );
+          DOUT( dbg_arches_task, "TaskFactoryBase::      modifying: " << ivar.name );
           tsk->modifies( ivar.label );
       }}
       break;
     case ArchesFieldContainer::MODIFIES:
       {
-        DOUT( dbg_arches_task, "    modifying: " << ivar.name );
+        DOUT( dbg_arches_task, "TaskFactoryBase::      modifying: " << ivar.name );
         tsk->modifies( ivar.label );
       }
       break;
     case ArchesFieldContainer::REQUIRES:
       {
-        DOUT( dbg_arches_task, "    requiring: " << ivar.name << "with ghosts: " << ivar.nGhost);
+        DOUT( dbg_arches_task, "TaskFactoryBase::      requiring: " << ivar.name << "with ghosts: " << ivar.nGhost);
         tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       }
       break;
@@ -425,38 +426,38 @@ void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
       switch( type ){
         case (TaskInterface::INITIALIZE):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " INITIALIZE " );
+            DOUT( dbg_arches_task, "TaskFactoryBase::   Executing " << (*i_task)->get_task_name() << " INITIALIZE " );
             (*i_task)->initialize( patch, tsk_info_mngr );
           }
           break;
         case (TaskInterface::RESTART_INITIALIZE):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " RESTART_INITIALIZE " );
+            DOUT( dbg_arches_task, "TaskFactoryBase::   Executing " << (*i_task)->get_task_name() << " RESTART_INITIALIZE " );
             (*i_task)->restart_initialize( patch, tsk_info_mngr );
           }
           break;
         case (TaskInterface::TIMESTEP_INITIALIZE):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " TIMESTEP_INITIALIZE " );
+            DOUT( dbg_arches_task, "TaskFactoryBase::   Executing " << (*i_task)->get_task_name() << " TIMESTEP_INITIALIZE " );
             (*i_task)->timestep_init( patch, tsk_info_mngr );
             time_substep = 0;
           }
           break;
         case (TaskInterface::TIMESTEP_EVAL):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " EVAL " );
+            DOUT( dbg_arches_task, "TaskFactoryBase::   Executing " << (*i_task)->get_task_name() << " EVAL " );
             (*i_task)->eval( patch, tsk_info_mngr );
           }
           break;
         case (TaskInterface::BC):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " BC " );
+            DOUT( dbg_arches_task, "TaskFactoryBase::   Executing " << (*i_task)->get_task_name() << " BC " );
             (*i_task)->compute_bcs( patch, tsk_info_mngr );
           }
           break;
         case (TaskInterface::ATOMIC):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " ATOMIC " );
+            DOUT( dbg_arches_task, "TaskFactoryBase::   Executing " << (*i_task)->get_task_name() << " ATOMIC " );
             (*i_task)->eval( patch, tsk_info_mngr);
           }
           break;
