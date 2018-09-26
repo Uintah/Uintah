@@ -482,19 +482,6 @@ namespace Uintah{
           return m_matl_index;
       }
 
-    private:
-
-      FieldContainerMap _nonconst_var_map;
-      ConstFieldContainerMap _const_var_map;
-      UintahParticleMap _particle_map;
-      ConstUintahParticleMap _const_particle_map;
-      const Patch* _patch;
-
-      const int m_matl_index;
-      DataWarehouse* _old_dw;
-      DataWarehouse* _new_dw;
-      VariableRegistry _variable_reg;
-
       /** @brief From the vector of VariableInformation, return a single set of information based
                  variable's name. **/
       VariableInformation get_variable_information( const std::string name, const bool is_constant ){
@@ -515,6 +502,20 @@ namespace Uintah{
         throw InvalidValue( msg.str(), __FILE__, __LINE__ );
 
       }
+
+    private:
+
+      FieldContainerMap _nonconst_var_map;
+      ConstFieldContainerMap _const_var_map;
+      UintahParticleMap _particle_map;
+      ConstUintahParticleMap _const_particle_map;
+      const Patch* _patch;
+
+      const int m_matl_index;
+      DataWarehouse* _old_dw;
+      DataWarehouse* _new_dw;
+      VariableRegistry _variable_reg;
+
 
       /** @brief From the vector of VariableInformation, return a single set of information based
                  variable's name with specified DW. **/
