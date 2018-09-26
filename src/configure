@@ -848,7 +848,6 @@ BUILD_UNIT_TESTS
 DEF_WASATCH
 DEF_PHASEFIELD
 DEF_MODELS_RADIATION
-DEF_DOUBLEMPM
 DEF_MPM
 DEF_ICE
 DEF_HEAT
@@ -857,7 +856,6 @@ DEF_EXAMPLES
 DEF_ARCHES
 BUILD_WASATCH
 BUILD_PHASEFIELD
-BUILD_DOUBLEMPM
 BUILD_MPM
 BUILD_MODELS_RADIATION
 BUILD_ICE
@@ -1020,7 +1018,6 @@ enable_fvm
 enable_heat
 enable_ice
 enable_mpm
-enable_doublempm
 enable_phasefield
 enable_wasatch
 enable_all_components
@@ -1697,7 +1694,6 @@ Optional Features:
 --enable-heat           Turn on the Heat component.
 --enable-ice            Turn on the Ice component.
 --enable-mpm            Turn on the Mpm component.
---enable-doublempm      Turn on the doublempm component.
 --enable-phasefield     Turn on the PhaseField component.
 --enable-wasatch        Turn on the Wasatch component - and Radiation Model.
 --enable-all-components Turn on the all components.
@@ -6329,19 +6325,6 @@ fi
 
 
 
-  # Check whether --enable-doublempm was given.
-if test "${enable_doublempm+set}" = set; then :
-  enableval=$enable_doublempm; BUILD_DOUBLEMPM="yes"
-else
-  BUILD_DOUBLEMPM="no"
-   DEF_DOUBLEMPM="#define NO_DOUBLEMPM"
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-doublempm --disable-doublempm"
-
-
-
-
   # Check whether --enable-phasefield was given.
 if test "${enable_phasefield+set}" = set; then :
   enableval=$enable_phasefield; BUILD_PHASEFIELD="yes"
@@ -6375,7 +6358,6 @@ if test "${enable_all_components+set}" = set; then :
    BUILD_HEAT="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
-   BUILD_DOUBLEMPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_EXAMPLES=
@@ -6383,7 +6365,6 @@ if test "${enable_all_components+set}" = set; then :
    DEF_HEAT=
    DEF_ICE=
    DEF_MPM=
-   DEF_DOUBLEMPM=
    DEF_UNIT_TESTS=
    DEF_WASATCH=
 
@@ -6414,7 +6395,6 @@ if test \( "$enable_arches"     = "yes" -o  \
            "$enable_heat"       = "yes" -o  \
            "$enable_ice"        = "yes" -o  \
            "$enable_mpm"        = "yes" -o  \
-           "$enable_doublempm"  = "yes" -o  \
            "$enable_phasefield" = "yes" -o  \
            "$enable_wasatch"    = "yes" \); then
   enabling_components=yes
@@ -8508,9 +8488,6 @@ fi
 if test "$USE_MPM" != ""; then
    as_fn_error $? "USE_MPM is deprecated.  Please use --enable-mpm. " "$LINENO" 5
 fi
-if test "$USE_DOUBLEMPM" != ""; then
-   as_fn_error $? "USE_DOUBLEMPM is deprecated.  Please use --enable-doublempm. " "$LINENO" 5
-fi
 if test "$USE_WASATCH" != ""; then
    as_fn_error $? "USE_WASATCH is deprecated.  Please use --enable-wasatch. " "$LINENO" 5
 fi
@@ -8525,8 +8502,6 @@ if test "$with_fortran" = "no"; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
-
-
 
 
 

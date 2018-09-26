@@ -90,18 +90,8 @@
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPM/SingleFieldMPM.h>
+#include <CCA/Components/MPM/DOUBLEMPM.h>
 #endif
-
-#ifndef NO_DOUBLEMPM
-#include <CCA/Components/DOUBLEMPM/AMRMPM.h>
-#include <CCA/Components/DOUBLEMPM/ImpMPM.h>
-#include <CCA/Components/DOUBLEMPM/RigidMPM.h>
-#include <CCA/Components/DOUBLEMPM/SerialMPM.h>
-#include <CCA/Components/DOUBLEMPM/ShellMPM.h>
-#include <CCA/Components/DOUBLEMPM/SingleFieldMPM.h>
-#include <CCA/Components/DOUBLEMPM/DOUBLEMPM.h>
-#endif
-
 
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
 #  include <CCA/Components/MPMArches/MPMArches.h>
@@ -304,54 +294,14 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   }
   else
     turned_on_options += "impm ";
-#endif
-
-  //----------------------------
-
-#ifndef NO_DOUBLEMPM
-  if (sim_comp == "mpm" || sim_comp == "MPM") {
-    return scinew SerialMPM(myworld, materialManager);
-  } 
-  else
-    turned_on_options += "mpm ";
-  
-  if (sim_comp == "rmpm" || sim_comp == "rigidmpm" || sim_comp == "RIGIDMPM") {
-    return scinew RigidMPM(myworld, materialManager);
-  } 
-  else
-    turned_on_options += "rigidmpm ";
-
-  if (sim_comp == "amrmpm" || sim_comp == "AMRmpm" || sim_comp == "AMRMPM") {
-    return scinew AMRMPM(myworld, materialManager);
-  } 
-  else
-    turned_on_options += "amrmpm ";
-
-  if (sim_comp == "sfmpm" || sim_comp == "SFmpm" || sim_comp == "SFMPM") {
-    return scinew SingleFieldMPM(myworld, materialManager);
-  } 
-  else
-    turned_on_options += "sfmpm ";
-
-  if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
-    return scinew ShellMPM(myworld, materialManager);
-  } 
-  else
-    turned_on_options += "shellmpm ";
-
-  if (sim_comp == "impm" || sim_comp == "IMPM") {
-    return scinew ImpMPM(myworld, materialManager);
-  }
-  else
-    turned_on_options += "impm ";
 
   if (sim_comp == "doublempm" || sim_comp == "DOUBLEMPM") {
-    return scinew DOUBLEMPM(myworld, materialManager);
-  } 
+	  return scinew DOUBLEMPM(myworld, materialManager);
+  }
   else
-    turned_on_options += "doublempm ";
-#endif
+	  turned_on_options += "doublempm ";
 
+#endif 
   //----------------------------
 
 

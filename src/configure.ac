@@ -795,14 +795,6 @@ SCI_ARG_ENABLE(mpm,
   [BUILD_MPM="no"
    DEF_MPM=["#define NO_MPM"]])
 
-SCI_ARG_ENABLE(doublempm,
-  AC_HELP_STRING(--enable-doublempm,
-                 Turn on the doublempm component.),
-  [BUILD_DOUBLEMPM="yes"],
-  [BUILD_DOUBLEMPM="no"
-   DEF_DOUBLEMPM=["#define NO_DOUBLEMPM"]])
-
-
 SCI_ARG_ENABLE(phasefield,
   AC_HELP_STRING(--enable-phasefield,
                  Turn on the PhaseField component.),
@@ -827,7 +819,6 @@ SCI_ARG_ENABLE(all_components,
    BUILD_HEAT="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
-   BUILD_DOUBLEMPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_EXAMPLES=
@@ -835,7 +826,6 @@ SCI_ARG_ENABLE(all_components,
    DEF_HEAT=
    DEF_ICE=
    DEF_MPM=
-   DEF_DOUBLEMPM=
    DEF_UNIT_TESTS=
    DEF_WASATCH=
   ],
@@ -861,7 +851,6 @@ if test \( "$enable_arches"     = "yes" -o  \
            "$enable_heat"       = "yes" -o  \
            "$enable_ice"        = "yes" -o  \
            "$enable_mpm"        = "yes" -o  \
-           "$enable_doublempm"  = "yes" -o  \
            "$enable_phasefield" = "yes" -o  \
            "$enable_wasatch"    = "yes" \); then
   enabling_components=yes
@@ -1409,9 +1398,6 @@ fi
 if test "$USE_MPM" != ""; then
    AC_MSG_ERROR( USE_MPM is deprecated.  Please use --enable-mpm. )
 fi
-if test "$USE_DOUBLEMPM" != ""; then
-   AC_MSG_ERROR( USE_DOUBLEMPM is deprecated.  Please use --enable-doublempm. )
-fi
 if test "$USE_WASATCH" != ""; then
    AC_MSG_ERROR( USE_WASATCH is deprecated.  Please use --enable-wasatch. )
 fi
@@ -1435,7 +1421,6 @@ AC_SUBST(BUILD_HEAT)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
-AC_SUBST(BUILD_DOUBLEMPM)
 AC_SUBST(BUILD_PHASEFIELD)
 AC_SUBST(BUILD_WASATCH)
 
@@ -1445,7 +1430,6 @@ AC_SUBST(DEF_FVM)
 AC_SUBST(DEF_HEAT)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
-AC_SUBST(DEF_DOUBLEMPM)
 AC_SUBST(DEF_MODELS_RADIATION)
 AC_SUBST(DEF_PHASEFIELD)
 AC_SUBST(DEF_WASATCH)

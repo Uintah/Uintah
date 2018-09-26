@@ -129,15 +129,10 @@ ifeq ($(BUILD_MPM),yes)
 	$(MPM_DIR)/Materials         \
 	$(MPM_DIR)/MMS               \
 	$(MPM_DIR)/PhysicalBC        \
-        $(MPM_DIR)/Solver            \
+    $(MPM_DIR)/Solver            \
 	$(MPM_DIR)/Core
 
 #       $(MPM_DIR)/Crack
-endif
-
-# Double MPM
-ifeq ($(BUILD_DOUBLEMPM),yes)
-  DOUBLEMPM_LIB = $(COMPONENTS)/DOUBLEMPM
 endif
 
 # MPM-Arches
@@ -218,7 +213,6 @@ ALL_PSE_LIBS =                              \
         $(ICE_LIB)                          \
         $(ICE_SUB_LIBS)                     \
         $(MPM_LIB)                          \
-	$(DOUBLEMPM_LIB)                    \
         $(MPM_SUB_LIBS)                     \
         $(MPMARCHES_LIB)                    \
         $(MPMFVM_LIB)                       \

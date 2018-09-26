@@ -33,6 +33,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR	:= CCA/Components/MPM
 
 SRCS += $(SRCDIR)/SerialMPM.cc    \
+        $(SRCDIR)/DOUBLEMPM.cc    \
 	$(SRCDIR)/RigidMPM.cc     \
 	$(SRCDIR)/MPMCommon.cc    \
 	$(SRCDIR)/ImpMPM.cc       \
