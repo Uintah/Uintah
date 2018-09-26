@@ -1,4 +1,5 @@
 #!/bin/csh -f
+setenv NCURSES_NO_UTF8_ACS 1   # fix for dialog issue with certain terminals
 #__________________________________
 #  This helper script executes one of two make commands
 #        make gold_standards
