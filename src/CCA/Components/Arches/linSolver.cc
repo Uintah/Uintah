@@ -96,13 +96,11 @@ linSolver::sched_PreconditionerConstruction(SchedulerP& sched, const MaterialSet
 
 
 
-  int archIndex = 0; // only one arches material
-  d_indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
   proc0cout << " SCHEDULING CUSTOM SOLVE derekx\n";
   std::string taskname("linSolver::initialize_preconditioner_" + std::to_string(level->getID()));
   if (level->hasFinerLevel() == false){  // only create labels first time through ( hhighest level) 
   sched_buildAMatrix( sched, patches, matls);
-  const VarLabel* ALabel = d_lab->d_presCoefPBLMLabel;
+  const VarLabel* ALabel = d_presCoefPBLMLabel;
   Task* tsk = scinew Task(taskname, this, &linSolver::customSolve,ALabel);
 
   tsk->requires(Task::NewDW, ALabel, Ghost::AroundCells, 1);   // ghosts needed fro jjacobiblock, not jacobi
@@ -178,13 +176,13 @@ linSolver::sched_buildAMatrix(SchedulerP& sched,
   //Ghost::GhostType  gn  = Ghost::None;
   //Ghost::GhostType  gaf = Ghost::AroundFaces;
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
+  tsk->requires(Task::NewDW, d_cellTypeLabel,       gac, 1);
   // get drhodt that goes in the rhs of the pressure equation
   if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gac, 1);
+    tsk->requires(Task::NewDW, d_mmgasVolFracLabel, gac, 1);
   }
 
-  tsk->computes(d_lab->d_presCoefPBLMLabel);
+  tsk->computes(d_presCoefPBLMLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -211,9 +209,9 @@ linSolver::buildAMatrix(const ProcessorGroup* pc,
     Ghost::GhostType  gac = Ghost::AroundCells;
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
 
-    new_dw->get(constVars.cellType,     d_lab->d_cellTypeLabel,    d_indx, patch, gac, 1);
+    new_dw->get(constVars.cellType,     d_cellTypeLabel,    d_indx, patch, gac, 1);
 
-    new_dw->allocateAndPut(vars.pressCoeff,        d_lab->d_presCoefPBLMLabel,      d_indx, patch);
+    new_dw->allocateAndPut(vars.pressCoeff,        d_presCoefPBLMLabel,      d_indx, patch);
 
     const IntVector idxLo = patch->getCellLowIndex();
     const IntVector idxHi = patch->getCellHighIndex();
@@ -233,7 +231,7 @@ linSolver::buildAMatrix(const ProcessorGroup* pc,
     d_pressureSolver->calculatePressureCoeff(patch, &vars, &constVars);
     // Modify pressure coefficients for multimaterial formulation
     if (d_MAlab) {
-      new_dw->get(constVars.voidFraction, d_lab->d_mmgasVolFracLabel, d_indx, patch,gac, 1);
+      new_dw->get(constVars.voidFraction, d_mmgasVolFracLabel, d_indx, patch,gac, 1);
     }
 
     //Vector Dx = patch->dCell();
@@ -262,8 +260,7 @@ linSolver::printError( const ProcessorGroup* pg,
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
+    int matl = d_indx ;
 
 
 
@@ -305,8 +302,6 @@ linSolver::Update_preconditioner( const ProcessorGroup* pg,
              DataWarehouse* old_dw,
              DataWarehouse* new_dw
              ){
-    //int archIndex = 0; // only one arches material
-    //int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
   for (unsigned int i=0;i<d_precMLabel.size();i++){
 
 //constCCVariable<double > x;
@@ -414,7 +409,7 @@ if (rb_iter == final_iter){
   task1->modifies(d_littleQLabel);
   task1->computes(d_corrSumLabel[cg_iter]);
 
-  sched->addTask(task1, fineLevel->eachPatch(),d_lab->d_materialManager->allMaterials( "Arches"));
+  sched->addTask(task1, fineLevel->eachPatch(),matls);
 
   Task* task2 = scinew Task("linSolver::cg_task2",
                            this, &linSolver::cg_task2,xLabel, cg_iter);
@@ -426,7 +421,7 @@ if (rb_iter == final_iter){
   task2->modifies(d_residualLabel);
 
 
-  sched->addTask(task2, fineLevel->eachPatch(),d_lab->d_materialManager->allMaterials( "Arches"));
+  sched->addTask(task2, fineLevel->eachPatch(),matls);
 
 
 
@@ -444,7 +439,7 @@ if (rb_iter == final_iter){
       task_multigrid_up->modifies(d_residualLabel);
 
     }
-    sched->addTask(task_multigrid_up, level_patches,d_lab->d_materialManager->allMaterials( "Arches"));
+    sched->addTask(task_multigrid_up, level_patches,matls);
   }
 
 
@@ -467,7 +462,7 @@ if (rb_iter == final_iter){
         task_multigrid_down->requires( Task::NewDW ,d_bigZLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::None, 0 );
     }
     
-    sched->addTask(task_multigrid_down, level_patches,d_lab->d_materialManager->allMaterials( "Arches"));
+    sched->addTask(task_multigrid_down, level_patches,matls);
 
     int smoother_iter=3;// In case user didn't set up levels
 
@@ -488,7 +483,7 @@ if (rb_iter == final_iter){
         task_multigrid_smooth->computes(d_resSumLabel [cg_iter+1]);
         task_multigrid_smooth->computes(d_convMaxLabel[cg_iter]);
       }
-      sched->addTask(task_multigrid_smooth, level_patches,d_lab->d_materialManager->allMaterials( "Arches"));
+      sched->addTask(task_multigrid_smooth, level_patches,matls);
     }
     
 
@@ -504,7 +499,7 @@ if (rb_iter == final_iter){
   task4->modifies(d_smallPLabel);
   task4->requires(Task::NewDW,d_bigZLabel,Ghost::None, 0);
 
-  sched->addTask(task4, fineLevel->eachPatch(),d_lab->d_materialManager->allMaterials( "Arches"));
+  sched->addTask(task4, fineLevel->eachPatch(),matls);
   } // END CG_iter
 
 };
@@ -540,8 +535,7 @@ linSolver::cg_init1( const ProcessorGroup* pg,
       rk1=false;
   }
 //
-    int archIndex = 0;
-  int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();  // have to do it this way because overloaded exists(arg) doesn't seem to work!!
+    int matl = d_indx ;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
@@ -610,8 +604,7 @@ linSolver::cg_init2( const ProcessorGroup* pg,
   }
   double R_squared=0.0;
 //
-    int archIndex = 0;
-  int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();  // have to do it this way because overloaded exists(arg) doesn't seem to work!!
+    int matl = d_indx ;
   for (int p = 0; p < patches->size(); p++) {
    const Patch* patch = patches->get(p);
 
@@ -693,8 +686,7 @@ linSolver::cg_task1( const ProcessorGroup* pg,
 //          correction factor requires a reduction                     //////////
 /////////////////////////////////////////////////////////////////////////////////
   double correction_sum=0.0;
-    int archIndex = 0;
-  int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();  // have to do it this way because overloaded exists(arg) doesn't seem to work!!
+    int matl = d_indx ;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
@@ -753,8 +745,7 @@ linSolver::cg_task2( const ProcessorGroup* pg,
     new_dw->get(correction_sum,d_corrSumLabel[iter]);
 
     double correction_factor= (abs(correction_sum) < 1e-100) ? 0.0 :R_squared_old/correction_sum; // ternary may not be needed when we switch to do-while loop
-    int archIndex = 0;
-    int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();  
+    int matl = d_indx ;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
@@ -785,8 +776,7 @@ linSolver::cg_task3( const ProcessorGroup* pg, // APPLY PRECONDITIONER
                        const MaterialSubset* matls,
                        DataWarehouse* old_dw,
                        DataWarehouse* new_dw, int iter){
-    int archIndex = 0;
-  int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();  
+  int matl = d_indx;  
   double  R_squared=0.0;
   double max_residual=0.0;
   for (int p = 0; p < patches->size(); p++) {
@@ -843,8 +833,7 @@ linSolver::cg_task4( const ProcessorGroup* pg,
     proc0cout << "MAX RESIDUAL VALUE:::: " << convergence << " \n"; 
 
     const double  beta=R_squared/R_squared_old;  
-    int archIndex = 0;
-  int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();  
+  int matl = d_indx ;  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
@@ -1638,8 +1627,7 @@ linSolver::customSolve( const ProcessorGroup* pg,
                              DataWarehouse* new_dw,
                              const VarLabel* ALabel){ // pas level
 
-    int archIndex = 0; // only one arches material
-    int matl = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
+    int matl = d_indx ;
 
   //double R_squared=0.0;
 

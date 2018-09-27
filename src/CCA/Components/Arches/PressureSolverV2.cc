@@ -94,7 +94,7 @@ PressureSolver::~PressureSolver()
 void
 PressureSolver::problemSetup(ProblemSpecP& params,MaterialManagerP& materialManager)
 {
-  //do_custom_arches_linear_solve=true; //  Don't use hypre, use proto-type solver
+  do_custom_arches_linear_solve=true; //  Don't use hypre, use proto-type solver
   
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();
@@ -176,7 +176,12 @@ void PressureSolver::scheduleInitialize( const LevelP& level,
 {
   if(do_custom_arches_linear_solve){
     int archIndex = 0; // only one arches material
-    custom_solver = scinew linSolver(d_MAlab,   this, d_boundaryCondition ,d_physicalConsts ,d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(),d_lab );
+    custom_solver = scinew linSolver(d_MAlab,   this, d_boundaryCondition ,d_physicalConsts ,d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(),
+                                                                                             d_lab->d_mmgasVolFracLabel,
+                                                                                             d_lab->d_cellTypeLabel,
+                                                                                             d_lab->d_presCoefPBLMLabel,
+                                                                                             d_lab->d_materialManager->allMaterials("Arches")
+                                                                                                                       );
     custom_solver->sched_PreconditionerConstruction( sched, matls, level );// hard coded for level 0 
   }else{
     d_hypreSolver->scheduleInitialize( level, sched, matls );
