@@ -80,7 +80,7 @@ ______________________________________________________________________*/
                                     const LevelP & level);
 
     virtual void scheduleRestartInitialize(SchedulerP   & sched,
-                                           const LevelP & level){};
+                                           const LevelP & level);
 
     virtual void restartInitialize();
 
@@ -92,6 +92,82 @@ ______________________________________________________________________*/
 
   private:
 
+    //__________________________________
+    //  This is a wrapper to create a vector of objects of different types(aveVar)
+    struct aveVarBase{
+      public:
+        VarLabel* label;
+        int matl;
+        int level;
+        TypeDescription::Type baseType;
+        TypeDescription::Type subType;
+        
+        virtual void reserve( const int ) = 0;
+        
+        // virtual templated functions are not allowed in C++11
+        // instantiate the various types
+        virtual  void getPlaneAve( std::vector<double>& ave ){};
+        virtual  void getPlaneAve( std::vector<Vector>& ave ){};
+        virtual  void setPlaneAve( std::vector<double>& ave ){};
+        virtual  void setPlaneAve( std::vector<Vector>& ave ){}
+    };
+
+    //  It's simple and straight forward to use a double and vector class
+    //  A templated class would be ideal but that involves too much C++ magic
+    //  
+    //__________________________________
+    //  Class that holds the planar averages     double
+    class aveVar_double: public aveVarBase{
+
+      private:
+        std::vector<double> sum;
+        std::vector<double> weight;
+        std::vector<double> ave;
+        
+      public:
+        void reserve( const int n )
+        {
+          sum.reserve(n);
+          weight.reserve(n);
+          ave.reserve(n);
+        }
+        
+        void getPlaneAve( std::vector<double>& me )  { me = ave; }
+        void setPlaneAve( std::vector<double>& me )  { ave = me; } 
+
+        ~aveVar_double(){}
+    };
+    
+    //__________________________________
+    //  Class that holds the planar averages      Vector
+    class aveVar_Vector: public aveVarBase{
+
+      private:
+        std::vector<Vector> sum;
+        std::vector<Vector> weight;
+        std::vector<Vector> ave;
+
+      public:
+        void reserve( const int n )
+        {
+          sum.reserve(n);
+          weight.reserve(n);
+          ave.reserve(n);
+        }
+        
+        void getPlaneAve( std::vector<Vector>& me )  { me = ave; }
+        void setPlaneAve( std::vector<Vector>& me )  { ave = me; } 
+        ~aveVar_Vector(){}
+    };
+
+    // Each element of the vector contains
+    // 
+    std::vector< std::shared_ptr< aveVarBase > > d_aveVars;
+
+    
+    //______________________________________________________________________
+    //
+    //
     bool isRightLevel( const int myLevel,
                        const int L_indx,
                        const LevelP& level);
@@ -101,6 +177,12 @@ ______________________________________________________________________*/
                     const MaterialSubset *,
                     DataWarehouse        *,
                     DataWarehouse        * new_dw);
+                    
+    void restartInitialize(const ProcessorGroup *,
+                           const PatchSubset    * patches,
+                           const MaterialSubset *,
+                           DataWarehouse        *,
+                           DataWarehouse        * new_dw);
 
     void computeAverage(const ProcessorGroup * pg,
                         const PatchSubset    * patches,
@@ -117,15 +199,14 @@ ______________________________________________________________________*/
     void createFile(std::string & filename,
                     FILE*       & fp,
                     std::string & levelIndex);
-    
-    int createDirectory( mode_t mode, 
-                    const std::string & rootPath, 
-                    std::string       & path );
+
+    int createDirectory( mode_t mode,
+                         const std::string & rootPath,
+                         std::string       & path );
 
     template <class Tvar, class Ttype>
     void findAverage( DataWarehouse  * new_dw,
-                      const VarLabel * varLabel,
-                      const int        indx,
+                      std::shared_ptr< aveVarBase > analyzeVars,
                       const Patch    * patch,
                       GridIterator     iter );
 
@@ -133,7 +214,6 @@ ______________________________________________________________________*/
     void planeIterator( const GridIterator& patchIter,
                         IntVector & lo,
                         IntVector & hi );
-
 
     // general labels
     class planeAverageLabel {
@@ -149,14 +229,6 @@ ______________________________________________________________________*/
     double d_writeFreq;
     double d_startTime;
     double d_stopTime;
-
-    struct varProperties {
-      VarLabel* label;
-      int matl;
-      int level;
-    };
-
-    std::vector<varProperties> d_analyzeVars;
 
     const Material*  d_matl;
     MaterialSet*     d_matl_set;

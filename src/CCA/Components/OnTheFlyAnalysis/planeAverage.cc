@@ -64,6 +64,8 @@ static DebugStream do_cout("planeAverage", "OnTheFlyAnalysis", "planeAverage deb
 /*
      This module computes the spatial average of a variable over a plane
 TO DO:
+    - Multiple levels
+    - allow user to control the number of planes
 
 
 ______________________________________________________________________*/
@@ -208,8 +210,8 @@ void planeAverage::problemSetup(const ProblemSpecP&,
     const TypeDescription* td = label->typeDescription();
     const TypeDescription* subtype = td->getSubType();
 
-    const int baseType = td->getType();
-    const int subType  = subtype->getType();
+    const TypeDescription::Type baseType = td->getType();
+    const TypeDescription::Type subType  = subtype->getType();
 
     // only CC, SFCX, SFCY, SFCZ variables
     if(baseType != TypeDescription::CCVariable &&
@@ -247,21 +249,30 @@ void planeAverage::problemSetup(const ProblemSpecP&,
     }
 
     //__________________________________
-    //  Create the max VarLabels for the reduction variables
-   
+    //  populate the vector
     // double
     if( subType == TypeDescription::double_type ) {
+      aveVar_double* me = new aveVar_double();
+      me->label    = label;
+      me->matl     = matl;
+      me->level    = level;
+      me->baseType = baseType;
+      me->subType  = subType;
+
+      d_aveVars.push_back( std::shared_ptr<aveVarBase>(me) );
+    
     }
     // Vectors
     if( subType == TypeDescription::Vector ) {
-    }
+      aveVar_Vector* me = new aveVar_Vector();
+      me->label    = label;
+      me->matl     = matl;
+      me->level    = level;
+      me->baseType = baseType;
+      me->subType  = subType;
 
-    varProperties me;
-    me.label = label;
-    me.matl  = matl;
-    me.level = level;
-    d_analyzeVars.push_back(me);
-    
+      d_aveVars.push_back( std::shared_ptr<aveVarBase>(me) );
+    }
   }
 
   //__________________________________
@@ -331,13 +342,83 @@ void planeAverage::initialize(const ProcessorGroup  *,
       closedir(check);
     }
   }
-}
-//______________________________________________________________________
-//
-void planeAverage::restartInitialize()
-{
+  
+  //__________________________________
+  //  reserve space for each of the VarLabels
+  //  vectors
+  const LevelP level = getLevelP(patches);
+  const int L_indx   = level->getIndex();
+  
+  //  Loop over variables */
+  
+  for (unsigned int i =0 ; i < d_aveVars.size(); i++) {
+    const int myLevel              = d_aveVars[i]->level;
+    const TypeDescription::Type td = d_aveVars[i]->baseType;
+
+    // is this the right level for this variable?
+    if ( isRightLevel( myLevel, L_indx, level ) ){
+      IntVector L_lo;
+      IntVector L_hi;
+      
+      level->computeVariableExtents( td, L_lo, L_hi );
+      
+      int nPlanes = 0;
+      switch( d_planeOrientation ){
+        case XY:{
+          nPlanes = L_hi.z() - L_lo.z();
+          break;
+        }
+        case XZ:{
+          nPlanes = L_hi.y() - L_lo.y();
+          break;
+        }
+        case YZ:{
+          nPlanes = L_hi.x() - L_lo.x();
+          break;
+        }
+        default:
+          break;
+      }
+      
+      d_aveVars[i]->reserve( nPlanes );
+    }
+  }
 }
 
+//______________________________________________________________________
+void planeAverage::scheduleRestartInitialize(SchedulerP   & sched,
+                                             const LevelP & level)
+{
+  printSchedule(level,do_cout,"planeAverage::scheduleRestartInitialize");
+
+  Task* t = scinew Task("planeAverage::restartInitialize",
+                  this, &planeAverage::restartInitialize);
+
+  t->computes(d_lb->lastCompTimeLabel );
+  t->computes(d_lb->fileVarsStructLabel, d_zero_matl);
+  sched->addTask(t, level->eachPatch(),  d_matl_set);
+}
+
+//______________________________________________________________________
+void planeAverage::restartInitialize(const ProcessorGroup  *,
+                                     const PatchSubset     * patches,
+                                     const MaterialSubset  *,
+                                     DataWarehouse         *,
+                                     DataWarehouse         * new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,do_cout,"Doing planeAverage::restartInitialize");
+
+    double tminus = -1.0/d_writeFreq;
+    new_dw->put(max_vartype(tminus), d_lb->lastCompTimeLabel );
+  }
+}
+//______________________________________________________________________
+void
+planeAverage::restartInitialize()
+{
+}
 //______________________________________________________________________
 void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
                                       const LevelP & level)
@@ -359,9 +440,9 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
   t0->requires( Task::OldDW, m_simulationTimeLabel );
   t0->requires( Task::OldDW, d_lb->lastCompTimeLabel );
 
-  for ( unsigned int i =0 ; i < d_analyzeVars.size(); i++ ) {
-    VarLabel* label   = d_analyzeVars[i].label;
-    const int myLevel = d_analyzeVars[i].level;
+  for ( unsigned int i =0 ; i < d_aveVars.size(); i++ ) {
+    VarLabel* label   = d_aveVars[i]->label;
+    const int myLevel = d_aveVars[i]->level;
 
     // is this the right level for this variable?
     if ( isRightLevel( myLevel, L_indx, level ) ){
@@ -374,7 +455,7 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
       }
 
       MaterialSubset* matSubSet = scinew MaterialSubset();
-      matSubSet->add( d_analyzeVars[i].matl );
+      matSubSet->add( d_aveVars[i]->matl );
       matSubSet->addReference();
 
       t0->requires( Task::NewDW, label, matSubSet, gn, 0 );
@@ -399,12 +480,12 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
   t1->requires( Task::OldDW, d_lb->fileVarsStructLabel, d_zero_matl, gn, 0 );
 
   // schedule the reduction variables
-  for ( unsigned int i =0 ; i < d_analyzeVars.size(); i++ ) {
+  for ( unsigned int i =0 ; i < d_aveVars.size(); i++ ) {
 
-    int myLevel = d_analyzeVars[i].level;
+    int myLevel = d_aveVars[i]->level;
     if ( isRightLevel( myLevel, L_indx, level) ){
       MaterialSubset* matSubSet = scinew MaterialSubset();
-      matSubSet->add( d_analyzeVars[i].matl );
+      matSubSet->add( d_aveVars[i]->matl );
       matSubSet->addReference();
     }
   }
@@ -422,7 +503,7 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
 }
 
 //______________________________________________________________________
-//  This task computes and min/max of each variable
+//  This task computes and planar average of each variable
 //
 void planeAverage::computeAverage(const ProcessorGroup * pg,
                                   const PatchSubset    * patches,
@@ -434,30 +515,13 @@ void planeAverage::computeAverage(const ProcessorGroup * pg,
   // the user may want to restart from an uda that wasn't using the DA module
   // This logic allows that.
   max_vartype writeTime;
-  double lastWriteTime = 0;
-  if( old_dw->exists( d_lb->lastCompTimeLabel ) ){
-    old_dw->get(writeTime, d_lb->lastCompTimeLabel);
-    lastWriteTime = writeTime;
-  }
-
-  // double now = m_materialManager->getElapsedSimTime();
+  old_dw->get(writeTime, d_lb->lastCompTimeLabel);
+  double lastWriteTime = writeTime;
 
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
-
-  // Get the delta T from the warehouse so time includes the current
-  // time step.
-  DataWarehouse * dw = m_scheduler->get_dw(0);
-
-  delt_vartype delt_var;
-
-cout << " now: " << now << " delT: " << delt_var << endl;
-
-  if( dw->exists( m_delTLabel ) ) {
-    m_scheduler->get_dw(0)->get( delt_var, m_delTLabel );
-    now += delt_var;
-  }
+cout << " now: " << now << endl;
 
   if(now < d_startTime || now > d_stopTime){
     return;
@@ -466,18 +530,23 @@ cout << " now: " << now << " delT: " << delt_var << endl;
   double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
   //__________________________________
   // compute plane average if it's time to write
-  if( now >= nextWriteTime){
+  if( now >= nextWriteTime ){
 
     const LevelP level = getLevelP(patches);
     const int L_indx = level->getIndex();
 
-    /*  Loop over patches  */
+    //__________________________________
+    // Loop over patches 
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
 
-      /* Loop over variables */
-      for (unsigned int i =0 ; i < d_analyzeVars.size(); i++) {
-        VarLabel* label = d_analyzeVars[i].label;
+      //__________________________________
+      // Loop over variables
+      for (unsigned int i =0 ; i < d_aveVars.size(); i++) {
+        
+        std::shared_ptr<aveVarBase> analyzeVar = d_aveVars[i];
+      
+        VarLabel* label = d_aveVars[i]->label;
         string labelName = label->getName();
 
         // bulletproofing
@@ -487,30 +556,30 @@ cout << " now: " << now << " delT: " << delt_var << endl;
         }
 
         // Are we on the right level for this level
-        const int myLevel = d_analyzeVars[i].level;
+        const int myLevel = d_aveVars[i]->level;
         if ( !isRightLevel( myLevel, L_indx, level) ){
           continue;
         }
 
         printTask(patches, patch,do_cout,"Doing planeAverage::computeAverage");
 
-        const TypeDescription* td = label->typeDescription();
-        const TypeDescription* subtype = td->getSubType();
+        const TypeDescription::Type type    = analyzeVar->baseType;
+        const TypeDescription::Type subType = analyzeVar->subType;
 
-        int indx = d_analyzeVars[i].matl;
-
-        switch(td->getType()){
+        //__________________________________
+        //  compute average for each variable type
+        switch( type ){
           case TypeDescription::CCVariable:             // CC Variables
-            switch(subtype->getType()) {
-
-            case TypeDescription::double_type:{         // CC double
+            
+            switch( subType ) {
+            case TypeDescription::double_type:{         // CC double  
               GridIterator iter=patch->getCellIterator();
-              findAverage <constCCVariable<double>, double > ( new_dw, label, indx, patch, iter );
+              findAverage <constCCVariable<double>, double > ( new_dw, analyzeVar, patch, iter );
               break;
             }
             case TypeDescription::Vector: {             // CC Vector
               GridIterator iter=patch->getCellIterator();
-              findAverage< constCCVariable<Vector>, Vector > ( new_dw, label, indx, patch, iter );
+              findAverage< constCCVariable<Vector>, Vector > ( new_dw, analyzeVar, patch, iter );
               break;
             }
             default:
@@ -519,16 +588,16 @@ cout << " now: " << now << " delT: " << delt_var << endl;
             break;
 
           case TypeDescription::NCVariable:             // NC Variables
-            switch(subtype->getType()) {
-
+            switch( subType ) {
+            
             case TypeDescription::double_type:{         // NC double
               GridIterator iter=patch->getNodeIterator();
-              findAverage <constNCVariable<double>, double > ( new_dw, label, indx, patch, iter );
+              findAverage <constNCVariable<double>, double > ( new_dw, analyzeVar, patch, iter );
               break;
             }
             case TypeDescription::Vector: {             // NC Vector
               GridIterator iter=patch->getNodeIterator();
-              findAverage< constNCVariable<Vector>, Vector > ( new_dw, label, indx, patch, iter );
+              findAverage< constNCVariable<Vector>, Vector > ( new_dw, analyzeVar, patch, iter );
               break;
             }
             default:
@@ -537,24 +606,24 @@ cout << " now: " << now << " delT: " << delt_var << endl;
             break;
           case TypeDescription::SFCXVariable: {         // SFCX double
             GridIterator iter=patch->getSFCXIterator();
-            findAverage <constSFCXVariable<double>, double > ( new_dw, label, indx, patch, iter );
+            findAverage <constSFCXVariable<double>, double > ( new_dw, analyzeVar, patch, iter );
             break;
           }
           case TypeDescription::SFCYVariable: {         // SFCY double
             GridIterator iter=patch->getSFCYIterator();
-            findAverage <constSFCYVariable<double>, double > ( new_dw, label, indx, patch, iter );
+            findAverage <constSFCYVariable<double>, double > ( new_dw, analyzeVar, patch, iter );
             break;
           }
           case TypeDescription::SFCZVariable: {         // SFCZ double
             GridIterator iter=patch->getSFCZIterator();
-            findAverage <constSFCZVariable<double>, double > ( new_dw, label, indx, patch, iter );
+            findAverage <constSFCZVariable<double>, double > ( new_dw, analyzeVar, patch, iter );
             break;
           }
           default:
-            ostringstream warn;
-            warn << "ERROR:AnalysisModule:planeAverage: ("<< label->getName() << " "
-                 << td->getName() << " ) has not been implemented" << endl;
-            throw InternalError(warn.str(), __FILE__, __LINE__);
+            ostringstream mesg;
+            mesg << "ERROR:AnalysisModule:planeAverage: ("<< label->getName() << " "
+                 << label->typeDescription()->getName() << " ) has not been implemented" << endl;
+            throw InternalError(mesg.str(), __FILE__, __LINE__);
         }
       }  // VarLabel loop
     }  // patches
@@ -574,24 +643,12 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
   int L_indx = level->getIndex();
 
   max_vartype writeTime;
-  double lastWriteTime = 0;
-  if( old_dw->exists( d_lb->lastCompTimeLabel ) ){
-    old_dw->get(writeTime, d_lb->lastCompTimeLabel);
-    lastWriteTime = writeTime;
-  }
+  old_dw->get(writeTime, d_lb->lastCompTimeLabel);
+  double lastWriteTime = writeTime;
 
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
-
-  // Get the delta t from the warehouse so time includes the current time step.
-  DataWarehouse * dw = m_scheduler->get_dw(0);
-
-  delt_vartype delt_var;
-  if( dw->exists( m_delTLabel ) ) {
-    m_scheduler->get_dw(0)->get( delt_var, m_delTLabel );
-    now += delt_var;
-  }
 
   if(now < d_startTime || now > d_stopTime){
     new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel);
@@ -600,6 +657,8 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
 
   double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
 
+  //__________________________________
+  //
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -631,8 +690,8 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
 
       printTask(patches, patch,do_cout,"Doing planeAverage::doAnalysis");
 
-      for (unsigned int i =0 ; i < d_analyzeVars.size(); i++) {
-        VarLabel* label = d_analyzeVars[i].label;
+      for (unsigned int i =0 ; i < d_aveVars.size(); i++) {
+        VarLabel* label = d_aveVars[i]->label;
         string labelName = label->getName();
 
         // bulletproofing
@@ -642,7 +701,7 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
         }
 
         // Are we on the right level for this variable?
-        const int myLevel = d_analyzeVars[i].level;
+        const int myLevel = d_aveVars[i]->level;
 
         if ( !isRightLevel( myLevel, L_indx, levelP ) ){
           continue;
@@ -673,7 +732,7 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
         } 
         
         ostringstream fname;
-        fname << udaDir << "/" << path << "/" << labelName << "_" << d_analyzeVars[i].matl;
+        fname << udaDir << "/" << path << "/" << labelName << "_" << d_aveVars[i]->matl;
         string filename = fname.str();
         
         //__________________________________
@@ -692,34 +751,40 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
         }
 
         //__________________________________
-        //  Now get the data from the DW and write it to the file
+        //  Write it to the file
+        const TypeDescription::Type subType = d_aveVars[i]->subType;
 
-        int indx = d_analyzeVars[i].matl;
-
-        const TypeDescription* td = label->typeDescription();
-        const TypeDescription* subtype = td->getSubType();
-
-        switch(subtype->getType()) {
+        switch( subType ) {
 
           case TypeDescription::double_type:{
-            double aveQ;
+            std::vector<double> aveQ;
+            d_aveVars[i]->getPlaneAve( aveQ );
+            cout << " doAnalysis: double size: " <<aveQ.size() <<  endl;
+            for (int i =0; i< aveQ.size(); i++){
+              cout << "   i: " << i << " aveQ: " << aveQ[i] << endl;
+            }
 
-            fprintf( fp, "%16.15E     %16.15E \n",now, (double)aveQ );
+            //fprintf( fp, "%16.15E     %16.15E \n",now, aveQ );
            break;
           }
           case TypeDescription::Vector: {
-            Vector aveQ_V;
+            std::vector<Vector> aveQ;
+            d_aveVars[i]->getPlaneAve( aveQ );
+            cout << " doAnalysis: Vector size: " <<aveQ.size() <<  endl;
+            for (int i =0; i< aveQ.size(); i++){
+              cout << "   i: " << i << " aveQ: " << aveQ[i] << endl;
+            }
 
-            fprintf( fp, "%16.15E     [%16.15E %16.15E %16.15E] \n",now,
-                          aveQ_V.x(), aveQ_V.y(), aveQ_V.z() );
-
+            //fprintf( fp, "%16.15E     [%16.15E %16.15E %16.15E] \n",now,
+            //              aveQ_V.x(), aveQ_V.y(), aveQ_V.z() );
             break;
           }
         default:
           throw InternalError("planeAverage: invalid data type", __FILE__, __LINE__);
         }
+        
         fflush(fp);
-      }  // label names
+      }  // d_aveVars loop
 
       lastWriteTime = now;
     }  // time to write data
@@ -738,15 +803,20 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
 //  Find the average of the VarLabel
 template <class Tvar, class Ttype>
 void planeAverage::findAverage( DataWarehouse * new_dw,
-                                const VarLabel* varLabel,
-                                const int       indx,
+                                std::shared_ptr< aveVarBase > analyzeVar,
                                 const Patch   * patch,
                                 GridIterator    iter )
 {
+
+  int indx = analyzeVar->matl;
+  
+  const VarLabel* varLabel = analyzeVar->label;
   cout <<"   " << varLabel->getName() << endl;
 
   Tvar Q_var;
   new_dw->get(Q_var, varLabel, indx, patch, Ghost::None, 0);
+  
+  std::vector<Ttype> sumV;
   
   IntVector lo;
   IntVector hi;
@@ -783,17 +853,14 @@ void planeAverage::findAverage( DataWarehouse * new_dw,
         sum = sum + Q_var[c];
       }
     }
-
+    sumV.push_back(sum);
+    
     const string labelName = varLabel->getName();
     do_cout << labelName << "plane: " << z << " sum: " <<sum << endl;
     
-    
-//    string VLmax = labelName + "_max";
-//    const VarLabel* meMax = VarLabel::find( VLmax );
-
-//    new_dw->put( ReductionVariable<Ttype, Reductions::Max<Ttype> >(maxQ), meMax, level, indx );
-
   }
+  
+  analyzeVar->setPlaneAve( sumV );
 }
 
 //______________________________________________________________________
