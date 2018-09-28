@@ -55,6 +55,7 @@ public:
   InfoMapper()
   {
     m_values.clear();
+    m_counts.clear();
     m_names.clear();
     m_units.clear();
   };
@@ -69,6 +70,7 @@ public:
   virtual void clear()
   {
     m_values.clear();
+    m_counts.clear();
     m_names.clear();
     m_units.clear();
   };
@@ -77,6 +79,7 @@ public:
   {
     for (unsigned int i = 0; i < m_values.size(); ++i) {
       m_values[i] = val;
+      m_counts[i] = 1;
     }
   };
 
@@ -116,6 +119,7 @@ public:
       unsigned int index = m_keys.size();
       m_keys[key] = index;
       m_values.push_back(value);
+      m_counts.push_back(1);
       m_names.push_back(name);
       m_units.push_back(units);
     }
@@ -139,6 +143,7 @@ public:
     validKey( key );
 
     m_values[ m_keys[key] ] = value;
+    m_counts[ m_keys[key] ] = 1;
   };
 
   // Get value
@@ -146,7 +151,7 @@ public:
   {
     validKey( key );
 
-    return m_values[ m_keys[key] ];
+    return m_values[ m_keys[key] ] / m_counts[ m_keys[key] ];
   };
 
   virtual T getRankValue( const unsigned int index )
@@ -161,6 +166,50 @@ public:
     const E key = getKey(name);
 
     return getRankValue( key );
+  };
+
+  // Get count
+  virtual unsigned int getCount( const E key )
+  {
+    validKey( key );
+
+    return m_counts[ m_keys[key] ];
+  };
+
+  virtual unsigned int getCount( const unsigned int index )
+  {
+    const E key = getKey(index);
+
+    return getCount( key );
+  };
+
+  virtual unsigned int getCount( const std::string name )
+  {
+    const E key = getKey(name);
+
+    return getCount( key );
+  };
+
+  // Increment count
+  virtual unsigned int incrCount( const E key )
+  {
+    validKey( key );
+
+    return ++m_counts[ m_keys[key] ];
+  };
+
+  virtual unsigned int incrCount( const unsigned int index )
+  {
+    const E key = getKey(index);
+
+    return incrCount( key );
+  };
+
+  virtual unsigned int incrCount( const std::string name )
+  {
+    const E key = getKey(name);
+
+    return incrCount( key );
   };
 
   // Get name
@@ -238,6 +287,7 @@ public:
 protected:
   std::map< E, unsigned int > m_keys;
   std::vector< T >            m_values;
+  std::vector< unsigned int > m_counts;
   std::vector< std::string >  m_names;
   std::vector< std::string >  m_units;
 };
@@ -404,33 +454,34 @@ public:
       // A little ugly, but do it anyway so only one reduction is needed
       // for the sum and one for the maximum. 
       for (size_t i = 0; i < nStats; ++i) {
-        toReduce[i] = InfoMapper<E, T>::m_values[i];
-        toReduceMax[i] =
-	  double_int(InfoMapper<E, T>::m_values[i], myWorld->myRank());
+        double val = InfoMapper<E, T>::m_values[i] / InfoMapper<E, T>::m_counts[i];
+
+        toReduce[i] = val;          
+        toReduceMax[i] = double_int( val, myWorld->myRank());
       }
 
       // Reduction across each node.
 #ifdef HAVE_VISIT
       Uintah::MPI::Allreduce(&toReduce[0], &m_node_sum[0], nStats,
-			     MPI_DOUBLE, MPI_SUM, myWorld->getNodeComm());
+                             MPI_DOUBLE, MPI_SUM, myWorld->getNodeComm());
 
       for (size_t i = 0; i < nStats; ++i) {
-	m_node_average[i] = m_node_sum[i] / myWorld->myNode_nRanks();
+        m_node_average[i] = m_node_sum[i] / myWorld->myNode_nRanks();
       }      
 #endif
       
       // Reductions across all ranks.
       if (allReduce) {
         Uintah::MPI::Allreduce(&toReduce[0], &m_rank_average[0], nStats,
-			       MPI_DOUBLE, MPI_SUM, myWorld->getComm());
+                               MPI_DOUBLE, MPI_SUM, myWorld->getComm());
         Uintah::MPI::Allreduce(&toReduceMax[0], &m_rank_maximum[0], nStats,
-			       MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm());
+                               MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm());
       }
       else {
         Uintah::MPI::Reduce(&toReduce[0], &m_rank_average[0], nStats,
-			    MPI_DOUBLE, MPI_SUM, 0, myWorld->getComm());
+                            MPI_DOUBLE, MPI_SUM, 0, myWorld->getComm());
         Uintah::MPI::Reduce(&toReduceMax[0], &m_rank_maximum[0], nStats,
-			    MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm());
+                            MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm());
       }
 
       // Calculate the averages.
@@ -447,7 +498,7 @@ public:
       m_rank_maximum.resize(nStats);
 
       for (size_t i = 0; i < nStats; ++i) {
-        double val = InfoMapper<E, T>::m_values[i];
+        double val = InfoMapper<E, T>::m_values[i] / InfoMapper<E, T>::m_counts[i];
 
         m_node_sum[i] = val;
         m_node_average[i] = val;
