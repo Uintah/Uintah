@@ -1083,7 +1083,7 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
  
       tmpTimer.stop();
 
-      m_arches->getApplicationStats()[ (ApplicationCommon::ApplicationStatsEnum) StableTimeStep ] += tmpTimer().seconds();    
+      m_arches->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) StableTimeStep ] += tmpTimer().seconds();    
 #endif
       if (d_underflow) {
 #ifdef ADD_PERFORMANCE_STATS 
@@ -1125,7 +1125,7 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
 #ifdef ADD_PERFORMANCE_STATS
  	tmpTimer.stop();
 
-	m_arches->getApplicationStats()[ (ApplicationCommon::ApplicationStatsEnum) StableTimeStepUnderflow ] += tmpTimer().seconds();
+	m_arches->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) StableTimeStepUnderflow ] += tmpTimer().seconds();
 #endif
       }
 
