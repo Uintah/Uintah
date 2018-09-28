@@ -106,57 +106,124 @@ ______________________________________________________________________*/
         
         // virtual templated functions are not allowed in C++11
         // instantiate the various types
-        virtual  void getPlaneAve( std::vector<double>& ave ){};
-        virtual  void getPlaneAve( std::vector<Vector>& ave ){};
-        virtual  void setPlaneAve( std::vector<double>& ave ){};
-        virtual  void setPlaneAve( std::vector<Vector>& ave ){}
+        virtual  void getPlaneAve( std::vector<double>& ave ){}
+        virtual  void getPlaneAve( std::vector<Vector>& ave ){}
+        
+        virtual  void setPlaneAve( std::vector<Point>  & pos,
+                                   std::vector<double> & ave ){}
+        virtual  void setPlaneAve( std::vector<Point>  & pos,
+                                   std::vector<Vector> & ave ){}
+        
+        virtual  void printQ( FILE* & fp, 
+                              const int levelIndex,
+                              const double simTime ) = 0;
     };
 
     //  It's simple and straight forward to use a double and vector class
     //  A templated class would be ideal but that involves too much C++ magic
     //  
-    //__________________________________
-    //  Class that holds the planar averages     double
+    //______________________________________________________________________
+    //  Class that holds the planar averages     DOUBLE 
     class aveVar_double: public aveVarBase{
 
       private:
+        std::vector<Point>  CC_pos;        // cell center position
         std::vector<double> sum;
         std::vector<double> weight;
         std::vector<double> ave;
         
       public:
+      
+        //__________________________________
         void reserve( const int n )
         {
+          CC_pos.reserve(n);
           sum.reserve(n);
           weight.reserve(n);
           ave.reserve(n);
         }
         
-        void getPlaneAve( std::vector<double>& me )  { me = ave; }
-        void setPlaneAve( std::vector<double>& me )  { ave = me; } 
-
+        //__________________________________  
+        void getPlaneAve( std::vector<double>& me )  
+        { 
+          me = ave; 
+        }
+        
+        //__________________________________
+        void setPlaneAve( std::vector<Point>  & pos,
+                          std::vector<double> & me )  
+        {
+          CC_pos = pos; 
+          ave    = me; 
+        } 
+        
+        //__________________________________
+        void printQ(FILE* & fp, 
+                    const int levelIndex,
+                    const double simTime )
+        {
+          fprintf( fp,"# Level: %i \n", levelIndex );
+          fprintf( fp,"# Simulation time: %16.15E \n", simTime );
+          fprintf( fp,"# Plane location x,y,z           Average\n" );
+          fprintf( fp,"#________CC_loc.x_______________CC_loc.y______________CC_loc.z_____________ave\n" );
+          
+          for ( unsigned i =0; i< ave.size(); i++ ){
+            fprintf( fp, "%16.15E  %16.15E  %16.15E ", CC_pos[i].x(), CC_pos[i].y(), CC_pos[i].z() );
+            fprintf( fp, "%16.15E \n", ave[i] );
+          }
+        }
         ~aveVar_double(){}
     };
     
-    //__________________________________
-    //  Class that holds the planar averages      Vector
+    //______________________________________________________________________
+    //  Class that holds the planar averages      VECTOR
     class aveVar_Vector: public aveVarBase{
 
       private:
+        std::vector<Point>  CC_pos;        // cell center position
         std::vector<Vector> sum;
         std::vector<Vector> weight;
         std::vector<Vector> ave;
 
       public:
+        //__________________________________
         void reserve( const int n )
         {
+          CC_pos.reserve(n);
           sum.reserve(n);
           weight.reserve(n);
           ave.reserve(n);
         }
         
-        void getPlaneAve( std::vector<Vector>& me )  { me = ave; }
-        void setPlaneAve( std::vector<Vector>& me )  { ave = me; } 
+        //__________________________________
+        void getPlaneAve( std::vector<Vector>& me )  
+        { 
+          me = ave; 
+        }
+        
+        //__________________________________
+        void setPlaneAve( std::vector<Point>  & pos,
+                          std::vector<Vector> & me )  
+        {
+          CC_pos = pos; 
+          ave    = me; 
+        } 
+        
+        //__________________________________
+        void printQ(FILE* & fp,
+                    const int levelIndex,
+                    const double simTime )
+        {
+          fprintf( fp,"# Level: %i \n", levelIndex );
+          fprintf( fp,"# Simulation time: %16.15E \n", simTime );
+          fprintf( fp,"# Plane location (x,y,z)           Average\n" );
+          fprintf( fp,"# ________CC_loc.x_______________CC_loc.y______________CC_loc.z_____________ave.x__________________ave.y______________ave.z\n" );
+          
+          for ( unsigned i =0; i< ave.size(); i++ ){
+            fprintf( fp, "%16.15E  %16.15E  %16.15E ", CC_pos[i].x(), CC_pos[i].y(), CC_pos[i].z() ); 
+            fprintf( fp, "%16.15E %16.15E %16.15E\n", ave[i].x(), ave[i].y(), ave[i].z() );
+          }
+        }
         ~aveVar_Vector(){}
     };
 
@@ -168,6 +235,10 @@ ______________________________________________________________________*/
     //______________________________________________________________________
     //
     //
+    IntVector findCellIndex(const int i,
+                            const int j,          
+                            const int k);       
+    
     bool isRightLevel( const int myLevel,
                        const int L_indx,
                        const LevelP& level);

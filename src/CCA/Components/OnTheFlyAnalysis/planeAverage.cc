@@ -66,8 +66,10 @@ static DebugStream do_cout("planeAverage", "OnTheFlyAnalysis", "planeAverage deb
 TO DO:
     - Multiple levels
     - allow user to control the number of planes
+    - add delT to now.
 
-
+Optimization:
+    - only define CC_pos once.
 ______________________________________________________________________*/
 
 planeAverage::planeAverage( const ProcessorGroup    * myworld,
@@ -249,7 +251,7 @@ void planeAverage::problemSetup(const ProblemSpecP&,
     }
 
     //__________________________________
-    //  populate the vector
+    //  populate the vector of averages
     // double
     if( subType == TypeDescription::double_type ) {
       aveVar_double* me = new aveVar_double();
@@ -469,7 +471,7 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
   sched->addTask( t0, level->eachPatch(), d_matl_set );
 
   //__________________________________
-  //  Write max to a file
+  //  Task that writes averages to files
   // Only write data on patch 0 on each level
 
   Task* t1 = scinew Task( "planeAverage::doAnalysis",
@@ -503,7 +505,7 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
 }
 
 //______________________________________________________________________
-//  This task computes and planar average of each variable
+//  This task is a wrapper that computes planar average of each variable type
 //
 void planeAverage::computeAverage(const ProcessorGroup * pg,
                                   const PatchSubset    * patches,
@@ -708,7 +710,6 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
         }
 
         //__________________________________
-        //
         // create the directory structure including sub directories
         string udaDir = m_output->getOutputLocation();
    
@@ -751,37 +752,8 @@ void planeAverage::doAnalysis(const ProcessorGroup* pg,
         }
 
         //__________________________________
-        //  Write it to the file
-        const TypeDescription::Type subType = d_aveVars[i]->subType;
-
-        switch( subType ) {
-
-          case TypeDescription::double_type:{
-            std::vector<double> aveQ;
-            d_aveVars[i]->getPlaneAve( aveQ );
-            cout << " doAnalysis: double size: " <<aveQ.size() <<  endl;
-            for (int i =0; i< aveQ.size(); i++){
-              cout << "   i: " << i << " aveQ: " << aveQ[i] << endl;
-            }
-
-            //fprintf( fp, "%16.15E     %16.15E \n",now, aveQ );
-           break;
-          }
-          case TypeDescription::Vector: {
-            std::vector<Vector> aveQ;
-            d_aveVars[i]->getPlaneAve( aveQ );
-            cout << " doAnalysis: Vector size: " <<aveQ.size() <<  endl;
-            for (int i =0; i< aveQ.size(); i++){
-              cout << "   i: " << i << " aveQ: " << aveQ[i] << endl;
-            }
-
-            //fprintf( fp, "%16.15E     [%16.15E %16.15E %16.15E] \n",now,
-            //              aveQ_V.x(), aveQ_V.y(), aveQ_V.z() );
-            break;
-          }
-        default:
-          throw InternalError("planeAverage: invalid data type", __FILE__, __LINE__);
-        }
+        //  Write to the file
+        d_aveVars[i]->printQ( fp, L_indx, now );
         
         fflush(fp);
       }  // d_aveVars loop
@@ -811,60 +783,47 @@ void planeAverage::findAverage( DataWarehouse * new_dw,
   int indx = analyzeVar->matl;
   
   const VarLabel* varLabel = analyzeVar->label;
-  cout <<"   " << varLabel->getName() << endl;
-
   Tvar Q_var;
   new_dw->get(Q_var, varLabel, indx, patch, Ghost::None, 0);
   
-  std::vector<Ttype> sumV;
+  std::vector<Ttype> sumV;        // sum over all cells in the plane
+  std::vector<Point> CC_pos;      // cell centered position
   
   IntVector lo;
   IntVector hi;
   planeIterator( iter, lo, hi );
-
-  cout <<"   iter.begin: " << iter.begin() << " lo: " << lo << endl;
-  cout <<"   iter.end:   " << iter.end() <<   " hi: " << hi << endl;
   
-  for ( auto z = lo.z(); z<hi.z(); z++ ) {          // This is the loop over planes
+  for ( auto z = lo.z(); z<hi.z(); z++ ) {          // This is the loop over all planes
   
-    Ttype sum( 0 );  // initial values
+    Ttype sum( 0 );  // initial value
       
     for ( auto y = lo.y(); y<hi.y(); y++ ) {        // cells in the plane
       for ( auto x = lo.x(); x<hi.x(); x++ ) {
         IntVector c(x,y,z);
         
-        switch( d_planeOrientation ){
-          case XY:{
-            c = IntVector(x,y,z);
-            break;
-          }
-          case XZ:{
-            c = IntVector(x,z,y);
-            break;
-          }
-          case YZ:{
-            c = IntVector(y,z,x);
-            break;
-          }
-          default:
-            break;
-        }
-//        cout << "   c: " << c << endl;
+        c = findCellIndex(x, y, z);
         sum = sum + Q_var[c];
       }
     }
+    
+    // set the cell centered position
+    IntVector here = findCellIndex( Uintah::Round( ( hi.x() - lo.x() )/2 ), 
+                                    Uintah::Round( ( hi.y() - lo.y() )/2 ), 
+                                    z );
+
+    CC_pos.push_back( patch->cellPosition( here ) );
+    
     sumV.push_back(sum);
     
     const string labelName = varLabel->getName();
     do_cout << labelName << "plane: " << z << " sum: " <<sum << endl;
-    
   }
   
-  analyzeVar->setPlaneAve( sumV );
+  analyzeVar->setPlaneAve( CC_pos, sumV );
 }
 
 //______________________________________________________________________
-//  Open the file if it doesn't exist and write the file header
+//  Open the file if it doesn't exist
 void planeAverage::createFile(string  & filename,  
                               FILE*   & fp, 
                               string  & levelIndex)
@@ -882,9 +841,7 @@ void planeAverage::createFile(string  & filename,
     perror("Error opening file:");
     throw InternalError("\nERROR:dataAnalysisModule:planeAverage:  failed opening file: " + filename,__FILE__, __LINE__);
   }
-  
-  fprintf( fp,"# Level-%s \n", levelIndex.c_str() );
-  fprintf( fp,"# Time            Plane location            Average\n" );
+ 
   cout << "OnTheFlyAnalysis planeAverage results are located in " << filename << endl;
 }
 
@@ -934,14 +891,37 @@ planeAverage::createDirectory( mode_t mode,
 }
 
 
-
-
-
-
+//______________________________________________________________________
+//
+IntVector planeAverage::findCellIndex(const int i,
+                                      const int j,
+                                      const int k)
+{
+  IntVector c(-9,-9,-9);
+  switch( d_planeOrientation ){        
+    case XY:{                          
+      c = IntVector( i,j,k );            
+      break;                           
+    }                                  
+    case XZ:{                          
+      c = IntVector( i,k,j );            
+      break;                           
+    }                                  
+    case YZ:{                          
+      c = IntVector( j,k,i );            
+      break;                           
+    }                                  
+    default:                           
+      break;                           
+  }
+  return c;                                    
+}
 
 //______________________________________________________________________
 //
-bool planeAverage::isRightLevel(const int myLevel, const int L_indx, const LevelP& level)
+bool planeAverage::isRightLevel(const int myLevel, 
+                                const int L_indx, 
+                                const LevelP& level)
 {
   if( myLevel == ALL_LEVELS || myLevel == L_indx )
     return true;
