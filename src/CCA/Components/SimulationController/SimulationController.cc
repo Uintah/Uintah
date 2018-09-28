@@ -789,31 +789,35 @@ SimulationController::ReportStats(const ProcessorGroup*,
       g_comp_timings && m_num_samples && m_runtime_stats.size())
   {
     // Ignore the first sample as that is for initialization.
+    std::ostringstream header;
+    header << "Runtime performance summary stats at "
+           << "time step " << m_application->getTimeStep()
+           << " at time="  << m_application->getSimTime()
+           << std::endl
+           << "  " << std::left
+           << std::setw(24) << "Description"
+           << std::setw(18) << "Units"
+           << std::setw(18) << "Average"
+           << std::setw(18) << "Maximum"
+           << std::setw(12) << "Rank"
+           << std::setw(12) << "100*(1-ave/max) '% load imbalance'"
+           << std::endl;
+
     std::ostringstream message;
-    message << "Runtime performance summary stats for "
-            << "time step " << m_application->getTimeStep()
-            << " at time="  << m_application->getSimTime()
-            << std::endl
-            << "  " << std::left
-            << std::setw(21) << "Description"
-            << std::setw(15) << "Units"
-            << std::setw(15) << "Average"
-            << std::setw(15) << "Maximum"
-            << std::setw(13) << "Rank"
-            << std::setw(13) << "100*(1-ave/max) '% load imbalance'";
     
     for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
       if( m_runtime_stats.getRankMaximum(i) != 0.0 ) {
         if( message.str().size() )
           message << std::endl;
         message << "  " << std::left
-                << std::setw(21) << m_runtime_stats.getName(i)
-                << "[" << std::setw(10) << m_runtime_stats.getUnits(i) << "]"
-                << " : " << std::setw(12) << m_runtime_stats.getRankAverage(i)
-                << " : " << std::setw(12) << m_runtime_stats.getRankMaximum(i)
-                << " : " << std::setw(10) << m_runtime_stats.getRankForMaximum(i)
-                << " : " << std::setw(10)
-                << (m_runtime_stats.getRankMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_runtime_stats.getRankAverage(i) / m_runtime_stats.getRankMaximum(i)))) : 0);
+                << std::setw(24) << m_runtime_stats.getName(i)
+                << "[" << std::setw(15) << m_runtime_stats.getUnits(i) << "]"
+                << " : " << std::setw(15) << m_runtime_stats.getRankAverage(i)
+                << " : " << std::setw(15) << m_runtime_stats.getRankMaximum(i)
+                << " : " << std::setw(9) << m_runtime_stats.getRankForMaximum(i)
+                << " : " << std::setw(9)
+                << (m_runtime_stats.getRankMaximum(i) == 0.0 ?
+                    0 : (100.0 * (1.0 - (m_runtime_stats.getRankAverage(i) / m_runtime_stats.getRankMaximum(i)))));
       }
     }
     
@@ -825,92 +829,113 @@ SimulationController::ReportStats(const ProcessorGroup*,
               << overheadAverage * 100.0;
     }
 
-    DOUT(reportStats, message.str());
+    if( message.str().size() ) {
+      DOUT(reportStats, header.str() + message.str());
+    }
   }
   
   // Infrastructure per proc runtime performance stats
   if (g_indv_comp_timings && m_runtime_stats.size() && m_runtime_stats.size())
   {
-    std::ostringstream message;
+    std::ostringstream header;    
+    header << "--" << std::left
+           << "Rank: " << std::setw(5) << d_myworld->myRank()
+           << "Runtime performance stats at "
+           << "time step " << m_application->getTimeStep()
+           << " at time="  << m_application->getSimTime()
+           << std::endl;
 
-    message << "--" << std::left
-            << "Rank: " << std::setw(5) << d_myworld->myRank() << " "
-            << "Runtime performance stats for "
-            << "time step " << m_application->getTimeStep()
-            << " at time="  << m_application->getSimTime();
+    std::ostringstream message;
     
     for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
       if (m_runtime_stats[i] > 0) {
         if( message.str().size() )
           message << std::endl;
         message << "  " << std::left
-                << "Rank: " << std::setw(5) << d_myworld->myRank() << " "
-                << std::left << std::setw(19) << m_runtime_stats.getName(i) << " ["
-                << m_runtime_stats.getUnits(i) << "]: " << m_runtime_stats[i];
+                << "Rank: " << std::setw(6) << d_myworld->myRank()
+                << std::left << std::setw(24) << m_runtime_stats.getName(i)
+                << "["   << std::setw(15) << m_runtime_stats.getUnits(i) << "]"
+                << " : " << std::setw(15) << m_runtime_stats.getRankValue(i)
+                << " ("  << std::setw( 4) << m_runtime_stats.getCount(i) << ")";
       }
     }
-
-    DOUT(reportStats, message.str());
+    
+    if( message.str().size() ) {
+      DOUT(reportStats, header.str() + message.str());
+    }
   }
   
   // Report the average application stats.
   if( d_myworld->myRank() == 0 &&
       g_app_timings && m_application->getApplicationStats().size() )
   {
+    std::ostringstream header;
+    header << "Application performance summary stats for "
+           << "time step " << m_application->getTimeStep()
+           << " at time="  << m_application->getSimTime()
+           << std::endl
+           << "  " << std::left
+           << std::setw(24) << "Description"
+           << std::setw(18) << "Units"
+           << std::setw(18) << "Average"
+           << std::setw(18) << "Maximum"
+           << std::setw(12) << "Rank"
+           << std::setw(12) << "100*(1-ave/max) '% load imbalance'"
+           << std::endl;
+    
     std::ostringstream message;
-    message << "Application performance summary stats for "
-            << "time step " << m_application->getTimeStep()
-            << " at time="  << m_application->getSimTime()
-            << std::endl
-            << "  " << std::left
-            << std::setw(21) << "Description"
-            << std::setw(15) << "Units"
-            << std::setw(15) << "Average"
-            << std::setw(15) << "Maximum"
-            << std::setw(13) << "Rank"
-            << std::setw(13) << "100*(1-ave/max) '% load imbalance'";
 
     for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
       if( m_application->getApplicationStats().getRankMaximum(i) != 0.0 ) {
+
         if( message.str().size() )
           message << std::endl;
         message << "  " << std::left
-                << std::setw(21) << m_application->getApplicationStats().getName(i)
-                << "["   << std::setw(10) << m_application->getApplicationStats().getUnits(i) << "]"
-                << " : " << std::setw(12) << m_application->getApplicationStats().getRankAverage(i)
-                << " : " << std::setw(12) << m_application->getApplicationStats().getRankMaximum(i)
-                << " : " << std::setw(10) << m_application->getApplicationStats().getRankForMaximum(i)
-                << " : " << std::setw(10)
-                << (m_application->getApplicationStats().getRankMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_application->getApplicationStats().getRankAverage(i) / m_application->getApplicationStats().getRankMaximum(i)))) : 0);
+                << std::setw(24) << m_application->getApplicationStats().getName(i)
+                << "["   << std::setw(15) << m_application->getApplicationStats().getUnits(i) << "]"
+                << " : " << std::setw(15) << m_application->getApplicationStats().getRankAverage(i)
+                << " : " << std::setw(15) << m_application->getApplicationStats().getRankMaximum(i)
+                << " : " << std::setw(9) << m_application->getApplicationStats().getRankForMaximum(i)
+                << " : " << std::setw(9)
+                << (m_application->getApplicationStats().getRankMaximum(i) == 0.0 ?
+                    0 : (100.0 * (1.0 - (m_application->getApplicationStats().getRankAverage(i) / m_application->getApplicationStats().getRankMaximum(i)))));
       }
     }
 
-    DOUT(reportStats, message.str());
+    if( message.str().size() ) {
+      DOUT(reportStats, header.str()+message.str());
+    }
   }
   
   // Application per proc runtime performance stats
   if (g_indv_app_timings && m_application->getApplicationStats().size())
   {
+    std::ostringstream header;
+    header << "--" << std::left
+           << "Rank: " << std::setw(5) << d_myworld->myRank()
+           << "Application performance stats for "
+           << "time step " << m_application->getTimeStep()
+           << " at time="  << m_application->getSimTime()
+           << std::endl;
+        
     std::ostringstream message;
-
-    message << "--" << std::left
-            << "Rank: " << std::setw(5) << d_myworld->myRank() << " "
-            << "Application performance stats for "
-            << "time step " << m_application->getTimeStep()
-            << " at time="  << m_application->getSimTime();
     
     for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
       if (m_application->getApplicationStats()[i] > 0) {
         if( message.str().size() )
           message << std::endl;
         message << "  " << std::left
-                << "rank: " << std::setw(5) << d_myworld->myRank() << " "
-                << std::left << std::setw(19) << m_application->getApplicationStats().getName(i) << " ["
-                << m_application->getApplicationStats().getUnits(i) << "]: " << m_application->getApplicationStats()[i];
+                << "Rank: " << std::setw(6) << d_myworld->myRank()
+                << std::left << std::setw(24) << m_application->getApplicationStats().getName(i)
+                << "["   << std::setw(15) << m_application->getApplicationStats().getUnits(i) << "]"
+                << " : " << std::setw(15) << m_application->getApplicationStats().getRankValue(i)
+                << " ("  << std::setw( 4) << m_application->getApplicationStats().getCount(i) << ")";
       }
     }
-      
-    DOUT(reportStats, message.str());
+
+    if( message.str().size() ) {
+      DOUT(reportStats, header.str()+message.str());
+    }
   }
 
   ++m_num_samples;
