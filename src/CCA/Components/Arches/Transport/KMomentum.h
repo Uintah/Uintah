@@ -648,10 +648,11 @@ private:
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }
 
-    std::vector<std::string> bc_dep;
+    ArchesCore::FunctorDepList bc_dep;
     m_boundary_functors->get_bc_dependencies( m_eqn_names, m_bcHelper, bc_dep );
     for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW,
+
+      register_variable( (*i).variable_name, ArchesFieldContainer::REQUIRES, (*i).n_ghosts , (*i).dw,
                          variable_registry );
     }
 
