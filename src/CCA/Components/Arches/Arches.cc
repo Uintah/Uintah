@@ -90,9 +90,12 @@ Arches::Arches(const ProcessorGroup* myworld,
   // checkpointIfInvalidNextDelT( DELTA_T_MIN );
 
 #ifdef ADD_PERFORMANCE_STATS 
-  m_application_stats.insert( (ApplicationStatsEnum) StableTimeStep, std::string("StableTimeStep"), "seconds", 0 );
-  
+  m_application_stats.insert( (ApplicationStatsEnum) StableTimeStep,          std::string("StableTimeStep"),          "seconds", 0 );
   m_application_stats.insert( (ApplicationStatsEnum) StableTimeStepUnderflow, std::string("StableTimeStepUnderflow"), "seconds", 0 );
+
+  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchTime,       std::string("RMCRT Patch Time"),       "milliseconds",  0 );
+  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchSize,       std::string("RMCRT Patch Steps"),      "steps",         0 );
+  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchEfficiency, std::string("RMCRT Patch Efficiency"), "steps/seconds", 0 );
 #endif
 }
 

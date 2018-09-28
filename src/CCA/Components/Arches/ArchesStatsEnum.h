@@ -53,6 +53,9 @@ namespace Uintah {
   {
     StableTimeStep,
     StableTimeStepUnderflow,
+    RMCRTPatchTime,
+    RMCRTPatchSize,
+    RMCRTPatchEfficiency,
   };
 
 } // end namespace Uintah

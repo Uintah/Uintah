@@ -63,6 +63,8 @@
  */
 class MTRand; // forward declaration for use in updateSumI
 
+class ApplicationInterface;
+
 namespace Uintah{
 
   class Ray : public RMCRTCommon  {
@@ -223,6 +225,8 @@ namespace Uintah{
       const VarLabel* d_ROI_HiCellLabel;
       const VarLabel* d_PPTimerLabel;        // perPatch timer
 
+      ApplicationInterface* m_application;
+    
       // const VarLabel* d_divQFiltLabel;
       // const VarLabel* d_boundFluxFiltLabel;
 
