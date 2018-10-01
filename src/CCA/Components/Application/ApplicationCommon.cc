@@ -495,9 +495,10 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   // was computed on an MPI rank, a benign value will be set. If the
   // reduction result is also a benign value, that means no MPI rank
   // wants to change the value and it will be ignored.
-  for ( auto & var : m_appReductionVars )
+  for ( auto & var : m_appReductionVars ) {
     var.second->reduce( new_dw );
-
+  }
+  
   // When checking a reduction var, if it is not a benign value then
   // it was set at some point by at least one rank. Which is the only
   // time the value should be use.
@@ -807,7 +808,7 @@ ApplicationCommon::setNextDelT( double delT, bool restart )
   if( restart && m_delTOverrideRestart )
   {
     proc0cout << "Overriding restart delT " << m_delT << " with "
-	      << m_delTOverrideRestart << "\n";
+              << m_delTOverrideRestart << "\n";
     
     m_delTNext = m_delTOverrideRestart;
     
@@ -1043,7 +1044,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     ValidateFlag invalidAll;
     
     Uintah::MPI::Reduce( &invalid, &invalidAll, 1, MPI_UNSIGNED_CHAR, MPI_BOR,
-			 0, d_myworld->getComm() );
+                         0, d_myworld->getComm() );
 
     // Only report the summary on rank 0. One line for each instance
     // where the threshold was exceeded.
@@ -1261,9 +1262,8 @@ void ApplicationCommon::incrementTimeStep()
   // Write the new time to the new data warehouse as the scheduler has
   // not yet advanced to the next data warehouse - see
   // SchedulerCommon::advanceDataWarehouse()
-  DataWarehouse* newDW = m_scheduler->getLastDW();
-
-  newDW->override(timeStep_vartype(m_timeStep), m_timeStepLabel );
+  m_scheduler->getLastDW()->override(timeStep_vartype(m_timeStep),
+                                     m_timeStepLabel );
 }
 
 //______________________________________________________________________
