@@ -1155,40 +1155,25 @@ parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& execut
 
   Kokkos::parallel_for (teamPolicy, KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
 
-    const unsigned int currentBlock = thread.league_rank();
       // i_tot will come in as a number between 0 and actualThreads.  Suppose actualThreads is 256.
       // Thread 0 should work on cell 0, thread 1 should work on cell 1, ... thread 255 should work on cell 255
       // then they all advanced forward by actualThreads.
       // Thread 0 works on cell 256, thread 1 works on cell 257... thread 511 works on cell 511.
       // This should continue until all cells are completed.
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, actualThreads), [&, n_cells, actualThreads, currentBlock, cudaBlocksPerLoop, KKV3] (const unsigned int& threadID) {
-      // const unsigned int n_iter = n_cells / (actualThreads * cudaBlocksPerLoop)  + (n_cells % (actualThreads * cudaBlocksPerLoop) > 0 ? 1 : 0); // round up (more efficient to compute this outside parallel_for?)
-      unsigned int curVar = 0;
-      unsigned int curOverallCell = 0;
-      //if (threadID == 0) {
-      //  printf("KKV3[curVar] is at %p\n", &(KKV3[curVar](0)));
-      //}
-      int currentCell = (currentBlock*actualThreads) + threadID;
-      while (curOverallCell < n_cells) {
-        while (currentCell >= KKV3[curVar].m_view.size()) {
-          currentCell -= KKV3[curVar].m_view.size();
-          curVar++;
-          if (curVar >= KKV3.runTime_size) {
-            return;
-          }
-          curOverallCell += KKV3[curVar].m_view.size();
-        }
-        // Using an i,j,k system to help in case of future layouts where tiling and/or paddding used.
-        const int k = (currentCell) / (KKV3[curVar].m_view.extent(1) * KKV3[curVar].m_view.extent(0));
-        const int j = ((currentCell) / KKV3[curVar].m_view.extent(0)) % KKV3[curVar].m_view.extent(1);
-        const int i = (currentCell) % KKV3[curVar].m_view.extent(1);
-        //printf("Current cell is %d and i, j, k is (%d, %d, %d)\n", currentCell, i, j, k);
-        KKV3[curVar]( i, j, k ) = init_val;
-
-        currentCell += (cudaBlocksPerLoop * actualThreads);
+    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, actualThreads), [&, n_cells, actualThreads, KKV3] (const unsigned int& i_tot) {
+      const unsigned int n_iter = n_cells / actualThreads  + (n_cells % actualThreads > 0 ? 1 : 0); // round up (more efficient to compute this outside parallel_for?)
+      unsigned int  j = 0;
+      unsigned int old_i = 0;
+      for (unsigned int i = 0; i < n_iter; i++) {
+         while ( i * actualThreads + i_tot - old_i >= KKV3[j].m_view.size() ) { // using a while for small data sets or massive streaming multiprocessors
+           old_i += KKV3[j].m_view.size();
+           j++;
+           if ( KKV3.runTime_size <= j ){
+             return; // do nothing
+           }
+         }
+         KKV3[j]( i * actualThreads + i_tot - old_i ) = init_val;
       }
-
-
     });
   });
 #if defined(NO_STREAM)
