@@ -99,6 +99,8 @@ ______________________________________________________________________*/
         VarLabel* label;
         int matl;
         int level;
+        int nPlanes;
+        
         TypeDescription::Type baseType;
         TypeDescription::Type subType;
         
@@ -113,6 +115,7 @@ ______________________________________________________________________*/
                                    std::vector<double> & ave ){}
         virtual  void setPlaneAve( std::vector<Point>  & pos,
                                    std::vector<Vector> & ave ){}
+        virtual  void zero_all_vars(){}
         
         virtual  void printQ( FILE* & fp, 
                               const int levelIndex,
@@ -137,10 +140,10 @@ ______________________________________________________________________*/
         //__________________________________
         void reserve( const int n )
         {
-          CC_pos.reserve(n);
-          sum.reserve(n);
-          weight.reserve(n);
-          ave.reserve(n);
+          CC_pos.resize(n, Point(0.,0.,0.));
+          sum.resize(n, 0.);
+          weight.resize(n, 0.);
+          ave.resize(n, 0.);
         }
         
         //__________________________________  
@@ -155,6 +158,17 @@ ______________________________________________________________________*/
         {
           CC_pos = pos; 
           ave    = me; 
+        }
+        //__________________________________
+        //
+        void zero_all_vars()
+        {
+          std::cout << "zeroing:  double" << std::endl;
+          for(unsigned i=0; i<ave.size(); i++ ){
+            sum[i]    = 0.0;
+            weight[i] = 0.0;
+            ave[i]    = 0.0;
+          }
         } 
         
         //__________________________________
@@ -189,10 +203,11 @@ ______________________________________________________________________*/
         //__________________________________
         void reserve( const int n )
         {
-          CC_pos.reserve(n);
-          sum.reserve(n);
-          weight.reserve(n);
-          ave.reserve(n);
+          Vector zero(0.);
+          CC_pos.resize(n, Point(0.,0.,0.));
+          sum.resize(n, zero);
+          weight.resize(n, zero);
+          ave.resize(n, zero);
         }
         
         //__________________________________
@@ -208,6 +223,21 @@ ______________________________________________________________________*/
           CC_pos = pos; 
           ave    = me; 
         } 
+        
+        //__________________________________
+        //
+        void zero_all_vars()
+        {
+          std::cout << "zeroing:  Vector" << std::endl;
+          Vector zero(0);
+          for(unsigned i=0; i<ave.size(); i++ ){
+            sum[i]    = zero;
+            weight[i] = zero;
+            ave[i]    = zero;
+          }
+        }
+        
+        
         
         //__________________________________
         void printQ(FILE* & fp,
@@ -255,6 +285,12 @@ ______________________________________________________________________*/
                            DataWarehouse        *,
                            DataWarehouse        * new_dw);
 
+    void zeroAveVars(const ProcessorGroup * pg,
+                     const PatchSubset    * patches,   
+                     const MaterialSubset *,           
+                     DataWarehouse        * old_dw,    
+                     DataWarehouse        * new_dw);   
+
     void computeAverage(const ProcessorGroup * pg,
                         const PatchSubset    * patches,
                         const MaterialSubset *,
@@ -285,6 +321,7 @@ ______________________________________________________________________*/
     void planeIterator( const GridIterator& patchIter,
                         IntVector & lo,
                         IntVector & hi );
+                              
 
     // general labels
     class planeAverageLabel {
