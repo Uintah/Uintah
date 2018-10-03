@@ -58,6 +58,10 @@ GENERAL INFORMATION
    University of Utah
 ______________________________________________________________________*/
 
+
+
+//______________________________________________________________________
+
   class planeAverage : public AnalysisModule {
   public:
 
@@ -99,12 +103,14 @@ ______________________________________________________________________*/
         VarLabel* label;
         int matl;
         int level;
-        int nPlanes;
+        
         
         TypeDescription::Type baseType;
         TypeDescription::Type subType;
         
-        virtual void reserve( const int ) = 0;
+        virtual void set_nPlanes( const int ) = 0;
+        virtual int  get_nPlanes() = 0;
+        virtual void reserve() = 0;
         
         // virtual templated functions are not allowed in C++11
         // instantiate the various types
@@ -116,6 +122,8 @@ ______________________________________________________________________*/
         virtual  void setPlaneAve( std::vector<Point>  & pos,
                                    std::vector<Vector> & ave ){}
         virtual  void zero_all_vars(){}
+        
+        virtual  void ReduceVar() = 0;
         
         virtual  void printQ( FILE* & fp, 
                               const int levelIndex,
@@ -134,22 +142,22 @@ ______________________________________________________________________*/
         std::vector<double> sum;
         std::vector<double> weight;
         std::vector<double> ave;
+        int nPlanes;
         
       public:
-      
         //__________________________________
-        void reserve( const int n )
-        {
-          CC_pos.resize(n, Point(0.,0.,0.));
-          sum.resize(n, 0.);
-          weight.resize(n, 0.);
-          ave.resize(n, 0.);
-        }
+        virtual void set_nPlanes(const int in) { nPlanes = in; }
+        virtual int  get_nPlanes() { return nPlanes; }
         
-        //__________________________________  
-        void getPlaneAve( std::vector<double>& me )  
-        { 
-          me = ave; 
+        //__________________________________
+        void getPlaneAve( std::vector<double>& me ) { me = ave; }
+        //__________________________________
+        void reserve()
+        {
+          CC_pos.resize(nPlanes, Point(0.,0.,0.));
+          sum.resize(   nPlanes, 0.);
+          weight.resize(nPlanes, 0.);
+          ave.resize(   nPlanes, 0.);
         }
         
         //__________________________________
@@ -159,17 +167,23 @@ ______________________________________________________________________*/
           CC_pos = pos; 
           ave    = me; 
         }
+        
         //__________________________________
-        //
         void zero_all_vars()
         {
-          std::cout << "zeroing:  double" << std::endl;
           for(unsigned i=0; i<ave.size(); i++ ){
             sum[i]    = 0.0;
             weight[i] = 0.0;
             ave[i]    = 0.0;
           }
         } 
+        
+        //__________________________________
+        void ReduceVar()
+        {
+          Uintah::MPI::Reduce(  MPI_IN_PLACE, &ave.front(), nPlanes, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        }
+        
         
         //__________________________________
         void printQ(FILE* & fp, 
@@ -188,33 +202,54 @@ ______________________________________________________________________*/
         }
         ~aveVar_double(){}
     };
+
+
+
     
     //______________________________________________________________________
     //  Class that holds the planar averages      VECTOR
     class aveVar_Vector: public aveVarBase{
 
+      //___________________________________
+      //  MPI user defined function for computing sum  for Uintah::Vector
+      static void MPI_Op_plusEqualVector( void * inVec, 
+                                          void * inoutVec,        
+                                          int  * len,             
+                                          MPI_Datatype * type)    
+      {
+        std::cout << " PEV len: "<< *len << std::endl;
+        Vector * in    = static_cast<Vector *> ( inVec );
+        Vector * inOut = static_cast<Vector *> ( inoutVec );
+        inOut[0] = in[0] + inOut[0];
+        inOut[1] = in[1] + inOut[1];
+        inOut[2] = in[2] + inOut[2];
+      }
+
+      //__________________________________
       private:
         std::vector<Point>  CC_pos;        // cell center position
         std::vector<Vector> sum;
         std::vector<Vector> weight;
         std::vector<Vector> ave;
+        int nPlanes;
 
       public:
         //__________________________________
-        void reserve( const int n )
-        {
-          Vector zero(0.);
-          CC_pos.resize(n, Point(0.,0.,0.));
-          sum.resize(n, zero);
-          weight.resize(n, zero);
-          ave.resize(n, zero);
-        }
+        virtual void set_nPlanes(const int in) { nPlanes = in; }
+        virtual int  get_nPlanes() { return nPlanes; }
         
         //__________________________________
-        void getPlaneAve( std::vector<Vector>& me )  
-        { 
-          me = ave; 
-        }
+        void getPlaneAve( std::vector<Vector>& me ) { me = ave; }
+        
+        //__________________________________
+        void reserve()
+        {
+          Vector zero(0.);
+          CC_pos.resize( nPlanes, Point(0.,0.,0.));
+          sum.resize(    nPlanes, zero);
+          weight.resize( nPlanes, zero);
+          ave.resize(    nPlanes, zero);
+        }        
         
         //__________________________________
         void setPlaneAve( std::vector<Point>  & pos,
@@ -225,10 +260,8 @@ ______________________________________________________________________*/
         } 
         
         //__________________________________
-        //
         void zero_all_vars()
         {
-          std::cout << "zeroing:  Vector" << std::endl;
           Vector zero(0);
           for(unsigned i=0; i<ave.size(); i++ ){
             sum[i]    = zero;
@@ -237,6 +270,20 @@ ______________________________________________________________________*/
           }
         }
         
+        //__________________________________
+        void ReduceVar()
+        {
+           MPI_Datatype  mpitype;
+           Uintah::MPI::Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
+           Uintah::MPI::Type_commit( &mpitype );
+
+           MPI_Op vector_add;
+           MPI_Op_create( MPI_Op_plusEqualVector, 1, &vector_add );
+
+           Uintah::MPI::Reduce(  MPI_IN_PLACE, &ave.front(), nPlanes, mpitype, vector_add, 0, MPI_COMM_WORLD );
+
+           MPI_Op_free( &vector_add );
+        }
         
         
         //__________________________________
@@ -297,11 +344,17 @@ ______________________________________________________________________*/
                         DataWarehouse        * old_dw,
                         DataWarehouse        * new_dw);
 
-    void doAnalysis(const ProcessorGroup  * pg,
-                    const PatchSubset     * patches,
-                    const MaterialSubset  *,
-                    DataWarehouse         *,
-                    DataWarehouse         * new_dw);
+    void sumOverAllProcs(const ProcessorGroup * pg,
+                         const PatchSubset    * patches,
+                         const MaterialSubset *,
+                         DataWarehouse        * old_dw,
+                         DataWarehouse        * new_dw);
+
+    void writeToFiles(const ProcessorGroup  * pg,
+                      const PatchSubset     * patches,
+                      const MaterialSubset  *,
+                      DataWarehouse         *,
+                      DataWarehouse         * new_dw);
 
     void createFile(std::string & filename,
                     FILE*       & fp,
