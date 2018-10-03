@@ -213,6 +213,9 @@ namespace Uintah {
     template<typename MemSpace>
     inline typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, Kokkos::View<int_3*,Kokkos::HostSpace> >::type
     get_ref_to_iterator(){ return listOfCells_; }
+    template<typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,  Kokkos::View<int_3*,Kokkos::HostSpace>>::type
+    get_ref_to_iterator(){ return listOfCells_; }
   #else
     template<typename MemSpace>
     inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<int_3*,Kokkos::HostSpace> >::type

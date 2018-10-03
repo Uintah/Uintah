@@ -578,10 +578,10 @@ parallel_reduce_sum(ExecutionObject<ExecutionSpace, MemorySpace>& executionObjec
     const int k = n / (j_size * i_size) + rbegin2;
     const int j = (n / i_size) % j_size + rbegin1;
     const int i = n % i_size + rbegin0;
-    functor( i, j, k, tmp );
-  }, tmp);
-
-  red = tmp;
+    ReductionType tmp2=0;
+    functor( i, j, k, tmp2 );
+    tmp+=tmp2;
+  }, Kokkos::Sum<ReductionType>(red));
 
 }
 
@@ -663,7 +663,9 @@ parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
         const int j = ((startingN + N) / i_size) % j_size + rbegin1;
         const int i = (startingN + N) % i_size + rbegin0;
         // Actually run the functor.
-        functor(i,j,k, inner_sum);
+        ReductionType tmp2=0;
+        functor(i,j,k, tmp2);
+        inner_sum+=tmp2;
       });
     }, tmp);
 
@@ -713,13 +715,13 @@ parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
   const int jb = r.begin(1); const int je = r.end(1);
   const int kb = r.begin(2); const int ke = r.end(2);
 
-  ReductionType tmp = red;
   for (int k=kb; k<ke; ++k) {
   for (int j=jb; j<je; ++j) {
   for (int i=ib; i<ie; ++i) {
+    ReductionType tmp = 0;
     functor(i,j,k,tmp);
+    red+=tmp;
   }}}
-  red = tmp;
 }
 
 //For legacy loops where no execution space was specified as a template parameter.
@@ -837,7 +839,9 @@ parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
         int j = ((startingN + N) / i_size) % j_size + rbegin1;
         int i = (startingN + N) % i_size + rbegin0;
         // Actually run the functor.
-        functor(i,j,k, inner_min );
+        ReductionType tmp2;
+        functor(i,j,k, tmp2 );
+        inner_min= inner_min > tmp2 ? tmp2 : inner_min;
       });
     }, Kokkos::Min<ReductionType>(tmp));
 
