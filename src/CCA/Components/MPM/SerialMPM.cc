@@ -1288,7 +1288,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
-  t->requires(Task::NewDW, lb->frictionalWorkLabel,             gac,NGN);
+  t->requires(Task::NewDW, lb->gSurfNormLabel,                  gac,NGN);
   if(flags->d_XPIC2){
     t->requires(Task::NewDW, lb->gVelSPSSPLabel,                gac,NGN);
     t->requires(Task::NewDW, lb->pVelocitySSPlusLabel,          gnone);
@@ -3103,8 +3103,6 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
-    Vector dxCell = patch->dCell();
-    double delX = dxCell.x();
 
     for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
@@ -3142,18 +3140,24 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
 
+#if 0
+        double delX = dxCell.x();
         if (flags->d_doingDissolution) {
           if(velocity_star[c].length()*delT > 0.4*delX && c.z() >= 0){
+           double rat = velocity_star[c].length()*delT/delX;
+           if(rat>100.){
             cout << "n = " << c << endl;
             cout << "mas = " << mass[c] << endl;
             cout << "mat = " << m << endl;
-            cout << "rat = " << velocity_star[c].length()*delT/delX << endl;
+            cout << "rat = " << rat << endl;
             cout << "vel = " << velocity[c] << endl;
             cout << "vstar = " << velocity_star[c] << endl;
             cout << "acc = " << acceleration[c] << endl << endl;
             velocity_star[c] = velocity[c];
+           }
           }
         } // if doing dissolution
+#endif
       }
     }    // matls
   }
@@ -3689,6 +3693,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<Vector> gvelocity_star, gacceleration, gvelSPSSP;
       constNCVariable<double> gTemperatureRate, gTempStar;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
+      constNCVariable<Vector> gSurfNorm;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -3737,7 +3742,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
-      new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
+      new_dw->get(gSurfNorm,       lb->gSurfNormLabel,       dwi,patch,gac,NGP);
       if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
       }
@@ -3763,7 +3768,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           Vector vel(0.0,0.0,0.0);
           Vector velSSPSSP(0.0,0.0,0.0);
           Vector acc(0.0,0.0,0.0);
-          double fricTempRate = 0.0;
+          Vector pSN(0.0,0.0,0.0);
           double tempRate = 0.0;
           double burnFraction = 0.0;
 
@@ -3773,11 +3778,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             vel      += gvelocity_star[node]  * S[k];
             velSSPSSP+= gvelSPSSP[node]       * S[k];
             acc      += gacceleration[node]   * S[k];
+            pSN      += gSurfNorm[node]       * S[k];
 
-            fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
-            tempRate += (gTemperatureRate[node] + dTdt[node] +
-                         fricTempRate)   * S[k];
-            burnFraction += massBurnFrac[node]     * S[k];
+            tempRate += (gTemperatureRate[node] + dTdt[node]) * S[k];
+            burnFraction += massBurnFrac[node]  * S[k];
           }
 
           // Update particle vel and pos using Nairn's XPIC(2) method
@@ -3786,27 +3790,72 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                        + velSSPSSP)*delT;
           pvelnew[idx]  = 2.0*pvelSSPlus[idx] - velSSPSSP   + acc*delT;
           pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
-#if 0
-          // PIC, or XPIC(1)
-          pxnew[idx]    = px[idx]    + vel*delT
-                     - 0.5*(acc*delT + (pvelocity[idx] - pvelSSPlus[idx]))*delT;
-          pvelnew[idx]   = pvelSSPlus[idx]    + acc*delT;
-#endif
           pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
+          // Normalize particle surface normal
+          double pSNL=pSN.length();
+          if(pSNL > 0.0){
+             pSN = pSN/pSNL;
+          }
           if (flags->d_doingDissolution){
             if(pSurf[idx]>=0.99){
               pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
+              double deltaMassFrac = (pmass[idx]-pmassNew[idx])/pmass[idx];
+              Vector L1=Vector(psize[idx](0,0),psize[idx](1,0),psize[idx](2,0));
+              double L1l = L1.length();
+              Vector L2=Vector(psize[idx](0,1),psize[idx](1,1),psize[idx](2,1));
+              double L2l = L2.length();
+              Vector L3=Vector(psize[idx](0,2),psize[idx](1,2),psize[idx](2,2));
+              double L3l = L3.length();
+              L1/=L1l;
+              L2/=L2l;
+              L3/=L3l;
+              double pSNdotL1 = fabs(Dot(pSN,L1));
+              double pSNdotL2 = fabs(Dot(pSN,L2));
+              double pSNdotL3 = fabs(Dot(pSN,L3));
+              double dL2overdL1 = pSNdotL2/pSNdotL1;
+              double dL3overdL1 = pSNdotL3/pSNdotL1;
+//              double a = dL2overdL1;
+//              double b = -(L2l+L1l*dL2overdL1);
+//              double c = deltaMassFrac*(L1l*L2l);
+//              double dL1 = (-b - sqrt(b*b-4.*a*c))/(2.*a);
+              double dL1 = deltaMassFrac*(L1l*L2l)/(L2l+L1l*dL2overdL1);
+              double dL2 = dL2overdL1*dL1;
+              double dL3 = 0.0;
+              L1*=(L1l-dL1);
+              L2*=(L2l-dL2);
+              L3*=(L3l-dL3);
+
+              psizeNew[idx] = Matrix3(L1.x(), L2.x(), L3.x(),
+                                      L1.y(), L2.y(), L3.y(),
+                                      L1.z(), L2.z(), L3.z());
+
+//            This, and below, are my attempts to make the dissolving particles
+//            retreat, but it doesn't look great.
+//            Matrix3 sizeRed=Matrix3(1.-deltaMassFrac,0.,0.,0.,1.,0.,0.,0.,1.);
+//            psizeNew[idx] = sizeRed*psize[idx];
+//            Matrix3 pszNew = sizeRed*psize[idx];
+//            cout << "psizeNew Old Way = " << pszNew << endl;
+//              double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
+//              pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
+//              Vector deltaPos = 0.25*Vector(dL1*dx*pSN.x(),
+//                                            dL2*dy*pSN.y(),
+//                                            dL3*dz*pSN.z());
+//              cout << "deltaPos = " << deltaPos << endl;
+//              pxnew[idx] = pxnew[idx] - deltaPos;
             }else{
-              pmassNew[idx]    = pmass[idx];
+              pmassNew[idx] = pmass[idx];
+              psizeNew[idx] = psize[idx];
             }
+//          double deltaMassFrac = (pmass[idx]-pmassNew[idx])/pmass[idx];
+//          Matrix3 sizeRed = Matrix3(1.-deltaMassFrac,0.,0.,0.,1.,0.,0.,0.,1.);
+//          psizeNew[idx] = sizeRed*psize[idx];
+//          double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
+//          pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
           } else {
             pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
+            psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
           }
-//          if(pmassNew[idx]==0.){
-//            cout << "particle consumed at " << pxnew[idx] << endl;
-//          }
-          psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
 
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
           ke += .5*pmass[idx]*pvelnew[idx].length2()*useInKECalc[m];
@@ -4199,8 +4248,6 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
     level->getInteriorSpatialRange(domain);
     Point dom_min = domain.min();
     Point dom_max = domain.max();
-//    cout << "dom_min = " << dom_min << endl;
-//    cout << "dom_max = " << dom_max << endl;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -4968,9 +5015,6 @@ void SerialMPM::addParticles(const ProcessorGroup*,
         }
       } // if any particles flagged for refinement
 
-//      cm->addCMSpecificParticleData(patch, dwi, oldNumPar, numNewPartNeeded,
-//                                    old_dw, new_dw);
-
       cm->splitCMSpecificParticleData(patch, dwi, fourOrEight, prefOld, pref,
                                       oldNumPar, numNewPartNeeded,
                                       old_dw, new_dw);
@@ -5072,6 +5116,7 @@ void SerialMPM::addTracers(const ProcessorGroup*,
        p3 = stof(token);
 //     cout << tid << " " << p1 << " " << p2 << " " << p3 << endl;
        Point pos = Point(p1,p2,p3);
+
        if(patch->containsPoint(pos)){
          particleIndex pidx = start;
          pxtmp[pidx]   = pos;
