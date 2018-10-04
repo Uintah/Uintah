@@ -30,7 +30,6 @@
 #include <CCA/Components/MPM/Materials/Dissolution/Dissolution.h>
 #include <CCA/Components/MPM/Materials/Dissolution/DissolutionMaterialSpec.h> 
 #include <CCA/Ports/DataWarehouseP.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/GridP.h>

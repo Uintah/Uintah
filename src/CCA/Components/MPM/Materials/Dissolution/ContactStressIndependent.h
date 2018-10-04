@@ -37,7 +37,6 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Task.h>
 
-
 namespace Uintah {
 /**************************************
 
