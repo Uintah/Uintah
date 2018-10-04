@@ -1173,12 +1173,11 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
     if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
       ss++;
   }
-#if 1
-#endif
 
   if(ss>0){
     return 1.0;
   }
+#if 0
   else {
     // Check to the left (-x)
     if(!piece->inside(p-Vector(2.0*dxpp.x(),0.,0.)))
@@ -1232,4 +1231,5 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
   } else {
     return 0.0;
   }
+#endif
 }
