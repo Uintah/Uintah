@@ -96,6 +96,7 @@ DOUBLEMPM::DOUBLEMPM( const ProcessorGroup* myworld,
   MPMCommon( myworld, materialManager )
 {
   flags = scinew MPMFlags(myworld);
+  d_lb = scinew DOUBLEMPMLabel();
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
@@ -113,6 +114,7 @@ DOUBLEMPM::~DOUBLEMPM()
   delete flags;
   delete contactModel;
   delete thermalContactModel;
+  delete d_lb;
 
   MPMPhysicalBCFactory::clean();
 
@@ -240,6 +242,7 @@ void DOUBLEMPM::problemSetup(const ProblemSpecP& prob_spec,
     } // refine_ps
   } // amr_ps
   
+  // Interacting nodes NGP = 1 for MPM and = 2 for GIMP and CPDI
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;
@@ -365,7 +368,6 @@ void DOUBLEMPM::outputProblemSpec(ProblemSpecP& root_ps)
 }
 
 
-
 // Initialize_______________________________________________________________________________
 void DOUBLEMPM::scheduleInitialize(const LevelP& level,
                                    SchedulerP& sched)
@@ -423,6 +425,7 @@ void DOUBLEMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->p_qLabel);
   }
 
+  // Constitutive models
   unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
   for(unsigned int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
@@ -689,6 +692,7 @@ void DOUBLEMPM::totalParticleCount(const ProcessorGroup*,
   }
 }
 
+// Compute the moving boundary for load_curve
 void DOUBLEMPM::scheduleInitializePressureBCs(const LevelP& level,
                                               SchedulerP& sched)
 {
@@ -959,7 +963,7 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
   const MaterialSet* matls = m_materialManager->allMaterials( "MPM" );
   const MaterialSet* all_matls = m_materialManager->allMaterials();
 
-  const MaterialSubset* mpm_matls_sub = (   matls ?    matls->getUnion() : nullptr);;
+  const MaterialSubset* mpm_matls_sub = (   matls ?    matls->getUnion() : nullptr);
 
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
@@ -1017,24 +1021,67 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
 }
 
 // Be aware the MPMCommon label denote lb in constructor of MPMCommon.cc (lb = scinew MPMLabel())
-// Need to define the label for new alforithm
+// Need to define the label for new alforithm and include in the library
 // double_lb = scinew DOUBLEMPMLabel()
 
 
+// schedule example _______________________________________________________________________________
 // Template for create a new function
-// void DOUBLE::scheduleEXAMPLE(){
+// void DOUBLEMPM::scheduleEXAMPLE(){
+
+//if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),     // this part is for AMR
+//	getLevel(patches)->getGrid()->numLevels()))
+//	return;
 // printSchedule(patches, cout_doing, "DOUBLEMPM::scheduleEXAMPLE");
 // Task* t=scinew Task("DOUBLEMPM::EXAMPLE", this, &DOUBLEMPM::EXAMPLE);
 
-//t->require(Task::OldDW, lb->INPUT_MPMLABEL, Ghost::Typeghost, 1)
+//t->require(Task::OldDW, lb->INPUT_MPMLABEL, Ghost::Typeghost, 1)              // ghost node for MPI
 //t->require(Task::OldDW, double_lb->INPUT_DOUBLEMPMLABEL, Ghost::Typeghost, 1)
+// Task::OldDW or Task::NewDW depends on where the varialbes stored.
 
 //t->compute(		      lb->OUTPUT_MPMLABEL, m_materialManager->getAllInOneMatls(), Task::OutOfDomain);
-
+// when we want to accumulate the value of all materials, then using m_materialManager->getAllInOneMatls(), Task::OutOfDomain
+// Otherwise, we can simply use:
+// t->compute(		      double_lb->OUTPUT_DOUBLEMPMLABEL)
+// t->modified(		      matls->getUnion(), matls->getUnion()) // Check boundary condition
 // sched->addTask(t, patches, matls);
 
+// Ghost::None
+// gvariables for interpolating particle to iode and balance equations, pvariables for particle update
+// Ghost::ArroundNodes
+// NewDW, pvariables for interpolating particle to node
+// Ghost::AroundCells
+//NewDW, gvarialbes for particle update
 
-// Apply the external loads
+// Example _______________________________________________________________________________________
+// void DOUBLEMPM::EXAMPLE()
+// Define and initialize variables
+// int globMatID = m_materialManager->getAllInOneMatls()->get(0);
+// double GLOBAL_OUTPUT
+// new_dw->allocateAndPut(GLOBAL_OUTPUT, lb->OUTPUTLABEL, globMatID,patch(;
+// GLOBAL_OUTPUT.initialize(0 or d_SMALL_NUM_MPM for volume and mass)
+
+// Require and Compute label in schedule will be used here in the form
+// Global variables
+// int globMatID = m_materialManager->getAllInOneMatls()->get(0);
+// new_dw->allocateAndPut(gmassglobal, lb->gMassLabel, globMatID, patch);
+
+// Loop material, Material variables
+// for (unsigned int m = 0; m < numMatls; m++) {
+// MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);		// mpm_matl is the material with index m
+// int dwi = mpm_matl->getDWIndex();
+// ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,	gan, NGP, lb->pXLabel);
+// old_dw->get(INPUT_MPM, lb->INPUT_MPMLABEL, pset);
+// new_dw->allocateAndPut(OUTPUT_DOUBLEMPM, double_lb->INPUT_DOUBLEMPMLABEL, dwi, patch)
+
+// Loop particle
+// for (ParticleSubset::iterator iter = pset->begin();	iter != pset->end();	iter++) {
+//	particleIndex idx = *iter;
+
+
+
+// Apply the external loads from LoadCurves
+// Flags : d_useLoadCurves, d_useCBDI
 void DOUBLEMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
@@ -1215,6 +1262,13 @@ void DOUBLEMPM::applyExternalLoads(const ProcessorGroup*,
 
 
 // Interpolate particle to grid
+// Loop patch for MPI
+	// Loop materials to locate each material variables with material index dwi and particle sublet pset(dwi)
+		// Loop particles with particle index idx
+			// Find interacting nodes NN and loop all nodes with patch condition
+		// Loop all nodes to accumulate global variables
+// Flags: d_GEVelProj, d_useCBDI
+
 void DOUBLEMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                    const PatchSet* patches,
                                                    const MaterialSet* matls)
@@ -1274,17 +1328,19 @@ void DOUBLEMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	const MaterialSubset*,
 	DataWarehouse* old_dw,
 	DataWarehouse* new_dw)
-{
+{	
+	// Loop all the patches
 	for (int p = 0; p < patches->size(); p++) {
 		const Patch* patch = patches->get(p);
 
 		printTask(patches, patch, cout_doing,
 			"Doing DOUBLEMPM::interpolateParticlesToGrid");
 
+		// numMatls = number of materials
 		unsigned int numMatls = m_materialManager->getNumMatls("MPM");
 		ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-		vector<IntVector> ni(interpolator->size());
-		vector<double> S(interpolator->size());
+		vector<IntVector> ni(interpolator->size());					// Node index vector
+		vector<double> S(interpolator->size());						// Value of shape function
 
 		ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
 
@@ -1304,8 +1360,8 @@ void DOUBLEMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 		Ghost::GhostType  gan = Ghost::AroundNodes;
 
 		for (unsigned int m = 0; m < numMatls; m++) {
-			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
-			int dwi = mpm_matl->getDWIndex();
+			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);		// mpm_matl is the material with index m
+			int dwi = mpm_matl->getDWIndex();													// dwi is the  material index in datawarehouse
 
 			// Create arrays for the particle data
 			constParticleVariable<Point>  px;
@@ -1319,9 +1375,9 @@ void DOUBLEMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 			constParticleVariable<Vector>  pTempGrad;
 
 			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-				gan, NGP, lb->pXLabel);
+				gan, NGP, lb->pXLabel);											// pset is particlesubset of material index dwi, in patch, ghost arround nodes
 
-			old_dw->get(px, lb->pXLabel, pset);
+			old_dw->get(px, lb->pXLabel, pset);									// get input pXLabel
 			old_dw->get(pmass, lb->pMassLabel, pset);
 			//    old_dw->get(pColor,         lb->pColorLabel,         pset);
 			old_dw->get(pvolume, lb->pVolumeLabel, pset);
@@ -1399,16 +1455,16 @@ void DOUBLEMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 			// GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
 
 			Vector total_mom(0.0, 0.0, 0.0);
-			double pSp_vol = 1. / mpm_matl->getInitialDensity();
+			double pSp_vol = 1. / mpm_matl->getInitialDensity();			// Density
+
 			//loop over all particles in the patch:
 			for (ParticleSubset::iterator iter = pset->begin();
 				iter != pset->end();
 				iter++) {
 				particleIndex idx = *iter;
-				int NN =
-					interpolator->findCellAndWeights(px[idx], ni, S, psize[idx], pFOld[idx]);
-				Vector pmom = pvelocity[idx] * pmass[idx];
-				double ptemp_ext = pTemperature[idx];
+				int NN = interpolator->findCellAndWeights(px[idx], ni, S, psize[idx], pFOld[idx]);			// NN : total interacting nodes number
+				Vector pmom = pvelocity[idx] * pmass[idx];													// px: particle position, ni: index of node vector
+				double ptemp_ext = pTemperature[idx];														// S: shape function
 				total_mom += pmom;
 
 				// Add each particles contribution to the local mass & velocity
@@ -1433,7 +1489,7 @@ void DOUBLEMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 							gexternalforce[node] += pexternalforce[idx] * S[k];
 						}
 						gTemperature[node] += ptemp_ext * pmass[idx] * S[k];
-						gSp_vol[node] += pSp_vol * pmass[idx] * S[k];
+						gSp_vol[node] += pSp_vol * pmass[idx] * S[k];					//???
 					}
 				}
 				if (flags->d_useCBDI && pLoadCurveID[idx].x() > 0) {
@@ -1817,6 +1873,7 @@ void DOUBLEMPM::computeContactArea(const ProcessorGroup*,
 
 
 // Compute internal forces
+// Flags: d_artificial_viscosity, d_axisymmetric
 void DOUBLEMPM::scheduleComputeInternalForce(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)
@@ -1942,6 +1999,8 @@ void DOUBLEMPM::computeInternalForce(const ProcessorGroup*,
 			}
 			p_pressure = p_pressure_create; // reference created data
 
+
+			// For vicousity
 			if (flags->d_artificial_viscosity) {
 				old_dw->get(p_q, lb->p_qLabel, pset);
 			}
@@ -1971,7 +2030,8 @@ void DOUBLEMPM::computeInternalForce(const ProcessorGroup*,
 						interpolator->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,
 							d_S, psize[idx], pFOld[idx]);
 					stressvol = pstress[idx] * pvol[idx];
-					stresspress = pstress[idx] + Id * (p_pressure[idx] - p_q[idx]);
+					// Consider the vicousity otherwise stresspress = pstress[idx];
+					stresspress = pstress[idx] + Id * (p_pressure[idx] - p_q[idx]);					
 
 					for (int k = 0; k < NN; k++) {
 						if (patch->containsNode(ni[k])) {
@@ -2452,7 +2512,8 @@ void DOUBLEMPM::setPrescribedMotion(const ProcessorGroup*,
 }
 
 
-// Update particle quantities
+// Update particle positions and velocities
+//Flags: d_reductionVars, d_with_color, d_refineParticles, d_addFrictionWork, d_max_vel
 void DOUBLEMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)
@@ -2753,6 +2814,10 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // Compute particle gradents
+// Update particle volume, 
+// Flags: d_reductionVars, d_8or27, d_min_subcycles_for_F, d_doPressureStabilization
+// Stabilize the pressure algorithm
+
 void DOUBLEMPM::scheduleComputeParticleGradients(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)
@@ -2902,7 +2967,7 @@ void DOUBLEMPM::computeParticleGradients(const ProcessorGroup*,
 					pFNew[idx] = F;
 				}
 				else {
-					Matrix3 Amat = tensorL * delT;
+					Matrix3 Amat = F * delT;
 					Matrix3 Finc = Amat.Exponential(abs(flags->d_min_subcycles_for_F));
 					pFNew[idx] = Finc * pFOld[idx];
 				}
@@ -2984,6 +3049,7 @@ void DOUBLEMPM::computeParticleGradients(const ProcessorGroup*,
 
 
 // Compute stress tensor
+// Flags: d_reductionVars
 void DOUBLEMPM::scheduleComputeStressTensor(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
@@ -3264,6 +3330,7 @@ void DOUBLEMPM::insertParticles(const ProcessorGroup*,
 
 
 // Scale particle factor (optional for flags->d_computeScaleFactor)
+// For vizualization
 void DOUBLEMPM::scheduleComputeParticleScaleFactor(SchedulerP  & sched,
 	const PatchSet    * patches,
 	const MaterialSet * matls)
@@ -3827,8 +3894,7 @@ void DOUBLEMPM::addParticles(const ProcessorGroup*,
 
 
 // Extra components_______________________________________________________________________________
-// AMR (incomplete?)
-
+// AMR
 void DOUBLEMPM::scheduleRefine(const PatchSet   * patches,
 	SchedulerP & sched)
 {
