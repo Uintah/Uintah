@@ -144,24 +144,54 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
     for(int m=0; m < numMatls; m++){
      if(masterMatls[m]){
       int md=m;
+
+      // Note the extra factor of 2.0 in the last line is to account for the
+      // NC_CCweight down below.  
+      // For the 1D case, NC_CCweight is 0.5 on edge nodes.
+      double rate = (0.75*M_PI)
+                  * ((d_Vm*d_Vm)*d_Ao)/(d_R*d_temperature)
+                  * exp(-d_Ea/(d_R*d_temperature))*d_StressThresh*area
+                  * 2.0*3.1536e19*d_timeConversionFactor;
+//      cout << "rateI = " << rate << endl;
+//      int numNodesMBRGT0 = 0;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
         double sumMass=0.0;
+        int inContactMatl=-999;
         for(int n = 0; n < numMatls; n++){
           if(n==md || inContactWithMatls[n]) {
             sumMass+=gmass[n][c]; 
           }
+          if(inContactWithMatls[n]) {
+            inContactMatl = n;
+          }
         }
+
+#if 0
+        if(c==IntVector(24,0,0) || c==IntVector(25,0,0)){
+          cout << "sumMass = " << sumMass << endl;
+          cout << "md = " << md << ", inContactMatl = " << inContactMatl << endl;
+          cout << "gmass[md]["<<c<<"]="<< gmass[md][c] << endl;
+          cout << "gnormtrac[md]["<<c<<"]="<< gnormtrac[md][c] << endl;
+          cout << "gnormtrac[iCM]["<<c<<"]="<< gnormtrac[inContactMatl][c] << endl;
+        }
+#endif
 
         if(gmass[md][c] >  1.e-100  &&
            gmass[md][c] != sumMass  && 
-          -gnormtrac[md][c] > d_StressThresh){ // Compressive stress is negative
+          (-gnormtrac[md][c] > d_StressThresh ||
+           -gnormtrac[inContactMatl][c] >d_StressThresh)){ // Comp stress is neg
 //           pressure > d_StressThresh){ // && volFrac > 0.6){
             double rho = gmass[md][c]/gvolume[md][c];
-            massBurnRate[md][c] += area*rho*2.0*NC_CCweight[c];
+//            massBurnRate[md][c] += area*rho*2.0*NC_CCweight[c];
+            massBurnRate[md][c] += NC_CCweight[c]*rate*rho;
+//            numNodesMBRGT0++;
+//          cout << "mBR["<<md<<"]["<<c<<"] = " << massBurnRate[md][c] << endl;
+//          cout << "NC_CCweight["<<c<<"] = "   << NC_CCweight[c]      << endl;
         }
       } // nodes
+//      cout << "numNodesMBRGT0=" << numNodesMBRGT0 << endl;
      } // endif a masterMaterial
     } // materials
   } // patches
