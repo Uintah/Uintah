@@ -1176,6 +1176,8 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
 
   if(ss>0){
     return 1.0;
+  }else{
+    return 0.0;
   }
 #if 0
   else {
