@@ -55,4 +55,5 @@ void Dissolution::setTimeConversionFactor(const double tcf)
   // This is the factor to convert 1 Uintah time unit (probably a
   // microsecond) to a Ma.  i.e., if tcf=10, 1 microsecond = 10 Ma
   d_timeConversionFactor = tcf;
+  proc0cout << "TCF = " << tcf << endl;
 }
