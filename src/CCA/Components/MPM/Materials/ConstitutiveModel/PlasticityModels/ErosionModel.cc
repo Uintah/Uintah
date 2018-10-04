@@ -256,7 +256,9 @@ ErosionModel::updateStress_Erosion( ParticleSubset * pset,
 
         double D = exp(-failTime/d_charTime);
 
-        //cout << "D = " << D << endl;
+//        cout << "D = " << D << endl;
+//        cout << "failTime = " << failTime << endl;
+//        cout << "timeOfLoc = " << pTimeOfLoc_new[idx] << endl;
 
         switch (d_algo) {
         case erosionAlgo::AllowNoTension :
