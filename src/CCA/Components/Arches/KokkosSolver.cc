@@ -343,14 +343,12 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
 
 
 
-      double denom_dt = std::fabs( u(i,j,k) ) / dx +
-                        std::fabs( v(i,j,k) ) / dy +
-                        std::fabs( w(i,j,k) ) / dz +
-                        mu(i,j,k) / rho(i,j,k) *
-                        ( 1. / ( dx * dx ) + 1. / ( dy * dy ) + 1. / ( dz * dz ) ) +
-                        small_num;
-
-      m_dt =  1.0 / denom_dt; // m_dt reduced by Kokkos::parallel_reduce
+       m_dt = 1. / (std::fabs( u(i,j,k) ) / dx +
+                   std::fabs( v(i,j,k) ) / dy +
+                   std::fabs( w(i,j,k) ) / dz +
+                   mu(i,j,k) / rho(i,j,k) *
+                   ( 1. / ( dx * dx ) + 1. / ( dy * dy ) + 1. / ( dz * dz ) ) +
+                   small_num);
 
     }, dt );
 

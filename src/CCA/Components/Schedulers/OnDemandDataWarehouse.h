@@ -1402,11 +1402,15 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                            int               matlIndex,
                                            const Patch*      patch,
                                            Ghost::GhostType  gtype = Ghost::None,
-                                           int               numGhostCells = 0 ) {
+                                           int               numGhostCells = 0 , bool l_getModifiable=false ) {
        
-      CCVariable<T> var;
+      grid_T var;
       if (matlIndex!=-999) {
-        this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+        if (l_getModifiable){
+          this->getModifiable(var, label, matlIndex, patch, gtype, numGhostCells );
+        }else{
+          this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+        }
       }
       return var;
     }
@@ -1427,6 +1431,26 @@ class OnDemandDataWarehouse : public DataWarehouse {
       return constVar;
     }
 
+
+    template <typename grid_T,typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, void>::type
+    assignGridVariable( grid_T& var ,const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype = Ghost::None,
+                                           int               numGhostCells = 0 , bool l_getModifiable=false ) {
+       
+      if (matlIndex!=-999) {
+        if (l_getModifiable){
+          this->getModifiable(var, label, matlIndex, patch, gtype, numGhostCells );
+        }else{
+          this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+        }
+      }
+    }
+
+
+
 #if defined(UINTAH_ENABLE_KOKKOS)
 
 
@@ -1437,14 +1461,37 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                            int               matlIndex,
                                            const Patch*      patch,
                                            Ghost::GhostType  gtype = Ghost::None,
-                                           int               numGhostCells = 0 ) {
+                                           int               numGhostCells = 0 , bool l_getModifiable=false ) {
 
       grid_T var;
       if (matlIndex!=-999) {
-        this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+        if (l_getModifiable){
+          this->getModifiable(var, label, matlIndex, patch, gtype, numGhostCells );
+        }else{
+          this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+        }
       }
       return var.getKokkosView();
     }
+
+    template <typename grid_T,typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value,void >::type
+    assignGridVariable(KokkosView3<T,MemSpace>& kvar, const VarLabel*   label,
+                                    int               matlIndex,
+                                    const Patch*      patch,
+                                    Ghost::GhostType  gtype = Ghost::None,
+                                    int               numGhostCells = 0 , bool l_getModifiable=false ) {
+     grid_T var;
+     if (matlIndex!=-999) {
+        if (l_getModifiable){
+          this->getModifiable(var, label, matlIndex, patch, gtype, numGhostCells );
+        }else{
+          this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+        }
+      }
+      kvar = var.getKokkosView();
+    }
+
 
     template <typename grid_CT,typename T, typename MemSpace>
     inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
@@ -1463,7 +1510,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
 #if defined(HAVE_CUDA)
 
-    template <typename grid_T,typename T, typename MemSpace>
+    template <typename grid_CT,typename T, typename MemSpace>
     inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
     getConstGridVariable( const VarLabel*   label,
                                            int               matlIndex,
@@ -1477,18 +1524,33 @@ class OnDemandDataWarehouse : public DataWarehouse {
       }
     }
 
-    template <typename grid_CT,typename T, typename MemSpace>
+    template <typename grid_T,typename T, typename MemSpace>
     inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
     getGridVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
                                            Ghost::GhostType  gtype = Ghost::None,
-                                           int               numGhostCells = 0 , bool allocate=true ) {
+                                           int               numGhostCells = 0 , bool l_getModifiable=false ) {
 
       if (matlIndex!=-999) {
         return this->getGPUDW()->getKokkosView<T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
       } else {
         return KokkosView3<T, Kokkos::CudaSpace>();
+      }
+    }
+
+    template <typename grid_T,typename T, typename MemSpace>
+    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, void >::type
+    assignGridVariable( KokkosView3<T, MemSpace>& var, const VarLabel*   label, 
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype = Ghost::None,
+                                           int               numGhostCells = 0 , bool l_getModifiable=false ) {
+
+      if (matlIndex!=-999) {
+        var=this->getGPUDW()->getKokkosView<T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
+      } else {
+        var=KokkosView3<T, Kokkos::CudaSpace>();
       }
     }
 

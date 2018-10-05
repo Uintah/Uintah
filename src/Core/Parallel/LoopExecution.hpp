@@ -581,7 +581,7 @@ parallel_reduce_sum(ExecutionObject<ExecutionSpace, MemorySpace>& executionObjec
     ReductionType tmp2=0;
     functor( i, j, k, tmp2 );
     tmp+=tmp2;
-  }, Kokkos::Sum<ReductionType>(red));
+  }, red);
 
 }
 
