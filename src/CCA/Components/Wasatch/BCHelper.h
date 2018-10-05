@@ -266,6 +266,7 @@ namespace WasatchCore {
     
     SpatialOps::SpatialMask<SVolField>* svolExtraCellSpatialMask; // iterator for svol/ccvar extra cells.
     SpatialOps::SpatialMask<XVolField>* xvolExtraCellSpatialMask; // iterator for xvol/sfcxvar extra cells.
+    SpatialOps::SpatialMask<SpatialOps::SSurfXField>* ssurfxExtraCellSpatialMask; // iterator for xvol/sfcxvar extra cells.
     SpatialOps::SpatialMask<YVolField>* yvolExtraCellSpatialMask; // iterator for yvol/sfcyvar extra cells.
     SpatialOps::SpatialMask<ZVolField>* zvolExtraCellSpatialMask; // iterator for zvol/sfczvar extra cells.
 

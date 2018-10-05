@@ -492,7 +492,7 @@ namespace WasatchCore{
     bcHelper.apply_boundary_condition<FieldT>( this->thisVelTag_, taskCat );
     // set bcs for partial rhs
     bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(mom_tag(this->solnVarName_)), taskCat, true);
-    // set bcs for partial full rhs
+    // set bcs for partial full rhs - apply directly on the boundary
     bcHelper.apply_boundary_condition<FieldT>( this->rhs_tag(), taskCat, true);
 
     if( !this->is_constant_density() ){

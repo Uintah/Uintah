@@ -34,7 +34,7 @@
 namespace WasatchCore{
 
   // ###################################################################
-
+  // Generic constant BC
   template< typename FieldT >
   void
   ConstantBC<FieldT>::
@@ -45,6 +45,38 @@ namespace WasatchCore{
       FieldT& lhs = this->value();
       APPLY_CONSTANT_BC(lhs, bcValue_);
     }
+  }
+
+  // ###################################################################
+  // ConstantBC Specialization for normal fluxes, X, Y, and Z. This works for DIRICHLET conditions ONLY on the normal fluxes
+  template<>
+  void
+  ConstantBC<SpatialOps::SSurfXField>::
+  evaluate()
+  {
+    typedef SpatialOps::SSurfXField FieldT;
+    FieldT& lhs = this->value();
+    masked_assign( SpatialOps::convert<FieldT>( *(this->svolSpatialMask_), SpatialOps::MINUS_SIDE, SpatialOps::PLUS_SIDE), lhs, bcValue_);
+  }
+  
+  template<>
+  void
+  ConstantBC<SpatialOps::SSurfYField>::
+  evaluate()
+  {
+    typedef SpatialOps::SSurfYField FieldT;
+    FieldT& lhs = this->value();
+    masked_assign( SpatialOps::convert<FieldT>( *(this->svolSpatialMask_), SpatialOps::MINUS_SIDE, SpatialOps::PLUS_SIDE), lhs, bcValue_);
+  }
+
+  template<>
+  void
+  ConstantBC<SpatialOps::SSurfZField>::
+  evaluate()
+  {
+    typedef SpatialOps::SSurfZField FieldT;
+    FieldT& lhs = this->value();
+    masked_assign( SpatialOps::convert<FieldT>( *(this->svolSpatialMask_), SpatialOps::MINUS_SIDE, SpatialOps::PLUS_SIDE), lhs, bcValue_);
   }
 
   // ###################################################################
