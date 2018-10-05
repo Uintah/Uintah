@@ -48,10 +48,10 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
 {
   ProblemSpecP child = ps->findBlock("diffusion_model");
   if(!child)
-    throw ProblemSetupException("Cannot find scalar_diffusion_model tag", __FILE__, __LINE__);
+    throw ProblemSetupException("Cannot find diffusion_model tag", __FILE__, __LINE__);
   string diffusion_type;
   if(!child->getAttribute("type", diffusion_type))
-    throw ProblemSetupException("No type for scalar_diffusion_model", __FILE__, __LINE__);
+    throw ProblemSetupException("No type for diffusion_model", __FILE__, __LINE__);
 
   if (diffusion_type == "jg")
     return(scinew JGConcentrationDiffusion(child, ss, flags, diffusion_type));

@@ -56,7 +56,8 @@ void NullDiffusion::addInitialComputesAndRequires(
                                                   const PatchSet    * patches
                                                  ) const
 {
-
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(d_lb->pFluxLabel, matlset);
 }
 
 void NullDiffusion::addParticleState(
@@ -64,6 +65,8 @@ void NullDiffusion::addParticleState(
                                      std::vector<const VarLabel*> & to
                                     ) const
 {
+  from.push_back(d_lb->pFluxLabel);
+  to.push_back(d_lb->pFluxLabel_preReloc);
 
 }
 
@@ -74,7 +77,13 @@ void NullDiffusion::computeFlux(
                                       DataWarehouse * NewDW
                                )
 {
-
+  int dwi = matl->getDWIndex();
+  ParticleVariable<Vector> pFlux;
+  ParticleSubset* pset = OldDW->getParticleSubset(dwi, patch);
+  NewDW->allocateAndPut(pFlux, d_lb->pFluxLabel_preReloc, pset);
+  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter) {
+    pFlux[*iter] = Vector(0.0, 0.0, 0.0);
+  }
 }
 
 void NullDiffusion::initializeSDMData(
@@ -83,6 +92,15 @@ void NullDiffusion::initializeSDMData(
                                             DataWarehouse * newDW
                                      )
 {
+  ParticleSubset* pset = newDW->getParticleSubset(matl->getDWIndex(), patch);
+  ParticleVariable<Vector>  pFlux;
+
+  newDW->allocateAndPut(pFlux, d_lb->pFluxLabel, pset);
+
+  for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+  {
+    pFlux[*iter] = Vector(0,0,0);
+  }
 
 }
 
@@ -92,7 +110,9 @@ void NullDiffusion::scheduleComputeFlux(
                                         const PatchSet    * patches
                        ) const
 {
+  const MaterialSubset* matlset = matl->thisMaterial();
 
+  task->computes(d_lb->pFluxLabel_preReloc, matlset);
 }
 
 void NullDiffusion::addSplitParticlesComputesAndRequires(
@@ -156,4 +176,6 @@ void NullDiffusion::computeDivergence(
                         matl->getDWIndex(), patch);
   gConcRate.initialize(0.0);
 }
+
+
 

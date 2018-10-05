@@ -2231,7 +2231,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup  * ,
 
         pmom = pvelocity[idx]*pmass[idx];
         double ptemp_ext = pTemperature[idx];
-        double pConc_Ext = pConcentration[idx];
+//        double pConc_Ext = pConcentration[idx];
 
         // Add each particles contribution to the local mass & velocity 
         IntVector node;
@@ -2255,7 +2255,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup  * ,
         if(flags->d_doScalarDiffusion) {
           double one_third = 1./3.;
           double phydrostress = one_third*pStress[idx].Trace();
-          pConc_Ext = pConcentration[idx];
+          double pConc_Ext = pConcentration[idx];
           for(int k = 0; k < NN; k++) {
             node = ni[k];
             if(patch->containsNode(node)) {
