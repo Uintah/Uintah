@@ -479,6 +479,10 @@ void UnweightVariable<T>::register_timestep_eval(
   }
   register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
+  // clipping   
+  for ( auto ieqn = m_clipping_info.begin(); ieqn != m_clipping_info.end(); ieqn++ ){
+    register_variable( ieqn->first, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
+  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -525,11 +529,16 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   for ( auto ieqn = m_clipping_info.begin(); ieqn != m_clipping_info.end(); ieqn++ ){
     Clipping_info info = ieqn->second;
     T& var = tsk_info->get_uintah_field_add<T>(info.var);
+    T& rho_var = tsk_info->get_uintah_field_add<T>(ieqn->first);
     Uintah::parallel_for( range, [&](int i, int j, int k){
     if ( var(i,j,k) > info.high ) {
-      var(i,j,k) = info.high;
+
+      var(i,j,k)     = info.high;
+      rho_var(i,j,k) = rho(i,j,k)*var(i,j,k); 
+
     } else if ( var(i,j,k) < info.low ) {
       var(i,j,k) = info.low;
+      rho_var(i,j,k) = rho(i,j,k)*var(i,j,k); 
     }
     });
   }
