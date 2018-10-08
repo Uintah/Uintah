@@ -115,6 +115,7 @@
                                                                           CO,
                                                                           spectralProperties,
                                                                           constant_scalar_diffusion_coef,
+                                                                          gas_kinetic_energy,
                                                                           wall_thermal_resistance'">
 
               <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->

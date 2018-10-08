@@ -151,7 +151,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 );
         register_task( name, tsk );
 
-      } else if ( type == "compute_kinetic_energy" ) {
+      } else if ( type == "gas_kinetic_energy" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew GasKineticEnergy::Builder( name, 0 );
         register_task( name, tsk );
