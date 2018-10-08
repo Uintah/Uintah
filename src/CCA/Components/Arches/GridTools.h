@@ -445,8 +445,8 @@ namespace Uintah{ namespace ArchesCore{
       @param idir       Array of the direction of interest
       @param vdir       Array of the variable direction  ([0,0,0] in the case of CC variables)
   **/
-  inline const double get_eps( const Array3<double> eps, const int i, const int j, const int k,
-                              const int* idir, const int* vdir )
+  inline double get_eps( const Array3<double> eps, const int i, const int j, const int k,
+                         const int* idir, const int* vdir )
   {
 
     const int i1 = i - vdir[0];
