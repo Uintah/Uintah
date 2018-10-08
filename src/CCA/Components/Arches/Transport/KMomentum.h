@@ -34,8 +34,8 @@
 
 #define MOMCONVECTION() \
         Uintah::ComputeConvectiveFlux                                       \
-          get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   \
-        Uintah::parallel_for( convection_range, get_flux, scheme );
+          get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps, m_vdir );   \
+        Uintah::parallel_for( convection_range, get_flux, scheme );         
 
 namespace Uintah{
 
@@ -111,8 +111,8 @@ private:
     std::string m_x_velocity_name;
     std::string m_y_velocity_name;
     std::string m_z_velocity_name;
-    std::string m_mu_name;
-    std::string m_rho_name;
+    //std::string m_mu_name;
+    //std::string m_rho_name;
     std::string m_eps_name;
 
     std::string m_sigmax_name;
@@ -127,6 +127,7 @@ private:
     std::vector<double> m_init_value;
 
     ArchesCore::DIR my_dir;
+    int m_vdir[3];
 
     bool m_inviscid;
 
@@ -158,6 +159,9 @@ private:
 
     ArchesCore::VariableHelper<T> helper;
     my_dir = helper.dir;
+    m_vdir[0] = helper.ioff;
+    m_vdir[1] = helper.joff;
+    m_vdir[2] = helper.koff;
 
   }
 
@@ -311,8 +315,8 @@ private:
     m_sigmay_name     = var_map.sigmay_name;
     m_sigmaz_name     = var_map.sigmaz_name;
 
-    m_mu_name = var_map.mu_name;
-    m_rho_name = parse_ups_for_role( DENSITY, db, "density" );
+    //m_mu_name = var_map.mu_name;
+    //m_rho_name = parse_ups_for_role( DENSITY, db, "density" );
 
     if ( input_db->findBlock("velocity") ){
       // can overide the global velocity space with this:
@@ -464,8 +468,8 @@ private:
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
-    register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    //register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    //register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   }
 
@@ -479,12 +483,7 @@ private:
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
-    // CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(m_x_velocity_name));
-    // CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(m_y_velocity_name));
-    // CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(m_z_velocity_name));
     CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
-    // constCCVariable<double>& mu = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_mu_name));
-    // constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_rho_name));
 
     const int istart = 0;
     const int iend = m_eqn_names.size();

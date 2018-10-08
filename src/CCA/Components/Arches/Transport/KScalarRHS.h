@@ -34,35 +34,35 @@
 #include <CCA/Components/Arches/UPSHelper.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#define CONVECTION_x(range_conv) \
-        if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { \
+#define CONVECTION_x(range_conv, xdir) \
+        if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {    \
           Uintah::ComputeConvectiveFlux1D                           \
-            get_flux_x( rho_phi, u, x_flux, eps,0 );                \
-          Uintah::parallel_for( range_conv, get_flux_x, scheme );   \
-        } else {                                                    \
-          Uintah::ComputeConvectiveFlux1D                             \
-            get_flux_x( phi, u, x_flux, eps,0 );                \
-          Uintah::parallel_for( range_conv, get_flux_x, scheme );\
+            get_flux_x( rho_phi, u, x_flux, eps, 0, xdir, m_vdir ); \
+          Uintah::parallel_for( range_conv, get_flux_x, scheme );      \
+        } else {                                                       \
+          Uintah::ComputeConvectiveFlux1D                           \
+            get_flux_x( phi, u, x_flux, eps, 0, xdir, m_vdir );     \
+          Uintah::parallel_for( range_conv, get_flux_x, scheme );      \
         }
-#define CONVECTION_y(range_conv) \
-        if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { \
+#define CONVECTION_y(range_conv, ydir) \
+        if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {    \
           Uintah::ComputeConvectiveFlux1D                           \
-            get_flux_y( rho_phi, v, y_flux, eps,1 );                \
-          Uintah::parallel_for( range_conv, get_flux_y, scheme );   \
-        } else {                                                    \
-          Uintah::ComputeConvectiveFlux1D                             \
-            get_flux_y( phi, v, y_flux, eps,1 );                \
+            get_flux_y( rho_phi, v, y_flux, eps, 1, ydir, m_vdir ); \
+          Uintah::parallel_for( range_conv, get_flux_y, scheme );      \
+        } else {                                                       \
+          Uintah::ComputeConvectiveFlux1D                           \
+            get_flux_y( phi, v, y_flux, eps, 1, ydir, m_vdir );     \
           Uintah::parallel_for( range_conv, get_flux_y, scheme );\
         }
-#define CONVECTION_z(range_conv) \
-        if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { \
+#define CONVECTION_z(range_conv, zdir) \
+        if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {    \
           Uintah::ComputeConvectiveFlux1D                           \
-            get_flux_z( rho_phi, w, z_flux, eps,2 );                \
-          Uintah::parallel_for( range_conv, get_flux_z, scheme );   \
-        } else {                                                    \
-          Uintah::ComputeConvectiveFlux1D                             \
-            get_flux_z( phi, w, z_flux, eps,2 );                \
-          Uintah::parallel_for( range_conv, get_flux_z, scheme );\
+            get_flux_z( rho_phi, w, z_flux, eps, 2, zdir, m_vdir ); \
+          Uintah::parallel_for( range_conv, get_flux_z, scheme );      \
+        } else {                                                       \
+          Uintah::ComputeConvectiveFlux1D                           \
+            get_flux_z( phi, w, z_flux, eps, 2, zdir, m_vdir );     \
+          Uintah::parallel_for( range_conv, get_flux_z, scheme );      \
         }
 namespace Uintah{
 
@@ -156,6 +156,7 @@ private:
 
     int m_boundary_int{0};
     int m_dir{0};
+    int m_vdir[3];
 
     struct SourceInfo{
       std::string name;
@@ -187,6 +188,9 @@ private:
     ArchesCore::VariableHelper<T>* helper = scinew ArchesCore::VariableHelper<T>;
     if ( helper->dir != ArchesCore::NODIR ) m_boundary_int = 1;
     m_dir = helper->dir;
+    m_vdir[0] = helper->ioff;
+    m_vdir[1] = helper->joff;
+    m_vdir[2] = helper->koff;
     delete helper;
 
   }
@@ -601,11 +605,9 @@ private:
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
       CT* rho_phi_ptr = nullptr;
-      //if ( m_premultiplier_name != "none" )
-      //if ( m_transported_eqn_names[ieqn] != "NA" )
-      if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] )
-        //rho_phi_ptr = tsk_info->get_const_uintah_field<CT>(m_premultiplier_name+m_eqn_names[ieqn]);
+      if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ){
         rho_phi_ptr = tsk_info->get_const_uintah_field<CT>(m_transported_eqn_names[ieqn]);
+      }
 
       CT& rho_phi = *rho_phi_ptr;
       CT& phi     = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
@@ -615,30 +617,25 @@ private:
       //Timers::Simple timer2;
 
       //timer.start();
-      //for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
-        //rhs[*iter] = 0.;
-      //}
+      // do something....
       //timer.stop();
       //std::cout << "rhs init Time: " << m_eqn_names[ieqn]<<": " <<timer().seconds() << std::endl;
 
       //timer.reset(false);
 
       //timer.start();
-      Uintah::BlockRange range_t(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
-      Uintah::parallel_for(range_t,  [&]( int i,  int j, int k){
-        rhs(i,j,k) = 0;
-      }); //end cell loop
-
+      rhs.initialize(0.0);
 
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
         //Convection:
+        const int xdir[3] = {1,0,0};
+        const int ydir[3] = {0,1,0};
+        const int zdir[3] = {0,0,1};
+
         FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
         FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
         FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
-
-        //IntVector low  = patch->getCellLowIndex();
-        //IntVector high = patch->getExtraCellHighIndex();
 
         IntVector low_x  = patch->getCellLowIndex();
         IntVector high_x = patch->getCellHighIndex();
@@ -664,7 +661,7 @@ private:
           high[0] = low[0] + 1 ;
           Uintah::BlockRange range( low, high);
           CentralConvection scheme;
-          CONVECTION_x(range);
+          CONVECTION_x(range, xdir);
         }
 
         if ( patch->getBCType(Patch::xplus)  != Patch::Neighbor ) {
@@ -675,9 +672,9 @@ private:
           Uintah::BlockRange range( low, high);
 
           CentralConvection scheme;
-          CONVECTION_x(range);
-          CONVECTION_y(range);
-          CONVECTION_z(range);
+          CONVECTION_x(range, xdir);
+          CONVECTION_y(range, ydir);
+          CONVECTION_z(range, zdir);
 
         }
 
@@ -689,7 +686,7 @@ private:
           Uintah::BlockRange range( low, high);
 
           CentralConvection scheme;
-          CONVECTION_y(range);
+          CONVECTION_y(range, ydir);
 
         }
 
@@ -700,9 +697,9 @@ private:
           Uintah::BlockRange range( low, high);
 
           CentralConvection scheme;
-          CONVECTION_x(range);
-          CONVECTION_y(range);
-          CONVECTION_z(range);
+          CONVECTION_x(range, xdir);
+          CONVECTION_y(range, ydir);
+          CONVECTION_z(range, zdir);
 
         }
 
@@ -715,7 +712,7 @@ private:
           Uintah::BlockRange range( low, high);
 
           CentralConvection scheme;
-          CONVECTION_z(range);
+          CONVECTION_z(range, zdir);
 
         }
 
@@ -726,9 +723,9 @@ private:
           Uintah::BlockRange range( low, high);
 
           CentralConvection scheme;
-          CONVECTION_x(range);
-          CONVECTION_y(range);
-          CONVECTION_z(range);
+          CONVECTION_x(range, xdir);
+          CONVECTION_y(range, ydir);
+          CONVECTION_z(range, zdir);
 
         }
 
@@ -742,9 +739,9 @@ private:
 
           //timer.reset(false);
           //timer.start();
-          CONVECTION_x(range_cl_to_ech_x);
-          CONVECTION_y(range_cl_to_ech_y);
-          CONVECTION_z(range_cl_to_ech_z);
+          CONVECTION_x(range_cl_to_ech_x, xdir);
+          CONVECTION_y(range_cl_to_ech_y, ydir);
+          CONVECTION_z(range_cl_to_ech_z, zdir);
           //timer.stop();
           //std::cout << "CONVECTION Time: " << m_eqn_names[ieqn]<<": " <<timer().seconds() << std::endl;
 
@@ -752,42 +749,41 @@ private:
 
           CentralConvection scheme;
 
-          CONVECTION_x(range_cl_to_ech_x);
-          CONVECTION_y(range_cl_to_ech_y);
-          CONVECTION_z(range_cl_to_ech_z);
+          CONVECTION_x(range_cl_to_ech_x, xdir);
+          CONVECTION_y(range_cl_to_ech_y, ydir);
+          CONVECTION_z(range_cl_to_ech_z, zdir);
 
         } else if ( m_conv_scheme[ieqn] == SUPERBEE ){
 
           SuperBeeConvection scheme;
 
-          CONVECTION_x(range_cl_to_ech_x);
-          CONVECTION_y(range_cl_to_ech_y);
-          CONVECTION_z(range_cl_to_ech_z);
+          CONVECTION_x(range_cl_to_ech_x, xdir);
+          CONVECTION_y(range_cl_to_ech_y, ydir);
+          CONVECTION_z(range_cl_to_ech_z, zdir);
 
         } else if ( m_conv_scheme[ieqn] == VANLEER ){
 
           VanLeerConvection scheme;
 
-          CONVECTION_x(range_cl_to_ech_x);
-          CONVECTION_y(range_cl_to_ech_y);
-          CONVECTION_z(range_cl_to_ech_z);
+          CONVECTION_x(range_cl_to_ech_x, xdir);
+          CONVECTION_y(range_cl_to_ech_y, ydir);
+          CONVECTION_z(range_cl_to_ech_z, zdir);
 
         } else if ( m_conv_scheme[ieqn] == ROE ){
 
           RoeConvection scheme;
 
-          CONVECTION_x(range_cl_to_ech_x);
-          CONVECTION_y(range_cl_to_ech_y);
-          CONVECTION_z(range_cl_to_ech_z);
-
+          CONVECTION_x(range_cl_to_ech_x, xdir);
+          CONVECTION_y(range_cl_to_ech_y, ydir);
+          CONVECTION_z(range_cl_to_ech_z, zdir);
 
         } else if ( m_conv_scheme[ieqn] == FOURTH ){
 
           FourthConvection scheme;
 
-          CONVECTION_x(range_cl_to_ech_x);
-          CONVECTION_y(range_cl_to_ech_y);
-          CONVECTION_z(range_cl_to_ech_z);
+          CONVECTION_x(range_cl_to_ech_x, xdir);
+          CONVECTION_y(range_cl_to_ech_y, ydir);
+          CONVECTION_z(range_cl_to_ech_z, zdir);
 
         } else {
 

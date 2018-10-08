@@ -128,9 +128,9 @@ namespace Uintah {
 
     void
     operator()(int i, int j, int k ) const {
-      double c1 = 7./12.; 
-      double c2 = -1./12.; 
-      
+      double c1 = 7./12.;
+      double c2 = -1./12.;
+
       //std::cout<<"fourth convection"<< std::endl;
 
       //X-dir
@@ -169,6 +169,7 @@ namespace Uintah {
 
   };
 
+
   /**
       @struct ComputeConvectiveFlux
       @brief Compute a convective flux given psi (flux limiter) with this functor.
@@ -182,8 +183,10 @@ namespace Uintah {
     ComputeConvectiveFlux1D( const Array3<double>& i_phi,
                              const Array3<double>& i_u,
                              Array3<double>& i_flux,
-                             const Array3<double>& i_eps, int i_dir ) :
-      phi(i_phi), u(i_u), flux(i_flux), eps(i_eps), dir(i_dir)
+                             const Array3<double>& i_eps, int i_dir,
+                             const int* i_idir, const int* i_vdir ) :
+      phi(i_phi), u(i_u), flux(i_flux), eps(i_eps), dir(i_dir),
+      idir(i_idir), vdir(i_vdir)
       {}
 
     // Default operator - throw an error
@@ -198,14 +201,14 @@ namespace Uintah {
 
         STENCIL3_1D(dir);
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc = floor(( eps(IJK_) + eps(IJK_M_) ) / 2. );
+        const double afc = ArchesCore::get_eps(eps, i, j, k, idir, vdir);
         flux(IJK_) = afc * u(IJK_) * Sup;
     }
 
     void operator()( const CentralConvection& scheme, int i, int j, int k ) const {
        {
         STENCIL3_1D(dir);
-        const double afc  = floor((( eps(IJK_) + eps(IJK_M_) )/2.));
+        const double afc = ArchesCore::get_eps(eps, i, j, k, idir, vdir);
         flux(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
        }
     }
@@ -221,8 +224,8 @@ namespace Uintah {
 
         SUPERBEEMACRO(r);
 
-        const double afc  = floor((( eps(IJK_) + eps(IJK_M_) )/2.));
-        const double afcm = floor((( eps(IJK_M_) + eps(IJK_MM_) )/2.));
+        const double afc = ArchesCore::get_eps(eps, i, j, k, idir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, idir, vdir);
 
         my_psi *= afc * afcm;
 
@@ -244,8 +247,8 @@ namespace Uintah {
               fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny )) ;
         VANLEERMACRO(r);
 
-        const double afc  = floor((( eps(IJK_) + eps(IJK_M_) )/2.));
-        const double afcm = floor((( eps(IJK_M_) + eps(IJK_MM_) )/2.));
+        const double afc = ArchesCore::get_eps(eps, i, j, k, idir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, idir, vdir);
         my_psi *= afc * afcm;
 
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
@@ -267,8 +270,8 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc  = floor((( eps(IJK_) + eps(IJK_M_) )/2.));
-        const double afcm = floor((( eps(IJK_M_) + eps(IJK_MM_) )/2.));
+        const double afc = ArchesCore::get_eps(eps, i, j, k, idir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, idir, vdir);
 
         my_psi *= afc * afcm;
 
@@ -285,7 +288,7 @@ namespace Uintah {
       double c2 = -1./12.;
 
         STENCIL5_1D(dir);
-        const double afc = floor(( eps(IJK_) + eps(IJK_M_) ) / 2.);
+        const double afc = ArchesCore::get_eps(eps, i, j, k, idir, vdir);
         flux(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
     }
 
@@ -296,6 +299,8 @@ namespace Uintah {
     Array3<double>& flux;
     const Array3<double>& eps;
     int dir;
+    const int* idir;
+    const int* vdir;
 
   };
   struct ComputeConvectiveFlux{
@@ -305,10 +310,10 @@ namespace Uintah {
                            const Array3<double>& i_w,
                            Array3<double>& i_flux_x, Array3<double>& i_flux_y,
                            Array3<double>& i_flux_z,
-                           const Array3<double>& i_eps ) :
+                           const Array3<double>& i_eps, int* i_vdir ) :
       phi(i_phi), u(i_u), v(i_v), w(i_w),
       flux_x(i_flux_x), flux_y(i_flux_y), flux_z(i_flux_z),
-      eps(i_eps)
+      eps(i_eps), vdir(i_vdir)
       {}
 
     // Default operator - throw an error
@@ -324,22 +329,25 @@ namespace Uintah {
       //X-dir
       {
         STENCIL3_1D(0);
+        const int xdir[3] = {1,0,0};
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        const double afc = ArchesCore::get_eps(eps, i, j, k, xdir, vdir);
         flux_x(IJK_) = afc * u(IJK_) * Sup;
       }
       //Y-dir
       {
         STENCIL3_1D(1);
+        const int ydir[3] = {0,1,0};
         const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        const double afc = ArchesCore::get_eps(eps, i, j, k, ydir, vdir);
         flux_y(IJK_) = afc * v(IJK_) * Sup;
       }
       //Z-dir
       {
         STENCIL3_1D(2);
+        const int zdir[3] = {0,0,1};
         const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        const double afc = ArchesCore::get_eps(eps, i, j, k, zdir, vdir);
         flux_z(IJK_) = afc * w(IJK_) * Sup;
       }
     }
@@ -348,21 +356,24 @@ namespace Uintah {
       //X-dir
       {
         STENCIL3_1D(0);
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
+        const int xdir[3] = {1,0,0};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, xdir, vdir);
 
         flux_x(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
       }
       //Y-dir
       {
         STENCIL3_1D(1);
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
+        const int ydir[3] = {0,1,0};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, ydir, vdir);
 
         flux_y(IJK_) = afc * v(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
       }
       //Z-dir
       {
         STENCIL3_1D(2);
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
+        const int zdir[3] = {0,0,1};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, zdir, vdir);
 
         flux_z(IJK_) = afc * w(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
       }
@@ -382,8 +393,9 @@ namespace Uintah {
 
         SUPERBEEMACRO(r);
 
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+        const int xdir[3] = {1,0,0};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, xdir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, xdir, vdir);
 
         my_psi *= afc * afcm;
 
@@ -404,8 +416,9 @@ namespace Uintah {
 
         SUPERBEEMACRO(r);
 
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+        const int ydir[3] = {0,1,0};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, ydir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, ydir, vdir);
 
         my_psi *= afc * afcm;
 
@@ -426,8 +439,9 @@ namespace Uintah {
 
         SUPERBEEMACRO(r);
 
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+        const int zdir[3] = {0,0,1};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, zdir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, zdir, vdir);
 
         my_psi *= afc * afcm;
 
@@ -453,8 +467,9 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+        const int xdir[3] = {1,0,0};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, xdir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, xdir, vdir);
 
         my_psi *= afc * afcm;
 
@@ -475,8 +490,9 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+        const int ydir[3] = {0,1,0};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, ydir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, ydir, vdir);
 
         my_psi *= afc * afcm;
 
@@ -496,9 +512,9 @@ namespace Uintah {
              fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         VANLEERMACRO(r);
-
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+        const int zdir[3] = {0,0,1};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, zdir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, zdir, vdir);
 
         my_psi *= afc * afcm;
 
@@ -524,8 +540,9 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+        const int xdir[3] = {1,0,0};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, xdir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, xdir, vdir);
 
         my_psi *= afc * afcm;
 
@@ -546,8 +563,9 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+        const int ydir[3] = {0,1,0};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, ydir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, ydir, vdir);
 
         my_psi *= afc * afcm;
 
@@ -568,8 +586,10 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+
+        const int zdir[3] = {0,0,1};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, zdir, vdir);
+        const double afcm = ArchesCore::get_eps(eps, im, jm, km, zdir, vdir);
 
         my_psi *= afc * afcm;
 
@@ -589,19 +609,22 @@ namespace Uintah {
       //X-dir
       {
         STENCIL5_1D(0);
-        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        const int xdir[3] = {1,0,0};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, xdir, vdir);
         flux_x(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
       }
       //Y-dir
       {
         STENCIL5_1D(1);
-        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        const int ydir[3] = {0,1,0};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, ydir, vdir);
         flux_y(IJK_) = afc * v(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
       }
       //Z-dir
       {
         STENCIL5_1D(2);
-        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        const int zdir[3] = {0,0,1};
+        const double afc = ArchesCore::get_eps(eps, i, j, k, zdir, vdir);
         flux_z(IJK_) = afc * w(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
       }
     }
@@ -616,6 +639,7 @@ namespace Uintah {
     Array3<double>& flux_y;
     Array3<double>& flux_z;
     const Array3<double>& eps;
+    int* vdir;
 
   };
 
