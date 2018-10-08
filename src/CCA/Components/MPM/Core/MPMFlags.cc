@@ -129,6 +129,9 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   } else if(d_mms_type=="AxisAligned3L"){
     d_mms_type = "AxisAligned3L";
   }
+
+  // DOUBLEMPM
+  d_DOUBLEMPM						= false;
 }
 
 MPMFlags::~MPMFlags()
@@ -392,6 +395,10 @@ else{
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
     dbg << "---------------------------------------------------------\n";
   }
+
+  // DOUBLEMPM
+  mpm_flag_ps->get("DOUBLEMPM", d_DOUBLEMPM);
+
 }
 
 void
@@ -433,6 +440,10 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("minimum_mass_for_acc",               d_min_mass_for_acceleration);
   ps->appendElement("maximum_particle_velocity",          d_max_vel);
   ps->appendElement("UsePrescribedDeformation",           d_prescribeDeformation);
+
+  // DOUBLEMPM
+  ps->appendElement("DOUBLEMPM",						  d_DOUBLEMPM);
+
 
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);

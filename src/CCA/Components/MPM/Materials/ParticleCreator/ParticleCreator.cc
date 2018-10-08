@@ -26,6 +26,7 @@
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/DOUBLEMPMLabel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
@@ -113,6 +114,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
                                  MPMFlags* flags)
 {
   d_lb = scinew MPMLabel();
+  double_lb = scinew DOUBLEMPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
@@ -120,8 +122,9 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_doScalarDiffusion = flags->d_doScalarDiffusion;
   d_withGaussSolver = flags->d_withGaussSolver;
   d_useCPTI = flags->d_useCPTI;
-
   d_flags = flags;
+
+  d_DOUBLEMPM = flags->d_DOUBLEMPM;
 
   registerPermanentParticleState(matl);
 }
@@ -129,6 +132,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
 ParticleCreator::~ParticleCreator()
 {
   delete d_lb;
+  delete double_lb;
 }
 
 particleIndex 
@@ -592,6 +596,14 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   if(d_flags->d_AMR){
      new_dw->allocateAndPut(pvars.pLastLevel, d_lb->pLastLevelLabel,    subset);
   }
+
+  if (d_flags->d_DOUBLEMPM) {
+	  new_dw->allocateAndPut(pvars.pMassSolid, double_lb->pMassSolidLabel, subset);
+	  new_dw->allocateAndPut(pvars.pMassLiquid, double_lb->pMassLiquidLabel, subset);
+	  new_dw->allocateAndPut(pvars.pPorePressure, double_lb->pPorePressureLabel, subset);
+	  new_dw->allocateAndPut(pvars.pPorePressureTensor, double_lb->pPorePressureTensorLabel, subset);
+	  new_dw->allocateAndPut(pvars.pVelocityLiquid, double_lb->pVelocityLiquidLabel, subset);
+  }
   return subset;
 }
 
@@ -769,7 +781,8 @@ ParticleCreator::initializeParticle(const Patch* patch,
       // assume unit radian extent in the circumferential direction
       pvars.pvolume[i] = p.x()*
               (size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
-    } else {
+    } 
+	else {
       // standard voxel volume
       pvars.pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
     }
@@ -777,6 +790,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
     pvars.psize[i]      = size;  // Normalized by grid spacing
 
     pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
+
     if(d_flags->d_integrator_type=="explicit"){
       pvars.pvelGrad[i]  = Matrix3(0.0);
     }
@@ -787,17 +801,29 @@ ParticleCreator::initializeParticle(const Patch* patch,
      if((*obj)->getInitialData_double("volumeFraction") == -1.0) {    
       vol_frac_CC = 1.0;
       pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i];
-     } else {
+     } 
+	 else {
       vol_frac_CC = (*obj)->getInitialData_double("volumeFraction");
       pvars.pmass[i]   = matl->getInitialDensity()*pvars.pvolume[i]*vol_frac_CC;
      }
-    } catch (...) {
+    } 
+	
+	catch (...) {
       vol_frac_CC = 1.0;       
       pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i];
     }
     pvars.pdisp[i]        = Vector(0.,0.,0.);
   }
   
+  // DOUBLEMPM
+  if (d_DOUBLEMPM) {
+	  pvars.pMassSolid[i]			= matl->getInitialDensity()*matl->getInitialPorosity()*pvars.pvolume[i];
+	  pvars.pMassSolid[i]			= matl->getInitialDensity()*(1-matl->getInitialPorosity())*pvars.pvolume[i];
+	  pvars.pPorePressure[i]		= 0.0;
+	  pvars.pPorePressureTensor[i]	= Matrix3(0.0);;
+	  pvars.pVelocityLiquid[i]		= Vector(0., 0., 0.);;
+  }
+   
   if(d_with_color){
     pvars.pcolor[i] = (*obj)->getInitialData_double("color");
   }
@@ -1129,6 +1155,25 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if (d_computeScaleFactor) {
     particle_state.push_back(d_lb->pScaleFactorLabel);
     particle_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
+  }
+
+  // DOUBLEMPM
+  // Prereloc variables ????
+  if (d_flags->d_DOUBLEMPM) {
+	  particle_state.push_back(double_lb->pPorePressureLabel);
+	  particle_state_preReloc.push_back(double_lb->pPorePressureLabel_preReloc);
+
+	  particle_state.push_back(double_lb->pPorePressureTensorLabel);
+	  //particle_state_preReloc.push_back(double_lb->pPorePressureTensorLabel_preReloc);
+
+	  particle_state.push_back(double_lb->pPorosityLabel);
+	  //particle_state_preReloc.push_back(double_lb->pPourosityLabel_preReloc);
+
+	  particle_state.push_back(double_lb->pPermeabilityLabel);
+	  //particle_state_preReloc.push_back(double_lb->pPermeabilityLabel_preReloc);
+
+	  particle_state.push_back(double_lb->pVelocityLiquidLabel);
+	  //particle_state_preReloc.push_back(double_lb->pVelocityLiquidLabel_preReloc);
   }
 
   matl->getConstitutiveModel()->addParticleState(particle_state,

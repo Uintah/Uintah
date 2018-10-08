@@ -249,6 +249,10 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("melt_temp",d_tmelt);
   mpm_ps->appendElement("is_rigid",d_is_rigid);
 
+  // DOUBLEMPM
+  mpm_ps->appendElement("Pourosity", d_Porosity);
+  mpm_ps->appendElement("Permeability", d_Permeability);
+
   d_cm->outputProblemSpec(mpm_ps);
   d_damageModel->outputProblemSpec(mpm_ps);
   d_erosionModel->outputProblemSpec(mpm_ps);
@@ -278,6 +282,10 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_troom = mat->d_troom;
   d_tmelt = mat->d_tmelt;
   d_is_rigid = mat->d_is_rigid;
+
+  // DOUBLEMPM
+  d_Porosity = mat->d_Porosity;
+  d_Permeability = mat->d_Permeability;
 
   // Check to see which ParticleCreator object we need
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
@@ -334,7 +342,7 @@ ParticleCreator* MPMMaterial::getParticleCreator()
 
 double MPMMaterial::getInitialDensity() const
 {
-  return d_density;
+	return d_density;
 }
 
 double 
@@ -383,6 +391,17 @@ double MPMMaterial::getSpecificHeat() const
 double MPMMaterial::getThermalConductivity() const
 {
   return d_thermalConductivity;
+}
+
+// DOUBLEMPM
+double MPMMaterial::getInitialPorosity() const
+{
+	return d_Porosity;
+}
+
+double MPMMaterial::getInitialPermeability() const
+{
+	return d_Permeability;
 }
 
 

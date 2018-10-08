@@ -48,16 +48,22 @@ using namespace Uintah;
 
 DOUBLEMPMLabel::DOUBLEMPMLabel()
 {
-	// Liquid particles variables
+	// particles variables
 	pPorePressureLabel			= VarLabel::create("p.PorePressure", ParticleVariable<double>::getTypeDescription());
 
 	pPorePressureTensorLabel	= VarLabel::create("p.PorePressureTensor", ParticleVariable<Matrix3>::getTypeDescription());
 
-	pPourosityLabel				= VarLabel::create("p.Pourosity", ParticleVariable<double>::getTypeDescription());
+	pPorosityLabel				= VarLabel::create("p.Porosity", ParticleVariable<double>::getTypeDescription());
 
 	pPermeabilityLabel			= VarLabel::create("p.Permeability", ParticleVariable<double>::getTypeDescription());
 
 	pVelocityLiquidLabel		= VarLabel::create("p.VelocityLiquid", ParticleVariable<Vector>::getTypeDescription());
+
+	pMassSolidLabel				= VarLabel::create("p.massSolid",	ParticleVariable<double>::getTypeDescription());
+
+	pMassLiquidLabel			= VarLabel::create("p.massLiquid",	ParticleVariable<double>::getTypeDescription());
+
+	pPorePressureLabel_preReloc = VarLabel::create("p.PorePressure_preReloc", ParticleVariable<double>::getTypeDescription());
 
 	// Grid liquid variables
 	gAccelerationLiquidLabel	= VarLabel::create("g.accelerationLiquid", NCVariable<Vector>::getTypeDescription());
@@ -74,18 +80,18 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 
 	gDragForceLabel				= VarLabel::create("g.DragForce", NCVariable<Vector>::getTypeDescription());
 
-
-
 }
 
 DOUBLEMPMLabel::~DOUBLEMPMLabel()
 {
-	// Liquid particles variables
+	// particles variables
 	VarLabel::destroy(pPorePressureLabel);
 	VarLabel::destroy(pPorePressureTensorLabel);
-	VarLabel::destroy(pPourosityLabel);
+	VarLabel::destroy(pPorosityLabel);
 	VarLabel::destroy(pPermeabilityLabel);
 	VarLabel::destroy(pVelocityLiquidLabel);
+	VarLabel::destroy(pMassSolidLabel);
+	VarLabel::destroy(pMassLiquidLabel);
 
 	// Grid liquid variables
 	VarLabel::destroy(gAccelerationLiquidLabel);

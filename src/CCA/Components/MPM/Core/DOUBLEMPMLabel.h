@@ -50,10 +50,13 @@ namespace Uintah {
 		// Particle variables involved in hydro-coupling calculation
 		const VarLabel* pPorePressureLabel;
 		const VarLabel* pPorePressureTensorLabel;
-		const VarLabel* pPourosityLabel;
+		const VarLabel* pPorosityLabel;
 		const VarLabel* pPermeabilityLabel;
 		const VarLabel* pVelocityLiquidLabel;
+		const VarLabel* pMassSolidLabel;
+		const VarLabel* pMassLiquidLabel;
 
+		const VarLabel* pPorePressureLabel_preReloc;
 
 		// Grid variables involved in diffusion calculations
 		const VarLabel* gAccelerationLiquidLabel;

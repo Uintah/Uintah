@@ -128,6 +128,9 @@ class Output;
     bool        d_withGaussSolver;
     //********** End Reactive Flow Section *********************
     
+	//Flags for DOUBLEMPM
+	bool		d_DOUBLEMPM;
+
     // flags for turning on/off the reduction variable calculations
     struct reductionVars{
      bool mass;

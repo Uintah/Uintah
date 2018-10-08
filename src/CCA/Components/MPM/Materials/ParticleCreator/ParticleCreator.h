@@ -44,6 +44,7 @@ namespace Uintah {
   class MPMFlags;
   class MPMMaterial;
   class MPMLabel;
+  class DOUBLEMPMLabel;
   class ParticleSubset;
   class VarLabel;
 
@@ -121,6 +122,16 @@ namespace Uintah {
     ParticleVariable<Vector> pPosChargeGrad;
     ParticleVariable<Vector> pNegChargeGrad;
     ParticleVariable<double> pPermittivity;
+
+	// DOUBLEMPM
+	ParticleVariable<double> pPorePressure;
+	ParticleVariable<Matrix3>pPorePressureTensor;
+	ParticleVariable<double> pPorosity;
+	ParticleVariable<double> pPPermeability;
+	ParticleVariable<Vector> pVelocityLiquid;
+
+	ParticleVariable<double> pMassSolid;
+	ParticleVariable<double> pMassLiquid;
     } ParticleVars;
 
   protected:
@@ -170,6 +181,7 @@ namespace Uintah {
                             const Vector dxpp);
 
     MPMLabel* d_lb;
+	DOUBLEMPMLabel* double_lb;
     MPMFlags* d_flags;
 
     bool d_useLoadCurves;
@@ -179,6 +191,8 @@ namespace Uintah {
     bool d_computeScaleFactor;
     bool d_useCPTI;
     bool d_withGaussSolver;
+
+	bool d_DOUBLEMPM;
 
     std::vector<const VarLabel* > particle_state, particle_state_preReloc;
     

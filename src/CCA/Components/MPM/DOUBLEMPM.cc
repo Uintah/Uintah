@@ -96,7 +96,7 @@ DOUBLEMPM::DOUBLEMPM( const ProcessorGroup* myworld,
   MPMCommon( myworld, materialManager )
 {
   flags = scinew MPMFlags(myworld);
-  d_lb = scinew DOUBLEMPMLabel();
+  double_lb = scinew DOUBLEMPMLabel();
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
@@ -114,7 +114,7 @@ DOUBLEMPM::~DOUBLEMPM()
   delete flags;
   delete contactModel;
   delete thermalContactModel;
-  delete d_lb;
+  delete double_lb;
 
   MPMPhysicalBCFactory::clean();
 
@@ -2967,7 +2967,7 @@ void DOUBLEMPM::computeParticleGradients(const ProcessorGroup*,
 					pFNew[idx] = F;
 				}
 				else {
-					Matrix3 Amat = F * delT;
+					Matrix3 Amat = tensorL * delT;
 					Matrix3 Finc = Amat.Exponential(abs(flags->d_min_subcycles_for_F));
 					pFNew[idx] = Finc * pFOld[idx];
 				}

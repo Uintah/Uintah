@@ -146,6 +146,10 @@ WARNING
    double getSpecificHeat() const;
    double getThermalConductivity() const;
 
+   // For DOUBLEMPM
+   double getInitialPorosity() const;
+   double getInitialPermeability() const;
+
    int nullGeomObject() const;
 
 
@@ -192,6 +196,10 @@ WARNING
 
    // for implicit rigid body contact
    bool d_is_rigid;
+
+   // for DOUBLEMPM
+   double d_Porosity;
+   double d_Permeability;
 
    // for autocycleflux boundary condtions
    bool d_do_conc_reduction;

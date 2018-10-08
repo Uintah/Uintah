@@ -36,6 +36,7 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/DOUBLEMPMLabel.h>
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <Core/Geometry/Vector.h>
@@ -139,6 +140,7 @@ public:
     Fracture
   };
 
+  DOUBLEMPMLabel* double_lb{ nullptr };
 
 protected:
 MaterialSubset* d_one_matl;         // matlsubset for zone of influence
