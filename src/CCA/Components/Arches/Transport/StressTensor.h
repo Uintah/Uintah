@@ -70,6 +70,7 @@ private:
     std::string m_t_vis_name;
     std::vector<std::string> m_sigma_t_names;
     int Nghost_cells;
+    std::string m_eps_name;
 
 
 protected:

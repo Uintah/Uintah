@@ -34,7 +34,7 @@ void StressTensor::problemSetup( ProblemSpecP& db ){
   /* It is going to use central scheme as default   */
   diff_scheme = "central";
   Nghost_cells = 1;
-
+  m_eps_name = "volFraction";
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -80,6 +80,7 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
   register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
   register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
   register_variable( m_t_vis_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry, time_substep);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -89,6 +90,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
   constSFCZVariable<double>& wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
   constCCVariable<double>&     D  = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_t_vis_name);
+  constCCVariable<double>&   eps  = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
 
   CCVariable<double>& sigma11 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[0]);
   CCVariable<double>& sigma12 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[1]);
@@ -112,6 +114,10 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   GET_WALL_BUFFERED_PATCH_RANGE(low, high,0,1,0,1,0,1);  
   Uintah::BlockRange x_range(low, high);
+
+  const int xdir[3] = {1,0,0};
+  const int ydir[3] = {0,1,0};
+  const int zdir[3] = {0,0,1};
 
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
@@ -147,13 +153,20 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     VelocityDerivative_central(dudx,dudy,dudz,uVel,Dx,i,j,k);
     VelocityDerivative_central(dvdx,dvdy,dvdz,vVel,Dx,i,j,k);
     VelocityDerivative_central(dwdx,dwdy,dwdz,wVel,Dx,i,j,k);
+    
+    const double afc11 = get_eps(eps, i, j, k, xdir, xdir);
+    const double afc22 = get_eps(eps, i, j, k, ydir, ydir);
+    const double afc33 = get_eps(eps, i, j, k, zdir, zdir);
+    const double afc12 = get_eps(eps, i, j, k, xdir, ydir);
+    const double afc13 = get_eps(eps, i, j, k, xdir, zdir);
+    const double afc23 = get_eps(eps, i, j, k, ydir, zdir);
 
-    sigma11(i,j,k) =  mu11 * 2.0*dudx;
-    sigma12(i,j,k) =  mu12 * (dudy + dvdx );
-    sigma13(i,j,k) =  mu13 * (dudz + dwdx );
-    sigma22(i,j,k) =  mu22 * 2.0*dvdy;
-    sigma23(i,j,k) =  mu23 * (dvdz + dwdy );
-    sigma33(i,j,k) =  mu33 * 2.0*dwdz;
+    sigma11(i,j,k) = afc11 * mu11 * 2.0*dudx;
+    sigma12(i,j,k) = afc12 * mu12 * (dudy + dvdx );
+    sigma13(i,j,k) = afc13 * mu13 * (dudz + dwdx );
+    sigma22(i,j,k) = afc22 * mu22 * 2.0*dvdy;
+    sigma23(i,j,k) = afc23 * mu23 * (dvdz + dwdy );
+    sigma33(i,j,k) = afc33 * mu33 * 2.0*dwdz;
 
   });
 }

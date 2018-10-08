@@ -459,7 +459,7 @@ namespace Uintah{ namespace ArchesCore{
     const int j3 = j - idir[1] - vdir[1];
     const int k3 = k - idir[2] - vdir[2];
 
-    return floor( 0.25 * ( eps(i,j,k) + eps(i1,j1,k1) + eps(i2,j2,k2) + eps(i3,j3,k3) ) + 1e-8 );
+    return eps(i,j,k)*eps(i1,j1,k1)*eps(i2,j2,k2)*eps(i3,j3,k3);
 
    }
 
