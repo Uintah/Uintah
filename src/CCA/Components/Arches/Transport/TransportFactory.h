@@ -29,6 +29,8 @@ namespace Uintah{
         return _scalar_update;
       } else if ( subset == "scalar_ssp" ){
         return _scalar_ssp;
+      } else if ( subset == "momentum_stress_tensor" ){
+        return _momentum_stress_tensor;
       } else if ( subset == "mom_rhs_builders"){
         return _momentum_builders;
       } else if ( subset == "momentum_fe_update" ){
@@ -65,6 +67,7 @@ namespace Uintah{
 
   private:
 
+    std::vector<std::string> _momentum_stress_tensor;
     std::vector<std::string> _scalar_up;
     std::vector<std::string> _rk_time_ave;
     std::vector<std::string> _scalar_builders;

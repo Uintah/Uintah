@@ -172,7 +172,8 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* stress_tsk = scinew StressTensor::Builder( stress_name, 0 );
     register_task(stress_name, stress_tsk);
     _momentum_builders.push_back( stress_name );
-    _momentum_solve.push_back( stress_name );
+    //_momentum_solve.push_back( stress_name );
+    _momentum_stress_tensor.push_back( stress_name );
 
     // X-mom
     std::string update_task_name = "x-mom-update";

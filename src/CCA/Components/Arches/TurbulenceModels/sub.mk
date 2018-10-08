@@ -40,6 +40,7 @@ SRCS += \
 				$(SRCDIR)/FractalUD.cc \
 				$(SRCDIR)/MultifractalSGS.cc \
 				$(SRCDIR)/SGSforTransport.cc \
+				$(SRCDIR)/WallConstSmag.cc \
 				$(SRCDIR)/TurbulenceModelFactory.cc
 
 ########################################################################

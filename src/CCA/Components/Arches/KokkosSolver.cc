@@ -929,8 +929,17 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
 
 
     // ** MOMENTUM **
+
+    i_transport->second->schedule_task_group( "momentum_stress_tensor", TaskInterface::TIMESTEP_EVAL,
+      packed_info.global, level, sched, matls, time_substep );
+
+    // compute wall momentum closure
+    i_turb_model_fac->second->schedule_task_group("wall_momentum_closure",
+      TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
+
     i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::TIMESTEP_EVAL,
       packed_info.global, level, sched, matls, time_substep );
+
 
     i_transport->second->schedule_task_group( "momentum_fe_update", TaskInterface::TIMESTEP_EVAL,
       packed_info.global, level, sched, matls, time_substep );

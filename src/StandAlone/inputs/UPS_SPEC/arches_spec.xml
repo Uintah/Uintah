@@ -81,17 +81,20 @@
                                         attribute2="type REQUIRED STRING 'sigma, 
                                                                           wale, 
                                                                           constant_smagorinsky,
+                                                                          wall_constant_smagorinsky,
                                                                           dynamic_smagorinsky, 
                                                                           multifractal'">
 
            <Cs                          spec="OPTIONAL DOUBLE"
-                                        need_applies_to="type sigma, wale, constant_smagorinsky, multifractal"/> <!-- default for sigma is 1.35
-                                                                                                        default for wale is 0.5 -->
+                                        need_applies_to="type sigma, wale, wall_constant_smagorinsky,constant_smagorinsky, multifractal"/> <!-- default for sigma is 1.35
+                                                                                                        default for wale is 0.5 default for wall_constant_smagorinsky is 0.17-->
          <filter                        spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'three_points, simpson, box'"
                                         need_applies_to="type dynamic_smagorinsky" />
          <epsilon                       spec="OPTIONAL DOUBLE"
                                          need_applies_to="type dynamic_smagorinsky"/>
+         <standoff                       spec="OPTIONAL INTEGER"
+                                         need_applies_to="type wall_constant_smagorinsky"/>
          </model>
       </TurbulenceModels>
 
