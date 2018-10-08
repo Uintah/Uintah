@@ -435,7 +435,7 @@ KokkosSolver::sched_initialize( const LevelP& level,
   m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
   //Need to apply BC's after everything is initialized
-  m_task_factory_map["transport_factory"]->schedule_task_group( "momentum_construction", TaskInterface::BC, pack_tasks, level, sched, matls );
+  m_task_factory_map["transport_factory"]->schedule_task_group( "momentum_construction", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
 
   m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
 

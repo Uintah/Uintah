@@ -284,10 +284,13 @@ void BCFunctors<T>::build_bcs( ProblemSpecP db_bc, const std::vector<std::string
            std::string vel_name = "uVel";
            if (varname == "x-mom"){
              vel_name = "uVel";
+             //vel_name = "x-mom";
            } else if (varname == "y-mom") {
              vel_name = "vVel";
+             //vel_name = "y-mom";
            } else if  (varname == "z-mom") {
              vel_name = "wVel";
+             //vel_name = "z-mom";
            } else {
              throw InvalidValue("Error: can not find velocity name "+type, __FILE__, __LINE__);
            } 
@@ -382,7 +385,7 @@ protected:
 
       bool found_match = false;
       for ( auto imaster = master_list.begin(); imaster != master_list.end(); imaster++ ){
-        if ( (*ilocal).variable_name == (*imaster).variable_name ){
+        if ( ((*ilocal).variable_name == (*imaster).variable_name) && ((*ilocal).dw == (*imaster).dw) ){
           found_match = true;
         }
       }
@@ -848,19 +851,21 @@ struct BCFunctors<T>::PressureOutletBC : BaseFunctor {
 public:
 
   PressureOutletBC( std::string vel_name, double value ):m_vel_name(vel_name), m_vel_value(value){
-    BaseFunctor::m_dep.push_back( m_vel_name );
   }
   ~PressureOutletBC(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){}
+  void add_dep( FunctorDepList& master_dep ){
+    // Now adding dependencies to the master list.
+    // This checks for repeats to ensure a variable isn't added twice.
+    DepBCInfo vel_info; vel_info.variable_name = m_vel_name;
+    //vel_info.dw = ArchesFieldContainer::LATEST; 
+    BaseFunctor::m_dep.push_back( vel_info );
+    BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
+
+  }
 
   void add_mod( std::vector<std::string>& master_mod ){}
   
-  //void add_dep_old( std::vector<std::string>& master_dep_old ){
-  // Now adding dependencies to the master list that are from old DW.
-  // This checks for repeats to ensure a variable isn't added twice.
-  //BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep_old );
-  //}
 
 template <typename ES, typename MS>
   void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
@@ -870,8 +875,8 @@ template <typename ES, typename MS>
     typedef typename VariableHelper<T>::ConstType CT;
     T& var = *( tsk_info->get_uintah_field<T>(var_name));
 
-    //constCCVariable<double>& old_var =
-    //tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_vel_name);
+    constCCVariable<double>& old_var =
+    tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_vel_name);
 
     const double possmall = 1e-16;
     const IntVector iDir = patch->faceDirection( bnd->face );
@@ -908,8 +913,8 @@ template <typename ES, typename MS>
         int jpp = j_f + iDir[1];
         int kpp = k_f + iDir[2];
   
-        //if ( sign * old_var(i_f,j_f,k_f) > possmall ){
-        if ( sign * var(i_f,j_f,k_f) > possmall ){
+        if ( sign * old_var(i_f,j_f,k_f) > possmall ){
+        //if ( sign * var(i_f,j_f,k_f) > possmall ){
           // du/dx = 0
           var(i_f,j_f,k_f)= var(im,jm,km);
         } else {
