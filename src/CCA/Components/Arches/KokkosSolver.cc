@@ -984,7 +984,7 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
                                           level, sched, matls, time_substep );
 
     }
-
+    // Get velocities from momemtum: u = x-mom/rho 
     i_prop_fac->second->schedule_task_group("ufromrhou",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 

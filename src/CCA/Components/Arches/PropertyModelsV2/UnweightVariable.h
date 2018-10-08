@@ -449,8 +449,22 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
               un_var(ip,jp,kp) = var(ip,jp,kp)/rho_inter; // BC
               un_var(i,j,k) = un_var(ip,jp,kp); // extra cell
             });
+          } else if ( dot == 1 ){
+            // face (+) in Staggered Variablewe set BC at 0
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              const int ip=i - iDir[0];
+              const int jp=j - iDir[1];
+              const int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
+              un_var(i,j,k) = var(i,j,k)/rho_inter; // extra cell
+              // aditional extra cell for staggered variables on face (+)
+              const int ie = i + iDir[0];
+              const int je = j + iDir[1];
+              const int ke = k + iDir[2];
+              un_var(ie,je,ke) = un_var(i,j,k);  
+            });
           } else {
-         // face (+) in Staggered Variablewe set BC at extra cell
+         // other direction that are not staggered  
             parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               const int ip=i - iDir[0];
               const int jp=j - iDir[1];
