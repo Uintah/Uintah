@@ -824,11 +824,11 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-    // compute momentum closure
+    // momentum closure: LES model 
     i_turb_model_fac->second->schedule_task_group("momentum_closure",
       TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
 
-    // pre-update properties/source tasks)
+    // scalar closure:
     i_prop_fac->second->schedule_task_group( "diffusion_property_models",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
@@ -982,6 +982,10 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
       // Correct velocities
       i_transport->second->schedule_task("pressure_correction", TaskInterface::ATOMIC,
                                           level, sched, matls, time_substep );
+
+    // apply boundary conditions
+     i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::BC, false,
+                                              level, sched, matls, time_substep );
 
     }
     // Get velocities from momemtum: u = x-mom/rho 

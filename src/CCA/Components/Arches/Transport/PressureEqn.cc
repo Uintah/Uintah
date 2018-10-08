@@ -151,6 +151,41 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
     A.p *= -1;
 
    });
+
+  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
+  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+
+    Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
+    IntVector iDir = patch->faceDirection( i_bc->second.face );
+    Patch::FaceType face = i_bc->second.face;
+    BndTypeEnum my_type = i_bc->second.type;
+
+    double sign;
+
+    if ( my_type == OUTLET ||
+         my_type == PRESSURE ){
+      // Dirichlet
+      // P = 0
+      sign = -1.0;
+    } else {
+      // Applies to Inlets, walls where
+      // P satisfies a Neumann condition
+      // dP/dX = 0
+      sign = 1.0;
+    }
+
+    parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+
+      const int im=i- iDir[0];
+      const int jm=j- iDir[1];
+      const int km=k- iDir[2];
+
+      Apress(im,jm,km).p = Apress(im,jm,km).p + sign * Apress(im,jm,km)[face];
+      Apress(im,jm,km)[face] = 0.;
+
+    });
+  }
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -252,39 +287,39 @@ PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
 
-  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
-  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+  //const BndMapT& bc_info = m_bcHelper->get_boundary_information();
+  //for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
-    Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
-    IntVector iDir = patch->faceDirection( i_bc->second.face );
-    Patch::FaceType face = i_bc->second.face;
-    BndTypeEnum my_type = i_bc->second.type;
+  //  Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
+  //  IntVector iDir = patch->faceDirection( i_bc->second.face );
+  //  Patch::FaceType face = i_bc->second.face;
+  //  BndTypeEnum my_type = i_bc->second.type;
 
-    double sign;
+  //  double sign;
 
-    if ( my_type == OUTLET ||
-         my_type == PRESSURE ){
+  //  if ( my_type == OUTLET ||
+  //       my_type == PRESSURE ){
       // Dirichlet
       // P = 0
-      sign = -1.0;
-    } else {
+  //    sign = -1.0;
+  //  } else {
       // Applies to Inlets, walls where
       // P satisfies a Neumann condition
       // dP/dX = 0
-      sign = 1.0;
-    }
+  //    sign = 1.0;
+  //  }
 
-    parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+  //  parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
-      const int im=i- iDir[0];
-      const int jm=j- iDir[1];
-      const int km=k- iDir[2];
+  //    const int im=i- iDir[0];
+  //    const int jm=j- iDir[1];
+  //    const int km=k- iDir[2];
 
-      A(im,jm,km).p = A(im,jm,km).p + sign * A(im,jm,km)[face];
-      A(im,jm,km)[face] = 0.;
+  //    A(im,jm,km).p = A(im,jm,km).p + sign * A(im,jm,km)[face];
+  //    A(im,jm,km)[face] = 0.;
 
-    });
-  }
+   // });
+  //}
 
   //Now take care of intrusions:
   for (CellIterator iter=patch->getCellIterator();
