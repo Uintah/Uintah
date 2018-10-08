@@ -471,11 +471,13 @@ Vector IntrusionBC::getMaxVelocity(){
   double max_mag = 0.;
   for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){
 
-    Vector vel = iIntrusion->second.velocity_inlet_generator->get_max_velocity();
-    double curr_mag = std::sqrt( vel.x()*vel.x() + vel.y()*vel.y() + vel.z()*vel.z() );
+    if ( iIntrusion->second.has_velocity_model ){
+      Vector vel = iIntrusion->second.velocity_inlet_generator->get_max_velocity();
+      double curr_mag = std::sqrt( vel.x()*vel.x() + vel.y()*vel.y() + vel.z()*vel.z() );
 
-    if ( curr_mag > max_mag ){
-      max_vel = vel;
+      if ( curr_mag > max_mag ){
+        max_vel = vel;
+      }
     }
 
   }
