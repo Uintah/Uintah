@@ -226,6 +226,8 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
   Cs.initialize(0.0);
+  mu_sgc.initialize(0.0);
+  mu_turb.initialize(0.0);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   int nG = -1;

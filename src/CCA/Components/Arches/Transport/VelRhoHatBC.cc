@@ -80,9 +80,9 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         int j_f = j + move_to_face[1];
         int k_f = k + move_to_face[2];
 
-        int im = i - iDir[0];// first interior cell
-        int jm = j - iDir[1];
-        int km = k - iDir[2];
+        int im = i_f - iDir[0];// first interior cell
+        int jm = j_f - iDir[1];
+        int km = k_f - iDir[2];
 
         int ipp = i_f + iDir[0];// extra cell face in the last index (mostly outwardly position) 
         int jpp = j_f + iDir[1];

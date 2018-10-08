@@ -464,14 +464,14 @@ template <typename ES, typename MS>
     // CCvariables and CC positions in a staggered variable
 
       const IntVector normIDir = iDir * iDir;
-      const double dx = normIDir == IntVector(1,0,0) ? Dx.x() : normIDir == IntVector(1,0,0) ? Dx.y() : Dx.z() ;
+      const double dx = normIDir == IntVector(1,0,0) ? Dx.x() : normIDir == IntVector(0,1,0) ? Dx.y() : Dx.z() ;
 
       const double spec_value = bnd->find(var_name)->value;
 
       parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-        int im=i - iDir[0];
-        int jm=j - iDir[1];
-        int km=k - iDir[2];
+        int im = i - iDir[0];
+        int jm = j - iDir[1];
+        int km = k - iDir[2];
 
         var(i,j,k) = norm*dx * spec_value + var(im,jm,km);
 
@@ -480,24 +480,24 @@ template <typename ES, typename MS>
 
       // for staggered variables, only going to allow for zero gradient, one-sided for now
       if ( dot == -1 ){
-      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-          int im=i - iDir[0];
-          int jm=j - iDir[1];
-          int km=k - iDir[2];
-          int imm=i - 2*iDir[0];
-          int jmm=j - 2*iDir[1];
-          int kmm=k - 2*iDir[2];
+//      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+//          int im=i - iDir[0];
+//          int jm=j - iDir[1];
+//          int km=k - iDir[2];
+//          int imm=i - 2*iDir[0];
+//          int jmm=j - 2*iDir[1];
+//          int kmm=k - 2*iDir[2];
 
-          var(im,jm,km) = var(imm,jmm,kmm);
-          var(i,j,k) = var(im,jm,km);
-        });
+//          var(im,jm,km) = var(imm,jmm,kmm);
+//          var(i,j,k) = var(im,jm,km);
+//        });
       } else if ( dot == 1 ){
-      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-          int im=i - iDir[0];
-          int jm=j - iDir[1];
-          int km=k - iDir[2];
-          var(i,j,k) = var(im,jm,km);
-        });
+//      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+//          int im=i - iDir[0];
+//          int jm=j - iDir[1];
+//          int km=k - iDir[2];
+//          var(i,j,k) = var(im,jm,km);
+//        });
       }
 
     }
