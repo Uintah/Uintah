@@ -657,7 +657,7 @@
                                                                      VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
                                                                      Swirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
-                              attribute4="type      OPTIONAL STRING 'int, velocity, handoff,MMS_almgren'" 
+                              attribute4="type      OPTIONAL STRING 'int, velocity, handoff,MMS_almgren,PressureOutlet'" 
                               attribute5="value     OPTIONAL STRING" >
                                                                 
           <value            spec="OPTIONAL STRING"/>

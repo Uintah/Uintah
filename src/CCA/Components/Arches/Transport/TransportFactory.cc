@@ -127,14 +127,26 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
 
       } else if ( type == "FX" ){
-        KFEUpdate<SFCXVariable<double> >::Builder* update_tsk =
-        scinew KFEUpdate<SFCXVariable<double> >::Builder( update_task_name, 0 );
-        register_task( update_task_name, update_tsk );
+        //KFEUpdate<SFCXVariable<double> >::Builder* update_tsk =
+        //scinew KFEUpdate<SFCXVariable<double> >::Builder( update_task_name, 0 );
+        //register_task( update_task_name, update_tsk );
 
         //diffusion term:
         TaskInterface::TaskBuilder* diff_tsk =
           scinew Diffusion<SFCXVariable<double> >::Builder( diffusion_task_name, 0 );
         register_task( diffusion_task_name, diff_tsk );
+
+        //split KFEUpate in two task for scalar
+        // rk time average 
+        TaskInterface::TaskBuilder* rk_ta_tsk =
+        scinew TimeAve<SFCXVariable<double> >::Builder( rk_time_ave_task_name, 0 );
+        register_task( rk_time_ave_task_name, rk_ta_tsk );
+
+        // scalar updated 
+        TaskInterface::TaskBuilder* sup_tsk =
+        scinew SUpdate<SFCXVariable<double> >::Builder( scalar_up_task_name, 0 );
+        register_task( scalar_up_task_name, sup_tsk );
+
 
       } else if ( type == "FY" ){
         KFEUpdate<SFCYVariable<double> >::Builder* update_tsk =

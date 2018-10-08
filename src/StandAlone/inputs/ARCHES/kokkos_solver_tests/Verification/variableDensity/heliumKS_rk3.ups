@@ -147,7 +147,8 @@
         <BCType var="Neumann" label="y-mom">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="z-mom">
+        <!--BCType var="Neumann" label="z-mom"-->
+        <BCType var="Custom" type="PressureOutlet" label="z-mom">
           <value>0.</value>
         </BCType>
         <BCType var="Neumann" label="phi">
@@ -156,7 +157,8 @@
       </Face>
       <!--Face side="x-" type="Pressure" name="xm_presion"-->
       <Face side="x-" type="Pressure" >
-        <BCType var="Neumann" label="x-mom">
+        <!--BCType var="Neumann" label="x-mom"-->
+        <BCType var="Custom" type="PressureOutlet" label="x-mom">
           <value>0</value>
         </BCType>
         <BCType var="Neumann" label="y-mom">
@@ -171,7 +173,8 @@
       </Face>
       <!--Face side="x+" type="Pressure" name="xp_presion"-->
       <Face side="x+" type="Pressure" >
-        <BCType var="Neumann" label="x-mom">
+        <!--BCType var="Neumann" label="x-mom"-->
+        <BCType var="Custom" type="PressureOutlet" label="x-mom">
           <value>0</value>
         </BCType>
         <BCType var="Neumann" label="y-mom">
@@ -189,7 +192,8 @@
         <BCType var="Neumann" label="x-mom">
           <value>0</value>
         </BCType>
-        <BCType var="Neumann" label="y-mom">
+        <!--BCType var="Neumann" label="y-mom"-->
+        <BCType var="Custom" type="PressureOutlet" label="y-mom">
           <value>0</value>
         </BCType>
         <BCType var="Neumann" label="z-mom">
@@ -204,7 +208,8 @@
         <BCType var="Neumann" label="x-mom">
           <value>0</value>
         </BCType>
-        <BCType var="Neumann" label="y-mom">
+        <!--BCType var="Neumann" label="y-mom"-->
+        <BCType var="Custom" type="PressureOutlet" label="y-mom">
           <value>0</value>
         </BCType>
         <BCType var="Neumann" label="z-mom">
@@ -314,7 +319,7 @@
         <force_area_calc/>
       </BoundaryConditions>
       <KokkosSolver>
-       <integrator>helium_plume</integrator>
+       <!--integrator>helium_plume</integrator-->
       </KokkosSolver>
     </ARCHES>
   </CFD>

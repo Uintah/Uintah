@@ -579,6 +579,7 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
 
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
+  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
@@ -596,6 +597,10 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
   // ----------------- SSP RK LOOP -----------------------------------------------------------------
 
   for ( int time_substep = 0; time_substep < m_rk_order; time_substep++ ){
+
+    // utility Factory
+    i_util_fac->second->schedule_task_group( "mass_flow_rate",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // pre-update properties/source tasks)
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
@@ -664,13 +669,17 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     //i_transport->second->schedule_task_group("scalar_rhs_builders",
     //  TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
-    // now update them:
-    i_transport->second->schedule_task_group("scalar_fe_update",
+    // update phi
+    i_transport->second->schedule_task_group("scalar_update",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // Compute density star
     i_prop_fac->second->schedule_task( "density_star", TaskInterface::TIMESTEP_EVAL,
       level, sched, matls, time_substep, false, true );
+
+    // now update them:
+//    i_transport->second->schedule_task_group("scalar_fe_update",
+//      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // Compute exact density from rho*phi
     //i_table_fac->second->schedule_task_group("compute_exact_density",
@@ -707,22 +716,61 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_table_fac->second->schedule_task_group("all_tasks",
      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
-    i_prop_fac->second->schedule_task_group("phifromrhophi",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+    if (time_substep > 0) {
+      // time average using rk method
+      i_transport->second->schedule_task_group("rk_time_ave",
+        TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+     }
+     // Compute density rk 
+     i_prop_fac->second->schedule_task( "density_rk", TaskInterface::TIMESTEP_EVAL,
+       level, sched, matls, time_substep, false, true );
+
+     if (time_substep > 0) {
+      // get phi from phi*rho
+      i_prop_fac->second->schedule_task_group("phifromrhophi",
+        TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+      // Scalar BCs
+      i_transport->second->schedule_task_group("scalar_rhs_builders",
+        TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+      // Set BC for rho*phi
+      i_prop_fac->second->schedule_task_group("phifromrhophi",
+        TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+      // ** TABLE LOOKUP **
+      i_table_fac->second->schedule_task_group("all_tasks",
+       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+      i_table_fac->second->schedule_task_group("all_tasks",
+       TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+     }
+ 
+   //i_prop_fac->second->schedule_task_group("phifromrhophi",
+   //   TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // bc factory tasks
     i_bc_fac->second->schedule_task_group("all_tasks",
       TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
       // Scalar BCs
-    i_transport->second->schedule_task_group("scalar_rhs_builders",
-      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+  //  i_transport->second->schedule_task_group("scalar_rhs_builders",
+  //    TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
     // Set BC for rho*phi
-    i_prop_fac->second->schedule_task_group("phifromrhophi",
-      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+ //   i_prop_fac->second->schedule_task_group("phifromrhophi",
+ //     TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
     // ** MOMENTUM **
+
+    i_transport->second->schedule_task_group( "momentum_stress_tensor", TaskInterface::TIMESTEP_EVAL,
+      packed_info.global, level, sched, matls, time_substep );
+
+    // compute wall momentum closure
+    i_turb_model_fac->second->schedule_task_group("wall_momentum_closure",
+      TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
+
     i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::TIMESTEP_EVAL,
       packed_info.global, level, sched, matls, time_substep );
 
@@ -768,12 +816,17 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
       i_transport->second->schedule_task("pressure_correction", TaskInterface::ATOMIC,
                                           level, sched, matls, time_substep );
 
+      // apply boundary conditions
+      i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::BC, false,
+                                               level, sched, matls, time_substep );
+
     }
 
+    // Get velocities from momemtum: u = x-mom/rho 
     i_prop_fac->second->schedule_task_group("ufromrhou",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-   // apply boundary conditions to rho*ui
+    // apply boundary conditions to rho*ui
     i_prop_fac->second->schedule_task_group("ufromrhou",
       TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
@@ -784,11 +837,15 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_prop_fac->second->schedule_task( "continuity_check", TaskInterface::TIMESTEP_EVAL,
       level, sched, matls, time_substep, false, true );
 
+    // compute kinetic energy
+    i_prop_fac->second->schedule_task_group( "post_update_property_models",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
   } // RK Integrator
   //Variable stats stuff
   i_prop_fac->second->schedule_task_group( "variable_stat_models",
     TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, 1 );
+
 }
 //--------------------------------------------------------------------------------------------------
 void
