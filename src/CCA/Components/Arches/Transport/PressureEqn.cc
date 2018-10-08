@@ -512,7 +512,8 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
       tsk->requires(Task::NewDW, ALabel, Ghost::AroundCells, 1);
       tsk->modifies(xLabel);
       if (rk_step==0){
-      tsk->computes(d_residualLabel);
+      tsk->computesWithScratchGhost
+          (d_residualLabel, nullptr, Uintah::Task::NormalDomain,Ghost::AroundCells,cg_ghost);
       }else{
       tsk->modifies(d_residualLabel);
       }
@@ -539,7 +540,8 @@ int final_iter=total_rb_switch-1;
 for (int rb_iter=0; rb_iter < total_rb_switch; rb_iter++){
   auto task_i2 = [&](Task* tsk) {
     if (rk_step==0 && rb_iter==0){
-      tsk->computes(d_smallPLabel);
+        tsk->computesWithScratchGhost
+          (d_smallPLabel, nullptr, Uintah::Task::NormalDomain,Ghost::AroundCells,1);
     }else{
       tsk->modifies(d_smallPLabel);
     }
@@ -548,7 +550,8 @@ for (int rb_iter=0; rb_iter < total_rb_switch; rb_iter++){
       if (rk_step==0 ){
         tsk->computesWithScratchGhost
           (d_bigZLabel, nullptr, Uintah::Task::NormalDomain,Ghost::AroundCells,cg_ghost);
-        tsk->computes(d_littleQLabel);
+        tsk->computesWithScratchGhost
+          (d_littleQLabel, nullptr, Uintah::Task::NormalDomain,Ghost::AroundCells,1);
         tsk->computes(d_resSumLabel[0]);
       }else{
         tsk->modifies(d_smallPLabel);
@@ -800,7 +803,7 @@ PressureEqn::cg_init1(const PatchSubset* patches,
     auto g_v   = new_dw->getConstGridVariable<constCCVariable<double> , double , MemSpace>    (  guess , indx , patch, Ghost::AroundCells, 1 );
     auto b_v   = new_dw->getConstGridVariable<constCCVariable<double> , double , MemSpace>    (  bLabel, indx , patch, Ghost::None, 0 );
     auto x_v   = new_dw->getGridVariable<CCVariable<double> , double , MemSpace>    (  xLabel, indx , patch, Ghost::AroundCells, 1 , getModifiable);
-    auto residual = new_dw->getGridVariable<CCVariable<double> , double , MemSpace>    ( d_residualLabel, indx , patch, Ghost::AroundCells, max(cg_ghost,1) );
+    auto residual = new_dw->getGridVariable<CCVariable<double> , double , MemSpace>    ( d_residualLabel, indx , patch, Ghost::AroundCells, cg_ghost );
 
     auto BJmat=createContainer<CCVariable<double>, double,num_prec_elem, MemSpace>(num_prec_elem); 
     for (unsigned int i=0;i<d_precMLabel.size();i++){
@@ -814,7 +817,6 @@ PressureEqn::cg_init1(const PatchSubset* patches,
 
 
     Uintah::parallel_for(exObj, range,   KOKKOS_LAMBDA (int i, int j, int k){  //compute correction, GHOST CELLS REQUIRED
-
                residual(i,j,k)=b_v(i,j,k)-(A_m(i,j,k)[6]*g_v(i,j,k)+
                                            A_m(i,j,k)[0]*g_v(i-1,j,k)+
                                            A_m(i,j,k)[1]*g_v(i+1,j,k)+
@@ -938,7 +940,7 @@ PressureEqn::cg_init2(const PatchSubset* patches,
     }
   
     if (iter == final_iter){
-    auto littleQ= new_dw->getGridVariable<CCVariable<double>, double, MemSpace> (d_littleQLabel  ,matl,patch,Ghost::None,0);
+    auto littleQ= new_dw->getGridVariable<CCVariable<double>, double, MemSpace> (d_littleQLabel  ,matl,patch,Ghost::AroundCells,1); // computes with scratch ghosts
     auto bigZ= new_dw->getGridVariable<CCVariable<double>, double, MemSpace> (d_bigZLabel  ,matl,patch,Ghost::AroundCells,cg_ghost);
     parallel_initialize(exObj,0.0,bigZ,littleQ);
     }
@@ -1047,7 +1049,6 @@ PressureEqn::cg_task1(const PatchSubset* patches,
 //          correction factor requires a reduction                     //////////
 /////////////////////////////////////////////////////////////////////////////////
   double correction_sum=0.0;
-    int matl = indx ;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
@@ -1107,8 +1108,8 @@ PressureEqn::cg_task2(const PatchSubset* patches,
     sum_vartype correction_sum;
     new_dw->get(correction_sum,d_corrSumLabel[iter]);
 
-    const double correction_factor= (abs(correction_sum) < 1e-100) ? 0.0 :R_squared_old/correction_sum; // ternary may not be needed when we switch to do-while loop
-    int matl = indx ;
+    const double correction_factor= (std::abs(correction_sum) < 1e-100) ? 0.0 :R_squared_old/correction_sum; // ternary may not be needed when we switch to do-while loop
+
     bool getModifiable=true;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1118,15 +1119,6 @@ PressureEqn::cg_task2(const PatchSubset* patches,
     auto x_v   = new_dw->getGridVariable<CCVariable<double> , double , MemSpace>    (  xLabel, indx , patch, Ghost::AroundCells, 1 , getModifiable);
     auto smallP   = new_dw->getConstGridVariable<constCCVariable<double> , double , MemSpace>(d_smallPLabel , indx , patch, Ghost::None, 0 );
     auto littleQ   = new_dw->getConstGridVariable<constCCVariable<double> , double , MemSpace>(d_littleQLabel , indx , patch, Ghost::None, 0 );
-
-    //CCVariable<double> residual;  
-    //new_dw->getModifiable(residual, d_residualLabel,     matl , patch);
-    //constCCVariable<double> smallP;  
-    //new_dw->get(smallP, d_smallPLabel,      matl , patch, Ghost::None, 0);
-    //CCVariable<double> x_v;  
-    //new_dw->getModifiable(x_v, xLabel,      matl , patch);
-    //constCCVariable<double> littleQ;  
-    //new_dw->get(littleQ, d_littleQLabel,      matl , patch, Ghost::None, 0);
 
     Uintah::parallel_for( exObj,range,  KOKKOS_LAMBDA(int i, int j, int k){  //compute correction, GHOST CELLS REQUIRED
                                x_v(i,j,k)=x_v(i,j,k)+correction_factor*smallP(i,j,k);
@@ -1170,11 +1162,13 @@ PressureEqn::cg_task3(const PatchSubset* patches,
           sum=residual(i,j,k)*bigZ(i,j,k); // reduction
        }, R_squared);
 
-     Uintah::parallel_reduce_min(exObj, range,   KOKKOS_LAMBDA (int i, int j, int k, double& min){  //compute correction, GHOST CELLS REQUIRED
-          min=-abs(residual(i,j,k));  // presumably most efficcient to comptue here.......could be computed earlier
+     Uintah::parallel_reduce_min(exObj, range,   KOKKOS_LAMBDA (int i, int j, int k, double& lmin){  //compute correction, GHOST CELLS REQUIRED
+          lmin=-fabs(residual(i,j,k));  // presumably most efficcient to comptue here.......could be computed earlier
        }, max_residual);
           
   }
+
+
   new_dw->put(sum_vartype(R_squared),d_resSumLabel[iter+1]);
   new_dw->put(max_vartype(-max_residual),d_convMaxLabel[iter]);
 
