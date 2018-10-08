@@ -301,9 +301,9 @@ private:
   template <typename T>
   void TimeAve<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    const double dt = tsk_info->get_dt();
-    Vector DX = patch->dCell();
-    const double V = DX.x()*DX.y()*DX.z();
+    //const double dt = tsk_info->get_dt();
+    //Vector DX = patch->dCell();
+    //const double V = DX.x()*DX.y()*DX.z();
 
     typedef std::vector<std::string> SV;
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;

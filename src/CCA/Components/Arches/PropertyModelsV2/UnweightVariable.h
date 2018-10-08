@@ -501,7 +501,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   ArchesCore::VariableHelper<T> helper;
 
-  typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+  //typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>>(m_rho_name);
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];

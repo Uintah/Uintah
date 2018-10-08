@@ -218,9 +218,9 @@ private:
     const double ay = Dx.z() * Dx.x();
     const double az = Dx.x() * Dx.y();
     typedef std::vector<std::string> SV;
-    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+    //typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
-    const int time_substep = tsk_info->get_time_substep();
+    //const int time_substep = tsk_info->get_time_substep();
     int ceqn = 0;
     for ( SV::iterator ieqn = _eqn_names.begin(); ieqn != _eqn_names.end(); ieqn++){
 
