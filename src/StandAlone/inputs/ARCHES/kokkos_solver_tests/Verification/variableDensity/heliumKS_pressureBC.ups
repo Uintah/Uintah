@@ -203,8 +203,8 @@
   </PhysicalConstants>
   <CFD>
     <ARCHES>
-      <TimeIntegrator order="1">
-        <ExplicitIntegrator order="first"/>
+      <TimeIntegrator order="2">
+        <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
       <VarID>
         <var role="uvelocity" label="uVel"/>

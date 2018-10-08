@@ -885,12 +885,17 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
     //i_table_fac->second->schedule_task_group("compute_exact_density",
     //  TaskInterface::BC, m_global_pack_tasks, level, sched, matls, time_substep );
 
+
     // ** TABLE LOOKUP **
     i_table_fac->second->schedule_task_group("all_tasks",
      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     i_table_fac->second->schedule_task_group("all_tasks",
      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+    // Compute density rk 
+    i_prop_fac->second->schedule_task( "density_rk", TaskInterface::TIMESTEP_EVAL,
+      level, sched, matls, time_substep, false, true );
 
     if (time_substep > 0) {
       // time average using rk method
