@@ -57,15 +57,15 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index ) :
-        _task_name(task_name), _matl_index(matl_index) {}
+        m_task_name(task_name), _matl_index(matl_index) {}
       ~Builder(){}
 
       TimeAve* build()
-      { return scinew TimeAve( _task_name, _matl_index ); }
+      { return scinew TimeAve( m_task_name, _matl_index ); }
 
       private:
 
-      std::string _task_name;
+      std::string m_task_name;
       int _matl_index;
 
     };
@@ -270,7 +270,7 @@ private:
 
     //special momentum case
     if ( _eqn_names.size() == 0 ){
-      std::string which_mom = _task_name.substr(0,5);
+      std::string which_mom = m_task_name.substr(0,5);
       _eqn_names.push_back(which_mom);
       m_transported_eqn_names.push_back(which_mom);
     }
@@ -290,7 +290,7 @@ private:
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
       ieqn += 1;
     }
-    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name  );
+    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
 
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
       register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
@@ -376,10 +376,10 @@ private:
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
     const int time_substep , const bool packed_tasks){
 
-    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name  );
+    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
     
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
-      register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
+      register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
       register_variable(ieqn->first, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     }
   }

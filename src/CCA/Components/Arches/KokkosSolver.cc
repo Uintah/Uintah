@@ -820,7 +820,7 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
 
   for ( int time_substep = 0; time_substep < m_rk_order; time_substep++ ){
 
-    // pre-update properties/source tasks)
+    // pre-update properties)
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 

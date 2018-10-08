@@ -57,15 +57,15 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index ) :
-        _task_name(task_name), _matl_index(matl_index) {}
+        m_task_name(task_name), _matl_index(matl_index) {}
       ~Builder(){}
 
       SUpdate* build()
-      { return scinew SUpdate( _task_name, _matl_index ); }
+      { return scinew SUpdate( m_task_name, _matl_index ); }
 
       private:
 
-      std::string _task_name;
+      std::string m_task_name;
       int _matl_index;
 
     };
@@ -178,7 +178,7 @@ private:
 
     //special momentum case
     if ( _eqn_names.size() == 0 ){
-      std::string which_mom = _task_name.substr(0,5);
+      std::string which_mom = m_task_name.substr(0,5);
       _eqn_names.push_back(which_mom);
       m_transported_eqn_names.push_back(which_mom);
     }
