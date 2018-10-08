@@ -1525,11 +1525,12 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     const int zdir=ziter[cdirecn];
     const int ydir=yiter[cdirecn];
     const int xdir=xiter[cdirecn];
+    ExecutionObject<UintahSpaces::CPU,UintahSpaces::HostSpace> exObj;
     int n_thread_partitions =4; // 4 appears to optimium on a 4 core machine.......... meaning 1-22 threads per patch.
     if (_LspectralSolve){
        KokkosView3<const double, Kokkos::HostSpace>    kv_abskg_array =  abskg_array[iband].getKokkosView();
        Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-       Uintah::sweeping_parallel_for< Kokkos::OpenMP >( range,      [=](int i, int j, int k) {
+       Uintah::sweeping_parallel_for(exObj, range,      [&](int i, int j, int k) {
              int km=k-zdir;
              int jm=j-ydir; 
              int im=i-xdir;
@@ -1538,7 +1539,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
            },_plusX[cdirecn] ,_plusY[cdirecn] , _plusZ[cdirecn], n_thread_partitions);
     }else{
        Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-       Uintah::sweeping_parallel_for< Kokkos::OpenMP >( range,      [=](int i, int j, int k) {
+       Uintah::sweeping_parallel_for(exObj, range,      [&](int i, int j, int k) {
              int km=k-zdir;
              int jm=j-ydir; 
              int im=i-xdir;
