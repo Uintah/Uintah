@@ -45,6 +45,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/Endian.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FancyAssert.h>
