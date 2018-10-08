@@ -799,7 +799,7 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
 
   using namespace Uintah::ArchesCore;
 
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
