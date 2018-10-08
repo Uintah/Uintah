@@ -1205,10 +1205,13 @@ IntrusionBC::addMomRHS( const Patch*  patch,
               }
               if ( directions[1] != 0 ){
                 IntVector cp = c + IntVector(1,0,0);
+                // A bit clunky - needs to be rewritten from the perspective of the velocity cell
+                if ( !patch->containsCell(cp) ){
+                  throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
+                }
                 usrc[cp] += area * ( (rho[cp] + i_rho )/2. * u[cp]
                                    + i_rho * i_vel[v_indx] )/2.*(u[cp]+i_vel[v_indx])/2.;
               }
-
 
             }
 
@@ -1227,6 +1230,10 @@ IntrusionBC::addMomRHS( const Patch*  patch,
               }
               if ( directions[3] != 0 ){
                 IntVector cp = c + IntVector(0,1,0);
+                // A bit clunky - needs to be rewritten from the perspective of the velocity cell
+                if ( !patch->containsCell(cp) ){
+                  throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
+                }
                 vsrc[cp] += area * ( (rho[cp] + i_rho )/2. * v[cp]
                                    + i_rho * i_vel[v_indx] )/2.*(v[cp]+i_vel[v_indx])/2.;
               }
@@ -1247,6 +1254,10 @@ IntrusionBC::addMomRHS( const Patch*  patch,
               }
               if ( directions[5] != 0 ){
                 IntVector cp = c + IntVector(0,0,1);
+                // A bit clunky - needs to be rewritten from the perspective of the velocity cell
+                if ( !patch->containsCell(cp) ){
+                  throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
+                }
                 wsrc[cp] += area * ( (rho[cp] + i_rho )/2. * w[cp]
                                    + i_rho * i_vel[v_indx] )/2.*(w[cp]+i_vel[v_indx])/2.;
               }

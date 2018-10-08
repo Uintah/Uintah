@@ -3124,6 +3124,8 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_volFractionLabel,   gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+
 
   //__________________________________
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
@@ -3192,6 +3194,11 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
     constCCVariable<int> cellType;
+
+    PerPatch<CellInformationP> cellInfoP;
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values){
@@ -3264,11 +3271,11 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 
           densityGuess[c] -= delta_t * 0.5* (
           ((density[c]+density[cxp])*uVelocity[cxp]*epsE -
-           (density[c]+density[cxm])*uVelocity[c]*epsW) / Dx.x() +
+           (density[c]+density[cxm])*uVelocity[c]*epsW) / cellinfo->sew[c.x()] +
           ((density[c]+density[cyp])*vVelocity[cyp]*epsN -
-           (density[c]+density[cym])*vVelocity[c]*epsS) / Dx.y() +
+           (density[c]+density[cym])*vVelocity[c]*epsS) / cellinfo->sns[c.y()] +
           ((density[c]+density[czp])*wVelocity[czp]*epsT -
-           (density[c]+density[czm])*wVelocity[c]*epsB) / Dx.z());
+           (density[c]+density[czm])*wVelocity[c]*epsB) / cellinfo->stb[c.z()]);
 
           for ( std::vector<constCCVariable<double> >::iterator viter = src_values.begin();
             viter != src_values.end(); viter++ ){
@@ -3306,13 +3313,13 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
           double epsT = volFraction[c]*volFraction[czp] < 1. ? 0 : 1;
           double epsB = volFraction[c]*volFraction[czm] < 1. ? 0 : 1;
 
-          densityGuess[c] -= delta_t * 0.5* volFraction[c] * (
-                            ((density[c]+density[cxp])*uVelocity[cxp]*epsE -
-                             (density[c]+density[cxm])*uVelocity[c]*epsW) / Dx.x() +
-                            ((density[c]+density[cyp])*vVelocity[cyp]*epsN -
-                             (density[c]+density[cym])*vVelocity[c]*epsS) / Dx.y() +
-                            ((density[c]+density[czp])*wVelocity[czp]*epsT -
-                             (density[c]+density[czm])*wVelocity[c]*epsB) / Dx.z());
+          densityGuess[c] -= delta_t * 0.5* (
+          ((density[c]+density[cxp])*uVelocity[cxp]*epsE -
+           (density[c]+density[cxm])*uVelocity[c]*epsW) / cellinfo->sew[c.x()] +
+          ((density[c]+density[cyp])*vVelocity[cyp]*epsN -
+           (density[c]+density[cym])*vVelocity[c]*epsS) / cellinfo->sns[c.y()] +
+          ((density[c]+density[czp])*wVelocity[czp]*epsT -
+           (density[c]+density[czm])*wVelocity[c]*epsB) / cellinfo->stb[c.z()]);
 
           if (densityGuess[c] < 0.0 && d_noisyDensityGuess) {
             cout << "Negative density guess occured at " << c
@@ -3326,25 +3333,28 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
       }
 
       // For intrusion inlets:
-      CCVariable<double> mass_src;
-      new_dw->allocateTemporary(mass_src, patch);
-      mass_src.initialize(0.0);
-      d_boundaryCondition->addIntrusionMassRHS(patch, mass_src);
-      double vol = Dx.x() * Dx.y() * Dx.z();
+      if ( d_boundaryCondition->is_using_new_intrusion() ){
+        
+        CCVariable<double> mass_src;
+        new_dw->allocateTemporary(mass_src, patch);
+        mass_src.initialize(0.0);
+        d_boundaryCondition->addIntrusionMassRHS(patch, mass_src);
+        double vol = Dx.x() * Dx.y() * Dx.z();
 
-      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 
-        IntVector c = *iter;
-        densityGuess[c] += delta_t / vol * mass_src[c] * volFraction[c];
+          IntVector c = *iter;
+          densityGuess[c] += delta_t / vol * mass_src[c] * volFraction[c];
 
-        if (densityGuess[c] < 0.0 && d_noisyDensityGuess) {
-          cout << "Negative density guess occured at " << c
-            << " with a value of " << densityGuess[c] << endl;
-          negativeDensityGuess = 1.0;
-        } else if (densityGuess[c] < 0.0 && !(d_noisyDensityGuess) && cellType[c] == -1 ) {
-          negativeDensityGuess = 1.0;
+          if (densityGuess[c] < 0.0 && d_noisyDensityGuess) {
+            cout << "Negative density guess occured at " << c
+              << " with a value of " << densityGuess[c] << endl;
+            negativeDensityGuess = 1.0;
+          } else if (densityGuess[c] < 0.0 && !(d_noisyDensityGuess) && cellType[c] == -1 ) {
+            negativeDensityGuess = 1.0;
+          }
+
         }
-
       }
       //-------------------
 
