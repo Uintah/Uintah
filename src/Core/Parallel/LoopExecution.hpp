@@ -876,12 +876,38 @@ parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
   }}}
 }
 
+template <typename ExecutionSpace, typename MemorySpace, typename Functor>
+inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU >::value, void>::type
+sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
+{
+
+    const int   idir= plusX ? 1 : -1; 
+    const int   jdir= plusY ? 1 : -1; 
+    const int   kdir= plusZ ? 1 : -1; 
+
+    const int start_x= plusX ? r.begin(0) : r.end(0)-1;
+    const int start_y= plusY ? r.begin(1) : r.end(1)-1;
+    const int start_z= plusZ ? r.begin(2) : r.end(2)-1;
+
+    const int end_x= plusX ? r.end(0) : -r.begin(0)+1; 
+    const int end_y= plusY ? r.end(1) : -r.begin(1)+1;
+    const int end_z= plusZ ? r.end(2) : -r.begin(2)+1; 
+
+    for (int k=start_z; k*kdir<end_z; k=k+kdir) {
+      for (int j=start_y; j*jdir<end_y; j=j+jdir) {
+        for (int i=start_x ; i*idir<end_x; i=i+idir) {
+          functor(i,j,k);
+        }}}
+
+}
+
+
 
 // -------------------------------------  sweeping_parallel_for loops  ---------------------------------------------
 #if defined(UINTAH_ENABLE_KOKKOS)
-template <typename ExecutionSpace, typename Functor>
+template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-sweeping_parallel_for( BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
+sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -976,6 +1002,17 @@ sweeping_parallel_for( BlockRange const & r, const Functor & functor, const bool
   }
 }
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA)
+template <typename ExecutionSpace, typename MemorySpace, typename Functor>
+inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
+sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
+{
+
+    SCI_THROW(InternalError("Error: sweeps on cuda has not been implimented .", __FILE__, __LINE__));
+}
+#endif
+#endif
 
 // Allows the user to specify a vector (or view) of indices that require an operation,
 // often needed for boundary conditions and possibly structured grids
