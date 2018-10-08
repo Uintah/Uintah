@@ -228,6 +228,36 @@ DataArchive::queryEndiannessAndBits(  FILE * doc, string & endianness, int & num
     }
   }
 }
+
+//______________________________________________________________________
+//
+void
+DataArchive::queryProcessors( unsigned int & nProcs )
+{
+  rewind( d_indexFile ); // Start looking from the top of the file.
+
+  bool found = ProblemSpec::findBlock( "<Uintah_DataArchive>", d_indexFile );
+
+  if( !found ) {
+    throw InternalError( "DataArchive::queryProcessors 'Uintah_DataArchive' node not found in index.xml", __FILE__, __LINE__ );
+  }
+  
+  while( true ) {
+    
+    string line = UintahXML::getLine( d_indexFile );
+    if( line == "" || line == "</Uintah_DataArchive>" ) {
+      return;
+    }
+    else {
+      vector<string> pieces = UintahXML::splitXMLtag( line );
+      if( pieces[0] == "<numberOfProcessors>" ) {
+        nProcs = atoi( pieces[1].c_str() );
+        return;
+      }
+    }
+  }
+}
+
 //______________________________________________________________________
 //
 void

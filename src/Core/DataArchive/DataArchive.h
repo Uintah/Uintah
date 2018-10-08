@@ -161,6 +161,8 @@ public:
   void queryTimesteps( std::vector<int>                      & index,
                        std::vector<double>                   & times );
 
+  void queryProcessors( unsigned int & nProcs );
+
   //! The ups is for the assignBCS that needs to happen if we are reading the simulation grid from the uda,
   //! and thus is only necessary on a true restart.
   GridP queryGrid( int index, const ProblemSpecP & ups = nullptr, bool assignBCs = true );
