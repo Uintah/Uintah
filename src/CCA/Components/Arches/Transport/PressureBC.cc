@@ -54,7 +54,6 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     } else if ( my_type == OUTLET || my_type == PRESSURE ) {
 
       //enforce p = 0
-      //const double sign = -(iDir[0]+iDir[1]+iDir[2]);
       parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
         p(i,j,k) = -p(i-iDir[0],j-iDir[1],k-iDir[2]);
       });
