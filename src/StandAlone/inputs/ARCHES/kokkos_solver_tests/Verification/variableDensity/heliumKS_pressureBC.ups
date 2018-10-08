@@ -72,7 +72,7 @@
         <upper>       [4,4,3]   </upper>
 	<resolution>  [40,40,30]</resolution>
         <extraCells>  [1,1,1]   </extraCells>
-	<patches>     [1,1,1]   </patches>
+	<patches>     [2,2,2]   </patches>
       </Box>
     </Level>
     <BoundaryConditions>
