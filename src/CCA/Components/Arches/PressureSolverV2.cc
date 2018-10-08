@@ -95,14 +95,14 @@ void
 PressureSolver::problemSetup(ProblemSpecP& params,MaterialManagerP& materialManager)
 {
   //do_custom_arches_linear_solve=true; //  Don't use hypre, use proto-type solver
-  
+
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();
   db->getWithDefault("normalize_pressure",      d_norm_press, false);
   db->getWithDefault("do_only_last_projection", d_do_only_last_projection, false);
 
   // make source and boundary_condition objects
-  d_source = scinew Source(d_physicalConsts);
+  d_source = scinew Source(d_physicalConsts, d_boundaryCondition);
 
   if(!do_custom_arches_linear_solve){
     d_hypreSolver->readParameters(db, "pressure" );
@@ -170,8 +170,8 @@ PressureSolver::problemSetup(ProblemSpecP& params,MaterialManagerP& materialMana
 
 //______________________________________________________________________
 //
-void PressureSolver::scheduleInitialize( const LevelP& level, 
-                                         SchedulerP& sched, 
+void PressureSolver::scheduleInitialize( const LevelP& level,
+                                         SchedulerP& sched,
                                          const MaterialSet* matls)
 {
   if(do_custom_arches_linear_solve){
@@ -182,15 +182,15 @@ void PressureSolver::scheduleInitialize( const LevelP& level,
                                                                                              d_lab->d_presCoefPBLMLabel,
                                                                                              d_lab->d_materialManager->allMaterials("Arches")
                                                                                                                        );
-    custom_solver->sched_PreconditionerConstruction( sched, matls, level );// hard coded for level 0 
+    custom_solver->sched_PreconditionerConstruction( sched, matls, level );// hard coded for level 0
   }else{
     d_hypreSolver->scheduleInitialize( level, sched, matls );
   }
 }
 //______________________________________________________________________
 //
-void PressureSolver::scheduleRestartInitialize( const LevelP& level, 
-                                                SchedulerP& sched, 
+void PressureSolver::scheduleRestartInitialize( const LevelP& level,
+                                                SchedulerP& sched,
                                                 const MaterialSet* matls)
 {
   d_hypreSolver->scheduleRestartInitialize( level, sched, matls );
@@ -391,10 +391,12 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
                                           &vars,
-                                          &constVars);
+                                          &constVars,
+                                          new_dw );
+
     Vector Dx = patch->dCell();
     double volume = Dx.x()*Dx.y()*Dx.z();
-    
+
     // Add other source terms to the pressure:
     for ( auto iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
 
@@ -618,7 +620,7 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
                                      A,      Task::NewDW,
                                      x,      Task::NewDW,
                                      b,      Task::NewDW,
-                                     guess,  Task::NewDW, rk_stage ,level); 
+                                     guess,  Task::NewDW, rk_stage ,level);
   }else{
     if ( isPeriodic || d_enforceSolvability ) {
       d_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, rk_stage);

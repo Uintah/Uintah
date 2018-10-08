@@ -320,7 +320,7 @@ private:
       //   phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
       //
       //}
-      
+
       phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
 
     }
