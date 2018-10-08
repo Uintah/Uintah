@@ -820,6 +820,9 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
 
   for ( int time_substep = 0; time_substep < m_rk_order; time_substep++ ){
 
+    // utilityFactory
+    i_util_fac->second->schedule_task_group( "mass_flow_rate",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
     // pre-update properties)
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
