@@ -49,6 +49,7 @@ SRCS += \
         $(SRCDIR)/sootVolumeFrac.cc         \
         $(SRCDIR)/ConsScalarDiffusion.cc         \
         $(SRCDIR)/spectralProperties.cc     \
+        $(SRCDIR)/GasKineticEnergy.cc     \
         $(SRCDIR)/sumRadiation.cc
 
 ########################################################################

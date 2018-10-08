@@ -279,10 +279,18 @@ void BCFunctors<T>::build_bcs( ProblemSpecP db_bc, const std::vector<std::string
 
            insert_functor( face_name, varname, fun );
 
-         } else if ( custom_type == "pressure" ){
+         } else if ( custom_type == "PressureOutlet" ){
            // HARD CODED! - fix me 
            std::string vel_name = "uVel";
-
+           if (varname == "x-mom"){
+             vel_name = "uVel";
+           } else if (varname == "y-mom") {
+             vel_name = "vVel";
+           } else if  (varname == "z-mom") {
+             vel_name = "wVel";
+           } else {
+             throw InvalidValue("Error: can not find velocity name "+type, __FILE__, __LINE__);
+           } 
            double vel_value=0.0;
            db_bc_type->require("value", vel_value);
 
@@ -351,6 +359,8 @@ public:
     }else if (BCFunctors<T>::SecondaryVariableBC*   child   = dynamic_cast<BCFunctors<T>::SecondaryVariableBC* >(this)){
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
     }else if (BCFunctors<T>::VelocityBC*            child   = dynamic_cast<BCFunctors<T>::VelocityBC*          >(this)){
+      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+    }else if (BCFunctors<T>::PressureOutletBC*      child   = dynamic_cast<BCFunctors<T>::PressureOutletBC*          >(this)){
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
     }else if (BCFunctors<T>::SubGridInjector*       chile   = dynamic_cast<BCFunctors<T>::SubGridInjector*     >(this)){
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
@@ -842,15 +852,15 @@ public:
   }
   ~PressureOutletBC(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){
-
-    // Now adding dependencies to the master list.
-    // This checks for repeats to ensure a variable isn't added twice.
-    BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
-
-  }
+  void add_dep( std::vector<std::string>& master_dep ){}
 
   void add_mod( std::vector<std::string>& master_mod ){}
+  
+  //void add_dep_old( std::vector<std::string>& master_dep_old ){
+  // Now adding dependencies to the master list that are from old DW.
+  // This checks for repeats to ensure a variable isn't added twice.
+  //BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep_old );
+  //}
 
 template <typename ES, typename MS>
   void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
@@ -859,8 +869,9 @@ template <typename ES, typename MS>
 
     typedef typename VariableHelper<T>::ConstType CT;
     T& var = *( tsk_info->get_uintah_field<T>(var_name));
-    constCCVariable<double>& old_var =
-      *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_vel_name));
+
+    //constCCVariable<double>& old_var =
+    //tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_vel_name);
 
     const double possmall = 1e-16;
     const IntVector iDir = patch->faceDirection( bnd->face );
@@ -897,7 +908,8 @@ template <typename ES, typename MS>
         int jpp = j_f + iDir[1];
         int kpp = k_f + iDir[2];
   
-        if ( sign * old_var(i_f,j_f,k_f) > possmall ){
+        //if ( sign * old_var(i_f,j_f,k_f) > possmall ){
+        if ( sign * var(i_f,j_f,k_f) > possmall ){
           // du/dx = 0
           var(i_f,j_f,k_f)= var(im,jm,km);
         } else {

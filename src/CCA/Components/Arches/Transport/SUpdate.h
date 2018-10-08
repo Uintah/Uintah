@@ -195,7 +195,7 @@ private:
     int ieqn =0;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+      //register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
       std::string rhs_name = m_transported_eqn_names[ieqn] + "_RHS";
       register_variable( rhs_name, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
       register_variable( *i+"_x_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
@@ -226,7 +226,7 @@ private:
 
       T& phi = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]);
       T& rhs = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]+"_RHS");
-      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
+      //CT& old_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
       ceqn +=1;
       CFXT& x_flux = tsk_info->get_const_uintah_field_add<CFXT>(*ieqn+"_x_flux");
       CFYT& y_flux = tsk_info->get_const_uintah_field_add<CFYT>(*ieqn+"_y_flux");
