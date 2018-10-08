@@ -474,15 +474,11 @@ void UnweightVariable<T>::register_timestep_eval(
   const int istart = 0;
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
-    register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-    register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry );
+    register_variable( m_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry );
   }
   register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
-  // clipping   
-  for ( auto ieqn = m_clipping_info.begin(); ieqn != m_clipping_info.end(); ieqn++ ){
-    register_variable( ieqn->first, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -507,7 +503,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
     T& un_var = tsk_info->get_uintah_field_add<T>(m_un_eqn_names[ieqn]);
-    CT& var = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
+    T& var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
     Uintah::parallel_for( range, [&](int i, int j, int k){
       const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
       un_var(i,j,k) = var(i,j,k)/rho_inter;
