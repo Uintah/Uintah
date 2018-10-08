@@ -85,12 +85,8 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw)
 {
-  int numMatls = d_sharedState->getNumMPMMatls();
-  ASSERTEQ(numMatls, matls->size());
-
-//  cout << "phase = " << d_phase << endl;
-//  cout << "temperature = " << d_temperature << endl;
-//  cout << "timeConversionFactor = " << d_timeConversionFactor << endl;
+   int numMatls = d_sharedState->getNumMPMMatls();
+   ASSERTEQ(numMatls, matls->size());
 
   if(d_phase=="hold"){
    for(int p=0;p<patches->size();p++){
@@ -127,7 +123,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
         masterMatls[m]=false;
       }
 
-      if(mat->getModalID()==d_inContactWithModalID){
+      if(mat->getModalID()==d_inContactWithModalID) {
         inContactWithMatls[m]=true;
       } else{
         inContactWithMatls[m]=false;
@@ -140,27 +136,40 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
 
       double rate = (0.75*M_PI)
                   * ((d_Vm*d_Vm)*d_Ao)/(d_R*d_temperature)
-                  * exp(-d_Ea/(d_R*d_temperature));
-//      cout << "rate = " << rate << endl;
+                  * exp(-d_Ea/(d_R*d_temperature))
+                  * 2.0*3.1536e19*d_timeConversionFactor*area;
+//      cout << "rateD = " << rate << endl;
+      int numNodesMBRGT0 = 0;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
         double sumMass=0.0;
+        int inContactMatl=-999;
         for(int n = 0; n < numMatls; n++){
           if(n==md || inContactWithMatls[n]) {
             sumMass+=gmass[n][c]; 
+          }
+          if(inContactWithMatls[n]) {
+            inContactMatl = n;
           }
         }
 
         if(gmass[md][c] >  1.e-100  &&
            gmass[md][c] != sumMass  && 
-          -gnormtrac[md][c] > d_StressThresh){ // Compressive stress is negative
+          (-gnormtrac[md][c] > d_StressThresh || // Compressive stress is neg
+           -gnormtrac[inContactMatl][c] > d_StressThresh)){
             double rho = gmass[md][c]/gvolume[md][c];
-            double stressDiff = (-gnormtrac[md][c]-d_StressThresh);
-            massBurnRate[md][c] += 2.*NC_CCweight[c]*rate*stressDiff*area*rho
-                                  *3.1536e19*d_timeConversionFactor;
+            double stressDiff = std::max(
+                                 (-gnormtrac[md][c]-d_StressThresh),
+                                 (-gnormtrac[inContactMatl][c]-d_StressThresh));
+//	    cout << "stressDiff = " << stressDiff << endl;
+            massBurnRate[md][c] += NC_CCweight[c]*rate*stressDiff*rho;
+//          cout << "mBR["<<md<<"]["<<c<<"] = " << massBurnRate[md][c] << endl;
+//          cout << "NC_CCweight["<<c<<"] = " << NC_CCweight[c] << endl;
+            numNodesMBRGT0++;
         }
       } // nodes
+//      cout << "numNodesMBRGT0=" << numNodesMBRGT0 << endl;
      } // endif a masterMaterial
     } // materials
   } // patches

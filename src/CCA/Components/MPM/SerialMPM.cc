@@ -3819,9 +3819,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //              double b = -(L2l+L1l*dL2overdL1);
 //              double c = deltaMassFrac*(L1l*L2l);
 //              double dL1 = (-b - sqrt(b*b-4.*a*c))/(2.*a);
-              double dL1 = deltaMassFrac*(L1l*L2l)/(L2l+L1l*dL2overdL1);
+              // 2D version
+              //double dL1 = deltaMassFrac*(L1l*L2l)/(L2l+L1l*dL2overdL1);
+
+              double dL1 = deltaMassFrac*(L1l*L2l*L3l)/
+                           (L2l*L3l + dL2overdL1*L1l*L3l + dL3overdL1*L1l*L2l);
               double dL2 = dL2overdL1*dL1;
-              double dL3 = 0.0;
+              double dL3 = dL3overdL1*dL1;
               L1*=(L1l-dL1);
               L2*=(L2l-dL2);
               L3*=(L3l-dL3);
@@ -3843,7 +3847,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //                                            dL3*dz*pSN.z());
 //              cout << "deltaPos = " << deltaPos << endl;
 //              pxnew[idx] = pxnew[idx] - deltaPos;
-            }else{
+            } else {
               pmassNew[idx] = pmass[idx];
               psizeNew[idx] = psize[idx];
             }

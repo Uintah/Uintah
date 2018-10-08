@@ -124,7 +124,8 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
       new_dw->get(gStress[m],   lb->gStressLabel,       dwi, patch, gnone, 0);
       new_dw->get(gnormtrac[m], lb->gNormTractionLabel, dwi, patch, gnone, 0);
 
-      new_dw->getModifiable(massBurnRate[m], lb->massBurnFractionLabel, dwi, patch);
+      new_dw->getModifiable(massBurnRate[m], 
+                                lb->massBurnFractionLabel, dwi, patch);
       
       MPMMaterial* mat = d_sharedState->getMPMMaterial(m);
       if(mat->getModalID()==d_masterModalID){
@@ -180,8 +181,8 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
 
         if(gmass[md][c] >  1.e-100  &&
            gmass[md][c] != sumMass  && 
-          (-gnormtrac[md][c] > d_StressThresh ||
-           -gnormtrac[inContactMatl][c] >d_StressThresh)){ // Comp stress is neg
+          (-gnormtrac[md][c] > d_StressThresh || // Compressive stress is neg
+           -gnormtrac[inContactMatl][c] > d_StressThresh)){
 //           pressure > d_StressThresh){ // && volFrac > 0.6){
             double rho = gmass[md][c]/gvolume[md][c];
 //            massBurnRate[md][c] += area*rho*2.0*NC_CCweight[c];

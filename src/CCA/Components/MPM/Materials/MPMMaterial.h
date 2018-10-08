@@ -121,7 +121,6 @@ WARNING
 
    ScalarDiffusionModel* getScalarDiffusionModel() const;
 
-
    particleIndex createParticles(
                         CCVariable<int>& cellNAPID,
                         const Patch*,
