@@ -87,7 +87,6 @@ DensityStar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
   register_variable( "z-mom", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( m_label_density , ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-  register_variable( m_label_density , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
 
   register_variable( m_label_densityStar, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
 
@@ -101,11 +100,9 @@ DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
 
-  constCCVariable<double>& old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density,ArchesFieldContainer::OLDDW);
   CCVariable<double>& rho = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_density );
   CCVariable<double>& rhoStar = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_densityStar );
 
-  const int time_substep = tsk_info->get_time_substep();
   const double dt = tsk_info->get_dt();
 
   Vector DX = patch->dCell();
@@ -114,16 +111,26 @@ DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const double area_TB = DX.x()*DX.y();
   const double vol       = DX.x()*DX.y()*DX.z();
 
+  double check_guess_density = 0;
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
 
     rhoStar(i,j,k)   = rho(i,j,k) - ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
                                       area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
                                       area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) )) * dt / vol;
-
-    rho(i,j,k)  = rhoStar(i,j,k); // I am copy density guess in density
-
+    if (rhoStar(i,j,k) < 0) {
+      check_guess_density = 1;  
+    }
   });
+
+  if (check_guess_density > 0){
+    std::cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density."<< std::endl ;
+  } else {
+    Uintah::parallel_for( range, [&](int i, int j, int k){  
+      rho(i,j,k)  = rhoStar(i,j,k); // I am copy density guess in density
+    });
+  }
+  
 }
 
 } //namespace Uintah
