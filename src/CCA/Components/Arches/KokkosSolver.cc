@@ -885,7 +885,6 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
     //i_table_fac->second->schedule_task_group("compute_exact_density",
     //  TaskInterface::BC, m_global_pack_tasks, level, sched, matls, time_substep );
 
-
     // ** TABLE LOOKUP **
     i_table_fac->second->schedule_task_group("all_tasks",
      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
@@ -893,19 +892,16 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
     i_table_fac->second->schedule_task_group("all_tasks",
      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
-    // Compute density rk 
-    i_prop_fac->second->schedule_task( "density_rk", TaskInterface::TIMESTEP_EVAL,
-      level, sched, matls, time_substep, false, true );
-
     if (time_substep > 0) {
       // time average using rk method
       i_transport->second->schedule_task_group("rk_time_ave",
         TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+     }
+     // Compute density rk 
+     i_prop_fac->second->schedule_task( "density_rk", TaskInterface::TIMESTEP_EVAL,
+       level, sched, matls, time_substep, false, true );
 
-      // Compute density rk 
-      i_prop_fac->second->schedule_task( "density_rk", TaskInterface::TIMESTEP_EVAL,
-        level, sched, matls, time_substep, false, true );
-    
+     if (time_substep > 0) {
       // get phi from phi*rho
       i_prop_fac->second->schedule_task_group("phifromrhophi",
         TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
