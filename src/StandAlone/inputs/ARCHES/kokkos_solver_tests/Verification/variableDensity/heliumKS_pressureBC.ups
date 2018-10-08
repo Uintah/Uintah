@@ -72,7 +72,7 @@
         <upper>       [4,4,3]   </upper>
 	<resolution>  [40,40,30]</resolution>
         <extraCells>  [1,1,1]   </extraCells>
-	<patches>     [2,2,2]   </patches>
+	<patches>     [1,1,1]   </patches>
       </Box>
     </Level>
     <BoundaryConditions>
@@ -270,6 +270,7 @@
             <convection scheme="superbee"/>
             <diffusion scheme ="central"/>
             <!--initialize value="1"/-->
+            <clip low="0" high="1"/>
           </eqn>
         </eqn_group>
       </KScalarTransport>
@@ -285,7 +286,9 @@
       </intrusions-->
         <force_area_calc/>
       </BoundaryConditions>
-      <KokkosSolver/>
+      <KokkosSolver>
+       <integrator>helium_plume</integrator>
+      </KokkosSolver>
     </ARCHES>
   </CFD>
 </Uintah_specification>

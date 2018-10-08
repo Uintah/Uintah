@@ -21,6 +21,10 @@ namespace Uintah{
 
       if ( subset == "scalar_rhs_builders" ){
         return _scalar_builders;
+      } else if ( subset == "scalar_update" ){
+        return _scalar_up;
+      } else if ( subset == "rk_time_ave" ){
+        return _rk_time_ave;
       } else if ( subset == "scalar_fe_update" ){
         return _scalar_update;
       } else if ( subset == "scalar_ssp" ){
@@ -61,6 +65,8 @@ namespace Uintah{
 
   private:
 
+    std::vector<std::string> _scalar_up;
+    std::vector<std::string> _rk_time_ave;
     std::vector<std::string> _scalar_builders;
     std::vector<std::string> _momentum_builders;
     std::vector<std::string> _scalar_update;

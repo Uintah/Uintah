@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 #include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
 #include <CCA/Components/Arches/PropertyModelsV2/DensityStar.h>
+#include <CCA/Components/Arches/PropertyModelsV2/DensityRK.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ContinuityPredictor.h>
 #include <CCA/Components/Arches/PropertyModelsV2/Drhodt.h>
 #include <CCA/Components/Arches/PropertyModelsV2/OneDWallHT.h>
@@ -370,6 +371,9 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
     if (compute_density_star){
       TaskInterface::TaskBuilder* ds = scinew DensityStar::Builder( "density_star", 0 );
       register_task( "density_star", ds );
+
+      TaskInterface::TaskBuilder* drk = scinew DensityRK::Builder( "density_rk", 0 );
+      register_task( "density_rk", drk );
     }
 
     TaskInterface::TaskBuilder* con = scinew ContinuityPredictor::Builder( "continuity_check", 0 );
@@ -495,6 +499,10 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
 
     if (compute_density_star){
       tsk = retrieve_task("density_star");
+      tsk->problemSetup(db);
+      tsk->create_local_labels();
+
+      tsk = retrieve_task("density_rk");
       tsk->problemSetup(db);
       tsk->create_local_labels();
     }

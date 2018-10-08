@@ -73,6 +73,15 @@ private:
     };
     std::map<std::string, Scaling_info> m_scaling_info;
     std::string m_volFraction_name{"volFraction"};
+
+    struct Clipping_info {
+      std::string var; // 
+      double high; // 
+      double low;
+    };
+    std::map<std::string, Clipping_info> m_clipping_info;
+    
+    
     //bool m_compute_mom;
 
   };
@@ -138,7 +147,6 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
 
     m_un_var_name = eqn_name;
 
-    //if (m_eqn_class == ArchesCore::DQMOM) {
     if (db_eqn->findBlock("no_weight_factor") == nullptr ){
       m_un_eqn_names.push_back(m_un_var_name);
       m_eqn_names.push_back(m_var_name);
@@ -159,7 +167,22 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
       // weight do not performe division 
     }  
 
+    //Clipping
+    if ( db_eqn->findBlock("clip")){
+      double low; double high;
+      db_eqn->findBlock("clip")->getAttribute("low", low);
+      db_eqn->findBlock("clip")->getAttribute("high", high);
+
+      Clipping_info clipping_eqn ;
+      clipping_eqn.var = eqn_name;
+      clipping_eqn.high = high;
+      clipping_eqn.low  = low;
+      m_clipping_info.insert(std::make_pair(m_var_name, clipping_eqn));
+    }
+    
+
   }
+  
   //m_compute_mom = false;
   if (m_task_name == "uVel"){
     m_eqn_class = ArchesCore::MOMENTUM;
@@ -194,6 +217,7 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
     db->findBlock("weight_factor")->getAttribute("label", m_rho_name);
     Nghost_cells = 1;
   }
+  
 
 }
 
@@ -495,8 +519,22 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
     Uintah::parallel_for( range, [&](int i, int j, int k){
       un_var(i,j,k) *= info.constant;
     });
-    //eqn += 1;
   }
+  
+  // clipping   
+  for ( auto ieqn = m_clipping_info.begin(); ieqn != m_clipping_info.end(); ieqn++ ){
+    Clipping_info info = ieqn->second;
+    T& var = tsk_info->get_uintah_field_add<T>(info.var);
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+    if ( var(i,j,k) > info.high ) {
+      var(i,j,k) = info.high;
+    } else if ( var(i,j,k) < info.low ) {
+      var(i,j,k) = info.low;
+    }
+    });
+  }
+  
+  
 
 }
 }

@@ -112,7 +112,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   IntVector low = patch->getCellLowIndex();
   IntVector high = patch->getCellHighIndex();
 
-  GET_WALL_BUFFERED_PATCH_RANGE(low, high,0,1,0,1,0,1);  
+  GET_WALL_BUFFERED_PATCH_RANGE(low, high,1,1,1,1,1,1);  
   Uintah::BlockRange x_range(low, high);
 
   const int xdir[3] = {1,0,0};

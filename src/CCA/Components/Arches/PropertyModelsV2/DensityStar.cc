@@ -21,58 +21,6 @@ DensityStar::problemSetup( ProblemSpecP& db ){
   using namespace ArchesCore;
   m_label_density = parse_ups_for_role( DENSITY, db, "density" );
   m_label_densityStar = m_label_density + "_star" ;
-  ProblemSpecP db_root = db->getRootNode();
-
-  db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", _time_order);
-
-  if ( _time_order == 1 ){
-
-    _alpha.resize(1);
-    _beta.resize(1);
-    _time_factor.resize(1);
-
-    _alpha[0] = 0.0;
-
-    _beta[0]  = 1.0;
-
-    _time_factor[0] = 1.0;
-
-  } else if ( _time_order == 2 ) {
-
-    _alpha.resize(2);
-    _beta.resize(2);
-    _time_factor.resize(2);
-
-    _alpha[0]= 0.0;
-    _alpha[1]= 0.5;
-
-    _beta[0]  = 1.0;
-    _beta[1]  = 0.5;
-
-    _time_factor[0] = 1.0;
-    _time_factor[1] = 1.0;
-
-  } else if ( _time_order == 3 ) {
-
-    _alpha.resize(3);
-    _beta.resize(3);
-    _time_factor.resize(3);
-
-    _alpha[0] = 0.0;
-    _alpha[1] = 0.75;
-    _alpha[2] = 1.0/3.0;
-
-    _beta[0]  = 1.0;
-    _beta[1]  = 0.25;
-    _beta[2]  = 2.0/3.0;
-
-    _time_factor[0] = 1.0;
-    _time_factor[1] = 0.5;
-    _time_factor[2] = 1.0;
-
-  } else {
-    throw InvalidValue("Error: <TimeIntegrator> must have value: 1, 2, or 3 (representing the order).",__FILE__, __LINE__);
-  }
 
 }
 
@@ -172,8 +120,6 @@ DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     rhoStar(i,j,k)   = rho(i,j,k) - ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
                                       area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
                                       area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) )) * dt / vol;
-
-    rhoStar(i,j,k) = _alpha[time_substep] * old_rho(i,j,k) + _beta[time_substep] * rhoStar(i,j,k);
 
     rho(i,j,k)  = rhoStar(i,j,k); // I am copy density guess in density
 

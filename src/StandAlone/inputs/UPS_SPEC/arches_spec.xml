@@ -1080,7 +1080,7 @@
                                                                                   be superceded if the CFL condition determines a smaller timestep as determined
                                                                                   from the BC's and initial condition.  -->
 
-        <integrator                     spec="OPTIONAL STRING 'ssprk, sandbox'"/> <!-- solution scheme during timestepping. Default = ssprk -->
+        <integrator                     spec="OPTIONAL STRING 'ssprk, sandbox, helium_plume'"/> <!-- solution scheme during timestepping. Default = ssprk -->
 
         <global_pack_tasks              spec="OPTIONAL NO_DATA"/> <!-- An experimental flag. Will pack together "certain" tasks to maximize work on a
                                                                        patch for a Uintah tasks and minimize communication -->
