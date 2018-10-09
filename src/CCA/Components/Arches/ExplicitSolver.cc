@@ -892,7 +892,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
     if( m_arches->getVisIt() && !initialized ) {
       ApplicationInterface::analysisVar aVar;
-      aVar.component = "ExplicitSolver-KineticEnergy";
+      aVar.component = "Arches/ExplicitSolver";
       aVar.name  = d_lab->d_totalKineticEnergyLabel->getName();
       aVar.matl  = -1; // Ignore the material
       aVar.level = IGNORE_LEVEL;
@@ -902,7 +902,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
       initialized = true;
     }
 #endif
-  
 }
 
 //--------------------------------------------------------------------------------------------------
