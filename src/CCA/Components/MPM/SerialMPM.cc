@@ -3799,22 +3799,34 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           }
           if (flags->d_doingDissolution){
             if(pSurf[idx]>=0.99){
+              int maxDir = 0; double maxComp=pSN.x();
+              for(int i = 1; i<3; i++){
+                if(fabs(pSN[i])>maxComp){
+                  maxComp=fabs(pSN[i]);
+                  maxDir=i;
+                }
+              }
+//              cout << "maxDir   = " << maxDir << endl;
+//              cout << "maxDir+1 = " << (maxDir+1)%3 << endl;
+//              cout << "maxDir+2 = " << (maxDir+2)%3 << endl;
+              int maxDirP1 = (maxDir+1)%3;
+              int maxDirP2 = (maxDir+2)%3;
               pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
               double deltaMassFrac = (pmass[idx]-pmassNew[idx])/pmass[idx];
-              Vector L1=Vector(psize[idx](0,0),psize[idx](1,0),psize[idx](2,0));
-              double L1l = L1.length();
-              Vector L2=Vector(psize[idx](0,1),psize[idx](1,1),psize[idx](2,1));
-              double L2l = L2.length();
-              Vector L3=Vector(psize[idx](0,2),psize[idx](1,2),psize[idx](2,2));
-              double L3l = L3.length();
-              L1/=L1l;
-              L2/=L2l;
-              L3/=L3l;
-              double pSNdotL1 = fabs(Dot(pSN,L1));
-              double pSNdotL2 = fabs(Dot(pSN,L2));
-              double pSNdotL3 = fabs(Dot(pSN,L3));
-              double dL2overdL1 = pSNdotL2/pSNdotL1;
-              double dL3overdL1 = pSNdotL3/pSNdotL1;
+              Vector L[3];
+              double Ll[3];
+              double dL[3];
+              double pSNdotL[3];
+              for(int i=0;i<3;i++){
+                L[i]=Vector(psize[idx](0,i),psize[idx](1,i),psize[idx](2,i));
+                Ll[i] = L[i].length();
+
+                L[i]/=Ll[i];
+                pSNdotL[i] = fabs(Dot(pSN,L[i]));
+              }
+
+              double dL1overdL0 = pSNdotL[maxDirP1]/pSNdotL[maxDir];
+              double dL2overdL0 = pSNdotL[maxDirP2]/pSNdotL[maxDir];
 //              double a = dL2overdL1;
 //              double b = -(L2l+L1l*dL2overdL1);
 //              double c = deltaMassFrac*(L1l*L2l);
@@ -3822,40 +3834,37 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
               // 2D version
               //double dL1 = deltaMassFrac*(L1l*L2l)/(L2l+L1l*dL2overdL1);
 
-              double dL1 = deltaMassFrac*(L1l*L2l*L3l)/
-                           (L2l*L3l + dL2overdL1*L1l*L3l + dL3overdL1*L1l*L2l);
-              double dL2 = dL2overdL1*dL1;
-              double dL3 = dL3overdL1*dL1;
-              L1*=(L1l-dL1);
-              L2*=(L2l-dL2);
-              L3*=(L3l-dL3);
+              dL[maxDir] = deltaMassFrac*(Ll[0]*Ll[1]*Ll[2])/
+                                         (Ll[maxDirP1]*Ll[maxDirP2] 
+                                   + dL1overdL0*Ll[maxDir]*Ll[maxDirP2] 
+                                   + dL2overdL0*Ll[maxDir]*Ll[maxDirP1]);
 
-              psizeNew[idx] = Matrix3(L1.x(), L2.x(), L3.x(),
-                                      L1.y(), L2.y(), L3.y(),
-                                      L1.z(), L2.z(), L3.z());
+              dL[maxDirP1] = dL1overdL0*dL[maxDir];
+              dL[maxDirP2] = dL2overdL0*dL[maxDir];
+              L[maxDir]       *= (Ll[maxDir]       - dL[maxDir]);
+              L[maxDirP1] *= (Ll[maxDirP1] - dL[maxDirP1]);
+              L[maxDirP2] *= (Ll[maxDirP2] - dL[maxDirP2]);
+
+              psizeNew[idx] = Matrix3(L[0].x(), L[1].x(), L[2].x(),
+                                      L[0].y(), L[1].y(), L[2].y(),
+                                      L[0].z(), L[1].z(), L[2].z());
 
 //            This, and below, are my attempts to make the dissolving particles
 //            retreat, but it doesn't look great.
 //            Matrix3 sizeRed=Matrix3(1.-deltaMassFrac,0.,0.,0.,1.,0.,0.,0.,1.);
 //            psizeNew[idx] = sizeRed*psize[idx];
 //            Matrix3 pszNew = sizeRed*psize[idx];
-//            cout << "psizeNew Old Way = " << pszNew << endl;
-//              double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
-//              pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
-//              Vector deltaPos = 0.25*Vector(dL1*dx*pSN.x(),
-//                                            dL2*dy*pSN.y(),
-//                                            dL3*dz*pSN.z());
-//              cout << "deltaPos = " << deltaPos << endl;
-//              pxnew[idx] = pxnew[idx] - deltaPos;
+//            double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
+//            pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
+//            Vector deltaPos = 0.25*Vector(dL1*dx*pSN.x(),
+//                                          dL2*dy*pSN.y(),
+//                                          dL3*dz*pSN.z());
+//            cout << "deltaPos = " << deltaPos << endl;
+//            pxnew[idx] = pxnew[idx] - deltaPos;
             } else {
               pmassNew[idx] = pmass[idx];
               psizeNew[idx] = psize[idx];
             }
-//          double deltaMassFrac = (pmass[idx]-pmassNew[idx])/pmass[idx];
-//          Matrix3 sizeRed = Matrix3(1.-deltaMassFrac,0.,0.,0.,1.,0.,0.,0.,1.);
-//          psizeNew[idx] = sizeRed*psize[idx];
-//          double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
-//          pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
           } else {
             pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
             psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
