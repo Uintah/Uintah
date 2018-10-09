@@ -1005,7 +1005,7 @@ sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObj
 #if defined(UINTAH_ENABLE_KOKKOS)
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
-inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
 sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
 {
 
