@@ -139,6 +139,8 @@
 #include <Core/Util/Timers/Timers.hpp>
 #include <CCA/Components/Arches/Filter.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <cmath>
 
 using namespace std;
@@ -882,6 +884,25 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     d_solvability = true;
   }
 
+#ifdef HAVE_VISIT
+
+#define IGNORE_LEVEL -2
+    
+    static bool initialized = false;
+
+    if( m_arches->getVisIt() && !initialized ) {
+      ApplicationInterface::analysisVar aVar;
+      aVar.component = "ExplicitSolver-KineticEnergy";
+      aVar.name  = d_lab->d_totalKineticEnergyLabel->getName();
+      aVar.matl  = -1; // Ignore the material
+      aVar.level = IGNORE_LEVEL;
+      aVar.labels.push_back( d_lab->d_totalKineticEnergyLabel );
+      m_arches->getAnalysisVars().push_back(aVar);
+
+      initialized = true;
+    }
+#endif
+  
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -1100,7 +1121,7 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
       if (d_underflow) {
 
 #ifdef ADD_PERFORMANCE_STATS
-	tmpTimer.reset( true );
+        tmpTimer.reset( true );
 #endif
         indexLow = patch->getFortranCellLowIndex();
         indexHigh = patch->getFortranCellHighIndex();
@@ -1136,9 +1157,9 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
         }
 
 #ifdef ADD_PERFORMANCE_STATS
- 	tmpTimer.stop();
+        tmpTimer.stop();
 
-	m_arches->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) StableTimeStepUnderflow ] += tmpTimer().seconds();
+        m_arches->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) StableTimeStepUnderflow ] += tmpTimer().seconds();
 #endif
       }
 
