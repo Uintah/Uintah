@@ -91,7 +91,7 @@ DataArchive::DataArchive( const string & filebase,
     d_types_initialized = true;
     // For static builds, sometimes the Uintah types (CCVariable, etc) do not get automatically
     // registered to the Uintah type system... this call forces that to happen.
-    proc0cout << "Loading Uintah var types into type system (static build).\n";
+    // proc0cout << "Loading Uintah var types into type system (static build).\n";
     instantiateVariableTypes();
   }
 #endif  
@@ -177,8 +177,8 @@ DataArchive::queryAndSetFileFormat( FILE * doc )
 
       // bulletproofing
       if( d_fileFormat == NOT_SPECIFIED ) {
-        proc0cout << "Warning: Reading in an UDA that is missing the <outputFormat> tag... "
-                  << "defaulting to type old 'UDA'.\n";
+        // proc0cout << "Warning: Reading in an UDA that is missing the <outputFormat> tag... "
+        //           << "defaulting to type old 'UDA'.\n";
         d_fileFormat = UDA;
       }
       return;
@@ -251,8 +251,8 @@ DataArchive::queryProcessors( unsigned int & nProcs )
     else {
       vector<string> pieces = UintahXML::splitXMLtag( line );
       if( pieces[0] == "<numberOfProcessors>" ) {
-        nProcs = atoi( pieces[1].c_str() );
-        return;
+	nProcs = atoi( pieces[1].c_str() );
+	return;
       }
     }
   }
@@ -1816,7 +1816,7 @@ DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
   }
   dw->setID( timeIndex );
   
-  proc0cout << "   DataArchive:postProcess_ReadUda: udaTimestep " << timesteps[timeIndex] << " timeIndex: " << timeIndex << " dw ID: " << dw->getID() << endl;
+  // proc0cout << "   DataArchive:postProcess_ReadUda: udaTimestep " << timesteps[timeIndex] << " timeIndex: " << timeIndex << " dw ID: " << dw->getID() << endl;
 
   TimeData& timedata = getTimeData( timeIndex );
   // Make sure to load all the data so we can iterate through it
