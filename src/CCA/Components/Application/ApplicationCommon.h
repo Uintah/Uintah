@@ -264,6 +264,11 @@ WARNING
     virtual int  getLastRegridTimeStep() { return m_lastRegridTimestep; }
 
     // Some applications can set reduction variables
+    virtual unsigned int numReductionVariable() const
+    {
+      return m_appReductionVars.size();
+    }
+    
     virtual void activateReductionVariable(std::string name, bool val) { m_appReductionVars[name]->setActive( val ); }
     virtual bool activeReductionVariable(std::string name) { return m_appReductionVars[name]->getActive(); }
 
@@ -271,7 +276,65 @@ WARNING
     virtual void setReductionVariable(std::string name,   bool val) { m_appReductionVars[name]->setValue( val ); }
     virtual void setReductionVariable(std::string name, double val) { m_appReductionVars[name]->setValue( val ); }
     // Get application specific reduction values all cast to doubles.
-    virtual double getReductionVariable( std::string name ) { return m_appReductionVars[name]->getValue(); }
+    virtual double getReductionVariable( std::string name ) const
+    {
+      if( m_appReductionVars.find(name) != m_appReductionVars.end() )
+	return m_appReductionVars.at(name)->getValue();
+      else
+	return 0;
+    }
+    
+    virtual double getReductionVariable( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->getValue();
+	else
+	  --index;
+      }
+
+      return 0;
+    }
+    
+    virtual std::string getReductionVariableName( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->getName();
+	else
+	  --index;
+      }
+
+      return "Unknown";
+    }
+    
+    virtual unsigned int getReductionVariableCount( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->getCount();
+	else
+	  --index;
+      }
+
+      return 0;
+    }
+    
+    virtual bool overriddenReductionVariable( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->overridden();
+	else
+	  --index;
+      }
+
+      return false;
+    }
     
     // Access methods for member classes.
     virtual MaterialManagerP getMaterialManagerP() const { return m_materialManager; }
