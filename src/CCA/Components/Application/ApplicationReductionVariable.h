@@ -86,7 +86,10 @@ WARNING
       bool_var.setBenignValue();
       min_var.setBenignValue();
       max_var.setBenignValue();
-    }
+
+      count = 0;
+      overriddenValue = false;
+  }
     
     void setValue( bool val )
     {
@@ -117,6 +120,7 @@ WARNING
           if ( overrideValue ) {
             new_dw->put( bool_or_vartype( bool_value ), label);
             overrideValue = false;
+	    overriddenValue = true;
           }
           // If the value does not exists put a benign value into the
           // warehouse.
@@ -138,6 +142,7 @@ WARNING
           if ( overrideValue ) {
             new_dw->put(min_vartype( double_value ), label);
             overrideValue = false;
+	    overriddenValue = true;
           }
           // If the value does not exists put a benign value into the
           // warehouse.
@@ -180,7 +185,8 @@ WARNING
     void setActive( bool val ) { active = val; }
     bool getActive() const { return active; }
     
-    const VarLabel * getLabel() const { return label; }
+    const VarLabel    * getLabel() const { return label; }
+    const std::string   getName()  const { return label->getName(); }
 
     double getValue() const
     {
@@ -216,10 +222,17 @@ WARNING
         return true;
     }
 
+    unsigned int getCount() const { return count; }
+    bool overridden() const { return overriddenValue; }
+    
   private:
     bool active{false};
 
     const VarLabel *label{nullptr};
+
+    // Count the number of times the value may have been set before
+    // being cleared.
+    unsigned int count{0};
 
     // Because this class gets put into a map it can not be a
     // template. As such, there are multiple storage variables. The
@@ -236,6 +249,7 @@ WARNING
     bool     bool_value{0};
     double double_value{0};
     bool overrideValue{false};
+    bool overriddenValue{false};
   };
 
 } // End namespace Uintah
