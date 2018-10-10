@@ -630,7 +630,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
   
   // Reductions are only need if these are true.
   if( (m_regridder && m_regridder->useDynamicDilation()) ||
-      g_sim_stats_mem || g_comp_stats || g_comp_indv_stats || reduce ) {
+      g_sim_stats_mem || g_comp_stats || reduce ) {
 
     m_runtime_stats.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   
@@ -642,7 +642,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     }
   }
   
-  if( g_app_stats || g_app_indv_stats || reduce ) {
+  if( g_app_stats || reduce ) {
     m_application->reduceApplicationStats( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   }
   
