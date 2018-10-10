@@ -3792,14 +3792,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
           pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
-          // Normalize particle surface normal
-          double pSNL=pSN.length();
-          if(pSNL > 0.0){
-             pSN = pSN/pSNL;
-          }
           if (flags->d_doingDissolution){
             if(pSurf[idx]>=0.99){
-              int maxDir = 0; double maxComp=pSN.x();
+              // Normalize particle surface normal
+              double pSNL=pSN.length();
+              if(pSNL > 0.0){
+                 pSN = pSN/pSNL;
+              }
+              int maxDir = 0; double maxComp=fabs(pSN.x());
               for(int i = 1; i<3; i++){
                 if(fabs(pSN[i])>maxComp){
                   maxComp=fabs(pSN[i]);
