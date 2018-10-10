@@ -79,7 +79,7 @@ public:
   {
     for (unsigned int i = 0; i < m_values.size(); ++i) {
       m_values[i] = val;
-      m_counts[i] = 1;
+      m_counts[i] = 0;
     }
   };
 
@@ -113,13 +113,13 @@ public:
   };
 
   virtual void insert( const E key, const std::string name,
-                                    const std::string units, const T value )
+                                    const std::string units )
   {
     if (!exists(key) && !exists(name)) {
       unsigned int index = m_keys.size();
       m_keys[key] = index;
-      m_values.push_back(value);
-      m_counts.push_back(1);
+      m_values.push_back(0);
+      m_counts.push_back(0);
       m_names.push_back(name);
       m_units.push_back(units);
     }
@@ -143,7 +143,7 @@ public:
     validKey( key );
 
     m_values[ m_keys[key] ] = value;
-    m_counts[ m_keys[key] ] = 1;
+    m_counts[ m_keys[key] ] = 0;
   };
 
   // Get value
@@ -151,7 +151,10 @@ public:
   {
     validKey( key );
 
-    return m_values[ m_keys[key] ] / m_counts[ m_keys[key] ];
+    if( m_counts[ m_keys[key] ] )
+      return m_values[ m_keys[key] ] / m_counts[ m_keys[key] ];
+    else
+      return m_values[ m_keys[key] ];
   };
 
   virtual T getRankValue( const unsigned int index )
@@ -313,9 +316,9 @@ public:
   };
 
   virtual void insert( const E key, const std::string name,
-                       const std::string units, const T value )
+                       const std::string units )
   {
-    InfoMapper<E, T>::insert( key, name, units, value );
+    InfoMapper<E, T>::insert( key, name, units );
 
     m_rank_average.push_back(-1);
     m_rank_maximum.push_back(double_int(0,-1));
@@ -454,7 +457,11 @@ public:
       // A little ugly, but do it anyway so only one reduction is needed
       // for the sum and one for the maximum. 
       for (size_t i = 0; i < nStats; ++i) {
-        double val = InfoMapper<E, T>::m_values[i] / InfoMapper<E, T>::m_counts[i];
+        double val;
+        if( InfoMapper<E, T>::m_counts[i] )
+          val = InfoMapper<E, T>::m_values[i] / InfoMapper<E, T>::m_counts[i];
+        else
+          val = InfoMapper<E, T>::m_values[i];
 
         toReduce[i] = val;          
         toReduceMax[i] = double_int( val, myWorld->myRank());
@@ -498,7 +505,12 @@ public:
       m_rank_maximum.resize(nStats);
 
       for (size_t i = 0; i < nStats; ++i) {
-        double val = InfoMapper<E, T>::m_values[i] / InfoMapper<E, T>::m_counts[i];
+        double val;
+
+        if(InfoMapper<E, T>::m_counts[i] )
+          val = InfoMapper<E, T>::m_values[i] / InfoMapper<E, T>::m_counts[i];
+        else
+          val = InfoMapper<E, T>::m_values[i];
 
         m_node_sum[i] = val;
         m_node_average[i] = val;

@@ -121,40 +121,40 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   std::string timeStr("seconds");
   std::string bytesStr("MBytes");
 
-  m_runtime_stats.insert( CompilationTime,           std::string("Compilation"),           timeStr, 0 );
-  m_runtime_stats.insert( RegriddingTime,            std::string("Regridding"),            timeStr, 0 );
-  m_runtime_stats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
-  m_runtime_stats.insert( RegriddingCopyDataTime,    std::string("RegriddingCopyData"),    timeStr, 0 );
-  m_runtime_stats.insert( LoadBalancerTime,          std::string("LoadBalancer"),          timeStr, 0 );
+  m_runtime_stats.insert( CompilationTime,           std::string("Compilation"),           timeStr );
+  m_runtime_stats.insert( RegriddingTime,            std::string("Regridding"),            timeStr );
+  m_runtime_stats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr );
+  m_runtime_stats.insert( RegriddingCopyDataTime,    std::string("RegriddingCopyData"),    timeStr );
+  m_runtime_stats.insert( LoadBalancerTime,          std::string("LoadBalancer"),          timeStr );
 
-  m_runtime_stats.insert( TaskExecTime,              std::string("TaskExec"),              timeStr, 0 );
-  m_runtime_stats.insert( TaskLocalCommTime,         std::string("TaskLocalComm"),         timeStr, 0 );
-  m_runtime_stats.insert( TaskWaitCommTime,          std::string("TaskWaitCommTime"),      timeStr, 0 );
-  m_runtime_stats.insert( TaskReduceCommTime,        std::string("TaskReduceCommTime"),    timeStr, 0 );
-  m_runtime_stats.insert( TaskWaitThreadTime,        std::string("TaskWaitThread"),        timeStr, 0 );
+  m_runtime_stats.insert( TaskExecTime,              std::string("TaskExec"),              timeStr );
+  m_runtime_stats.insert( TaskLocalCommTime,         std::string("TaskLocalComm"),         timeStr );
+  m_runtime_stats.insert( TaskWaitCommTime,          std::string("TaskWaitCommTime"),      timeStr );
+  m_runtime_stats.insert( TaskReduceCommTime,        std::string("TaskReduceCommTime"),    timeStr );
+  m_runtime_stats.insert( TaskWaitThreadTime,        std::string("TaskWaitThread"),        timeStr );
 
-  m_runtime_stats.insert( XMLIOTime,                 std::string("XMLIO"),                 timeStr, 0 );
-  m_runtime_stats.insert( OutputIOTime,              std::string("OutputIO"),              timeStr, 0 );
-  m_runtime_stats.insert( ReductionIOTime,           std::string("ReductionIO"),           timeStr, 0 );
-  m_runtime_stats.insert( CheckpointIOTime,          std::string("CheckpointIO"),          timeStr, 0 );
-  m_runtime_stats.insert( CheckpointReductionIOTime, std::string("CheckpointReductionIO"), timeStr, 0 );
-  m_runtime_stats.insert( TotalIOTime,               std::string("TotalIO"),               timeStr, 0 );
+  m_runtime_stats.insert( XMLIOTime,                 std::string("XMLIO"),                 timeStr );
+  m_runtime_stats.insert( OutputIOTime,              std::string("OutputIO"),              timeStr );
+  m_runtime_stats.insert( ReductionIOTime,           std::string("ReductionIO"),           timeStr );
+  m_runtime_stats.insert( CheckpointIOTime,          std::string("CheckpointIO"),          timeStr );
+  m_runtime_stats.insert( CheckpointReductionIOTime, std::string("CheckpointReductionIO"), timeStr );
+  m_runtime_stats.insert( TotalIOTime,               std::string("TotalIO"),               timeStr );
 
-  m_runtime_stats.insert( OutputIORate,              std::string("OutputIORate"),     "MBytes/sec", 0 );
-  m_runtime_stats.insert( ReductionIORate,           std::string("ReductionIORate"),  "MBytes/sec", 0 );
-  m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"), "MBytes/sec", 0 );
-  m_runtime_stats.insert( CheckpointReductionIORate, std::string("CheckpointReductionIORate"), "MBytes/sec", 0 );
+  m_runtime_stats.insert( OutputIORate,              std::string("OutputIORate"),     "MBytes/sec" );
+  m_runtime_stats.insert( ReductionIORate,           std::string("ReductionIORate"),  "MBytes/sec" );
+  m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"), "MBytes/sec" );
+  m_runtime_stats.insert( CheckpointReductionIORate, std::string("CheckpointReductionIORate"), "MBytes/sec" );
 
-  m_runtime_stats.insert( NumTasks,                  std::string("NumberOfTasks"), "tasks", 0 );
-  m_runtime_stats.insert( NumPatches,                std::string("NumberOfPatches"), "patches", 0 );
-  m_runtime_stats.insert( NumCells,                  std::string("NumberOfCells"), "cells", 0 );
-  m_runtime_stats.insert( NumParticles,              std::string("NumberOfParticles"), "paticles", 0 );
+  m_runtime_stats.insert( NumTasks,                  std::string("NumberOfTasks"),     "tasks" );
+  m_runtime_stats.insert( NumPatches,                std::string("NumberOfPatches"),   "patches" );
+  m_runtime_stats.insert( NumCells,                  std::string("NumberOfCells"),     "cells" );
+  m_runtime_stats.insert( NumParticles,              std::string("NumberOfParticles"), "paticles" );
   
-  m_runtime_stats.insert( SCIMemoryUsed,             std::string("SCIMemoryUsed"),         bytesStr, 0 );
-  m_runtime_stats.insert( SCIMemoryMaxUsed,          std::string("SCIMemoryMaxUsed"),      bytesStr, 0 );
-  m_runtime_stats.insert( SCIMemoryHighwater,        std::string("SCIMemoryHighwater"),    bytesStr, 0 );
-  m_runtime_stats.insert( MemoryUsed,                std::string("MemoryUsed"),            bytesStr, 0 );
-  m_runtime_stats.insert( MemoryResident,            std::string("MemoryResident"),        bytesStr, 0 );
+  m_runtime_stats.insert( SCIMemoryUsed,             std::string("SCIMemoryUsed"),         bytesStr );
+  m_runtime_stats.insert( SCIMemoryMaxUsed,          std::string("SCIMemoryMaxUsed"),      bytesStr );
+  m_runtime_stats.insert( SCIMemoryHighwater,        std::string("SCIMemoryHighwater"),    bytesStr );
+  m_runtime_stats.insert( MemoryUsed,                std::string("MemoryUsed"),            bytesStr );
+  m_runtime_stats.insert( MemoryResident,            std::string("MemoryResident"),        bytesStr );
 
 #ifdef HAVE_VISIT
   m_visitSimData = scinew visit_simulation_data();
@@ -622,9 +622,15 @@ SimulationController::ReportStats(const ProcessorGroup*,
   // Get and reduce the performance runtime stats
   getMemoryStats();
 
+#ifdef HAVE_VISIT
+  bool reduce = getVisIt();
+#else
+  bool reduce = false;
+#endif
+  
   // Reductions are only need if these are true.
   if( (m_regridder && m_regridder->useDynamicDilation()) ||
-      g_sim_stats_mem || g_comp_timings || g_indv_comp_timings ) {
+      g_sim_stats_mem || g_comp_timings || g_indv_comp_timings || reduce ) {
 
     m_runtime_stats.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   
@@ -636,7 +642,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     }
   }
   
-  if( g_app_timings || g_indv_app_timings ) {
+  if( g_app_timings || g_indv_app_timings || reduce ) {
     m_application->reduceApplicationStats( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   }
   

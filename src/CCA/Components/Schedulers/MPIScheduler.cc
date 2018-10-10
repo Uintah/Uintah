@@ -123,12 +123,12 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
 
   std::string timeStr("seconds");
 
-  mpi_info_.insert( TotalSend  , std::string("TotalSend")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalRecv  , std::string("TotalRecv")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalTest  , std::string("TotalTest")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalWait  , std::string("TotalWait")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalReduce, std::string("TotalReduce"),    timeStr, 0 );
-  mpi_info_.insert( TotalTask  , std::string("TotalTask")  ,    timeStr, 0 );
+  mpi_info_.insert( TotalSend  , std::string("TotalSend")  ,    timeStr );
+  mpi_info_.insert( TotalRecv  , std::string("TotalRecv")  ,    timeStr );
+  mpi_info_.insert( TotalTest  , std::string("TotalTest")  ,    timeStr );
+  mpi_info_.insert( TotalWait  , std::string("TotalWait")  ,    timeStr );
+  mpi_info_.insert( TotalReduce, std::string("TotalReduce"),    timeStr );
+  mpi_info_.insert( TotalTask  , std::string("TotalTask")  ,    timeStr );
 }
 
 //______________________________________________________________________
