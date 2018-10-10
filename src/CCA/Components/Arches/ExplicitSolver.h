@@ -55,7 +55,6 @@ DESCRIPTION
 WARNING
    none
 ****************************************/
-//#define ADD_PERFORMANCE_STATS
 
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Components/Arches/MomentumSolver.h>

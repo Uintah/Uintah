@@ -968,21 +968,12 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
-
-#ifdef ADD_PERFORMANCE_STATS
-   Timers::Simple tmpTimer;
-#endif
-
   const Level* level = getLevel(patches);
   // You have to compute it on every level but
   // only computethe real delT on the archesLevel
   if( level->getIndex() == d_archesLevelIndex ) {
 
     for (int p = 0; p < patches->size(); p++) {
-
-#ifdef ADD_PERFORMANCE_STATS
-      tmpTimer.reset( true );
-#endif
 
       const Patch* patch = patches->get(p);
       int archIndex = 0; // only one arches material
@@ -1111,17 +1102,8 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
                        Abs(max_intrusion_vel.z())/(DX.z())+small_num;
       delta_t2=Min(1.0/tmp_time, delta_t2);
 
-#ifdef ADD_PERFORMANCE_STATS
-      tmpTimer.stop();
-
-      m_arches->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) StableTimeStep ] += tmpTimer().seconds();
-#endif
-
       if (d_underflow) {
 
-#ifdef ADD_PERFORMANCE_STATS
-        tmpTimer.reset( true );
-#endif
         indexLow = patch->getFortranCellLowIndex();
         indexHigh = patch->getFortranCellHighIndex();
 
@@ -1154,12 +1136,6 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
             }
           }
         }
-
-#ifdef ADD_PERFORMANCE_STATS
-        tmpTimer.stop();
-
-        m_arches->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) StableTimeStepUnderflow ] += tmpTimer().seconds();
-#endif
       }
 
       delta_t = delta_t2;
