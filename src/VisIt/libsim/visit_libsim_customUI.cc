@@ -166,6 +166,47 @@ void visit_SetWallTimes( visit_simulation_data *sim )
 
 
 //---------------------------------------------------------------------
+// SetReductionVariables
+//    Set the reduction variables so they can be displayed in the Custon UI
+//---------------------------------------------------------------------
+void visit_SetReductionVariables( visit_simulation_data *sim )
+{
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
+
+  Output * output       = sim->simController->getOutput();
+
+  VisItUI_setTableValueS("ReductionVariableTable",
+                         -1, -1, "CLEAR_TABLE", 0);
+
+  unsigned int nVars = appInterface->numReductionVariable();
+
+  unsigned int row = 0;
+  
+  for( unsigned int i=0; i<nVars; ++ i)
+  {
+    std::string name = appInterface->getReductionVariableName(i);
+    
+    if( appInterface->activeReductionVariable( name ) )
+    {
+      double val = appInterface->getReductionVariable(i);
+      unsigned int count = appInterface->getReductionVariableCount(i);
+      bool overridden = appInterface->overriddenReductionVariable(i);
+      
+      VisItUI_setTableValueS("ReductionVariableTable",
+                             row, 0, name.c_str(),  0);
+      VisItUI_setTableValueD("ReductionVariableTable",
+                             row, 1, val, 0);
+      VisItUI_setTableValueI("ReductionVariableTable",
+                             row, 2, count, 0);
+      VisItUI_setTableValueS("ReductionVariableTable",
+                             row, 3, overridden ? "Yes" : "No", 0);
+      ++row;
+    }
+  }
+}
+
+//---------------------------------------------------------------------
 // SetOutputIntervals
 //    Set the output checkpoints so they can be displayed in the Custon UI
 //---------------------------------------------------------------------
@@ -271,7 +312,6 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            CheckpointIntervalRow+2, 1,
                            (output->checkpointTimeStepExists( sim->cycle ) ? "Yes" : "No"), 0);
-
 
     // This var must be in row specified by CheckpointCyclelRow
     VisItUI_setTableValueS("OutputIntervalVariableTable",
@@ -536,9 +576,16 @@ void visit_SetUPSVars( visit_simulation_data *sim )
       ApplicationInterface:: interactiveVar &var = vars[i];
       
       var.modified = false;
+
+      std::string component = var.component;
+      std::string name = var.name;
       
-      VisItUI_setTableValueS("UPSVariableTable", i, 0, var.component.c_str(), 0);
-      VisItUI_setTableValueS("UPSVariableTable", i, 1, var.name.c_str(), 0);
+      // Replace all colons with and an underscore.
+      std::replace( name.begin(), name.end(), ':', '_');
+      std::replace( component.begin(), component.end(), ':', '_');
+      
+      VisItUI_setTableValueS("UPSVariableTable", i, 0, component.c_str(), 0);
+      VisItUI_setTableValueS("UPSVariableTable", i, 1, name.c_str(), 0);
       
       switch( var.type )
       {
@@ -661,49 +708,53 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
   VisItUI_setValueS( "RuntimeStatsGroupBox", "SHOW_WIDGET", 1);
   VisItUI_setTableValueS("RuntimeStatsTable", -1, -1, "CLEAR_TABLE", 0);
 
-  int cc = 0;
+  int row = 0;
 
   for (unsigned int i=0; i<runtimeStats.size(); ++i)
   {
     std::string name  = runtimeStats.getName(i);
     std::string units = runtimeStats.getUnits(i);
 
+    // Replace all colons with and an underscore.
+    std::replace( name.begin(), name.end(), ':', '_');
+    std::replace( units.begin(), units.end(), ':', '_');
+      
     double  average = runtimeStats.getRankAverage(i);
     double  maximum = runtimeStats.getRankMaximum(i);
     int     rank    = runtimeStats.getRankForMaximum(i);
 
     if( average > 0 && units == std::string("MBytes"))
     {
-      VisItUI_setTableValueS("RuntimeStatsTable", cc, 0, name.c_str(), 0);
-      VisItUI_setTableValueS("RuntimeStatsTable", cc, 1, units.c_str(), 0);
-      VisItUI_setTableValueS("RuntimeStatsTable", cc, 2,
+      VisItUI_setTableValueS("RuntimeStatsTable", row, 0, name.c_str(), 0);
+      VisItUI_setTableValueS("RuntimeStatsTable", row, 1, units.c_str(), 0);
+      VisItUI_setTableValueS("RuntimeStatsTable", row, 2,
                              ProcessInfo::toHumanUnits(average).c_str(), 0);
-      VisItUI_setTableValueS("RuntimeStatsTable", cc, 3,
+      VisItUI_setTableValueS("RuntimeStatsTable", row, 3,
                              ProcessInfo::toHumanUnits(maximum).c_str(), 0);
-      VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, rank, 0);
+      VisItUI_setTableValueI("RuntimeStatsTable", row, 4, rank, 0);
       if( maximum != 0 )
-        VisItUI_setTableValueD("RuntimeStatsTable", cc, 5,
+        VisItUI_setTableValueD("RuntimeStatsTable", row, 5,
                                100.0*(1.0-(average/maximum)), 0);
       else
-        VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 0.0, 0);
+        VisItUI_setTableValueD("RuntimeStatsTable", row, 5, 0.0, 0);
       
-      ++cc;
+      ++row;
     }
   
     else if( average > 0 )
     {
-      VisItUI_setTableValueS("RuntimeStatsTable", cc, 0, name.c_str(), 0);
-      VisItUI_setTableValueS("RuntimeStatsTable", cc, 1, units.c_str(), 0);
-      VisItUI_setTableValueD("RuntimeStatsTable", cc, 2, average, 0);
-      VisItUI_setTableValueD("RuntimeStatsTable", cc, 3, maximum, 0);
-      VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, rank, 0);
+      VisItUI_setTableValueS("RuntimeStatsTable", row, 0, name.c_str(), 0);
+      VisItUI_setTableValueS("RuntimeStatsTable", row, 1, units.c_str(), 0);
+      VisItUI_setTableValueD("RuntimeStatsTable", row, 2, average, 0);
+      VisItUI_setTableValueD("RuntimeStatsTable", row, 3, maximum, 0);
+      VisItUI_setTableValueI("RuntimeStatsTable", row, 4, rank, 0);
       if( maximum != 0 )
-        VisItUI_setTableValueD("RuntimeStatsTable", cc, 5,
+        VisItUI_setTableValueD("RuntimeStatsTable", row, 5,
                                100.0*(1.0-(average/maximum)), 0);
       else
-        VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 0.0, 0);
+        VisItUI_setTableValueD("RuntimeStatsTable", row, 5, 0.0, 0);
 
-      ++cc;
+      ++row;
     }
 
     visit_SetStripChartValue( sim, "RuntimeStats/"+name+"/Average", average );
@@ -733,6 +784,10 @@ void visit_SetMPIStats( visit_simulation_data *sim )
     {
       std::string name  = mpiStats.getName(i);
       std::string units = mpiStats.getUnits(i);
+      
+      // Replace all colons with and an underscore.
+      std::replace( name.begin(), name.end(), ':', '_');
+      std::replace( units.begin(), units.end(), ':', '_');
       
       double  average = mpiStats.getRankAverage(i);
       double  maximum = mpiStats.getRankMaximum(i);
@@ -776,25 +831,37 @@ void visit_SetApplicationStats( visit_simulation_data *sim )
     VisItUI_setValueS( "ApplicationStatsGroupBox", "SHOW_WIDGET", 1);
     VisItUI_setTableValueS("ApplicationStatsTable", -1, -1, "CLEAR_TABLE", 0);
 
+    int row = 0;
+    
     for (unsigned int i=0; i<nStats; ++i)
     {
       std::string name  = appInterface->getApplicationStats().getName(i);
       std::string units = appInterface->getApplicationStats().getUnits(i);
       
+      // Replace all colons with and an underscore.
+      std::replace( name.begin(), name.end(), ':', '_');
+      std::replace( units.begin(), units.end(), ':', '_');
+      
       double  average = appInterface->getApplicationStats().getRankAverage(i);
       double  maximum = appInterface->getApplicationStats().getRankMaximum(i);
       int     rank    = appInterface->getApplicationStats().getRankForMaximum(i);
+
+      if( average > 0 ) {
       
-      VisItUI_setTableValueS("ApplicationStatsTable", i, 0, name.c_str(), 0);
-      VisItUI_setTableValueS("ApplicationStatsTable", i, 1, units.c_str(), 0);
-      VisItUI_setTableValueD("ApplicationStatsTable", i, 2, average, 0);
-      VisItUI_setTableValueD("ApplicationStatsTable", i, 3, maximum, 0);
-      VisItUI_setTableValueI("ApplicationStatsTable", i, 4, rank, 0);
-      // if( maximum != 0 )
-      //         VisItUI_setTableValueD("ApplicationStatsTable", i, 5,
-      //                                100.0*(1.0-(average/maximum)), 0);
-      // else
-      //         VisItUI_setTableValueD("ApplicationStatsTable", i, 5, 0.0, 0);
+        VisItUI_setTableValueS("ApplicationStatsTable", row, 0, name.c_str(), 0);
+        VisItUI_setTableValueS("ApplicationStatsTable", row, 1, units.c_str(), 0);
+        VisItUI_setTableValueD("ApplicationStatsTable", row, 2, average, 0);
+        VisItUI_setTableValueD("ApplicationStatsTable", row, 3, maximum, 0);
+        VisItUI_setTableValueI("ApplicationStatsTable", row, 4, rank, 0);
+        
+        // if( maximum != 0 )
+        //         VisItUI_setTableValueD("ApplicationStatsTable", row, 5,
+        //                                100.0*(1.0-(average/maximum)), 0);
+        // else
+        //         VisItUI_setTableValueD("ApplicationStatsTable", row, 5, 0.0, 0);
+
+        ++row;
+      }
       
       visit_SetStripChartValue( sim, "ApplicationStats/"+name+"/Average", average );
       visit_SetStripChartValue( sim, "ApplicationStats/"+name+"/Maximum", maximum );
@@ -869,8 +936,15 @@ void visit_SetStateVars( visit_simulation_data *sim )
       
       var.modified = false;
       
-      VisItUI_setTableValueS("StateVariableTable", i, 0, var.component.c_str(), 0);
-      VisItUI_setTableValueS("StateVariableTable", i, 1, var.name.c_str(), 0);
+      std::string component = var.component;
+      std::string name = var.name;
+      
+      // Replace all colons with and an underscore.
+      std::replace( name.begin(), name.end(), ':', '_');
+      std::replace( component.begin(), component.end(), ':', '_');
+
+      VisItUI_setTableValueS("StateVariableTable", i, 0, component.c_str(), 0);
+      VisItUI_setTableValueS("StateVariableTable", i, 1, name.c_str(), 0);
       
       switch( var.type )
       {
@@ -948,6 +1022,10 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
       std::string filename    = (*iter).second->getFilename();
       bool        active      = (*iter).second->active();
 
+      // Replace all colons with and an underscore.
+      std::replace( name.begin(), name.end(), ':', '_');
+      std::replace( component.begin(), component.end(), ':', '_');
+      
       unsigned int col = 0;
       VisItUI_setTableValueS("DebugStreamTable",
                              i, col++, (active ? "true":"false"), 1);
@@ -992,6 +1070,10 @@ void visit_SetDouts( visit_simulation_data *sim )
       std::string filename    = "cout"; // (*iter).second->getFilename();
       bool        active      = (*iter).second->active();
 
+      // Replace all colons with and an underscore.
+      std::replace( name.begin(), name.end(), ':', '_');
+      std::replace( component.begin(), component.end(), ':', '_');
+      
       unsigned int col = 0;
       VisItUI_setTableValueS("DoutTable",
                              i, col++, (active ? "true":"false"), 1);
