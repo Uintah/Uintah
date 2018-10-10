@@ -273,13 +273,18 @@ WARNING
     virtual int  getLastRegridTimeStep() = 0;
     
     // Some applications can set reduction variables
+    virtual unsigned int numReductionVariable() const = 0;
     virtual void activateReductionVariable(std::string name, bool val) = 0;
     virtual bool activeReductionVariable(std::string name) = 0;
     virtual bool isBenignReductionVariable( std::string name ) = 0;
     virtual void setReductionVariable(std::string name,   bool val) = 0;
     virtual void setReductionVariable(std::string name, double val) = 0;
     // Get application specific reduction values all cast to doubles.
-    virtual double getReductionVariable( std::string name ) = 0;
+    virtual double getReductionVariable( std::string name ) const = 0;
+    virtual double getReductionVariable( unsigned int index ) const = 0;
+    virtual std::string getReductionVariableName( unsigned int index ) const = 0;
+    virtual unsigned int getReductionVariableCount( unsigned int index ) const = 0;
+    virtual bool       overriddenReductionVariable( unsigned int index ) const = 0;
     
     // Access methods for member classes.
     virtual MaterialManagerP getMaterialManagerP() const = 0;
