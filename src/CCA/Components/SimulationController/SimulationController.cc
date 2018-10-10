@@ -62,14 +62,14 @@
 
 namespace {
 
-Uintah::Dout g_sim_stats(         "SimulationStats"           , "SimulationController", "sim general stats debug info"             , true  );
-Uintah::Dout g_sim_stats_mem(     "SimulationStatsMem"        , "SimulationController", "sim memory stats debug info"              , true  );
+Uintah::Dout g_sim_stats(       "SimulationStats"           , "SimulationController", "Simulation general stats"    , true  );
+Uintah::Dout g_sim_stats_mem(   "SimulationStatsMem"        , "SimulationController", "Simulation memory stats"     , true  );
 
-Uintah::Dout g_comp_timings(      "ComponentTimings"          , "SimulationController", "aggregated component timings per timestep", false );
-Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", "SimulationController", "individual component timings"             , false );
+Uintah::Dout g_comp_stats(      "ComponentStats"            , "SimulationController", "Aggregated component stats"  , false );
+Uintah::Dout g_comp_indv_stats( "ComponentIndividualStats"  , "SimulationController", "Individual component stats"  , false );
 
-Uintah::Dout g_app_timings(      "ApplicationTimings"          , "SimulationController", "aggregated application timing stats per timestep", false );
-Uintah::Dout g_indv_app_timings( "IndividualApplicationTimings", "SimulationController", "individual application timings"                  , false );
+Uintah::Dout g_app_stats(       "ApplicationStats"          , "SimulationController", "Aggregated application stats", false );
+Uintah::Dout g_app_indv_stats(  "ApplicationIndividualStats", "SimulationController", "Individual application stats", false );
 
 }
 
@@ -630,7 +630,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
   
   // Reductions are only need if these are true.
   if( (m_regridder && m_regridder->useDynamicDilation()) ||
-      g_sim_stats_mem || g_comp_timings || g_indv_comp_timings || reduce ) {
+      g_sim_stats_mem || g_comp_stats || g_comp_indv_stats || reduce ) {
 
     m_runtime_stats.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   
@@ -642,7 +642,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     }
   }
   
-  if( g_app_timings || g_indv_app_timings || reduce ) {
+  if( g_app_stats || g_app_indv_stats || reduce ) {
     m_application->reduceApplicationStats( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   }
   
@@ -737,7 +737,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
   double percent_overhead = 0;
   
   if( (m_regridder && m_regridder->useDynamicDilation()) ||
-      g_comp_timings ) {
+      g_comp_stats ) {
 
     // Sum up the average time for overhead related components.
     double overhead_time =
@@ -792,7 +792,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
   // Average proc runtime performance stats
   if( d_myworld->myRank() == 0 &&
-      g_comp_timings && m_num_samples && m_runtime_stats.size())
+      g_comp_stats && m_num_samples && m_runtime_stats.size())
   {
     // Ignore the first sample as that is for initialization.
     std::ostringstream header;
@@ -841,7 +841,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
   }
   
   // Infrastructure per proc runtime performance stats
-  if (g_indv_comp_timings && m_runtime_stats.size() && m_runtime_stats.size())
+  if (g_comp_indv_stats && m_runtime_stats.size() && m_runtime_stats.size())
   {
     std::ostringstream header;    
     header << "--" << std::left
@@ -873,7 +873,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
   
   // Report the average application stats.
   if( d_myworld->myRank() == 0 &&
-      g_app_timings && m_application->getApplicationStats().size() )
+      g_app_stats && m_application->getApplicationStats().size() )
   {
     std::ostringstream header;
     header << "Application performance summary stats for "
@@ -914,7 +914,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
   }
   
   // Application per proc runtime performance stats
-  if (g_indv_app_timings && m_application->getApplicationStats().size())
+  if (g_app_indv_stats && m_application->getApplicationStats().size())
   {
     std::ostringstream header;
     header << "--" << std::left
