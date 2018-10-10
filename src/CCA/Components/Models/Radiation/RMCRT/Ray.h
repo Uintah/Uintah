@@ -225,7 +225,7 @@ namespace Uintah{
       const VarLabel* d_ROI_HiCellLabel;
       const VarLabel* d_PPTimerLabel;        // perPatch timer
 
-      ApplicationInterface* m_application;
+      ApplicationInterface* m_application{nullptr};
     
       // const VarLabel* d_divQFiltLabel;
       // const VarLabel* d_boundFluxFiltLabel;
