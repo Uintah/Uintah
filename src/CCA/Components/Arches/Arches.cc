@@ -90,13 +90,14 @@ Arches::Arches(const ProcessorGroup* myworld,
   // checkpointIfInvalidNextDelT( DELTA_T_MIN );
 
 #ifdef ADD_PERFORMANCE_STATS 
-  m_application_stats.insert( (ApplicationStatsEnum) StableTimeStep,          std::string("StableTimeStep"),          "seconds", 0 );
-  m_application_stats.insert( (ApplicationStatsEnum) StableTimeStepUnderflow, std::string("StableTimeStepUnderflow"), "seconds", 0 );
-
-  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchTime,       std::string("RMCRT Patch Time"),       "milliseconds",  0 );
-  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchSize,       std::string("RMCRT Patch Steps"),      "steps",         0 );
-  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchEfficiency, std::string("RMCRT Patch Efficiency"), "steps/seconds", 0 );
+  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchTime,       std::string("RMCRT_Patch_Time"),       "milliseconds"  );
+  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchSize,       std::string("RMCRT_Patch_Steps"),      "steps"         );
+  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchEfficiency, std::string("RMCRT_Patch_Efficiency"), "steps/seconds" );
 #endif
+
+  m_application_stats.insert( (ApplicationStatsEnum) DORadiationTime,   std::string("DO_Radiation_Time"),   "seconds" );
+  m_application_stats.insert( (ApplicationStatsEnum) DORadiationSweeps, std::string("DO_Radiation_Sweeps"), "sweeps"  );
+  m_application_stats.insert( (ApplicationStatsEnum) DORadiationBands,  std::string("DO_Radiation_Bands"),  "bands"   );
 }
 
 //--------------------------------------------------------------------------------------------------

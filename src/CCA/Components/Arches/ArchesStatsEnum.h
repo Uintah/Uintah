@@ -51,11 +51,12 @@ namespace Uintah {
   // timing statistics to test load balance
   enum ArchesStatsEnum
   {
-    StableTimeStep,
-    StableTimeStepUnderflow,
     RMCRTPatchTime,
     RMCRTPatchSize,
     RMCRTPatchEfficiency,
+    DORadiationTime,
+    DORadiationSweeps,
+    DORadiationBands,
   };
 
 } // end namespace Uintah

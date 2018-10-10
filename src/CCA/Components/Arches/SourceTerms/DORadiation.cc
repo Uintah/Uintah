@@ -682,6 +682,12 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 void
 DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
+  // A pointer to the application so to get a handle to the
+  // performanance stats.  This is a bit of hack so to get the
+  // application passed down to other classes like the
+  if( _DO_model )
+    _DO_model->setApplicationInterface( sched->getApplication() );
+
   string taskname = "DORadiation::initialize";
   Task* tsk = scinew Task(taskname, this, &DORadiation::initialize);
 
