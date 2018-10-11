@@ -76,6 +76,9 @@ void visit_SimGetCustomUIData(void *cbdata)
   // Set the custom UI optional UPS variable table
   visit_SetUPSVars( sim );
 
+  // Set the custom UI reduction variable table
+  visit_SetReductionVariables( sim );
+
   // Set the custom UI output variable table
   visit_SetOutputIntervals( sim );
 
@@ -156,6 +159,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     /* NOTE visit_SimGetMetaData is called as a results of calling
        visit_CheckState which calls VisItTimeStepChanged at this point
        the sim->runMode will always be VISIT_SIMMODE_RUNNING. */
+
+    // To get the "Simulation status" in the Simulation window correct
+    // one needs to call VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
     if(sim->runMode == VISIT_SIMMODE_FINISHED ||
        sim->runMode == VISIT_SIMMODE_STOPPED ||
        sim->runMode == VISIT_SIMMODE_STEP)

@@ -369,6 +369,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       DOUT( visitdbg, msg.str().c_str() );
 
       VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
+      VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
     }
 
     // A hack because m_max_time_steps is checked only if it is
@@ -393,6 +394,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       DOUT( visitdbg, msg.str().c_str() );
 
       VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
+      VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
     }
 
     VisItDisconnect();

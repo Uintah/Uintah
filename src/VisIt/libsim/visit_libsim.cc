@@ -124,6 +124,8 @@ void visit_LibSimArguments(int argc, char **argv)
 //---------------------------------------------------------------------
 void visit_InitLibSim( visit_simulation_data *sim )
 {
+  // sim->runMode is set in AMRSimulationController.cc
+  
   // The simulation will wait for VisIt to connect after first step.
   // sim->runMode = VISIT_SIMMODE_STOPPED;
 
@@ -474,7 +476,7 @@ void visit_EndLibSim( visit_simulation_data *sim )
     while( sim->runMode != VISIT_SIMMODE_FINISHED &&
            sim->simMode != VISIT_SIMMODE_TERMINATED );
 
-    VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
+    VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
   }
 }
 
@@ -643,7 +645,7 @@ bool visit_CheckState( visit_simulation_data *sim )
           VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
           VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
 
-          VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
+          VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
         }
 
         /* Start running again if VisIt closes. */
@@ -683,7 +685,7 @@ bool visit_CheckState( visit_simulation_data *sim )
       {
         if(sim->isProc0)
         {
-          VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
+          VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
 
           std::stringstream msg;          
           msg << "Visit libsim - Finished the simulation ";
