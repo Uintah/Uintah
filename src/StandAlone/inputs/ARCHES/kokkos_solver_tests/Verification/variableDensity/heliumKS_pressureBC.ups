@@ -22,6 +22,10 @@
     <outputInitTimestep/>
     <save label="x-mom"/>
     <save label="volFraction"/>
+    <save label="cellType"/>
+    <save label="fx_volume_fraction"/>
+    <save label="fy_volume_fraction"/>
+    <save label="fz_volume_fraction"/>
     <save label="drhodt"/>
     <save label="y-mom"/>
     <save label="z-mom"/>
@@ -131,7 +135,7 @@
         <BCType var="Neumann" label="y-mom">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="z-mom">
+        <BCType var="Custom" type="PressureOutlet" label="z-mom">
           <value>0.</value>
         </BCType>
         <BCType var="Neumann" label="phi">
@@ -139,7 +143,7 @@
         </BCType>
       </Face>
       <Face side="x-" type="Pressure">
-        <BCType var="Neumann" label="x-mom">
+        <BCType var="Custom" type="PressureOutlet" label="x-mom">
           <value>0</value>
         </BCType>
         <BCType var="Neumann" label="y-mom">
@@ -153,7 +157,7 @@
         </BCType>
       </Face>
       <Face side="x+" type="Pressure">
-        <BCType var="Neumann" label="x-mom">
+        <BCType var="Custom" type="PressureOutlet" label="x-mom">
           <value>0</value>
         </BCType>
         <BCType var="Neumann" label="y-mom">
@@ -170,7 +174,7 @@
         <BCType var="Neumann" label="x-mom">
           <value>0</value>
         </BCType>
-        <BCType var="Neumann" label="y-mom">
+        <BCType var="Custom" type="PressureOutlet" label="y-mom">
           <value>0</value>
         </BCType>
         <BCType var="Neumann" label="z-mom">
@@ -184,7 +188,7 @@
         <BCType var="Neumann" label="x-mom">
           <value>0</value>
         </BCType>
-        <BCType var="Neumann" label="y-mom">
+        <BCType var="Custom" type="PressureOutlet" label="y-mom">
           <value>0</value>
         </BCType>
         <BCType var="Neumann" label="z-mom">
@@ -199,12 +203,12 @@
   <PhysicalConstants>
     <gravity>[0,0,-9.8]</gravity>
     <reference_point>[0,0,0]</reference_point>
-    <viscosity>0.0002</viscosity>
+    <viscosity>0.00002</viscosity>
   </PhysicalConstants>
   <CFD>
     <ARCHES>
-      <TimeIntegrator order="2">
-        <ExplicitIntegrator order="second"/>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
       <VarID>
         <var role="uvelocity" label="uVel"/>
@@ -286,9 +290,7 @@
       </intrusions-->
         <force_area_calc/>
       </BoundaryConditions>
-      <KokkosSolver>
-       <integrator>helium_plume</integrator>
-      </KokkosSolver>
+      <KokkosSolver/>
     </ARCHES>
   </CFD>
 </Uintah_specification>

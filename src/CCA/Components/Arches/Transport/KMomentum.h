@@ -463,7 +463,7 @@ private:
     register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 2 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
     //register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     //register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 

@@ -40,6 +40,19 @@ public:
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void VelocityDerivative_central(double&, double&, double&, const Array3<double>&, const Vector&, int, int, int);
+#define dVeldDir(u, eps, Dx, dudx, dudy, dudz, i,  j, k ) \
+         {                                           \
+           STENCIL3_1D(0);                           \
+           dudx = eps(IJK_)*eps(IJK_M_)*(u(IJK_) - u(IJK_M_))/Dx.x();      \
+         }                                           \
+         {                                           \
+           STENCIL3_1D(1);                           \
+           dudy = eps(IJK_)*eps(IJK_M_)*(u(IJK_) - u(IJK_M_))/Dx.y();      \
+         }                                           \
+         {                                           \
+           STENCIL3_1D(2);                           \
+           dudz = eps(IJK_)*eps(IJK_M_)*(u(IJK_) - u(IJK_M_))/Dx.z();      \
+         }    
     //Build instructions for this class.
     class Builder : public TaskInterface::TaskBuilder {
 
@@ -66,11 +79,13 @@ private:
     std::string m_u_vel_name;
     std::string m_v_vel_name;
     std::string m_w_vel_name;
+    std::string m_eps_x_name;
+    std::string m_eps_y_name;
+    std::string m_eps_z_name;
     std::string diff_scheme;
     std::string m_t_vis_name;
     std::vector<std::string> m_sigma_t_names;
     int Nghost_cells;
-    std::string m_eps_name;
 
 
 protected:

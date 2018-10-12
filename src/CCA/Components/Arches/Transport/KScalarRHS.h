@@ -423,18 +423,18 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
       //if ( m_premultiplier_name != "none" )
       //if ( m_transported_eqn_names[ieqn] != "NA" )
         //register_variable( m_premultiplier_name+m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      register_variable(  m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
       register_variable(  m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
       register_variable(  m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
       register_variable(  m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
     }
 
-    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, m_task_name  );
+    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, m_task_name   );
     //for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
     //  register_variable( i->first+"_unscaled", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
     //}
@@ -448,8 +448,7 @@ private:
   template <typename T, typename PT> void
   KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    constCCVariable<double>& vol_fraction =
-    tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+    CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -486,7 +485,7 @@ private:
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
       Uintah::parallel_for( range, [&](int i, int j, int k){
-        phi_unscaled(i,j,k) = phi(i,j,k) * info.constant * vol_fraction(i,j,k)  ;
+        phi_unscaled(i,j,k) = phi(i,j,k) * info.constant * eps(i,j,k)  ;
 
       });
     }
