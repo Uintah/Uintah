@@ -267,7 +267,7 @@
         <eqn_group label="CCFields" type="CC">
           <diffusion_coef label="gamma"/>
           <eqn label="phi">
-            <convection scheme="central"/>
+            <convection scheme="superbee"/>
             <diffusion scheme ="central"/>
             <!--initialize value="1"/-->
           </eqn>

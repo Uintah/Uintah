@@ -782,6 +782,9 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
 
 
   } // RK Integrator
+  //Variable stats stuff
+  i_prop_fac->second->schedule_task_group( "variable_stat_models",
+    TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, 1 );
 }
 
 //--------------------------------------------------------------------------------------------------
