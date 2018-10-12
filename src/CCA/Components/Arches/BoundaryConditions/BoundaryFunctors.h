@@ -425,7 +425,8 @@ public:
     const BndCondSpec* spec = bnd->find(var_name);
 
     const double spec_value=spec->value;
-    if ( dot == 0 ){
+
+    if ( var_help.dir == ArchesCore::NODIR || dot == 0){
 
 
       // CCVariable or CC position in the staggered variable
@@ -486,7 +487,7 @@ template <typename ES, typename MS>
     const double norm = iDir[0]+iDir[1]+iDir[2];
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
-    if ( dot == 0  ){
+    if ( var_help.dir == ArchesCore::NODIR || dot == 0  ){
     // CCvariables and CC positions in a staggered variable
 
       const IntVector normIDir = iDir * iDir;

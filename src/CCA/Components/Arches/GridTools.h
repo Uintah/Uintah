@@ -227,7 +227,7 @@ namespace Uintah{ namespace ArchesCore{
     typedef Uintah::SFCZVariable<double> ZFaceType;
     DIR dir;
     int ioff, joff, koff;
-    VariableHelper():dir(NODIR), ioff(0), joff(0), koff(0){}
+    VariableHelper():dir(NODIR), ioff(-1), joff(-1), koff(-1){}
   };
 
   template <>
@@ -238,7 +238,7 @@ namespace Uintah{ namespace ArchesCore{
     typedef Uintah::constSFCZVariable<double> ZFaceType;
     DIR dir;
     int ioff, joff, koff;
-    VariableHelper():dir(NODIR), ioff(0), joff(0), koff(0){}
+    VariableHelper():dir(NODIR), ioff(-1), joff(-1), koff(-1){}
   };
 
   template <>
@@ -475,5 +475,5 @@ namespace Uintah{ namespace ArchesCore{
   private:
 
   };
-}} //namespace Uintah::ArchesCore
+}} //namespace Uintah::Arches
 #endif
