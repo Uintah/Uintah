@@ -55,6 +55,7 @@ namespace Uintah { namespace ArchesCore{
     struct MMSshunn;
     struct SecondaryVariableBC;
     struct VelocityBC;
+    struct PressureOutletBC;
     struct SubGridInjector;
 
     void create_bcs( ProblemSpecP& db, std::vector<std::string> variables );
@@ -272,6 +273,29 @@ void BCFunctors<T>::build_bcs( ProblemSpecP db_bc, const std::vector<std::string
 
            insert_functor( face_name, varname, fun );
 
+         } else if ( custom_type == "PressureOutlet" ){
+           // HARD CODED! - fix me 
+           std::string vel_name = "uVel";
+           if (varname == "x-mom"){
+             vel_name = "uVel";
+             //vel_name = "x-mom";
+           } else if (varname == "y-mom") {
+             vel_name = "vVel";
+             //vel_name = "y-mom";
+           } else if  (varname == "z-mom") {
+             vel_name = "wVel";
+             //vel_name = "z-mom";
+           } else {
+             throw InvalidValue("Error: can not find velocity name "+type, __FILE__, __LINE__);
+           } 
+           double vel_value=0.0;
+           db_bc_type->require("value", vel_value);
+
+           std::shared_ptr<BaseFunctor> fun( scinew PressureOutletBC(vel_name, vel_value));
+
+           insert_functor( face_name, varname, fun );
+
+
          } else if ( custom_type == "subgrid_injector" ){
 
            std::shared_ptr<BaseFunctor> fun( scinew SubGridInjector(varname, db_bc_type));
@@ -329,6 +353,8 @@ public:
     }else if (BCFunctors<T>::SecondaryVariableBC*   child   = dynamic_cast<BCFunctors<T>::SecondaryVariableBC* >(this)){
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
     }else if (BCFunctors<T>::VelocityBC*            child   = dynamic_cast<BCFunctors<T>::VelocityBC*          >(this)){
+      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+    }else if (BCFunctors<T>::PressureOutletBC*      child   = dynamic_cast<BCFunctors<T>::PressureOutletBC*          >(this)){
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
     }else if (BCFunctors<T>::SubGridInjector*       chile   = dynamic_cast<BCFunctors<T>::SubGridInjector*     >(this)){
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
@@ -797,6 +823,100 @@ private:
   MaterialManagerP m_materialManager;
 
 };
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+struct BCFunctors<T>::PressureOutletBC : BaseFunctor {
+
+public:
+
+  PressureOutletBC( std::string vel_name, double value ):m_vel_name(vel_name), m_vel_value(value){
+  }
+  ~PressureOutletBC(){}
+
+  //void add_dep( FunctorDepList& master_dep ){
+  void add_dep( std::vector<std::string>& master_dep ){
+    // Now adding dependencies to the master list.
+    // This checks for repeats to ensure a variable isn't added twice.
+    //DepBCInfo vel_info; vel_info.variable_name = m_vel_name;
+    //vel_info.dw = ArchesFieldContainer::LATEST; 
+    //BaseFunctor::m_dep.push_back( vel_info );
+    //BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
+
+  }
+
+  void add_mod( std::vector<std::string>& master_mod ){}
+  
+
+template <typename ES, typename MS>
+  void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
+
+    // There is an issue with register variable for old_var. This BC is being applied in VelRhoHatBC.cc 
+
+    //typedef typename VariableHelper<T>::ConstType CT;
+    //T& var = *( tsk_info->get_uintah_field<T>(var_name));
+
+    //constCCVariable<double>& old_var =
+    //tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_vel_name);
+
+    //const double possmall = 1e-16;
+    //const IntVector iDir = patch->faceDirection( bnd->face );
+    //Patch::FaceType face = bnd->face;
+    //BndTypeEnum my_type  = bnd->type;
+    //int sign = iDir[0] + iDir[1] + iDir[2];
+    //int bc_sign = 0;
+    //int move_to_face_value = ( sign < 1 ) ? 1 : 0;
+
+    //IntVector move_to_face(std::abs(iDir[0])*move_to_face_value,
+    //                       std::abs(iDir[1])*move_to_face_value,
+    //                       std::abs(iDir[2])*move_to_face_value);
+
+    //if ( my_type == OUTLET ){
+    //  bc_sign = 1.;
+    //} else if ( my_type == PRESSURE){
+    //  bc_sign = -1.;
+    //}
+
+    //sign = bc_sign * sign;
+
+    //if ( my_type == OUTLET || my_type == PRESSURE ){
+      // This applies the mostly in (pressure)/mostly out (outlet) boundary condition
+    //  parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (const int i,const int j,const int k) {
+    //    int i_f = i + move_to_face[0]; // cell on the face
+    //    int j_f = j + move_to_face[1];
+    //    int k_f = k + move_to_face[2];
+  
+    //    int im = i_f - iDir[0];// first interior cell
+    //    int jm = j_f - iDir[1];
+    //    int km = k_f - iDir[2];
+  
+    //    int ipp = i_f + iDir[0];// extra cell face in the last index (mostly outwardly position) 
+    //    int jpp = j_f + iDir[1];
+    //    int kpp = k_f + iDir[2];
+  
+    //    if ( sign * old_var(i_f,j_f,k_f) > possmall ){
+        //if ( sign * var(i_f,j_f,k_f) > possmall ){
+          // du/dx = 0
+    //      var(i_f,j_f,k_f)= var(im,jm,km);
+    //    } else {
+          // shut off the hatted value to encourage the mostly-* condition
+    //      var(i_f,j_f,k_f) = 0.0;
+    //    }
+  
+    //    var(ipp,jpp,kpp) = var(i_f,j_f,k_f);
+  
+    //  });
+    //}
+
+    }
+
+private:
+
+  std::string m_vel_name;
+  const double m_vel_value;
+
+};
+
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>

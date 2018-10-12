@@ -76,14 +76,17 @@ public:
 
     };
 
-template<typename ExecutionSpace, typename MemSpace, typename grid_T>
-void set_mom_bc( ExecutionObject<ExecutionSpace,MemSpace>& exObj,grid_T& var, IntVector& iDir,  const double &possmall , const int sign, ListOfCellsIterator& cell_iter);
+template<typename ExecutionSpace, typename MemSpace, typename grid_T, typename Cgrid_T>
+void set_mom_bc( ExecutionObject<ExecutionSpace,MemSpace>& exObj,grid_T& var, Cgrid_T& old_var, IntVector& iDir,  const double &possmall , const int sign, ListOfCellsIterator& cell_iter);
 
 private:
 
     std::string m_xmom;
     std::string m_ymom;
     std::string m_zmom;
+    std::string m_uVel;
+    std::string m_vVel;
+    std::string m_wVel;
 
 
   };

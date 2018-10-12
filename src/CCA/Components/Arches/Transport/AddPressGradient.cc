@@ -97,7 +97,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   // boundary conditions on the pressure fields are applied
   // post linear solve in the PressureBC.cc class.
 
-  GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1, 1)
+  GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0, 1)
   Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
 
   Uintah::parallel_for(exObj, x_range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -107,7 +107,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   });
 
-  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1, 1)
+  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0, 1)
   Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
 
   Uintah::parallel_for(exObj, y_range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -117,7 +117,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   });
 
-  GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1, 1)
+  GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0, 1)
   Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
   Uintah::parallel_for(exObj, z_range, KOKKOS_LAMBDA (int i, int j, int k){
 

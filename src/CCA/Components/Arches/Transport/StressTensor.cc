@@ -170,16 +170,10 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     double dwdx = 0.0;
     double dwdy = 0.0;
     double dwdz = 0.0;
-    double mu11 = 0.0;
     double mu12 = 0.0;
     double mu13 = 0.0;
-    double mu22 = 0.0;
     double mu23 = 0.0;
-    double mu33 = 0.0;
 
-    mu11 = D(i-1,j,k); // it does not need interpolation
-    mu22 = D(i,j-1,k);  // it does not need interpolation
-    mu33 = D(i,j,k-1);  // it does not need interpolation
     mu12  = 0.5*(D(i-1,j,k)+D(i,j,k)); // First interpolation at j
     mu12 += 0.5*(D(i-1,j-1,k)+D(i,j-1,k));// Second interpolation at j-1
     mu12 *= 0.5;
@@ -197,11 +191,45 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     dVeldDir(vVel, Dx, dvdx,dvdy,dvdz,i,j,k);
     dVeldDir(wVel, Dx, dwdx,dwdy,dwdz,i,j,k);
 
-    sigma11(i,j,k) =  mu11 * 2.0*dudx;
     sigma12(i,j,k) =  mu12 * (dudy + dvdx );
     sigma13(i,j,k) =  mu13 * (dudz + dwdx );
-    sigma22(i,j,k) =  mu22 * 2.0*dvdy;
     sigma23(i,j,k) =  mu23 * (dvdz + dwdy );
+
+  });
+
+  IntVector lowNx = patch->getCellLowIndex();
+  IntVector highNx = patch->getCellHighIndex();
+
+  GET_WALL_BUFFERED_PATCH_RANGE(lowNx, highNx,1,1,0,0,0,0);  
+  Uintah::BlockRange range1(lowNx, highNx);
+  Uintah::parallel_for(exObj, range1, KOKKOS_LAMBDA (int i, int j, int k){
+
+    const double mu11  = D(i-1,j,k); // it does not need interpolation
+    const double dudx  = (uVel(i,j,k) - uVel(i-1,j,k))/Dx.x();
+    sigma11(i,j,k)     =  mu11 * 2.0*dudx;
+
+  });
+
+  IntVector lowNy = patch->getCellLowIndex();
+  IntVector highNy = patch->getCellHighIndex();
+
+  GET_WALL_BUFFERED_PATCH_RANGE(lowNy, highNy,0,0,1,1,0,0);  
+  Uintah::BlockRange range2(lowNy, highNy);
+  Uintah::parallel_for(exObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
+    const double mu22 = D(i,j-1,k);  // it does not need interpolation
+    const double dvdy  = (vVel(i,j,k) - vVel(i,j-1,k))/Dx.y();
+    sigma22(i,j,k) =  mu22 * 2.0*dvdy;
+
+  });
+
+  IntVector lowNz = patch->getCellLowIndex();
+  IntVector highNz = patch->getCellHighIndex();
+
+  GET_WALL_BUFFERED_PATCH_RANGE(lowNz, highNz,0,0,0,0,1,1);  
+  Uintah::BlockRange range3(lowNz, highNz);
+  Uintah::parallel_for(exObj, range3, KOKKOS_LAMBDA (int i, int j, int k){
+    const double mu33 = D(i,j,k-1);  // it does not need interpolation
+    const double dwdz  = (wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
     sigma33(i,j,k) =  mu33 * 2.0*dwdz;
 
   });
