@@ -372,7 +372,11 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 void
 DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-
+  // A pointer to the application so to get a handle to the
+  // performanance stats.  This is a bit of hack so to get the
+  // application passed down to other classes like the
+  if( _DO_model )
+    _DO_model->setApplicationInterface( sched->getApplication() );
 
   _T_label = VarLabel::find(_T_label_name);
   if ( _T_label == 0){
@@ -682,12 +686,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 void
 DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  // A pointer to the application so to get a handle to the
-  // performanance stats.  This is a bit of hack so to get the
-  // application passed down to other classes like the
-  if( _DO_model )
-    _DO_model->setApplicationInterface( sched->getApplication() );
-
   string taskname = "DORadiation::initialize";
   Task* tsk = scinew Task(taskname, this, &DORadiation::initialize);
 
