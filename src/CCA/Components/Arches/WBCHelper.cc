@@ -617,50 +617,51 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
               // This method is sometimes overestimates by 4 due to double counting//
               // the corners.                                                      //
               ///////////////////////////////////////////////////////////////////////
-                int i_size=0;
-              Uintah::Iterator iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xminus, Uintah::Patch::ExtraCells );
-                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
-                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xplus, Uintah::Patch::ExtraCells );
-                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
-                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yminus, Uintah::Patch::ExtraCells );
-                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
-                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yplus, Uintah::Patch::ExtraCells );
-                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
-                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zminus, Uintah::Patch::ExtraCells );
-                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
-                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zplus, Uintah::Patch::ExtraCells );
-                add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                //int i_size=0;
+              //Uintah::Iterator iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xminus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xplus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yminus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yplus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zminus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zplus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
               /////////////END GET BC size ////////////////////
 
 
               ///////////////////////////////////////////////////////////////////////
               //////////////////Populate BC container ///////////////////////////////
               ///////////////////////////////////////////////////////////////////////
-              ListOfCellsIterator list_bndExtraCells(i_size+bndIter.size());
-              ListOfCellsIterator list_bndFaceCells(i_size+bndIter.size());
-              for ( bndIter.reset(); !bndIter.done(); bndIter++){   //no parallel_for needed
-                list_bndFaceCells.add(*bndIter);
-              }
+              //ListOfCellsIterator list_bndExtraCells(i_size+bndIter.size());
+              //ListOfCellsIterator list_bndFaceCells(i_size+bndIter.size());
+              //for ( bndIter.reset(); !bndIter.done(); bndIter++){   //no parallel_for needed
+                //list_bndFaceCells.add(*bndIter);
+              //}
 
-              iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xminus, Uintah::Patch::ExtraCells);
-                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
-                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xplus, Uintah::Patch::ExtraCells );
-                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
-                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yminus, Uintah::Patch::ExtraCells );
-                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
-                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yplus, Uintah::Patch::ExtraCells );
-                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
-                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zminus, Uintah::Patch::ExtraCells );
-                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
-                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zplus, Uintah::Patch::ExtraCells );
-                add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+              //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xminus, Uintah::Patch::ExtraCells);
+                //add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xplus, Uintah::Patch::ExtraCells );
+                //add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yminus, Uintah::Patch::ExtraCells );
+                //add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yplus, Uintah::Patch::ExtraCells );
+                //add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zminus, Uintah::Patch::ExtraCells );
+                //add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zplus, Uintah::Patch::ExtraCells );
+                //add_iterator_if_exluded_from_arg_1(list_bndFaceCells,iterLimits);
               ////////////////////END POPULATE BC CONTAINER//////////////////////////
 
 
-              bndIter = list_bndFaceCells;
+              //bndIter = list_bndFaceCells;
               //
 
-              BoundaryIterators myIters(i_size+bndIter.size());
+              //BoundaryIterators myIters(i_size+bndIter.size());
+              BoundaryIterators myIters(bndIter.size());
               DOUT( dbgbc_new, "[WBCHelper]   Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl);
               pack_uintah_iterator(face, patch, bndIter, myIters); // store uintah iterator
               // store a pointer to the list of particle index that are near this boundary.

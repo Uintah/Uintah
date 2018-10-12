@@ -22,6 +22,10 @@
     <outputInitTimestep/>
     <save label="x-mom"/>
     <save label="volFraction"/>
+    <save label="volFractionX"/>
+    <save label="volFractionY"/>
+    <save label="volFractionZ"/>
+    <save label="cellType"/>
     <save label="drhodt"/>
     <save label="m_dot_g"/>
     <save label="gas_kinetic_energy"/>
@@ -107,7 +111,7 @@
       </Face>
       <!-- Annular Ring WallBC -->
       <Face annulus="z-" origin="2.0 2.0 0.0" inner_radius="0.5" 
-        outer_radius="1.01" type="Wall" >
+        outer_radius="1.01" type="Wall" name="annulus">
         <!-- outer_radius="1.01" type="Wall"-->
         <BCType var="Dirichlet" label="x-mom">
           <value>0</value>
