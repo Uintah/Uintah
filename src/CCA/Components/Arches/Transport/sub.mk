@@ -29,6 +29,8 @@ endif
 SRCS += \
         $(SRCDIR)/ComputePsi.cc       \
         $(SRCDIR)/KFEUpdate.cc        \
+        $(SRCDIR)/SUpdate.cc          \
+        $(SRCDIR)/TimeAve.cc          \
         $(SRCDIR)/KScalarRHS.cc       \
         $(SRCDIR)/KMomentum.cc        \
 			  $(SRCDIR)/PressureEqn.cc      \
