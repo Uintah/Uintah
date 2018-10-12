@@ -77,7 +77,7 @@ public:
     };
 
 template<typename ExecutionSpace, typename MemSpace, typename grid_T, typename Cgrid_T>
-void set_mom_bc( ExecutionObject<ExecutionSpace,MemSpace>& exObj,grid_T& var, Cgrid_T& old_var, IntVector& iDir,  const double &possmall , const int sign, ListOfCellsIterator& cell_iter);
+void set_mom_bc( ExecutionObject<ExecutionSpace,MemSpace>& exObj,grid_T& var, const Cgrid_T& old_var, IntVector& iDir,  const double &possmall , const int sign, ListOfCellsIterator& cell_iter);
 
 private:
 

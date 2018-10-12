@@ -101,10 +101,9 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
       //enforce p = 0
 
       //const double sign = -(iDir[0]+iDir[1]+iDir[2]);
-      const double sign = -1;
 
       parallel_for_unstructured(exObj, cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
-        p(i,j,k) = sign*p(i-iDir[0],j-iDir[1],k-iDir[2]);
+        p(i,j,k) = -p(i-iDir[0],j-iDir[1],k-iDir[2]);
       });
     }
   }

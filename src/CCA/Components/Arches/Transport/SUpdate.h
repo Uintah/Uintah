@@ -305,7 +305,7 @@ private:
     const double Vol = DX.x()*DX.y()*DX.z();
 
     typedef std::vector<std::string> SV;
-    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+    //typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
     const int time_substep = tsk_info->get_time_substep();
     int ceqn = 0;
