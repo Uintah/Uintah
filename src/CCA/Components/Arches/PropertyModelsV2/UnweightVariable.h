@@ -87,6 +87,15 @@ private:
     };
     std::map<std::string, Scaling_info> m_scaling_info;
     std::string m_volFraction_name{"volFraction"};
+
+    struct Clipping_info {
+      std::string var; // 
+      double high; // 
+      double low;
+    };
+    std::map<std::string, Clipping_info> m_clipping_info;
+    
+    
     //bool m_compute_mom;
 
   };
@@ -221,7 +230,22 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
       // weight do not performe division 
     }  
 
+    //Clipping
+    if ( db_eqn->findBlock("clip")){
+      double low; double high;
+      db_eqn->findBlock("clip")->getAttribute("low", low);
+      db_eqn->findBlock("clip")->getAttribute("high", high);
+
+      Clipping_info clipping_eqn ;
+      clipping_eqn.var = eqn_name;
+      clipping_eqn.high = high;
+      clipping_eqn.low  = low;
+      m_clipping_info.insert(std::make_pair(m_var_name, clipping_eqn));
+    }
+    
+
   }
+  
   //m_compute_mom = false;
   if (m_task_name == "uVel"){
     m_eqn_class = ArchesCore::MOMENTUM;
@@ -488,8 +512,22 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
               un_var(ip,jp,kp) = var(ip,jp,kp)/rho_inter; // BC
               un_var(i,j,k) = un_var(ip,jp,kp); // extra cell
             });
+          } else if ( dot == 1 ){
+            // face (+) in Staggered Variablewe set BC at 0
+            parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+              const int ip=i - iDir[0];
+              const int jp=j - iDir[1];
+              const int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
+              un_var(i,j,k) = var(i,j,k)/rho_inter; // extra cell
+              // aditional extra cell for staggered variables on face (+)
+              const int ie = i + iDir[0];
+              const int je = j + iDir[1];
+              const int ke = k + iDir[2];
+              un_var(ie,je,ke) = un_var(i,j,k);  
+            });
           } else {
-         // face (+) in Staggered Variablewe set BC at extra cell
+         // other direction that are not staggered  
             parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
               const int ip=i - iDir[0];
               const int jp=j - iDir[1];
@@ -514,7 +552,7 @@ void UnweightVariable<T>::register_timestep_eval(
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
     register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-    register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
   }
   register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
@@ -552,7 +590,6 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   }
 
   // unscaling
-  //int eqn =0;
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     Scaling_info info = ieqn->second;
     const double ScalingConst = info.constant;
@@ -560,9 +597,25 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
     Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       un_var(i,j,k) *= ScalingConst;
     });
-    //eqn += 1;
   }
 
+  // clipping   
+  for ( auto ieqn = m_clipping_info.begin(); ieqn != m_clipping_info.end(); ieqn++ ){
+    Clipping_info info = ieqn->second;
+    T& var = tsk_info->get_uintah_field_add<T>(info.var);
+    T& rho_var = tsk_info->get_uintah_field_add<T>(ieqn->first);
+    Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+    if ( var(i,j,k) > info.high ) {
+
+      var(i,j,k)     = info.high;
+      rho_var(i,j,k) = rho(i,j,k)*var(i,j,k); 
+
+    } else if ( var(i,j,k) < info.low ) {
+      var(i,j,k) = info.low;
+      rho_var(i,j,k) = rho(i,j,k)*var(i,j,k); 
+    }
+    });
+  }
 }
 }
 #endif
