@@ -23,9 +23,9 @@
     <save label="x-mom"/>
     <save label="volFraction"/>
     <save label="cellType"/>
-    <save label="fx_volume_fraction"/>
-    <save label="fy_volume_fraction"/>
-    <save label="fz_volume_fraction"/>
+    <save label="volFractionX"/>
+    <save label="volFractionY"/>
+    <save label="volFractionZ"/>
     <save label="drhodt"/>
     <save label="y-mom"/>
     <save label="z-mom"/>
