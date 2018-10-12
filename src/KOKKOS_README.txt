@@ -23,7 +23,7 @@ And here is how I configured Kokkos for both OpenMP and CUDA
 
 1) Apply my Kokkos patch for asynchronous, I have placed it in this Uintah branch's src directory. 
 
-git apply /patch/to/patch/kokkos_brad_june82018.patch (works from anywhere inside the kokkos source tree)
+git apply /patch/to/patch/kokkos_brad_oct122018.patch (works from anywhere inside the kokkos source tree)
 
 2) Double check Kokkos's Makefile script, its bugged: 
 
