@@ -1081,8 +1081,13 @@ SimulationController::CheckInSitu( const ProcessorGroup *
     // Check the state - if the return value is true the user issued
     // a termination.
     if( visit_CheckState( m_visitSimData ) ) {
-      // Nothing to do because the in situ will have changed the
-      // max cycles to the current time step so Uintah will terminate.
+      // Set the max wall time to the current wall time which will
+      // cause the simulation to terminate because the next wall time
+      // check will be greater.
+      m_application->setWallTimeMax( m_wall_timers.GetWallTime() );
+
+      // Disconnect from VisIt.
+      visit_EndLibSim( m_visitSimData );
     }
 
     // This function is no longer used as last is now used in the
