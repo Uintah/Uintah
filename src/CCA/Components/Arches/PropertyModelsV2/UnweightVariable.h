@@ -603,16 +603,18 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   // clipping   
   for ( auto ieqn = m_clipping_info.begin(); ieqn != m_clipping_info.end(); ieqn++ ){
     Clipping_info info = ieqn->second;
-    T& var = tsk_info->get_uintah_field_add<T>(info.var);
-    T& rho_var = tsk_info->get_uintah_field_add<T>(ieqn->first);
+    auto var = tsk_info->get_uintah_field_add<T, double, MemSpace>(info.var);
+    auto rho_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(ieqn->first);
+    const double cHigh =info.high;
+    const double cLow =info.low;
     Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-    if ( var(i,j,k) > info.high ) {
+    if ( var(i,j,k) > cHigh ) {
 
-      var(i,j,k)     = info.high;
+      var(i,j,k)     = cHigh;
       rho_var(i,j,k) = rho(i,j,k)*var(i,j,k); 
 
-    } else if ( var(i,j,k) < info.low ) {
-      var(i,j,k) = info.low;
+    } else if ( var(i,j,k) < cLow ) {
+      var(i,j,k) = cLow;
       rho_var(i,j,k) = rho(i,j,k)*var(i,j,k); 
     }
     });
