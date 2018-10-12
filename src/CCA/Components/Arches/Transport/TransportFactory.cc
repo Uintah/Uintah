@@ -3,6 +3,8 @@
 #include <CCA/Components/Arches/Transport/KMomentum.h>
 #include <CCA/Components/Arches/Transport/ComputePsi.h>
 #include <CCA/Components/Arches/Transport/KFEUpdate.h>
+#include <CCA/Components/Arches/Transport/TimeAve.h>
+#include <CCA/Components/Arches/Transport/SUpdate.h>
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
 #include <CCA/Components/Arches/Transport/VelRhoHatBC.h>
 #include <CCA/Components/Arches/Transport/AddPressGradient.h>
@@ -98,51 +100,102 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
       //Generate a psi function for each scalar and fe updates:
       std::string update_task_name = "scalar_fe_update_"+group_name;
       std::string diffusion_task_name = "diffusion_"+group_name;
+      // 
+      std::string rk_time_ave_task_name = "rk_time_avg_"+group_name;
+      std::string scalar_up_task_name = "scalar_update_"+group_name;
+
       if ( type == "CC" ){
-        KFEUpdate<CCVariable<double> >::Builder* update_tsk =
-        scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name, 0 );
-        register_task( update_task_name, update_tsk );
+        //KFEUpdate<CCVariable<double> >::Builder* update_tsk =
+        //scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name, 0 );
+        //register_task( update_task_name, update_tsk );
 
         //diffusion term:
         TaskInterface::TaskBuilder* diff_tsk =
-          scinew Diffusion<CCVariable<double> >::Builder( diffusion_task_name, 0 );
+        scinew Diffusion<CCVariable<double> >::Builder( diffusion_task_name, 0 );
         register_task( diffusion_task_name, diff_tsk );
+
+        //split KFEUpate in two task for scalar
+        // rk time average 
+        TaskInterface::TaskBuilder* rk_ta_tsk =
+        scinew TimeAve<CCVariable<double> >::Builder( rk_time_ave_task_name, 0 );
+        register_task( rk_time_ave_task_name, rk_ta_tsk );
+
+        // scalar updated 
+        TaskInterface::TaskBuilder* sup_tsk =
+        scinew SUpdate<CCVariable<double> >::Builder( scalar_up_task_name, 0 );
+        register_task( scalar_up_task_name, sup_tsk );
+
 
       } else if ( type == "FX" ){
-        KFEUpdate<SFCXVariable<double> >::Builder* update_tsk =
-        scinew KFEUpdate<SFCXVariable<double> >::Builder( update_task_name, 0 );
-        register_task( update_task_name, update_tsk );
+        //KFEUpdate<SFCXVariable<double> >::Builder* update_tsk =
+        //scinew KFEUpdate<SFCXVariable<double> >::Builder( update_task_name, 0 );
+        //register_task( update_task_name, update_tsk );
 
         //diffusion term:
         TaskInterface::TaskBuilder* diff_tsk =
-          scinew Diffusion<SFCXVariable<double> >::Builder( diffusion_task_name, 0 );
+        scinew Diffusion<SFCXVariable<double> >::Builder( diffusion_task_name, 0 );
         register_task( diffusion_task_name, diff_tsk );
+
+        //split KFEUpate in two task for scalar
+        // rk time average 
+        TaskInterface::TaskBuilder* rk_ta_tsk =
+        scinew TimeAve<SFCXVariable<double> >::Builder( rk_time_ave_task_name, 0 );
+        register_task( rk_time_ave_task_name, rk_ta_tsk );
+
+        // scalar updated 
+        TaskInterface::TaskBuilder* sup_tsk =
+        scinew SUpdate<SFCXVariable<double> >::Builder( scalar_up_task_name, 0 );
+        register_task( scalar_up_task_name, sup_tsk );
+
 
       } else if ( type == "FY" ){
-        KFEUpdate<SFCYVariable<double> >::Builder* update_tsk =
-        scinew KFEUpdate<SFCYVariable<double> >::Builder( update_task_name, 0 );
-        register_task( update_task_name, update_tsk );
+        //KFEUpdate<SFCYVariable<double> >::Builder* update_tsk =
+        //scinew KFEUpdate<SFCYVariable<double> >::Builder( update_task_name, 0 );
+        //register_task( update_task_name, update_tsk );
 
         //diffusion term:
         TaskInterface::TaskBuilder* diff_tsk =
-          scinew Diffusion<SFCYVariable<double> >::Builder( diffusion_task_name, 0 );
+        scinew Diffusion<SFCYVariable<double> >::Builder( diffusion_task_name, 0 );
         register_task( diffusion_task_name, diff_tsk );
+
+        //split KFEUpate in two task for scalar
+        // rk time average 
+        TaskInterface::TaskBuilder* rk_ta_tsk =
+        scinew TimeAve<SFCYVariable<double> >::Builder( rk_time_ave_task_name, 0 );
+        register_task( rk_time_ave_task_name, rk_ta_tsk );
+
+        // scalar updated 
+        TaskInterface::TaskBuilder* sup_tsk =
+        scinew SUpdate<SFCYVariable<double> >::Builder( scalar_up_task_name, 0 );
+        register_task( scalar_up_task_name, sup_tsk );
 
       } else if ( type == "FZ" ){
-        KFEUpdate<SFCZVariable<double> >::Builder* update_tsk =
-        scinew KFEUpdate<SFCZVariable<double> >::Builder( update_task_name, 0 );
-        register_task( update_task_name, update_tsk );
+        //KFEUpdate<SFCZVariable<double> >::Builder* update_tsk =
+        //scinew KFEUpdate<SFCZVariable<double> >::Builder( update_task_name, 0 );
+        //register_task( update_task_name, update_tsk );
 
         //diffusion term:
         TaskInterface::TaskBuilder* diff_tsk =
-          scinew Diffusion<SFCZVariable<double> >::Builder( diffusion_task_name, 0 );
+        scinew Diffusion<SFCZVariable<double> >::Builder( diffusion_task_name, 0 );
         register_task( diffusion_task_name, diff_tsk );
+
+        //split KFEUpate in two task for scalar
+        // rk time average 
+        TaskInterface::TaskBuilder* rk_ta_tsk =
+        scinew TimeAve<SFCZVariable<double> >::Builder( rk_time_ave_task_name, 0 );
+        register_task( rk_time_ave_task_name, rk_ta_tsk );
+
+        // scalar updated 
+        TaskInterface::TaskBuilder* sup_tsk =
+        scinew SUpdate<SFCZVariable<double> >::Builder( scalar_up_task_name, 0 );
+        register_task( scalar_up_task_name, sup_tsk );
 
       }
 
       _scalar_update.push_back( update_task_name );
       _scalar_diffusion.push_back( diffusion_task_name );
-
+      _scalar_up.push_back( scalar_up_task_name );
+      _rk_time_ave.push_back( rk_time_ave_task_name );
     }
   }
 
@@ -153,7 +206,8 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* stress_tsk = scinew StressTensor::Builder( stress_name, 0 );
     register_task(stress_name, stress_tsk);
     _momentum_builders.push_back( stress_name );
-    _momentum_solve.push_back( stress_name );
+    //_momentum_solve.push_back( stress_name );
+    _momentum_stress_tensor.push_back( stress_name );
 
     // X-mom
     std::string update_task_name = "x-mom-update";
@@ -254,10 +308,20 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
       diff_tsk->problemSetup( group_db );
       diff_tsk->create_local_labels();
 
-      TaskInterface* fe_tsk = retrieve_task("scalar_fe_update_"+group_name);
-      print_task_setup_info(group_name, "FE update.");
-      fe_tsk->problemSetup( group_db );
-      fe_tsk->create_local_labels();
+      //TaskInterface* fe_tsk = retrieve_task("scalar_fe_update_"+group_name);
+      //print_task_setup_info(group_name, "FE update.");
+      //fe_tsk->problemSetup( group_db );
+      //fe_tsk->create_local_labels();
+
+      TaskInterface* rk_tsk = retrieve_task("rk_time_avg_"+group_name);
+      print_task_setup_info(group_name, "RK time avg.");
+      rk_tsk->problemSetup( group_db );
+      rk_tsk->create_local_labels();
+
+      TaskInterface* sup_tsk = retrieve_task("scalar_update_"+group_name);
+      print_task_setup_info(group_name, "Scalar update.");
+      sup_tsk->problemSetup( group_db );
+      sup_tsk->create_local_labels();
 
       // tsk = retrieve_task("scalar_ssp_update_"+group_name);
       // tsk->problemSetup( group_db );
