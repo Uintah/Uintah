@@ -305,9 +305,7 @@ private:
     const double Vol = DX.x()*DX.y()*DX.z();
 
     typedef std::vector<std::string> SV;
-    //typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
-    const int time_substep = tsk_info->get_time_substep();
     int ceqn = 0;
     for ( SV::iterator ieqn = _eqn_names.begin(); ieqn != _eqn_names.end(); ieqn++){
 
@@ -342,8 +340,6 @@ private:
       } else {
         range2=Uintah::BlockRange(patch->getCellLowIndex(), patch->getCellHighIndex());
       }
-        const double alpha=_alpha[time_substep];
-        const double beta=_beta[time_substep];
 
         Uintah::parallel_for(exObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
        

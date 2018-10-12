@@ -80,6 +80,17 @@ void StressTensor::problemSetup( ProblemSpecP& db ){
   diff_scheme = "central";
   Nghost_cells = 1;
 
+  ArchesCore::GridVarMap< SFCXVariable<double> > var_map_x;
+  var_map_x.problemSetup( db );
+  m_eps_x_name = var_map_x.vol_frac_name;
+
+  ArchesCore::GridVarMap< SFCYVariable<double> > var_map_y;
+  var_map_y.problemSetup( db );
+  m_eps_y_name = var_map_y.vol_frac_name;
+
+  ArchesCore::GridVarMap< SFCZVariable<double> > var_map_z;
+  var_map_z.problemSetup( db );
+  m_eps_z_name = var_map_z.vol_frac_name;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -126,6 +137,9 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
   register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
   register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
   register_variable( m_t_vis_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_eps_x_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::OLDDW, variable_registry, time_substep);
+  register_variable( m_eps_y_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::OLDDW, variable_registry, time_substep);
+  register_variable( m_eps_z_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::OLDDW, variable_registry, time_substep);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -136,6 +150,9 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
   auto wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
   auto   D  = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_t_vis_name);
+  auto eps_x = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(m_eps_x_name);
+  auto eps_y = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(m_eps_y_name);
+  auto eps_z = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(m_eps_z_name);
 
   auto sigma11 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_sigma_t_names[0]);
   auto sigma12 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_sigma_t_names[1]);
@@ -187,9 +204,9 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     //apply_uVelStencil(dudx,dudy,dudz,i,j,k);  // non-macro approach gives cuda streaming error downstream, likely due to saving templated value as reference instead of value. But must save by reference to suppor legacy code.  poosibly Use getKokkosView in functor constructor
     //apply_vVelStencil(dvdx,dvdy,dvdz,i,j,k);
     //apply_wVelStencil(dwdx,dwdy,dwdz,i,j,k);
-    dVeldDir(uVel, Dx, dudx,dudy,dudz,i,j,k);
-    dVeldDir(vVel, Dx, dvdx,dvdy,dvdz,i,j,k);
-    dVeldDir(wVel, Dx, dwdx,dwdy,dwdz,i,j,k);
+    dVeldDir(uVel,eps_x, Dx, dudx,dudy,dudz,i,j,k);
+    dVeldDir(vVel,eps_y, Dx, dvdx,dvdy,dvdz,i,j,k);
+    dVeldDir(wVel,eps_z, Dx, dwdx,dwdy,dwdz,i,j,k);
 
     sigma12(i,j,k) =  mu12 * (dudy + dvdx );
     sigma13(i,j,k) =  mu13 * (dudz + dwdx );
@@ -205,7 +222,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   Uintah::parallel_for(exObj, range1, KOKKOS_LAMBDA (int i, int j, int k){
 
     const double mu11  = D(i-1,j,k); // it does not need interpolation
-    const double dudx  = (uVel(i,j,k) - uVel(i-1,j,k))/Dx.x();
+    const double dudx  = eps_x(i,j,k)*eps_x(i-1,j,k)*(uVel(i,j,k) - uVel(i-1,j,k))/Dx.x();
     sigma11(i,j,k)     =  mu11 * 2.0*dudx;
 
   });
@@ -217,7 +234,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   Uintah::BlockRange range2(lowNy, highNy);
   Uintah::parallel_for(exObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
     const double mu22 = D(i,j-1,k);  // it does not need interpolation
-    const double dvdy  = (vVel(i,j,k) - vVel(i,j-1,k))/Dx.y();
+    const double dvdy  = eps_y(i,j,k)*eps_y(i,j-1,k)*(vVel(i,j,k) - vVel(i,j-1,k))/Dx.y();
     sigma22(i,j,k) =  mu22 * 2.0*dvdy;
 
   });
@@ -229,7 +246,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   Uintah::BlockRange range3(lowNz, highNz);
   Uintah::parallel_for(exObj, range3, KOKKOS_LAMBDA (int i, int j, int k){
     const double mu33 = D(i,j,k-1);  // it does not need interpolation
-    const double dwdz  = (wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
+    const double dwdz  = eps_y(i,j,k)*eps_y(i,j,k-1)*(wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
     sigma33(i,j,k) =  mu33 * 2.0*dwdz;
 
   });

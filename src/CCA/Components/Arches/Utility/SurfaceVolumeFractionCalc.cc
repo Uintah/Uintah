@@ -84,14 +84,16 @@ SurfaceVolumeFractionCalc::create_local_labels(){
 
   // CC fields
   register_new_variable<CCVariable<double> >( "volFraction" );
-  register_new_variable<SFCXVariable<double> >( "fx_volume_fraction" );
-  register_new_variable<SFCYVariable<double> >( "fy_volume_fraction" );
-  register_new_variable<SFCZVariable<double> >( "fz_volume_fraction" );
+  register_new_variable<SFCXVariable<double> >( "volFractionX" );
+  register_new_variable<SFCYVariable<double> >( "volFractionY" );
+  register_new_variable<SFCZVariable<double> >( "volFractionZ" );
+  register_new_variable<CCVariable<int> >("cellType");
 
   m_var_names.push_back( "volFraction" );
-  m_var_names.push_back( "fx_volume_fraction" );
-  m_var_names.push_back( "fy_volume_fraction" );
-  m_var_names.push_back( "fz_volume_fraction" );
+  m_var_names.push_back( "volFractionX" );
+  m_var_names.push_back( "volFractionY" );
+  m_var_names.push_back( "volFractionZ" );
+  m_var_names.push_back( "cellType" );
 
 }
 
@@ -111,12 +113,55 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
   typedef CCVariable<double> T;
 
   auto cc_vf = tsk_info->get_uintah_field_add<T, double, MemSpace>("volFraction");
-  auto fx_vf = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace >("fx_volume_fraction");
-  auto fy_vf = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace >("fy_volume_fraction");
-  auto fz_vf = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >("fz_volume_fraction");
+  auto fx_vf = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace >("volFractionX");
+  auto fy_vf = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace >("volFractionY");
+  auto fz_vf = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >("volFractionZ");
+  auto cell_type = tsk_info->get_uintah_field_add<CCVariable<int>, int, MemSpace>("cellType");
 
   parallel_initialize(exObj,1.0, cc_vf,fx_vf,fy_vf,fz_vf);
+  parallel_initialize(exObj,-1, cell_type);
 
+  //Now get the boundary conditions:
+  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
+
+  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+
+    const bool on_this_patch = i_bc->second.has_patch(patch->getID());
+
+    if ( on_this_patch ){
+
+      //Handle cell type first
+      Uintah::ListOfCellsIterator& cell_iter_ct  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+      parallel_for_unstructured(exObj,cell_iter_ct.get_ref_to_iterator<MemSpace>(),cell_iter_ct.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        cell_type(i,j,k) = i_bc->second.type;
+      });
+
+      if ( i_bc->second.type == WALL ){
+        //Get the iterator
+         Uintah::ListOfCellsIterator& cell_iter  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+
+      parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+          cc_vf(i,j,k)= 0.0;
+          fx_vf(i,j,k)= 0.0;
+          fy_vf(i,j,k)= 0.0;
+          fz_vf(i,j,k)= 0.0;
+
+          if ( i_bc->second.face == Patch::xminus || i_bc->second.face == Patch::xplus ){
+            fx_vf(i+1,j,k) = 0.0;
+          }
+
+          if ( i_bc->second.face == Patch::yminus || i_bc->second.face == Patch::yplus ){
+            fy_vf(i,j+1,k) = 0.0;
+          }
+
+          if ( i_bc->second.face == Patch::zminus || i_bc->second.face == Patch::zplus ){
+            fz_vf(i,j,k+1) = 0.0;
+          }
+        });
+
+      }
+    }
+  }
   //Clean out all intrusions that don't intersect with this patch:
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   for ( auto i = m_intrusions.begin(); i != m_intrusions.end(); i++ ){
@@ -142,7 +187,35 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
             if ( geom->inside(p) ){ // GPU portability challenge
             //PCELL
             cc_vf(i,j,k) = 0.0;
+            cell_type(i,j,k) = 10;
             }
+
+          // X-dir
+          IntVector ix = IntVector(i,j,k) - IntVector(1,0,0);
+          Point px = patch->cellPosition( ix );
+          if ( patch->containsCell( ix ) ){
+            if ( geom->inside(px) || geom->inside(p) ){
+              fx_vf(i,j,k) = 0.0;
+            }
+          }
+
+          // y-dir
+          IntVector iy = IntVector(i,j,k) - IntVector(0,1,0);
+          Point py = patch->cellPosition( iy );
+          if ( patch->containsCell( iy ) ){
+            if ( geom->inside(py) || geom->inside(p) ){
+              fy_vf(i,j,k) = 0.0;
+            }
+          }
+
+          // z-dir
+          IntVector iz = IntVector(i,j,k) - IntVector(0,0,1);
+          Point pz = patch->cellPosition( iz );
+          if ( patch->containsCell( iy ) ){
+            if ( geom->inside(pz) || geom->inside(p) ){
+              fz_vf(i,j,k) = 0.0;
+            }
+          }
         });
       }
     }
@@ -151,26 +224,6 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
 
   }
 
-  //Now get the boundary conditions:
-  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
-
-  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-
-    const bool on_this_patch = i_bc->second.has_patch(patch->getID());
-
-    if ( on_this_patch ){
-
-      if ( i_bc->second.type == WALL ){
-        //Get the iterator
-         Uintah::ListOfCellsIterator& cell_iter  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-
-      parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
-          cc_vf(i,j,k)= 0.0;
-        });
-
-      }
-    }
-  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -190,21 +243,25 @@ SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoMana
   auto cc_vol_frac = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("volFraction");
   auto cc_vol_frac_old = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >("volFraction");
 
-  auto fx_vol_frac = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>("fx_volume_fraction");
-  auto fx_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >("fx_volume_fraction");
+  auto cellType = tsk_info->get_uintah_field_add<CCVariable<int>, int, MemSpace >("cellType");
+  auto cellType_old = tsk_info->get_const_uintah_field_add<constCCVariable<int>, const int, MemSpace >("cellType");
 
-  auto fy_vol_frac = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>("fy_volume_fraction");
-  auto fy_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >("fy_volume_fraction");
+  auto fx_vol_frac = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>("volFractionX");
+  auto fx_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >("volFractionX");
 
-  auto fz_vol_frac = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("fz_volume_fraction");
-  auto fz_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace >("fz_volume_fraction");
+  auto fy_vol_frac = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>("volFractionY");
+  auto fy_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >("volFractionY");
+
+  auto fz_vol_frac = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("volFractionZ");
+  auto fz_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace >("volFractionZ");
   
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   parallel_for( exObj, range, KOKKOS_LAMBDA (int i,int j,int k){
-  cc_vol_frac(i,j,k)=cc_vol_frac_old(i,j,k);
-  fx_vol_frac(i,j,k)=fx_vol_frac_old(i,j,k);
-  fy_vol_frac(i,j,k)=fy_vol_frac_old(i,j,k);
-  fz_vol_frac(i,j,k)=fz_vol_frac_old(i,j,k);
+    cc_vol_frac(i,j,k) = cc_vol_frac_old(i,j,k);
+    fx_vol_frac(i,j,k) = fx_vol_frac_old(i,j,k);
+    fy_vol_frac(i,j,k) = fy_vol_frac_old(i,j,k);
+    fz_vol_frac(i,j,k) = fz_vol_frac_old(i,j,k);
+    cellType(i,j,k)    = cellType_old(i,j,k);
   });
 
 }

@@ -201,6 +201,40 @@ void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
     A.p *= -1;
 
    });
+
+  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
+  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+
+    Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
+    IntVector iDir = patch->faceDirection( i_bc->second.face );
+    Patch::FaceType face = i_bc->second.face;
+    BndTypeEnum my_type = i_bc->second.type;
+
+    double sign;
+
+    if ( my_type == OUTLET ||
+         my_type == PRESSURE ){
+      // Dirichlet
+      // P = 0
+      sign = -1.0;
+    } else {
+      // Applies to Inlets, walls where
+      // P satisfies a Neumann condition
+      // dP/dX = 0
+      sign = 1.0;
+    }
+
+    parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA(const int i,const int j,const int k) {
+
+      const int im=i- iDir[0];
+      const int jm=j- iDir[1];
+      const int km=k- iDir[2];
+
+      Apress(im,jm,km).p = Apress(im,jm,km).p + sign * Apress(im,jm,km)[face];
+      Apress(im,jm,km)[face] = 0.;
+
+    });
+  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -305,39 +339,6 @@ void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_in
   auto b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >("b_press");
   auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_eps_name);
 
-  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
-  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-
-    Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
-    IntVector iDir = patch->faceDirection( i_bc->second.face );
-    Patch::FaceType face = i_bc->second.face;
-    BndTypeEnum my_type = i_bc->second.type;
-
-    double sign;
-
-    if ( my_type == OUTLET ||
-         my_type == PRESSURE ){
-      // Dirichlet
-      // P = 0
-      sign = -1.0;
-    } else {
-      // Applies to Inlets, walls where
-      // P satisfies a Neumann condition
-      // dP/dX = 0
-      sign = 1.0;
-    }
-
-    parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA(const int i,const int j,const int k) {
-
-      const int im=i- iDir[0];
-      const int jm=j- iDir[1];
-      const int km=k- iDir[2];
-
-      A(im,jm,km).p = A(im,jm,km).p + sign * A(im,jm,km)[face];
-      A(im,jm,km)[face] = 0.;
-
-    });
-  }
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   parallel_for(exObj,range, KOKKOS_LAMBDA (const int i, const int j, const int k){ 

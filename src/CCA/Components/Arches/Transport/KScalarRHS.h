@@ -181,7 +181,7 @@ private:
     std::vector<LIMITER> m_conv_scheme;
 
     ArchesCore::BCFunctors<T>* m_boundary_functors;
-    std::string m_volFraction_name{"volFraction"};
+    //std::string m_volFraction_name{"volFraction"};
 
 enum cartSpace {x_direc,y_direc,z_direc};
 //template<typename ExecutionSpace, typename MemSpace, unsigned int Cscheme , typename grid_T, typename grid_CT> 
@@ -583,7 +583,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
       register_variable(  m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
     }
 
-    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, m_task_name  );
+    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, m_task_name  );
     //for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
     //  register_variable( i->first+"_unscaled", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
     //}
@@ -598,8 +598,8 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
   template<typename ExecutionSpace, typename MemSpace>
   void KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-    auto vol_fraction =
-    tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_volFraction_name);
+    auto eps =
+    tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -644,7 +644,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
       Uintah::BlockRange range2( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
       Uintah::parallel_for( range2, KOKKOS_LAMBDA (int i, int j, int k){
-        phi_unscaled(i,j,k) = phi(i,j,k) * scalingConstant * vol_fraction(i,j,k)  ;
+        phi_unscaled(i,j,k) = phi(i,j,k) * scalingConstant * eps(i,j,k)  ;
 
       });
     }

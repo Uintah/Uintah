@@ -332,7 +332,7 @@ namespace Uintah{ namespace ArchesCore{
     void problemSetup( ProblemSpecP db ){
       mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
     }
-    std::string vol_frac_name = "fx_volume_fraction";
+    std::string vol_frac_name = "volFractionX";
     std::string uvel_name = "ucell_xvel";
     std::string vvel_name = "ucell_yvel";
     std::string wvel_name = "ucell_zvel";
@@ -346,7 +346,7 @@ namespace Uintah{ namespace ArchesCore{
     void problemSetup( ProblemSpecP db ){
       mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
     }
-    std::string vol_frac_name = "fy_volume_fraction";
+    std::string vol_frac_name = "volFractionY";
     std::string uvel_name = "vcell_xvel";
     std::string vvel_name = "vcell_yvel";
     std::string wvel_name = "vcell_zvel";
@@ -360,7 +360,7 @@ namespace Uintah{ namespace ArchesCore{
     void problemSetup( ProblemSpecP db ){
       mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
     }
-    std::string vol_frac_name = "fz_volume_fraction";
+    std::string vol_frac_name = "volFractionZ";
     std::string uvel_name = "wcell_xvel";
     std::string vvel_name = "wcell_yvel";
     std::string wvel_name = "wcell_zvel";
