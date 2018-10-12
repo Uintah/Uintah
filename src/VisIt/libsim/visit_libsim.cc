@@ -446,37 +446,42 @@ void visit_EndLibSim( visit_simulation_data *sim )
 {
   // Only go into finish mode if connected and the user has not force
   // the simulation to terminate early.
-  if( VisItIsConnected() && sim->simMode != VISIT_SIMMODE_TERMINATED )
+  if( VisItIsConnected() )
   {
-    // The simulation is finished but the user may want to stay
-    // conntected to analyze the last time step. So stop the run mode
-    // but do not let the simulation complete until the user says they
-    // are finished.
-    sim->runMode = VISIT_SIMMODE_STOPPED;
-    sim->simMode = VISIT_SIMMODE_FINISHED;
-
-    if(sim->isProc0)
+    if( sim->simMode == VISIT_SIMMODE_TERMINATED )
+      VisItDisconnect();
+    else // if( sim->simMode != VISIT_SIMMODE_TERMINATED )
     {
-      VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
-
-      std::stringstream msg;
-      msg << "Visit libsim - "
-          << "The simulation has finished, stopping at the last time step.";
+      // The simulation is finished but the user may want to stay
+      // conntected to analyze the last time step. So stop the run mode
+      // but do not let the simulation complete until the user says they
+      // are finished.
+      sim->runMode = VISIT_SIMMODE_STOPPED;
+      sim->simMode = VISIT_SIMMODE_FINISHED;
       
-      DOUT( visitdbg, msg.str().c_str() );
+      if(sim->isProc0)
+      {
+	VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
+	
+	std::stringstream msg;
+	msg << "Visit libsim - "
+	    << "The simulation has finished, stopping at the last time step.";
+	
+	DOUT( visitdbg, msg.str().c_str() );
+	
+	VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+      }
       
-      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+      // Now check for the user to have finished or issue a terminate.
+      do
+      {
+	visit_CheckState(sim);
+      }
+      while( sim->runMode != VISIT_SIMMODE_FINISHED &&
+	     sim->simMode != VISIT_SIMMODE_TERMINATED );
+      
+      VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
     }
-
-    // Now check for the user to have finished or issue a terminate.
-    do
-    {
-      visit_CheckState(sim);
-    }
-    while( sim->runMode != VISIT_SIMMODE_FINISHED &&
-           sim->simMode != VISIT_SIMMODE_TERMINATED );
-
-    VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
   }
 }
 
@@ -554,7 +559,8 @@ bool visit_CheckState( visit_simulation_data *sim )
         // will not be running so change the state to allow
         // asyncronious commands like saving a timestep or a
         // checkpoint to happen.
-        if( sim->simMode != VISIT_SIMMODE_FINISHED )
+	if( sim->simMode != VISIT_SIMMODE_FINISHED &&
+	    sim->simMode != VISIT_SIMMODE_TERMINATED )
         {
           sim->simMode = VISIT_SIMMODE_STOPPED;
           
@@ -702,7 +708,7 @@ bool visit_CheckState( visit_simulation_data *sim )
     }
   } while(err == 0);
 
-  return (sim->simMode == VISIT_SIMMODE_TERMINATED);  
+  return (sim->simMode == VISIT_SIMMODE_TERMINATED);
 }
 
 

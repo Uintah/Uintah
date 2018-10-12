@@ -350,14 +350,11 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     else
       sim->runMode = VISIT_SIMMODE_RUNNING;
   }
-  else if(strcmp(cmd, "Terminate") == 0)
+  else if(strcmp(cmd, "Terminate") == 0 ||
+	  strcmp(cmd, "Abort") == 0)
   {
     sim->runMode = VISIT_SIMMODE_RUNNING;
     sim->simMode = VISIT_SIMMODE_TERMINATED;
-
-    // Set the max time steps to the current time step so that the
-    // simulation controller will exit gracefully.
-    appInterface->setTimeStepsMax( sim->cycle );
 
     if(sim->isProc0)
     {
@@ -372,34 +369,12 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
     }
 
-    // A hack because m_max_time_steps is checked only if it is
-    // greater than zero. So just abort as a nothing will have been
-    // computed.
-    if( sim->cycle == 0 )
+    if(strcmp(cmd, "Abort") == 0)
     {
       VisItDisconnect();
-      
+
       exit( 0 );
     }
-  }
-  else if(strcmp(cmd, "Abort") == 0)
-  {
-    if(sim->isProc0)
-    {
-      std::stringstream msg;      
-      msg << "Visit libsim - Aborting the simulation";
-      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-      VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
-
-      DOUT( visitdbg, msg.str().c_str() );
-
-      VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
-      VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
-    }
-
-    VisItDisconnect();
-
-    exit( 0 );
   }
   else if(strcmp(cmd, "ActivateCustomUI") == 0 )
   {
