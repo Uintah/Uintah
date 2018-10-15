@@ -1051,7 +1051,7 @@ SimulationController::CheckInSitu( const ProcessorGroup *
                                  , const PatchSubset    *
                                  , const MaterialSubset *
                                  ,       DataWarehouse  *
-                                 ,       DataWarehouse  *
+                                 ,       DataWarehouse  * new_dw 
                                  ,       bool first
                                  )
 {
@@ -1081,10 +1081,17 @@ SimulationController::CheckInSitu( const ProcessorGroup *
     // Check the state - if the return value is true the user issued
     // a termination.
     if( visit_CheckState( m_visitSimData ) ) {
+
+      if( new_dw ) {
+        m_application->activateReductionVariable( endSimulation_name, true );
+        m_application->setReductionVariable( new_dw, endSimulation_name, true );
+      }
+      
       // Set the max wall time to the current wall time which will
       // cause the simulation to terminate because the next wall time
       // check will be greater.
-      m_application->setWallTimeMax( m_wall_timers.GetWallTime() );
+      else
+        m_application->setWallTimeMax( m_wall_timers.GetWallTime() );
 
       // Disconnect from VisIt.
       visit_EndLibSim( m_visitSimData );
