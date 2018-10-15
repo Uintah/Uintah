@@ -759,7 +759,7 @@ parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
     }}
   }, Kokkos::Experimental::Min<ReductionType>(tmp0));
 
-  red = tmp0;
+  red = min(tmp0,red); 
 
 }
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
