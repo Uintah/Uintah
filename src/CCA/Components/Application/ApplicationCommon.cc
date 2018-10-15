@@ -121,8 +121,10 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   m_appReductionVars[ endSimulation_name ] = new
     ApplicationReductionVariable( endSimulation_name, bool_or_vartype::getTypeDescription() );
  
-  // m_application_stats.insert( DummyEnum, std::string("DummyEnum"), "DummyEnum", 0 );
-}
+  // Use Alternative Task Graph
+  m_appReductionVars[ useAlternativeTaskGraph_name ] = new
+    ApplicationReductionVariable( useAlternativeTaskGraph_name, bool_or_vartype::getTypeDescription() );
+ }
 
 ApplicationCommon::~ApplicationCommon()
 {
@@ -196,10 +198,10 @@ void ApplicationCommon::setReductionVariables( UintahParallelComponent *comp )
     var.second->setActive( child->m_appReductionVars[ var.first ]->getActive() );
 }
 
-void ApplicationCommon::clearReductionVariables()
+void ApplicationCommon::resetReductionVariables()
 {
   for ( auto & var : m_appReductionVars )
-    var.second->setBenignValue();
+    var.second->reset();
 }
 
 void ApplicationCommon::releaseComponents()
@@ -484,12 +486,12 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   }
 
   // If delta T has been changed and if requested, for that change
-  // output or checkpoint. Must be done before the redcution call.
+  // output or checkpoint. Must be done before the reduction call.
   if( validDelT & m_outputIfInvalidNextDelTFlag )
-    setReductionVariable( outputTimeStep_name, true );
+    setReductionVariable( new_dw, outputTimeStep_name, true );
   
   if( validDelT & m_checkpointIfInvalidNextDelTFlag )
-    setReductionVariable( checkpointTimeStep_name, true );
+    setReductionVariable( new_dw, checkpointTimeStep_name, true );
   
   // Reduce the application specific reduction variables. If no value
   // was computed on an MPI rank, a benign value will be set. If the
@@ -498,7 +500,7 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   for ( auto & var : m_appReductionVars ) {
     var.second->reduce( new_dw );
   }
-  
+
   // When checking a reduction var, if it is not a benign value then
   // it was set at some point by at least one rank. Which is the only
   // time the value should be use.
@@ -752,7 +754,7 @@ ApplicationCommon::prepareForNextTimeStep()
   m_delT = delt_var;
 
   // Clear the time step based reduction variables.
-  clearReductionVariables();
+  resetReductionVariables();
 }
 
 //______________________________________________________________________

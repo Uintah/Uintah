@@ -69,152 +69,208 @@ WARNING
       // Construct the label.
       VarLabel* nonconstVar = VarLabel::create(name, varType);
       nonconstVar->allowMultipleComputes();
-      label = nonconstVar;
+      m_label = nonconstVar;
 
-      active = varActive;      
+      m_active = varActive;      
 
       setBenignValue();
+      reset();
     };
 
     virtual ~ApplicationReductionVariable()
     {
-      VarLabel::destroy(label);
+      VarLabel::destroy(m_label);
     }
     
     void setBenignValue()
     {
-      bool_var.setBenignValue();
-      min_var.setBenignValue();
-      max_var.setBenignValue();
-
-      count = 0;
-      overriddenValue = false;
-  }
-    
-    void setValue( bool val )
-    {
-      bool_value = val;
-      overrideValue = true;
+      m_bool_var.setBenignValue();
+      m_min_var.setBenignValue();
+      m_max_var.setBenignValue();
     }
 
-    void setValue( double val )
+    void reset()
     {
-      double_value = val;
-      overrideValue = true;
+      m_reduction = false;
+      
+      m_count = 0;
+      m_overriddenValue = false;
+    }
+
+    // The set value call should be used before the reduction.
+    void setValue( DataWarehouse * new_dw, bool val )
+    {
+      // Idiot proofing - If the reduction has occured do an override.
+      if( m_reduction )
+        overrideValue( new_dw, val );
+      else {      
+        m_bool_value = val;
+        m_overrideValue = true;
+      }
+    }
+
+    void setValue( DataWarehouse * new_dw, double val )
+    {
+      // Idiot proofing - If the reduction has occured do an override.
+      if( m_reduction )
+        overrideValue( new_dw, val );
+      else {      
+        m_double_value = val;
+        m_overrideValue = true;
+      }
+    }
+
+    // The override value call should be used after the reduction.
+    void overrideValue( DataWarehouse * new_dw, bool val )
+    {
+      if( m_reduction ) {
+        m_overriddenValue = true;
+        
+        new_dw->override( bool_or_vartype( val ), m_label);
+
+        // Get the reduced value.
+        new_dw->get( m_bool_var, m_label );
+      }
+      // Idiot proofing - If the reduction has not occured do a set.
+      else
+        setValue( new_dw, val );
+    }
+
+    void overrideValue( DataWarehouse * new_dw, double val )
+    {
+      if( m_reduction ) {
+        m_overriddenValue = true;
+
+        if( m_label->typeDescription() == min_vartype::getTypeDescription() ) {
+          new_dw->override(min_vartype( val ), m_label);
+          // Get the reduced value.
+          new_dw->get( m_max_var, m_label );
+        }
+        else if( m_label->typeDescription() == max_vartype::getTypeDescription() ) {
+          new_dw->override(max_vartype( val ), m_label);
+          // Get the reduced value.
+          new_dw->get( m_max_var, m_label );
+        }
+      }
+      // Idiot proofing - If the reduction has not occured do a set.
+      else
+        setValue( new_dw, val );
     }
 
     void reduce( DataWarehouse * new_dw )
     {
       Patch* patch = nullptr;
 
-      bool_var.setBenignValue();
-      min_var.setBenignValue();
-      max_var.setBenignValue();
+      m_bool_var.setBenignValue();
+      m_min_var.setBenignValue();
+      m_max_var.setBenignValue();
 
       // Reduce only if active.
-      if (active) {
+      if (m_active) {
 
-        if( label->typeDescription() == bool_or_vartype::getTypeDescription() )
+        if( m_label->typeDescription() == bool_or_vartype::getTypeDescription() )
         {
           // If the user gave a value use it.
-          if ( overrideValue ) {
-            new_dw->put( bool_or_vartype( bool_value ), label);
-            overrideValue = false;
-	    overriddenValue = true;
+          if ( m_overrideValue ) {
+            new_dw->put( bool_or_vartype( m_bool_value ), m_label);
+            m_overrideValue = false;
+            m_overriddenValue = true;
           }
           // If the value does not exists put a benign value into the
           // warehouse.
-          else if (!new_dw->exists(label, -1, patch)) {
-            new_dw->put(bool_var, label);
+          else if (!new_dw->exists(m_label, -1, patch)) {
+            new_dw->put(m_bool_var, m_label);
           }
 
           // Only reduce if on more than one rank
           if( Parallel::getMPISize() > 1 ) {
-            new_dw->reduceMPI(label, 0, 0, -1);
+            new_dw->reduceMPI(m_label, 0, 0, -1);
           }
 
           // Get the reduced value.
-          new_dw->get( bool_var, label );
+          new_dw->get( m_bool_var, m_label );
         }
-        else if( label->typeDescription() == min_vartype::getTypeDescription() )
+        else if( m_label->typeDescription() == min_vartype::getTypeDescription() )
         {
           // If the user gave a value use it.
-          if ( overrideValue ) {
-            new_dw->put(min_vartype( double_value ), label);
-            overrideValue = false;
-	    overriddenValue = true;
+          if ( m_overrideValue ) {
+            new_dw->put(min_vartype( m_double_value ), m_label);
+            m_overrideValue = false;
+            m_overriddenValue = true;
           }
           // If the value does not exists put a benign value into the
           // warehouse.
-          else if (!new_dw->exists(label, -1, patch)) {
-            new_dw->put(min_var, label);
+          else if (!new_dw->exists(m_label, -1, patch)) {
+            new_dw->put(m_min_var, m_label);
           }
 
           // Only reduce if on more than one rank
           if( Parallel::getMPISize() > 1 ) {
-            new_dw->reduceMPI(label, 0, 0, -1);
+            new_dw->reduceMPI(m_label, 0, 0, -1);
           }
 
           // Get the reduced value.
-          new_dw->get( min_var, label );
+          new_dw->get( m_min_var, m_label );
         }
-        else if( label->typeDescription() == max_vartype::getTypeDescription() )
+        else if( m_label->typeDescription() == max_vartype::getTypeDescription() )
         {
           // If the user gave a value use it.
-          if ( overrideValue ) {
-            new_dw->put(max_vartype( double_value ), label);
-            overrideValue = false;
+          if ( m_overrideValue ) {
+            new_dw->put(max_vartype( m_double_value ), m_label);
+            m_overrideValue = false;
           }
           // If the value does not exists put a benign value into the
           // warehouse.
-          else if (!new_dw->exists(label, -1, patch)) {
-            new_dw->put(max_var, label);
+          else if (!new_dw->exists(m_label, -1, patch)) {
+            new_dw->put(m_max_var, m_label);
           }
 
           // Only reduce if on more than one rank
           if( Parallel::getMPISize() > 1 ) {
-            new_dw->reduceMPI(label, 0, 0, -1);
+            new_dw->reduceMPI(m_label, 0, 0, -1);
           }
 
           // Get the reduced value.
-          new_dw->get( max_var, label );
+          new_dw->get( m_max_var, m_label );
         }
       }
+
+      m_reduction = true;
     }
 
-    void setActive( bool val ) { active = val; }
-    bool getActive() const { return active; }
+    void setActive( bool val ) { m_active = val; }
+    bool getActive() const { return m_active; }
     
-    const VarLabel    * getLabel() const { return label; }
-    const std::string   getName()  const { return label->getName(); }
+    const VarLabel    * getLabel() const { return m_label; }
+    const std::string   getName()  const { return m_label->getName(); }
 
     double getValue() const
     {
-      if( active )
+      if( m_active )
       {
-	if( label->typeDescription() == bool_or_vartype::getTypeDescription() )
-	  return double(bool_var);
-	else if( label->typeDescription() == min_vartype::getTypeDescription() )
-	  return min_var;
-	else if( label->typeDescription() == max_vartype::getTypeDescription() )
-	  return max_var;
-	else
-	  return 0;
+        if( m_label->typeDescription() == bool_or_vartype::getTypeDescription() )
+          return double(m_bool_var);
+        else if( m_label->typeDescription() == min_vartype::getTypeDescription() )
+          return m_min_var;
+        else if( m_label->typeDescription() == max_vartype::getTypeDescription() )
+          return m_max_var;
+        else
+          return 0;
       }
       else
-	return 0;
+        return 0;
     }
 
     bool isBenignValue() const
     {
-      if( active )
+      if( m_active )
       {
-        if( label->typeDescription() == bool_or_vartype::getTypeDescription() )
-          return bool_var.isBenignValue();
-        else if( label->typeDescription() == min_vartype::getTypeDescription() )
-          return min_var.isBenignValue();
-        else if( label->typeDescription() == max_vartype::getTypeDescription() )
-          return max_var.isBenignValue();
+        if( m_label->typeDescription() == bool_or_vartype::getTypeDescription() )
+          return m_bool_var.isBenignValue();
+        else if( m_label->typeDescription() == min_vartype::getTypeDescription() )
+          return m_min_var.isBenignValue();
+        else if( m_label->typeDescription() == max_vartype::getTypeDescription() )
+          return m_max_var.isBenignValue();
         else
           return true;
       }
@@ -222,34 +278,43 @@ WARNING
         return true;
     }
 
-    unsigned int getCount() const { return count; }
-    bool overridden() const { return overriddenValue; }
+    unsigned int getCount() const { return m_count; }
+    bool overridden() const { return m_overriddenValue; }
     
   private:
-    bool active{false};
+    bool m_active{false};
 
-    const VarLabel *label{nullptr};
+    const VarLabel *m_label{nullptr};
 
+    // Flag to indicate if the reduction has occured.
+    bool m_reduction{false};
     // Count the number of times the value may have been set before
     // being cleared.
-    unsigned int count{0};
+    unsigned int m_count{0};
 
     // Because this class gets put into a map it can not be a
     // template. As such, there are multiple storage variables. The
     // user need to know which one to use. Which they should given the
     // type description.
-    bool_or_vartype bool_var;
-    min_vartype min_var;
-    max_vartype max_var;
+
+    // Also these vars hold the value of the reduction throughout the
+    // execution of the task and do not get updated until the
+    // reduction occurs. This scheme makes it possible to use the
+    // value while the current time step is calculating the next
+    // value.
+    bool_or_vartype m_bool_var;
+    min_vartype m_min_var;
+    max_vartype m_max_var;
 
     // If the user has direct access to the application they can set
     // the reduction value directly rather than setting it in the data
     // warehouse. Before the reduction this value will get put into the
-    // data wareouse for them thus overidding the current value.
-    bool     bool_value{0};
-    double double_value{0};
-    bool overrideValue{false};
-    bool overriddenValue{false};
+    // data warehouse for them thus overidding the current value.
+    bool     m_bool_value{0};
+    double m_double_value{0};
+    bool m_overrideValue{false};
+    
+    bool m_overriddenValue{false};
   };
 
 } // End namespace Uintah
