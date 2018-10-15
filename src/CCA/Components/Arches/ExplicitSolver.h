@@ -405,16 +405,10 @@ public:
                                 SchedulerP& sched,
                                 const bool doing_restart );
 
-  int getTaskGraphIndex(const int time_step ) {
-    if (d_num_taskgraphs==1){
-      return 0;
-    }else{
-      return ((time_step % d_rad_calc_frequency == 0));
-    }
-  }
+  int getTaskGraphIndex(const int time_step ) const;
 
-  int taskGraphsRequested() {
-  return d_num_taskgraphs;
+  int taskGraphsRequested() const {
+    return d_num_taskgraphs;
   }
 
   void registerModels( ProblemSpecP& db );
@@ -528,6 +522,5 @@ public:
 
 }; // End class ExplicitSolver
 } // End namespace Uintah
-
 
 #endif

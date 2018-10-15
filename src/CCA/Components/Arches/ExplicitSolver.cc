@@ -148,6 +148,8 @@ using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
 
+//#define USE_ALTERNATIVE_TASK_GRAPH true
+  
 // ****************************************************************************
 // Default constructor for ExplicitSolver
 // ****************************************************************************
@@ -199,6 +201,9 @@ ExplicitSolver(MaterialManagerP& materialManager,
   d_cqmomSolver = 0;
   d_cqmomConvect = 0;
 
+#ifdef USE_ALTERNATIVE_TASK_GRAPH
+  m_arches->activateReductionVariable( useAlternativeTaskGraph_name, true );
+#endif
 }
 
 // ****************************************************************************
@@ -956,8 +961,11 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   tsk->computes( VarLabel::find(     endSimulation_name) );
 #endif
 
-  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
+#ifdef USE_ALTERNATIVE_TASK_GRAPH
+  tsk->computes( VarLabel::find(useAlternativeTaskGraph_name) );
+#endif
 
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -968,6 +976,17 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
+  // This method is called at both initialization and otherwise. At
+  // initialization the old DW will not exist so get the value from
+  // the new DW.  Otherwise for a normal time step get the time step
+  // from the old DW.
+  timeStep_vartype timeStep(0);
+
+  if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
+    old_dw->get(timeStep, VarLabel::find(timeStep_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
+    new_dw->get(timeStep, VarLabel::find(timeStep_name) );
+
   const Level* level = getLevel(patches);
   // You have to compute it on every level but
   // only computethe real delT on the archesLevel
@@ -1142,17 +1161,6 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
       new_dw->put(delt_vartype(delta_t), d_lab->d_delTLabel, level);
 
 #ifdef OUTPUT_WITH_BAD_DELTA_T
-      // This method is called at both initialization and otherwise. At
-      // initialization the old DW will not exist so get the value from
-      // the new DW.  Otherwise for a normal time step get the time step
-      // from the old DW.
-      timeStep_vartype timeStep(0);
-
-      if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
-        old_dw->get(timeStep, VarLabel::find(timeStep_name) );
-      else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
-        new_dw->get(timeStep, VarLabel::find(timeStep_name) );
-
       // If after the first 10 time steps delta T goes below this
       // value immediately output and checkpoint. Then end the simulation.
       if( 10 < timeStep && delta_t <= 0.01 )
@@ -1168,6 +1176,14 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
     new_dw->put(delt_vartype(9e99), d_lab->d_delTLabel,level);
 
   }
+
+#ifdef USE_ALTERNATIVE_TASK_GRAPH
+  // Should the next time step be a radiation solve? if so set the
+  // reduction flag.
+  if( (timeStep+1) % d_rad_calc_frequency == 0 ) {
+    new_dw->put( bool_or_vartype(true), VarLabel::find(useAlternativeTaskGraph_name) );
+  }
+#endif
 }
 
 void
@@ -4702,3 +4718,16 @@ ExplicitSolver::setupBoundaryConditions( const LevelP& level,
 
   }
 }
+
+int 
+ExplicitSolver::getTaskGraphIndex(const int time_step ) const {
+    if (d_num_taskgraphs==1){
+      return 0;
+    }else{
+#ifdef USE_ALTERNATIVE_TASK_GRAPH      
+      return( m_arches->getReductionVariable( useAlternativeTaskGraph_name ) );
+#else      
+      return ((time_step % d_rad_calc_frequency == 0));
+#endif      
+    }
+  }

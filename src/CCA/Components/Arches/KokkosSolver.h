@@ -145,11 +145,11 @@ namespace Uintah{
 
     void setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSet* matls );
 
-    int getTaskGraphIndex(const int timeStep ) {
+    int getTaskGraphIndex(const int timeStep ) const {
       return 0;
     }
 
-    int taskGraphsRequested() {
+    int taskGraphsRequested() const {
       return 1;
     }
 
