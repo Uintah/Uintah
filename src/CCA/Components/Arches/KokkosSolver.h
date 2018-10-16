@@ -149,10 +149,6 @@ namespace Uintah{
       return 0;
     }
 
-    // int taskGraphsRequested() const {
-    //   return 1;
-    // }
-
     MaterialManagerP& m_materialManager;
 
     std::map<std::string,std::shared_ptr<TaskFactoryBase> > m_task_factory_map;

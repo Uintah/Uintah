@@ -276,9 +276,10 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   }
 
   if( d_num_taskgraphs == 2 ) {
-    // Tell the infrastructure how many tasksgraphs are needed.
+    // Tell the infrastructure how many tasksgraphs are needed. The
+    // defaul is 1.
     m_arches->getScheduler()->setNumTaskGraphs( d_num_taskgraphs );
-  
+
 #ifdef USE_ALTERNATIVE_TASK_GRAPH
     m_arches->activateReductionVariable( useAlternativeTaskGraph_name, true );
 #endif
@@ -4726,9 +4727,9 @@ ExplicitSolver::setupBoundaryConditions( const LevelP& level,
 
 int
 ExplicitSolver::getTaskGraphIndex(const int time_step ) const {
-    if (d_num_taskgraphs==1){
-      return 0;
-    }else{
-      return ((time_step % d_rad_calc_frequency == 0));
-    }
+  if (d_num_taskgraphs==1){
+    return 0;
+  }else{
+    return ((time_step % d_rad_calc_frequency == 0));
   }
+}
