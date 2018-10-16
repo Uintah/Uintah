@@ -119,14 +119,18 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
     d_sdm = nullptr;
   }
   
-  
-
   // Step 4 -- get the general material properties
 
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
   
+  if (flags->d_DOUBLEMPM) {
+	  ps->require("density_liquid", d_densityLiquid);
+	  ps->require("Porosity", d_Porosity);
+	  ps->require("Permeability", d_Permeability);
+  }
+
   // Assume the the centered specific heat is C_v
   d_Cv = d_specificHeat;
 
@@ -250,7 +254,8 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("is_rigid",d_is_rigid);
 
   // DOUBLEMPM
-  mpm_ps->appendElement("Pourosity", d_Porosity);
+  mpm_ps->appendElement("density_liquid", d_densityLiquid);
+  mpm_ps->appendElement("Porosity", d_Porosity);
   mpm_ps->appendElement("Permeability", d_Permeability);
 
   d_cm->outputProblemSpec(mpm_ps);
@@ -284,6 +289,7 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_is_rigid = mat->d_is_rigid;
 
   // DOUBLEMPM
+  d_densityLiquid = mat->d_densityLiquid;
   d_Porosity = mat->d_Porosity;
   d_Permeability = mat->d_Permeability;
 
@@ -394,6 +400,11 @@ double MPMMaterial::getThermalConductivity() const
 }
 
 // DOUBLEMPM
+double MPMMaterial::getInitialDensityLiquid() const
+{
+	return d_densityLiquid;
+}
+
 double MPMMaterial::getInitialPorosity() const
 {
 	return d_Porosity;

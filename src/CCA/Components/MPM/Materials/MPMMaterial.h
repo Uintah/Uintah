@@ -147,6 +147,7 @@ WARNING
    double getThermalConductivity() const;
 
    // For DOUBLEMPM
+   double getInitialDensityLiquid() const;
    double getInitialPorosity() const;
    double getInitialPermeability() const;
 
@@ -200,6 +201,7 @@ WARNING
    // for DOUBLEMPM
    double d_Porosity;
    double d_Permeability;
+   double d_densityLiquid;
 
    // for autocycleflux boundary condtions
    bool d_do_conc_reduction;
