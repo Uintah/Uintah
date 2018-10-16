@@ -716,7 +716,11 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   #__________________________________
   #  define failure messages
   if getenv('OUTPUT_HTML') == "yes":
+  
     logpath     =  "%s/%s/%s-results/%s" % (environ['RT_URL'],  dbg_opt, application, testname )
+    if startFrom == "restart":
+      logpath   =  logpath + "/restart"
+    
     sus_log_msg = '\t<A href=\"%s/sus.log.txt\">See sus.log</a> for details' % (logpath)
     compare_msg = '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</A> for more comparison information.' % (logpath)
     memory_msg  = '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
