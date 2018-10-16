@@ -148,6 +148,7 @@ using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
 
+// Also in Arches.cc
 //#define USE_ALTERNATIVE_TASK_GRAPH true
   
 // ****************************************************************************
@@ -200,10 +201,6 @@ ExplicitSolver(MaterialManagerP& materialManager,
   d_cqmomSource = 0;
   d_cqmomSolver = 0;
   d_cqmomConvect = 0;
-
-#ifdef USE_ALTERNATIVE_TASK_GRAPH
-  m_arches->activateReductionVariable( useAlternativeTaskGraph_name, true );
-#endif
 }
 
 // ****************************************************************************
@@ -278,7 +275,15 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     }
   }
 
-
+  if( d_num_taskgraphs == 2 ) {
+    // Tell the infrastructure how many tasksgraphs are needed.
+    m_arches->getScheduler()->setNumTaskGraphs( d_num_taskgraphs );
+  
+#ifdef USE_ALTERNATIVE_TASK_GRAPH
+    m_arches->activateReductionVariable( useAlternativeTaskGraph_name, true );
+#endif
+  }
+  
   ProblemSpecP db_es = params->findBlock("ExplicitSolver");
   ProblemSpecP db = params;
 
@@ -4719,15 +4724,11 @@ ExplicitSolver::setupBoundaryConditions( const LevelP& level,
   }
 }
 
-int 
+int
 ExplicitSolver::getTaskGraphIndex(const int time_step ) const {
     if (d_num_taskgraphs==1){
       return 0;
     }else{
-#ifdef USE_ALTERNATIVE_TASK_GRAPH      
-      return( m_arches->getReductionVariable( useAlternativeTaskGraph_name ) );
-#else      
       return ((time_step % d_rad_calc_frequency == 0));
-#endif      
     }
   }

@@ -186,10 +186,6 @@ Arches::problemSetup( const ProblemSpecP     & params,
   activateReductionVariable( recomputeTimeStep_name, mayRecompute );
   activateReductionVariable(     abortTimeStep_name, mayRecompute );
 
-  // tell the infrastructure how many tasksgraphs are needed.
-  int num_task_graphs=m_nlSolver->taskGraphsRequested();
-  m_scheduler->setNumTaskGraphs(num_task_graphs);
-
   //__________________________________
   // On the Fly Analysis. The belongs at bottom
   // of task after all of the problemSetups have been called.
@@ -326,11 +322,21 @@ Arches::scheduleAnalysis( const LevelP& level,
   }
 }
 
+// Also in ExplicitSolver.cc
+//#define USE_ALTERNATIVE_TASK_GRAPH true
+
 int Arches::computeTaskGraphIndex( const int timeStep )
 {
   // Setup the task graph for execution on the next timestep.
-
+#ifdef USE_ALTERNATIVE_TASK_GRAPH
+  if( m_arches->activeReductionVariable( useAlternativeTaskGraph_name ) &&
+      m_arches->getReductionVariable( useAlternativeTaskGraph_name ) )
+    return 1;
+  else
+    return 0;
+#else
   return m_nlSolver->getTaskGraphIndex( timeStep );
+#endif
 }
 
 //--------------------------------------------------------------------------------------------------

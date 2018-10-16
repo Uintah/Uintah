@@ -149,9 +149,9 @@ namespace Uintah{
       return 0;
     }
 
-    int taskGraphsRequested() const {
-      return 1;
-    }
+    // int taskGraphsRequested() const {
+    //   return 1;
+    // }
 
     MaterialManagerP& m_materialManager;
 

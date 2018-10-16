@@ -84,7 +84,7 @@ public:
 
   virtual int getTaskGraphIndex(const int timeStep ) const = 0;
 
-  virtual int taskGraphsRequested() const = 0;
+  // virtual int taskGraphsRequested() const = 0;
 
   class NLSolverBuilder {
 

@@ -407,9 +407,9 @@ public:
 
   int getTaskGraphIndex(const int time_step ) const;
 
-  int taskGraphsRequested() const {
-    return d_num_taskgraphs;
-  }
+  // int taskGraphsRequested() const {
+  //   return d_num_taskgraphs;
+  // }
 
   void registerModels( ProblemSpecP& db );
   void registerTransportEqns( ProblemSpecP& db );
