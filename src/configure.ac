@@ -3282,6 +3282,7 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
         test_libs[[9]]="mpich"
         test_libs[[10]]="mpi_mt"
 	      test_libs[[11]]="mpich-xl opa-xl mpl-xl pami-gcc SPI SPI_cnk rt stdc++" # Vulcan@LLNL
+	      test_libs[[12]]="mpi_ibm" # Lassen@LLNL
 
         unset other
         other[[0]]=""
@@ -3296,6 +3297,7 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
         other[[9]]=""
         other[[10]]=""
         other[[11]]=""
+        other[[12]]=""
 
         num_libs=${#test_libs[*]}
 
@@ -3778,7 +3780,7 @@ EOF
 
   # for a static build, use the static CUDA runtime lib
   if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-     _cudart_lib="cudart_static dl rt"
+     _cudart_lib="cudart_static dl rt pthread"
   else
      _cudart_lib="cudart"
   fi

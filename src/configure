@@ -32420,6 +32420,7 @@ $as_echo "$as_me: checking for required MPI components......" >&6;}
         test_libs[9]="mpich"
         test_libs[10]="mpi_mt"
 	      test_libs[11]="mpich-xl opa-xl mpl-xl pami-gcc SPI SPI_cnk rt stdc++" # Vulcan@LLNL
+	      test_libs[12]="mpi_ibm" # Lassen@LLNL
 
         unset other
         other[0]=""
@@ -32434,6 +32435,7 @@ $as_echo "$as_me: checking for required MPI components......" >&6;}
         other[9]=""
         other[10]=""
         other[11]=""
+        other[12]=""
 
         num_libs=${#test_libs[*]}
 
@@ -36240,7 +36242,7 @@ EOF
 
   # for a static build, use the static CUDA runtime lib
   if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-     _cudart_lib="cudart_static dl rt"
+     _cudart_lib="cudart_static dl rt pthread"
   else
      _cudart_lib="cudart"
   fi
@@ -36370,11 +36372,11 @@ fi
 
 
 # Allow GPU code generation for specific compute capabilities: 3.0, 3.5, 5.0, 5.2
-#   NOTE: We only support code generation for Kepler, Maxwell, Pascal and VOlta architectures now (APH 10/16/18)
-if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \) -a \( "$cuda_gencode" != "61" \) -a \( "$cuda_gencode" != "72" \); then
+#   NOTE: We only support code generation for Kepler, Maxwell, Pascal (P100) and Volta (GV100) architectures  now (APH 10/16/18)
+if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \) -a \( "$cuda_gencode" != "60" \) -a \( "$cuda_gencode" != "70" \); then
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-  as_fn_error $? "The specified value provided: \"--enable-gencode=$cuda_gencode\" is invalid, must be: 30, 35, 50, 52, 61, 72 " "$LINENO" 5
+  as_fn_error $? "The specified value provided: \"--enable-gencode=$cuda_gencode\" is invalid, must be: 30, 35, 50, 52, 60, 70 " "$LINENO" 5
 fi
 
 NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
