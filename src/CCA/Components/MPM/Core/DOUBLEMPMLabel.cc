@@ -50,27 +50,27 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 {
 	// particles variables
 	pPorePressureLabel			= VarLabel::create("p.PorePressure", ParticleVariable<double>::getTypeDescription());
-	//pPorePressureLabel_preReloc = VarLabel::create("p.PorePressure+", ParticleVariable<double>::getTypeDescription());
+	pPorePressureLabel_preReloc = VarLabel::create("p.PorePressure+", ParticleVariable<double>::getTypeDescription());
 
 	pPorePressureTensorLabel	= VarLabel::create("p.PorePressureTensor", ParticleVariable<Matrix3>::getTypeDescription());
-	//pPorePressureTensorLabel_preReloc = VarLabel::create("p.PorePressureTensor+", ParticleVariable<Matrix3>::getTypeDescription());
+	pPorePressureTensorLabel_preReloc = VarLabel::create("p.PorePressureTensor+", ParticleVariable<Matrix3>::getTypeDescription());
 
 	pPorosityLabel				= VarLabel::create("p.Porosity", ParticleVariable<double>::getTypeDescription());
-	//pPorosityLabel_preReloc		= VarLabel::create("p.Porosity+", ParticleVariable<double>::getTypeDescription());
+	pPorosityLabel_preReloc		= VarLabel::create("p.Porosity+", ParticleVariable<double>::getTypeDescription());
 
 	pPermeabilityLabel			= VarLabel::create("p.Permeability", ParticleVariable<double>::getTypeDescription());
-	//pPermeabilityLabel_preReloc = VarLabel::create("p.Permeability+", ParticleVariable<double>::getTypeDescription());
+	pPermeabilityLabel_preReloc = VarLabel::create("p.Permeability+", ParticleVariable<double>::getTypeDescription());
 
 	//pVelocitySolidLabel			= VarLabel::create("p.VelocitySolid", ParticleVariable<Vector>::getTypeDescription());
 
 	pVelocityLiquidLabel		= VarLabel::create("p.VelocityLiquid", ParticleVariable<Vector>::getTypeDescription());
-	//pVelocityLiquidLabel_preReloc = VarLabel::create("p.VelocityLiquid+", ParticleVariable<Vector>::getTypeDescription());
+	pVelocityLiquidLabel_preReloc = VarLabel::create("p.VelocityLiquid+", ParticleVariable<Vector>::getTypeDescription());
 
 	pMassSolidLabel				= VarLabel::create("p.massSolid",	ParticleVariable<double>::getTypeDescription());
-	//pMassSolidLabel_preReloc	= VarLabel::create("p.massSolid+", ParticleVariable<double>::getTypeDescription());
+	pMassSolidLabel_preReloc	= VarLabel::create("p.massSolid+", ParticleVariable<double>::getTypeDescription());
 
 	pMassLiquidLabel			= VarLabel::create("p.massLiquid",	ParticleVariable<double>::getTypeDescription());
-	//pMassLiquidLabel_preReloc	= VarLabel::create("p.massLiquid+", ParticleVariable<double>::getTypeDescription());
+	pMassLiquidLabel_preReloc	= VarLabel::create("p.massLiquid+", ParticleVariable<double>::getTypeDescription());
 
 	//pVolumeSolidLabel			= VarLabel::create("p.VolumeSolid", ParticleVariable<double>::getTypeDescription());
 
@@ -81,7 +81,7 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 
 	gMassLiquidLabel			= VarLabel::create("g.massLiquid",	ParticleVariable<double>::getTypeDescription());
 
-	gVolumeLiquidLabel			= VarLabel::create("g.gVolumeLiquid", ParticleVariable<double>::getTypeDescription());
+	//gVolumeLiquidLabel			= VarLabel::create("g.gVolumeLiquid", ParticleVariable<double>::getTypeDescription());
 
 	gVelocityLiquidLabel		= VarLabel::create("g.velocityLiquid", NCVariable<Vector>::getTypeDescription());
 
@@ -93,7 +93,7 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 
 	gDragForceLabel				= VarLabel::create("g.DragForce", NCVariable<Vector>::getTypeDescription());
 
-	//gMassSolidLabel				= VarLabel::create("g.massSolid", NCVariable<double>::getTypeDescription());
+	gMassSolidLabel				= VarLabel::create("g.massSolid", NCVariable<double>::getTypeDescription());
 
 	//gVolumeSolidLabel			= VarLabel::create("g.gVolumeSolid", NCVariable<double>::getTypeDescription());
 
@@ -104,26 +104,26 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 {
 	// particles variables
 	VarLabel::destroy(pPorePressureLabel);
-	//VarLabel::destroy(pPorePressureLabel_preReloc);
+	VarLabel::destroy(pPorePressureLabel_preReloc);
 
 	VarLabel::destroy(pPorePressureTensorLabel);
-	//VarLabel::destroy(pPorePressureTensorLabel_preReloc);
+	VarLabel::destroy(pPorePressureTensorLabel_preReloc);
 
 	VarLabel::destroy(pPorosityLabel);
-	//VarLabel::destroy(pPorosityLabel_preReloc);
+	VarLabel::destroy(pPorosityLabel_preReloc);
 
 	VarLabel::destroy(pPermeabilityLabel);
-	//VarLabel::destroy(pPermeabilityLabel_preReloc);
+	VarLabel::destroy(pPermeabilityLabel_preReloc);
 
 	//VarLabel::destroy(pVelocitySolidLabel);
 	VarLabel::destroy(pVelocityLiquidLabel);
-	//VarLabel::destroy(pVelocityLiquidLabel_preReloc);
+	VarLabel::destroy(pVelocityLiquidLabel_preReloc);
 
 	VarLabel::destroy(pMassSolidLabel);
-	//VarLabel::destroy(pMassSolidLabel_preReloc);
+	VarLabel::destroy(pMassSolidLabel_preReloc);
 
 	VarLabel::destroy(pMassLiquidLabel);
-	//VarLabel::destroy(pMassLiquidLabel_preReloc);
+	VarLabel::destroy(pMassLiquidLabel_preReloc);
 
 	//VarLabel::destroy(pVolumeSolidLabel);
 	//VarLabel::destroy(pVolumeLiquidLabel);
@@ -131,7 +131,7 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 	// Grid liquid variables
 	VarLabel::destroy(gAccelerationLiquidLabel);
 	VarLabel::destroy(gMassLiquidLabel);
-	VarLabel::destroy(gVolumeLiquidLabel);
+	//VarLabel::destroy(gVolumeLiquidLabel);
 	VarLabel::destroy(gVelocityLiquidLabel);
 	VarLabel::destroy(gVelocityStarLiquidLabel);
 	VarLabel::destroy(gInternalForceLiquidLabel);
@@ -139,7 +139,7 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 	VarLabel::destroy(gPorosityLabel);
 	VarLabel::destroy(gDragForceLabel);
 
-	//VarLabel::destroy(gMassSolidLabel);
+	VarLabel::destroy(gMassSolidLabel);
 	//VarLabel::destroy(gVolumeSolidLabel);
 	//VarLabel::destroy(gVeloctySolidLabel);
 

@@ -49,25 +49,26 @@ namespace Uintah {
 
 		// Particle variables involved in hydro-coupling calculation
 		const VarLabel* pPorePressureLabel;
-		 //VarLabel* pPorePressureLabel_preReloc;
+		const VarLabel* pPorePressureLabel_preReloc;
 
 		const VarLabel* pPorePressureTensorLabel;
-		 //VarLabel* pPorePressureTensorLabel_preReloc;
+		const VarLabel* pPorePressureTensorLabel_preReloc;
 
 		const VarLabel* pPorosityLabel;
-		 //VarLabel* pPorosityLabel_preReloc;
+		const VarLabel* pPorosityLabel_preReloc;
 
 		const VarLabel* pPermeabilityLabel;
-		 //VarLabel* pPermeabilityLabel_preReloc;
+		const VarLabel* pPermeabilityLabel_preReloc;
+
 		//VarLabel* pVelocitySolidLabel;
 		const VarLabel* pVelocityLiquidLabel;
-		 //VarLabel* pVelocityLiquidLabel_preReloc;
+		const VarLabel* pVelocityLiquidLabel_preReloc;
 
 		const VarLabel* pMassSolidLabel;
-		 //VarLabel* pMassSolidLabel_preReloc;
+		const VarLabel* pMassSolidLabel_preReloc;
 
 		const VarLabel* pMassLiquidLabel;
-		 //VarLabel* pMassLiquidLabel_preReloc;
+		const VarLabel* pMassLiquidLabel_preReloc;
 
 		//VarLabel* pVolumeSolidLabel;
 		//VarLabel* pVolumeLiquidLabel;
@@ -75,7 +76,7 @@ namespace Uintah {
 		// Grid variables involved in diffusion calculations
 		const VarLabel* gAccelerationLiquidLabel;
 		const VarLabel* gMassLiquidLabel;
-		const VarLabel* gVolumeLiquidLabel;
+		//const VarLabel* gVolumeLiquidLabel;
 		const VarLabel* gVelocityLiquidLabel;
 		const VarLabel* gVelocityStarLiquidLabel;
 		const VarLabel* gInternalForceLiquidLabel;
@@ -83,7 +84,7 @@ namespace Uintah {
 		const VarLabel* gPorosityLabel;
 		const VarLabel* gDragForceLabel;
 
-		//VarLabel* gMassSolidLabel;
+		VarLabel* gMassSolidLabel;
 		//VarLabel* gVolumeSolidLabel;
 		//VarLabel* gVeloctySolidLabel;
 	};
