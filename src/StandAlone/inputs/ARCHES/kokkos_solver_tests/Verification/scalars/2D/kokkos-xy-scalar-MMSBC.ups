@@ -43,42 +43,42 @@
     </Level>
     <BoundaryConditions>
       <DefaultMaterial>all</DefaultMaterial>
-      <Face side="x+">
+      <Face side="x+" type="Inlet">
         <BCType var="Custom" label="phi" type="MMS_almgren">
           <which_vel>u</which_vel>
           <coordinates x="gridX" y="gridY"/>
           <value>0</value>
         </BCType>
       </Face>
-      <Face side="x-">
+      <Face side="x-" type="Inlet">
         <BCType var="Custom" label="phi" type="MMS_almgren">
           <which_vel>u</which_vel>
           <coordinates x="gridX" y="gridY"/>
           <value>0</value>
         </BCType>
       </Face>
-      <Face side="y-">
+      <Face side="y-" type="Inlet">
         <BCType var="Custom" label="phi" type="MMS_almgren">
           <which_vel>u</which_vel>
           <coordinates x="gridX" y="gridY"/>
           <value>0.</value>
         </BCType>
       </Face>
-      <Face side="y+">
+      <Face side="y+" type="Inlet">
         <BCType var="Custom" label="phi" type="MMS_almgren">
           <which_vel>u</which_vel>
           <coordinates x="gridX" y="gridY"/>
           <value>0.</value>
         </BCType>
       </Face>
-      <Face side="z-">
+      <Face side="z-" type="Inlet">
         <BCType var="Custom" label="phi" type="MMS_almgren">
           <which_vel>u</which_vel>
           <coordinates x="gridX" y="gridY"/>
           <value>0.</value>
         </BCType>
       </Face>
-      <Face side="z+">
+      <Face side="z+" type="Inlet">
         <BCType var="Custom" label="phi" type="MMS_almgren">
           <which_vel>u</which_vel>
           <coordinates x="gridX" y="gridY"/>

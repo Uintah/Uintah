@@ -139,6 +139,7 @@ enum BndTypeEnum
   OUTLET,    ///< Outlet boundary condition
   PRESSURE,  ///< Pressure boundary condition
   USER,      ///< User specified
+  INTRUSION, ///< Intrusion - enum stored here for convenience
   INVALID
 };
 

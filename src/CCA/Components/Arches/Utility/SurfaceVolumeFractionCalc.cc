@@ -187,7 +187,7 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
             if ( geom->inside(p) ){ // GPU portability challenge
             //PCELL
             cc_vf(i,j,k) = 0.0;
-            cell_type(i,j,k) = 10;
+            cell_type(i,j,k) = INTRUSION;
             }
 
           // X-dir
@@ -262,6 +262,8 @@ SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoMana
     fy_vol_frac(i,j,k) = fy_vol_frac_old(i,j,k);
     fz_vol_frac(i,j,k) = fz_vol_frac_old(i,j,k);
     cellType(i,j,k)    = cellType_old(i,j,k);
+        //std::cout << i << "  " << j << "  " << k << "  " <<  (int) i_bc->second.type << " \n";
+        std::cout << i << "  " << j << "  " << k << "  " <<  cellType_old(i,j,k) << " \n";
   });
 
 }
