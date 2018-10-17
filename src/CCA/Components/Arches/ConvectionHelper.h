@@ -33,12 +33,12 @@ namespace Uintah {
   enum LIMITER {NOCONV, CENTRAL, UPWIND, SUPERBEE, ROE, VANLEER, FOURTH};
 
 #define SUPERBEEMACRO(r) \
-      my_psi = ( r < huge ) ? std::max( std::min( 2.*r, 1.), std::min(r, 2. ) ) : 2.; \
-      my_psi = std::max( 0., my_psi );
+      my_psi = ( r < huge ) ? max( min( 2.*r, 1.), min(r, 2. ) ) : 2.; \
+      my_psi = max( 0., my_psi );
 
 #define ROEMACRO(r) \
-      my_psi = ( r < huge ) ? std::min(1., r) : 1.; \
-      my_psi = std::max(0., my_psi);
+      my_psi = ( r < huge ) ? min(1., r) : 1.; \
+      my_psi = max(0., my_psi);
 
 #define VANLEERMACRO(r) \
       my_psi = ( r < huge ) ? ( r + fabs(r) ) / ( 1. + fabs(r) ) : 2.; \
