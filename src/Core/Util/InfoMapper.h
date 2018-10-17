@@ -28,7 +28,6 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
-#include <Core/Util/DOUT.hpp>
 
 #include <sci_defs/visit_defs.h>
 
