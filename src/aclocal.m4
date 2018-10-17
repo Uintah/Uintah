@@ -797,10 +797,10 @@ done
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
 # Allow GPU code generation for specific compute capabilities: 3.0, 3.5, 5.0, 5.2
-#   NOTE: We only support code generation for Kepler and Maxwell architectures now (APH 01/08/16)
-if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \); then
+#   NOTE: We only support code generation for Kepler, Maxwell, Pascal and VOlta architectures now (APH 10/16/18)
+if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \) -a \( "$cuda_gencode" != "61" \) -a \( "$cuda_gencode" != "72" \); then
   AC_MSG_RESULT([no])
-  AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 3.0, 3.5, 5.0, 5.2] )
+  AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 30, 35, 50, 52, 61, 72] )
 fi  
   
 NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
