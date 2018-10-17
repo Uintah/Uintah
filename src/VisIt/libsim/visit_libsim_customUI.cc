@@ -697,6 +697,121 @@ void visit_SetGridInfo( visit_simulation_data *sim )
 }
 
 //---------------------------------------------------------------------
+// RuntimeStats template
+//---------------------------------------------------------------------
+template< class E, class T >
+void reportStats( const char* statsName,
+                  ReductionInfoMapper<E, T> runtimeStats,
+                  bool calcImbalance,
+                  visit_simulation_data *sim )
+{
+  unsigned int nStats = runtimeStats.size();
+
+  char tableName[128];
+  char groupBoxName[128];
+
+  sprintf( tableName,    "%sStatsTable", statsName );
+  sprintf( groupBoxName, "%sStatsGroupBox", statsName );
+  
+  if( nStats )
+  {
+    VisItUI_setValueS( groupBoxName, "SHOW_WIDGET", 1 );
+    VisItUI_setTableValueS( tableName, -1, -1, "CLEAR_TABLE", 0 );
+
+    int row = 0;
+    
+    for (unsigned int i=0; i<runtimeStats.size(); ++i)
+    {
+      std::string name  = runtimeStats.getName(i);
+      std::string units = runtimeStats.getUnits(i);
+
+      // Replace all colons with and an underscore.
+      std::replace( name.begin(), name.end(), ':', '_');
+      std::replace( units.begin(), units.end(), ':', '_');
+      
+      double  minimum = runtimeStats.getRankMinimum(i);
+      int     minRank = runtimeStats.getRankForMinimum(i);
+      double  average = runtimeStats.getRankAverage(i);
+      double  stdDev  = runtimeStats.getRankStdDev(i);
+      double  maximum = runtimeStats.getRankMaximum(i);
+      int     maxRank = runtimeStats.getRankForMaximum(i);
+
+      int col = 0;
+
+      if( average > 0 ) {
+        
+        if( units == std::string("MBytes"))
+        {
+          VisItUI_setTableValueS(tableName, row, col++, name.c_str(), 0);
+          VisItUI_setTableValueS(tableName, row, col++, units.c_str(), 0);
+          if( runtimeStats.calculateMinimum() ) {
+            VisItUI_setTableValueS(tableName, row, col++,
+                                   ProcessInfo::toHumanUnits(minimum).c_str(), 0);
+            VisItUI_setTableValueI(tableName, row, col++, minRank, 0);
+          }
+          if( runtimeStats.calculateAverage() )
+            VisItUI_setTableValueS(tableName, row, col++,
+                                   ProcessInfo::toHumanUnits(average).c_str(), 0);
+          if( runtimeStats.calculateStdDev() )
+            VisItUI_setTableValueS(tableName, row, col++,
+                                   ProcessInfo::toHumanUnits(stdDev).c_str(), 0);
+          if( runtimeStats.calculateMaximum() ) {
+            VisItUI_setTableValueS(tableName, row, col++,
+                                   ProcessInfo::toHumanUnits(maximum).c_str(), 0);
+            VisItUI_setTableValueI(tableName, row, col++, maxRank, 0);
+          }
+        }
+        
+        else
+        {
+          VisItUI_setTableValueS(tableName, row, col++, name.c_str(), 0);
+          VisItUI_setTableValueS(tableName, row, col++, units.c_str(), 0);
+          if( runtimeStats.calculateMinimum() ) {
+            VisItUI_setTableValueD(tableName, row, col++, minimum, 0);
+            VisItUI_setTableValueI(tableName, row, col++, minRank, 0);
+          }
+          if( runtimeStats.calculateAverage() )
+            VisItUI_setTableValueD(tableName, row, col++, average, 0);
+          if( runtimeStats.calculateStdDev() )
+            VisItUI_setTableValueD(tableName, row, col++, stdDev, 0);
+          if( runtimeStats.calculateMaximum() ) {
+            VisItUI_setTableValueD(tableName, row, col++, maximum, 0);
+            VisItUI_setTableValueI(tableName, row, col++, maxRank, 0);
+          }
+        }
+        
+        if( calcImbalance )
+        {
+          if( maximum != 0 )
+            VisItUI_setTableValueD(tableName, row, col++,
+                                   100.0*(1.0-(average/maximum)), 0);
+          else
+            VisItUI_setTableValueD(tableName, row, col++, 0.0, 0);
+        }
+        
+        ++row;
+      }
+      
+      std::string menuName = std::string(statsName) + "Stats/" + name;
+
+      if( runtimeStats.calculateMinimum() )
+        visit_SetStripChartValue( sim, menuName+"/Minimum", minimum );
+      if( runtimeStats.calculateAverage() )
+        visit_SetStripChartValue( sim, menuName+"/Average", average );
+      if( runtimeStats.calculateStdDev() )
+        visit_SetStripChartValue( sim, menuName+"/StdDev",  stdDev  );
+      if( runtimeStats.calculateMaximum() )
+        visit_SetStripChartValue( sim, menuName+"/Maximum", maximum );
+    }
+  }
+  else
+  {
+    VisItUI_setValueS( groupBoxName, "HIDE_WIDGET", 0 );
+    VisItUI_setTableValueS( tableName, -1, -1, "CLEAR_TABLE", 0 );
+  }
+}
+
+//---------------------------------------------------------------------
 // SetRuntimeStats
 //    Set the Runtime stats
 //---------------------------------------------------------------------
@@ -705,61 +820,7 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
   ReductionInfoMapper< RuntimeStatsEnum, double > runtimeStats =
     sim->simController->getRuntimeStats();
 
-  VisItUI_setValueS( "RuntimeStatsGroupBox", "SHOW_WIDGET", 1);
-  VisItUI_setTableValueS("RuntimeStatsTable", -1, -1, "CLEAR_TABLE", 0);
-
-  int row = 0;
-
-  for (unsigned int i=0; i<runtimeStats.size(); ++i)
-  {
-    std::string name  = runtimeStats.getName(i);
-    std::string units = runtimeStats.getUnits(i);
-
-    // Replace all colons with and an underscore.
-    std::replace( name.begin(), name.end(), ':', '_');
-    std::replace( units.begin(), units.end(), ':', '_');
-      
-    double  average = runtimeStats.getRankAverage(i);
-    double  maximum = runtimeStats.getRankMaximum(i);
-    int     rank    = runtimeStats.getRankForMaximum(i);
-
-    if( average > 0 && units == std::string("MBytes"))
-    {
-      VisItUI_setTableValueS("RuntimeStatsTable", row, 0, name.c_str(), 0);
-      VisItUI_setTableValueS("RuntimeStatsTable", row, 1, units.c_str(), 0);
-      VisItUI_setTableValueS("RuntimeStatsTable", row, 2,
-                             ProcessInfo::toHumanUnits(average).c_str(), 0);
-      VisItUI_setTableValueS("RuntimeStatsTable", row, 3,
-                             ProcessInfo::toHumanUnits(maximum).c_str(), 0);
-      VisItUI_setTableValueI("RuntimeStatsTable", row, 4, rank, 0);
-      if( maximum != 0 )
-        VisItUI_setTableValueD("RuntimeStatsTable", row, 5,
-                               100.0*(1.0-(average/maximum)), 0);
-      else
-        VisItUI_setTableValueD("RuntimeStatsTable", row, 5, 0.0, 0);
-      
-      ++row;
-    }
-  
-    else if( average > 0 )
-    {
-      VisItUI_setTableValueS("RuntimeStatsTable", row, 0, name.c_str(), 0);
-      VisItUI_setTableValueS("RuntimeStatsTable", row, 1, units.c_str(), 0);
-      VisItUI_setTableValueD("RuntimeStatsTable", row, 2, average, 0);
-      VisItUI_setTableValueD("RuntimeStatsTable", row, 3, maximum, 0);
-      VisItUI_setTableValueI("RuntimeStatsTable", row, 4, rank, 0);
-      if( maximum != 0 )
-        VisItUI_setTableValueD("RuntimeStatsTable", row, 5,
-                               100.0*(1.0-(average/maximum)), 0);
-      else
-        VisItUI_setTableValueD("RuntimeStatsTable", row, 5, 0.0, 0);
-
-      ++row;
-    }
-
-    visit_SetStripChartValue( sim, "RuntimeStats/"+name+"/Average", average );
-    visit_SetStripChartValue( sim, "RuntimeStats/"+name+"/Maximum", maximum );
-  }
+  reportStats( "Runtime", runtimeStats, true, sim );
 }
 
 //---------------------------------------------------------------------
@@ -777,36 +838,7 @@ void visit_SetMPIStats( visit_simulation_data *sim )
     ReductionInfoMapper< MPIScheduler::TimingStatEnum, double > &mpiStats =
       mpiScheduler->mpi_info_;
 
-    VisItUI_setValueS( "MPIStatsGroupBox", "SHOW_WIDGET", 1);
-    VisItUI_setTableValueS("MPIStatsTable", -1, -1, "CLEAR_TABLE", 0);
-
-    for (unsigned int i=0; i<mpiStats.size(); ++i)
-    {
-      std::string name  = mpiStats.getName(i);
-      std::string units = mpiStats.getUnits(i);
-      
-      // Replace all colons with and an underscore.
-      std::replace( name.begin(), name.end(), ':', '_');
-      std::replace( units.begin(), units.end(), ':', '_');
-      
-      double  average = mpiStats.getRankAverage(i);
-      double  maximum = mpiStats.getRankMaximum(i);
-      int     rank    = mpiStats.getRankForMaximum(i);
-      
-      VisItUI_setTableValueS("MPIStatsTable", i, 0, name.c_str(), 0);
-      VisItUI_setTableValueS("MPIStatsTable", i, 1, units.c_str(), 0);
-      VisItUI_setTableValueD("MPIStatsTable", i, 2, average, 0);
-      VisItUI_setTableValueD("MPIStatsTable", i, 3, maximum, 0);
-      VisItUI_setTableValueI("MPIStatsTable", i, 4, rank, 0);
-      if( maximum != 0 )
-        VisItUI_setTableValueD("MPIStatsTable", i, 5,
-                               100.0*(1.0-(average/maximum)), 0);
-      else
-        VisItUI_setTableValueD("MPIStatsTable", i, 5, 0.0, 0);
-
-      visit_SetStripChartValue( sim, "MPIStats/"+name+"/Average", average );
-      visit_SetStripChartValue( sim, "MPIStats/"+name+"/Maximum", maximum );
-    }
+    reportStats( "MPI", mpiStats, true, sim );
   }
   else
   {
@@ -814,6 +846,7 @@ void visit_SetMPIStats( visit_simulation_data *sim )
     VisItUI_setTableValueS("MPIStatsTable", -1, -1, "CLEAR_TABLE", 0);
   }
 }
+
 
 //---------------------------------------------------------------------
 // SetApplicationStats
@@ -824,54 +857,10 @@ void visit_SetApplicationStats( visit_simulation_data *sim )
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
-  unsigned int nStats = appInterface->getApplicationStats().size();
-
-  if( nStats )
-  {
-    VisItUI_setValueS( "ApplicationStatsGroupBox", "SHOW_WIDGET", 1);
-    VisItUI_setTableValueS("ApplicationStatsTable", -1, -1, "CLEAR_TABLE", 0);
-
-    int row = 0;
-    
-    for (unsigned int i=0; i<nStats; ++i)
-    {
-      std::string name  = appInterface->getApplicationStats().getName(i);
-      std::string units = appInterface->getApplicationStats().getUnits(i);
-      
-      // Replace all colons with and an underscore.
-      std::replace( name.begin(), name.end(), ':', '_');
-      std::replace( units.begin(), units.end(), ':', '_');
-      
-      double  average = appInterface->getApplicationStats().getRankAverage(i);
-      double  maximum = appInterface->getApplicationStats().getRankMaximum(i);
-      int     rank    = appInterface->getApplicationStats().getRankForMaximum(i);
-
-      if( average > 0 ) {
-      
-        VisItUI_setTableValueS("ApplicationStatsTable", row, 0, name.c_str(), 0);
-        VisItUI_setTableValueS("ApplicationStatsTable", row, 1, units.c_str(), 0);
-        VisItUI_setTableValueD("ApplicationStatsTable", row, 2, average, 0);
-        VisItUI_setTableValueD("ApplicationStatsTable", row, 3, maximum, 0);
-        VisItUI_setTableValueI("ApplicationStatsTable", row, 4, rank, 0);
-        
-        // if( maximum != 0 )
-        //         VisItUI_setTableValueD("ApplicationStatsTable", row, 5,
-        //                                100.0*(1.0-(average/maximum)), 0);
-        // else
-        //         VisItUI_setTableValueD("ApplicationStatsTable", row, 5, 0.0, 0);
-
-        ++row;
-      }
-      
-      visit_SetStripChartValue( sim, "ApplicationStats/"+name+"/Average", average );
-      visit_SetStripChartValue( sim, "ApplicationStats/"+name+"/Maximum", maximum );
-    }
-  }
-  else
-  {
-    VisItUI_setValueS( "ApplicationStatsGroupBox", "HIDE_WIDGET", 0);
-    VisItUI_setTableValueS("ApplicationStatsTable", -1, -1, "CLEAR_TABLE", 0);
-  }
+  ReductionInfoMapper< ApplicationInterface::ApplicationStatsEnum, double > 
+    appStats = appInterface->getApplicationStats();
+  
+  reportStats( "Application", appStats, false, sim );
 }
 
 //---------------------------------------------------------------------

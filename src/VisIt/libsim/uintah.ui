@@ -554,7 +554,22 @@
        </column>
        <column>
         <property name="text">
+         <string>Minimum</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Rank</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
          <string>Average</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Std. Dev.</string>
         </property>
        </column>
        <column>
@@ -565,11 +580,6 @@
        <column>
         <property name="text">
          <string>Rank</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>%</string>
         </property>
        </column>
       </widget>
