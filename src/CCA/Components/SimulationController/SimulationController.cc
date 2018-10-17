@@ -882,29 +882,48 @@ SimulationController::ReportStats(const ProcessorGroup*,
            << std::endl
            << "  " << std::left
            << std::setw(24) << "Description"
-           << std::setw(18) << "Units"
-           << std::setw(18) << "Average"
-           << std::setw(18) << "Maximum"
-           << std::setw(12) << "Rank"
-           << std::setw(12) << "100*(1-ave/max) '% load imbalance'"
-           << std::endl;
+           << std::setw(18) << "Units";
+    if( m_application->getApplicationStats().calculateMinimum() ) {
+      header << std::setw(18) << "Minimum"
+             << std::setw(12) << "Rank";
+    }
+    if( m_application->getApplicationStats().calculateAverage() )
+      header << std::setw(18) << "Average";
+    if( m_application->getApplicationStats().calculateStdDev() )
+      header << std::setw(18) << "Std. Dev.";
+    if( m_application->getApplicationStats().calculateMaximum() ) {
+      header << std::setw(18) << "Maximum"
+              << std::setw(12) << "Rank";
+    }
+    // header << std::setw(12) << "100*(1-ave/max) '% load imbalance'";
+    header << std::endl;
     
     std::ostringstream message;
 
     for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
-      if( m_application->getApplicationStats().getRankMaximum(i) != 0.0 ) {
+      // if( m_application->getApplicationStats().getRankMaximum(i) != 0.0 )
+        {
 
         if( message.str().size() )
           message << std::endl;
         message << "  " << std::left
                 << std::setw(24) << m_application->getApplicationStats().getName(i)
-                << "["   << std::setw(15) << m_application->getApplicationStats().getUnits(i) << "]"
-                << " : " << std::setw(15) << m_application->getApplicationStats().getRankAverage(i)
-                << " : " << std::setw(15) << m_application->getApplicationStats().getRankMaximum(i)
-                << " : " << std::setw(9) << m_application->getApplicationStats().getRankForMaximum(i)
-                << " : " << std::setw(9)
-                << (m_application->getApplicationStats().getRankMaximum(i) == 0.0 ?
-                    0 : (100.0 * (1.0 - (m_application->getApplicationStats().getRankAverage(i) / m_application->getApplicationStats().getRankMaximum(i)))));
+                << "["   << std::setw(15) << m_application->getApplicationStats().getUnits(i) << "]";
+        if( m_application->getApplicationStats().calculateMinimum() ) {
+          message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMinimum(i)
+                  << " : " << std::setw(9)  << m_application->getApplicationStats().getRankForMinimum(i);
+        }
+        if( m_application->getApplicationStats().calculateAverage() )
+          message << " : " << std::setw(15) << m_application->getApplicationStats().getRankAverage(i);
+        if( m_application->getApplicationStats().calculateStdDev() )
+          message  << " : " << std::setw(15) << m_application->getApplicationStats().getRankStdDev(i);
+        if( m_application->getApplicationStats().calculateMaximum() ) {
+          message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMaximum(i)
+                  << " : " << std::setw(9)  << m_application->getApplicationStats().getRankForMaximum(i);
+        }
+        // message << " : " << std::setw(9)
+        // << (m_application->getApplicationStats().getRankMaximum(i) == 0.0 ?
+        //     0 : (100.0 * (1.0 - (m_application->getApplicationStats().getRankAverage(i) / m_application->getApplicationStats().getRankMaximum(i)))));
       }
     }
 
