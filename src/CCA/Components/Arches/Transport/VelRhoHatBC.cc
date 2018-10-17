@@ -57,6 +57,9 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
+    const bool on_this_patch = i_bc->second.has_patch(patch->getID());
+    if ( !on_this_patch ) continue;
+
     Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
     IntVector iDir = patch->faceDirection( i_bc->second.face );
     Patch::FaceType face = i_bc->second.face;
