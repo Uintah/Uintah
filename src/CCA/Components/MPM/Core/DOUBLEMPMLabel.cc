@@ -79,9 +79,9 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 	// Grid liquid variables
 	gAccelerationLiquidLabel	= VarLabel::create("g.accelerationLiquid", NCVariable<Vector>::getTypeDescription());
 
-	gMassLiquidLabel			= VarLabel::create("g.massLiquid",	ParticleVariable<double>::getTypeDescription());
+	gMassLiquidLabel			= VarLabel::create("g.massLiquid", NCVariable<double>::getTypeDescription());
 
-	//gVolumeLiquidLabel			= VarLabel::create("g.gVolumeLiquid", ParticleVariable<double>::getTypeDescription());
+	//gVolumeLiquidLabel			= VarLabel::create("g.gVolumeLiquid", NCVariable<double>::getTypeDescription());
 
 	gVelocityLiquidLabel		= VarLabel::create("g.velocityLiquid", NCVariable<Vector>::getTypeDescription());
 

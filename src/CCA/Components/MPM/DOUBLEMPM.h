@@ -300,6 +300,17 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* old_dw,
 	  DataWarehouse* new_dw);
 
+  // Compute internal forces
+  virtual void scheduleComputeInternalForce_DOUBLEMPM(SchedulerP&, const PatchSet*,
+	  const MaterialSet*);
+
+  virtual void computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
+	  const PatchSubset* patches,
+	  const MaterialSubset* matls,
+	  DataWarehouse* old_dw,
+	  DataWarehouse* new_dw);
+
+
   // Compute the acceleration
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
 	  const PatchSet*,

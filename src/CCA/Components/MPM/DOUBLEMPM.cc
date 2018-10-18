@@ -975,7 +975,8 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
   if(d_bndy_traction_faces.size()>0) {
     scheduleComputeContactArea(           sched, patches, matls);
   }
-  scheduleComputeInternalForce(           sched, patches, matls);
+  scheduleComputeInternalForce_DOUBLEMPM(           sched, patches, matls);
+  //scheduleComputeInternalForce(sched, patches, matls);
   scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
@@ -1267,7 +1268,6 @@ void DOUBLEMPM::applyExternalLoads(const ProcessorGroup*,
 			// Find interacting nodes NN and loop all nodes with patch condition
 		// Loop all nodes to accumulate global variables
 // Flags: d_GEVelProj, d_useCBDI
-
 void DOUBLEMPM::scheduleRelocateParticle_DOUBLEMPM(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls) {
@@ -1282,15 +1282,16 @@ void DOUBLEMPM::scheduleRelocateParticle_DOUBLEMPM(SchedulerP& sched,
 	Ghost::GhostType  gan = Ghost::AroundNodes;
 	Ghost::GhostType gnone = Ghost::None;
 
-	//t->requires(Task::OldDW, double_lb->pPorePressureLabel, gan, NGP);
-	//t->requires(Task::OldDW, double_lb->pPorePressureTensorLabel, gan, NGP);
-	//t->requires(Task::OldDW, double_lb->pPorosityLabel, gan, NGP);
-	//t->requires(Task::OldDW, double_lb->pPermeabilityLabel, gan, NGP);
+	t->requires(Task::OldDW, double_lb->pPorePressureLabel, gan, NGP);
+	t->requires(Task::OldDW, double_lb->pPorePressureTensorLabel, gan, NGP);
+	t->requires(Task::OldDW, double_lb->pPorosityLabel, gan, NGP);
+	t->requires(Task::OldDW, double_lb->pPermeabilityLabel, gan, NGP);
 
-	//t->requires(Task::OldDW, double_lb->pMassSolidLabel, gan, NGP);
-	//t->requires(Task::OldDW, double_lb->pMassLiquidLabel, gan, NGP);
-	//t->requires(Task::OldDW, double_lb->pVelocityLiquidLabel, gan, NGP);
-
+	t->requires(Task::OldDW, double_lb->pMassSolidLabel, gan, NGP);
+	t->requires(Task::OldDW, double_lb->pMassLiquidLabel, gan, NGP);
+	t->requires(Task::OldDW, double_lb->pVelocityLiquidLabel, gan, NGP);
+	
+	/*
 	t->requires(Task::OldDW, double_lb->pPorePressureLabel, gnone);
 	t->requires(Task::OldDW, double_lb->pPorePressureTensorLabel, gnone);
 	t->requires(Task::OldDW, double_lb->pPorosityLabel, gnone);
@@ -1299,7 +1300,7 @@ void DOUBLEMPM::scheduleRelocateParticle_DOUBLEMPM(SchedulerP& sched,
 	t->requires(Task::OldDW, double_lb->pMassSolidLabel, gnone);
 	t->requires(Task::OldDW, double_lb->pMassLiquidLabel, gnone);
 	t->requires(Task::OldDW, double_lb->pVelocityLiquidLabel, gnone);
-
+	*/
 	t->computes(double_lb->pPorePressureLabel_preReloc);
 	t->computes(double_lb->pPorePressureTensorLabel_preReloc);
 	t->computes(double_lb->pPorosityLabel_preReloc);
@@ -1436,369 +1437,10 @@ void DOUBLEMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gTemperatureRateLabel);
 
-  // Solid and Liquid
-  t->requires(Task::OldDW, double_lb->pMassSolidLabel, gan, NGP);
-  t->requires(Task::OldDW, double_lb->pMassLiquidLabel, gan, NGP);
-  t->requires(Task::OldDW, double_lb->pVelocityLiquidLabel, gan, NGP);
-
-  t->computes(double_lb->gMassSolidLabel, m_materialManager->getAllInOneMatls(),
-	  Task::OutOfDomain);
-  t->computes(double_lb->gMassLiquidLabel, m_materialManager->getAllInOneMatls(),
-	  Task::OutOfDomain);
-  t->computes(double_lb->gVelocityLiquidLabel, m_materialManager->getAllInOneMatls(),
-	  Task::OutOfDomain);
-
-  t->computes(double_lb->gMassSolidLabel);
-  t->computes(double_lb->gMassLiquidLabel);
-  t->computes(double_lb->gVelocityLiquidLabel);
-
     sched->addTask(t, patches, matls);
 }
 
 void DOUBLEMPM::interpolateParticlesToGrid(const ProcessorGroup*,
-	const PatchSubset* patches,
-	const MaterialSubset*,
-	DataWarehouse* old_dw,
-	DataWarehouse* new_dw)
-{
-	// Loop all the patches
-	for (int p = 0; p < patches->size(); p++) {
-		const Patch* patch = patches->get(p);
-
-		printTask(patches, patch, cout_doing,
-			"Doing DOUBLEMPM::interpolateParticlesToGrid");
-
-		// numMatls = number of materials
-		unsigned int numMatls = m_materialManager->getNumMatls("MPM");
-		ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-		vector<IntVector> ni(interpolator->size());					// Node index vector
-		vector<double> S(interpolator->size());						// Value of shape function
-
-		ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
-
-		string interp_type = flags->d_interpolator_type;
-
-		// MPM variables
-		NCVariable<double> gmassglobal, gtempglobal, gvolumeglobal;
-		NCVariable<Vector> gvelglobal;
-		int globMatID = m_materialManager->getAllInOneMatls()->get(0);
-		new_dw->allocateAndPut(gmassglobal, lb->gMassLabel, globMatID, patch);
-		new_dw->allocateAndPut(gtempglobal, lb->gTemperatureLabel, globMatID, patch);
-		new_dw->allocateAndPut(gvolumeglobal, lb->gVolumeLabel, globMatID, patch);
-		new_dw->allocateAndPut(gvelglobal, lb->gVelocityLabel, globMatID, patch);
-		gmassglobal.initialize(d_SMALL_NUM_MPM);
-		gvolumeglobal.initialize(d_SMALL_NUM_MPM);
-		gtempglobal.initialize(0.0);
-		gvelglobal.initialize(Vector(0.0));
-
-		// Solid variables
-		NCVariable<double> gmassglobal_solid;
-		new_dw->allocateAndPut(gmassglobal_solid, double_lb->gMassSolidLabel, globMatID, patch);
-		gmassglobal_solid.initialize(d_SMALL_NUM_MPM);
-
-		// Liquid variables
-		NCVariable<double> gmassglobal_liquid;
-		NCVariable<Vector> gvelglobal_liquid;
-		new_dw->allocateAndPut(gmassglobal_liquid, double_lb->gMassLiquidLabel, globMatID, patch);
-		new_dw->allocateAndPut(gvelglobal_liquid, double_lb->gVelocityLiquidLabel, globMatID, patch);
-		gmassglobal_liquid.initialize(d_SMALL_NUM_MPM);
-		gvelglobal_liquid.initialize(Vector(0.0));
-
-		Ghost::GhostType  gan = Ghost::AroundNodes;
-
-		for (unsigned int m = 0; m < numMatls; m++) {
-			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);		// mpm_matl is the material with index m
-			int dwi = mpm_matl->getDWIndex();													// dwi is the  material index in datawarehouse
-
-			// Create arrays for the particle data
-			constParticleVariable<Point>  px;
-			constParticleVariable<double> pmass, pvolume, pTemperature, pColor;
-			constParticleVariable<Vector> pvelocity, pexternalforce;
-			constParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
-				pExternalForceCorner3, pExternalForceCorner4;
-			constParticleVariable<Matrix3> psize;
-			constParticleVariable<Matrix3> pFOld;
-			constParticleVariable<Matrix3> pVelGrad;
-			constParticleVariable<Vector>  pTempGrad;
-
-			// Solid and Liquid variables
-			constParticleVariable<double> pMassSolid, pMassLiquid;
-			constParticleVariable<Vector> pvelocity_liquid;
-
-
-			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-				gan, NGP, lb->pXLabel);											// pset is particlesubset of material index dwi, in patch, ghost arround nodes
-
-			old_dw->get(px, lb->pXLabel, pset);									// get input pXLabel
-			old_dw->get(pmass, lb->pMassLabel, pset);
-			old_dw->get(pvolume, lb->pVolumeLabel, pset);
-			old_dw->get(pvelocity, lb->pVelocityLabel, pset);
-			if (flags->d_GEVelProj) {
-				old_dw->get(pVelGrad, lb->pVelGradLabel, pset);
-				old_dw->get(pTempGrad, lb->pTemperatureGradientLabel, pset);
-			}
-			old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
-			old_dw->get(psize, lb->pSizeLabel, pset);
-			old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
-
-			// Solid and Liquid variables
-			old_dw->get(pMassSolid, double_lb->pMassSolidLabel, pset);
-			old_dw->get(pMassLiquid, double_lb->pMassLiquidLabel, pset);
-			old_dw->get(pvelocity_liquid, double_lb->pVelocityLiquidLabel, pset);
-
-			// JBH -- Scalar diffusion related
-			constParticleVariable<double> pConcentration, pExternalScalarFlux;
-			constParticleVariable<Vector> pConcGrad;
-			constParticleVariable<Matrix3> pStress;
-
-			new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
-			constParticleVariable<IntVector> pLoadCurveID;
-			if (flags->d_useCBDI) {
-				new_dw->get(pExternalForceCorner1,
-					lb->pExternalForceCorner1Label, pset);
-				new_dw->get(pExternalForceCorner2,
-					lb->pExternalForceCorner2Label, pset);
-				new_dw->get(pExternalForceCorner3,
-					lb->pExternalForceCorner3Label, pset);
-				new_dw->get(pExternalForceCorner4,
-					lb->pExternalForceCorner4Label, pset);
-				old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-			}
-
-			// Create arrays for the grid data
-			NCVariable<double> gmass;
-			NCVariable<double> gvolume;
-			NCVariable<Vector> gvelocity;
-			NCVariable<Vector> gexternalforce;
-			NCVariable<double> gTemperature;
-			NCVariable<double> gSp_vol;
-			NCVariable<double> gTemperatureNoBC;
-			NCVariable<double> gTemperatureRate;
-
-			// Solid and liquid variables
-			NCVariable<double> gmass_solid, gmass_liquid;
-			NCVariable<Vector> gvelocity_liquid;
-
-			new_dw->allocateAndPut(gmass, lb->gMassLabel, dwi, patch);
-			new_dw->allocateAndPut(gSp_vol, lb->gSp_volLabel, dwi, patch);
-			new_dw->allocateAndPut(gvolume, lb->gVolumeLabel, dwi, patch);
-			new_dw->allocateAndPut(gvelocity, lb->gVelocityLabel, dwi, patch);
-			new_dw->allocateAndPut(gTemperature, lb->gTemperatureLabel, dwi, patch);
-			new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
-				dwi, patch);
-			new_dw->allocateAndPut(gTemperatureRate, lb->gTemperatureRateLabel,
-				dwi, patch);
-			new_dw->allocateAndPut(gexternalforce, lb->gExternalForceLabel,
-				dwi, patch);
-			
-			gmass.initialize(d_SMALL_NUM_MPM);
-			gvolume.initialize(d_SMALL_NUM_MPM);
-			gvelocity.initialize(Vector(0, 0, 0));
-			gexternalforce.initialize(Vector(0, 0, 0));
-			gTemperature.initialize(0);
-			gTemperatureNoBC.initialize(0);
-			gTemperatureRate.initialize(0);
-			gSp_vol.initialize(0.);
-
-			// Solid and Liquid variables
-			new_dw->allocateAndPut(gmass_solid, double_lb->gMassSolidLabel, dwi, patch);
-			new_dw->allocateAndPut(gmass_liquid, double_lb->gMassLiquidLabel, dwi, patch);
-			new_dw->allocateAndPut(gvelocity_liquid, double_lb->gVelocityLiquidLabel, dwi, patch);
-
-			gmass_solid.initialize(d_SMALL_NUM_MPM);
-			gmass_liquid.initialize(d_SMALL_NUM_MPM);
-			gvelocity_liquid.initialize(Vector(0, 0, 0));
-
-			// JBH -- Scalar diffusion related
-			NCVariable<double>  gConcentration, gConcentrationNoBC;
-			NCVariable<double>  gHydrostaticStress, gExtScalarFlux;
-
-			// Interpolate particle data to Grid data.
-			// This currently consists of the particle velocity and mass
-			// Need to compute the lumped global mass matrix and velocity
-			// Vector from the individual mass matrix and velocity vector
-			// GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
-
-			Vector total_mom(0.0, 0.0, 0.0);
-			double pSp_vol = 1. / mpm_matl->getInitialDensity();			// Initial volume/mass = 1/initial density 
-
-			//loop over all particles in the patch:
-			for (ParticleSubset::iterator iter = pset->begin();
-				iter != pset->end();
-				iter++) {
-				particleIndex idx = *iter;
-				int NN = interpolator->findCellAndWeights(px[idx], ni, S, psize[idx], pFOld[idx]);			// NN : total interacting nodes number
-				Vector pmom = pvelocity[idx] * pMassSolid[idx];													// px: particle position, ni: index of node vector
-				Vector pmom_liquid = pvelocity_liquid[idx] * pMassLiquid[idx];
-				double ptemp_ext = pTemperature[idx];														// S: shape function
-				total_mom += pmom;
-
-				// Add each particles contribution to the local mass & velocity
-				// Must use the node indices
-				IntVector node;
-				// Iterate through the nodes that receive data from the current particle
-				for (int k = 0; k < NN; k++) {
-					node = ni[k];
-					if (patch->containsNode(node)) {
-						if (flags->d_GEVelProj) {
-							Point gpos = patch->getNodePosition(node);
-							Vector distance = px[idx] - gpos;
-							Vector pvel_ext = pvelocity[idx] - pVelGrad[idx] * distance;
-							pmom = pvel_ext * pmass[idx];
-							ptemp_ext = pTemperature[idx] - Dot(pTempGrad[idx], distance);
-						}
-						gmass[node] += pmass[idx] * S[k];
-						gvolume[node] += pvolume[idx] * S[k];
-						if (!flags->d_useCBDI) {
-							gexternalforce[node] += pexternalforce[idx] * S[k];
-						}
-						gTemperature[node] += ptemp_ext * pmass[idx] * S[k];
-						gSp_vol[node] += pSp_vol * pmass[idx] * S[k];					// nodal initial volume
-						
-						// Solid and Liquid
-						gmass_solid[node] += pMassSolid[idx] * S[k];
-						gmass_liquid[node] += pMassLiquid[idx] * S[k];
-						gvelocity_liquid[node] += pmom_liquid * S[k];
-						gvelocity[node] += pmom * S[k];
-					}
-				}
-				if (flags->d_useCBDI && pLoadCurveID[idx].x() > 0) {
-					vector<IntVector> niCorner1(linear_interpolator->size());
-					vector<IntVector> niCorner2(linear_interpolator->size());
-					vector<IntVector> niCorner3(linear_interpolator->size());
-					vector<IntVector> niCorner4(linear_interpolator->size());
-					vector<double> SCorner1(linear_interpolator->size());
-					vector<double> SCorner2(linear_interpolator->size());
-					vector<double> SCorner3(linear_interpolator->size());
-					vector<double> SCorner4(linear_interpolator->size());
-					linear_interpolator->findCellAndWeights(pExternalForceCorner1[idx],
-						niCorner1, SCorner1, psize[idx], pFOld[idx]);
-					linear_interpolator->findCellAndWeights(pExternalForceCorner2[idx],
-						niCorner2, SCorner2, psize[idx], pFOld[idx]);
-					linear_interpolator->findCellAndWeights(pExternalForceCorner3[idx],
-						niCorner3, SCorner3, psize[idx], pFOld[idx]);
-					linear_interpolator->findCellAndWeights(pExternalForceCorner4[idx],
-						niCorner4, SCorner4, psize[idx], pFOld[idx]);
-					for (int k = 0; k < 8; k++) { // Iterates through the nodes which receive information from the current particle
-						node = niCorner1[k];
-						if (patch->containsNode(node)) {
-							gexternalforce[node] += pexternalforce[idx] * SCorner1[k];
-						}
-						node = niCorner2[k];
-						if (patch->containsNode(node)) {
-							gexternalforce[node] += pexternalforce[idx] * SCorner2[k];
-						}
-						node = niCorner3[k];
-						if (patch->containsNode(node)) {
-							gexternalforce[node] += pexternalforce[idx] * SCorner3[k];
-						}
-						node = niCorner4[k];
-						if (patch->containsNode(node)) {
-							gexternalforce[node] += pexternalforce[idx] * SCorner4[k];
-						}
-					}
-				}
-			} // End of particle loop
-			for (NodeIterator iter = patch->getExtraNodeIterator();
-				!iter.done(); iter++) {
-				IntVector c = *iter;
-
-				gmassglobal[c] += gmass[c];
-				gvolumeglobal[c] += gvolume[c];
-				
-				
-				gtempglobal[c] += gTemperature[c];
-				gTemperature[c] /= gmass[c];
-				gTemperatureNoBC[c] = gTemperature[c];
-				gSp_vol[c] /= gmass[c];
-
-				// Solid and Liquid
-				gmassglobal_solid[c] += gmass_solid[c];
-				gmassglobal_liquid[c] += gmass_liquid[c];
-				gvelglobal_liquid[c] += gvelocity_liquid[c];						// Total liquid momentum in grid of all materials
-				gvelocity_liquid[c] /= gmass_liquid[c];
-				gvelglobal[c] += gvelocity[c];
-				gvelocity[c] /= gmass_solid[c];
-			}
-
-			// Apply boundary conditions to the temperature and velocity (if symmetry)
-			MPMBoundCond bc;
-			bc.setBoundaryCondition(patch, dwi, "Temperature", gTemperature, interp_type);
-			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity, interp_type);
-			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity_liquid, interp_type);
-		}  // End loop over materials
-
-		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-			IntVector c = *iter;
-			gtempglobal[c] /= gmassglobal[c];
-
-			// Solid and Liquid
-			gvelglobal_liquid[c] /= gmassglobal_liquid[c];
-			gvelglobal[c] /= gmassglobal_solid[c];
-		}
-		delete interpolator;
-		delete linear_interpolator;
-	}  // End loop over patches
-}
-
-
-// d_GEVelProj should be ignored
-void DOUBLEMPM::scheduleInterpolateParticlesToGrid_DOUBLEMPM(SchedulerP& sched,
-	const PatchSet* patches,
-	const MaterialSet* matls)
-{
-	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-		getLevel(patches)->getGrid()->numLevels()))
-		return;
-
-	printSchedule(patches, cout_doing, "DOUBLEMPM::scheduleInterpolateParticlesToGrid_DOUBLEMPM");
-
-	Task* t = scinew Task("interpolateParticlesToGrid_DOUBLEMPM",
-		this, &DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM);
-	Ghost::GhostType  gan = Ghost::AroundNodes;
-
-	t->requires(Task::OldDW, lb->pMassLabel, gan, NGP);
-	t->requires(Task::OldDW, lb->pVolumeLabel, gan, NGP);
-	//  t->requires(Task::OldDW, lb->pColorLabel,            gan,NGP);
-	t->requires(Task::OldDW, lb->pVelocityLabel, gan, NGP);
-	if (flags->d_GEVelProj) {
-		t->requires(Task::OldDW, lb->pVelGradLabel, gan, NGP);
-		t->requires(Task::OldDW, lb->pTemperatureGradientLabel, gan, NGP);
-	}
-	t->requires(Task::OldDW, lb->pXLabel, gan, NGP);
-	t->requires(Task::NewDW, lb->pExtForceLabel_preReloc, gan, NGP);
-	t->requires(Task::OldDW, lb->pTemperatureLabel, gan, NGP);
-	t->requires(Task::OldDW, lb->pSizeLabel, gan, NGP);
-	t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
-	if (flags->d_useCBDI) {
-		t->requires(Task::NewDW, lb->pExternalForceCorner1Label, gan, NGP);
-		t->requires(Task::NewDW, lb->pExternalForceCorner2Label, gan, NGP);
-		t->requires(Task::NewDW, lb->pExternalForceCorner3Label, gan, NGP);
-		t->requires(Task::NewDW, lb->pExternalForceCorner4Label, gan, NGP);
-		t->requires(Task::OldDW, lb->pLoadCurveIDLabel, gan, NGP);
-	}
-	t->computes(lb->gMassLabel, m_materialManager->getAllInOneMatls(),
-		Task::OutOfDomain);
-	t->computes(lb->gTemperatureLabel, m_materialManager->getAllInOneMatls(),
-		Task::OutOfDomain);
-	t->computes(lb->gVolumeLabel, m_materialManager->getAllInOneMatls(),
-		Task::OutOfDomain);
-	t->computes(lb->gVelocityLabel, m_materialManager->getAllInOneMatls(),
-		Task::OutOfDomain);
-	t->computes(lb->gMassLabel);
-	t->computes(lb->gSp_volLabel);
-	t->computes(lb->gVolumeLabel);
-	//  t->computes(lb->gColorLabel);
-	t->computes(lb->gVelocityLabel);
-	t->computes(lb->gExternalForceLabel);
-	t->computes(lb->gTemperatureLabel);
-	t->computes(lb->gTemperatureNoBCLabel);
-	t->computes(lb->gTemperatureRateLabel);
-	sched->addTask(t, patches, matls);
-}
-
-
-void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 	const PatchSubset* patches,
 	const MaterialSubset*,
 	DataWarehouse* old_dw,
@@ -2035,6 +1677,383 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 	}  // End loop over patches
 }
 
+
+// d_GEVelProj should be ignored
+void DOUBLEMPM::scheduleInterpolateParticlesToGrid_DOUBLEMPM(SchedulerP& sched,
+	const PatchSet* patches,
+	const MaterialSet* matls)
+{
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
+
+	printSchedule(patches, cout_doing, "DOUBLEMPM::scheduleInterpolateParticlesToGrid_DOUBLEMPM");
+
+	Task* t = scinew Task("interpolateParticlesToGrid_DOUBLEMPM",
+		this, &DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM);
+	Ghost::GhostType  gan = Ghost::AroundNodes;
+
+	t->requires(Task::OldDW, lb->pMassLabel, gan, NGP);
+	t->requires(Task::OldDW, lb->pVolumeLabel, gan, NGP);
+	t->requires(Task::OldDW, lb->pVelocityLabel, gan, NGP);
+	if (flags->d_GEVelProj) {
+		t->requires(Task::OldDW, lb->pVelGradLabel, gan, NGP);
+		t->requires(Task::OldDW, lb->pTemperatureGradientLabel, gan, NGP);
+	}
+	t->requires(Task::OldDW, lb->pXLabel, gan, NGP);
+	t->requires(Task::NewDW, lb->pExtForceLabel_preReloc, gan, NGP);
+	t->requires(Task::OldDW, lb->pTemperatureLabel, gan, NGP);
+	t->requires(Task::OldDW, lb->pSizeLabel, gan, NGP);
+	t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
+	if (flags->d_useCBDI) {
+		t->requires(Task::NewDW, lb->pExternalForceCorner1Label, gan, NGP);
+		t->requires(Task::NewDW, lb->pExternalForceCorner2Label, gan, NGP);
+		t->requires(Task::NewDW, lb->pExternalForceCorner3Label, gan, NGP);
+		t->requires(Task::NewDW, lb->pExternalForceCorner4Label, gan, NGP);
+		t->requires(Task::OldDW, lb->pLoadCurveIDLabel, gan, NGP);
+	}
+	t->computes(lb->gMassLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+	t->computes(lb->gTemperatureLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+	t->computes(lb->gVolumeLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+	t->computes(lb->gVelocityLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+	t->computes(lb->gMassLabel);
+	t->computes(lb->gSp_volLabel);
+	t->computes(lb->gVolumeLabel);
+	t->computes(lb->gVelocityLabel);
+	t->computes(lb->gExternalForceLabel);
+	t->computes(lb->gTemperatureLabel);
+	t->computes(lb->gTemperatureNoBCLabel);
+	t->computes(lb->gTemperatureRateLabel);
+
+	// Solid and Liquid
+	t->requires(Task::OldDW, double_lb->pMassSolidLabel, gan, NGP);
+	t->requires(Task::OldDW, double_lb->pMassLiquidLabel, gan, NGP);
+	t->requires(Task::OldDW, double_lb->pVelocityLiquidLabel, gan, NGP);
+	t->requires(Task::OldDW, double_lb->pPorosityLabel, gan, NGP);
+
+	t->computes(double_lb->gMassSolidLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+	t->computes(double_lb->gMassLiquidLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+	t->computes(double_lb->gVelocityLiquidLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+	t->computes(double_lb->gPorosityLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+
+	t->computes(double_lb->gMassSolidLabel);
+	t->computes(double_lb->gMassLiquidLabel);
+	t->computes(double_lb->gVelocityLiquidLabel);
+	t->computes(double_lb->gPorosityLabel);
+
+	sched->addTask(t, patches, matls);
+}
+
+void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
+	const PatchSubset* patches,
+	const MaterialSubset*,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
+{
+	// Loop all the patches
+	for (int p = 0; p < patches->size(); p++) {
+		const Patch* patch = patches->get(p);
+
+		printTask(patches, patch, cout_doing,
+			"Doing DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM");
+
+		// numMatls = number of materials
+		unsigned int numMatls = m_materialManager->getNumMatls("MPM");
+		ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+		vector<IntVector> ni(interpolator->size());					// Node index vector
+		vector<double> S(interpolator->size());						// Value of shape function
+
+		ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
+
+		string interp_type = flags->d_interpolator_type;
+
+		// MPM variables
+		NCVariable<double> gmassglobal, gtempglobal, gvolumeglobal;
+		NCVariable<Vector> gvelglobal;
+		int globMatID = m_materialManager->getAllInOneMatls()->get(0);
+		new_dw->allocateAndPut(gmassglobal, lb->gMassLabel, globMatID, patch);
+		new_dw->allocateAndPut(gtempglobal, lb->gTemperatureLabel, globMatID, patch);
+		new_dw->allocateAndPut(gvolumeglobal, lb->gVolumeLabel, globMatID, patch);
+		new_dw->allocateAndPut(gvelglobal, lb->gVelocityLabel, globMatID, patch);
+		gmassglobal.initialize(d_SMALL_NUM_MPM);
+		gvolumeglobal.initialize(d_SMALL_NUM_MPM);
+		gtempglobal.initialize(0.0);
+		gvelglobal.initialize(Vector(0.0));
+
+		// Solid variables
+		NCVariable<double> gmassglobal_solid, gPorosityglobal;
+		new_dw->allocateAndPut(gmassglobal_solid, double_lb->gMassSolidLabel, globMatID, patch);
+		new_dw->allocateAndPut(gPorosityglobal, double_lb->gPorosityLabel, globMatID, patch);
+
+		gmassglobal_solid.initialize(d_SMALL_NUM_MPM);
+		gPorosityglobal.initialize(0.0);
+
+		// Liquid variables
+		NCVariable<double> gmassglobal_liquid;
+		NCVariable<Vector> gvelglobal_liquid;
+		new_dw->allocateAndPut(gmassglobal_liquid, double_lb->gMassLiquidLabel, globMatID, patch);
+		new_dw->allocateAndPut(gvelglobal_liquid, double_lb->gVelocityLiquidLabel, globMatID, patch);
+		gmassglobal_liquid.initialize(d_SMALL_NUM_MPM);
+		gvelglobal_liquid.initialize(Vector(0.0));
+
+		Ghost::GhostType  gan = Ghost::AroundNodes;
+
+		for (unsigned int m = 0; m < numMatls; m++) {
+			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);		// mpm_matl is the material with index m
+			int dwi = mpm_matl->getDWIndex();													// dwi is the  material index in datawarehouse
+
+			// Create arrays for the particle data
+			constParticleVariable<Point>  px;
+			constParticleVariable<double> pmass, pvolume, pTemperature, pColor;
+			constParticleVariable<Vector> pvelocity, pexternalforce;
+			constParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
+				pExternalForceCorner3, pExternalForceCorner4;
+			constParticleVariable<Matrix3> psize;
+			constParticleVariable<Matrix3> pFOld;
+			constParticleVariable<Matrix3> pVelGrad;
+			constParticleVariable<Vector>  pTempGrad;
+
+			// Solid and Liquid variables
+			constParticleVariable<double> pMassSolid, pMassLiquid, pPorosity;
+			constParticleVariable<Vector> pvelocity_liquid;
+
+
+			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+				gan, NGP, lb->pXLabel);											// pset is particlesubset of material index dwi, in patch, ghost arround nodes
+
+			old_dw->get(px, lb->pXLabel, pset);									// get input pXLabel
+			old_dw->get(pmass, lb->pMassLabel, pset);
+			old_dw->get(pvolume, lb->pVolumeLabel, pset);
+			old_dw->get(pvelocity, lb->pVelocityLabel, pset);
+			if (flags->d_GEVelProj) {
+				old_dw->get(pVelGrad, lb->pVelGradLabel, pset);
+				old_dw->get(pTempGrad, lb->pTemperatureGradientLabel, pset);
+			}
+			old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
+			old_dw->get(psize, lb->pSizeLabel, pset);
+			old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
+
+			// Solid and Liquid variables
+			old_dw->get(pMassSolid, double_lb->pMassSolidLabel, pset);
+			old_dw->get(pMassLiquid, double_lb->pMassLiquidLabel, pset);
+			old_dw->get(pvelocity_liquid, double_lb->pVelocityLiquidLabel, pset);
+			old_dw->get(pPorosity, double_lb->pPorosityLabel, pset);
+
+			// JBH -- Scalar diffusion related
+			constParticleVariable<double> pConcentration, pExternalScalarFlux;
+			constParticleVariable<Vector> pConcGrad;
+			constParticleVariable<Matrix3> pStress;
+
+			new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
+			constParticleVariable<IntVector> pLoadCurveID;
+			if (flags->d_useCBDI) {
+				new_dw->get(pExternalForceCorner1,
+					lb->pExternalForceCorner1Label, pset);
+				new_dw->get(pExternalForceCorner2,
+					lb->pExternalForceCorner2Label, pset);
+				new_dw->get(pExternalForceCorner3,
+					lb->pExternalForceCorner3Label, pset);
+				new_dw->get(pExternalForceCorner4,
+					lb->pExternalForceCorner4Label, pset);
+				old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+			}
+
+			// Create arrays for the grid data
+			NCVariable<double> gmass;
+			NCVariable<double> gvolume;
+			NCVariable<Vector> gvelocity;
+			NCVariable<Vector> gexternalforce;
+			NCVariable<double> gTemperature;
+			NCVariable<double> gSp_vol;
+			NCVariable<double> gTemperatureNoBC;
+			NCVariable<double> gTemperatureRate;
+
+			new_dw->allocateAndPut(gmass, lb->gMassLabel, dwi, patch);
+			new_dw->allocateAndPut(gSp_vol, lb->gSp_volLabel, dwi, patch);
+			new_dw->allocateAndPut(gvolume, lb->gVolumeLabel, dwi, patch);
+			new_dw->allocateAndPut(gvelocity, lb->gVelocityLabel, dwi, patch);
+			new_dw->allocateAndPut(gTemperature, lb->gTemperatureLabel, dwi, patch);
+			new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
+				dwi, patch);
+			new_dw->allocateAndPut(gTemperatureRate, lb->gTemperatureRateLabel,
+				dwi, patch);
+			new_dw->allocateAndPut(gexternalforce, lb->gExternalForceLabel,
+				dwi, patch);
+
+			gmass.initialize(d_SMALL_NUM_MPM);
+			gvolume.initialize(d_SMALL_NUM_MPM);
+			gvelocity.initialize(Vector(0, 0, 0));
+			gexternalforce.initialize(Vector(0, 0, 0));
+			gTemperature.initialize(0);
+			gTemperatureNoBC.initialize(0);
+			gTemperatureRate.initialize(0);
+			gSp_vol.initialize(0.);
+
+			// Solid and liquid variables
+			NCVariable<double> gmass_solid, gmass_liquid, gPorosity;
+			NCVariable<Vector> gvelocity_liquid;
+
+			// Solid and Liquid variables
+			new_dw->allocateAndPut(gmass_solid, double_lb->gMassSolidLabel, dwi, patch);
+			new_dw->allocateAndPut(gmass_liquid, double_lb->gMassLiquidLabel, dwi, patch);
+			new_dw->allocateAndPut(gvelocity_liquid, double_lb->gVelocityLiquidLabel, dwi, patch);
+			new_dw->allocateAndPut(gPorosity, double_lb->gPorosityLabel, dwi, patch);
+
+			gmass_solid.initialize(d_SMALL_NUM_MPM);
+			gmass_liquid.initialize(d_SMALL_NUM_MPM);
+			gvelocity_liquid.initialize(Vector(0, 0, 0));
+			gPorosity.initialize(0.0);
+
+			// JBH -- Scalar diffusion related
+			NCVariable<double>  gConcentration, gConcentrationNoBC;
+			NCVariable<double>  gHydrostaticStress, gExtScalarFlux;
+
+			// Interpolate particle data to Grid data.
+			// This currently consists of the particle velocity and mass
+			// Need to compute the lumped global mass matrix and velocity
+			// Vector from the individual mass matrix and velocity vector
+			// GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
+
+			Vector total_mom(0.0, 0.0, 0.0);
+			double pSp_vol = 1. / mpm_matl->getInitialDensity();			// Initial volume/mass = 1/initial density 
+
+			//loop over all particles in the patch:
+			for (ParticleSubset::iterator iter = pset->begin();
+				iter != pset->end(); iter++) {
+				particleIndex idx = *iter;
+				int NN = interpolator->findCellAndWeights(px[idx], ni, S, psize[idx], pFOld[idx]);			// NN : total interacting nodes number
+				Vector pmom = pvelocity[idx] * pmass[idx];													// px: particle position, ni: index of node vector
+				//Vector pmom = pvelocity[idx] * pMassSolid[idx];
+				Vector pmom_liquid = pvelocity_liquid[idx] * pMassLiquid[idx];
+				double ptemp_ext = pTemperature[idx];														// S: shape function
+				total_mom += pmom;
+
+				// Add each particles contribution to the local mass & velocity
+				// Must use the node indices
+				IntVector node;
+				// Iterate through the nodes that receive data from the current particle
+				for (int k = 0; k < NN; k++) {
+					node = ni[k];
+					if (patch->containsNode(node)) {
+						if (flags->d_GEVelProj) {
+							Point gpos = patch->getNodePosition(node);
+							Vector distance = px[idx] - gpos;
+							Vector pvel_ext = pvelocity[idx] - pVelGrad[idx] * distance;
+							pmom = pvel_ext * pmass[idx];
+							ptemp_ext = pTemperature[idx] - Dot(pTempGrad[idx], distance);
+						}
+						gmass[node] += pmass[idx] * S[k];
+						gvolume[node] += pvolume[idx] * S[k];
+						if (!flags->d_useCBDI) {
+							gexternalforce[node] += pexternalforce[idx] * S[k];
+						}
+						gTemperature[node] += ptemp_ext * pmass[idx] * S[k];
+						gSp_vol[node] += pSp_vol * pmass[idx] * S[k];					// nodal initial volume
+
+						// Solid and Liquid
+						
+						gmass_solid[node] += pMassSolid[idx] * S[k];
+						gmass_liquid[node] += pMassLiquid[idx] * S[k];
+						gvelocity_liquid[node] += pmom_liquid * S[k];
+						gvelocity[node] += pmom * S[k];
+						gPorosity[node] += pPorosity[idx] * pMassSolid[idx] * S[k];
+					}
+				}
+				if (flags->d_useCBDI && pLoadCurveID[idx].x() > 0) {
+					vector<IntVector> niCorner1(linear_interpolator->size());
+					vector<IntVector> niCorner2(linear_interpolator->size());
+					vector<IntVector> niCorner3(linear_interpolator->size());
+					vector<IntVector> niCorner4(linear_interpolator->size());
+					vector<double> SCorner1(linear_interpolator->size());
+					vector<double> SCorner2(linear_interpolator->size());
+					vector<double> SCorner3(linear_interpolator->size());
+					vector<double> SCorner4(linear_interpolator->size());
+					linear_interpolator->findCellAndWeights(pExternalForceCorner1[idx],
+						niCorner1, SCorner1, psize[idx], pFOld[idx]);
+					linear_interpolator->findCellAndWeights(pExternalForceCorner2[idx],
+						niCorner2, SCorner2, psize[idx], pFOld[idx]);
+					linear_interpolator->findCellAndWeights(pExternalForceCorner3[idx],
+						niCorner3, SCorner3, psize[idx], pFOld[idx]);
+					linear_interpolator->findCellAndWeights(pExternalForceCorner4[idx],
+						niCorner4, SCorner4, psize[idx], pFOld[idx]);
+					for (int k = 0; k < 8; k++) { // Iterates through the nodes which receive information from the current particle
+						node = niCorner1[k];
+						if (patch->containsNode(node)) {
+							gexternalforce[node] += pexternalforce[idx] * SCorner1[k];
+						}
+						node = niCorner2[k];
+						if (patch->containsNode(node)) {
+							gexternalforce[node] += pexternalforce[idx] * SCorner2[k];
+						}
+						node = niCorner3[k];
+						if (patch->containsNode(node)) {
+							gexternalforce[node] += pexternalforce[idx] * SCorner3[k];
+						}
+						node = niCorner4[k];
+						if (patch->containsNode(node)) {
+							gexternalforce[node] += pexternalforce[idx] * SCorner4[k];
+						}
+					}
+				}
+			} // End of particle loop
+			for (NodeIterator iter = patch->getExtraNodeIterator();
+				!iter.done(); iter++) {
+				IntVector c = *iter;
+
+				gmassglobal[c] += gmass[c];
+				gvolumeglobal[c] += gvolume[c];
+				//gvelglobal[c] += gvelocity[c];
+				//gvelocity[c] /= gmass[c];
+
+				gtempglobal[c] += gTemperature[c];
+				gTemperature[c] /= gmass[c];
+				gTemperatureNoBC[c] = gTemperature[c];
+				gSp_vol[c] /= gmass[c];
+
+				// Solid and Liquid
+				gmassglobal_solid[c] += gmass_solid[c];
+				gmassglobal_liquid[c] += gmass_liquid[c];
+				gvelglobal_liquid[c] += gvelocity_liquid[c];	// Total liquid momentum in grid of all materials
+				gvelocity_liquid[c] /= gmass_liquid[c];
+				gvelglobal[c] += gvelocity[c];
+				gvelocity[c] /= gmass_solid[c];
+				gPorosityglobal[c] += gPorosity[c];
+				gPorosity[c] /= gmass_solid[c];
+			}
+
+			// Apply boundary conditions to the temperature and velocity (if symmetry)
+			MPMBoundCond bc;
+			bc.setBoundaryCondition(patch, dwi, "Temperature", gTemperature, interp_type);
+			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity, interp_type);
+			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity_liquid, interp_type);
+
+		}  // End loop over materials
+
+		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+			IntVector c = *iter;
+			gtempglobal[c] /= gmassglobal[c];
+			//gvelglobal[c] /= gmassglobal[c];
+
+			// Solid and Liquid
+			gvelglobal_liquid[c] /= gmassglobal_liquid[c];
+			gvelglobal[c] /= gmassglobal_solid[c];
+			gPorosityglobal[c] /= gmassglobal_solid[c];
+
+		}
+		delete interpolator;
+		delete linear_interpolator;
+	}  // End loop over patches
+}
+
+
 // Compute normal vectors (optional for flags->d_computeNormals)
 void DOUBLEMPM::scheduleComputeNormals(SchedulerP   & sched,
 	const PatchSet * patches,
@@ -2245,7 +2264,7 @@ void DOUBLEMPM::scheduleExMomInterpolated(SchedulerP& sched,
 }
 
 
-// Compute contact area of object boundary
+// Compute contact area of object boundary (for  if(d_bndy_traction_faces.size()>0))
 void DOUBLEMPM::scheduleComputeContactArea(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)
@@ -2633,6 +2652,305 @@ void DOUBLEMPM::computeInternalForce(const ProcessorGroup*,
 			lb->BndyContactAreaLabel[iface]);
 	}
 }
+
+// Compute internal forces
+// Flags: d_artificial_viscosity, d_axisymmetric
+void DOUBLEMPM::scheduleComputeInternalForce_DOUBLEMPM(SchedulerP& sched,
+	const PatchSet* patches,
+	const MaterialSet* matls)
+{
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
+
+	printSchedule(patches, cout_doing, "DOUBLEMPM::scheduleComputeInternalForce_DOUBLE");
+
+	Task* t = scinew Task("DOUBLEMPM::computeInternalForce_DOUBLE",
+		this, &DOUBLEMPM::computeInternalForce_DOUBLEMPM);
+
+	Ghost::GhostType  gan = Ghost::AroundNodes;
+	Ghost::GhostType  gnone = Ghost::None;
+	t->requires(Task::NewDW, lb->gVolumeLabel, gnone);
+	t->requires(Task::NewDW, lb->gVolumeLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain, gnone);
+	t->requires(Task::OldDW, lb->pStressLabel, gan, NGP);
+	t->requires(Task::OldDW, lb->pVolumeLabel, gan, NGP);
+	t->requires(Task::OldDW, lb->pXLabel, gan, NGP);
+	t->requires(Task::OldDW, lb->pSizeLabel, gan, NGP);
+	t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
+
+	if (flags->d_artificial_viscosity) {
+		t->requires(Task::OldDW, lb->p_qLabel, gan, NGP);
+	}
+
+	t->computes(lb->gInternalForceLabel);
+
+	// Boundary force
+	for (std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
+		ftit != d_bndy_traction_faces.end(); ftit++) {
+		int iface = (int)(*ftit);
+		t->requires(Task::NewDW, lb->BndyContactCellAreaLabel[iface]);
+		t->computes(lb->BndyForceLabel[iface]);
+		t->computes(lb->BndyContactAreaLabel[iface]);
+		t->computes(lb->BndyTractionLabel[iface]);
+	}
+
+	t->computes(lb->gStressForSavingLabel);
+	t->computes(lb->gStressForSavingLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+
+	sched->addTask(t, patches, matls);
+}
+
+void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
+	const PatchSubset* patches,
+	const MaterialSubset*,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
+{
+	// node based forces
+	Vector bndyForce[6];
+	Vector bndyTraction[6];
+	for (int iface = 0; iface < 6; iface++) {
+		bndyForce[iface] = Vector(0.);
+		bndyTraction[iface] = Vector(0.);
+	}
+
+	for (int p = 0; p < patches->size(); p++) {
+		const Patch* patch = patches->get(p);
+		printTask(patches, patch, cout_doing, "Doing computeInternalForce");
+
+		Vector dx = patch->dCell();
+		double oodx[3];
+		oodx[0] = 1.0 / dx.x();
+		oodx[1] = 1.0 / dx.y();
+		oodx[2] = 1.0 / dx.z();
+		Matrix3 Id;
+		Id.Identity();
+
+		ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+		vector<IntVector> ni(interpolator->size());
+		vector<double> S(interpolator->size());
+		vector<Vector> d_S(interpolator->size());
+		string interp_type = flags->d_interpolator_type;
+
+		unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
+
+		NCVariable<Matrix3>       gstressglobal;
+		constNCVariable<double>   gvolumeglobal;
+		new_dw->get(gvolumeglobal, lb->gVolumeLabel,
+			m_materialManager->getAllInOneMatls()->get(0), patch, Ghost::None, 0);
+		new_dw->allocateAndPut(gstressglobal, lb->gStressForSavingLabel,
+			m_materialManager->getAllInOneMatls()->get(0), patch);
+
+		for (unsigned int m = 0; m < numMPMMatls; m++) {
+			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+			int dwi = mpm_matl->getDWIndex();
+			// Create arrays for the particle position, volume
+			// and the constitutive model
+			constParticleVariable<Point>   px;
+			constParticleVariable<double>  pvol;
+			constParticleVariable<double>  p_pressure;
+			constParticleVariable<double>  p_q;
+			constParticleVariable<Matrix3> pstress;
+			constParticleVariable<Matrix3> psize;
+			constParticleVariable<Matrix3> pFOld;
+			NCVariable<Vector>             internalforce;
+			NCVariable<Matrix3>            gstress;
+			constNCVariable<double>        gvolume;
+
+			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+				Ghost::AroundNodes, NGP,
+				lb->pXLabel);
+
+			old_dw->get(px, lb->pXLabel, pset);
+			old_dw->get(pvol, lb->pVolumeLabel, pset);
+			old_dw->get(pstress, lb->pStressLabel, pset);
+			old_dw->get(psize, lb->pSizeLabel, pset);
+			old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
+
+			new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
+
+			new_dw->allocateAndPut(gstress, lb->gStressForSavingLabel, dwi, patch);
+			new_dw->allocateAndPut(internalforce, lb->gInternalForceLabel, dwi, patch);
+
+			ParticleVariable<double>  p_pressure_create;
+			new_dw->allocateTemporary(p_pressure_create, pset);
+			for (ParticleSubset::iterator it = pset->begin(); it != pset->end(); it++) {
+				p_pressure_create[*it] = 0.0;
+			}
+			p_pressure = p_pressure_create; // reference created data
+
+
+			// For vicousity
+			if (flags->d_artificial_viscosity) {
+				old_dw->get(p_q, lb->p_qLabel, pset);
+			}
+			else {
+				ParticleVariable<double>  p_q_create;
+				new_dw->allocateTemporary(p_q_create, pset);
+				for (ParticleSubset::iterator it = pset->begin(); it != pset->end(); it++) {
+					p_q_create[*it] = 0.0;
+				}
+				p_q = p_q_create; // reference created data
+			}
+
+			internalforce.initialize(Vector(0, 0, 0));
+
+			Matrix3 stressvol;
+			Matrix3 stresspress;
+
+			// for the non axisymmetric case:
+			if (!flags->d_axisymmetric) {
+				for (ParticleSubset::iterator iter = pset->begin();
+					iter != pset->end();
+					iter++) {
+					particleIndex idx = *iter;
+
+					// Get the node indices that surround the cell
+					int NN =
+						interpolator->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,
+							d_S, psize[idx], pFOld[idx]);
+					stressvol = pstress[idx] * pvol[idx];
+					// Consider the vicousity otherwise stresspress = pstress[idx];
+					stresspress = pstress[idx] + Id * (p_pressure[idx] - p_q[idx]);
+
+					for (int k = 0; k < NN; k++) {
+						if (patch->containsNode(ni[k])) {
+							Vector div(d_S[k].x()*oodx[0], d_S[k].y()*oodx[1],
+								d_S[k].z()*oodx[2]);
+							internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
+							gstress[ni[k]] += stressvol * S[k];
+						}
+					}
+				}
+			}
+
+			// for the axisymmetric case
+			if (flags->d_axisymmetric) {
+				for (ParticleSubset::iterator iter = pset->begin();
+					iter != pset->end();
+					iter++) {
+					particleIndex idx = *iter;
+
+					int NN =
+						interpolator->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,
+							d_S, psize[idx], pFOld[idx]);
+
+					stressvol = pstress[idx] * pvol[idx];
+					stresspress = pstress[idx] + Id * (p_pressure[idx] - p_q[idx]);
+
+					// r is the x direction, z (axial) is the y direction
+					double IFr = 0., IFz = 0.;
+					for (int k = 0; k < NN; k++) {
+						if (patch->containsNode(ni[k])) {
+							IFr = d_S[k].x()*oodx[0] * stresspress(0, 0) +
+								d_S[k].y()*oodx[1] * stresspress(0, 1) +
+								d_S[k].z()*stresspress(2, 2);
+							IFz = d_S[k].x()*oodx[0] * stresspress(0, 1)
+								+ d_S[k].y()*oodx[1] * stresspress(1, 1);
+							internalforce[ni[k]] -= Vector(IFr, IFz, 0.0) * pvol[idx];
+							gstress[ni[k]] += stressvol * S[k];
+						}
+					}
+				}
+			}
+
+			for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+				IntVector c = *iter;
+				gstressglobal[c] += gstress[c];
+				gstress[c] /= gvolume[c];
+			}
+
+			// save boundary forces before apply symmetry boundary condition.
+			for (list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin());
+				fit != d_bndy_traction_faces.end(); fit++) {
+				Patch::FaceType face = *fit;
+
+				// Check if the face is on an external boundary
+				if (patch->getBCType(face) == Patch::Neighbor)
+					continue;
+
+				const int iface = (int)face;
+
+				// We are on the boundary, i.e. not on an interior patch
+				// boundary, and also on the correct side,
+
+				IntVector projlow, projhigh;
+				patch->getFaceNodes(face, 0, projlow, projhigh);
+				Vector norm = face_norm(face);
+				double celldepth = dx[iface / 2]; // length in dir. perp. to boundary
+
+				// loop over face nodes to find boundary forces, ave. stress (traction).
+				// Note that nodearea incorporates a factor of two as described in the
+				// bndyCellArea calculation in order to get node face areas.
+
+				for (int i = projlow.x(); i < projhigh.x(); i++) {
+					for (int j = projlow.y(); j < projhigh.y(); j++) {
+						for (int k = projlow.z(); k < projhigh.z(); k++) {
+							IntVector ijk(i, j, k);
+
+							// flip sign so that pushing on boundary gives positive force
+							bndyForce[iface] -= internalforce[ijk];
+
+							double nodearea = 2.0*gvolume[ijk] / celldepth; // node area
+							for (int ic = 0; ic < 3; ic++) for (int jc = 0; jc < 3; jc++) {
+								bndyTraction[iface][ic] += gstress[ijk](ic, jc)*norm[jc] * nodearea;
+							}
+						}
+					}
+				}
+			} // faces
+
+			MPMBoundCond bc;
+			bc.setBoundaryCondition(patch, dwi, "Symmetric", internalforce, interp_type);
+		}
+
+		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+			IntVector c = *iter;
+			gstressglobal[c] /= gvolumeglobal[c];
+		}
+		delete interpolator;
+	}
+
+	// be careful only to put the fields that we have built
+	// that way if the user asks to output a field that has not been built
+	// it will fail early rather than just giving zeros.
+	for (std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
+		ftit != d_bndy_traction_faces.end(); ftit++) {
+		int iface = (int)(*ftit);
+		new_dw->put(sumvec_vartype(bndyForce[iface]), lb->BndyForceLabel[iface]);
+
+		sum_vartype bndyContactCellArea_iface;
+		new_dw->get(bndyContactCellArea_iface, lb->BndyContactCellAreaLabel[iface]);
+
+		if (bndyContactCellArea_iface > 0)
+			bndyTraction[iface] /= bndyContactCellArea_iface;
+
+		new_dw->put(sumvec_vartype(bndyTraction[iface]),
+			lb->BndyTractionLabel[iface]);
+
+		// Use the face force and traction calculations to provide a second estimate
+		// of the contact area.
+		double bndyContactArea_iface = bndyContactCellArea_iface;
+		if (bndyTraction[iface][iface / 2] * bndyTraction[iface][iface / 2] > 1.e-12)
+			bndyContactArea_iface = bndyForce[iface][iface / 2]
+			/ bndyTraction[iface][iface / 2];
+
+		new_dw->put(sum_vartype(bndyContactArea_iface),
+			lb->BndyContactAreaLabel[iface]);
+	}
+}
+
+
+
+
+
+
+
+
+
+
 
 
 // Compute the acceleration
