@@ -837,6 +837,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
 	  pvars.pMassLiquid[i] = matl->getInitialDensity()*matl->getInitialPorosity()*pvars.pvolume[i];
 	  pvars.pMassSolid[i] = matl->getInitialDensity()*(1 - matl->getInitialPorosity())*pvars.pvolume[i];
 
+	  cerr << pvars.pmass[i] << pvars.pMassLiquid[i] << pvars.pMassSolid[i] << endl;
   }   
   if(d_with_color){
     pvars.pcolor[i] = (*obj)->getInitialData_double("color");
