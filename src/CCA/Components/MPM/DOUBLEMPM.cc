@@ -1959,7 +1959,6 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 						gSp_vol[node] += pSp_vol * pmass[idx] * S[k];					// nodal initial volume
 
 						// Solid and Liquid
-						
 						gmass_solid[node] += pMassSolid[idx] * S[k];
 						gmass_liquid[node] += pMassLiquid[idx] * S[k];
 						gvelocity_liquid[node] += pmom_liquid * S[k];
@@ -2655,6 +2654,7 @@ void DOUBLEMPM::computeInternalForce(const ProcessorGroup*,
 
 // Compute internal forces
 // Flags: d_artificial_viscosity, d_axisymmetric
+// Internal force do not have global variables!
 void DOUBLEMPM::scheduleComputeInternalForce_DOUBLEMPM(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)
@@ -2684,6 +2684,16 @@ void DOUBLEMPM::scheduleComputeInternalForce_DOUBLEMPM(SchedulerP& sched,
 	}
 
 	t->computes(lb->gInternalForceLabel);
+	t->computes(lb->gStressForSavingLabel);
+	t->computes(lb->gStressForSavingLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+
+	// Liquid
+	t->requires(Task::OldDW, double_lb->pPorePressureLabel, gan, NGP);
+	t->computes(double_lb->gInternalForceLiquidLabel);
+	t->computes(double_lb->gPorePressureLabel);
+	t->computes(double_lb->gPorePressureLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
 
 	// Boundary force
 	for (std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
@@ -2695,9 +2705,7 @@ void DOUBLEMPM::scheduleComputeInternalForce_DOUBLEMPM(SchedulerP& sched,
 		t->computes(lb->BndyTractionLabel[iface]);
 	}
 
-	t->computes(lb->gStressForSavingLabel);
-	t->computes(lb->gStressForSavingLabel, m_materialManager->getAllInOneMatls(),
-		Task::OutOfDomain);
+
 
 	sched->addTask(t, patches, matls);
 }
@@ -2718,7 +2726,7 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 
 	for (int p = 0; p < patches->size(); p++) {
 		const Patch* patch = patches->get(p);
-		printTask(patches, patch, cout_doing, "Doing computeInternalForce");
+		printTask(patches, patch, cout_doing, "Doing computeInternalForce_DOUBLEMPM");
 
 		Vector dx = patch->dCell();
 		double oodx[3];
@@ -2743,9 +2751,17 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 		new_dw->allocateAndPut(gstressglobal, lb->gStressForSavingLabel,
 			m_materialManager->getAllInOneMatls()->get(0), patch);
 
+		// Liquid phase
+		NCVariable<double>       gPorePressureglobal;
+		new_dw->allocateAndPut(gPorePressureglobal, double_lb->gPorePressureLabel,
+			m_materialManager->getAllInOneMatls()->get(0), patch);
+
 		for (unsigned int m = 0; m < numMPMMatls; m++) {
 			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
 			int dwi = mpm_matl->getDWIndex();
+			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+				Ghost::AroundNodes, NGP, lb->pXLabel);
+
 			// Create arrays for the particle position, volume
 			// and the constitutive model
 			constParticleVariable<Point>   px;
@@ -2759,10 +2775,6 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 			NCVariable<Matrix3>            gstress;
 			constNCVariable<double>        gvolume;
 
-			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-				Ghost::AroundNodes, NGP,
-				lb->pXLabel);
-
 			old_dw->get(px, lb->pXLabel, pset);
 			old_dw->get(pvol, lb->pVolumeLabel, pset);
 			old_dw->get(pstress, lb->pStressLabel, pset);
@@ -2774,14 +2786,29 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 			new_dw->allocateAndPut(gstress, lb->gStressForSavingLabel, dwi, patch);
 			new_dw->allocateAndPut(internalforce, lb->gInternalForceLabel, dwi, patch);
 
+			internalforce.initialize(Vector(0, 0, 0));
+			gstress.initialize(Matrix3(0.0));
+
+			// Liquid phase
+			constParticleVariable<double> pPorePressure;
+			NCVariable<double>		      gPorePresure;
+			NCVariable<Vector>		      gInternalForceLiquid;
+
+			old_dw->get(pPorePressure, double_lb->pPorePressureLabel, pset);
+			new_dw->allocateAndPut(gPorePresure, double_lb->gPorePressureLabel, dwi, patch);
+			new_dw->allocateAndPut(gInternalForceLiquid, double_lb->gInternalForceLiquidLabel, dwi, patch);
+			
+			gInternalForceLiquid.initialize(Vector(0, 0, 0));
+			gPorePresure.initialize(0.0);
+
+			// For artificial vicousity
 			ParticleVariable<double>  p_pressure_create;
 			new_dw->allocateTemporary(p_pressure_create, pset);
 			for (ParticleSubset::iterator it = pset->begin(); it != pset->end(); it++) {
 				p_pressure_create[*it] = 0.0;
 			}
 			p_pressure = p_pressure_create; // reference created data
-
-
+			
 			// For vicousity
 			if (flags->d_artificial_viscosity) {
 				old_dw->get(p_q, lb->p_qLabel, pset);
@@ -2795,10 +2822,13 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 				p_q = p_q_create; // reference created data
 			}
 
-			internalforce.initialize(Vector(0, 0, 0));
-
+			// Solid
 			Matrix3 stressvol;
 			Matrix3 stresspress;
+
+			//Liquid
+			Matrix3 PoreTensor;
+			double PoreVol;
 
 			// for the non axisymmetric case:
 			if (!flags->d_axisymmetric) {
@@ -2811,19 +2841,31 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 					int NN =
 						interpolator->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,
 							d_S, psize[idx], pFOld[idx]);
+					
+					// Solid stress
 					stressvol = pstress[idx] * pvol[idx];
 					// Consider the vicousity otherwise stresspress = pstress[idx];
 					stresspress = pstress[idx] + Id * (p_pressure[idx] - p_q[idx]);
+
+					// Liquid pressure
+					PoreTensor = Id * pPorePressure[idx];
+					PoreVol = pPorePressure[idx] * pvol[idx];
 
 					for (int k = 0; k < NN; k++) {
 						if (patch->containsNode(ni[k])) {
 							Vector div(d_S[k].x()*oodx[0], d_S[k].y()*oodx[1],
 								d_S[k].z()*oodx[2]);
+
+							// Solid
 							internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
 							gstress[ni[k]] += stressvol * S[k];
+
+							// Liquid
+							gInternalForceLiquid[ni[k]] -= (div * PoreTensor) * pvol[idx];  // Vector
+							gPorePresure[ni[k]] += PoreVol * S[k];							// Scalar
 						}
 					}
-				}
+				} // End particle loop
 			}
 
 			// for the axisymmetric case
@@ -2858,8 +2900,13 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 
 			for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
 				IntVector c = *iter;
+				// Solid
 				gstressglobal[c] += gstress[c];
 				gstress[c] /= gvolume[c];
+
+				// Liquid
+				gPorePressureglobal[c] += gPorePresure[c];
+				gPorePresure[c] /= gvolume[c];
 			}
 
 			// save boundary forces before apply symmetry boundary condition.
@@ -2904,11 +2951,13 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 
 			MPMBoundCond bc;
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", internalforce, interp_type);
+			bc.setBoundaryCondition(patch, dwi, "Symmetric", gInternalForceLiquid, interp_type);
 		}
 
 		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
 			IntVector c = *iter;
 			gstressglobal[c] /= gvolumeglobal[c];
+			gPorePressureglobal[c] /= gvolumeglobal[c];
 		}
 		delete interpolator;
 	}

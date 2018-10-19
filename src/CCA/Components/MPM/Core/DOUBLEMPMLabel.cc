@@ -96,8 +96,9 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 	gMassSolidLabel				= VarLabel::create("g.massSolid", NCVariable<double>::getTypeDescription());
 
 	//gVolumeSolidLabel			= VarLabel::create("g.gVolumeSolid", NCVariable<double>::getTypeDescription());
+	//gVeloctySolidLabel		= VarLabel::create("g.gVeloctySolid", NCVariable<Vector>::getTypeDescription());
+	gPorePressureLabel			= VarLabel::create("g.PorePressure", NCVariable<double>::getTypeDescription());
 
-	//gVeloctySolidLabel			= VarLabel::create("g.gVeloctySolid", NCVariable<Vector>::getTypeDescription());
 }
 
 DOUBLEMPMLabel::~DOUBLEMPMLabel()
@@ -142,6 +143,8 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 	VarLabel::destroy(gMassSolidLabel);
 	//VarLabel::destroy(gVolumeSolidLabel);
 	//VarLabel::destroy(gVeloctySolidLabel);
+
+	VarLabel::destroy(gPorePressureLabel);
 
 }
 
