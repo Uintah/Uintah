@@ -39,7 +39,6 @@
 #include <Core/Grid/Variables/PerPatch.h>
 
 #include <Core/Math/MiscMath.h>
-#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 
@@ -495,16 +494,13 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
   Task* t2 = scinew Task( "planeAverage::sumOverAllProcs",
                      this,&planeAverage::sumOverAllProcs );
 
+  t2->setType( Task::OncePerProc );
   t2->requires( Task::OldDW, m_simulationTimeLabel );
   t2->requires( Task::OldDW, d_lb->lastCompTimeLabel );
+  
+  // only compute task on 1 patch in this proc
 
-  // first patch on this level
-  const Patch* p = level->getPatch(0);
-  PatchSet* zeroPatch = scinew PatchSet();
-  zeroPatch->add(p);
-  zeroPatch->addReference();
-
-  sched->addTask( t2, zeroPatch, d_matl_set );
+  sched->addTask( t2, perProcPatches, d_matl_set );
 
   //__________________________________
   //  Task that writes averages to files
@@ -530,7 +526,13 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
 
   t3->computes( d_lb->lastCompTimeLabel );
   t3->computes( d_lb->fileVarsStructLabel, d_zero_matl );
-
+  
+  // first patch on this level
+  const Patch* p = level->getPatch(0);
+  PatchSet* zeroPatch = scinew PatchSet();
+  zeroPatch->add(p);
+  zeroPatch->addReference();
+  
   sched->addTask( t3, zeroPatch , d_matl_set );
 }
 
@@ -722,11 +724,13 @@ void planeAverage::findAverage( DataWarehouse * new_dw,
   
   std::vector<Ttype> local_sum;    // sum over all cells in the plane
   std::vector<Ttype> proc_sum;     // planar sum already computed on this proc
-  std::vector<Point> CC_pos;       // cell centered position
+  std::vector<Point> local_CC_pos; // cell centered position
   
   analyzeVar->getPlaneAve( proc_sum );
   
-  local_sum.resize( analyzeVar->get_nPlanes(), zero );
+  const int nPlanes = analyzeVar->get_nPlanes();
+  local_sum.resize( nPlanes, zero );
+  local_CC_pos.resize( nPlanes, Point(0,0,0) );
   
   IntVector lo;
   IntVector hi;
@@ -750,8 +754,7 @@ void planeAverage::findAverage( DataWarehouse * new_dw,
                                     Uintah::Round( ( hi.y() - lo.y() )/2 ), 
                                     z );
 
-    CC_pos.push_back( patch->cellPosition( here ) );
-
+    local_CC_pos[z] = patch->cellPosition( here );
     local_sum[z] = sum;
   }
   
@@ -762,13 +765,15 @@ void planeAverage::findAverage( DataWarehouse * new_dw,
     proc_sum[z] += local_sum[z];
   }
   
-  analyzeVar->setPlaneAve( CC_pos, proc_sum );
+  // CC_positions and planar average on this rank
+  analyzeVar->setCC_pos( local_CC_pos, lo.z(), hi.z() );
+  analyzeVar->setPlaneAve( proc_sum );
 
 }
 
 
 //______________________________________________________________________
-//  Find the average of the VarLabel
+//  This task performs a reduction (sum) over all ranks
 void planeAverage::sumOverAllProcs(const ProcessorGroup * pg,
                                    const PatchSubset    * patch0,
                                    const MaterialSubset *,
@@ -792,6 +797,7 @@ void planeAverage::sumOverAllProcs(const ProcessorGroup * pg,
     return;
   }
 
+  
   const LevelP level = getLevelP( patch0 );
   const int L_indx = level->getIndex();
 
@@ -806,8 +812,10 @@ void planeAverage::sumOverAllProcs(const ProcessorGroup * pg,
     if ( !isRightLevel( myLevel, L_indx, level) ){
       continue;
     }
-
-    analyzeVar->ReduceVar();
+    
+    int rank = pg->myRank();
+    analyzeVar->ReduceCC_pos( rank );
+    analyzeVar->ReduceVar( rank );
 
   }  // loop over aveVars
 }
