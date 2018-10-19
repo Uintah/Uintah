@@ -1187,7 +1187,7 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
   // Should the next time step be a radiation solve? if so set the
   // reduction flag.
   if( (timeStep+1) % d_rad_calc_frequency == 0 ) {
-    new_dw->put( bool_or_vartype(true), VarLabel::find(useAlternativeTaskGraph_name) );
+    new_dw->put( min_vartype(1), VarLabel::find(useAlternativeTaskGraph_name) );
   }
 #endif
 }

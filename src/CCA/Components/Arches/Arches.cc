@@ -329,8 +329,9 @@ int Arches::computeTaskGraphIndex( const int timeStep )
 {
   // Setup the task graph for execution on the next timestep.
 #ifdef USE_ALTERNATIVE_TASK_GRAPH
-  if( m_arches->activeReductionVariable( useAlternativeTaskGraph_name ) &&
-      m_arches->getReductionVariable( useAlternativeTaskGraph_name ) )
+  if( activeReductionVariable( useAlternativeTaskGraph_name ) &&
+      getReductionVariable( useAlternativeTaskGraph_name ) &&
+      !isBenignReductionVariable( useAlternativeTaskGraph_name ) )
     return 1;
   else
     return 0;
