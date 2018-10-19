@@ -213,11 +213,11 @@ namespace Uintah {
 
       const Uintah::TypeDescription* type_desc = the_label->typeDescription();
 
-      if ( dep == ArchesFieldContainer::REQUIRES ) {
+      info.ghost_type = Ghost::None; 
 
-        if ( nGhost == 0 ){
-          info.ghost_type = Ghost::None;
-        } else {
+      if ( dep == ArchesFieldContainer::REQUIRES || dep == ArchesFieldContainer::COMPUTESCRATCHGHOST ) {
+
+        if ( nGhost > 0 ){ 
           if ( type_desc == CCVariable<int>::getTypeDescription() ) {
               info.ghost_type = Ghost::AroundCells;
           } else if ( type_desc == CCVariable<double>::getTypeDescription() ) {

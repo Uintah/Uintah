@@ -365,6 +365,11 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
           tsk->modifies( ivar.label );
       }}
       break;
+    case ArchesFieldContainer::COMPUTESCRATCHGHOST:
+      {
+        tsk->computesWithScratchGhost( ivar.label, matls->getSubset(0), Uintah::Task::NormalDomain, ivar.ghost_type, ivar.nGhost );
+      }
+      break;
     case ArchesFieldContainer::MODIFIES:
       {
         DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
