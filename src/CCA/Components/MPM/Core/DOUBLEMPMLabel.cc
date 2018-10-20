@@ -49,6 +49,9 @@ using namespace Uintah;
 DOUBLEMPMLabel::DOUBLEMPMLabel()
 {
 	// particles variables
+	//pXLiquidLabel				= VarLabel::create("p.xLiquid",ParticleVariable<Point>::getTypeDescription(),
+	//							IntVector(0, 0, 0), VarLabel::PositionVariable);
+
 	pPorePressureLabel			= VarLabel::create("p.PorePressure", ParticleVariable<double>::getTypeDescription());
 	pPorePressureLabel_preReloc = VarLabel::create("p.PorePressure+", ParticleVariable<double>::getTypeDescription());
 
