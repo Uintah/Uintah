@@ -85,7 +85,7 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 
 	gVelocityLiquidLabel		= VarLabel::create("g.velocityLiquid", NCVariable<Vector>::getTypeDescription());
 
-	gVelocityStarLiquidLabel	= VarLabel::create("g.velocityLiquid_star", NCVariable<Vector>::getTypeDescription());
+	gVelocityStarLiquidLabel	= VarLabel::create("g.velocityStarLiquid", NCVariable<Vector>::getTypeDescription());
 
 	gInternalForceLiquidLabel	= VarLabel::create("g.internalforceLiquid", NCVariable<Vector>::getTypeDescription());
 
@@ -98,6 +98,8 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 	//gVolumeSolidLabel			= VarLabel::create("g.gVolumeSolid", NCVariable<double>::getTypeDescription());
 	//gVeloctySolidLabel		= VarLabel::create("g.gVeloctySolid", NCVariable<Vector>::getTypeDescription());
 	gPorePressureLabel			= VarLabel::create("g.PorePressure", NCVariable<double>::getTypeDescription());
+
+	gDraggingLabel				= VarLabel::create("g.Dragging", NCVariable<double>::getTypeDescription());
 
 }
 
@@ -135,6 +137,7 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 	//VarLabel::destroy(gVolumeLiquidLabel);
 	VarLabel::destroy(gVelocityLiquidLabel);
 	VarLabel::destroy(gVelocityStarLiquidLabel);
+
 	VarLabel::destroy(gInternalForceLiquidLabel);
 
 	VarLabel::destroy(gPorosityLabel);
@@ -146,6 +149,7 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 
 	VarLabel::destroy(gPorePressureLabel);
 
+	VarLabel::destroy(gDraggingLabel);
 }
 
 

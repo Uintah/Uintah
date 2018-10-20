@@ -322,6 +322,18 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* old_dw,
 	  DataWarehouse* new_dw);
 
+  // Compute the acceleration
+  virtual void scheduleComputeAndIntegrateAcceleration_DOUBLEMPM(SchedulerP&,
+	  const PatchSet*,
+	  const MaterialSet*);
+
+  virtual void computeAndIntegrateAcceleration_DOUBLEMPM(const ProcessorGroup*,
+	  const PatchSubset* patches,
+	  const MaterialSubset* matls,
+	  DataWarehouse* old_dw,
+	  DataWarehouse* new_dw);
+
+
   // Compute extra momentum from the contact
   virtual void scheduleExMomIntegrated(SchedulerP&, const PatchSet*,
 	  const MaterialSet*);

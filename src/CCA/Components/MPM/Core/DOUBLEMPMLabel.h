@@ -89,6 +89,8 @@ namespace Uintah {
 		//const VarLabel* gVeloctySolidLabel;
 
 		const VarLabel* gPorePressureLabel;
+
+		const VarLabel* gDraggingLabel;
 	};
 
 }
