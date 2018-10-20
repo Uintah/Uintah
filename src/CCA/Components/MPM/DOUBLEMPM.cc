@@ -981,7 +981,9 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeAndIntegrateAcceleration_DOUBLEMPM(sched, patches, matls);
 
   scheduleExMomIntegrated(                sched, patches, matls);
-  scheduleSetGridBoundaryConditions(      sched, patches, matls);
+  //scheduleSetGridBoundaryConditions(      sched, patches, matls);
+  scheduleSetGridBoundaryConditions_DOUBLEMPM(sched, patches, matls);
+
   if (flags->d_prescribeDeformation){
     scheduleSetPrescribedMotion(          sched, patches, matls);
   }
@@ -3282,7 +3284,7 @@ void DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM (const ProcessorGroup*
 	for (int p = 0; p < patches->size(); p++) {
 		const Patch* patch = patches->get(p);
 		printTask(patches, patch, cout_doing,
-			"Doing DOUBLEMPM::computeAndIntegrateAcceleration");
+			"Doing DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM");
 
 		Ghost::GhostType  gnone = Ghost::None;
 		Vector gravity = flags->d_gravity;
@@ -3346,36 +3348,20 @@ void DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM (const ProcessorGroup*
 					DraggingForce = gDragging [c] * GradientVelocity;
 
 					accLiquid = (InternalforceLiquid - DraggingForce) / gMassLiquid[c]; 
-					//accLiquid = (gInternalForceLiquid[c]) / gMassLiquid[c];
 					accLiquid -= damp_coef * gVelocityLiquid[c];
 
 					//std::cerr << InternalforceLiquid << std::endl;
 					//std::cerr << DraggingForce << std::endl;
 					//std::cerr << accLiquid << std::endl;
-
-				}
-
-				
+				}			
 				gAccelerationLiquid[c] = accLiquid + gravity;
 				gVelocityStarLiquid[c] = gVelocityLiquid[c] + gAccelerationLiquid[c] * delT;
 				acceleration[c] = acc + gravity;
-				velocity_star[c] = velocity[c] + acceleration[c] * delT;
-
-				
+				velocity_star[c] = velocity[c] + acceleration[c] * delT;				
 			}
 		}    // matls
 	}
 }
-
-
-
-
-
-
-
-
-
-
 
 // Compute extra momentum from the contact
 void DOUBLEMPM::scheduleExMomIntegrated(SchedulerP& sched,
@@ -3395,7 +3381,6 @@ void DOUBLEMPM::scheduleExMomIntegrated(SchedulerP& sched,
 	printSchedule(patches, cout_doing, "MPM::scheduleExMomIntegrated");
 	contactModel->addComputesAndRequiresIntegrated(sched, patches, matls);
 }
-
 
 // Boundary condition
 void DOUBLEMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
@@ -3464,6 +3449,103 @@ void DOUBLEMPM::setGridBoundaryConditions(const ProcessorGroup*,
 		} // matl loop
 	}  // patch loop
 }
+
+// Boundary condition for liquid phase
+void DOUBLEMPM::scheduleSetGridBoundaryConditions_DOUBLEMPM(SchedulerP& sched,
+	const PatchSet* patches,
+	const MaterialSet* matls)
+
+{
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
+	printSchedule(patches, cout_doing, "DOUBLEMPM::scheduleSetGridBoundaryConditions_DOUBLEMPM");
+	Task* t = scinew Task("DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM",
+		this, &DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM);
+
+	const MaterialSubset* mss = matls->getUnion();
+	t->requires(Task::OldDW, lb->delTLabel);
+
+	// Solid
+	t->modifies(lb->gAccelerationLabel, mss);
+	t->modifies(lb->gVelocityStarLabel, mss);
+	t->requires(Task::NewDW, lb->gVelocityLabel, Ghost::None);
+
+	// Liquid
+	t->modifies(double_lb->gAccelerationLiquidLabel, mss);
+	t->modifies(double_lb->gVelocityStarLiquidLabel, mss);
+	t->requires(Task::NewDW, double_lb->gVelocityLiquidLabel, Ghost::None);
+	
+	sched->addTask(t, patches, matls);
+}
+
+void DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
+	const PatchSubset* patches,
+	const MaterialSubset*,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
+{
+	for (int p = 0; p < patches->size(); p++) {
+		const Patch* patch = patches->get(p);
+		printTask(patches, patch, cout_doing,
+			"Doing setGridBoundaryConditions_DOUBLEMPM");
+
+		unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
+
+		delt_vartype delT;
+		old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
+		string interp_type = flags->d_interpolator_type;
+		for (unsigned int m = 0; m < numMPMMatls; m++) {
+			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+			int dwi = mpm_matl->getDWIndex();
+
+			// Solid
+			NCVariable<Vector> gvelocity_star, gacceleration;
+			constNCVariable<Vector> gvelocity;
+
+			new_dw->getModifiable(gacceleration, lb->gAccelerationLabel, dwi, patch);
+			new_dw->getModifiable(gvelocity_star, lb->gVelocityStarLabel, dwi, patch);
+			new_dw->get(gvelocity, lb->gVelocityLabel, dwi, patch,
+				Ghost::None, 0);
+
+			// Liquid
+			NCVariable<Vector> gVelocityStarLiquid, gAccelerationLiquid;
+			constNCVariable<Vector> gVelocityLiquid;
+			new_dw->getModifiable(gAccelerationLiquid, double_lb->gAccelerationLiquidLabel, dwi, patch);
+			new_dw->getModifiable(gVelocityStarLiquid, double_lb->gVelocityStarLiquidLabel, dwi, patch);
+			new_dw->get(gVelocityLiquid, double_lb->gVelocityLiquidLabel, dwi, patch,
+				Ghost::None, 0);
+
+			// Apply grid boundary conditions to the velocity_star and
+			// acceleration before interpolating back to the particles
+			MPMBoundCond bc;
+
+			// Solid
+			bc.setBoundaryCondition(patch, dwi, "Velocity", gvelocity_star, interp_type);
+			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity_star, interp_type);
+
+			// Liquid
+			bc.setBoundaryCondition(patch, dwi, "Velocity", gVelocityStarLiquid, interp_type);
+			bc.setBoundaryCondition(patch, dwi, "Symmetric", gVelocityStarLiquid, interp_type);
+
+			// Now recompute acceleration as the difference between the velocity
+			// interpolated to the grid (no bcs applied) and the new velocity_star
+			for (NodeIterator iter = patch->getExtraNodeIterator(); !iter.done();
+				iter++) {
+				IntVector c = *iter;
+
+				// Solid
+				gacceleration[c] = (gvelocity_star[c] - gvelocity[c]) / delT;
+
+				// Liquid
+				gAccelerationLiquid[c] = (gVelocityStarLiquid[c] - gVelocityLiquid[c]) / delT;
+			}
+		} // matl loop
+	}  // patch loop
+}
+
+
 
 
 // Set prescribed motion (optional for flags->d_prescribeDeformation)

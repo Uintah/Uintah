@@ -348,6 +348,16 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* old_dw,
 	  DataWarehouse* new_dw);
 
+  // Boundary condition for DOUBLEMPM
+  void scheduleSetGridBoundaryConditions_DOUBLEMPM(SchedulerP&, const PatchSet*,
+	  const MaterialSet* matls);
+
+  void setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
+	  const PatchSubset* patches,
+	  const MaterialSubset*,
+	  DataWarehouse* old_dw,
+	  DataWarehouse* new_dw);
+
   // Set prescribed motion (optional for flags->d_prescribeDeformation)
   virtual void scheduleSetPrescribedMotion(SchedulerP&,
 	  const PatchSet*,
