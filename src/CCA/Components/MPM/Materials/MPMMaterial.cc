@@ -129,6 +129,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
 	  ps->require("density_liquid", d_densityLiquid);
 	  ps->require("Porosity", d_Porosity);
 	  ps->require("Permeability", d_Permeability);
+	  ps->require("BulkLiquidModulus", d_BulkLiquidModulus);
   }
 
   // Assume the the centered specific heat is C_v
@@ -257,6 +258,7 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("density_liquid", d_densityLiquid);
   mpm_ps->appendElement("Porosity", d_Porosity);
   mpm_ps->appendElement("Permeability", d_Permeability);
+  mpm_ps->appendElement("BulkLiquidModulus", d_BulkLiquidModulus);
 
   d_cm->outputProblemSpec(mpm_ps);
   d_damageModel->outputProblemSpec(mpm_ps);
@@ -292,6 +294,7 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_densityLiquid = mat->d_densityLiquid;
   d_Porosity = mat->d_Porosity;
   d_Permeability = mat->d_Permeability;
+  d_Permeability = mat->d_BulkLiquidModulus;
 
   // Check to see which ParticleCreator object we need
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
@@ -415,6 +418,10 @@ double MPMMaterial::getInitialPermeability() const
 	return d_Permeability;
 }
 
+double MPMMaterial::getBulkLiquidModulus() const
+{
+	return d_BulkLiquidModulus;
+}
 
 /* --------------------------------------------------------------------- 
  Function~  MPMMaterial::initializeCells--

@@ -150,6 +150,7 @@ WARNING
    double getInitialDensityLiquid() const;
    double getInitialPorosity() const;
    double getInitialPermeability() const;
+   double getBulkLiquidModulus() const;
 
    int nullGeomObject() const;
 
@@ -202,6 +203,7 @@ WARNING
    double d_Porosity;
    double d_Permeability;
    double d_densityLiquid;
+   double d_BulkLiquidModulus;
 
    // for autocycleflux boundary condtions
    bool d_do_conc_reduction;

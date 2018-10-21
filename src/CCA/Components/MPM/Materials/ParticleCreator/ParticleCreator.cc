@@ -600,17 +600,18 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   // DOUBLEMPM
   if (d_flags->d_DOUBLEMPM) {
 	  new_dw->allocateAndPut(pvars.pPorePressure, double_lb->pPorePressureLabel, subset);
-	  new_dw->allocateAndPut(pvars.pPorePressureTensor, double_lb->pPorePressureTensorLabel, subset);
 	  new_dw->allocateAndPut(pvars.pPorosity, double_lb->pPorosityLabel, subset);
 	  new_dw->allocateAndPut(pvars.pPermeability, double_lb->pPermeabilityLabel, subset);
 	  //new_dw->allocateAndPut(pvars.pVelocitySolid, double_lb->pVelocitySolidLabel, subset);
 	  new_dw->allocateAndPut(pvars.pVelocityLiquid, double_lb->pVelocityLiquidLabel, subset);
+	  new_dw->allocateAndPut(pvars.pVelocityGradLiquid, double_lb->pVelocityGradLiquidLabel, subset);
 
 	  new_dw->allocateAndPut(pvars.pMassSolid, double_lb->pMassSolidLabel, subset);
 	  new_dw->allocateAndPut(pvars.pMassLiquid, double_lb->pMassLiquidLabel, subset);
 	  //new_dw->allocateAndPut(pvars.pVolumeSolid, double_lb->pVolumeSolidLabel, subset);
 	  //new_dw->allocateAndPut(pvars.pVolumeLiquid, double_lb->pVolumeLiquidLabel, subset);
 
+	  new_dw->allocateAndPut(pvars.pBulkModulLiquid, double_lb->pBulkModulLiquidLabel, subset);
   }
   return subset;
 }
@@ -828,14 +829,16 @@ ParticleCreator::initializeParticle(const Patch* patch,
 	  //cerr << d_DOUBLEMPM << endl;
 
 	  pvars.pPorePressure[i]		= 0.0;
-	  pvars.pPorePressureTensor[i]	= Matrix3(0.0);
 	  pvars.pPorosity[i]			= matl->getInitialPorosity();
 	  pvars.pPermeability[i]		= matl->getInitialPermeability();
 	  //pvars.pVelocitySolid[i]		= Vector(0., 0., 0.);
 	  pvars.pVelocityLiquid[i]		= Vector(0., 0., 0.);
+	  pvars.pVelocityGradLiquid[i]  = Matrix3(0.0);
 
 	  pvars.pMassLiquid[i] = matl->getInitialDensity()*matl->getInitialPorosity()*pvars.pvolume[i];
 	  pvars.pMassSolid[i] = matl->getInitialDensity()*(1 - matl->getInitialPorosity())*pvars.pvolume[i];
+
+	  pvars.pBulkModulLiquid[i] = matl->getBulkLiquidModulus();
 
 	  //cerr << pvars.pmass[i] << pvars.pMassLiquid[i] << pvars.pMassSolid[i] << endl;
   }   
@@ -1177,10 +1180,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if (d_flags->d_DOUBLEMPM) {
 	  particle_state.push_back(double_lb->pPorePressureLabel);
 	  particle_state_preReloc.push_back(double_lb->pPorePressureLabel_preReloc);
-	  //cerr << "xin chao" << endl;
-
-	  particle_state.push_back(double_lb->pPorePressureTensorLabel);
-	  particle_state_preReloc.push_back(double_lb->pPorePressureTensorLabel_preReloc);
 
 	  particle_state.push_back(double_lb->pPorosityLabel);
 	  particle_state_preReloc.push_back(double_lb->pPorosityLabel_preReloc);
@@ -1191,12 +1190,18 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 	  //particle_state.push_back(double_lb->pVelocitySolidLabel);
 	  particle_state.push_back(double_lb->pVelocityLiquidLabel);
 	  particle_state_preReloc.push_back(double_lb->pVelocityLiquidLabel_preReloc);
+		
+	  particle_state.push_back(double_lb->pVelocityGradLiquidLabel);
+	  particle_state_preReloc.push_back(double_lb->pVelocityGradLiquidLabel_preReloc);
 
 	  particle_state.push_back(double_lb->pMassSolidLabel);
 	  particle_state_preReloc.push_back(double_lb->pMassSolidLabel_preReloc);
 
 	  particle_state.push_back(double_lb->pMassLiquidLabel);
 	  particle_state_preReloc.push_back(double_lb->pMassLiquidLabel_preReloc);
+
+	  particle_state.push_back(double_lb->pBulkModulLiquidLabel);
+	  particle_state_preReloc.push_back(double_lb->pBulkModulLiquidLabel_preReloc);
 
 	  //particle_state.push_back(double_lb->pVolumeSolidLabel);
 	  //particle_state.push_back(double_lb->pVolumeLiquidLabel);

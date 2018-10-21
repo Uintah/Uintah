@@ -401,6 +401,16 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* old_dw,
 	  DataWarehouse* new_dw);
 
+  virtual void scheduleComputeParticleGradientsAndPorePressure_DOUBLEMPM(SchedulerP&,
+	  const PatchSet*,
+	  const MaterialSet*);
+
+  virtual void computeParticleGradientsAndPorePressure_DOUBLEMPM(const ProcessorGroup*,
+	  const PatchSubset* patches,
+	  const MaterialSubset* matls,
+	  DataWarehouse* old_dw,
+	  DataWarehouse* new_dw);
+
   // Compute stress tensor
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);

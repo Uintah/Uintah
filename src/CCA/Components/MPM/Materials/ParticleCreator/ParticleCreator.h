@@ -125,13 +125,15 @@ namespace Uintah {
 
 			// DOUBLEMPM
 			ParticleVariable<double> pPorePressure;
-			ParticleVariable<Matrix3>pPorePressureTensor;
 			ParticleVariable<double> pPorosity;
 			ParticleVariable<double> pPermeability;
 			ParticleVariable<Vector> pVelocityLiquid;
+			ParticleVariable<Matrix3>pVelocityGradLiquid;
 
 			ParticleVariable<double> pMassSolid;
 			ParticleVariable<double> pMassLiquid;
+			ParticleVariable<double> pBulkModulLiquid;
+
 		} ParticleVars;
 
 	protected:

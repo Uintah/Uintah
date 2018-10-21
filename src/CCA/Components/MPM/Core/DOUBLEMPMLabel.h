@@ -51,9 +51,6 @@ namespace Uintah {
 		const VarLabel* pPorePressureLabel;
 		const VarLabel* pPorePressureLabel_preReloc;
 
-		const VarLabel* pPorePressureTensorLabel;
-		const VarLabel* pPorePressureTensorLabel_preReloc;
-
 		const VarLabel* pPorosityLabel;
 		const VarLabel* pPorosityLabel_preReloc;
 
@@ -64,11 +61,17 @@ namespace Uintah {
 		const VarLabel* pVelocityLiquidLabel;
 		const VarLabel* pVelocityLiquidLabel_preReloc;
 
+		const VarLabel* pVelocityGradLiquidLabel;
+		const VarLabel* pVelocityGradLiquidLabel_preReloc;
+
 		const VarLabel* pMassSolidLabel;
 		const VarLabel* pMassSolidLabel_preReloc;
 
 		const VarLabel* pMassLiquidLabel;
 		const VarLabel* pMassLiquidLabel_preReloc;
+
+		const VarLabel* pBulkModulLiquidLabel;
+		const VarLabel* pBulkModulLiquidLabel_preReloc;
 
 		//VarLabel* pVolumeSolidLabel;
 		//VarLabel* pVolumeLiquidLabel;
