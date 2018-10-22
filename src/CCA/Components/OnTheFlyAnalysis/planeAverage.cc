@@ -420,29 +420,14 @@ void planeAverage::scheduleRestartInitialize(SchedulerP   & sched,
 {
   printSchedule(level,do_cout,"planeAverage::scheduleRestartInitialize");
 
-  Task* t = scinew Task("planeAverage::restartInitialize",
-                  this, &planeAverage::restartInitialize);
+  Task* t = scinew Task("planeAverage::initialize",
+                  this, &planeAverage::initialize);
 
   t->computes(d_lb->lastCompTimeLabel );
   t->computes(d_lb->fileVarsStructLabel, d_zero_matl);
   sched->addTask(t, level->eachPatch(),  d_matl_set);
 }
 
-//______________________________________________________________________
-void planeAverage::restartInitialize(const ProcessorGroup  *,
-                                     const PatchSubset     * patches,
-                                     const MaterialSubset  *,
-                                     DataWarehouse         *,
-                                     DataWarehouse         * new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,do_cout,"Doing planeAverage::restartInitialize");
-
-    double tminus = -1.0/d_writeFreq;
-    new_dw->put(max_vartype(tminus), d_lb->lastCompTimeLabel );
-  }
-}
 //______________________________________________________________________
 void
 planeAverage::restartInitialize()

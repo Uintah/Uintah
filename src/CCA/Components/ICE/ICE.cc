@@ -181,8 +181,7 @@ ICE::~ICE()
 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
+    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
       am->releaseComponents();
       delete am;
@@ -698,8 +697,7 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
   if(!d_with_mpm && d_analysisModules.size() != 0){
 
     vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
+    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
 
       am->outputProblemSpec( root );
@@ -765,8 +763,7 @@ void ICE::scheduleInitialize(const LevelP & level,
   // dataAnalysis 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
+    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
       am->scheduleInitialize( sched, level );
     }
@@ -803,6 +800,17 @@ void ICE::scheduleRestartInitialize(const LevelP& level,
     const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
     m_solver->scheduleRestartInitialize(level, sched, ice_matls);
   }
+  
+  //__________________________________
+  // dataAnalysis 
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleRestartInitialize( sched, level);
+    }
+  }
+  
 }
 /* _____________________________________________________________________
  Function~  ICE::restartInitialize--
@@ -816,8 +824,7 @@ void ICE::restartInitialize()
   //__________________________________
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
+    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
       am->restartInitialize();
     }
@@ -1058,8 +1065,7 @@ ICE::scheduleAnalysis( const LevelP& level, SchedulerP& sched)
   //  on the fly analysis
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
+    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
       am->scheduleDoAnalysis( sched, level);
     }

@@ -426,12 +426,6 @@ ______________________________________________________________________*/
                     DataWarehouse        *,
                     DataWarehouse        * new_dw);
 
-    void restartInitialize(const ProcessorGroup *,
-                           const PatchSubset    * patches,
-                           const MaterialSubset *,
-                           DataWarehouse        *,
-                           DataWarehouse        * new_dw);
-
     void zeroPlanarVars(const ProcessorGroup * pg,
                      const PatchSubset    * patches,
                      const MaterialSubset *,
