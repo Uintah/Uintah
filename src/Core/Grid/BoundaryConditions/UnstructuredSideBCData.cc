@@ -35,8 +35,8 @@ using namespace Uintah;
 
 UnstructuredSideBCData::UnstructuredSideBCData() 
 {
-  d_cells=GridIterator(IntVector(0,0,0),IntVector(0,0,0));
-  d_nodes=GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+  d_cells=UnstructuredGridIterator(IntVector(0,0,0),IntVector(0,0,0));
+  d_nodes=UnstructuredGridIterator(IntVector(0,0,0),IntVector(0,0,0));
   d_bcname = "NotSet"; 
 }
 
@@ -105,7 +105,7 @@ void UnstructuredSideBCData::determineIteratorLimits(UnstructuredPatch::FaceType
 
   IntVector l,h;
   patch->getFaceCells(face,0,l,h);
-  d_cells = GridIterator(l,h);
+  d_cells = UnstructuredGridIterator(l,h);
 
 #if 0
   std::cout << "d_cells->begin() = " << d_cells->begin() << " d_cells->end() = " 
@@ -115,7 +115,7 @@ void UnstructuredSideBCData::determineIteratorLimits(UnstructuredPatch::FaceType
 
   IntVector ln,hn;
   patch->getFaceNodes(face,0,ln,hn);
-  d_nodes = GridIterator(ln,hn);
+  d_nodes = UnstructuredGridIterator(ln,hn);
 
 
 #if 0

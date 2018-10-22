@@ -27,7 +27,7 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Grid/Variables/ListOfCellsIterator.h>
-#include <Core/Grid/Variables/GridIterator.h>
+#include <Core/Grid/Variables/UnstructuredGridIterator.h>
 #include <Core/Grid/UnstructuredLevel.h>
 #include <Core/Grid/BoundaryConditions/UnstructuredBCDataArray.h>
 
@@ -43,8 +43,8 @@ DebugStream UnstructuredBCGeomBase::BC_dbg("BC_dbg", "Grid_BoundaryConditions", 
 
 UnstructuredBCGeomBase::UnstructuredBCGeomBase()
 {
-  d_cells           = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
-  d_nodes           = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+  d_cells           = UnstructuredGridIterator(IntVector(0,0,0),IntVector(0,0,0));
+  d_nodes           = UnstructuredGridIterator(IntVector(0,0,0),IntVector(0,0,0));
   d_bcname          = "NotSet";
   d_bndtype         = "None";
   d_particleBndSpec = ParticleBndSpec(ParticleBndSpec::NOTSET, ParticleBndSpec::ELASTIC, 0.0, 0.0);
@@ -114,12 +114,12 @@ void UnstructuredBCGeomBase::determineIteratorLimits( const UnstructuredPatch::F
   
   IntVector l,h;
   patch->getFaceCells(face,0,l,h);
-  GridIterator cells(l,h);
+  UnstructuredGridIterator cells(l,h);
   
   
   IntVector ln,hn;
   patch->getFaceNodes(face,0,ln,hn);
-  GridIterator nodes(ln,hn);
+  UnstructuredGridIterator nodes(ln,hn);
   
   
   Iterator cell_itr(cells), node_itr(nodes);
@@ -146,7 +146,7 @@ void UnstructuredBCGeomBase::determineIteratorLimits( const UnstructuredPatch::F
   }
   
   if (vec_cells.empty()) {
-    d_cells = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+    d_cells = UnstructuredGridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
     for (std::vector<IntVector>::const_iterator i = vec_cells.begin();
@@ -156,7 +156,7 @@ void UnstructuredBCGeomBase::determineIteratorLimits( const UnstructuredPatch::F
     d_cells = list_cells;
   }
   if (vec_nodes.empty()) {
-    d_nodes = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+    d_nodes = UnstructuredGridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
     for (std::vector<IntVector>::const_iterator i = vec_nodes.begin();
@@ -240,7 +240,7 @@ void UnstructuredBCGeomBase::determineInteriorBndIteratorLimits( const Unstructu
     test_pts.push_back(p);
   }
   
-  GridIterator cells(lpts,hpts);
+  UnstructuredGridIterator cells(lpts,hpts);
   Iterator cell_itr(cells);
   std::vector<Point>::const_iterator pts = test_pts.begin();
 
@@ -259,7 +259,7 @@ void UnstructuredBCGeomBase::determineInteriorBndIteratorLimits( const Unstructu
   }
   
   if (vec_cells.empty()) {
-    d_cells = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+    d_cells = UnstructuredGridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
     for (std::vector<IntVector>::const_iterator i = vec_cells.begin();
@@ -273,7 +273,7 @@ void UnstructuredBCGeomBase::determineInteriorBndIteratorLimits( const Unstructu
   // Now for nodes...
   IntVector ln,hn;
   patch->getFaceNodes(face,-offset[pdir],ln,hn);
-  GridIterator nodes(ln,hn);
+  UnstructuredGridIterator nodes(ln,hn);
   Iterator node_itr(nodes);
   ListOfCellsIterator list_nodes;
   std::vector<IntVector> vec_nodes;
@@ -284,7 +284,7 @@ void UnstructuredBCGeomBase::determineInteriorBndIteratorLimits( const Unstructu
     }
   }
   if (vec_nodes.empty()) {
-    d_nodes = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+    d_nodes = UnstructuredGridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
     for (std::vector<IntVector>::const_iterator i = vec_nodes.begin();

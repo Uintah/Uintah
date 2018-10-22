@@ -30,7 +30,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/BoundaryConditions/UnstructuredBCDataArray.h>
-#include <Core/Grid/Variables/GridIterator.h>
+#include <Core/Grid/Variables/UnstructuredGridIterator.h>
 #include <vector>
 
 namespace Uintah {
