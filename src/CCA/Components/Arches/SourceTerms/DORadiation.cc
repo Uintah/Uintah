@@ -97,13 +97,10 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   do_rad_in_n_timesteps=_radiation_calc_freq;
 
   if(db->findBlock("auto_rad_frequency") !=nullptr){ // change name to smart_rad_frequency
-
     db->getWithDefault( "auto_rad_frequency",   _nsteps_calc_freq, 25 );
     _autoSolveFrequency=true; 
   } 
 
-  _autoSolveFrequency=true; _nsteps_calc_freq = 25;
-  
   db->getWithDefault( "checkForMissingIntensities", _checkForMissingIntensities  , false );
   db->getWithDefault( "calc_on_all_RKsteps", _all_rk, false );
   if (db->findBlock("abskt")!= nullptr ){
