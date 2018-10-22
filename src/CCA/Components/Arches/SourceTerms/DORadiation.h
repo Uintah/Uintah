@@ -102,12 +102,6 @@ void profileDynamicRadiation( const ProcessorGroup* pc,
                          const MaterialSubset* matls, 
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw );
-// print reduction variable
-void printChange( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw );
 
 // initialize and set boundary conditions for intensities
 void setIntensityBC( const ProcessorGroup* pc, 
@@ -160,10 +154,10 @@ private:
   int _nDir;
   int _nphase;
   int _nstage;
+  int _nsteps_calc_freq;  /// number of radiation solves to resolve the radiation time-scale
 
   bool _multiBox; 
-  bool _runRadProfiler{false};  /// turns on the radiation profiler, tool to identifying if radiation is being resolved
-  bool _doTimeScaleAnalysis{false};  // uses a time scale to help users know if they are solving radiation frequently enough, using several approximations
+  bool _autoSolveFrequency{false};  /// turns on the radiation profiler, tool to identifying if radiation is being resolved
   std::vector<std::vector<double> > _xyzPatch_boundary;/// all patch boundaries (approximate), needed for multi-box weeps, 
 
   std::vector< std::vector < std::vector < bool > > > _doesPatchExist;
@@ -228,16 +222,20 @@ private:
   const VarLabel* _radiationFluxBLabel;
   const VarLabel* _radiationVolqLabel;
   const PatchSet* _perproc_patches;
-  std::vector< std::vector < std::vector < Ghost::GhostType > > >   _gv;
+  std::vector< std::vector < std::vector < Ghost::GhostType > > >   _gv; 
 
-      std::vector<const VarLabel*>  _radIntSource;
-      std::vector<std::string> _radIntSource_names;
+  int last_rad_solve_timestep={0};
+  int do_rad_in_n_timesteps={5};
+
+  std::vector<const VarLabel*>  _radIntSource;
+  std::vector<std::string> _radIntSource_names;
 
   std::vector< const VarLabel*> _IntensityLabels;
   std::vector< const VarLabel*> _emiss_plus_scat_source_label; 
 
   std::vector< std::vector< const VarLabel*> > _patchIntensityLabels; 
 
+  ApplicationInterface* m_arches{nullptr};
 }; // end DORadiation
 } // end namespace Uintah
 #endif

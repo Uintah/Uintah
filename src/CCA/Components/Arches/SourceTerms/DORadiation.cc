@@ -94,17 +94,16 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb;
 
   db->getWithDefault( "calc_frequency",   _radiation_calc_freq, 3 );
+  do_rad_in_n_timesteps=_radiation_calc_freq;
 
-  if(db->findBlock("profile_rad_frequency") !=nullptr){
-     _runRadProfiler=true; 
-    db->get("profile_rad_frequency",_profiler_label_name);
-    if (_profiler_label_name=="divQ"){
-       //"Do Time scale analysis" 
-       _doTimeScaleAnalysis=true;
-    }
-    
-  } // else initialized to false
+  if(db->findBlock("auto_rad_frequency") !=nullptr){ // change name to smart_rad_frequency
 
+    db->getWithDefault( "auto_rad_frequency",   _nsteps_calc_freq, 25 );
+    _autoSolveFrequency=true; 
+  } 
+
+  _autoSolveFrequency=true; _nsteps_calc_freq = 25;
+  
   db->getWithDefault( "checkForMissingIntensities", _checkForMissingIntensities  , false );
   db->getWithDefault( "calc_on_all_RKsteps", _all_rk, false );
   if (db->findBlock("abskt")!= nullptr ){
@@ -378,6 +377,12 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   if( _DO_model )
     _DO_model->setApplicationInterface( sched->getApplication() );
 
+  m_arches=sched->getApplication();
+  
+  if(_autoSolveFrequency) {
+    m_arches->activateReductionVariable( useAlternativeTaskGraph_name, true );
+  }
+
   _T_label = VarLabel::find(_T_label_name);
   if ( _T_label == 0){
     throw InvalidValue("Error: For DO Radiation source term -- Could not find the radiation temperature label.", __FILE__, __LINE__);
@@ -413,123 +418,116 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   if (_sweepMethod>0){
     sched_computeSourceSweep( level, sched, timeSubStep );
   }else{
-  std::string taskname = "DORadiation::computeSource";
-  Task* tsk = scinew Task(taskname, this, &DORadiation::computeSource, timeSubStep);
+    std::string taskname = "DORadiation::computeSource";
+    Task* tsk = scinew Task(taskname, this, &DORadiation::computeSource, timeSubStep);
 
-  _perproc_patches = level->eachPatch();
+    _perproc_patches = level->eachPatch();
 
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gn = Ghost::None;
-
-
-  if (timeSubStep == 0) {
-
-    tsk->computes(_src_label);
-    tsk->requires( Task::NewDW, _T_label, gac, 1 );
-    tsk->requires( Task::OldDW, _abskt_label, gac, 1 );
-    tsk->requires( Task::OldDW, _abskg_label, gn, 0 );
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn = Ghost::None;
 
 
-    tsk->requires( Task::OldDW, _src_label, gn, 0 ); // should be removed, for temporal scheduling
+    if (timeSubStep == 0) {
 
-    _DO_model->setLabels();
+      tsk->computes(_src_label);
+      tsk->requires( Task::NewDW, _T_label, gac, 1 );
+      tsk->requires( Task::OldDW, _abskt_label, gac, 1 );
+      tsk->requires( Task::OldDW, _abskg_label, gn, 0 );
 
 
-    for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
-      tsk->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );
-      tsk->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 );
-    }
+      tsk->requires( Task::OldDW, _src_label, gn, 0 ); // should be removed, for temporal scheduling
 
-    if (_DO_model->ScatteringOnBool()){
-      tsk->requires( Task::OldDW, _scatktLabel, gn, 0 );
-      tsk->requires( Task::OldDW,_asymmetryLabel, gn, 0 );
-    }
+      _DO_model->setLabels();
 
-    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
-        iter != _extra_local_labels.end(); iter++){
 
-      tsk->computes( *iter );
-      //if (*(*iter)=="radiationVolq"){
+      for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
+        tsk->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );
+        tsk->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 );
+      }
+
+      if (_DO_model->ScatteringOnBool()){
+        tsk->requires( Task::OldDW, _scatktLabel, gn, 0 );
+        tsk->requires( Task::OldDW,_asymmetryLabel, gn, 0 );
+      }
+
+      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+           iter != _extra_local_labels.end(); iter++){
+
+        tsk->computes( *iter );
+        //if (*(*iter)=="radiationVolq"){
         //continue;
-      //}
-      tsk->requires( Task::OldDW, *iter, gn, 0 );
+        //}
+        tsk->requires( Task::OldDW, *iter, gn, 0 );
 
+      }
+
+    } else {
+
+      tsk->modifies(_src_label);
+      tsk->requires( Task::NewDW, _T_label, gac, 1 );
+      tsk->requires( Task::OldDW, _abskt_label, gac, 1 );
+      tsk->requires( Task::OldDW, _abskg_label, gn, 0 );
+
+      for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
+        tsk->requires( Task::NewDW,_DO_model->getAbskpLabels()[i], gn, 0 );
+        tsk->requires( Task::NewDW,_DO_model->getPartTempLabels()[i], gn, 0 );
+      }
+
+      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+           iter != _extra_local_labels.end(); iter++){
+
+        tsk->modifies( *iter );
+
+      }
     }
 
-  } else {
+    tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gac, 1 );
+    tsk->requires(Task::NewDW, _labels->d_cellInfoLabel, gn);
 
-    tsk->modifies(_src_label);
-    tsk->requires( Task::NewDW, _T_label, gac, 1 );
-    tsk->requires( Task::OldDW, _abskt_label, gac, 1 );
-    tsk->requires( Task::OldDW, _abskg_label, gn, 0 );
+    sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ),Rad_TG);
 
-    for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
-      tsk->requires( Task::NewDW,_DO_model->getAbskpLabels()[i], gn, 0 );
-      tsk->requires( Task::NewDW,_DO_model->getPartTempLabels()[i], gn, 0 );
+
+    ////---------------------carry forward task-------------------------------//
+
+    if (timeSubStep == 0) {
+      std::string taskNoCom = "DORadiation::TransferRadFieldsFromOldDW";
+      Task* tsk_noRad = scinew Task(taskNoCom, this, &DORadiation::TransferRadFieldsFromOldDW);
+
+      tsk_noRad->requires(Task::OldDW, _src_label,gn,0);
+      tsk_noRad->computes( _src_label);
+
+      // fluxes and intensities and radvolq
+      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+           iter != _extra_local_labels.end(); iter++){
+        tsk_noRad->requires( Task::OldDW, *iter, gn, 0 );
+        tsk_noRad->computes( *iter );
+      }
+
+      if (_autoSolveFrequency ){
+        tsk_noRad->computes( VarLabel::find(useAlternativeTaskGraph_name) );
+      }
+
+      sched->addTask(tsk_noRad, level->eachPatch(), _materialManager->allMaterials( "Arches" ),no_Rad_TG);
     }
 
-    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
-         iter != _extra_local_labels.end(); iter++){
+    ////----------------------------------------------------------------------//
 
-      tsk->modifies( *iter );
-
-    }
   }
 
-  tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gac, 1 );
-  tsk->requires(Task::NewDW, _labels->d_cellInfoLabel, gn);
-
-  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ),Rad_TG);
-
-
-////---------------------carry forward task-------------------------------//
-
-  if (timeSubStep == 0) {
-    std::string taskNoCom = "DORadiation::TransferRadFieldsFromOldDW";
-    Task* tsk_noRad = scinew Task(taskNoCom, this, &DORadiation::TransferRadFieldsFromOldDW);
-
-    tsk_noRad->requires(Task::OldDW, _src_label,gn,0);
-    tsk_noRad->computes( _src_label);
-
-    // fluxes and intensities and radvolq
-    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
-        iter != _extra_local_labels.end(); iter++){
-      tsk_noRad->requires( Task::OldDW, *iter, gn, 0 );
-      tsk_noRad->computes( *iter );
-    }
-
-    sched->addTask(tsk_noRad, level->eachPatch(), _materialManager->allMaterials( "Arches" ),no_Rad_TG);
-  }
-
-////----------------------------------------------------------------------//
-
-}
-
-
-if (_runRadProfiler && timeSubStep==0){
-  VarLabel::create("max_rad_change",  max_vartype::getTypeDescription());
-  std::string taskname4 = "DORadiation::profileDynamicRadiation";
-  Task* tsk4 = scinew Task(taskname4, this, &DORadiation::profileDynamicRadiation);
-
-  tsk4->requires( Task::OldDW,VarLabel::find(_profiler_label_name), Ghost::None, 0 );
-  tsk4->requires( Task::NewDW,VarLabel::find(_profiler_label_name), Ghost::None, 0 );
-
-  tsk4->computes(VarLabel::find("max_rad_change"));
-
-  if (_doTimeScaleAnalysis){
+  if (_autoSolveFrequency && timeSubStep==0){
+    std::string taskname4 = "DORadiation::profileDynamicRadiation";
+    Task* tsk4 = scinew Task(taskname4, this, &DORadiation::profileDynamicRadiation);
+    
+    tsk4->requires( Task::NewDW, VarLabel::find("radiationVolq"), Ghost::None, 0 );
+    tsk4->requires( Task::NewDW, VarLabel::find("divQ"), Ghost::None, 0 );
+    tsk4->requires( Task::NewDW, _T_label, Ghost::None, 0 );
+    
+    tsk4->computes( VarLabel::find(useAlternativeTaskGraph_name) );
     tsk4->requires(Task::OldDW,_labels->d_delTLabel,Ghost::None,0);
+    sched->addTask(tsk4, level->eachPatch(), _materialManager->allMaterials( "Arches" ),Rad_TG);
   }
-  sched->addTask(tsk4, level->eachPatch(), _materialManager->allMaterials( "Arches" ),Rad_TG);
-
-  std::string taskname5 = "DORadiation::printChange";
-  Task* tsk5 = scinew Task(taskname5, this, &DORadiation::printChange);
-
-  tsk5->requires(Task::NewDW,VarLabel::find("max_rad_change"),Ghost::None,0);
-
-  sched->addTask(tsk5, level->eachPatch(), _materialManager->allMaterials( "Arches" ),Rad_TG);
 }
 
-}
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term
 //---------------------------------------------------------------------------
@@ -839,6 +837,10 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
           tsk_noRadiation->computes( _IntensityLabels[j+iband*_DO_model->getIntOrdinates()]);
         }
       }
+    }
+
+    if (_autoSolveFrequency ){
+      tsk_noRadiation->computes( VarLabel::find(useAlternativeTaskGraph_name) );
     }
 
     sched->addTask(tsk_noRadiation, level->eachPatch(), _materialManager->allMaterials( "Arches" ),no_Rad_TG);
@@ -1154,59 +1156,45 @@ DORadiation::profileDynamicRadiation( const ProcessorGroup* pc,
                          DataWarehouse* new_dw
                          ){
 
-
-  double change=0.;
+  double    dt_min=1.0 ; // min
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _labels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
 
-    constCCVariable <double > rad_field;
-    constCCVariable <double > rad_field_old;
-    old_dw->get(rad_field_old,VarLabel::find(_profiler_label_name), matlIndex, patch, Ghost::None,0);
-    new_dw->get(rad_field,VarLabel::find(_profiler_label_name), matlIndex, patch, Ghost::None,0);
 
+    constCCVariable <double > volQ;
+    constCCVariable <double > divQ;
+    constCCVariable <double > gasTemp;
+
+    new_dw->get(gasTemp,  _T_label, matlIndex , patch , Ghost::None , 0 );
+    new_dw->get(volQ,_radiationVolqLabel , matlIndex, patch, Ghost::None,0);
+    new_dw->get(divQ,_src_label          , matlIndex, patch, Ghost::None,0);
+
+    double maxdelT=0.;
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-     if (_doTimeScaleAnalysis){
+       const double Cp_vol=400.; // j/m^3/K            air at 1000K
        Uintah::parallel_for( range,   [&](int i, int j, int k){
-           change=std::max(std::abs(rad_field(i,j,k)-rad_field_old(i,j,k)), change);
 
-           });
-     }else{
-        Uintah::parallel_for( range,   [&](int i, int j, int k){
-            change=std::max(std::abs(rad_field(i,j,k)-rad_field_old(i,j,k))/rad_field(i,j,k),change);
-            });
-     }
+       double   T_eql =    sqrt(sqrt(volQ(i,j,k) / 4. /  5.67e-8));
 
-
+       maxdelT= max(fabs(T_eql - gasTemp(i,j,k)), maxdelT);
+       double timescale = fabs((T_eql - gasTemp(i,j,k) *Cp_vol) / divQ(i,j,k));
+       dt_min = std::min( timescale / _nsteps_calc_freq,  dt_min ); // min for zero divQ
+       });
   }
 
-  if (_doTimeScaleAnalysis){
-    const double Cp_vol=400.; // j/m^3/K            air at 1000K
+  // Doing the radiation so get the new time for the radiation solve.
+  if(_autoSolveFrequency) {
     delt_vartype delT;
     old_dw->get(delT,_labels->d_delTLabel);
-    change=change/2./Cp_vol*delT*_radiation_calc_freq;
-  }
-
-  new_dw->put(max_vartype(change), VarLabel::find("max_rad_change"));
-}
-
-void
-DORadiation::printChange( const ProcessorGroup* pc,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw
-                         ){
-  max_vartype change;
-  new_dw->get(change,VarLabel::find("max_rad_change"));
-  if (_doTimeScaleAnalysis){
-    proc0cout << "***rad Dynamics result in "<< change << "K for this radiation calculation frequency  \n";
-  }else{
-    proc0cout << "Max Change in "<< _profiler_label_name <<": "<<change*100 << " percent \n";
+    do_rad_in_n_timesteps = min ((int) (dt_min / delT),_radiation_calc_freq);
+    DOUTALL( true, "***************  " << do_rad_in_n_timesteps );
+    new_dw->put( min_vartype(do_rad_in_n_timesteps), VarLabel::find(useAlternativeTaskGraph_name) );
   }
 }
+
 
 void
 DORadiation::setIntensityBC( const ProcessorGroup* pc,
@@ -1238,9 +1226,6 @@ DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw)
 {
-
-
-
   if (_DO_model->ScatteringOnBool() || (!_sweepMethod) ){
     for (int iband=0; iband<d_nbands; iband++){
       for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
@@ -1252,13 +1237,18 @@ DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
     }
   }
 
-     new_dw->transferFrom(old_dw,_radiationFluxELabel,patches,matls);
-     new_dw->transferFrom(old_dw,_radiationFluxWLabel,patches,matls);
-     new_dw->transferFrom(old_dw,_radiationFluxNLabel,patches,matls);
-     new_dw->transferFrom(old_dw,_radiationFluxSLabel,patches,matls);
-     new_dw->transferFrom(old_dw,_radiationFluxTLabel,patches,matls);
-     new_dw->transferFrom(old_dw,_radiationFluxBLabel,patches,matls);
-     new_dw->transferFrom(old_dw,_radiationVolqLabel,patches,matls);
-     new_dw->transferFrom(old_dw, _src_label,patches,matls);
+  new_dw->transferFrom(old_dw,_radiationFluxELabel,patches,matls);
+  new_dw->transferFrom(old_dw,_radiationFluxWLabel,patches,matls);
+  new_dw->transferFrom(old_dw,_radiationFluxNLabel,patches,matls);
+  new_dw->transferFrom(old_dw,_radiationFluxSLabel,patches,matls);
+  new_dw->transferFrom(old_dw,_radiationFluxTLabel,patches,matls);
+  new_dw->transferFrom(old_dw,_radiationFluxBLabel,patches,matls);
+  new_dw->transferFrom(old_dw,_radiationVolqLabel,patches,matls);
+  new_dw->transferFrom(old_dw, _src_label,patches,matls);
 
+  // Reduce the radiation time step counter.
+  if(_autoSolveFrequency) {
+    new_dw->put( min_vartype(do_rad_in_n_timesteps), VarLabel::find(useAlternativeTaskGraph_name) );
+    --do_rad_in_n_timesteps;
+  }
 }

@@ -323,21 +323,26 @@ Arches::scheduleAnalysis( const LevelP& level,
 }
 
 // Also in ExplicitSolver.cc
-//#define USE_ALTERNATIVE_TASK_GRAPH true
+#define USE_ALTERNATIVE_TASK_GRAPH true
 
 int Arches::computeTaskGraphIndex( const int timeStep )
 {
   // Setup the task graph for execution on the next timestep.
-#ifdef USE_ALTERNATIVE_TASK_GRAPH
-  if( activeReductionVariable( useAlternativeTaskGraph_name ) &&
-      getReductionVariable( useAlternativeTaskGraph_name ) &&
-      !isBenignReductionVariable( useAlternativeTaskGraph_name ) )
-    return 1;
+
+  // If the DORadiation is using the auto solve frequency check the
+  // varaible.
+  if( activeReductionVariable( useAlternativeTaskGraph_name ) ) {
+    // If the variable is not benign then at least one rank set the value.
+    // The bengin value is realy large so this check is somewhat moot.
+    if( !isBenignReductionVariable( useAlternativeTaskGraph_name ) )
+    {
+      return( getReductionVariable( useAlternativeTaskGraph_name ) <= 1 );
+    }
+    else
+      return 0;
+  }
   else
-    return 0;
-#else
-  return m_nlSolver->getTaskGraphIndex( timeStep );
-#endif
+    return m_nlSolver->getTaskGraphIndex( timeStep );
 }
 
 //--------------------------------------------------------------------------------------------------

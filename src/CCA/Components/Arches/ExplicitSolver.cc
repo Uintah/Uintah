@@ -148,9 +148,6 @@ using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
 
-// Also in Arches.cc
-//#define USE_ALTERNATIVE_TASK_GRAPH true
-  
 // ****************************************************************************
 // Default constructor for ExplicitSolver
 // ****************************************************************************
@@ -279,10 +276,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     // Tell the infrastructure how many tasksgraphs are needed. The
     // defaul is 1.
     m_arches->getScheduler()->setNumTaskGraphs( d_num_taskgraphs );
-
-#ifdef USE_ALTERNATIVE_TASK_GRAPH
-    m_arches->activateReductionVariable( useAlternativeTaskGraph_name, true );
-#endif
   }
   
   ProblemSpecP db_es = params->findBlock("ExplicitSolver");
@@ -967,10 +960,6 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   tsk->computes( VarLabel::find(     endSimulation_name) );
 #endif
 
-#ifdef USE_ALTERNATIVE_TASK_GRAPH
-  tsk->computes( VarLabel::find(useAlternativeTaskGraph_name) );
-#endif
-
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
 
@@ -1182,14 +1171,6 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
     new_dw->put(delt_vartype(9e99), d_lab->d_delTLabel,level);
 
   }
-
-#ifdef USE_ALTERNATIVE_TASK_GRAPH
-  // Should the next time step be a radiation solve? if so set the
-  // reduction flag.
-  if( (timeStep+1) % d_rad_calc_frequency == 0 ) {
-    new_dw->put( min_vartype(1), VarLabel::find(useAlternativeTaskGraph_name) );
-  }
-#endif
 }
 
 void
@@ -1388,7 +1369,6 @@ ExplicitSolver::sched_initialize( const LevelP& level,
     // Utility Factory : Balance Terms computation
     _task_factory_map["utility_factory"]->schedule_task_group( "mass_flow_rate", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
   }
-
 }
 
 void
@@ -2103,7 +2083,6 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
     i_property_models->second->schedule_task_group("pre_table_post_iv_update", TaskInterface::TIMESTEP_EVAL,
       dont_pack_tasks, level, sched, matls, curr_level );
     //------------------ New Task Interface (end) ------------------------------------------------
-
 
     //1st TABLE LOOKUP
     bool initialize_it  = false;
