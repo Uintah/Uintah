@@ -783,22 +783,34 @@
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
     <Module                             spec="MULTIPLE NO_DATA"
-                                          attribute1="name REQUIRED STRING 'lineExtract, planeExtract, containerExtract, particleExtract flatPlate_heatFlux firstLawThermo minMax vorticity radiometer momentumAnalysis statistics'" >
+                                          attribute1="name REQUIRED STRING 'containerExtract, firstLawThermo, flatPlate_heatFlux, 
+                                                                            lineExtract,      minMax,         momentumAnalysis, 
+                                                                            particleExtract,  planeAverage,   planeExtract, 
+                                                                            radiometer,       statistics,     vorticity'" >
       
       <!--  Common __________________________________-->
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
-      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
-      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax, statistics"/>
-      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax, statistics"/>
+      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract,     planeExtract,    containerExtract, 
+                                                                                      particleExtract, firstLawThermo,  minMax"/>
+                                                                                      
+      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name containerExtract, firstLawThermo,  lineExtract, 
+                                                                                      minMax,           particleExtract, planeAverage, 
+                                                                                      planeExtract,     statistics"/>
+                                                                                      
+      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name containerExtract, firstLawThermo,  lineExtract, 
+                                                                                      minMax,           particleExtract, planeAverage, 
+                                                                                      planeExtract,     statistics"/>
+                                                                                      
       <colorThreshold                   spec="REQUIRED DOUBLE"  need_applies_to="name particleExtract"/>
        
-      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract planeExtract particleExtract minMax statistics">
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract minMax particleExtract planeAverage planeExtract statistics">
         <analyze                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING" 
                                           attribute2="matl  OPTIONAL STRING"
                                           attribute3="level OPTIONAL STRING"
-                                          attribute4="computeReynoldsStress OPTIONAL STRING" />
+                                          attribute4="computeReynoldsStress OPTIONAL STRING"
+                                          attribute5="weighting OPTIONAL STRING 'none, nCells, mass'" />
       </Variables>
       
       <!--  lineExtract __________________________________-->
@@ -810,6 +822,11 @@
         </line>
       </lines>
       
+      <!--  planeAverage __________________________________-->
+      <planeOrientation                 spec="REQUIRED STRING  'XY XZ YZ'" need_applies_to="name planeAverage"/>
+      <weight                           spec= "OPTIONAL NO_DATA" need_applies_to="name planeAverage"
+                                          attribute1="label REQUIRED STRING" />
+
       <!--  planeExtract __________________________________-->
       <planes                           spec="OPTIONAL NO_DATA" need_applies_to="name planeExtract">
         <plane                          spec="MULTIPLE NO_DATA" attribute1="name REQUIRED STRING" > 
