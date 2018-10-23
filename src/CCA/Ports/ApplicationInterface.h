@@ -273,6 +273,9 @@ WARNING
     virtual int  getLastRegridTimeStep() = 0;
     
     // Some applications can set reduction variables
+    virtual void addReductionVariable( std::string name,
+				       const TypeDescription *varType,
+				       bool varActive = false ) = 0;
     virtual unsigned int numReductionVariable() const = 0;
     virtual void activateReductionVariable(std::string name, bool val) = 0;
     virtual bool activeReductionVariable(std::string name) = 0;

@@ -268,9 +268,21 @@ WARNING
     {
       return m_appReductionVars.size();
     }
+
+    virtual void addReductionVariable( std::string name,
+				       const TypeDescription *varType,
+				       bool varActive = false )
+    {
+      m_appReductionVars[name] = new ApplicationReductionVariable( name, varType, varActive );
+    }
     
     virtual void activateReductionVariable(std::string name, bool val) { m_appReductionVars[name]->setActive( val ); }
-    virtual bool activeReductionVariable(std::string name) { return m_appReductionVars[name]->getActive(); }
+    virtual bool activeReductionVariable(std::string name) {
+      if( m_appReductionVars.find(name) != m_appReductionVars.end() )
+	  return m_appReductionVars[name]->getActive();
+      else
+	return false;
+    }
 
     virtual bool isBenignReductionVariable( std::string name ) { return m_appReductionVars[name]->isBenignValue(); }
     virtual void overrideReductionVariable( DataWarehouse * new_dw, std::string name,   bool val) { m_appReductionVars[name]->setValue( new_dw, val ); }

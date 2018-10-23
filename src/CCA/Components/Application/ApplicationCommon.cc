@@ -122,10 +122,6 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   // End the simulation
   m_appReductionVars[ endSimulation_name ] = new
     ApplicationReductionVariable( endSimulation_name, bool_or_vartype::getTypeDescription() );
- 
-  // Use Alternative Task Graph
-  m_appReductionVars[ useAlternativeTaskGraph_name ] = new
-    ApplicationReductionVariable( useAlternativeTaskGraph_name, min_vartype::getTypeDescription() );
  }
 
 ApplicationCommon::~ApplicationCommon()
