@@ -48,6 +48,8 @@ namespace Uintah {
       
 ****************************************/
 
+  const std::string dynamicSolveCount_name( "dynamicSolveCount" );
+  
   // timing statistics to test load balance
   enum ArchesStatsEnum
   {

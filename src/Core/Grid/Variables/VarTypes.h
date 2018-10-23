@@ -72,7 +72,6 @@ namespace Uintah {
    const std::string recomputeTimeStep_name( "recomputeTimeStep" );
    const std::string abortTimeStep_name( "abortTimeStep" );
    const std::string endSimulation_name( "endSimulation" );
-   const std::string useAlternativeTaskGraph_name( "useAlternativeTaskGraph" );
   
    typedef SoleVariable<unsigned int > timeStep_vartype;
    typedef SoleVariable<double       >  simTime_vartype;

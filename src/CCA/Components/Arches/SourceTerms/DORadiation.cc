@@ -2,6 +2,7 @@
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesStatsEnum.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -93,12 +94,13 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 
   ProblemSpecP db = inputdb;
 
-  db->getWithDefault( "calc_frequency",   _radiation_calc_freq, 3 );
-  do_rad_in_n_timesteps=_radiation_calc_freq;
+  db->getWithDefault( "calc_frequency", _radiation_calc_freq, 3 );
+  do_rad_in_n_timesteps = _radiation_calc_freq;
 
-  if(db->findBlock("auto_rad_frequency") !=nullptr){ // change name to smart_rad_frequency
-    db->getWithDefault( "auto_rad_frequency",   _nsteps_calc_freq, 25 );
-    _autoSolveFrequency=true; 
+  // Check to see if the dynamic frequency radiation solve should be used. 
+  if(db->findBlock("use_dynamic_frequency") != nullptr) {
+    db->getWithDefault( "use_dynamic_frequency", _nsteps_calc_freq, 25 );
+    _dynamicSolveFrequency = true;
   } 
 
   db->getWithDefault( "checkForMissingIntensities", _checkForMissingIntensities  , false );
@@ -357,11 +359,9 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
    _RelevantPatchesXmYpZm2=std::vector<const PatchSet*> (0);
    _RelevantPatchesXmYmZp2=std::vector<const PatchSet*> (0);
    _RelevantPatchesXmYmZm2=std::vector<const PatchSet*> (0);
-
-
   }
-
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term
 //---------------------------------------------------------------------------
@@ -376,8 +376,11 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
   m_arches=sched->getApplication();
   
-  if(_autoSolveFrequency) {
-    m_arches->activateReductionVariable( useAlternativeTaskGraph_name, true );
+  if(_dynamicSolveFrequency) { 
+    // Use dynamic frequency radiation solve so create a new reduction variable.
+    // NOTE : the name is in ArchesStatsEnum.h
+    m_arches->addReductionVariable( dynamicSolveCount_name,
+                                    min_vartype::getTypeDescription(), true );
   }
 
   _T_label = VarLabel::find(_T_label_name);
@@ -483,7 +486,6 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ),Rad_TG);
 
-
     ////---------------------carry forward task-------------------------------//
 
     if (timeSubStep == 0) {
@@ -500,28 +502,27 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
         tsk_noRad->computes( *iter );
       }
 
-      if (_autoSolveFrequency ){
-        tsk_noRad->computes( VarLabel::find(useAlternativeTaskGraph_name) );
+      if (_dynamicSolveFrequency ){
+        tsk_noRad->computes( VarLabel::find(dynamicSolveCount_name) );
       }
 
       sched->addTask(tsk_noRad, level->eachPatch(), _materialManager->allMaterials( "Arches" ),no_Rad_TG);
     }
-
-    ////----------------------------------------------------------------------//
-
   }
-
-  if (_autoSolveFrequency && timeSubStep==0){
+      
+  ////---------------------profile dynamic radiation task-------------------//
+  if (timeSubStep == 0 && _dynamicSolveFrequency) {
     std::string taskname4 = "DORadiation::profileDynamicRadiation";
     Task* tsk4 = scinew Task(taskname4, this, &DORadiation::profileDynamicRadiation);
     
     tsk4->requires( Task::NewDW, VarLabel::find("radiationVolq"), Ghost::None, 0 );
     tsk4->requires( Task::NewDW, VarLabel::find("divQ"), Ghost::None, 0 );
     tsk4->requires( Task::NewDW, _T_label, Ghost::None, 0 );
+    tsk4->requires( Task::OldDW, _labels->d_delTLabel, Ghost::None, 0 );
     
-    tsk4->computes( VarLabel::find(useAlternativeTaskGraph_name) );
-    tsk4->requires(Task::OldDW,_labels->d_delTLabel,Ghost::None,0);
-    sched->addTask(tsk4, level->eachPatch(), _materialManager->allMaterials( "Arches" ),Rad_TG);
+    tsk4->computes( VarLabel::find(dynamicSolveCount_name) );
+
+    sched->addTask(tsk4, level->eachPatch(), _materialManager->allMaterials( "Arches" ), Rad_TG);
   }
 }
 
@@ -836,12 +837,11 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
       }
     }
 
-    if (_autoSolveFrequency ){
-      tsk_noRadiation->computes( VarLabel::find(useAlternativeTaskGraph_name) );
+    if (_dynamicSolveFrequency ) {
+      tsk_noRadiation->computes( VarLabel::find(dynamicSolveCount_name) );
     }
 
     sched->addTask(tsk_noRadiation, level->eachPatch(), _materialManager->allMaterials( "Arches" ),no_Rad_TG);
-
 
   std::vector<const VarLabel* > spectral_gas_absorption = _DO_model->getAbskgLabels();
   std::vector<const VarLabel* > spectral_gas_weight = _DO_model->getAbswgLabels();
@@ -1147,49 +1147,46 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
 
 void
 DORadiation::profileDynamicRadiation( const ProcessorGroup* pc,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw
-                         ){
-
-  double    dt_min=1.0 ; // min
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw
+                                      ) {
+  double  dt_min=1.0 ; // min
+  
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _labels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
-
-
     constCCVariable <double > volQ;
     constCCVariable <double > divQ;
     constCCVariable <double > gasTemp;
 
-    new_dw->get(gasTemp,  _T_label, matlIndex , patch , Ghost::None , 0 );
-    new_dw->get(volQ,_radiationVolqLabel , matlIndex, patch, Ghost::None,0);
-    new_dw->get(divQ,_src_label          , matlIndex, patch, Ghost::None,0);
+    new_dw->get(gasTemp, _T_label            , matlIndex, patch, Ghost::None, 0);
+    new_dw->get(volQ,    _radiationVolqLabel , matlIndex, patch, Ghost::None, 0);
+    new_dw->get(divQ,    _src_label          , matlIndex, patch, Ghost::None, 0);
 
     double maxdelT=0.;
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-       const double Cp_vol=400.; // j/m^3/K            air at 1000K
-       Uintah::parallel_for( range,   [&](int i, int j, int k){
+    const double Cp_vol=400.; // j/m^3/K            air at 1000K
+    Uintah::parallel_for( range, [&](int i, int j, int k) {
 
-       double   T_eql =    sqrt(sqrt(volQ(i,j,k) / 4. /  5.67e-8));
-
-       maxdelT= max(fabs(T_eql - gasTemp(i,j,k)), maxdelT);
-       double timescale = fabs((T_eql - gasTemp(i,j,k) *Cp_vol) / divQ(i,j,k));
-       dt_min = std::min( timescale / _nsteps_calc_freq,  dt_min ); // min for zero divQ
-       });
+        double   T_eql =    sqrt(sqrt(volQ(i,j,k) / 4. /  5.67e-8));
+        
+        maxdelT= max(fabs(T_eql - gasTemp(i,j,k)), maxdelT);
+        double timescale = fabs((T_eql - gasTemp(i,j,k) *Cp_vol) / divQ(i,j,k));
+        dt_min = std::min( timescale / _nsteps_calc_freq,  dt_min ); // min for zero divQ
+      } );
   }
 
-  // Doing the radiation so get the new time for the radiation solve.
-  if(_autoSolveFrequency) {
-    delt_vartype delT;
-    old_dw->get(delT,_labels->d_delTLabel);
-    do_rad_in_n_timesteps = min ((int) (dt_min / delT),_radiation_calc_freq);
-    DOUTALL( true, "***************  " << do_rad_in_n_timesteps );
-    new_dw->put( min_vartype(do_rad_in_n_timesteps), VarLabel::find(useAlternativeTaskGraph_name) );
-  }
+  // For the dynamic frequency radiation solve get the new number of
+  // time steps to skip before doing the next radiation solve.
+  delt_vartype delT;
+  old_dw->get(delT,_labels->d_delTLabel);
+  do_rad_in_n_timesteps = min ((int) (dt_min / delT), _radiation_calc_freq);
+  DOUTALL( true, " ***************  " << dt_min / delT << "  " << _radiation_calc_freq);
+  new_dw->put( min_vartype(do_rad_in_n_timesteps), VarLabel::find(dynamicSolveCount_name) );
 }
 
 
@@ -1218,10 +1215,10 @@ DORadiation::setIntensityBC( const ProcessorGroup* pc,
 
 void
 DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw)
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw)
 {
   if (_DO_model->ScatteringOnBool() || (!_sweepMethod) ){
     for (int iband=0; iband<d_nbands; iband++){
@@ -1243,9 +1240,10 @@ DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
   new_dw->transferFrom(old_dw,_radiationVolqLabel,patches,matls);
   new_dw->transferFrom(old_dw, _src_label,patches,matls);
 
-  // Reduce the radiation time step counter.
-  if(_autoSolveFrequency) {
-    new_dw->put( min_vartype(do_rad_in_n_timesteps), VarLabel::find(useAlternativeTaskGraph_name) );
+  // Reduce the dynamic radiation solve time step counter.
+  if(_dynamicSolveFrequency) {
+    // DOUTALL( true, " ***************  " << do_rad_in_n_timesteps );
     --do_rad_in_n_timesteps;
+    new_dw->put( min_vartype(do_rad_in_n_timesteps), VarLabel::find(dynamicSolveCount_name) );
   }
 }

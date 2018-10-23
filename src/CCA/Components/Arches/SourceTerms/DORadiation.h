@@ -157,7 +157,7 @@ private:
   int _nsteps_calc_freq;  /// number of radiation solves to resolve the radiation time-scale
 
   bool _multiBox; 
-  bool _autoSolveFrequency{false};  /// turns on the radiation profiler, tool to identifying if radiation is being resolved
+  bool _dynamicSolveFrequency{false};  /// turns on the radiation profiler, tool to identifying if radiation is being resolved
   std::vector<std::vector<double> > _xyzPatch_boundary;/// all patch boundaries (approximate), needed for multi-box weeps, 
 
   std::vector< std::vector < std::vector < bool > > > _doesPatchExist;
