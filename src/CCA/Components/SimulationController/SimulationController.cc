@@ -93,17 +93,15 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   ProblemSpecP simController_ps = m_ups->findBlock( "SimulationController" );
 
   if (simController_ps) {
-    ProblemSpecP runtimeStats_ps = simController_ps->findBlock( "RuntimeStats" );
+    ProblemSpecP runtimeStats_ps = simController_ps->findBlock("RuntimeStats");
 
     if (runtimeStats_ps) {
       runtimeStats_ps->get("frequency", m_reportStatsFrequency);
       runtimeStats_ps->get("onTimeStep", m_reportStatsOnTimeStep);
 
       if (m_reportStatsOnTimeStep >= m_reportStatsFrequency) {
-        proc0cout << "Error: the frequency of reporting the run time stats "
-                  << m_reportStatsFrequency << " "
-                  << "is less than or equal to the time step ordinality "
-                  << m_reportStatsOnTimeStep << " "
+        proc0cout << "Error: the frequency of reporting the run time stats " << m_reportStatsFrequency  << " "
+                  << "is less than or equal to the time step ordinality "    << m_reportStatsOnTimeStep << " "
                   << ". Resetting the ordinality to ";
 
         if (m_reportStatsFrequency > 1) {
@@ -112,7 +110,6 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
         else {
           m_reportStatsOnTimeStep = 0;
         }
-
         proc0cout << m_reportStatsOnTimeStep << std::endl;
       }
     }
@@ -190,31 +187,31 @@ SimulationController::getComponents( void )
 {
   m_application = dynamic_cast<ApplicationInterface*>( getPort( "application" ) );
 
-  if( !m_application ) {
+  if (!m_application) {
     throw InternalError("dynamic_cast of 'm_app' failed!", __FILE__, __LINE__);
   }
 
   m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
 
-  if( !m_loadBalancer ) {
+  if (!m_loadBalancer) {
     throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
   }
 
   m_output = dynamic_cast<Output*>( getPort("output") );
 
-  if( !m_output ) {
+  if (!m_output) {
     throw InternalError("dynamic_cast of 'm_output' failed!", __FILE__, __LINE__);
   }
 
   m_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
 
-  if( m_application->isDynamicRegridding() && !m_regridder ) {
+  if (m_application->isDynamicRegridding() && !m_regridder) {
     throw InternalError("dynamic_cast of 'm_regridder' failed!", __FILE__, __LINE__);
   }
 
   m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
 
-  if( !m_scheduler ) {
+  if (!m_scheduler) {
     throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
   }
 }
@@ -333,8 +330,7 @@ SimulationController::outputSetup( void )
   // Set up the output - needs to be done before the application is setup.
   m_output->setRuntimeStats( &m_runtime_stats );
 
-  m_output->problemSetup( m_ups, m_restart_ps,
-                          m_application->getMaterialManagerP() );
+  m_output->problemSetup( m_ups, m_restart_ps, m_application->getMaterialManagerP() );
 
 #ifdef HAVE_VISIT
   if( getVisIt() ) {
@@ -349,7 +345,7 @@ void
 SimulationController::gridSetup( void )
 {
   // Set up the grid.
-  if( m_restarting ) {
+  if (m_restarting) {
     // tsaad & bisaac: At this point, and during a restart, there not
     // legitimate load balancer. This means that the grid obtained
     // from the data archiver will global domain BCs on every MPI Rank
@@ -366,33 +362,29 @@ SimulationController::gridSetup( void )
   else /* if( !m_restarting ) */ {
     m_current_gridP = scinew Grid();
 
-    // The call to preGridProblemSetup() by the simulation interface
-    // allows for a call to grid->setExtraCells() to be made before
-    // the grid problemSetup() so that if there are no extra cells
-    // defined in the ups file, all levels will use the grid extra
-    // cell value.
+    // The call to preGridProblemSetup() by the simulation interface allows
+    // for a call to grid->setExtraCells() to be made before the grid
+    // problemSetup() so that if there are no extra cells defined in the
+    // ups file, all levels will use the grid extra cell value.
 
     // For instance, Wasatch does not allow users to specify extra
     // cells through the input file. Instead, Wasatch wants to specify
-    // it internally. This call gives the option to do just that
-    // though it does not follow normal paradigm of calling
-    // problemSetup immediately after a component or other object is
-    // created.
+    // it internally. This call gives the option to do just that though
+    // it does not follow normal paradigm of calling problemSetup
+    // immediately after a component or other object is created.
     m_application->preGridProblemSetup( m_ups, m_current_gridP );
 
-    // Now that the simulation interface has made its changes do the
-    // normal grid problemSetup()
+    // Now that the simulation interface has made its changes do the normal grid problemSetup()
     m_current_gridP->problemSetup( m_ups, d_myworld, m_application->isAMR() );
   }
 
-  if( m_current_gridP->numLevels() == 0 ) {
+  if (m_current_gridP->numLevels() == 0) {
     throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
   }
 
-  // Print out meta data
-  if ( d_myworld->myRank() == 0 ) {
+  // Print out metadata
+  if (d_myworld->myRank() == 0) {
     m_current_gridP->printStatistics();
-//    DOUT(true, "Restart grid\n" << *m_current_gridP.get_rep());
   }
 }
 
@@ -405,8 +397,8 @@ SimulationController::regridderSetup( void )
 
   // Do this step before fully setting up the application interface so that the
   // Switcher (being an application) can reset the state of the regridder.
-  if( m_regridder ) {
-    m_regridder->problemSetup( m_ups, m_current_gridP, m_application->getMaterialManagerP() );
+  if (m_regridder) {
+    m_regridder->problemSetup(m_ups, m_current_gridP, m_application->getMaterialManagerP());
   }
 }
 
@@ -536,7 +528,7 @@ SimulationController::finalSetup()
   // reduction output vars are copied to the new uda. Further, it must
   // be called after timeStateSetup() is call so that checkpoints are
   // copied to the new uda as well.
-  if( m_restarting ) {
+  if (m_restarting) {
     Dir dir( m_from_dir );
     m_output->restartSetup( dir, 0, m_restart_timestep,
                             m_application->getSimTime(),
@@ -545,7 +537,7 @@ SimulationController::finalSetup()
 
   // Miscellaneous initializations.
   ProblemSpecP amr_ps = m_ups->findBlock("AMR");
-  if( amr_ps ) {
+  if (amr_ps) {
     amr_ps->get( "doMultiTaskgraphing", m_do_multi_taskgraphing );
   }
 }
@@ -563,8 +555,7 @@ void SimulationController::ResetStats( void )
 void
 SimulationController::ScheduleReportStats( bool header )
 {
-  Task* task = scinew Task("SimulationController::ReportStats",
-                           this, &SimulationController::ReportStats, header);
+  Task* task = scinew Task("SimulationController::ReportStats", this, &SimulationController::ReportStats, header);
   
   task->setType(Task::OncePerProc);
 
@@ -588,9 +579,8 @@ SimulationController::ReportStats(const ProcessorGroup*,
 {
   bool reportStats;
 
-  // If the reporting frequency is greater than 1 check to see if
-  // output is needed.
-  if( m_reportStatsFrequency == 1 ) {
+  // If the reporting frequency is greater than 1 check to see if output is needed.
+  if (m_reportStatsFrequency == 1) {
     reportStats = true;
   }
 
@@ -598,24 +588,23 @@ SimulationController::ReportStats(const ProcessorGroup*,
   // isLastTimeStep is last and called only when needed. Unfortunately,
   // the greater the frequency the more often it will be called.
   else {
-    if( header ) {
+    if (header) {
       reportStats = true;
     }
-    else if( m_application->getTimeStep()%m_reportStatsFrequency == m_reportStatsOnTimeStep ) {
+    else if (m_application->getTimeStep() % m_reportStatsFrequency == m_reportStatsOnTimeStep) {
       reportStats = true;
     }
     else {
       // Get the wall time if is needed, otherwise ignore it.
       double walltime;
-      
-      if( m_application->getWallTimeMax() > 0 ) {
+
+      if (m_application->getWallTimeMax() > 0) {
         walltime = m_wall_timers.GetWallTime();
       }
       else {
         walltime = 0;
       }
-      
-      reportStats = m_application->isLastTimeStep( walltime );
+      reportStats = m_application->isLastTimeStep(walltime);
     }
   }
   
@@ -629,21 +618,20 @@ SimulationController::ReportStats(const ProcessorGroup*,
 #endif
   
   // Reductions are only need if these are true.
-  if( (m_regridder && m_regridder->useDynamicDilation()) ||
-      g_sim_stats_mem || g_comp_stats || reduce ) {
+  if ((m_regridder && m_regridder->useDynamicDilation()) || g_sim_stats_mem || g_comp_stats || reduce) {
 
-    m_runtime_stats.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
-  
+    m_runtime_stats.reduce(m_regridder && m_regridder->useDynamicDilation(), d_myworld);
+
     // Reduce the MPI runtime stats.
-    MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( m_scheduler.get_rep() );
+    MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>(m_scheduler.get_rep());
 
-    if( mpiScheduler ) {
-      mpiScheduler->mpi_info_.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
+    if (mpiScheduler) {
+      mpiScheduler->mpi_info_.reduce(m_regridder && m_regridder->useDynamicDilation(), d_myworld);
     }
   }
-  
-  if( g_app_stats || reduce ) {
-    m_application->reduceApplicationStats( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
+
+  if (g_app_stats || reduce) {
+    m_application->reduceApplicationStats(m_regridder && m_regridder->useDynamicDilation(), d_myworld);
   }
   
   // Update the moving average and get the wall time for this time step.
@@ -651,7 +639,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     m_wall_timers.updateExpMovingAverage();
 
   // Print the stats for this time step
-  if( d_myworld->myRank() == 0 && g_sim_stats ) {
+  if (d_myworld->myRank() == 0 && g_sim_stats) {
     std::ostringstream message;
 
     if( header ) {
@@ -666,34 +654,26 @@ SimulationController::ReportStats(const ProcessorGroup*,
     message << std::left
             << "Timestep "   << std::setw(8)  << m_application->getTimeStep()
             << "Time="       << std::setw(12) << m_application->getSimTime()
-    
-            // << "Current delT="       << std::setw(12) << m_application->getDelT()
             << "Next delT="  << std::setw(12) << m_application->getNextDelT()
-
-            << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
-            // << "All Time steps= " << std::setw(12) << m_wall_timers.TimeStep().seconds()
-            // << "Current Time Step= " << std::setw(12) << timeStepTime.seconds()
-            << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
-           // << "In-situ Time = " << std::setw(12) << walltimers.InSitu().seconds()
-      ;
+            << "Wall Time="  << std::setw(10) << m_wall_timers.GetWallTime()
+            << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds();
 
     // Report on the memory used.
-    if( g_sim_stats_mem ) {
-      // With the sum reduces, use double, since with memory it is possible that
-      // it will overflow
-      double        avg_memused      = m_runtime_stats.getRankAverage( SCIMemoryUsed );
-      unsigned long max_memused      = m_runtime_stats.getRankMaximum( SCIMemoryUsed );
-      int           max_memused_rank = m_runtime_stats.getRankForMaximum(    SCIMemoryUsed );
+    if (g_sim_stats_mem) {
+      // With the sum reduces, use double, since with memory it is possible that it will overflow
+      double        avg_memused      = m_runtime_stats.getRankAverage(    SCIMemoryUsed );
+      unsigned long max_memused      = m_runtime_stats.getRankMaximum(    SCIMemoryUsed );
+      int           max_memused_rank = m_runtime_stats.getRankForMaximum( SCIMemoryUsed );
       
-      double        avg_highwater      = m_runtime_stats.getRankAverage( SCIMemoryHighwater );
-      unsigned long max_highwater      = m_runtime_stats.getRankMaximum( SCIMemoryHighwater );
-      int           max_highwater_rank = m_runtime_stats.getRankForMaximum(    SCIMemoryHighwater );
+      double        avg_highwater      = m_runtime_stats.getRankAverage(    SCIMemoryHighwater );
+      unsigned long max_highwater      = m_runtime_stats.getRankMaximum(    SCIMemoryHighwater );
+      int           max_highwater_rank = m_runtime_stats.getRankForMaximum( SCIMemoryHighwater );
       
       if (avg_memused == max_memused && avg_highwater == max_highwater) {
         message << "Memory Use=" << std::setw(8)
                 << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
 
-        if(avg_highwater) {
+        if (avg_highwater) {
           message << "    Highwater Memory Use=" << std::setw(8)
                   << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
         }
@@ -721,7 +701,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
       message << "Memory Use=" << std::setw(8)
               << ProcessInfo::toHumanUnits((unsigned long) memused );
 
-      if(highwater) {
+      if (highwater) {
         message << "    Highwater Memory Use=" << std::setw(8)
                 << ProcessInfo::toHumanUnits((unsigned long) highwater);
       }
@@ -736,8 +716,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
   // Variable for calculating the percentage of time spent in overhead.
   double percent_overhead = 0;
   
-  if( (m_regridder && m_regridder->useDynamicDilation()) ||
-      g_comp_stats ) {
+  if ((m_regridder && m_regridder->useDynamicDilation()) || g_comp_stats) {
 
     // Sum up the average time for overhead related components.
     double overhead_time =
@@ -785,15 +764,13 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
     overheadAverage = overhead / weight;
 
-    if( m_regridder ) {
+    if (m_regridder) {
       m_regridder->setOverheadAverage(overheadAverage);
     }
   }
 
   // Average proc runtime performance stats
-  if( d_myworld->myRank() == 0 &&
-      g_comp_stats && m_num_samples && m_runtime_stats.size())
-  {
+  if (d_myworld->myRank() == 0 && g_comp_stats && m_num_samples && m_runtime_stats.size()) {
     // Ignore the first sample as that is for initialization.
     std::ostringstream header;
     header << "Runtime performance summary stats at "
@@ -812,9 +789,10 @@ SimulationController::ReportStats(const ProcessorGroup*,
     std::ostringstream message;
     
     for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
-      if( m_runtime_stats.getRankMaximum(i) != 0.0 ) {
-        if( message.str().size() )
+      if (m_runtime_stats.getRankMaximum(i) != 0.0) {
+        if( message.str().size() ) {
           message << std::endl;
+        }
         message << "  " << std::left
                 << std::setw(24) << m_runtime_stats.getName(i)
                 << "[" << std::setw(15) << m_runtime_stats.getUnits(i) << "]"
@@ -828,9 +806,10 @@ SimulationController::ReportStats(const ProcessorGroup*,
     }
     
     // Report the overhead percentage.
-    if( !std::isnan(overheadAverage) ) {
-      if( message.str().size() )
+    if (!std::isnan(overheadAverage)) {
+      if (message.str().size()) {
         message << std::endl;
+      }
       message << "  Percentage of time spent in overhead : "
               << overheadAverage * 100.0;
     }
@@ -841,8 +820,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
   }
   
   // Infrastructure per proc runtime performance stats
-  if (g_comp_indv_stats && m_runtime_stats.size() && m_runtime_stats.size())
-  {
+  if (g_comp_indv_stats && m_runtime_stats.size() && m_runtime_stats.size()) {
     std::ostringstream header;    
     header << "--" << std::left
            << "Rank: " << std::setw(5) << d_myworld->myRank()
@@ -853,10 +831,11 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
     std::ostringstream message;
     
-    for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
+    for (unsigned int i = 0; i < m_runtime_stats.size(); ++i) {
       if (m_runtime_stats[i] > 0) {
-        if( message.str().size() )
+        if (message.str().size()) {
           message << std::endl;
+        }
         message << "  " << std::left
                 << "Rank: " << std::setw(6) << d_myworld->myRank()
                 << std::left << std::setw(24) << m_runtime_stats.getName(i)
@@ -866,15 +845,13 @@ SimulationController::ReportStats(const ProcessorGroup*,
       }
     }
     
-    if( message.str().size() ) {
+    if (message.str().size()) {
       DOUT(reportStats, header.str() + message.str());
     }
   }
   
   // Report the average application stats.
-  if( d_myworld->myRank() == 0 &&
-      g_app_stats && m_application->getApplicationStats().size() )
-  {
+  if (d_myworld->myRank() == 0 && g_app_stats && m_application->getApplicationStats().size()) {
     std::ostringstream header;
     header << "Application performance summary stats for "
            << "time step " << m_application->getTimeStep()
@@ -883,47 +860,46 @@ SimulationController::ReportStats(const ProcessorGroup*,
            << "  " << std::left
            << std::setw(24) << "Description"
            << std::setw(18) << "Units";
-    if( m_application->getApplicationStats().calculateMinimum() ) {
+    if (m_application->getApplicationStats().calculateMinimum()) {
       header << std::setw(18) << "Minimum"
              << std::setw(12) << "Rank";
     }
-    if( m_application->getApplicationStats().calculateAverage() )
+    if (m_application->getApplicationStats().calculateAverage()) {
       header << std::setw(18) << "Average";
-    if( m_application->getApplicationStats().calculateStdDev() )
+    }
+    if (m_application->getApplicationStats().calculateStdDev()) {
       header << std::setw(18) << "Std. Dev.";
-    if( m_application->getApplicationStats().calculateMaximum() ) {
+    }
+    if (m_application->getApplicationStats().calculateMaximum()) {
       header << std::setw(18) << "Maximum"
               << std::setw(12) << "Rank";
     }
-    // header << std::setw(12) << "100*(1-ave/max) '% load imbalance'";
+
     header << std::endl;
     
     std::ostringstream message;
 
-    for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
-      // if( m_application->getApplicationStats().getRankMaximum(i) != 0.0 )
-        {
+    for (unsigned int i = 0; i < m_application->getApplicationStats().size(); ++i) {
 
-        if( message.str().size() )
-          message << std::endl;
-        message << "  " << std::left
-                << std::setw(24) << m_application->getApplicationStats().getName(i)
-                << "["   << std::setw(15) << m_application->getApplicationStats().getUnits(i) << "]";
-        if( m_application->getApplicationStats().calculateMinimum() ) {
-          message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMinimum(i)
-                  << " : " << std::setw(9)  << m_application->getApplicationStats().getRankForMinimum(i);
-        }
-        if( m_application->getApplicationStats().calculateAverage() )
-          message << " : " << std::setw(15) << m_application->getApplicationStats().getRankAverage(i);
-        if( m_application->getApplicationStats().calculateStdDev() )
-          message  << " : " << std::setw(15) << m_application->getApplicationStats().getRankStdDev(i);
-        if( m_application->getApplicationStats().calculateMaximum() ) {
-          message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMaximum(i)
-                  << " : " << std::setw(9)  << m_application->getApplicationStats().getRankForMaximum(i);
-        }
-        // message << " : " << std::setw(9)
-        // << (m_application->getApplicationStats().getRankMaximum(i) == 0.0 ?
-        //     0 : (100.0 * (1.0 - (m_application->getApplicationStats().getRankAverage(i) / m_application->getApplicationStats().getRankMaximum(i)))));
+      if (message.str().size()) {
+        message << std::endl;
+      }
+
+      message << "  " << std::left << std::setw(24) << m_application->getApplicationStats().getName(i) << "[" << std::setw(15)
+              << m_application->getApplicationStats().getUnits(i) << "]";
+      if (m_application->getApplicationStats().calculateMinimum()) {
+        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMinimum(i) << " : " << std::setw(9)
+                << m_application->getApplicationStats().getRankForMinimum(i);
+      }
+      if (m_application->getApplicationStats().calculateAverage()) {
+        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankAverage(i);
+      }
+      if (m_application->getApplicationStats().calculateStdDev()) {
+        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankStdDev(i);
+      }
+      if (m_application->getApplicationStats().calculateMaximum()) {
+        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMaximum(i) << " : " << std::setw(9)
+                << m_application->getApplicationStats().getRankForMaximum(i);
       }
     }
 
@@ -947,8 +923,9 @@ SimulationController::ReportStats(const ProcessorGroup*,
     
     for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
       if (m_application->getApplicationStats()[i] > 0) {
-        if( message.str().size() )
+        if (message.str().size()) {
           message << std::endl;
+        }
         message << "  " << std::left
                 << "Rank: " << std::setw(6) << d_myworld->myRank()
                 << std::left << std::setw(24) << m_application->getApplicationStats().getName(i)
@@ -958,8 +935,8 @@ SimulationController::ReportStats(const ProcessorGroup*,
       }
     }
 
-    if( message.str().size() ) {
-      DOUT(reportStats, header.str()+message.str());
+    if (message.str().size()) {
+      DOUT(reportStats, header.str() + message.str());
     }
   }
 

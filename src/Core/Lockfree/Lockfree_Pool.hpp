@@ -66,7 +66,7 @@ private:
                                    >;
   using impl_node_type = typename impl_pool_type::node_type;
 
-  static constexpr size_type one = 1;
+  static constexpr size_type  one = 1;
   static constexpr size_type zero = 0;
 
 public:
@@ -140,7 +140,7 @@ public:
 
   /// find_any()
   ///
-  /// return any valid iterater
+  /// return any valid iterator
   //  may return an invalid iterator
   iterator find_any() const
   {
@@ -149,7 +149,7 @@ public:
 
   /// find_any()
   ///
-  /// return any valid iterater
+  /// return any valid iterator
   //  may return an invalid iterator
   iterator find_any(handle const& h) const
   {
@@ -312,7 +312,7 @@ public:
     rhs.m_size_allocator = size_allocator_type{};
   }
 
-  // move assignement
+  // move assignment
   //
   // NOT thread safe
   Pool & operator=( Pool && rhs )
