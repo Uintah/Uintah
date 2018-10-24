@@ -70,6 +70,9 @@ inline int Sign(int i)
   return i<0?-1:1;
 }
 
+template <typename T> int SignZero(T val) {
+  return (T(0) < val) - (val < T(0));
+}
 // Clamp a number to a specific range
 inline double Clamp(double d, double min, double max)
 {

@@ -644,8 +644,11 @@ void CleanReactionDiffusionEP::initializeCMData(const Patch          * patch  ,
 
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
-  constParticleVariable<double> pMass;
+  constParticleVariable<double> pMass, pTemp;
   new_dw->get(pMass, lb->pMassLabel, pset);
+  new_dw->get(pTemp, lb->pTemperatureLabel, pset);
+
+  const double Tmelt = matl->getMeltTemperature();
 
   ParticleVariable<Matrix3> pRotation;
   ParticleVariable<double>  pPorosity, pPlasticStrain,
@@ -682,7 +685,14 @@ void CleanReactionDiffusionEP::initializeCMData(const Patch          * patch  ,
     // JBH -- Thermo/Phase Change/REaction
     pDissipatedEnergy[*iter]  = 0.;
     pWorkEnergy[*iter]        = 0.;
-    pHeatBuffer[*iter]        = 0.0;
+    // If temperature is above melting point, then the material
+    //   has dH_f inherently to "lose" on freezing.
+    if (pTemp[*iter] >= Tmelt) {
+      pHeatBuffer[*iter] = pMass[*iter] * d_dHFusion;
+    }
+    else {
+      pHeatBuffer[*iter]        = 0.0;
+    }
     pReactionProgress[*iter]  = 0.0;
     pLastReactionFlag[*iter]  = 0;
     pStartingMoles[*iter] = pMass[*iter]*d_molesPerMass;
@@ -1091,15 +1101,15 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
         //   caused by incorporation of the diffusant.
         dCdt = (pConcentration[idx] - pConcPrevious[idx])/delT;
         // Output generated heat for specific points.  HACK FIXME TODO
-        if (   d_writeDirectly
-            && currStep%d_directOutputFrequency == 1
-            && (idx == 31 || idx == 32 || idx == 55 || idx == 79)
-            && dwi == 0
-           )
-          {
-            d_ConcOutputFile << " " << std::fixed << std::setw(2) << std::right << idx << " "
-                             << std::scientific << std::setw(8) << std::right << pConcentration[idx] << " ";
-          }
+//        if (   d_writeDirectly
+//            && currStep%d_directOutputFrequency == 1
+//            && (idx == 31 || idx == 32 || idx == 55 || idx == 79)
+//            && dwi == 0
+//           )
+//          {
+//            d_ConcOutputFile << " " << std::fixed << std::setw(2) << std::right << idx << " "
+//                             << std::scientific << std::setw(8) << std::right << pConcentration[idx] << " ";
+//          }
 
         ScalarDiffusionModel* sdm = matl->getScalarDiffusionModel();
         Matrix3 expansionCoeff = sdm->getStressFreeExpansionMatrix();
@@ -1180,16 +1190,16 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
 //                                      pStartingMoles[idx];
           pdTdt[idx] += pReactionHeat_temp[idx] / (Cp * pMass[idx]);
 
-          // Output generated heat for specific points.  HACK FIXME TODO
-          if (   d_writeDirectly
-              && currStep%d_directOutputFrequency == 1
-              && (idx == 31 || idx == 32 || idx == 55 || idx == 79)
-              && dwi == 0
-             )
-          {
-            d_HeatGenOutputFile << " " << std::fixed << std::setw(2) << std::right << idx << " "
-                                << std::scientific << std::setw(8) << std::right << pReactionHeat_temp[idx] * delT << " ";
-          }
+//          // Output generated heat for specific points.  HACK FIXME TODO
+//          if (   d_writeDirectly
+//              && currStep%d_directOutputFrequency == 1
+//              && (idx == 31 || idx == 32 || idx == 55 || idx == 79)
+//              && dwi == 0
+//             )
+//          {
+//            d_HeatGenOutputFile << " " << std::fixed << std::setw(2) << std::right << idx << " "
+//                                << std::scientific << std::setw(8) << std::right << pReactionHeat_temp[idx] * delT << " ";
+//          }
         }
 
       }
@@ -1531,106 +1541,111 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
       // pHeatEnergy_new[idx] -= pDissipatedEnergy_new[idx];
 
       // Copy over the reaction (currently melt) progress tracker
-      pMeltProgress_new[idx] = pMeltProgress[idx];
+      //pMeltProgress_new[idx] = pMeltProgress[idx];
 
-      // JBH -- Logic to deal with phase transitions requiring finite heat of
-      //          transition
+/* /------------------------------------------------------------------------\
+ * |  Phase change - TODO Extract to own class which is part of the CM (JBH)|
+ * \------------------------------------------------------------------------/
+ */
       //
-      //        Calculate projected new temperature
-      // This value determines the maximum amount we "rewind" the temperature if
-      //   we've progressed above the melt temperature.
+      // Note:  -std::max(-a,-b) = std::min(a,b)
+      //
+      //   Maximum offset from phase change temperature at which phase change
+      //     may begin.
       const double maxMeltTempBuffer = 1.0;
-      double newTemp = pTemperature_new[idx] + pdTdt[idx]*delT;
-      double oldTemp = pTemperature[idx];
+      //   phaseDirection is +1 for increasing T, -1 for decreasing T
+      const int    phaseDirection = SignZero(pdTdt[idx]);
+      //   correct calculation of offset temperature regardless of direction
+      const double phaseOnsetTemp = Tm_cur - phaseDirection*maxMeltTempBuffer;
+      //   fixed T at which phase change is occurring
+      const double clampTemp      = -phaseDirection*(
+                                    std::max(-phaseDirection*pTemperature[idx],
+                                             -phaseDirection*phaseOnsetTemp)
+                                                    );
+      //   0 for decreasing T, 1 for increasing T
+      const int    dropFactor     = (1 + phaseDirection)/2;
+      //   heat needed for phase change of THIS material point
+      const double dQ_fusion      = pMass[idx] * d_dHFusion;
+      //   thermal mass of THIS material point
+      const double thermalMass    = pMass[idx] * Cp;
 
-      double meltOnsetTemp = Tm_cur - maxMeltTempBuffer;
+      double trialTemp    = pTemperature_new[idx] + pdTdt[idx]*delT;
+      double previousTemp = pTemperature[idx];
+      double dQ_predicted = (trialTemp - previousTemp) * thermalMass; // dQ = dT * M_i * C_p
 
-      //double enthalpyTolerance = 1e-12;
-      // Output generated heat for specific points.  HACK FIXME TODO
-      if (   d_writeDirectly
-          && currStep%d_directOutputFrequency == 1
-          && dwi == 0
-          && (idx == 31 || idx == 32 || idx == 55 || idx == 79)
-         )
-         {
-           d_TempOutputFile << " " << std::fixed << std::setw(2) << std::right << idx 
-                            << " T: " << std::scientific << std::setw(8) << std::right << pTemperature[idx]
-                            << " Rx: " << std::scientific << std::setw(8) << std::right << pConcentration[idx];
-         } 
-//      if (
-//          dwi == 0
-//          && (currStep%outputFreq==1)
-//          && (idx == 0 || idx == 95)
-//        )
-//        std::cerr << std::fixed << std::setw(3) << std::right << idx << " T:"
-//                  << std::fixed << std::setw(2) << std::right << oldTemp << " C:"
-//                  << std::setprecision(15)
-//                 // << std::scientific << std::setw(5) << std::right << pConcentration[idx] << " dCdt: "
-//                  //<< std::scientific << std::setw(5) << std::right << dCdt * delT << " dTemp: "
-//                  << std::scientific << std::setw(5) << std::right << pReactionHeat_temp[idx];
-//        std::cerr << "DWI: "<< std::fixed << std::setw(3) << std::right << dwi
-//                  << " Particle: " << std::fixed << std::setw(3) << std::right << idx
-//                  << " Ti: " << std::fixed << std::setw(4) << std::right << oldTemp
-//                  << " Tn: " << std::fixed << std::setw(4) << std::right << newTemp
-//                  << " Tm: " << std::fixed << std::setw(1) << std::right << meltOnsetTemp;
+      const double Q_prev = pHeatBuffer[idx];
+      const double Q_new  = pHeatBuffer[idx] + dQ_predicted;
 
-      // Compare the projected temperature to the current melting point
-      // If we want to melt, make sure we have enough enthalpy to do so.
-      double T_clamp = std::max(meltOnsetTemp,pTemperature[idx]);
-      if (newTemp >= T_clamp)
-      {
-        double dQ_phaseChange = pMass[idx] * d_dHFusion;
-        double thermalMass    = pMass[idx] * Cp;
+      //  Cases:  Increasing temperature, phaseDirection =  1; dropFactor = 1
+      //          Decreasing temperature, phaseDirection = -1; dropFactor = 0
+      double Q_intermed = Q_new - dropFactor * dQ_fusion; // Increasing: Q_new - Hf ; Decreasing:  Q_new
+      //    1.  Increasing Temp, Q_new <  dQ_fusion (Q_intermed < 0) => Remainder: 0,                            dTdt = 0
+      //    2.  Increasing Temp, Q_new >= dQ_fusion (Q_intermed >=0) => Remainder: Q_excess = Q_new - dQ_fusion; dTdt = Q_excess/thermal_mass
+      //    3.  Decreasing Temp, Q_new <  0         (Q_intermed < 0) => Remainder: Q_excess = Q_new,             dTdt = Q_new/thermal_mass
+      //    4.  Decreasing Temp, Q_new >= 0         (Q_intermed >=0) => Remainder: 0,                            dTdt = 0
+      double Q_excess  = phaseDirection*std::max(phaseDirection*Q_intermed,0.0); // 1. phaseDirection =  1, Q_intermed < 0  -> 0.0 >  Q_intermed
+                                                                                 // 2. phaseDirection =  1, Q_intermed >= 0 ->  Q_intermed > 0.0
+                                                                                 // 3. phaseDirection = -1, Q_intermed < 0  -> -Q_intermed > 0.0
+                                                                                 // 4. phaseDirection = -1, Q_intermed >= 0 -> 0.0 > -Q_intermed
 
-        if (pColor_new[idx] != d_reactedColor)
-        {
-          pColor_new[idx] = d_meltingColor;
-        }
+      double Q_store = phaseDirection*std::min(phaseDirection*Q_new, dropFactor*dQ_fusion);
 
-        // Amount of heat which would have gone toward raising the temperature.
-        double Q_in = (newTemp - oldTemp)*thermalMass; // q = (delta_Temp)*
-
-        // Temp change to get from current temperature to clamp value
-        double T_delta = T_clamp - oldTemp;
-
-        // Heat needed to get T to T_clamp
-        double Q_toClamp = T_delta*thermalMass;
-
-        double Q_remaining = Q_in - Q_toClamp;
-        if (Q_remaining >= 0.0)
-        {
-          // Always true!
-          newTemp = T_clamp;
-          T_delta = 0.0;
-        }
-        else
-        {
-          std::cout << " ERROR SHOULDN'T BE HERE EVER! ";
-          newTemp = oldTemp + Q_in/thermalMass;
-          Q_remaining = 0.0;
-        }
-        double newQInBuffer = pHeatBuffer[idx] + Q_remaining;
-        pHeatBuffer_new[idx] = newQInBuffer;
-        if (newQInBuffer > dQ_phaseChange)
-        {
-          if (pColor_new[idx] != d_reactedColor)
-          {
-            pColor_new[idx] = d_meltedColor;
-          }
-          pHeatBuffer_new[idx] = dQ_phaseChange;
-          Q_remaining = newQInBuffer - dQ_phaseChange;
-          newTemp = T_clamp + Q_remaining/thermalMass;
-        }
-
-        pdTdt[idx] = (newTemp - pTemperature_new[idx])/delT;
-//        std::cout << "\npdTdt 7 [" << idx << "]: " << pdTdt[idx] * delT << "\t";
-//        std::cout << " pTemp: " << pTemperature[idx]
-//                  << " pTempNew: " << pTemperature_new[idx]
-//                  << " pTempNew_updated: " << pTemperature_new[idx] + pdTdt[idx]*delT
-//                  << " adjusted new temp: " << newTemp << std::endl
+      double dT_actual = Q_excess/thermalMass;
+      pdTdt[idx] = dT_actual/delT;
+      pHeatBuffer_new[idx] = Q_store;
+      pMeltProgress_new[idx] = pHeatBuffer_new[idx]/dQ_fusion;
+      if (pColor_new[idx] != d_reactedColor && Q_store > 0) pColor_new[idx] = d_meltingColor;
+//      double dT_actual = T_clamp - phaseDirection*oldTemp;
+//      double dQ_toClamp = dT_actual*thermalMass;
+//      double dQ_remainder = dQPredict - phaseDirection * dQ_toClamp;
 //
-        pMeltProgress_new[idx] = pHeatBuffer_new[idx]/dQ_phaseChange;
-      }
+//
+//      double T_clamp = std::max(meltOnsetTemp,pTemperature[idx]);
+//      if (newTemp >= T_clamp)
+//      {
+////        if (pColor_new[idx] != d_reactedColor)
+////        {
+////          pColor_new[idx] = d_meltingColor;
+////        }
+////
+////        // Amount of heat which would have gone toward raising the temperature.
+////        double Q_in = (newTemp - oldTemp)*thermalMass; // q = (delta_Temp)*
+////
+////        // Temp change to get from current temperature to clamp value
+////        double T_delta = T_clamp - oldTemp;
+////
+////        // Heat needed to get T to T_clamp
+////        double Q_toClamp = T_delta*thermalMass;
+////
+////        double Q_remaining = Q_in - Q_toClamp;
+////        if (Q_remaining >= 0.0)
+////        {
+////          // Always true!
+////          newTemp = T_clamp;
+////          T_delta = 0.0;
+////        }
+////        else
+////        {
+////          std::cout << " ERROR SHOULDN'T BE HERE EVER! ";
+////          newTemp = oldTemp + Q_in/thermalMass;
+////          Q_remaining = 0.0;
+////        }
+////        double newQInBuffer = pHeatBuffer[idx] + Q_remaining;
+////        pHeatBuffer_new[idx] = newQInBuffer;
+////        if (newQInBuffer > dQ_phaseChange)
+////        {
+////          if (pColor_new[idx] != d_reactedColor)
+////          {
+////            pColor_new[idx] = d_meltedColor;
+////          }
+////          pHeatBuffer_new[idx] = dQ_phaseChange;
+////          Q_remaining = newQInBuffer - dQ_phaseChange;
+////          newTemp = T_clamp + Q_remaining/thermalMass;
+////        }
+////
+//////        pdTdt[idx] = (newTemp - pTemperature_new[idx])/delT;
+//////        pMeltProgress_new[idx] = pHeatBuffer_new[idx]/dQ_phaseChange;
+//      }
       // JBH - All sources of temperature have been included now, back it out
       //         and determine proper temperature including heat of fusion
       //double delTemp = newTemp - pTemperature[idx];
