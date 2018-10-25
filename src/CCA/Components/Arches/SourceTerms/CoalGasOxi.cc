@@ -13,6 +13,7 @@
 #include <CCA/Components/Arches/CoalModels/CharOxidationSmith.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 
 #include <sci_defs/kokkos_defs.h>
 
@@ -28,7 +29,10 @@ CoalGasOxi::CoalGasOxi( std::string src_name, vector<std::string> label_names, M
 }
 
 CoalGasOxi::~CoalGasOxi()
-{}
+{
+  VarLabel::destroy(m_char_for_nox_src_label);
+  VarLabel::destroy(m_char_bd_src_label);
+}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
@@ -39,6 +43,14 @@ CoalGasOxi::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb;
 
   db->require( "char_oxidation_model_name", _oxi_model_name );
+  
+  db->getWithDefault( "char_src_label_for_nox", m_char_for_nox_src_name, "Char_NOx_source" );
+  m_char_for_nox_src_label = VarLabel::create( m_char_for_nox_src_name, CCVariable<double>::getTypeDescription() );
+  _mult_srcs.push_back( m_char_for_nox_src_name ); // this makes the source term available as a second source term within the implemenation.
+  
+  db->getWithDefault( "bd_char_src_label", m_char_bd_src_name, "birth_death_char_source" );
+  m_char_bd_src_label = VarLabel::create( m_char_bd_src_name, CCVariable<double>::getTypeDescription() );
+  _mult_srcs.push_back( m_char_bd_src_name ); // this makes the source term available as a second source term within the implemenation.
 
    m_dest_flag = false;
   if (db->findBlock("char_BirthDeath")) {
@@ -61,8 +73,12 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
 
   if (timeSubStep == 0) {
     tsk->computes(_src_label);
+    tsk->computes(m_char_for_nox_src_label);
+    tsk->computes(m_char_bd_src_label);
   } else {
     tsk->modifies(_src_label);
+    tsk->modifies(m_char_for_nox_src_label);
+    tsk->modifies(m_char_bd_src_label);
   }
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
@@ -101,64 +117,6 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
 
 }
 
-struct sumCharOxyGasDestSource{
-       sumCharOxyGasDestSource(constCCVariable<double>& _qn_gas_dest,
-                           CCVariable<double>& _oxiSrc,
-                           double& _w_scaling_constant,
-                           double& _char_scaling_constant ) :
-#ifdef UINTAH_ENABLE_KOKKOS
-                           qn_gas_dest(_qn_gas_dest.getKokkosView()),
-                           oxiSrc(_oxiSrc.getKokkosView()),
-                           char_scaling_constant(_char_scaling_constant),
-                           w_scaling_constant(_w_scaling_constant)
-#else
-                           qn_gas_dest(_qn_gas_dest),
-                           oxiSrc(_oxiSrc),
-                           char_scaling_constant(_char_scaling_constant),
-                           w_scaling_constant(_w_scaling_constant)
-#endif
-                           {  }
-
-  void operator()(int i , int j, int k ) const {
-   oxiSrc(i,j,k) +=  - qn_gas_dest(i,j,k)*w_scaling_constant*char_scaling_constant; // minus sign because it is applied to the gas 
-  }
-
-  private:
-#ifdef UINTAH_ENABLE_KOKKOS
-   KokkosView3<const double> qn_gas_dest;
-   KokkosView3<double>  oxiSrc;
-#else
-   constCCVariable<double>& qn_gas_dest;
-   CCVariable<double>& oxiSrc;
-#endif
-  double char_scaling_constant;
-  double w_scaling_constant;
-};
-struct sumCharOxyGasSource{
-       sumCharOxyGasSource(constCCVariable<double>& _qn_gas_oxi,
-                           CCVariable<double>& _oxiSrc) :
-#ifdef UINTAH_ENABLE_KOKKOS
-                           qn_gas_oxi(_qn_gas_oxi.getKokkosView()),
-                           oxiSrc(_oxiSrc.getKokkosView())
-#else
-                           qn_gas_oxi(_qn_gas_oxi),
-                           oxiSrc(_oxiSrc)
-#endif
-                           {  }
-
-  void operator()(int i , int j, int k ) const {
-   oxiSrc(i,j,k) += qn_gas_oxi(i,j,k);
-  }
-
-  private:
-#ifdef UINTAH_ENABLE_KOKKOS
-   KokkosView3<const double> qn_gas_oxi;
-   KokkosView3<double>  oxiSrc;
-#else
-   constCCVariable<double>& qn_gas_oxi;
-   CCVariable<double>& oxiSrc;
-#endif
-};
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term
 //---------------------------------------------------------------------------
@@ -185,13 +143,25 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
     CoalModelFactory& modelFactory = CoalModelFactory::self();
 
     CCVariable<double> oxiSrc;
+    CCVariable<double> charNOxSrc;
+    CCVariable<double> bd_charSrc;
     if ( timeSubStep == 0 ){
       new_dw->allocateAndPut( oxiSrc, _src_label, matlIndex, patch );
       oxiSrc.initialize(0.0);
+      new_dw->allocateAndPut( charNOxSrc, m_char_for_nox_src_label, matlIndex, patch );
+      charNOxSrc.initialize(0.0);
+      new_dw->allocateAndPut( bd_charSrc, m_char_bd_src_label, matlIndex, patch );
+      bd_charSrc.initialize(0.0);
     } else {
       new_dw->getModifiable( oxiSrc, _src_label, matlIndex, patch );
       oxiSrc.initialize(0.0);
+      new_dw->getModifiable( charNOxSrc, m_char_for_nox_src_label, matlIndex, patch );
+      charNOxSrc.initialize(0.0);
+      new_dw->getModifiable( bd_charSrc, m_char_bd_src_label, matlIndex, patch );
+      bd_charSrc.initialize(0.0);
     }
+    
+    Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
     for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
       std::string model_name = _oxi_model_name;
@@ -205,19 +175,19 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
       ModelBase& model = modelFactory.retrieve_model( model_name );
 
       constCCVariable<double> qn_gas_oxi;
+      constCCVariable<double> qn_gas_dest;
+      double char_scaling_constant = 0.0;
+      double w_scaling_constant = 0.0;
       const VarLabel* gasModelLabel = model.getGasSourceLabel();
 
-      new_dw->get( qn_gas_oxi, gasModelLabel, matlIndex, patch, gn, 0 );
-      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-      sumCharOxyGasSource doSumCharOxyGas(qn_gas_oxi,oxiSrc); 
-      Uintah::parallel_for(range, doSumCharOxyGas);
 
+      new_dw->get( qn_gas_oxi, gasModelLabel, matlIndex, patch, gn, 0 );
       if (m_dest_flag){
-        // get Charmass birth death, RC scaling constant and equation handle   
+        // get Charmass birth death, CH scaling constant and equation handle   
         std::string charmassqn_name = ArchesCore::append_qn_env(m_charmass_root, iqn );
         EqnBase& temp_charmass_eqn = dqmomFactory.retrieve_scalar_eqn(charmassqn_name);
         DQMOMEqn& charmass_eqn = dynamic_cast<DQMOMEqn&>(temp_charmass_eqn);
-        double char_scaling_constant = charmass_eqn.getScalingConstant(iqn);
+        char_scaling_constant = charmass_eqn.getScalingConstant(iqn);
         const std::string char_birth_name = charmass_eqn.get_model_by_type( "BirthDeath" );
         std::string char_birth_qn_name = ArchesCore::append_qn_env(char_birth_name, iqn);
         const VarLabel* charmass_birthdeath_varlabel=VarLabel::find(char_birth_qn_name);
@@ -225,14 +195,27 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
         std::string weightqn_name = ArchesCore::append_qn_env("w", iqn);
         EqnBase& temp_weight_eqn = dqmomFactory.retrieve_scalar_eqn(weightqn_name);
         DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
-        double w_scaling_constant = weight_eqn.getScalingConstant(iqn);
-        
-        constCCVariable<double> qn_gas_dest;
+        w_scaling_constant = weight_eqn.getScalingConstant(iqn);
         new_dw->get( qn_gas_dest, charmass_birthdeath_varlabel, matlIndex, patch, gn, 0 );
-        // sum the dest sources
-        sumCharOxyGasDestSource doSumCharOxyDestGas(qn_gas_dest,oxiSrc,w_scaling_constant,char_scaling_constant);  
-        Uintah::parallel_for(range, doSumCharOxyDestGas);
       }
+      
+      // charSrc = sum_i( rxn_char_i - b/d_ch )       -> used for coal_gas_mix_frac 
+      // charNOxSrc = sum_i( (1-f_T)*rxn_char_i )     -> used for part of char rate in NOx 
+      // bd_charSrc = sum_i( - b/d_ch )                -> used in nox to compute remaining piece of char rate
+      // sum_i is the sum over all particle environments
+      // b/d_ch is the birth death term from the perspective of the particles (thus a - sign for the gas)
+      
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        // compute the contribution of eta_source1 from the reactions
+        oxiSrc(i,j,k) += qn_gas_oxi(i,j,k);
+        // compute the char source term for the nox model
+        charNOxSrc(i,j,k) += qn_gas_oxi(i,j,k);
+
+        if (m_dest_flag){
+          oxiSrc(i,j,k) += - qn_gas_dest(i,j,k)*w_scaling_constant*char_scaling_constant; // minus sign because it is applied to the gas  
+          bd_charSrc(i,j,k) += - qn_gas_dest(i,j,k)*w_scaling_constant*char_scaling_constant; // minus sign because it is applied to the gas  
+        }
+      });
     }
   }
 }
@@ -247,6 +230,8 @@ CoalGasOxi::sched_initialize( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task(taskname, this, &CoalGasOxi::initialize);
 
   tsk->computes(_src_label);
+  tsk->computes(m_char_for_nox_src_label);
+  tsk->computes(m_char_bd_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
     tsk->computes(*iter);
@@ -270,10 +255,16 @@ CoalGasOxi::initialize( const ProcessorGroup* pc,
     int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> src;
+    CCVariable<double> charnoxsrc;
+    CCVariable<double> bd_charsrc;
 
     new_dw->allocateAndPut( src, _src_label, matlIndex, patch );
+    new_dw->allocateAndPut( charnoxsrc, m_char_for_nox_src_label, matlIndex, patch );
+    new_dw->allocateAndPut( bd_charsrc, m_char_bd_src_label, matlIndex, patch );
 
     src.initialize(0.0);
+    charnoxsrc.initialize(0.0);
+    bd_charsrc.initialize(0.0);
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
       CCVariable<double> tempVar;

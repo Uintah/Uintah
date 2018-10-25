@@ -653,6 +653,7 @@
             <Ash_real                spec="REQUIRED DOUBLE 'positive'"/> <!-- This is a range, the high and low applies to the real component -->
             <Ash_imag                spec="REQUIRED DOUBLE 'negative'"/>
           </optics>
+          <Tar_fraction                 spec="OPTIONAL DOUBLE"/> <!-- This is the fraction of devol rate products that go to tar vs light off gases. Default is 0.0 -->
 
       </ParticleProperties>
         <!-- Helper python information -->
@@ -1796,7 +1797,6 @@
            <PowerReburn                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
            <F1_De_soete                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
            <Tar_src_label                spec="OPTIONAL STRING" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
-           <Tar_fraction                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
 
 
 
@@ -1839,6 +1839,9 @@
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
+            <tar_creation_src_label     spec="OPTIONAL STRING" need_applies_to="type coal_gas_devol"/>
+            <devol_src_label_for_nox    spec="OPTIONAL STRING" need_applies_to="type coal_gas_devol"/>
+            <bd_devol_src_label         spec="OPTIONAL STRING" need_applies_to="type coal_gas_devol"/>
             <devol_BirthDeath           spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_devol">
             </devol_BirthDeath>
 
@@ -1867,7 +1870,9 @@
 
             <!-- Spec for the char oxidation source -->
             <char_oxidation_model_name  spec="REQUIRED STRING" need_applies_to="type coal_gas_oxi" />
-            <char_BirthDeath           spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_oxi">
+            <char_src_label_for_nox    spec="OPTIONAL STRING" need_applies_to="type coal_gas_oxi"/>
+            <bd_char_src_label          spec="OPTIONAL STRING" need_applies_to="type coal_gas_oxi"/>
+            <char_BirthDeath            spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_oxi">
             </char_BirthDeath>
 
             <!-- Multi-point constant injection -->
