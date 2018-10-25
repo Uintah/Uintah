@@ -139,11 +139,12 @@ private:
   std::string NO_src_name; ///< string name for the average molecular weight (from table)
   std::string HCN_src_name;            ///< string name for tar
   std::string NH3_src_name;        ///< string name for tar src
-  std::string m_rcmass_root;
   std::string m_coal_temperature_root;
-  std::string length_root;
-  std::vector<double> m_rc_scaling_const;
-  std::vector<double> m_weight_scaling_const;
+  std::string m_weight_root;
+  std::string m_length_root;
+  std::string m_p_rho_root;
+  std::string m_rc_mass_root;
+  std::string m_char_mass_root;
 
   const VarLabel* NO_src_label;
   const VarLabel* HCN_src_label;
@@ -165,7 +166,12 @@ private:
   const VarLabel* m_NO_RHS_label;
   const VarLabel* m_HCN_RHS_label;
   const VarLabel* m_NH3_RHS_label;
+  std::vector<const VarLabel* > m_coal_temperature_label;
+  std::vector<const VarLabel* > m_weight_label;
   std::vector<const VarLabel* > m_length_label;
+  std::vector<const VarLabel* > m_p_rho_label;
+  std::vector<const VarLabel* > m_rc_mass_label;
+  std::vector<const VarLabel* > m_char_mass_label;
 
 /**
  NO sourceTerm computation

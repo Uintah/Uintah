@@ -126,20 +126,14 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
   helper.add_lookup_species( m_density_name);
   helper.add_lookup_species( m_mix_mol_weight_name );
   //read DQMOM Information
-  m_rcmass_root         = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);                   //raw coal
-  m_coal_temperature_root       = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE);        //coal particle temperature
-  m_num_env             = ArchesCore::get_num_env(db, ArchesCore::DQMOM_METHOD);                     //qn number
-  length_root=(ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE));                                 // paritcle diameter root name
+  m_coal_temperature_root  = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE);        // coal particle temperature
+  m_weight_root            = "w";                                                                                // particle weight root name
+  m_length_root            = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);               // particle diameter root name
+  m_p_rho_root             = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);            // particle density root name
+  m_rc_mass_root           = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);            // raw coal
+  m_char_mass_root         = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_CHAR);               // char coal
+  m_num_env                = ArchesCore::get_num_env(db, ArchesCore::DQMOM_METHOD);                              // qn number
 
-
-  for ( int i = 0; i < m_num_env; i++ ){                                                            //scaling constant of raw coal
-    double scaling_const = ArchesCore::get_scaling_constant( db, m_rcmass_root, i );
-    m_rc_scaling_const.push_back(scaling_const);
-  }
-  for ( int i = 0; i < m_num_env; i++ ){                                                            //scaling constant of weight
-    double scaling_const = ArchesCore::get_scaling_constant( db, "weight", i );
-    m_weight_scaling_const.push_back(scaling_const);
-  }
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term
@@ -173,17 +167,30 @@ psNox::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
   }
 
   for ( int i = 0; i < m_num_env; i++){
-    std::string coal_temperatureqn_name;
-    std::string weight_name;
-    weight_name = ArchesCore::append_env( "w", i );                               //weight
-    tsk->requires( which_dw, VarLabel::find(weight_name), Ghost::None, 0 );
 
-    coal_temperatureqn_name = ArchesCore::append_env( m_coal_temperature_root, i );              //unweighted unscaled coal temperature
-    tsk->requires( which_dw, VarLabel::find(coal_temperatureqn_name), Ghost::None, 0 );
-
-    std::string length_name = ArchesCore::append_env( length_root, i );
+    std::string coal_temperature_name = ArchesCore::append_env( m_coal_temperature_root, i );
+    m_coal_temperature_label.push_back(  VarLabel::find(coal_temperature_name));
+    tsk->requires( which_dw, m_coal_temperature_label[i], Ghost::None, 0 );
+    
+    std::string weight_name = ArchesCore::append_env( m_weight_root, i );
+    m_weight_label.push_back(  VarLabel::find(weight_name));
+    tsk->requires( which_dw, m_weight_label[i], Ghost::None, 0 );
+    
+    std::string length_name = ArchesCore::append_env( m_length_root, i );
     m_length_label.push_back(  VarLabel::find(length_name));
     tsk->requires( which_dw, m_length_label[i], Ghost::None, 0 );
+    
+    std::string p_rho_name = ArchesCore::append_env( m_p_rho_root, i );
+    m_p_rho_label.push_back(  VarLabel::find(p_rho_name));
+    tsk->requires( which_dw, m_p_rho_label[i], Ghost::None, 0 );
+    
+    std::string rc_mass_name = ArchesCore::append_env( m_rc_mass_root, i );
+    m_rc_mass_label.push_back(  VarLabel::find(rc_mass_name));
+    tsk->requires( which_dw, m_rc_mass_label[i], Ghost::None, 0 );
+    
+    std::string char_mass_name = ArchesCore::append_env( m_char_mass_root, i );
+    m_char_mass_label.push_back(  VarLabel::find(char_mass_name));
+    tsk->requires( which_dw, m_char_mass_label[i], Ghost::None, 0 );
   }
   // resolve some labels:
   oxi_label              = VarLabel::find( oxi_name);
@@ -362,33 +369,37 @@ psNox::computeSource( const ProcessorGroup* pc,
 
     //read DQMOM information
     //store sum of coal mass concentration
-    std::vector< CCVariable<double> > temp_coal_mass_concentration(m_num_env);
-    std::vector<constCCVariable<double> > coal_temperature(m_num_env);
+    std::vector< CCVariable<double> > temp_organic_conc_times_area(m_num_env);
+    std::vector< constCCVariable<double> > coal_temperature(m_num_env);
     std::vector< constCCVariable<double> > length(m_num_env);
+    std::vector< constCCVariable<double> > p_rho(m_num_env);
+    std::vector< constCCVariable<double> > weight(m_num_env);
+    std::vector< constCCVariable<double> > rc_mass(m_num_env);
+    std::vector< constCCVariable<double> > char_mass(m_num_env);
     for ( int i_env = 0; i_env < m_num_env; i_env++){
-    std::string coal_temperatureqn_name;
-    new_dw->allocateTemporary( temp_coal_mass_concentration[i_env], patch );
-    temp_coal_mass_concentration[i_env].initialize(0.0);
 
-    coal_temperatureqn_name = ArchesCore::append_env( m_coal_temperature_root, i_env );
-    which_dw->get( coal_temperature[i_env], VarLabel::find(coal_temperatureqn_name), matlIndex, patch, gn, 0 );
+      new_dw->allocateTemporary( temp_organic_conc_times_area[i_env], patch );
+      temp_organic_conc_times_area[i_env].initialize(0.0);
 
-    which_dw->get( length[i_env], m_length_label[i_env], matlIndex, patch, gn, 0 );
+      which_dw->get( coal_temperature[i_env], m_coal_temperature_label[i_env], matlIndex, patch, gn, 0 );
+      which_dw->get( weight[i_env], m_weight_label[i_env], matlIndex, patch, gn, 0 );
+      which_dw->get( length[i_env], m_length_label[i_env], matlIndex, patch, gn, 0 );
+      which_dw->get( p_rho[i_env], m_p_rho_label[i_env], matlIndex, patch, gn, 0 );
+      which_dw->get( rc_mass[i_env], m_rc_mass_label[i_env], matlIndex, patch, gn, 0 );
+      which_dw->get( char_mass[i_env], m_char_mass_label[i_env], matlIndex, patch, gn, 0 );
+
     }
 
     //store sum of coal mass concentration* coal temperature
     for ( int i_env = 0; i_env < m_num_env; i_env++){
-      constCCVariable<double> weight;
-      std::string weight_name;
-      weight_name = ArchesCore::append_env( "w", i_env );
-      which_dw->get( weight, VarLabel::find(weight_name), matlIndex, patch, gn, 0 );
       Uintah::parallel_for(range, [&](int i, int j, int k){
-          //double weight   =  0.0;
-          double p_area =  0.0;
-          //weight   = rcmass_weighted_scaled(i,j,k)/rcmass_unweighted_unscaled(i,j,k)*m_rc_scaling_const[i_env]*m_weight_scaling_const[i_env];
-          p_area = M_PI*length[i_env](i,j,k)*length[i_env](i,j,k);     // m^2
-          temp_coal_mass_concentration[i_env](i,j,k) = weight(i,j,k) * p_area; // m^2 / m^3
-          });
+          double p_area = M_PI*length[i_env](i,j,k)*length[i_env](i,j,k);     // m^2
+          double p_volume = M_PI/6.*length[i_env](i,j,k)*length[i_env](i,j,k)*length[i_env](i,j,k); // particle volme [m^3]
+          double p_mass = max(1e-50,p_rho[i_env](i,j,k)*p_volume); // particle mass [kg / #]
+          double organic_mass = rc_mass[i_env](i,j,k) + char_mass[i_env](i,j,k); // organic mass [kg organic / #]
+          double organic_frac = min(1.0,max(0.0,organic_mass/p_mass));     // [-]
+          temp_organic_conc_times_area[i_env](i,j,k) = weight[i_env](i,j,k)*organic_frac*p_area; // #/m^3 * [-] * m^2 = [m^2/m^3]
+      });
     }
 
     //start calculation
@@ -555,10 +566,10 @@ psNox::computeSource( const ProcessorGroup* pc,
 
         //nox reduction by particle surface, Adel sarofim char+NOx reduction
         double pNO   = NO_mp*_gasPressure/101325;                                                             //(atm);
-        double NO_red_solid =0.0;
+        double NO_red_solid = 0.0;
         for ( int i_env = 0; i_env < m_num_env; i_env++){
-          double NO_red_solid_rate = 4.8e4 * std::exp (-145180./_R/coal_temperature[i_env](i,j,k)) * pNO;                               //(mol/m2 BET s)
-          NO_red_solid += NO_red_solid_rate*temp_coal_mass_concentration[i_env](i,j,k); //(mol/m3 s)
+          double NO_red_solid_rate = 4.8e4 * std::exp (-145184.8/_R/coal_temperature[i_env](i,j,k)) * pNO;                               //(mol/m2/s)
+          NO_red_solid += NO_red_solid_rate*temp_organic_conc_times_area[i_env](i,j,k); // mol/m^2/s * m^2/m^3 (mol/m3/s)
         }
 
         rxn_rates[7]=NO_red_solid;
