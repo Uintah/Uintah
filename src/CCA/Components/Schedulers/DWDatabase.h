@@ -796,15 +796,23 @@ DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatl<DomainT
 
 //______________________________________________________________________
 //
-// Hash function for VarLabelMatl
+// Custom hash function for VarLabelMatl
+//
+// Specialize std::hash structure and inject into the std namespace so that
+// VarLabelMatl<DomainType> can be used as a key in std::unordered_map
+//
+// NOTE: this is legit, and likely the easiest way to get this done due to templates (APH - 10/25/18).
+//
+// It is allowed to add template specializations for any standard library class template to the std namespace
+// only if the declaration depends on at least one program-defined type and the specialization satisfies all
+// requirements for the original template (https://en.cppreference.com/w/cpp/language/extending_std).
 //
 namespace std {
 
-using Uintah::DWDatabase;
 using Uintah::VarLabelMatl;
 
 template<class DomainType>
-struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t> {
+struct hash<VarLabelMatl<DomainType> > {
   size_t operator()( const VarLabelMatl<DomainType>& v ) const
   {
     size_t h = 0;
