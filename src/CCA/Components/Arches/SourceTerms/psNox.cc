@@ -26,7 +26,6 @@ psNox::psNox( std::string src_name, ArchesLabel* field_labels,
 }
 psNox::~psNox()
 {
-  VarLabel::destroy(_src_label);
   VarLabel::destroy(NO_src_label);
   VarLabel::destroy(HCN_src_label);
   VarLabel::destroy(NH3_src_label);
@@ -37,6 +36,7 @@ psNox::~psNox()
   void
 psNox::problemSetup(const ProblemSpecP& inputdb)
 {
+  CoalHelper& coal_helper = CoalHelper::self();
   ProblemSpecP db = inputdb;
   const ProblemSpecP params_root = db->getRootNode();
   //read pressure
@@ -92,7 +92,7 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("NH3_label",            NH3_name,             "NH3_zz");
 
   db->getWithDefault("Tar_src_label",        tar_src_name,    "eta_source3");
-  db->getWithDefault("Tar_fraction",         tarFrac,                  .209);
+  tarFrac = coal_helper.get_coal_db().Tar_fraction;
 
   //read devol. & oxi. rate from coal particles
   ProblemSpecP db_source = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
@@ -100,11 +100,20 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
     std::string model_type;
     db_src->getAttribute("type",model_type);
     if (model_type == "coal_gas_devol"){
-      db_src->getAttribute("label",devol_name);
+      db_src->getWithDefault( "devol_src_label_for_nox", devol_name, "Devol_NOx_source" );
+      db_src->getWithDefault( "bd_devol_src_label", bd_devol_name, "birth_death_devol_source" );
     }
     if (model_type == "coal_gas_oxi"){
-      db_src->getAttribute("label",oxi_name);
+      db_src->getWithDefault( "char_src_label_for_nox", oxi_name, "Char_NOx_source" );
+      db_src->getWithDefault( "bd_char_src_label", bd_oxi_name, "birth_death_char_source" );
     }
+  }
+  ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
+  if (db_coal_props->findBlock("FOWYDevol")) {
+    ProblemSpecP db_BT = db_coal_props->findBlock("FOWYDevol");
+    db_BT->require("v_hiT", m_v_hiT); //
+  } else {
+    m_v_hiT = 1.0; // if fowy devol model is not used than we set devol fraction to 1 in the case of birth/death. 
   }
   //source terms name,and ...
   db->findBlock("NO_src")->getAttribute( "label",  NO_src_name );
@@ -195,6 +204,8 @@ psNox::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
   // resolve some labels:
   oxi_label              = VarLabel::find( oxi_name);
   devol_label            = VarLabel::find( devol_name);
+  bd_oxi_label           = VarLabel::find( bd_oxi_name);
+  bd_devol_label         = VarLabel::find( bd_devol_name);
   tar_src_label          = VarLabel::find( tar_src_name);
   m_o2_label             = VarLabel::find( m_O2_name);
   m_n2_label             = VarLabel::find( m_N2_name);
@@ -210,9 +221,10 @@ psNox::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
   m_NO_RHS_label         = VarLabel::find( NO_name+"_RHS");
   m_NH3_RHS_label        = VarLabel::find( NH3_name+"_RHS");
   m_HCN_RHS_label        = VarLabel::find( HCN_name+"_RHS");
-
   tsk->requires( which_dw, oxi_label,             Ghost::None, 0 );
   tsk->requires( which_dw, devol_label,           Ghost::None, 0 );
+  tsk->requires( which_dw, bd_oxi_label,             Ghost::None, 0 );
+  tsk->requires( which_dw, bd_devol_label,           Ghost::None, 0 );
   tsk->requires( which_dw, tar_src_label,         Ghost::None, 0 );
   tsk->requires( which_dw, m_o2_label,            Ghost::None, 0 );
   tsk->requires( which_dw, m_n2_label,            Ghost::None, 0 );
@@ -255,6 +267,8 @@ psNox::computeSource( const ProcessorGroup* pc,
     constCCVariable<double> tar_src;
     constCCVariable<double> devol;
     constCCVariable<double> oxi;
+    constCCVariable<double> bd_devol;
+    constCCVariable<double> bd_oxi;
     constCCVariable<double> O2;
     constCCVariable<double> N2;
     constCCVariable<double> CO;
@@ -297,7 +311,9 @@ psNox::computeSource( const ProcessorGroup* pc,
 
     which_dw->get( tar_src,        tar_src_label,          matlIndex, patch, gn, 0 );
     which_dw->get( devol,          devol_label,            matlIndex, patch, gn, 0 );
+    which_dw->get( bd_devol,       bd_devol_label,         matlIndex, patch, gn, 0 );
     which_dw->get( oxi,            oxi_label,              matlIndex, patch, gn, 0 );
+    which_dw->get( bd_oxi,         bd_oxi_label,           matlIndex, patch, gn, 0 );
     which_dw->get( O2,             m_o2_label,             matlIndex, patch, gn, 0 ); //mass percentage (kg/kg)
     which_dw->get( N2,             m_n2_label,             matlIndex, patch, gn, 0 );
     which_dw->get( CO,             m_co_label,             matlIndex, patch, gn, 0 );
@@ -574,8 +590,22 @@ psNox::computeSource( const ProcessorGroup* pc,
 
         rxn_rates[7]=NO_red_solid;
 
-        double devolRate   =  _Nit*devol(i,j,k)* (1.0 - tarFrac) / _MW_N;      // mol / m^3 / s of N
-        double CharOxyRate =  _Nit*oxi(i,j,k) /_MW_N;      // mol / m^3 / s of N
+        // birth_death_rate = sum_i( - b/d_rc ) + sum_i( - b/d_ch ) // this is done so that the negative ch st is countered with the positive rc st.
+        // devolRate = sum_i( (1-f_T)*rxn_devol_i ) + v_hiT*birth_death_rate
+        // CharOxyRate = sum_i( rxn_char_i ) + (1-v_hiT)*birth_death_rate
+        // for TarRate the following is used to create Tar: tarSrc = sum_i( f_T*rxn_devol_i )
+        // Then reactions of tar and soot are computed in the Brown soot model and "returned" to the gas phase through eta_source3 (tar_src)
+        // 
+        //  v_hiT is the ultimate yield of devol products.
+        //  f_T is the fraction of devol products that are tar (heavy gas instead of light).
+        //  sum_i is the sum over all particle environments
+        //  b/d_rc is the birth death term of rc from the perspective of the particles (thus a - sign for the gas)
+        //  b/d_ch is the birth death term of ch from the perspective of the particles (thus a - sign for the gas)
+        double birth_death_rate = bd_devol(i,j,k) + bd_oxi(i,j,k);
+        double birth_death_devol_rate = m_v_hiT*birth_death_rate;
+        double birth_death_oxi_rate = (1.0-m_v_hiT)*birth_death_rate;
+        double devolRate   =  _Nit*(devol(i,j,k)+birth_death_devol_rate) / _MW_N;      // mol / m^3 / s of N
+        double CharOxyRate =  _Nit*(oxi(i,j,k)+birth_death_oxi_rate) /_MW_N;      // mol / m^3 / s of N
         double TarRate     =  _Nit*tar_src(i,j,k) /_MW_N;      // mol / m^3 / s of N
 
         rxn_rates[8]  = devolRate;

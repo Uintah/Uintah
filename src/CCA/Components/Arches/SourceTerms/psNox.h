@@ -97,6 +97,7 @@ private:
 
   ArchesLabel* _field_labels;
 
+    double m_v_hiT;
     double _Nit;
     double _N_ad;
     double _Ash_ad;
@@ -123,7 +124,9 @@ private:
 
   std::string tar_src_name;
   std::string devol_name; ///< string name for the average molecular weight (from table)
+  std::string bd_devol_name; 
   std::string oxi_name;            ///< string name for tar
+  std::string bd_oxi_name; 
   std::string m_O2_name;
   std::string m_N2_name;
   std::string m_CO_name;
@@ -152,6 +155,8 @@ private:
   const VarLabel* tar_src_label;
   const VarLabel* devol_label;
   const VarLabel* oxi_label;
+  const VarLabel* bd_devol_label;
+  const VarLabel* bd_oxi_label;
   const VarLabel* m_o2_label;
   const VarLabel* m_n2_label;
   const VarLabel* m_co_label;
