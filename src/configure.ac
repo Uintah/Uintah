@@ -4006,31 +4006,6 @@ AC_LANG([C])
 
 sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
 
-##  --  search for Hash Map ------------------------
-
-AC_LANG([C++])
-AC_MSG_CHECKING(for location of hash_map)
-DEF_HASHMAP=None
-
-if test "$DEF_HASHMAP" = "None"; then
-  AC_TRY_COMPILE([#include <unordered_map>
-                 std::unordered_map<int, int> xx;], ,
-		 [DEF_HASHMAP=HAVE_C11_HASHMAP])
-fi
-
-
-if test "$DEF_HASHMAP" = "None"; then
-  DEF_HASHMAP=
-  AC_MSG_RESULT(not found)
-  AC_MSG_WARN([Cannot find hash_map, will use map instead])
-else
-  AC_MSG_RESULT(found: $DEF_HASHMAP)
-  DEF_HASHMAP="#define $DEF_HASHMAP 1"
-fi
-AC_SUBST(DEF_HASHMAP)
-sci_defs_files="$sci_defs_files include/sci_defs/hashmap_testdefs.h"
-AC_LANG(C)
-
 ##  --  Handle --enable-wasatch_3p... ------------------------
 
 if test "$build_wasatch_3p" != "no"; then

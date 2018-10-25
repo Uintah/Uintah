@@ -39,11 +39,10 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <sci_hash_map.h>
-
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 
@@ -70,6 +69,8 @@
 
 
 ****************************************/
+
+
 namespace {
 
 Uintah::MasterLock g_keyDB_mutex{};
@@ -109,7 +110,7 @@ public:
 
 private:
 
-  using keyDBtype = hashmap<VarLabelMatl<DomainType>, int>;
+  using keyDBtype = std::unordered_map<VarLabelMatl<DomainType>, int>;
   keyDBtype m_keys;
 
   int m_key_count { 0 };
@@ -793,54 +794,29 @@ DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatl<DomainT
 } // namespace Uintah
 
 
+//______________________________________________________________________
 //
 // Hash function for VarLabelMatl
 //
-#ifdef HAVE_GNU_HASHMAP
+namespace std {
 
-  namespace __gnu_cxx
+using Uintah::DWDatabase;
+using Uintah::VarLabelMatl;
+
+template<class DomainType>
+struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t> {
+  size_t operator()( const VarLabelMatl<DomainType>& v ) const
   {
-    using Uintah::DWDatabase;
-    using Uintah::VarLabelMatl;
-    template <class DomainType>
-    struct hash<VarLabelMatl<DomainType> > : public std::unary_function<VarLabelMatl<DomainType>, size_t>
-    {
-      size_t operator()(const VarLabelMatl<DomainType>& v) const
-      {
-        size_t h=0;
-        char *str =const_cast<char*> (v.label_->getName().data());
-        while (int c = *str++) h = h*7+c;
-        return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
-                 ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
-      }
-    };
+    size_t h = 0;
+    char *str = const_cast<char*>(v.label_->getName().data());
+    while (int c = *str++) {
+      h = h * 7 + c;
+    }
+    return ((((size_t)v.label_) << (sizeof(size_t) / 2) ^ ((size_t)v.label_) >> (sizeof(size_t) / 2)) ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_);
   }
+};
 
-#elif HAVE_TR1_HASHMAP || HAVE_C11_HASHMAP 
+}  // end namespace std
 
-  namespace std {
-#if HAVE_TR1_HASHMAP 
-    namespace tr1 {
-#endif 
-      using Uintah::DWDatabase;
-      using Uintah::VarLabelMatl;
-      template <class DomainType>
-      struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t>
-      {
-        size_t operator()(const VarLabelMatl<DomainType>& v) const
-        {
-          size_t h=0;
-          char *str =const_cast<char*> (v.label_->getName().data());
-          while (int c = *str++) h = h*7+c;
-          return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
-                   ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
-        }
-      };
-#if HAVE_TR1_HASHMAP 
-    } // end namespace tr1
-#endif 
-  } // end namespace std
-
-#endif // HAVE_GNU_HASHMAP
 
 #endif // CCA_COMPONENTS_SCHEDULERS_DWDATABASE_H
