@@ -54,7 +54,6 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 #ifdef USE_PLANES
   makePlanes();
 #endif
-//  makeTriBoxes();
 
   // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
 
@@ -65,9 +64,32 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   tri_list = tri.makeTriList(d_tri,d_points);
   d_grid = scinew UniformGrid(d_box);
   d_grid->buildUniformGrid(tri_list);
-
-
+  d_points.clear();
 }
+
+TriGeometryPiece::TriGeometryPiece(string filename)
+{
+  name_ = "Unnamed Tri";
+
+  d_file = filename;
+
+  readPoints(d_file);
+  readTri(d_file);
+#ifdef USE_PLANES
+  makePlanes();
+#endif
+
+  // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
+
+  // The Tri class sits inside of UniformGrid.h
+  list<Tri> tri_list;
+  Tri tri;
+
+  tri_list = tri.makeTriList(d_tri,d_points);
+  d_grid = scinew UniformGrid(d_box);
+  d_grid->buildUniformGrid(tri_list);
+}
+
 
 TriGeometryPiece::TriGeometryPiece(const TriGeometryPiece& copy)
 {
@@ -149,12 +171,20 @@ TriGeometryPiece::insideNew(const Point &p,int& cross) const
   if (!(p == Max(p,d_box.lower()) && p == Min(p,d_box.upper())))
     return false;
 
-  d_grid->countIntersections(p,cross);
+  int crossx=0;
+  int crossy=0;
+  int crossz=0;
+  d_grid->countIntersectionsx(p,crossx);
+  d_grid->countIntersectionsy(p,crossy);
+  d_grid->countIntersectionsz(p,crossz);
   //  cout << "Point " << p << " has " << cross << " crossings " << endl;
-  if (cross % 2)
+  if ((crossx % 2 == 1 && crossy % 2 ==1)||
+      (crossx % 2 == 1 && crossz % 2 ==1)||
+      (crossy % 2 == 1 && crossz % 2 ==1)){
     return true;
-  else
+  } else {
     return false;
+  }
 }
 
 
@@ -312,6 +342,7 @@ TriGeometryPiece::makePlanes()
     Plane plane(pt[0],pt[1],pt[2]);
     d_planes.push_back(plane);
   }
+
 }
 #endif
 
