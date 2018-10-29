@@ -35,7 +35,7 @@
 #define MOMCONVECTION() \
         Uintah::ComputeConvectiveFlux                                       \
           get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   \
-        Uintah::parallel_for( convection_range, get_flux, scheme );         
+        Uintah::parallel_for( convection_range, get_flux, scheme );
 
 namespace Uintah{
 
@@ -99,7 +99,7 @@ private:
     typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
     typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
     typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
-    
+
     //typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType CFXT;
     //typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType CFYT;
     //typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
@@ -442,9 +442,9 @@ private:
 
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep );
       register_variable( m_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
-      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
-      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
+      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
 
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator i = m_source_info[ieqn].begin(); i != m_source_info[ieqn].end(); i++){
@@ -464,8 +464,8 @@ private:
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
-    register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    //register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    //register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   }
 
@@ -479,12 +479,12 @@ private:
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
-    CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(m_x_velocity_name));
-    CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(m_y_velocity_name));
-    CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(m_z_velocity_name));
+    // CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(m_x_velocity_name));
+    // CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(m_y_velocity_name));
+    // CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(m_z_velocity_name));
     CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
-    constCCVariable<double>& mu = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_mu_name));
-    constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_rho_name));
+    // constCCVariable<double>& mu = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_mu_name));
+    // constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_rho_name));
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -514,12 +514,12 @@ private:
         IntVector low_patch_range  = patch->getCellLowIndex();
         IntVector high_patch_range = patch->getCellHighIndex();
 
-        //resolve the range: 
+        //resolve the range:
         if ( my_dir == ArchesCore::XDIR ){
           GET_WALL_BUFFERED_PATCH_RANGE( low_patch_range, high_patch_range, 1, 1, 0, 1, 0, 1 );
-        } else if ( my_dir == ArchesCore::YDIR ){ 
+        } else if ( my_dir == ArchesCore::YDIR ){
           GET_WALL_BUFFERED_PATCH_RANGE( low_patch_range, high_patch_range, 0, 1, 1, 1, 0, 1 );
-        } else { 
+        } else {
           GET_WALL_BUFFERED_PATCH_RANGE( low_patch_range, high_patch_range, 0, 1, 0, 1, 1, 1 );
         }
 
@@ -528,47 +528,47 @@ private:
         CT& u_fx = tsk_info->get_const_uintah_field_add<CT>(m_x_velocity_name);
         CT& v_fy = tsk_info->get_const_uintah_field_add<CT>(m_y_velocity_name);
         CT& w_fz = tsk_info->get_const_uintah_field_add<CT>(m_z_velocity_name);
-       
-        // switch between difference convection schemes: 
-        switch (m_conv_scheme[ieqn]){ 
+
+        // switch between difference convection schemes:
+        switch (m_conv_scheme[ieqn]){
           case CENTRAL:
-            { 
-            CentralConvection scheme; 
-            MOMCONVECTION(); 
-            }
-            break; 
-          case FOURTH: 
             {
-            FourthConvection scheme; 
-            MOMCONVECTION(); 
-            }
-            break; 
-          case VANLEER:
-            { 
-            VanLeerConvection scheme; 
-            MOMCONVECTION(); 
-            }
-            break; 
-          case SUPERBEE: 
-            {
-            SuperBeeConvection scheme; 
+            CentralConvection scheme;
             MOMCONVECTION();
-            } 
-            break; 
-          case ROE: 
-            {
-            RoeConvection scheme; 
-            MOMCONVECTION(); 
             }
-            break; 
-          case UPWIND: 
+            break;
+          case FOURTH:
             {
-            UpwindConvection scheme; 
-            MOMCONVECTION(); 
+            FourthConvection scheme;
+            MOMCONVECTION();
             }
-            break; 
-          default: 
-            throw InvalidValue("Error: Momentum convection scheme not recognized.", __FILE__, __LINE__); 
+            break;
+          case VANLEER:
+            {
+            VanLeerConvection scheme;
+            MOMCONVECTION();
+            }
+            break;
+          case SUPERBEE:
+            {
+            SuperBeeConvection scheme;
+            MOMCONVECTION();
+            }
+            break;
+          case ROE:
+            {
+            RoeConvection scheme;
+            MOMCONVECTION();
+            }
+            break;
+          case UPWIND:
+            {
+            UpwindConvection scheme;
+            MOMCONVECTION();
+            }
+            break;
+          default:
+            throw InvalidValue("Error: Momentum convection scheme not recognized.", __FILE__, __LINE__);
         }
       }
 
@@ -648,10 +648,11 @@ private:
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }
 
-    std::vector<std::string> bc_dep;
+    ArchesCore::FunctorDepList bc_dep;
     m_boundary_functors->get_bc_dependencies( m_eqn_names, m_bcHelper, bc_dep );
     for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW,
+
+      register_variable( (*i).variable_name, ArchesFieldContainer::REQUIRES, (*i).n_ghosts , (*i).dw,
                          variable_registry );
     }
 

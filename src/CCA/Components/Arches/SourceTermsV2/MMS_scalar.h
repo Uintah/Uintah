@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_MMS_scalar_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 namespace Uintah{
 
@@ -12,14 +12,14 @@ public:
 
     enum WAVE_TYPE { SINE, SINE_T, GCOSINE, T1, T2, T3 };
 
-    MMS_scalar( std::string task_name, int matl_index, SimulationStateP shared_state  );
+    MMS_scalar( std::string task_name, int matl_index, MaterialManagerP materialManager  );
     ~MMS_scalar();
 
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry  , const bool pack_tasks);
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry  , const bool packed_tasks);
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry  , const bool packed_tasks){}
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep  , const bool packed_tasks);
 
@@ -29,7 +29,7 @@ public:
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -46,18 +46,18 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, SimulationStateP shared_state ) : _task_name(task_name), _matl_index(matl_index), _shared_state(shared_state){}
+      Builder( std::string task_name, int matl_index, MaterialManagerP materialManager ) : m_task_name(task_name), m_matl_index(matl_index), _materialManager(materialManager){}
       ~Builder(){}
 
       MMS_scalar* build()
-      { return scinew MMS_scalar( _task_name, _matl_index, _shared_state  ); }
+      { return scinew MMS_scalar( m_task_name, m_matl_index, _materialManager  ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
-      SimulationStateP _shared_state;
+      MaterialManagerP _materialManager;
     };
 
 private:
@@ -75,7 +75,7 @@ private:
     std::string m_MMS_source_diff_label;
     std::string m_MMS_source_t_label;
 
-    SimulationStateP _shared_state;
+    MaterialManagerP _materialManager;
 
   };
 }

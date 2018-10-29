@@ -27,7 +27,7 @@
 
 #include <CCA/Ports/SwitchingCriteria.h>
 
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
@@ -48,7 +48,7 @@ namespace Uintah {
       
       virtual void problemSetup(const ProblemSpecP& ps, 
                                 const ProblemSpecP& restart_prob_spec, 
-                                SimulationStateP& sharedState);
+                                MaterialManagerP& materialManager);
 
       virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
@@ -62,7 +62,7 @@ namespace Uintah {
       
       const VarLabel* m_timeStepLabel {nullptr};
       
-      SimulationStateP m_sharedState {nullptr};
+      MaterialManagerP m_materialManager {nullptr};
     };
 } // End namespace Uintah
 

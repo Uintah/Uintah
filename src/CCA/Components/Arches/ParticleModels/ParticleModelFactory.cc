@@ -315,7 +315,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "deposition_velocity" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew DepositionVelocity::Builder(task_name,0,N,_shared_state);
+        TaskInterface::TaskBuilder* tsk = scinew DepositionVelocity::Builder(task_name,0,N,_materialManager);
         register_task( task_name, tsk );
 
         _coal_models.push_back(task_name);
@@ -326,7 +326,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "deposition_enthalpy" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew DepositionEnthalpy::Builder(task_name,0,N,_shared_state);
+        TaskInterface::TaskBuilder* tsk = scinew DepositionEnthalpy::Builder(task_name,0,N,_materialManager);
         register_task( task_name, tsk );
 
         _coal_models.push_back(task_name);

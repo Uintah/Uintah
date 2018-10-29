@@ -35,7 +35,7 @@ using namespace Uintah;
 
 RFConcDiffusion1MPM::RFConcDiffusion1MPM(
                                          ProblemSpecP     & ps,
-                                         SimulationStateP & sS,
+                                         MaterialManagerP & sS,
                                          MPMFlags         * Mflag,
                                          string             diff_type
                                         ) :ScalarDiffusionModel(ps,

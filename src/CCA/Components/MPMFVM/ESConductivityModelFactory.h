@@ -28,7 +28,7 @@
 #include <CCA/Components/FVM/FVMLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPMFVM/ESConductivityModel.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
 
@@ -40,7 +40,7 @@ namespace Uintah {
     // this function has a switch for all known mat_types
     
     static ESConductivityModel* create(const ProblemSpecP& ps,
-                                       SimulationStateP& shared_state,
+                                       MaterialManagerP& materialManager,
                                        MPMFlags* mpm_flags,
                                        MPMLabel* mpm_lb,
                                        FVMLabel* fvm_lb);

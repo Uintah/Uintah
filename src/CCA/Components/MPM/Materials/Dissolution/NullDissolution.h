@@ -34,8 +34,8 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 namespace Uintah {
 /**************************************
@@ -70,12 +70,12 @@ WARNING
       NullDissolution(const NullDissolution &con);
       NullDissolution& operator=(const NullDissolution &con);
 
-      SimulationStateP d_sharedState;
+      MaterialManagerP d_materialManager;
       
     public:
       // Constructor
       NullDissolution(const ProcessorGroup* myworld,
-                      SimulationStateP& ss, MPMLabel* lb);
+                      MaterialManagerP& ss, MPMLabel* lb);
 
       // Destructor
       virtual ~NullDissolution();

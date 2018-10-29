@@ -31,7 +31,7 @@
 #include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
 #include <CCA/Components/ICE/CustomBCs/sine.h>
 
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 namespace Uintah {
   class DataWarehouse;
@@ -80,7 +80,7 @@ namespace Uintah {
     bool using_inletVel_BCs;
     inletVel_globalVars* inletVel;
     
-    SimulationStateP sharedState;
+    MaterialManagerP materialManager;
     Vector d_gravity;
     bool applyHydrostaticPress;
 

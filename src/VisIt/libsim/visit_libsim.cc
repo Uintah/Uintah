@@ -92,6 +92,8 @@ void visit_LibSimArguments(int argc, char **argv)
     }
     else if( strcmp( argv[i], "-visit_options" ) == 0 )
     {
+      // VisItGetVersion();
+
       VisItSetOptions(argv[++i]);
     }
     else if( strcmp( argv[i], "-visit_trace" ) == 0 )
@@ -122,6 +124,8 @@ void visit_LibSimArguments(int argc, char **argv)
 //---------------------------------------------------------------------
 void visit_InitLibSim( visit_simulation_data *sim )
 {
+  // sim->runMode is set in AMRSimulationController.cc
+  
   // The simulation will wait for VisIt to connect after first step.
   // sim->runMode = VISIT_SIMMODE_STOPPED;
 
@@ -242,6 +246,12 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->switchIndex = -1;
   sim->nodeIndex = -1;
 
+  std::string hostName = sim->myworld->myProcName();
+  std::string hostNode = sim->myworld->myProcName();
+  
+  hostName.erase(std::remove_if(hostName.begin(), hostName.end(), (int(*)(int))std::isdigit), hostName.end());
+  hostNode.erase(std::remove_if(hostNode.begin(), hostNode.end(), (int(*)(int))std::isalpha), hostNode.end());
+
   // Possible machine file names.
   const unsigned int nMachines = 1;
   std::string hostNames[ nMachines ] = { "ash" };
@@ -278,7 +288,9 @@ void visit_InitLibSim( visit_simulation_data *sim )
     std::string path = std::string( sci_getenv("SCIRUN_OBJDIR") ) +
       std::string("/../src/VisIt/libsim/");
 
-    std::ifstream infile(path + sim->hostName + "_layout.txt");
+    std::string filename = path + sim->hostName + "_layout.txt";
+
+    std::ifstream infile(filename);
 
     if( infile.is_open() )
     {
@@ -286,8 +298,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
       std::string line;
       while (std::getline(infile, line))
       {
-        // std::cerr << "Reading  " << line << std::endl;
-
         // Skip empty lines
         if( line.empty() )
         {
@@ -327,8 +337,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
           std::vector< unsigned int > nodes;
           
           sim->switchNodeList.push_back( nodes );
-          
-          // std::cerr << std::endl << "Switch " << sim->switchNodeList.size()-1 << " nodes: ";
         }
         // A switch connection
         else if( line.find("[") == 0 )
@@ -355,8 +363,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
               // Add this node to the list.
               sim->switchNodeList.back().push_back( node );
 
-              // std::cerr << node << "  ";
-
               // Get the maximum number of nodes on a switch.
               if( sim->maxNodes < sim->switchNodeList.back().size() )
                 sim->maxNodes = sim->switchNodeList.back().size();
@@ -374,23 +380,32 @@ void visit_InitLibSim( visit_simulation_data *sim )
         {
           std::stringstream msg;
           msg << "Visit libsim - "
-            << "Uintah machine parse error \"" << line << "\"  ";
+              << "Parse error \"" << line << "\" "
+              << "in the current network file: " << filename;
           
           VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
         }
       }
       
-      // std::cerr << std::endl;
-      
-      // std::cerr << sim->myworld->myProcName() << "  "
-      //        << sim->myworld->myNode_myRank() << "  "
-      //        << node << "  "
-      //        << sim->switchIndex << "  "
-      //        << sim->nodeIndex << "  " << std::endl;
+      if( sim->switchNodeList.size() &&
+          ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) )
+      {
+        std::stringstream msg;
+        msg << "Visit libsim - "
+            << "Can not find node " << sim->myworld->myProcName() << " "
+            << "in the current network file: " << filename;
+          
+        VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+      }
+
+      DOUT( (sim->switchNodeList.size() &&
+             ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) ),
+            "Visit libsim - "
+            << "Can not find node " << sim->myworld->myProcName() << " "
+            << "in the current network file: " << filename );
 
       infile.close();
-
-
+ 
       // Get the greatest common demoninator so to have multiple columns.
       unsigned int gcd = 2;
       
@@ -431,37 +446,42 @@ void visit_EndLibSim( visit_simulation_data *sim )
 {
   // Only go into finish mode if connected and the user has not force
   // the simulation to terminate early.
-  if( VisItIsConnected() && sim->simMode != VISIT_SIMMODE_TERMINATED )
+  if( VisItIsConnected() )
   {
-    // The simulation is finished but the user may want to stay
-    // conntected to analyze the last time step. So stop the run mode
-    // but do not let the simulation complete until the user says they
-    // are finished.
-    sim->runMode = VISIT_SIMMODE_STOPPED;
-    sim->simMode = VISIT_SIMMODE_FINISHED;
-
-    if(sim->isProc0)
+    if( sim->simMode == VISIT_SIMMODE_TERMINATED )
+      VisItDisconnect();
+    else // if( sim->simMode != VISIT_SIMMODE_TERMINATED )
     {
-      VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
-
-      std::stringstream msg;
-      msg << "Visit libsim - "
-          << "The simulation has finished, stopping at the last time step.";
+      // The simulation is finished but the user may want to stay
+      // conntected to analyze the last time step. So stop the run mode
+      // but do not let the simulation complete until the user says they
+      // are finished.
+      sim->runMode = VISIT_SIMMODE_STOPPED;
+      sim->simMode = VISIT_SIMMODE_FINISHED;
       
-      DOUT( visitdbg, msg.str().c_str() );
+      if(sim->isProc0)
+      {
+	VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
+	
+	std::stringstream msg;
+	msg << "Visit libsim - "
+	    << "The simulation has finished, stopping at the last time step.";
+	
+	DOUT( visitdbg, msg.str().c_str() );
+	
+	VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+      }
       
-      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+      // Now check for the user to have finished or issue a terminate.
+      do
+      {
+	visit_CheckState(sim);
+      }
+      while( sim->runMode != VISIT_SIMMODE_FINISHED &&
+	     sim->simMode != VISIT_SIMMODE_TERMINATED );
+      
+      VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
     }
-
-    // Now check for the user to have finished or issue a terminate.
-    do
-    {
-      visit_CheckState(sim);
-    }
-    while( sim->runMode != VISIT_SIMMODE_FINISHED &&
-           sim->simMode != VISIT_SIMMODE_TERMINATED );
-
-    VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
   }
 }
 
@@ -484,9 +504,9 @@ bool visit_CheckState( visit_simulation_data *sim )
         // VisItUI_setValueS("SIMULATION_MESSAGE", sim->message.c_str(), 1);
 
         std::stringstream msg;
-        msg << "Visit libsim - Completed simulation "
-            << "timestep " << sim->cycle << ",  "
-            << "Time = "   << sim->time;
+        msg << "Visit libsim - Completed the simulation at "
+            << "time step " << sim->cycle << ",  "
+            << "time = "   << sim->time;
         
         // DOUT( visitdbg, msg.str().c_str() );
         
@@ -539,7 +559,8 @@ bool visit_CheckState( visit_simulation_data *sim )
         // will not be running so change the state to allow
         // asyncronious commands like saving a timestep or a
         // checkpoint to happen.
-        if( sim->simMode != VISIT_SIMMODE_FINISHED )
+	if( sim->simMode != VISIT_SIMMODE_FINISHED &&
+	    sim->simMode != VISIT_SIMMODE_TERMINATED )
         {
           sim->simMode = VISIT_SIMMODE_STOPPED;
           
@@ -549,8 +570,8 @@ bool visit_CheckState( visit_simulation_data *sim )
               
             std::stringstream msg;
             msg << "Visit libsim - Stopped the simulation at "
-                << "timestep " << sim->cycle << ",  "
-                << "Time = " << sim->time;
+                << "time step " << sim->cycle << ",  "
+                << "time = " << sim->time;
             
             DOUT( visitdbg, msg.str().c_str() );
  
@@ -630,7 +651,7 @@ bool visit_CheckState( visit_simulation_data *sim )
           VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
           VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
 
-          VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
+          VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
         }
 
         /* Start running again if VisIt closes. */
@@ -670,7 +691,7 @@ bool visit_CheckState( visit_simulation_data *sim )
       {
         if(sim->isProc0)
         {
-          VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
+          VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
 
           std::stringstream msg;          
           msg << "Visit libsim - Finished the simulation ";
@@ -687,7 +708,7 @@ bool visit_CheckState( visit_simulation_data *sim )
     }
   } while(err == 0);
 
-  return (sim->simMode == VISIT_SIMMODE_TERMINATED);  
+  return (sim->simMode == VISIT_SIMMODE_TERMINATED);
 }
 
 
@@ -697,20 +718,16 @@ bool visit_CheckState( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
-                          double time,  unsigned int cycle,
-                          double delt, double delt_next,
                           bool first, bool last )
 {
-  // ApplicationInterface* appInterface =
-  //   sim->simController->getApplicationInterface();
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
 
   // Update all of the simulation grid and time dependent variables.
   sim->gridP     = currentGrid;
 
-  sim->time      = time;
-  sim->cycle     = cycle;
-  sim->delt      = delt;
-  sim->delt_next = delt_next;
+  sim->time      = appInterface->getSimTime();
+  sim->cycle     = appInterface->getTimeStep();
   
   sim->first     = first;
 
@@ -786,10 +803,10 @@ void visit_Initialize( visit_simulation_data *sim )
     VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
 
   
-  VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
-  VisItUI_textChanged("MaxTime",     visit_MaxTimeCallback,     (void*) sim);
-  VisItUI_valueChanged("EndOnMaxTime",
-                       visit_EndOnMaxTimeCallback, (void*) sim);
+  VisItUI_textChanged("TimeStepsMax", visit_TimeStepsMaxCallback, (void*) sim);
+  VisItUI_textChanged("SimTime",      visit_SimTimeMaxCallback,   (void*) sim);
+  VisItUI_valueChanged("SimTimeEndAtMax",
+                       visit_SimTimeEndAtMaxCallback, (void*) sim);
 
   VisItUI_cellChanged("DeltaTVariableTable",
                       visit_DeltaTVariableCallback,          (void*) sim);
@@ -799,8 +816,8 @@ void visit_Initialize( visit_simulation_data *sim )
                       visit_UPSVariableCallback,             (void*) sim);
   VisItUI_cellChanged("OutputIntervalVariableTable",
                       visit_OutputIntervalVariableCallback,  (void*) sim);
-  VisItUI_valueChanged("ClampTimeStepsToOutput",
-                       visit_ClampTimeStepsToOutputCallback, (void*) sim);
+  VisItUI_valueChanged("ClampTimeToOutput",
+                       visit_ClampTimeToOutputCallback,      (void*) sim);
         
   VisItUI_valueChanged("ImageGroupBox",
                        visit_ImageGenerateCallback, (void*) sim);

@@ -30,7 +30,7 @@
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Util/DebugStream.h>
@@ -45,7 +45,7 @@ namespace Uintah {
   class MPMCommon : public ApplicationCommon
   {
   public:
-    MPMCommon(const ProcessorGroup* myworld, SimulationStateP sharedState);
+    MPMCommon(const ProcessorGroup* myworld, MaterialManagerP materialManager);
 
     virtual ~MPMCommon();
 
@@ -66,11 +66,51 @@ namespace Uintah {
                                          MPMFlags* flags);
 
   protected:
+
+    // Used by the switcher
+    virtual void setupForSwitching() {
+  
+      d_cohesiveZoneState.clear();
+      d_cohesiveZoneState_preReloc.clear();
+
+      d_tracerState.clear();
+      d_tracerState_preReloc.clear();
+
+      d_particleState.clear();
+      d_particleState_preReloc.clear();
+    }
+
+  public:
+    // Particle state
+    std::vector<std::vector<const VarLabel* > > d_particleState;
+    std::vector<std::vector<const VarLabel* > > d_particleState_preReloc;
+    
+    std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState;
+    std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
+    
+    std::vector<std::vector<const VarLabel* > > d_tracerState;
+    std::vector<std::vector<const VarLabel* > > d_tracerState_preReloc;
+    
+    inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
+      particle_ghost_type = type;
+      particle_ghost_layer = ngc;
+    }
+
+    inline void getParticleGhostLayer(Ghost::GhostType& type, int& ngc) {
+      type = particle_ghost_type;
+      ngc = particle_ghost_layer;
+    }
+
     MPMLabel* lb {nullptr};
    private:
+
     MPMFlags*             d_flags       = nullptr;
     
-  protected:
+   protected:
+    //! so all components can know how many particle ghost cells to ask for
+    Ghost::GhostType particle_ghost_type{Ghost::None};
+    int particle_ghost_layer{0};
+    
     /*! update the stress field due to damage & erosion*/
     void updateStress_DamageErosionModels(const ProcessorGroup  *,
                                           const PatchSubset     * patches,

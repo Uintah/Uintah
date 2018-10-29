@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_CoalGasHeat_h
 #define Uintah_Component_Arches_CoalGasHeat_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
@@ -39,7 +39,7 @@ class CoalGasHeat: public SourceTermBase {
 
   public: 
 
-  CoalGasHeat( std::string src_name, std::vector<std::string> required_label_names, SimulationStateP& shared_state, std::string type );
+  CoalGasHeat( std::string src_name, std::vector<std::string> required_label_names, MaterialManagerP& materialManager, std::string type );
 
   ~CoalGasHeat();
 
@@ -71,20 +71,20 @@ class CoalGasHeat: public SourceTermBase {
 
     public: 
 
-      Builder( std::string name, std::vector<std::string> required_label_names, SimulationStateP& shared_state )
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
+      Builder( std::string name, std::vector<std::string> required_label_names, MaterialManagerP& materialManager )
+        : _name(name), _materialManager(materialManager), _required_label_names(required_label_names){
           _type = "coal_gas_heat"; 
         };
       ~Builder(){}; 
 
       CoalGasHeat* build()
-      { return scinew CoalGasHeat( _name, _required_label_names, _shared_state, _type ); };
+      { return scinew CoalGasHeat( _name, _required_label_names, _materialManager, _type ); };
 
     private: 
 
       std::string _name; 
       std::string _type; 
-      SimulationStateP& _shared_state; 
+      MaterialManagerP& _materialManager; 
       std::vector<std::string> _required_label_names;
 
   }; // class Builder 

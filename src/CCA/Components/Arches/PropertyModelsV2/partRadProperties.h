@@ -2,8 +2,8 @@
 #define Uintah_Component_Arches_partRadProperties_h
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #ifdef HAVE_RADPROPS
 #  include <radprops/Particles.h>
@@ -75,16 +75,16 @@ namespace Uintah{
         public:
 
           Builder( std::string task_name, int matl_index)
-            : _task_name(task_name), _matl_index(matl_index) {}
+            : m_task_name(task_name), m_matl_index(matl_index) {}
           ~Builder(){}
 
           partRadProperties* build()
-          { return scinew partRadProperties( _task_name, _matl_index ); }
+          { return scinew partRadProperties( m_task_name, m_matl_index ); }
 
         private:
 
-          std::string _task_name;
-          int _matl_index;
+          std::string m_task_name;
+          int m_matl_index;
 
       };
 
@@ -93,16 +93,16 @@ namespace Uintah{
 
           //public: 
 
-            //Builder( std::string name, SimulationStateP& shared_state,ArchesLabel * fieldLabels) : _name(name), _shared_state(shared_state),_fieldLabels(fieldLabels) {};
+            //Builder( std::string name, MaterialManagerP& materialManager,ArchesLabel * fieldLabels) : _name(name), _materialManager(materialManager),_fieldLabels(fieldLabels) {};
             //~Builder(){}; 
 
             //partRadProperties* build()
-            //{ return scinew partRadProperties( _name, _shared_state, _fieldLabels ); };
+            //{ return scinew partRadProperties( _name, _materialManager, _fieldLabels ); };
 
           //private: 
 
             //std::string _name; 
-            //SimulationStateP& _shared_state; 
+            //MaterialManagerP& _materialManager; 
             //ArchesLabel* _fieldLabels;
 
         //}; // class Builder 

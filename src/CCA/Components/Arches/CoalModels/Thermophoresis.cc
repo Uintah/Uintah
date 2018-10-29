@@ -8,7 +8,7 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -26,27 +26,27 @@ ThermophoresisBuilder::ThermophoresisBuilder( const std::string         & modelN
                                                             const vector<std::string> & reqICLabelNames,
                                                             const vector<std::string> & reqScalarLabelNames,
                                                             ArchesLabel         * fieldLabels,
-                                                            SimulationStateP          & sharedState,
+                                                            MaterialManagerP          & materialManager,
                                                             int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, materialManager, qn )
 {
 }
 
 ThermophoresisBuilder::~ThermophoresisBuilder(){}
 
 ModelBase* ThermophoresisBuilder::build() {
-  return scinew Thermophoresis( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return scinew Thermophoresis( d_modelName, d_materialManager, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
 Thermophoresis::Thermophoresis( std::string modelName,
-                                              SimulationStateP& sharedState,
+                                              MaterialManagerP& materialManager,
                                               ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames,
                                               vector<std::string> scalarLabelNames,
                                               int qn )
-: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+: ModelBase(modelName, materialManager, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Create a label for this model
   d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
@@ -176,7 +176,7 @@ Thermophoresis::sched_initVars( const LevelP& level, SchedulerP& sched )
 
   tsk->computes(d_modelLabel);
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
 
 //-------------------------------------------------------------------------
@@ -193,7 +193,7 @@ Thermophoresis::initVars( const ProcessorGroup * pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> thp_rate;
 
@@ -232,7 +232,7 @@ Thermophoresis::sched_computeModel( const LevelP& level, SchedulerP& sched, int 
   tsk->requires( which_dw, _weight_scaled_varlabel, gn, 0 );
   tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0 );
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 
 }
 
@@ -252,7 +252,7 @@ Thermophoresis::computeModel( const ProcessorGroup * pc,
     Ghost::GhostType  gac = Ghost::AroundCells;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     Vector Dx = patch->dCell();
     double delta_n = 0.0;

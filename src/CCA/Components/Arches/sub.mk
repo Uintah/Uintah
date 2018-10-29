@@ -78,7 +78,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/DQMOM.cc                     \
         $(SRCDIR)/ExplicitSolver.cc            \
         $(SRCDIR)/ExplicitTimeInt.cc           \
-        $(SRCDIR)/IncDynamicProcedure.cc       \
         $(SRCDIR)/IntrusionBC.cc               \
         $(SRCDIR)/KokkosSolver.cc              \
         $(SRCDIR)/LU.cc                        \
@@ -86,6 +85,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/NonlinearSolver.cc           \
         $(SRCDIR)/PhysicalConstants.cc         \
         $(SRCDIR)/PressureSolverV2.cc          \
+        $(SRCDIR)/linSolver.cc          \
         $(SRCDIR)/Properties.cc                \
         $(SRCDIR)/RHSSolver.cc                 \
         $(SRCDIR)/ScaleSimilarityModel.cc      \

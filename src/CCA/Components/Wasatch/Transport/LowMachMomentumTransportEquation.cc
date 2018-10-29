@@ -82,19 +82,17 @@ namespace WasatchCore{
                                    const std::string velName,
                              const std::string momName,
                              const Expr::Tag densTag,
-                             const bool isConstDensity,
                              const Expr::Tag bodyForceTag,
                              const Expr::Tag srcTermTag,
                              GraphCategories& gc,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
                              Uintah::SolverInterface& linSolver,
-                             Uintah::SimulationStateP sharedState)
+                             Uintah::MaterialManagerP materialManager)
     : MomentumTransportEquationBase<FieldT>(momComponent,
                                             velName,
                          momName,
                          densTag,
-                         isConstDensity,
                          bodyForceTag,
                          srcTermTag,
                          gc,
@@ -107,6 +105,7 @@ namespace WasatchCore{
     doMom[1] = params->get( "Y-Momentum", ymomname );
     doMom[2] = params->get( "Z-Momentum", zmomname );
 
+    const bool isConstDensity = this->isConstDensity_;
     GraphHelper& graphHelper   = *(gc[ADVANCE_SOLUTION  ]);
     Expr::ExpressionFactory& factory = *(graphHelper.exprFactory);
 
@@ -117,20 +116,14 @@ namespace WasatchCore{
     //__________________
     // Pressure source term        
     if( !factory.have_entry( tagNames.pressuresrc ) ){
-      const Expr::Tag densStarTag  = tagNames.make_star(densTag, Expr::STATE_NONE);
+      const Expr::Tag densNP1Tag  = Expr::Tag(densTag.name(), Expr::STATE_NP1);
       
-//      set_mom_tags( params, this->momTags_ );
-//      set_mom_tags( params, this->oldMomTags_, true );
       // register the expression for pressure source term
       Expr::TagList psrcTagList;
       psrcTagList.push_back(tagNames.pressuresrc);
       if( !isConstDensity ) {
-        psrcTagList.push_back(tagNames.drhodtstar );
+        psrcTagList.push_back(tagNames.drhodt );
       }
-//      Expr::TagList scalarEOSTagList;
-//      if(!isConstDensity){
-//        scalarEOSTagList.push_back(Expr::Tag("f*_EOS_Coupling",Expr::STATE_NONE));
-//      }
 
       // create an expression for divu. In the case of variable density flows, the scalar equations
       // will add their contributions to this expression
@@ -139,7 +132,15 @@ namespace WasatchCore{
         factory.register_expression( new divuBuilder(tagNames.divu, 0.0));
       }
 
-      const Expr::ExpressionID psrcID = factory.register_expression( new typename PressureSource::Builder( psrcTagList, this->momTags_, this->oldMomTags_, this->velTags_, tagNames.divu, isConstDensity, densTag, densStarTag ) );
+      const Expr::ExpressionID
+      psrcID = factory.register_expression( new typename PressureSource::Builder( psrcTagList,
+                                                                                  this->momTags_,
+                                                                                  this->oldMomTags_,
+                                                                                  this->velTags_,
+                                                                                  tagNames.divu,
+                                                                                  isConstDensity,
+                                                                                  densTag,
+                                                                                  densNP1Tag ) );
       
       factory.cleave_from_parents( psrcID  );
       factory.cleave_from_children( psrcID  );
@@ -198,10 +199,10 @@ namespace WasatchCore{
         Expr::TagList ptags;
         ptags.push_back( this->pressureTag_ );
         ptags.push_back( Expr::Tag( this->pressureTag_.name() + "_rhs", this->pressureTag_.context() ) );
-        const Expr::Tag rhoStarTag = isConstDensity ? this->densityTag_ : tagNames.make_star(this->densityTag_, this->densityTag_.context()); // get the tagname of rho*
+        const Expr::Tag densityTag = isConstDensity ? this->densityTag_ : Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1);
         
         Expr::ExpressionBuilder* pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
-                                                                            tagNames.pressuresrc, tagNames.dt, embedGeom.vol_frac_tag<SVolField>(), rhoStarTag,
+                                                                            tagNames.pressuresrc, tagNames.dt, embedGeom.vol_frac_tag<SVolField>(), densityTag,
                                                                             embedGeom.has_moving_geometry(), usePressureRefPoint, refPressureValue,
                                                                             refPressureLocation, use3DLaplacian,
                                                                             enforceSolvability, this->is_constant_density(),
@@ -276,14 +277,6 @@ namespace WasatchCore{
         bcHelper.create_dummy_dependency<SVolField, FieldT>(momTimeAdvanceTag, tag_list(densityStateNone),INITIALIZATION);
         bcHelper.create_dummy_dependency<FieldT, FieldT>(momTimeAdvanceTag, tag_list(this->thisVelTag_),INITIALIZATION);
       }
-
-      if( !this->is_constant_density() ){
-        const Expr::Tag rhoTagInit(this->densityTag_.name(), Expr::STATE_NONE);
-        const Expr::Tag rhoStarTag = tagNames.make_star(this->densityTag_); // get the tagname of rho*
-        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagInit), INITIALIZATION);
-        const Expr::Tag rhoTagAdv(this->densityTag_.name(), Expr::STATE_NONE);
-        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagAdv), ADVANCE_SOLUTION);
-      }
     }
     //
     // END DUMMY MODIFIER SETUP
@@ -300,12 +293,12 @@ namespace WasatchCore{
       // variable density: add bcopiers on all boundaries
       if( !this->is_constant_density() ){
         // if we are solving a variable density problem, then set bcs on density estimate rho*
-        const Expr::Tag rhoStarTag = tagNames.make_star(this->densityTag_); // get the tagname of rho*
+        const Expr::Tag densityNP1Tag = Expr::Tag(this->densityTag_.name(), Expr::STATE_NP1); // get the tagname of rho*
         // check if this boundary applies a bc on the density
         if( myBndSpec.has_field(this->densityTag_.name()) ){
           // create a bc copier for the density estimate
-          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + "_" + bndName +"_bccopier", Expr::STATE_NONE);
-          BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+          const Expr::Tag rhoStarBCTag( densityNP1Tag.name() + bndName +"_bccopier", Expr::STATE_NONE);
+          BndCondSpec rhoStarBCSpec = {densityNP1Tag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
           if( !initFactory.have_entry(rhoStarBCTag) ){
             const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
             initFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
@@ -481,10 +474,6 @@ namespace WasatchCore{
       // set bcs for density
       const Expr::Tag densTag( this->densityTag_.name(), Expr::STATE_NONE );
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
-      
-      // set bcs for density_*
-      const Expr::Tag densStarTag = tagNames.make_star(this->densityTag_, Expr::STATE_NONE);
-      bcHelper.apply_boundary_condition<SVolField>(densStarTag, taskCat);
     }
   }
 
@@ -503,18 +492,15 @@ namespace WasatchCore{
     bcHelper.apply_boundary_condition<FieldT>( this->thisVelTag_, taskCat );
     // set bcs for partial rhs
     bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(mom_tag(this->solnVarName_)), taskCat, true);
-    // set bcs for partial full rhs
+    // set bcs for partial full rhs - apply directly on the boundary
     bcHelper.apply_boundary_condition<FieldT>( this->rhs_tag(), taskCat, true);
 
     if( !this->is_constant_density() ){
       const TagNames& tagNames = TagNames::self();
 
       // set bcs for density
-      const Expr::Tag densTag( this->densityTag_.name(), Expr::STATE_NONE );
-      bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
-      
-      // set bcs for density_*
-      bcHelper.apply_boundary_condition<SVolField>( tagNames.make_star(this->densityTag_,Expr::STATE_NONE), taskCat );
+      const Expr::Tag densityNP1Tag( this->densityTag_.name(), Expr::STATE_NP1 );
+      bcHelper.apply_boundary_condition<SVolField>( densityNP1Tag, taskCat );
     }
   }
 
@@ -560,8 +546,9 @@ namespace WasatchCore{
     return icFactory.get_id( this->initial_condition_tag() );
   }
 
-  //==================================================================
-  
+
+  //------------------------------------------------------------------
+
   //==================================================================  
   // Explicit template instantiation
   template class LowMachMomentumTransportEquation< XVolField >;

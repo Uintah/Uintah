@@ -35,36 +35,31 @@ using namespace Uintah;
 
 Material::Material()
 {
-  thismatl=0;
-  haveName = false;
-  name="";
 }
 
 Material::Material(ProblemSpecP& ps)
 {
-  
-  thismatl=0;
+  m_matlSubset = 0;
  
   // Look for the name attribute
-  if(ps->getAttribute("name", name))
-    haveName = true;
+  if(ps->getAttribute("name", m_name))
+    m_haveName = true;
   else
-    haveName = false;
-
+    m_haveName = false;
 }
 
 Material::~Material()
 {
-  if(thismatl && thismatl->removeReference())
-    delete thismatl;
+  if(m_matlSubset && m_matlSubset->removeReference())
+    delete m_matlSubset;
 }
 
 ProblemSpecP Material::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP mat = 0;
-  if (haveName) {
+  if (m_haveName) {
     mat = ps->appendChild("material");
-    mat->setAttribute("name",name);
+    mat->setAttribute("name", m_name);
   } else {
     mat = ps->appendChild("material");
   }
@@ -79,19 +74,16 @@ ProblemSpecP Material::outputProblemSpec(ProblemSpecP& ps)
 int Material::getDWIndex() const
 {
   // Return this material's index into the data warehouse
-  return d_dwindex;
+  return m_dwIndex;
 }
 
 void Material::setDWIndex(int idx)
 {
-   d_dwindex = idx;
-   ASSERT(!thismatl);
-   thismatl = scinew MaterialSubset(); 
+   m_dwIndex = idx;
+   
+   ASSERT(!m_matlSubset);
+   m_matlSubset = scinew MaterialSubset(); 
                                        
-   thismatl->addReference();
-   thismatl->add(idx);
-}
-
-void Material::registerParticleState(SimulationState* ss)
-{
+   m_matlSubset->addReference();
+   m_matlSubset->add(m_dwIndex);
 }

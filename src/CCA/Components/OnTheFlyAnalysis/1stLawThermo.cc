@@ -33,7 +33,7 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -57,10 +57,10 @@ static DebugStream cout_doing("FirstLawThermo",   false);
 static DebugStream cout_dbg("FirstLawThermo_dbg", false);
 //______________________________________________________________________
 FirstLawThermo::FirstLawThermo(const ProcessorGroup* myworld,
-			       const SimulationStateP sharedState,
-			       const ProblemSpecP& module_spec)
+                               const MaterialManagerP materialManager,
+                               const ProblemSpecP& module_spec)
                                
-  : AnalysisModule(myworld, sharedState, module_spec)
+  : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_zeroMatl     = 0;
   d_zeroMatlSet  = 0;
@@ -107,7 +107,9 @@ FirstLawThermo::~FirstLawThermo()
 //     P R O B L E M   S E T U P
 void FirstLawThermo::problemSetup(const ProblemSpecP&,
                                   const ProblemSpecP& restart_prob_spec,
-                                  GridP& grid)
+                                  GridP& grid,
+                                  std::vector<std::vector<const VarLabel* > > &PState,
+                                  std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tFirstLawThermo" << endl;
   
@@ -274,8 +276,8 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
                      this,&FirstLawThermo::compute_ICE_Contributions );
 
   Ghost::GhostType  gn  = Ghost::None;
-  const MaterialSet* all_matls = m_sharedState->allMaterials();
-  const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
+  const MaterialSet* all_matls = m_materialManager->allMaterials();
+  const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
   const MaterialSubset* ice_ss = ice_matls->getUnion();
   
   t0->requires( Task::OldDW, m_simulationTimeLabel );
@@ -300,7 +302,7 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   Task* t1 = scinew Task( "FirstLawThermo::compute_MPM_Contributions", 
                      this,&FirstLawThermo::compute_MPM_Contributions );
 
-  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
+  const MaterialSet* mpm_matls = m_materialManager->allMaterials( "MPM" );
   const MaterialSubset* mpm_ss = mpm_matls->getUnion();
   
   t1->requires( Task::OldDW, m_simulationTimeLabel );
@@ -348,7 +350,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
   
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
-  // double now = m_sharedState->getElapsedSimTime();
+  // double now = m_materialManager->getElapsedSimTime();
 
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
@@ -377,7 +379,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
     Vector dx = patch->dCell();
     double vol = dx.x() * dx.y() * dx.z();
 
-    int numICEmatls = m_sharedState->getNumICEMatls();
+    int numICEmatls = m_materialManager->getNumMatls( "ICE" );
     Ghost::GhostType gn  = Ghost::None;
 
     double ICE_totalIntEng = 0.0;
@@ -385,7 +387,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
 
     for (int m = 0; m < numICEmatls; m++ ) {
 
-      ICEMaterial* ice_matl = m_sharedState->getICEMaterial(m);
+      ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
       int indx = ice_matl->getDWIndex();
       new_dw->get(rho_CC,  I_lb->rho_CCLabel,       indx, patch, gn,0);
       new_dw->get(temp_CC, I_lb->temp_CCLabel,      indx, patch, gn,0);
@@ -588,7 +590,7 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
 
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
-  // double now = m_sharedState->getElapsedSimTime();
+  // double now = m_materialManager->getElapsedSimTime();
 
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
@@ -604,11 +606,11 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
 
     //__________________________________
     //  compute the thermal energy of the solids
-    int    numMPMMatls     = m_sharedState->getNumMPMMatls();
+    int    numMPMMatls     = m_materialManager->getNumMatls( "MPM" );
     double MPM_totalIntEng = 0.0;
     
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       constParticleVariable<double> pmassNew, pTempNew;
       
@@ -647,7 +649,7 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
 
-  // double now = m_sharedState->getElapsedSimTime();
+  // double now = m_materialManager->getElapsedSimTime();
   double nextTime = lastTime + 1.0/d_analysisFreq;
   
   double time_dw  = lastTime;  

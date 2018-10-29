@@ -25,8 +25,6 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_RUNTIMESTATSENUMS_H
 #define CCA_COMPONENTS_SCHEDULERS_RUNTIMESTATSENUMS_H
 
-#include <sci_defs/papi_defs.h>
-
 
 namespace Uintah {
 
@@ -91,13 +89,6 @@ namespace Uintah {
     , NumCells
     , NumParticles
 
-#ifdef USE_PAPI_COUNTERS
-    , TotalFlops            // Floating point operations executed
-    , TotalVFlops           // Floating point operations executed; optimized to count scaled DP vector ops
-    , L2Misses              // L2 cache misses
-    , L3Misses              // L3 cache misses
-    , TLBMisses             // Total translation lookaside buffer misses
-#endif
   };
 
 } // end namespace Uintah

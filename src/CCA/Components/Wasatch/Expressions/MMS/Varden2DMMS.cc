@@ -57,9 +57,11 @@ evaluate()
   
   
   SpatFldPtr<TimeField> ta = SpatialFieldStore::get<TimeField>( result );
-  *ta <<= t_->field_ref();
   if (atNP1_) {
     *ta <<= t_->field_ref() + dt_->field_ref();
+  }
+  else{
+    *ta <<= t_->field_ref();
   }
   
   const TimeField& t = *ta;
@@ -168,19 +170,23 @@ VarDenOscillatingMMSMixFrac( const Expr::Tag& xTag,
                  const double w,
                  const double k,
                  const double uf,
-                 const double vf )
+                 const double vf,
+                 const bool atNP1 )
 : Expr::Expression<FieldT>(),
 r0_( r0 ),
 r1_( r1 ),
 w_ ( w ),
 k_ ( k ),
 uf_ ( uf ),
-vf_ ( vf )
+vf_ ( vf ),
+atNP1_( atNP1 )
 {
   this->set_gpu_runnable( true );
    x_ = this->template create_field_request<FieldT>(xTag);
    y_ = this->template create_field_request<FieldT>(yTag);
    t_ = this->template create_field_request<TimeField>(tTag);
+   if(atNP1_)
+     dt_ = this->template create_field_request<TimeField>(WasatchCore::TagNames::self().dt);
 }
 
 //--------------------------------------------------------------------
@@ -193,9 +199,16 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   
+  SpatFldPtr<TimeField> ta = SpatialFieldStore::get<TimeField>( result );
+  *ta <<= t_->field_ref();
+  if (atNP1_) {
+    *ta <<= t_->field_ref() + dt_->field_ref();
+  }
+
+  const TimeField& t = *ta;
+
   const FieldT& x = x_->field_ref();
   const FieldT& y = y_->field_ref();
-  const TimeField& t = t_->field_ref();
   
   SpatFldPtr<FieldT> xh = SpatialFieldStore::get<FieldT>( x );
   SpatFldPtr<FieldT> yh = SpatialFieldStore::get<FieldT>( y );
@@ -225,7 +238,8 @@ Builder( const Expr::Tag& result,
         const double w,
         const double k,
         const double uf,
-        const double vf )
+        const double vf,
+        const bool atNP1 )
 : ExpressionBuilder(result),
 r0_( r0 ),
 r1_( r1 ),
@@ -235,7 +249,8 @@ uf_ ( uf ),
 vf_ ( vf ),
 xTag_( xTag ),
 yTag_( yTag ),
-tTag_( tTag )
+tTag_( tTag ),
+atNP1_( atNP1 )
 {}
 
 //--------------------------------------------------------------------
@@ -245,7 +260,7 @@ Expr::ExpressionBase*
 VarDenOscillatingMMSMixFrac<FieldT>::Builder::
 build() const
 {
-  return new VarDenOscillatingMMSMixFrac<FieldT>( xTag_, yTag_, tTag_, r0_, r1_, w_, k_, uf_, vf_ );
+  return new VarDenOscillatingMMSMixFrac<FieldT>( xTag_, yTag_, tTag_, r0_, r1_, w_, k_, uf_, vf_, atNP1_ );
 }
 
 

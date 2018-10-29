@@ -23,15 +23,15 @@
  */
 
 //----- Arches.cc ----------------------------------------------
-#include <CCA/Components/Arches/ArchesParticlesHelper.h>
-#include <Core/IO/UintahZlibUtil.h>
 #include <CCA/Components/Arches/Arches.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Arches/ArchesParticlesHelper.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/ArchesStatsEnum.h>
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <CCA/Components/Arches/KokkosSolver.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SolverInterface.h>
@@ -40,13 +40,14 @@
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/IO/UintahZlibUtil.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DOUT.hpp>
@@ -61,18 +62,42 @@ static DebugStream dbg("ARCHES", false);
 
 //--------------------------------------------------------------------------------------------------
 Arches::Arches(const ProcessorGroup* myworld,
-               const SimulationStateP sharedState) :
-  ApplicationCommon(myworld, sharedState)
+               const MaterialManagerP materialManager) :
+  ApplicationCommon(myworld, materialManager)
 {
   m_MAlab               = 0;
   m_nlSolver            = 0;
   m_physicalConsts      = 0;
-  m_doing_restart        = false;
   m_with_mpmarches      = false;
 
   //lagrangian particles:
   m_particlesHelper = scinew ArchesParticlesHelper();
   m_particlesHelper->sync_with_arches(this);
+
+#ifdef OUTPUT_WITH_BAD_DELTA_T
+  // The other reduciton vars are set in the problem setup because the
+  // UPS file needs to be read first.
+  activateReductionVariable(     outputTimeStep_name, true );
+  activateReductionVariable( checkpointTimeStep_name, true );
+  activateReductionVariable(      endSimulation_name, true );
+#endif
+
+  // One can also output or checkpoint if one of the validate
+  // thresholds are met. This setting has the same affect as the above
+  // along with the puts in the data warehouse (see ExplicitSolve.cc).
+
+  //     outputIfInvalidNextDelT( DELTA_T_MIN | DELTA_T_MAX );
+  // checkpointIfInvalidNextDelT( DELTA_T_MIN );
+
+#ifdef ADD_PERFORMANCE_STATS 
+  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchTime,       std::string("RMCRT_Patch_Time"),       "milliseconds"  );
+  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchSize,       std::string("RMCRT_Patch_Steps"),      "steps"         );
+  m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchEfficiency, std::string("RMCRT_Patch_Efficiency"), "steps/seconds" );
+#endif
+
+  m_application_stats.insert( (ApplicationStatsEnum) DORadiationTime,   std::string("DO_Radiation_Time"),   "seconds" );
+  m_application_stats.insert( (ApplicationStatsEnum) DORadiationSweeps, std::string("DO_Radiation_Sweeps"), "sweeps"  );
+  m_application_stats.insert( (ApplicationStatsEnum) DORadiationBands,  std::string("DO_Radiation_Bands"),  "bands"   );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -90,9 +115,6 @@ Arches::~Arches()
       delete am;
     }
   }
-  releasePort("solver");
-
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -102,7 +124,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
                             GridP            & grid )
 {
   ArchesMaterial* mat= scinew ArchesMaterial();
-  m_sharedState->registerArchesMaterial(mat);
+  m_materialManager->registerMaterial( "Arches", mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   m_arches_spec = db;
 
@@ -123,8 +145,6 @@ Arches::problemSetup( const ProblemSpecP     & params,
     assign_unique_boundary_names( bcProbSpec );
   }
 
-  db->getWithDefault("recompileTaskgraph",  m_recompile, false);       // Is this needed? -Todd
-
   // physical constant
   m_physicalConsts = scinew PhysicalConstants();
   const ProblemSpecP db_root = db->getRootNode();
@@ -134,7 +154,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
   NonlinearSolver::NLSolverBuilder* builder;
   if (   db->findBlock("ExplicitSolver") ) {
 
-    builder = scinew ExplicitSolver::Builder( m_sharedState,
+    builder = scinew ExplicitSolver::Builder( m_materialManager,
                                               m_MAlab,
                                               m_physicalConsts,
                                               d_myworld,
@@ -144,7 +164,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
 
   } else if ( db->findBlock("KokkosSolver")) {
 
-    builder = scinew KokkosSolver::Builder( m_sharedState,
+    builder = scinew KokkosSolver::Builder( m_materialManager,
                                             d_myworld,
                                             m_solver,
                                             this );
@@ -158,11 +178,13 @@ Arches::problemSetup( const ProblemSpecP     & params,
   m_nlSolver = builder->build();
   delete builder;
 
-  m_nlSolver->problemSetup( db, m_sharedState, grid );
+  m_nlSolver->problemSetup( db, m_materialManager, grid );
 
-  // tell the infrastructure how many tasksgraphs are needed.
-  int num_task_graphs=m_nlSolver->taskGraphsRequested();
-  m_scheduler->setNumTaskGraphs(num_task_graphs);
+  // Must be set here rather than the constructor because the value
+  // is based on the solver being requested in the problem setup.
+  bool mayRecompute = m_nlSolver->mayRecomputeTimeStep();
+  activateReductionVariable( recomputeTimeStep_name, mayRecompute );
+  activateReductionVariable(     abortTimeStep_name, mayRecompute );
 
   //__________________________________
   // On the Fly Analysis. The belongs at bottom
@@ -173,7 +195,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
     }
 
     m_analysis_modules = AnalysisModuleFactory::create(d_myworld,
-                                                       m_sharedState,
+                                                       m_materialManager,
                                                        params);
 
     if(m_analysis_modules.size() != 0) {
@@ -181,8 +203,9 @@ Arches::problemSetup( const ProblemSpecP     & params,
       for( iter  = m_analysis_modules.begin();
            iter != m_analysis_modules.end(); iter++) {
         AnalysisModule* am = *iter;
+        std::vector<std::vector<const VarLabel* > > dummy;
         am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
-        am->problemSetup(params, materials_ps, grid);
+        am->problemSetup(params, materials_ps, grid, dummy, dummy);
       }
     }
   }
@@ -206,12 +229,12 @@ Arches::scheduleInitialize(const LevelP& level,
 
   //=========== NEW TASK INTERFACE ==============================
   if ( m_do_lagrangian_particles ) {
-    m_particlesHelper->set_materials(m_sharedState->allArchesMaterials());
+    m_particlesHelper->set_materials(m_materialManager->allMaterials( "Arches" ));
     m_particlesHelper->schedule_initialize(level, sched);
   }
 
   //=========== END NEW TASK INTERFACE ==============================
-  m_nlSolver->sched_initialize( level, sched, m_doing_restart );
+  m_nlSolver->sched_initialize( level, sched, isRestartTimeStep() );
 
   if( level->getIndex() != m_arches_level_index )
     return;
@@ -246,7 +269,6 @@ Arches::scheduleRestartInitialize( const LevelP& level,
 void
 Arches::restartInitialize()
 {
-  m_doing_restart = true;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -255,16 +277,6 @@ Arches::scheduleComputeStableTimeStep(const LevelP& level,
                                       SchedulerP& sched)
 {
   m_nlSolver->computeTimestep(level, sched );
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-Arches::MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched,
-                                          bool& recompile, bool doing_restart )
-{
-  if ( doing_restart ) {
-    recompile = true;
-  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -280,21 +292,11 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
   if( isRegridTimeStep() ) { // Needed for single level regridding on restarts.
-    m_doing_restart = true;  // Note, this task is called twice on a regrid.
-    m_recompile = true;
-  }
-
-  if ( m_doing_restart ) {
-    if( m_recompile ) {
-      m_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
-    }
+                             // Note, this task is called twice on a regrid.
+    m_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
   }
 
   m_nlSolver->sched_nonlinearSolve(level, sched);
-
-  if( m_doing_restart ) {
-    m_doing_restart = false;
-  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -324,17 +326,22 @@ int Arches::computeTaskGraphIndex( const int timeStep )
 {
   // Setup the task graph for execution on the next timestep.
 
-  return m_nlSolver->getTaskGraphIndex( timeStep );
+  // Check to see if the DORadiation is using the dynamic solve frequency.
+  if( activeReductionVariable( dynamicSolveCount_name ) ) {
+    // If the variable is not benign then at least one rank set the value.
+    // The bengin value is realy large so this check is somewhat moot.
+    if( !isBenignReductionVariable( dynamicSolveCount_name ) )
+      return( getReductionVariable( dynamicSolveCount_name ) <= 1 );
+    else
+      return 0;
+  }
+  else
+    return m_nlSolver->getTaskGraphIndex( timeStep );
 }
 
 //--------------------------------------------------------------------------------------------------
 double Arches::recomputeDelT(const double delT ) {
   return m_nlSolver->recomputeDelT( delT );
-}
-
-//--------------------------------------------------------------------------------------------------
-bool Arches::restartableTimeSteps() {
-  return m_nlSolver->restartableTimeSteps();
 }
 
 //-------------------------------------------------------------------------------------------------

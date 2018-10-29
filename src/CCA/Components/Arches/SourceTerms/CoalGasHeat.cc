@@ -1,6 +1,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasHeat.h>
@@ -20,8 +20,8 @@
 using namespace std;
 using namespace Uintah;
 
-CoalGasHeat::CoalGasHeat( std::string src_name, vector<std::string> label_names, SimulationStateP& shared_state, std::string type )
-: SourceTermBase( src_name, shared_state, label_names, type )
+CoalGasHeat::CoalGasHeat( std::string src_name, vector<std::string> label_names, MaterialManagerP& materialManager, std::string type )
+: SourceTermBase( src_name, materialManager, label_names, type )
 {
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() );
 }
@@ -55,7 +55,7 @@ CoalGasHeat::problemSetup(const ProblemSpecP& inputdb)
     }
 
     int Nenv = ArchesCore::get_num_env(db,ArchesCore::DQMOM_METHOD);
-    double ash_mass_frac = coal_helper.get_coal_db().ash_mf; 
+    double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
     double init_particle_density = ArchesCore::get_inlet_particle_density( db );
     double initial_diameter = 0.0;
     double p_volume = 0.0;
@@ -99,8 +99,6 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     model_name  += "_qn";
     model_name  += node;
 
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( weight_name );
-
     ModelBase& model = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
@@ -128,7 +126,7 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
   }
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 
@@ -233,7 +231,7 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
     CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -316,7 +314,7 @@ CoalGasHeat::sched_initialize( const LevelP& level, SchedulerP& sched )
     tsk->computes(*iter);
   }
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 void
@@ -331,7 +329,7 @@ CoalGasHeat::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> src;
 

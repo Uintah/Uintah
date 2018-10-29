@@ -31,7 +31,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
@@ -39,7 +39,7 @@ namespace Uintah {
 
   class AutoCycleFluxBC : public FluxBCModel {
     public:
-      AutoCycleFluxBC(SimulationStateP& shared_state, MPMFlags* mpm_flags);
+      AutoCycleFluxBC(MaterialManagerP& materialManager, MPMFlags* mpm_flags);
 
       virtual ~AutoCycleFluxBC();
 

@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Ports/SolverInterface.h>
 
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 using namespace Uintah;
 
@@ -10,10 +10,10 @@ typedef ArchesFieldContainer AFC;
 typedef ArchesTaskInfoManager ATIM;
 
 //--------------------------------------------------------------------------------------------------
-PressureEqn::PressureEqn( std::string task_name, int matl_index, SimulationStateP shared_state ) :
+PressureEqn::PressureEqn( std::string task_name, int matl_index, MaterialManagerP materialManager ) :
 TaskInterface( task_name, matl_index ) {
 
-  m_sharedState = shared_state;
+  m_materialManager = materialManager;
   m_pressure_name = "pressure";
 
 }
@@ -53,14 +53,14 @@ PressureEqn::problemSetup( ProblemSpecP& db ){
 //--------------------------------------------------------------------------------------------------
 void
 PressureEqn::sched_Initialize( const LevelP& level, SchedulerP& sched ){
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
   m_hypreSolver->scheduleInitialize( level, sched, matls );
 }
 
 //--------------------------------------------------------------------------------------------------
 void
 PressureEqn::sched_restartInitialize( const LevelP& level, SchedulerP& sched ){
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
   m_hypreSolver->scheduleRestartInitialize( level, sched, matls );
 }
 
@@ -151,6 +151,44 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
     A.p *= -1;
 
    });
+
+  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
+  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+
+    const bool on_this_patch = i_bc->second.has_patch(patch->getID());
+    if ( !on_this_patch ) continue;
+
+    Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
+    IntVector iDir = patch->faceDirection( i_bc->second.face );
+    Patch::FaceType face = i_bc->second.face;
+    BndTypeEnum my_type = i_bc->second.type;
+
+    double sign;
+
+    if ( my_type == OUTLET ||
+         my_type == PRESSURE ){
+      // Dirichlet
+      // P = 0
+      sign = -1.0;
+    } else {
+      // Applies to Inlets, walls where
+      // P satisfies a Neumann condition
+      // dP/dX = 0
+      sign = 1.0;
+    }
+
+    parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+
+      const int im=i- iDir[0];
+      const int jm=j- iDir[1];
+      const int km=k- iDir[2];
+
+      Apress(im,jm,km).p = Apress(im,jm,km).p + sign * Apress(im,jm,km)[face];
+      Apress(im,jm,km)[face] = 0.;
+
+    });
+  }
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -252,37 +290,39 @@ PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
 
-  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
-  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+  //const BndMapT& bc_info = m_bcHelper->get_boundary_information();
+  //for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
-    Uintah::Iterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
-    IntVector iDir = patch->faceDirection( i_bc->second.face );
-    Patch::FaceType face = i_bc->second.face;
-    BndTypeEnum my_type = i_bc->second.type;
+  //  Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
+  //  IntVector iDir = patch->faceDirection( i_bc->second.face );
+  //  Patch::FaceType face = i_bc->second.face;
+  //  BndTypeEnum my_type = i_bc->second.type;
 
-    double sign;
+  //  double sign;
 
-    if ( my_type == OUTLET ||
-         my_type == PRESSURE ){
+  //  if ( my_type == OUTLET ||
+  //       my_type == PRESSURE ){
       // Dirichlet
       // P = 0
-      sign = -1.0;
-    } else {
+  //    sign = -1.0;
+  //  } else {
       // Applies to Inlets, walls where
       // P satisfies a Neumann condition
       // dP/dX = 0
-      sign = 1.0;
-    }
+  //    sign = 1.0;
+  //  }
 
-    for (cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+  //  parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
-      IntVector c = *cell_iter - iDir;
+  //    const int im=i- iDir[0];
+  //    const int jm=j- iDir[1];
+  //    const int km=k- iDir[2];
 
-      A[c].p = A[c].p + sign * A[c][face];
-      A[c][face] = 0.;
+  //    A(im,jm,km).p = A(im,jm,km).p + sign * A(im,jm,km)[face];
+  //    A(im,jm,km)[face] = 0.;
 
-    }
-  }
+   // });
+  //}
 
   //Now take care of intrusions:
   for (CellIterator iter=patch->getCellIterator();
@@ -344,7 +384,7 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
   const VarLabel* x = NULL;
   const VarLabel* guess = NULL;
 
-  for ( auto i = _local_labels.begin(); i != _local_labels.end(); i++ ){
+  for ( auto i = m_local_labels.begin(); i != m_local_labels.end(); i++ ){
     if ( (*i)->getName() == "A_press" ){
       A = *i;
     } else if ( (*i)->getName() == "b_press" ){
@@ -356,7 +396,7 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
     }
   }
 
-  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
   IntVector m_periodic_vector = level->getPeriodicBoundaries();
 
   const bool isPeriodic = m_periodic_vector.x() == 1 && m_periodic_vector.y() == 1 && m_periodic_vector.z() ==1;

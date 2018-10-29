@@ -1,0 +1,17 @@
+#!/bin/csh -f
+
+set SUS = "/home/builds/Fresh/NB/opt_gcc/StandAlone/sus"
+
+if (! -e $SUS )then
+  echo "ERROR the path to sus is undefined"
+  echo "Now exiting..."
+  exit(1)
+endif
+
+mpirun -np 1 $SUS -mpi XY.ups >& out.XY&
+
+mpirun -np 1 $SUS -mpi YZ.ups >& out.YZ&
+
+mpirun -np 1 $SUS -mpi XZ.ups >& out.XZ&
+
+exit

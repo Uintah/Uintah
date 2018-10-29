@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_HTConvection_h
 #define Uintah_Component_Arches_HTConvection_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/ArchesLabel.h>

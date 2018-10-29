@@ -41,16 +41,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       HandOff* build()
-      { return scinew HandOff<T>( _task_name, _matl_index ); }
+      { return scinew HandOff<T>( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
     };
 
@@ -96,7 +96,7 @@ private:
       db_default->getAttribute("label", m_default_label );
     }
     else {
-      throw ProblemSetupException("Error: no default bc found for: "+_task_name, __FILE__, __LINE__);
+      throw ProblemSetupException("Error: no default bc found for: "+m_task_name, __FILE__, __LINE__);
     }
 
     ArchesCore::VariableHelper<T> helper;
@@ -111,7 +111,7 @@ private:
   template <typename T>
   void HandOff<T>::create_local_labels(){
 
-    register_new_variable<T>(_task_name);
+    register_new_variable<T>(m_task_name);
 
   }
 
@@ -121,7 +121,7 @@ private:
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
     const bool packed_tasks ){
 
-    register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   }
 
@@ -129,7 +129,7 @@ private:
   template <typename T>
   void HandOff<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& var = *(tsk_info->get_uintah_field<T>( _task_name ));
+    T& var = *(tsk_info->get_uintah_field<T>( m_task_name ));
     var.initialize(0.0);
 
     ArchesCore::VariableHelper<T> helper;
@@ -209,8 +209,8 @@ private:
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
     const bool packed_tasks ){
 
-    register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( _task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
+    register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( m_task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
                        variable_registry );
 
   }
@@ -221,8 +221,8 @@ private:
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
-    T& var = *(tsk_info->get_uintah_field<T>(_task_name));
-    CT& old_var = *(tsk_info->get_const_uintah_field<CT>(_task_name));
+    T& var = *(tsk_info->get_uintah_field<T>(m_task_name));
+    CT& old_var = *(tsk_info->get_const_uintah_field<CT>(m_task_name));
 
     var.copyData(old_var);
 
@@ -235,7 +235,7 @@ private:
     const int time_substep,
     const bool packed_tasks ){
 
-    register_variable( _task_name, ArchesFieldContainer::MODIFIES, variable_registry );
+    register_variable( m_task_name, ArchesFieldContainer::MODIFIES, variable_registry );
     register_variable( m_default_label, ArchesFieldContainer::REQUIRES, 0,
                        ArchesFieldContainer::NEWDW, variable_registry );
 
@@ -252,7 +252,7 @@ private:
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     CT& default_var = *(tsk_info->get_const_uintah_field<CT>(m_default_label));
-    T& var = *(tsk_info->get_uintah_field<T>(_task_name));
+    T& var = *(tsk_info->get_uintah_field<T>(m_task_name));
 
     const BndMapT& bc_info = m_bcHelper->get_boundary_information();
     Vector DX = patch->dCell();
@@ -293,14 +293,13 @@ private:
       }
 
       if ( spec->bcType == CUSTOM ){
-        Uintah::Iterator cell_iter
+        Uintah::ListOfCellsIterator& cell_iter
           = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-        cell_iter.reset();
-        for (; !cell_iter.done(); cell_iter++){
-
-          IntVector ijk = *cell_iter;
-          IntVector orig_ijk = *cell_iter;
+        parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+           
+          IntVector ijk(i,j,k);
+          IntVector orig_ijk(i,j,k);
 
           ijk -= m_boundary_info.relative_ijk;
           ijk[0] = I;
@@ -314,7 +313,7 @@ private:
               var[orig_ijk+shift] = m_boundary_info.default_value * delta + default_var[orig_ijk];
             }
           }
-        }
+        });
       }
     }
   }

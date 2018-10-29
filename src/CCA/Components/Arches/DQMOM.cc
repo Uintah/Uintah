@@ -17,7 +17,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
@@ -399,7 +399,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     }
   }
 
-  sched->addTask(tsk, level->eachPatch(), m_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), m_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 
 }
 
@@ -431,7 +431,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #endif
 #endif
 
-  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // int timeStep = d_lab->d_materialManager->getCurrentTopLevelTimeStep();
   timeStep_vartype timeStep;
   old_dw->get( timeStep, m_fieldLabels->d_timeStepLabel );
 
@@ -442,7 +442,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
 
     int archIndex = 0;
-    int matlIndex = m_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = m_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     DataWarehouse* which_dw;
 
     CCVariable<double> normB;
@@ -1937,7 +1937,7 @@ DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeS
     //tsk->requires(Task::NewDW, tempLabel, Ghost::None, 0);
   //}
 
-  //sched->addTask(tsk, level->eachPatch(), m_fieldLabels->d_sharedState->allArchesMaterials());
+  //sched->addTask(tsk, level->eachPatch(), m_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 // **********************************************
@@ -1960,7 +1960,7 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
     //const Patch* patch = patches->get(p);
 
     //int archIndex = 0;
-    //int matlIndex = m_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    //int matlIndex = m_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     //// get weights from data warehouse and store their corresponding CCVariables
     //vector<constCCVarWrapper> weightCCVars;

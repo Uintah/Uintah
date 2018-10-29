@@ -38,7 +38,7 @@ namespace Uintah {
             -reads input parameters needed setBC routines
  ______________________________________________________________________  */
 bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
-                             SimulationStateP& sharedState,
+                             MaterialManagerP& materialManager,
                              inletVel_globalVars* global,
                              GridP& grid)
 {
@@ -90,15 +90,15 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
     
     //__________________________________
     //  Find the material associated with this BC
-    Material* matl = sharedState->parseAndLookupMaterial(inlet_ps, "material");
+    Material* matl = materialManager->parseAndLookupMaterial(inlet_ps, "material");
     global->iceMatl_indx = matl->getDWIndex();
     
-    int numICEMatls = sharedState->getNumICEMatls();
+    int numICEMatls = materialManager->getNumMatls( "ICE" );
     bool foundMatl = false;
     ostringstream indicies;
     
     for(int m = 0; m < numICEMatls; m++){
-      ICEMaterial* matl = sharedState->getICEMaterial( m );
+      ICEMaterial* matl = (ICEMaterial*) materialManager->getMaterial( "ICE",  m );
       int indx = matl->getDWIndex();
       indicies << " " << indx ;
       if(indx == global->iceMatl_indx){

@@ -34,7 +34,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Task.h>
 
 
@@ -86,7 +86,7 @@ WARNING
          NodalSVFContact(const NodalSVFContact &con);
          NodalSVFContact& operator=(const NodalSVFContact &con);
          
-         SimulationStateP    d_sharedState;
+         MaterialManagerP    d_materialManager;
          
          //PARAMETERS UNIQUE TO THIS MODEL FROM UPS FILE
          double d_myu;
@@ -95,7 +95,7 @@ WARNING
       public:
          // Constructor
          NodalSVFContact(const ProcessorGroup* myworld,
-                          ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb,
+                          ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb,
                           MPMFlags* MFlag);
          
          // Destructor

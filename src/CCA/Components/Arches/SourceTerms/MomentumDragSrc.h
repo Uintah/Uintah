@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_MomentumDragSrc_h
 #define Uintah_Component_Arches_MomentumDragSrc_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 /**
@@ -30,7 +30,7 @@ namespace Uintah{
   class MomentumDragSrc: public SourceTermBase {
   public:
     
-    MomentumDragSrc( std::string srcName, SimulationStateP& shared_state,
+    MomentumDragSrc( std::string srcName, MaterialManagerP& materialManager,
                      std::vector<std::string> reqLabelNames, std::string type );
     
     ~MomentumDragSrc();
@@ -60,20 +60,20 @@ namespace Uintah{
       
     public:
       
-      Builder( std::string name, std::vector<std::string> required_label_names, SimulationStateP& shared_state )
-      : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
+      Builder( std::string name, std::vector<std::string> required_label_names, MaterialManagerP& materialManager )
+      : _name(name), _materialManager(materialManager), _required_label_names(required_label_names){
         _type = "momentum_drag_src";
       };
       ~Builder(){};
       
       MomentumDragSrc* build()
-      { return scinew MomentumDragSrc( _name, _shared_state, _required_label_names, _type ); };
+      { return scinew MomentumDragSrc( _name, _materialManager, _required_label_names, _type ); };
       
     private:
       
       std::string _name;
       std::string _type;
-      SimulationStateP& _shared_state;
+      MaterialManagerP& _materialManager;
       std::vector<std::string> _required_label_names;
       
     }; // Builder

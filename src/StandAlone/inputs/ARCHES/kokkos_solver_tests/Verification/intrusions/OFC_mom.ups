@@ -28,6 +28,9 @@
     <outputInitTimestep/>
     <save label="A_press"/>
     <save label="volFraction"/>
+    <save label="volFractionX"/>
+    <save label="volFractionY"/>
+    <save label="volFractionZ"/>
     <save label="x-mom"/>
     <save label="y-mom"/>
     <save label="z-mom"/>

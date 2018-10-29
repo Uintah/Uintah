@@ -2,8 +2,8 @@
 #define Uintah_Component_Arches_HeatLoss_h
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 
 
@@ -34,7 +34,7 @@ class HeatLoss : public PropertyModelBase {
 
 public:
 
-  HeatLoss( std::string prop_name, SimulationStateP& shared_state );
+  HeatLoss( std::string prop_name, MaterialManagerP& materialManager );
   ~HeatLoss();
 
   void problemSetup( const ProblemSpecP& db );
@@ -79,15 +79,15 @@ public:
 
   public:
 
-    Builder( std::string name, SimulationStateP& shared_state ) : _name(name), _shared_state(shared_state) {};
+    Builder( std::string name, MaterialManagerP& materialManager ) : _name(name), _materialManager(materialManager) {};
     ~Builder(){};
 
-    HeatLoss* build() { return scinew HeatLoss( _name, _shared_state ); };
+    HeatLoss* build() { return scinew HeatLoss( _name, _materialManager ); };
 
   private:
 
     std::string _name;
-    SimulationStateP& _shared_state;
+    MaterialManagerP& _materialManager;
 
   }; // class Builder
 

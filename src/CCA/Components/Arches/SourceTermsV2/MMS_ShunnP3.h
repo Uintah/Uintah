@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_MMS_ShunnP3_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 namespace Uintah{
 
@@ -11,7 +11,7 @@ namespace Uintah{
 
 public:
 
-  MMS_ShunnP3<T>( std::string task_name, int matl_index, SimulationStateP shared_state  );
+  MMS_ShunnP3<T>( std::string task_name, int matl_index, MaterialManagerP materialManager  );
   ~MMS_ShunnP3<T>();
 
   void problemSetup( ProblemSpecP& db );
@@ -21,19 +21,19 @@ public:
 
     public:
 
-    Builder( std::string task_name, int matl_index, SimulationStateP shared_state ) :
-      _task_name(task_name), _matl_index(matl_index), _shared_state(shared_state){}
+    Builder( std::string task_name, int matl_index, MaterialManagerP materialManager ) :
+      m_task_name(task_name), m_matl_index(matl_index), _materialManager(materialManager){}
     ~Builder(){}
 
     MMS_ShunnP3* build()
-    { return scinew MMS_ShunnP3<T>( _task_name, _matl_index, _shared_state  ); }
+    { return scinew MMS_ShunnP3<T>( m_task_name, m_matl_index, _materialManager  ); }
 
     private:
 
-    std::string _task_name;
-    int _matl_index;
+    std::string m_task_name;
+    int m_matl_index;
 
-    SimulationStateP _shared_state;
+    MaterialManagerP _materialManager;
   };
 
 protected:
@@ -89,7 +89,7 @@ private:
   //std::string m_MMS_source_diff_label;
   //std::string m_MMS_source_t_label;
 
-  SimulationStateP _shared_state;
+  MaterialManagerP _materialManager;
 
   void compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -97,8 +97,8 @@ private:
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-MMS_ShunnP3<T>::MMS_ShunnP3( std::string task_name, int matl_index, SimulationStateP shared_state ) :
-TaskInterface( task_name, matl_index ) , _shared_state(shared_state){
+MMS_ShunnP3<T>::MMS_ShunnP3( std::string task_name, int matl_index, MaterialManagerP materialManager ) :
+TaskInterface( task_name, matl_index ) , _materialManager(materialManager){
 
 }
 
@@ -181,21 +181,21 @@ void MMS_ShunnP3<T>::problemSetup( ProblemSpecP& db ){
       __FILE__, __LINE__);
   }
 
-  m_MMS_label             = _task_name;
-  m_rho_u_label           = _task_name + "_rho_u";
-  //m_MMS_scalar_label      = _task_name+"_scalar";
-  m_MMS_source_label      = _task_name + "_source";
-  //m_MMS_source_scalar_label = _task_name + "_source_scalar";
+  m_MMS_label             = m_task_name;
+  m_rho_u_label           = m_task_name + "_rho_u";
+  //m_MMS_scalar_label      = m_task_name+"_scalar";
+  m_MMS_source_label      = m_task_name + "_source";
+  //m_MMS_source_scalar_label = m_task_name + "_source_scalar";
 
-  //m_MMS_rho_scalar_label   = _task_name+"_rho_scalar";
-  m_MMS_rho_label          = _task_name+"_rho";
-  //m_MMS_rho_face_label          = _task_name+"_rho_face";
+  //m_MMS_rho_scalar_label   = m_task_name+"_rho_scalar";
+  m_MMS_rho_label          = m_task_name+"_rho";
+  //m_MMS_rho_face_label          = m_task_name+"_rho_face";
 
-  m_MMS_drhodt_label       = _task_name+"_drhodt";
-  m_MMS_continuity_label       = _task_name+"_continuity";
+  m_MMS_drhodt_label       = m_task_name+"_drhodt";
+  m_MMS_continuity_label       = m_task_name+"_continuity";
 
-  //m_MMS_source_diff_label = _task_name + "_source_diff";
-  //m_MMS_source_t_label    = _task_name + "_source_time";
+  //m_MMS_source_diff_label = m_task_name + "_source_diff";
+  //m_MMS_source_t_label    = m_task_name + "_source_time";
 
 }
 
@@ -297,7 +297,7 @@ void MMS_ShunnP3<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 template <typename T>
 void MMS_ShunnP3<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  double time_d      = tsk_info->get_time(); //_shared_state->getElapsedSimTime();
+  double time_d      = tsk_info->get_time(); //_materialManager->getElapsedSimTime();
   int   time_substep = tsk_info->get_time_substep();
   double factor      = tsk_info->get_ssp_time_factor(time_substep);
   double dt          = tsk_info->get_dt();

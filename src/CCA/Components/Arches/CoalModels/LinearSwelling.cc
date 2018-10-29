@@ -10,7 +10,7 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -28,27 +28,27 @@ LinearSwellingBuilder::LinearSwellingBuilder( const std::string         & modelN
                                                             const vector<std::string> & reqICLabelNames,
                                                             const vector<std::string> & reqScalarLabelNames,
                                                             ArchesLabel         * fieldLabels,
-                                                            SimulationStateP          & sharedState,
+                                                            MaterialManagerP          & materialManager,
                                                             int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, materialManager, qn )
 {
 }
 
 LinearSwellingBuilder::~LinearSwellingBuilder(){}
 
 ModelBase* LinearSwellingBuilder::build() {
-  return scinew LinearSwelling( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return scinew LinearSwelling( d_modelName, d_materialManager, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
 LinearSwelling::LinearSwelling( std::string modelName,
-                                              SimulationStateP& sharedState,
+                                              MaterialManagerP& materialManager,
                                               ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames,
                                               vector<std::string> scalarLabelNames,
                                               int qn )
-: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+: ModelBase(modelName, materialManager, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Create a label for this model
   d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
@@ -87,7 +87,7 @@ LinearSwelling::problemSetup(const ProblemSpecP& params, int qn)
 
   m_init_diam = ArchesCore::get_inlet_particle_size( db, qn );
   double init_particle_density = ArchesCore::get_inlet_particle_density( db );
-  double ash_mass_frac = coal_helper.get_coal_db().ash_mf; 
+  double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
   double p_volume = M_PI/6.*m_init_diam*m_init_diam*m_init_diam; // particle volme [m^3]
   m_init_rc = p_volume*init_particle_density*(1.-ash_mass_frac);
 
@@ -117,8 +117,6 @@ LinearSwelling::problemSetup(const ProblemSpecP& params, int qn)
   std::string scaled_weight_name = ArchesCore::append_qn_env("w", d_quadNode);
   m_scaled_weight_varlabel = VarLabel::find(scaled_weight_name);
   std::string weightqn_name = ArchesCore::append_qn_env("w", d_quadNode);
-  EqnBase& temp_current_eqn2 = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
-  DQMOMEqn& current_eqn2 = dynamic_cast<DQMOMEqn&>(temp_current_eqn2);
 
   // Get rcmass scaling constant
   std::string rc_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);
@@ -156,7 +154,7 @@ LinearSwelling::sched_initVars( const LevelP& level, SchedulerP& sched )
 
   tsk->computes(d_modelLabel);
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
 
 //-------------------------------------------------------------------------
@@ -173,7 +171,7 @@ LinearSwelling::initVars( const ProcessorGroup * pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> ls_rate;
 
@@ -213,7 +211,7 @@ LinearSwelling::sched_computeModel( const LevelP& level, SchedulerP& sched, int 
   // get time step size for model clipping
   tsk->requires( Task::OldDW,d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 
 }
 
@@ -232,7 +230,7 @@ LinearSwelling::computeModel( const ProcessorGroup * pc,
     Ghost::GhostType  gn  = Ghost::None;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     Vector Dx = patch->dCell();
     const double vol = Dx.x()* Dx.y()* Dx.z();

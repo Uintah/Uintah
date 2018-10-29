@@ -29,7 +29,7 @@
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Math/FastMatrix.h>
@@ -44,7 +44,7 @@ namespace ExchangeModels{
 
   public:
     ScalarExch(const ProblemSpecP     & prob_spec,
-               const SimulationStateP & sharedState );
+               const MaterialManagerP & materialManager );
 
     virtual ~ScalarExch();
 
@@ -65,6 +65,7 @@ namespace ExchangeModels{
     virtual void sched_AddExch_VelFC(SchedulerP           & sched,
                                      const PatchSet       * patches,
                                      const MaterialSubset * iceMatls,
+                                     const MaterialSubset * mpmMatls,
                                      const MaterialSet    * allMatls,
                                      customBC_globalVars  * BC_globalVars,
                                      const bool recursion);

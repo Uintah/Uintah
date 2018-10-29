@@ -35,7 +35,7 @@ namespace Uintah {
 
   public:
   
-    DynamicModel(ProblemSpecP& ps, SimulationStateP& sharedState);
+    DynamicModel(ProblemSpecP& ps, MaterialManagerP& materialManager);
     virtual ~DynamicModel();
     
     virtual void computeTurbViscosity(DataWarehouse* new_dw,
@@ -47,7 +47,7 @@ namespace Uintah {
                                       constSFCZVariable<double>& wvel_FC,      
                                       constCCVariable<double>& rho_CC,         
                                       const int indx,                           
-                                      SimulationStateP&  d_sharedState,         
+                                      MaterialManagerP&  d_materialManager,         
                                       CCVariable<double>& turb_viscosity);      
              
     virtual void scheduleComputeVariance(SchedulerP& sched, 
@@ -64,7 +64,7 @@ namespace Uintah {
                           constSFCYVariable<double>& vvel_FC,               
                           constSFCZVariable<double>& wvel_FC,               
                           const int indx,                                    
-                          SimulationStateP&  d_sharedState,                  
+                          MaterialManagerP&  d_materialManager,                  
                           CCVariable<double>& term,                          
                           CCVariable<double>& meanSIJ);                      
 

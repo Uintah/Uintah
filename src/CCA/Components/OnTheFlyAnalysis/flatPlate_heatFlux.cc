@@ -33,7 +33,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
@@ -57,9 +57,9 @@ static DebugStream cout_doing("FLATPLATE_HEATFLUX_DOING_COUT", false);
 static DebugStream cout_dbg("FLATPLATE_HEATFLUX_DBG_COUT", false);
 //______________________________________________________________________
 flatPlate_heatFlux::flatPlate_heatFlux(const ProcessorGroup* myworld,
-                                       const SimulationStateP sharedState,
+                                       const MaterialManagerP materialManager,
                                        const ProblemSpecP& module_spec)
-  : AnalysisModule(myworld, sharedState, module_spec)
+  : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_matl = nullptr;
   d_matl_set = nullptr;
@@ -90,7 +90,9 @@ flatPlate_heatFlux::~flatPlate_heatFlux()
 //     P R O B L E M   S E T U P
 void flatPlate_heatFlux::problemSetup(const ProblemSpecP& ,
                                       const ProblemSpecP& ,
-                                      GridP& grid)
+                                      GridP& grid,
+                                      std::vector<std::vector<const VarLabel* > > &PState,
+                                      std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tflatPlate_heatFlux" << endl;
   
@@ -98,7 +100,7 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& ,
     VarLabel::create("total_heatRate", sum_vartype::getTypeDescription());
 
   // determine which material index to compute
-  d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
+  d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
   
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();

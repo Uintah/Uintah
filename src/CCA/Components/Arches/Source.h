@@ -29,29 +29,29 @@
 /**************************************
 CLASS
    Source
-   
-   Class Source computes source terms for 
-   N-S equations.  
+
+   Class Source computes source terms for
+   N-S equations.
 
 GENERAL INFORMATION
    Source.h - declaration of the class
-   
+
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
 
    All major modifications since 01.01.2004 done by:
    Stanislav Borodai(borodai@crsim.utah.edu)
-   
+
    Creation Date:   Mar 1, 2000
-   
-   C-SAFE 
-   
+
+   C-SAFE
+
 
 KEYWORDS
 
 
 DESCRIPTION
-   Class Source computes source terms for 
-   N-S equations.  
+   Class Source computes source terms for
+   N-S equations.
 
 WARNING
    none
@@ -74,7 +74,7 @@ class BoundaryCondition;
 class Source {
 
 public:
-  
+
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
   // Construct an instance of a Source.
@@ -86,7 +86,7 @@ public:
   // Construct an instance of a Source.
   // PRECONDITIONS
   // POSTCONDITIONS
-  Source(PhysicalConstants* phys_const);
+  Source(PhysicalConstants* phys_const, BoundaryCondition* boundaryCondition );
 
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
@@ -106,26 +106,27 @@ public:
                                    const Patch* patch,
                                    double delta_t,
                                    ArchesVariables* vars,
-                                   ArchesConstVariables* constvars); 
+                                   ArchesConstVariables* constvars,
+                                   DataWarehouse* newDW );
   ////////////////////////////////////////////////////////////////////////
   // Set source terms. Will need more parameters...like velocity and
   // scalars
   void calculateVelocitySource(const Patch* patch,
-                               double delta_t, 
+                               double delta_t,
                                CellInformation* cellinfo,
                                ArchesVariables* vars,
                                ArchesConstVariables* constvars);
 
   template<class T>
-  void compute_massSource(CellIterator iter, IntVector D, 
-                           constCCVariable<double> volFraction, 
+  void compute_massSource(CellIterator iter, IntVector D,
+                           constCCVariable<double> volFraction,
                            const T& vel,
                            StencilMatrix<T>& velCoeff,
                            T& velNonLinearSrc,
                            StencilMatrix<T>& velConvectCoeff);
-                           
+
   void modifyVelMassSource(const Patch* patch,
-                           constCCVariable<double> volFraction, 
+                           constCCVariable<double> volFraction,
                            ArchesVariables* vars,
                            ArchesConstVariables* constvars);
 
@@ -137,7 +138,7 @@ public:
                                ArchesVariables* vars,
                                ArchesConstVariables* constvars);
 
-                                   
+
 private:
 
   PhysicalConstants* d_physicalConsts;
@@ -146,6 +147,7 @@ private:
   Vector d_gravity;
   double d_viscosity;
   double d_turbPrNo;
+  BoundaryCondition* d_boundaryCondition;
 
   // linear mms
   double cu, cv, cw, cp, phi0;
@@ -155,5 +157,4 @@ private:
 }; // end Class Source
 
 } // End namespace Uintah
-#endif  
-  
+#endif

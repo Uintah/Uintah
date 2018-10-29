@@ -52,6 +52,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include <Core/Grid/Variables/ListOfCellsIterator.h> // used for Uintah::PatchSet
 /**
  * \file WBCHelper.h
  */
@@ -85,6 +86,7 @@
  We support Dirichlet and Neumnann conditions on the boundary.
  */
 //****************************************************************************
+
 
 enum BndCondTypeEnum
 {
@@ -137,6 +139,7 @@ enum BndTypeEnum
   OUTLET,    ///< Outlet boundary condition
   PRESSURE,  ///< Pressure boundary condition
   USER,      ///< User specified
+  INTRUSION, ///< Intrusion - enum stored here for convenience
   INVALID
 };
 
@@ -244,16 +247,22 @@ typedef std::map <std::string, BndSpec> BndMapT;
  near the boundary, NOT the particle ID (PID).
  */
 //****************************************************************************
+namespace Uintah{
 struct BoundaryIterators
 {
+  BoundaryIterators(int size) :  extraBndCellsUintah(size) , particleIdx(0){ }
+  BoundaryIterators(const BoundaryIterators& copyMe) :  extraBndCellsUintah(copyMe.extraBndCellsUintah) , particleIdx(copyMe.particleIdx){ }
+
   /**
    \brief Helper function to return the appropriate spatial mask given a field type
    */
-  Uintah::Iterator extraBndCellsUintah;                   // We still need the Unitah iterator
+
+  ListOfCellsIterator extraBndCellsUintah;                   // We still need the Unitah iterator
   const std::vector<int>* particleIdx;                    // list of particle indices near a given boundary. Given the memory of ALL particles on a given patch, this vector stores
                                                           // the indices of those particles that are near a boundary.
-};
 
+};
+}
 
 //****************************************************************************
 /**
@@ -382,7 +391,7 @@ public:
   /**
    \brief Returns the original Uintah boundary cell iterator.
    */
-  Uintah::Iterator& get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
+  Uintah::ListOfCellsIterator& get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
                                                const int& patchID );
 
   // Parse boundary conditions specified through the input file. This function does NOT need

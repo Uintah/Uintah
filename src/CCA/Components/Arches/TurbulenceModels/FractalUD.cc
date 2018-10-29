@@ -152,7 +152,7 @@ namespace Uintah{
 
       // register Velocity Delta
       for (auto iter = m_VelDelta_names.begin(); iter != m_VelDelta_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name  );
+        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name  );
       }
     }
 
@@ -177,9 +177,9 @@ namespace Uintah{
       SFCZVariable<double>& wcell_YvelD     = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_YvelD"));
       SFCZVariable<double>& wcell_ZvelD     = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_ZvelD"));
       //U2D
-      SFCXVariable<double>& u2D_ctr    = *(tsk_info->get_uintah_field<SFCXVariable<double> >("u2D_ctr"));
-      SFCYVariable<double>& v2D_ctr   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >("v2D_ctr"));
-      SFCZVariable<double>& w2D_ctr    = *(tsk_info->get_uintah_field<SFCZVariable<double> >("w2D_ctr"));
+      // SFCXVariable<double>& u2D_ctr    = *(tsk_info->get_uintah_field<SFCXVariable<double> >("u2D_ctr"));
+      // SFCYVariable<double>& v2D_ctr   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >("v2D_ctr"));
+      // SFCZVariable<double>& w2D_ctr    = *(tsk_info->get_uintah_field<SFCZVariable<double> >("w2D_ctr"));
       uD_ctr.initialize(0.0);
       ucell_XvelD.initialize(0.0);
       ucell_YvelD.initialize(0.0);
@@ -249,7 +249,7 @@ namespace Uintah{
       // UPDATE USER DEFINE VARIABLES
       // register Velocity Delta
       for (auto iter = m_VelDelta_names.begin(); iter != m_VelDelta_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, time_substep,_task_name );
+        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, time_substep,m_task_name );
       }
 
     }

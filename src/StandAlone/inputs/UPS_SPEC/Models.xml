@@ -131,6 +131,21 @@
       </SimpleRxn>
 
       <!--__________________________________-->
+      <!--  flameSheet_rxn -->
+      <flameSheet_rxn             spec="OPTIONAL NO_DATA">                                      
+        <material                 spec="REQUIRED STRING"/>                                      
+        <scalar                   spec="OPTIONAL NO_DATA" attribute1="name REQUIRED STRING" >   
+          <reaction_constants       spec="OPTIONAL NO_DATA">
+            <f_stoichometric        spec="REQUIRED DOUBLE '0,1'"/>
+            <delta_H_combustion     spec="REQUIRED DOUBLE 'positive'"/>
+            <oxidizer_temp_infinity spec="REQUIRED DOUBLE 'positive'"/>
+            <initial_fuel_temp      spec="REQUIRED DOUBLE 'positive'"/>
+            <diffusivity            spec="REQUIRED DOUBLE 'positive'"/>
+          </reaction_constants>
+          <geom_object              spec="MULTIPLE" />
+        </scalar>
+      </flameSheet_rxn>
+      <!--__________________________________-->
       <!-- SolidReactionModel -->
       <SolidReactionModel           spec="OPTIONAL NO_DATA">
         <fromMaterial               spec="REQUIRED STRING" />

@@ -99,7 +99,7 @@ PartVel::schedInitPartVel( const LevelP& level, SchedulerP& sched )
     tsk->computes( i->second );
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 
   // Not needed since velocities are always used from new_dw
 }
@@ -118,7 +118,7 @@ void PartVel::InitPartVel( const ProcessorGroup* pc,
     DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     int N = dqmomFactory.get_quad_nodes();
     for ( int iqn = 0; iqn < N; iqn++){
@@ -231,7 +231,7 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
 
     }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
 // Method: Copy old data into a newly allocated new data spot
@@ -251,7 +251,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
     Ghost::GhostType  ga = Ghost::AroundCells;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     DataWarehouse* which_dw;
     if ( rkStep == 0 ){

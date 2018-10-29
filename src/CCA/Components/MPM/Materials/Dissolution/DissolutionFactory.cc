@@ -37,7 +37,7 @@ using namespace std;
 using namespace Uintah;
 
 Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
-                                const ProblemSpecP& ps, SimulationStateP &ss,
+                                const ProblemSpecP& ps, MaterialManagerP &ss,
                                 MPMLabel* lb, MPMFlags* flag)
 {
 

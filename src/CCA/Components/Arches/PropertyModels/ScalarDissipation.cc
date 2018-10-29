@@ -5,7 +5,7 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 //Method: Constructor
 //---------------------------------------------------------------------------
-ScalarDissipation::ScalarDissipation( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
+ScalarDissipation::ScalarDissipation( std::string prop_name, MaterialManagerP& materialManager ) : PropertyModelBase( prop_name, materialManager )
 {
   _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() );  
   
@@ -65,7 +65,7 @@ void ScalarDissipation::sched_computeProp( const LevelP& level, SchedulerP& sche
     tsk->requires( Task::NewDW, _gradmf2_label, Ghost::None, 0 ); 
   } 
   
-  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+  sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
 }
 
 //---------------------------------------------------------------------------
@@ -83,7 +83,7 @@ void ScalarDissipation::computeProp(const ProcessorGroup* pc,
     
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     
     CCVariable<double>      prop; 
     constCCVariable<double> gradmf2;
@@ -117,7 +117,7 @@ void ScalarDissipation::sched_initialize( const LevelP& level, SchedulerP& sched
   Task* tsk = scinew Task(taskname, this, &ScalarDissipation::initialize);
   tsk->computes(_prop_label); 
   
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -134,7 +134,7 @@ void ScalarDissipation::initialize( const ProcessorGroup* pc,
     
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     
     CCVariable<double> prop; 
     

@@ -1,6 +1,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/ShunnMoinMMSMF.h>
@@ -10,9 +10,9 @@
 using namespace std;
 using namespace Uintah; 
 
-ShunnMoinMMSMF::ShunnMoinMMSMF( std::string src_name, SimulationStateP& shared_state,
+ShunnMoinMMSMF::ShunnMoinMMSMF( std::string src_name, MaterialManagerP& materialManager,
                             vector<std::string> req_label_names, std::string type ) 
-: SourceTermBase(src_name, shared_state, req_label_names, type)
+: SourceTermBase(src_name, materialManager, req_label_names, type)
 {
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 }
@@ -89,7 +89,7 @@ ShunnMoinMMSMF::sched_computeSource( const LevelP& level, SchedulerP& sched, int
 
   tsk->requires(which_dw, VarLabel::find("density"), Ghost::None, 0); 
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" )); 
 
 }
 //---------------------------------------------------------------------------
@@ -103,7 +103,7 @@ ShunnMoinMMSMF::computeSource( const ProcessorGroup* pc,
                    DataWarehouse* new_dw, 
                    int timeSubStep )
 {
-//  double simTime = _sharedState->getElapsedSimTime();
+//  double simTime = _materialManager->getElapsedSimTime();
   simTime_vartype simTime;
   old_dw->get( simTime, _simulationTimeLabel );
 
@@ -111,7 +111,7 @@ ShunnMoinMMSMF::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> src; 
     constCCVariable<double> density; 
@@ -189,7 +189,7 @@ ShunnMoinMMSMF::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   tsk->computes(_src_label);
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 void 
@@ -204,7 +204,7 @@ ShunnMoinMMSMF::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
 
     CCVariable<double> src;

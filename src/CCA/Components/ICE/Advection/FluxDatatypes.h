@@ -61,8 +61,8 @@ namespace Uintah {
       //across function calls
       MPI_Datatype (*func)() = makeMPI_facedata<T>;
       td = scinew TypeDescription(TypeDescription::Other,
-				  "facedata", true, 
-				  func);
+                                  "facedata", true, 
+                                  func);
     }
     return td;
   }
@@ -93,8 +93,8 @@ namespace Uintah {
       //across function calls
       MPI_Datatype (*func)() = makeMPI_vertex<T>;
       td = scinew TypeDescription(TypeDescription::Other,
-				  "vertex", true, 
-				  func);
+                                  "vertex", true, 
+                                  func);
     }
     return td;
   }  

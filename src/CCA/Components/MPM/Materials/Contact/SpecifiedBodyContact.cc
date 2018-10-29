@@ -31,8 +31,8 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -50,7 +50,7 @@ using namespace Uintah;
 
 SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
                                            ProblemSpecP& ps,
-                                           SimulationStateP& d_sS, 
+                                           MaterialManagerP& d_sS, 
                                            MPMLabel* Mlb, MPMFlags* MFlag)
   : Contact(myworld, Mlb, MFlag, ps)
 {
@@ -99,7 +99,7 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   ps->getWithDefault("stop_time",d_stop_time, std::numeric_limits<double>::max());
   ps->getWithDefault("velocity_after_stop",d_vel_after_stop, Vector(0,0,0));
   
-  d_sharedState = d_sS;
+  d_materialManager = d_sS;
   lb = Mlb;
   flag = MFlag;
   if(flag->d_8or27==8){
@@ -176,7 +176,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* new_dw)
 {
  if(d_oneOrTwoStep==2){
-  // const double simTime = d_sharedState->getElapsedSimTime();
+  // const double simTime = d_materialManager->getElapsedSimTime();
   
   simTime_vartype simTime;
   old_dw->get(simTime, lb->simulationTimeLabel);
@@ -184,7 +184,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel, getLevel(patches));
   
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = d_materialManager->getNumMatls( "MPM" );
   ASSERTEQ(numMatls, matls->size());
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -253,13 +253,13 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
                                        DataWarehouse* new_dw)
 {
   // set velocity to appropriate vel
-  // const double simTime = d_sharedState->getElapsedSimTime(); // FIXME: + dt ?
+  // const double simTime = d_materialManager->getElapsedSimTime(); // FIXME: + dt ?
     
   simTime_vartype simTime;
   old_dw->get(simTime, lb->simulationTimeLabel);
 
   Ghost::GhostType  gnone = Ghost::None;
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = d_materialManager->getNumMatls( "MPM" );
 
   // Retrieve necessary data from DataWarehouse
   std::vector<constNCVariable<double> > gmass(numMatls);

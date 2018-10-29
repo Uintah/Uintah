@@ -107,9 +107,9 @@ public:
 
   DebugStream( const std::string& name
              , const std::string& component
-	           , const std::string& description
-	           , bool defaulton = true
-	           );
+                   , const std::string& description
+                   , bool defaulton = true
+                   );
 
   ~DebugStream();
 
@@ -126,9 +126,9 @@ public:
   void print() const
   {
     std::cout << std::setw(2)  << std::left << (m_active ? "+" : "-")
-              << std::setw(40) << std::left << m_name.c_str()
-              << std::setw(50) << std::left << m_description.c_str()
-              << std::setw(40) << std::left << m_component.c_str()
+              << std::setw(30) << std::left << m_name.c_str()
+              << std::setw(75) << std::left << m_description.c_str()
+              << std::setw(30) << std::left << m_component.c_str()
               << std::endl;
   }
 

@@ -26,7 +26,7 @@
  */
 
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -320,7 +320,7 @@ private:
       //   phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
       //
       //}
-      
+
       phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
 
     }

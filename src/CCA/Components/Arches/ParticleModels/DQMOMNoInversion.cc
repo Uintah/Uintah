@@ -111,8 +111,10 @@ void DQMOMNoInversion::timestep_init( const Patch* patch, ArchesTaskInfoManager*
 
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
 
+    //Just allocating the memory here. The source is initialized in the eval function.
+    // but we have to do something with var to avoid the compiler warning.
     CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >(*i);
-    //Just allocating the memory here. The source is initialized in the eval function. 
+    var.initialize(0.0);
 
   }
 }
@@ -125,14 +127,14 @@ void DQMOMNoInversion::register_timestep_eval(
 
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
 
-    register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
+    register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
 
     std::vector<std::string> models = m_ic_model_map[*i];
     for ( auto imodel = models.begin(); imodel != models.end(); imodel++ ){
 
       register_variable( *imodel, ArchesFieldContainer::REQUIRES, 0,
-                         ArchesFieldContainer::NEWDW, variable_registry, 
-                         time_substep, _task_name );
+                         ArchesFieldContainer::NEWDW, variable_registry,
+                         time_substep, m_task_name );
 
     }
 
@@ -147,9 +149,9 @@ void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
     std::vector<std::string> models = m_ic_model_map[*i];
     CCVariable<double>& src = tsk_info->get_uintah_field_add<CCVariable<double> >( *i );
 
-    //Must initialize here to deal with higher-order timestepping (otherwise the values add up over the 
-    //sub-steps) 
-    src.initialize(0.0); 
+    //Must initialize here to deal with higher-order timestepping (otherwise the values add up over the
+    //sub-steps)
+    src.initialize(0.0);
 
     for ( auto j = models.begin(); j != models.end(); j++ ){
 

@@ -325,10 +325,13 @@ KOKKOSTESTS = [
    ("isotropic_kokkos_wale"             , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_wale.ups"              , 1   , "All"   , ["exactComparison", "no_restart"]),
    ("isotropic_kokkos_dynSmag_packed"   , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_packed.ups"    , 8   , "All"   , ["exactComparison", "no_restart"]),
    ("isotropic_kokkos_dynSmag_unpacked" , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_unpacked.ups"  , 8   , "All"   , ["exactComparison", "no_restart"]),
-   ("char_modelps"                      , "kokkos_solver_tests/Verification/particleModels/char_modelps.ups"                    , 8   , "All"   , ["exactComparison"]),
-   ("dqmom_example_char"                , "kokkos_solver_tests/Verification/particleModels/dqmom_example_char.ups"              , 8   , "All"   , ["exactComparison"]),
-   ("dqmom_example"                     , "kokkos_solver_tests/dqmom_example.ups"                                               , 1   , "All"   , ["exactComparison"]),
-   ("OFC_mom"                           , "kokkos_solver_tests/Verification/intrusions/OFC_mom.ups"                             , 3   , "All"   , ["exactComparison"]),
+   ("char_modelps"                      , "kokkos_solver_tests/Verification/particleModels/char_modelps.ups"                     , 8   , "All"   , ["exactComparison"]),
+   ("dqmom_example_char"                , "kokkos_solver_tests/Verification/particleModels/dqmom_example_char.ups"               , 8   , "All"   , ["exactComparison"]),
+   ("dqmom_example"                     , "kokkos_solver_tests/dqmom_example.ups"                                                , 1   , "All"   , ["exactComparison"]),
+   ("OFC_mom"                           , "kokkos_solver_tests/Verification/intrusions/OFC_mom.ups"                              , 3   , "All"   , ["exactComparison"]),
+   ("helium_plume_rk1"                   , "kokkos_solver_tests/Verification/variableDensity/heliumKS_rk1.ups"                   , 1   , "All"   , ["exactComparison"]),
+   ("helium_plume_rk2"                   , "kokkos_solver_tests/Verification/variableDensity/heliumKS_rk2.ups"                   , 1   , "All"   , ["exactComparison"]),
+   ("helium_plume_rk3"                   , "kokkos_solver_tests/Verification/variableDensity/heliumKS_rk3.ups"                   , 1   , "All"   , ["exactComparison"]),
 ]
 
 KOKKOSCOALTESTS = [

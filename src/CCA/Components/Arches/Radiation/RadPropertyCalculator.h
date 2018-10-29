@@ -26,7 +26,7 @@ namespace Uintah {
 
     public: 
 
-      RadPropertyCalculator( const int _matl_index );
+      RadPropertyCalculator( const int m_matl_index );
 
       ~RadPropertyCalculator();
 
@@ -254,7 +254,7 @@ namespace Uintah {
 
     private: 
 
-      const int _matl_index; 
+      const int m_matl_index; 
       std::string _temperature_name; 
       const VarLabel* _temperature_label; 
 

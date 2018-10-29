@@ -2,8 +2,8 @@
 #define Uintah_Component_Arches_spectralProperties_h
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 // SEE PROPTEMPLATE.CC FOR INSTRUCTIONS
@@ -72,16 +72,16 @@ namespace Uintah{
         public:
 
           Builder( std::string task_name, int matl_index)
-            : _task_name(task_name), _matl_index(matl_index) {}
+            : m_task_name(task_name), m_matl_index(matl_index) {}
           ~Builder(){}
 
           spectralProperties* build()
-          { return scinew spectralProperties( _task_name, _matl_index ); }
+          { return scinew spectralProperties( m_task_name, m_matl_index ); }
 
         private:
 
-          std::string _task_name;
-          int _matl_index;
+          std::string m_task_name;
+          int m_matl_index;
 
       };
 

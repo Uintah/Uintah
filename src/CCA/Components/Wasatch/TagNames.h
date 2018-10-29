@@ -52,7 +52,7 @@ namespace WasatchCore{
      */
     static const TagNames& self();
     
-    const Expr::Tag time, dt, dualTimeStepSize, timestep, rkstage, stableTimestep;
+    const Expr::Tag time, dt, timestep, rkstage, stableTimestep, dualTimeStepSize;
     
     const Expr::Tag celltype;
     
@@ -101,6 +101,7 @@ namespace WasatchCore{
     // turbulence related variables
     const Expr::Tag
     turbulentviscosity,
+    turbulentdiffusivity,
     straintensormag, vremantensormag,
     waletensormag, dynamicsmagcoef;
 
@@ -120,10 +121,9 @@ namespace WasatchCore{
     convectiveflux, diffusiveflux;
     
     const Expr::Tag
-    pressuresrc,
-    divu, drhodtstar, drhodtstarnp1,
+    pressuresrc,divu,
     drhodt,drhodtnp1,unconvergedpts;
-    
+
     // mms varden
     const Expr::Tag
     mms_mixfracsrc, mms_continuitysrc,

@@ -39,7 +39,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -64,9 +64,9 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 //               
 
 flameSheet_rxn::flameSheet_rxn(const ProcessorGroup* myworld, 
-			       const SimulationStateP& sharedState,
+                               const MaterialManagerP& materialManager,
                                const ProblemSpecP& params)
-  : FluidsBasedModel(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, materialManager), d_params(params)
 {
   d_matl_set = 0;
   Ilb = scinew ICELabel();
@@ -102,7 +102,8 @@ void flameSheet_rxn::problemSetup(GridP&, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tFLAMESHEET" << endl;
 
-  d_matl = m_sharedState->parseAndLookupMaterial(d_params, "material");
+  ProblemSpecP base_ps = d_params->findBlock("flameSheet_rxn");
+  d_matl = m_materialManager->parseAndLookupMaterial(d_params, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -111,7 +112,7 @@ void flameSheet_rxn::problemSetup(GridP&, const bool isRestart)
   d_matl_set->addReference();
 
   // determine the specific heat of that matl.
-  Material* matl = m_sharedState->getMaterial( m[0] );
+  Material* matl = m_materialManager->getMaterial( m[0] );
   ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
   if (ice_matl){
     d_cp = ice_matl->getSpecificHeat();
@@ -122,18 +123,18 @@ void flameSheet_rxn::problemSetup(GridP&, const bool isRestart)
   d_scalar->name  = "f";
   
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
-  d_scalar->scalar_CCLabel =        VarLabel::create("scalar-f",    td_CCdouble);
+  d_scalar->scalar_CCLabel        = VarLabel::create("scalar-f",    td_CCdouble);
   d_scalar->scalar_source_CCLabel = VarLabel::create("scalar_f_src",td_CCdouble);
-  d_scalar->sum_scalar_fLabel     =  VarLabel::create("sum_scalar_f", 
+  d_scalar->sum_scalar_fLabel     = VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription());
                                             
   registerTransportedVariable(d_matl_set,
-			      d_scalar->scalar_CCLabel,
-			      d_scalar->scalar_source_CCLabel);
+                              d_scalar->scalar_CCLabel,
+                              d_scalar->scalar_source_CCLabel);
 
   //__________________________________
   // Read in the constants for the scalar 
-  ProblemSpecP child = d_params->findBlock("scalar");
+  ProblemSpecP child = base_ps->findBlock("scalar");
   if (!child){
     throw ProblemSetupException("flameSheet: Couldn't find scalar tag", __FILE__, __LINE__);    
   }

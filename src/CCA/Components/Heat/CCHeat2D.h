@@ -113,7 +113,7 @@ protected:
 
 public:
     CCHeat2D ( const ProcessorGroup * myworld,
-	       const SimulationStateP sharedState,
+	       const MaterialManagerP materialManager,
 	       int verbosity = 0 );
   
     virtual ~CCHeat2D();

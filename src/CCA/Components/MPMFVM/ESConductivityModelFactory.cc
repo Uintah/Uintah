@@ -34,7 +34,7 @@
 using namespace Uintah;
 
 ESConductivityModel* ESConductivityModelFactory::create(const ProblemSpecP& ps,
-                                                        SimulationStateP& shared_state,
+                                                        MaterialManagerP& materialManager,
                                                         MPMFlags* mpm_flags,
                                                         MPMLabel* mpm_lb,
                                                         FVMLabel* fvm_lb)
@@ -49,7 +49,7 @@ ESConductivityModel* ESConductivityModelFactory::create(const ProblemSpecP& ps,
   child->require("conductivity_model", model_type);
 
   if (model_type == "ivd")
-    return scinew ESConductivityModel(shared_state, mpm_flags, mpm_lb, fvm_lb, model_type);
+    return scinew ESConductivityModel(materialManager, mpm_flags, mpm_lb, fvm_lb, model_type);
 
   else
   {

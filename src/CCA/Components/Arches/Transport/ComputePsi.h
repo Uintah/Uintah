@@ -68,16 +68,16 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index ) :
-        _task_name(task_name), _matl_index(matl_index){}
+        m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       ComputePsi* build()
-      { return scinew ComputePsi( _task_name, _matl_index ); }
+      { return scinew ComputePsi( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
     };
 
@@ -242,7 +242,7 @@ private:
 
         LIMITER enum_limiter = conv_helper->get_limiter_from_string(limiter);
 
-        std::string which_mom = _task_name.substr(0,5);
+        std::string which_mom = m_task_name.substr(0,5);
 
         _name_to_limiter_map.insert(std::make_pair(which_mom, enum_limiter));
 
@@ -304,10 +304,10 @@ private:
   {
 
     for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++){
-      register_variable( *i+"_x_psi", AFC::COMPUTES, variable_registry, time_substep, _task_name, packed_tasks );
-      register_variable( *i+"_y_psi", AFC::COMPUTES, variable_registry, time_substep, _task_name, packed_tasks );
-      register_variable( *i+"_z_psi", AFC::COMPUTES, variable_registry, time_substep, _task_name, packed_tasks );
-      register_variable( *i, AFC::REQUIRES, 2, AFC::LATEST, variable_registry, time_substep, _task_name );
+      register_variable( *i+"_x_psi", AFC::COMPUTES, variable_registry, time_substep, m_task_name, packed_tasks );
+      register_variable( *i+"_y_psi", AFC::COMPUTES, variable_registry, time_substep, m_task_name, packed_tasks );
+      register_variable( *i+"_z_psi", AFC::COMPUTES, variable_registry, time_substep, m_task_name, packed_tasks );
+      register_variable( *i, AFC::REQUIRES, 2, AFC::LATEST, variable_registry, time_substep, m_task_name );
     }
 
     int nGhosts = 1;
@@ -315,10 +315,10 @@ private:
       nGhosts = 2;
     }
 
-    register_variable( m_eps_name,   AFC::REQUIRES, 2, AFC::NEWDW, variable_registry, time_substep, _task_name );
-    register_variable( m_u_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, _task_name );
-    register_variable( m_v_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, _task_name );
-    register_variable( m_w_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, _task_name );
+    register_variable( m_eps_name,   AFC::REQUIRES, 2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_u_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_v_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_w_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, m_task_name );
 
   }
 

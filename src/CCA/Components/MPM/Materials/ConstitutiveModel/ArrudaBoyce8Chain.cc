@@ -74,7 +74,7 @@ namespace Uintah {
     Identity.Identity();
     Matrix3 zero(0.0);
 
-    ParticleSubset  * pset  = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+//  ParticleSubset * pset =new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
     // Initialize the variables shared by all CM's.
     if (flag->d_integrator == MPMFlags::Implicit) {
@@ -224,7 +224,7 @@ namespace Uintah {
   {
     // Constants
     const double oneThird = (1.0/3.0);
-    const double rootTwoThirds = sqrt(2.0/3.0);
+//    const double rootTwoThirds = sqrt(2.0/3.0);
     const Matrix3 Identity(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
     //

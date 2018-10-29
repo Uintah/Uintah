@@ -35,7 +35,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Task.h>
 
 
@@ -82,12 +82,12 @@ WARNING
          SingleVelContact(const SingleVelContact &con);
          SingleVelContact& operator=(const SingleVelContact &con);
          
-         SimulationStateP    d_sharedState;
+         MaterialManagerP    d_materialManager;
          
       public:
          // Constructor
          SingleVelContact(const ProcessorGroup* myworld,
-                          ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb,
+                          ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb,
                           MPMFlags* MFlag);
          
          // Destructor

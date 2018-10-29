@@ -57,12 +57,12 @@ using namespace Uintah;
 
 static DebugStream cout_doing("ESMPM_DOING_COUT", false);
 
-ESConductivityModel::ESConductivityModel(SimulationStateP& shared_state,
+ESConductivityModel::ESConductivityModel(MaterialManagerP& materialManager,
                                          MPMFlags* mpm_flags,
                                          MPMLabel* mpm_lb, FVMLabel* fvm_lb,
                                          std::string& model_type)
 {
-  d_shared_state = shared_state;
+  d_materialManager = materialManager;
   d_mpm_flags = mpm_flags;
   d_mpm_lb = mpm_lb;
   d_fvm_lb = fvm_lb;
@@ -151,9 +151,9 @@ void ESConductivityModel::computeConductivity(const ProcessorGroup* pg,
     fcy_mass.initialize(d_TINY_RHO * cell_vol);
     fcz_mass.initialize(d_TINY_RHO * cell_vol);
 
-    int numMatls = d_shared_state->getNumMPMMatls();
+    int numMatls = d_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_shared_state->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial* ) d_materialManager->getMaterial( "MPM", m );
       int dwi = mpm_matl->getDWIndex();
 
       d_conductivity_equation = mpm_matl->getScalarDiffusionModel()->getConductivityEquation();
@@ -284,7 +284,7 @@ void ESConductivityModel::computeConductivity(const ProcessorGroup* pg,
     printTask(patches, patch, cout_doing,
                 "Doing ESConductivityModel::computeConductivity");
 
-    int num_matls = d_shared_state->getNumMPMMatls();
+    int num_matls = d_materialManager->getNumMatls( "MPM" );
     Vector cell_dim = patch->getLevel()->dCell();
     double cell_vol = cell_dim.x() * cell_dim.y() * cell_dim.z();
 
@@ -315,7 +315,7 @@ void ESConductivityModel::computeConductivity(const ProcessorGroup* pg,
     IntVector lowidx = patch->getCellLowIndex();
     IntVector highidx = patch->getExtraCellHighIndex();
     for(int m = 0; m < num_matls; m++){
-      MPMMaterial* mpm_matl = d_shared_state->getMPMMaterial(m);
+      MPMMaterial* mpm_matl = d_materialManager->getMaterial( "MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
       constNCVariable<double> gconc;

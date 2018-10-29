@@ -94,14 +94,14 @@ public:
 
   public:
 
-    Builder( SimulationStateP& sharedState,
+    Builder( MaterialManagerP& materialManager,
              const MPMArchesLabel* MAlb,
              PhysicalConstants* physConst,
              const ProcessorGroup* myworld,
              ArchesParticlesHelper* particle_helper,
              SolverInterface* hypreSolver,
-             const ApplicationCommon* arches ) :
-             _sharedState(sharedState),
+             ApplicationCommon* arches ) :
+             _materialManager(materialManager),
              _MAlb(MAlb),
              _physConst(physConst),
              _myworld(myworld),
@@ -113,7 +113,7 @@ public:
     ~Builder(){}
 
     ExplicitSolver* build(){
-      return scinew ExplicitSolver( _sharedState,
+      return scinew ExplicitSolver( _materialManager,
                                     _MAlb,
                                     _physConst,
                                     _myworld,
@@ -124,23 +124,22 @@ public:
 
   private:
 
-    SimulationStateP& _sharedState;
+    MaterialManagerP& _materialManager;
     const MPMArchesLabel* _MAlb;
     PhysicalConstants* _physConst;
     const ProcessorGroup* _myworld;
     ArchesParticlesHelper* _particle_helper;
     SolverInterface* _hypreSolver;
-    const ApplicationCommon* _arches;
-
+    ApplicationCommon* _arches;
   };
 
-  ExplicitSolver( SimulationStateP& sharedState,
+  ExplicitSolver( MaterialManagerP& materialManager,
                   const MPMArchesLabel* MAlb,
                   PhysicalConstants* physConst,
                   const ProcessorGroup* myworld,
                   ArchesParticlesHelper* particle_helper,
                   SolverInterface* hypreSolver,
-                  const ApplicationCommon* arches );
+                  ApplicationCommon* arches );
 
   virtual ~ExplicitSolver();
 
@@ -152,7 +151,7 @@ public:
 
   /** @brief Input file interface. **/
   virtual void problemSetup( const ProblemSpecP& input_db,
-                             SimulationStateP& state,
+                             MaterialManagerP& materialManager,
                              GridP& grid );
 
   /** @brief Solve the nonlinear system. (also does some actual computations) **/
@@ -283,7 +282,7 @@ public:
     return delT / 2.0;
   }
 
-  inline bool restartableTimeSteps() {
+  inline bool mayRecomputeTimeStep() {
     return true;
   }
 
@@ -406,17 +405,7 @@ public:
                                 SchedulerP& sched,
                                 const bool doing_restart );
 
-  int getTaskGraphIndex(const int time_step ) {
-    if (d_num_taskgraphs==1){
-      return 0;
-    }else{
-      return ((time_step % d_rad_calc_frequency == 0));
-    }
-  }
-
-  int taskGraphsRequested() {
-  return d_num_taskgraphs;
-  }
+  int getTaskGraphIndex(const int time_step ) const;
 
   void registerModels( ProblemSpecP& db );
   void registerTransportEqns( ProblemSpecP& db );
@@ -445,7 +434,7 @@ public:
 
   MomentumSolver* d_momSolver;             ///< Momentum solver
   WallModelDriver* d_wall_ht_models;       ///< Heat transfer models for walls
-  SimulationStateP& d_sharedState;
+  MaterialManagerP& d_materialManager;
   const MPMArchesLabel* d_MAlab;
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
 
@@ -462,7 +451,7 @@ public:
   int d_turbModelCalcFreq;
   bool d_turbModelRKsteps;
   int d_turbCounter;
-  bool d_restart_on_negative_density_guess;
+  bool d_recompute_on_negative_density_guess;
   bool d_noisyDensityGuess;
   std::string d_mms;
   std::string d_mmsErrorType;
@@ -529,6 +518,5 @@ public:
 
 }; // End class ExplicitSolver
 } // End namespace Uintah
-
 
 #endif

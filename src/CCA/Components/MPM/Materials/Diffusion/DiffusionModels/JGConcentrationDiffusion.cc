@@ -36,7 +36,7 @@ using namespace Uintah;
 
 
 JGConcentrationDiffusion::JGConcentrationDiffusion(ProblemSpecP     & ps,
-                                                   SimulationStateP & sS,
+                                                   MaterialManagerP & sS,
                                                    MPMFlags         * Mflag,
                                                    string             diff_type
                                                   )

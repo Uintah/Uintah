@@ -45,7 +45,10 @@
 #include <Core/Math/Gaussian.h>
 #include <Core/Math/Weibull.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <iostream>
+
+#include <unistd.h>
 
 using namespace std;
 using namespace Uintah;
@@ -2061,7 +2064,7 @@ void UCNH::splitCMSpecificParticleData(const Patch* patch,
   }
 
   // copy data from old variables for particle IDs and the position vector
-  for(int pp=0; pp<oldNumPar; ++pp ){
+  for(unsigned int pp=0; pp<oldNumPar; ++pp ){
     bElBarTmp[pp] = bElBar[pp];
   }
 

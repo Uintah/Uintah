@@ -47,7 +47,7 @@
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -142,7 +142,7 @@ void PressureSolver::sched_solve(const LevelP& level,
                            bool doing_EKT_now)
 {
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
 
   sched_buildLinearMatrix(sched, patches, matls, timelabels, extraProjection,
                          d_EKTCorrection, doing_EKT_now);
@@ -260,8 +260,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                    getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->
+                    getMaterial( "Arches", archIndex)->getDWIndex(); 
     ArchesVariables pressureVars;
     ArchesConstVariables constPressureVars;
 
@@ -366,7 +366,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   LoadBalancer* lb = sched->getLoadBalancer();
   d_perproc_patches = lb->getPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
 
   string taskname =  "PressureSolver::PressLinearSolve_all" + 
                      timelabels->integrator_step_name;
@@ -440,7 +440,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
                                         bool doing_EKT_now)
 {
   int archIndex = 0; // only one arches material
-  int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+  int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
   ArchesVariables pressureVars;
   int me = pg->myRank();
   // initializeMatrix...
@@ -463,7 +463,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
   //debugging
   string desc = timelabels->integrator_step_name;
 
-  // int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep(); 
+  // int timestep = d_lab->d_materialManager->getCurrentTopLevelTimeStep(); 
   timeStep_vartype timeStep;
   old_dw->get( timeStep, d_lab->d_timeStepLabel );
 
@@ -630,7 +630,7 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     constCCVariable<double> prel;
     CCVariable<double> pPlusHydro;

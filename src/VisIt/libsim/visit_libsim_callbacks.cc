@@ -36,7 +36,6 @@
 #include <CCA/Ports/Output.h>
 
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationTime.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
@@ -274,6 +273,9 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
+
   if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
     sim->runMode = VISIT_SIMMODE_STOPPED;
@@ -291,38 +293,48 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     // visit_SimGetMetaData(cbdata);
     // visit_SimGetDomainList(nullptr, cbdata);
   }
-  else if(strcmp(cmd, "Save") == 0)
+  else if(strncmp(cmd, "Output", 6) == 0)
   {
     // Do not call unless the simulation is stopped or finished as it
     // will interfer with the task graph.
     if(sim->simMode == VISIT_SIMMODE_STOPPED ||
        sim->simMode == VISIT_SIMMODE_FINISHED)
     {
-      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Save", 0);
+      // Disable the button so to prevent outputing the same time step
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", cmd, 0);
 
+      // Do not allow out of order output files.
+      if( strlen(cmd) == 6 )
+        VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Output Previous", 0);
+        
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->outputTimeStep( sim->gridP, schedulerP );
+      output->outputTimeStep( sim->gridP, schedulerP, strlen(cmd) > 6 );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
                         "Can not save a timestep unless the simulation has "
                         "run for at least one time step and is stopped.", 0);
   }
-  else if(strcmp(cmd, "Checkpoint") == 0)
+  else if(strncmp(cmd, "Checkpoint", 10) == 0)
   {
     // Do not call unless the simulation is stopped or finished as it
     // will interfer with the task graph.
     if(sim->simMode == VISIT_SIMMODE_STOPPED ||
        sim->simMode == VISIT_SIMMODE_FINISHED)
     {
-      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Checkpoint", 0);
+      // Disable the button so to prevent checkpointing the same time step
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", cmd, 0);
 
+      // Do not allow out of order checkpoint files.
+      if( strlen(cmd) == 10 )
+        VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Checkpoint Previous", 0);
+        
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->checkpointTimeStep( sim->gridP, schedulerP );
+      output->checkpointTimeStep( sim->gridP, schedulerP, strlen(cmd) > 10 );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
@@ -338,7 +350,8 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     else
       sim->runMode = VISIT_SIMMODE_RUNNING;
   }
-  else if(strcmp(cmd, "Terminate") == 0)
+  else if(strcmp(cmd, "Terminate") == 0 ||
+	  strcmp(cmd, "Abort") == 0)
   {
     sim->runMode = VISIT_SIMMODE_RUNNING;
     sim->simMode = VISIT_SIMMODE_TERMINATED;
@@ -353,25 +366,15 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       DOUT( visitdbg, msg.str().c_str() );
 
       VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
+      VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
     }
-  }
-  else if(strcmp(cmd, "Abort") == 0)
-  {
-    if(sim->isProc0)
+
+    if(strcmp(cmd, "Abort") == 0)
     {
-      std::stringstream msg;      
-      msg << "Visit libsim - Aborting the simulation";
-      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-      VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+      VisItDisconnect();
 
-      DOUT( visitdbg, msg.str().c_str() );
-
-      VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
+      exit( 0 );
     }
-
-    VisItDisconnect();
-
-    exit( 0 );
   }
   else if(strcmp(cmd, "ActivateCustomUI") == 0 )
   {
@@ -509,30 +512,31 @@ int visit_ProcessVisItCommand( visit_simulation_data *sim )
 // MaxTimeStepCallback
 //     Custom UI callback for a line edit box
 //---------------------------------------------------------------------
-void visit_MaxTimeStepCallback(char *val, void *cbdata)
+void visit_TimeStepsMaxCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-  SimulationTime* simTime =
-    sim->simController->getApplicationInterface()->getSimulationTime();
 
-  int oldValue = simTime->m_max_time_steps;
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
+
+  int oldValue = appInterface->getTimeStepsMax();
   int newValue = atoi(val);
   
   if( newValue <= sim->cycle )
   {
     std::stringstream msg;
     msg << "Visit libsim - the value (" << newValue << ") for "
-        << "the maximum time step is before the current time step. "
+        << "the time step maximum is before the current time step. "
         << "Resetting the value.";
     VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
 
-    VisItUI_setValueI("MaxTimeStep", simTime->m_max_time_steps, 1);
+    VisItUI_setValueI("MaxTimeSteps", appInterface->getTimeStepsMax(), 1);
   }
   else
   {  
-    simTime->m_max_time_steps = newValue;
+    appInterface->setTimeStepsMax( newValue );
     
-    visit_VarModifiedMessage( sim, "MaxTimeStep", oldValue, newValue);
+    visit_VarModifiedMessage( sim, "TimeStepsMax", oldValue, newValue);
   }
 }
 
@@ -541,30 +545,31 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
 // MaxTimeCallback
 //     Custom UI callback for a line edit box
 //---------------------------------------------------------------------
-void visit_MaxTimeCallback(char *val, void *cbdata)
+void visit_SimTimeMaxCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-  SimulationTime* simTime =
-    sim->simController->getApplicationInterface()->getSimulationTime();
 
-  float oldValue = simTime->m_max_time;
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
+
+  float oldValue = appInterface->getSimTimeMax();
   float newValue = atof(val);
 
-  if( newValue <= sim->time )
+  if( newValue <= appInterface->getSimTime() )
   {
     std::stringstream msg;
     msg << "Visit libsim - the value (" << newValue << ") for "
-        << "the maximum simulation time is before the current time. "
+        << "the simulation maximum time is before the current time. "
         << "Resetting the value.";
     VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
 
-    VisItUI_setValueD("MaxTime", simTime->m_max_time, 1);
+    VisItUI_setValueD("SimTimeMax", appInterface->getSimTimeMax(), 1);
   }
   else
   {  
-    simTime->m_max_time = newValue;
+    appInterface->setSimTimeMax( newValue );
 
-    visit_VarModifiedMessage( sim, "MaxTime", oldValue, newValue);
+    visit_VarModifiedMessage( sim, "SimTimeMax", oldValue, newValue);
   }
 }
 
@@ -573,13 +578,14 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
 // EndOnMaxTimeCallback
 //     Custom UI callback for a check box
 //---------------------------------------------------------------------
-void visit_EndOnMaxTimeCallback(int val, void *cbdata)
+void visit_SimTimeEndAtMaxCallback(int val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-  SimulationTime* simTime =
-    sim->simController->getApplicationInterface()->getSimulationTime();
 
-  simTime->m_end_at_max_time = val;
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
+
+  appInterface->setSimTimeEndAtMax( val );
 }
 
 
@@ -594,9 +600,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
-  SimulationStateP simStateP = appInterface->getSimulationStateP();
-  SimulationTime*  simTime   = appInterface->getSimulationTime();
-  DataWarehouse          *dw = sim->simController->getSchedulerP()->getLastDW();
+  DataWarehouse *dw = sim->simController->getSchedulerP()->getLastDW();
 
   unsigned int row, column;
   double oldValue, newValue;
@@ -607,9 +611,9 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
   {
   case 1:  // DeltaTNext
     {
-      double minValue = simTime->m_delt_min;
-      double maxValue = simTime->m_delt_max;
-      oldValue = sim->delt_next;
+      double minValue = appInterface->getDelTMin();
+      double maxValue = appInterface->getDelTMax();
+      oldValue = appInterface->getNextDelT();
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -622,20 +626,20 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
         return;
       }
 
-      dw->override(delt_vartype(newValue), appInterface->getDelTLabel());
-      visit_VarModifiedMessage( sim, "DeltaTNext", oldValue, newValue );
+      appInterface->setNextDelT( newValue );
     }
     break;
   case 2:  // DeltaTFactor
     {
       double minValue = 1.0e-4;
       double maxValue = 1.0e+4;
-      oldValue = simTime->m_delt_factor;
+      oldValue = appInterface->getDelTMultiplier();
       
       if( newValue < minValue || maxValue < newValue )
       {
         std::stringstream msg;
-        msg << "Visit libsim - the value (" << newValue << ") for DeltaTFactor "
+        msg << "Visit libsim - the value (" << newValue
+            << ") for the DeltaTMutlipler "
             << "is outside the range [" << minValue << ", " << maxValue << "]. "
             << "Resetting value.";
         VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
@@ -643,20 +647,20 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
         return;
       }
 
-      simTime->m_delt_factor = newValue;
-      visit_VarModifiedMessage( sim, "DeltaTFactor", oldValue, newValue );
+      appInterface->setDelTMultiplier( newValue );
+      visit_VarModifiedMessage( sim, "DeltaTMultiplier", oldValue, newValue );
     }
     break;
   case 3:  // MaxDeltaIncrease
     {
       double minValue = 0;
       double maxValue = 1.e99;
-      oldValue = simTime->m_max_delt_increase;
+      oldValue = appInterface->getDelTMaxIncrease();
       
       if( newValue < minValue || maxValue < newValue )
       {
         std::stringstream msg;
-        msg << "Visit libsim - the value (" << newValue << ") for MaxDeltaIncrease "
+        msg << "Visit libsim - the value (" << newValue << ") for DeltaTMaxIncrease "
             << "is outside the range [" << minValue << ", " << maxValue << "]. "
             << "Resetting value.";
         VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
@@ -664,15 +668,15 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
         return;
       }
 
-      simTime->m_max_delt_increase = newValue;
-      visit_VarModifiedMessage( sim, "MaxDeltaIncrease", oldValue, newValue );
+      appInterface->setDelTMaxIncrease( newValue );
+      visit_VarModifiedMessage( sim, "DeltaTMaxIncrease", oldValue, newValue );
     }
     break;
-  case 4:   // DeltaTMin
+  case 4:   // MinDeltaT
     {
       double minValue = 0;
-      double maxValue = simTime->m_delt_max;
-      oldValue = simTime->m_delt_min;
+      double maxValue = appInterface->getDelTMax();
+      oldValue = appInterface->getDelTMin();
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -685,15 +689,15 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
         return;
       }
 
-      simTime->m_delt_min = newValue;
+      appInterface->setDelTMin( newValue );
       visit_VarModifiedMessage( sim, "DeltaTMin", oldValue, newValue );
     }
     break;
-  case 5:  // DeltaTMax
+  case 5:  // MaxDeltaT
     {
-      double minValue = simTime->m_delt_min;
+      double minValue = appInterface->getDelTMin();
       double maxValue = 1.0e9;
-      oldValue = simTime->m_delt_max;
+      oldValue = appInterface->getDelTMax();
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -706,7 +710,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
         return;
       }
 
-      simTime->m_delt_max = newValue;
+      appInterface->setDelTMax( newValue );
       visit_VarModifiedMessage( sim, "DeltaTMax", oldValue, newValue );
     }
     break;
@@ -714,12 +718,12 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 1.0e-99;
       double maxValue = DBL_MAX;
-      oldValue = simTime->m_max_initial_delt;
+      oldValue = appInterface->getDelTInitialMax();
       
       if( newValue < minValue || maxValue < newValue )
       {
         std::stringstream msg;
-        msg << "Visit libsim - the value (" << newValue << ") for MaxInitialDelta "
+        msg << "Visit libsim - the value (" << newValue << ") for DeltaTInitialMax "
             << "is outside the range [" << minValue << ", " << maxValue << "]. "
             << "Resetting value.";
         VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
@@ -727,20 +731,20 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
         return;
       }
 
-      simTime->m_max_initial_delt = newValue;
-      visit_VarModifiedMessage( sim, "MaxInitialDelta", oldValue, newValue );
+      appInterface->setDelTInitialMax( newValue );
+      visit_VarModifiedMessage( sim, "DeltaTInitialMax", oldValue, newValue );
     }
     break;
   case 7:  // InitialDeltaRange
     {
       double minValue = 0;
       double maxValue = 1.0e99;
-      oldValue = simTime->m_initial_delt_range;
+      oldValue = appInterface->getDelTInitialRange();
       
       if( newValue < minValue || maxValue < newValue )
       {
         std::stringstream msg;
-        msg << "Visit libsim - the value (" << newValue << ") for InitialDeltaRange "
+        msg << "Visit libsim - the value (" << newValue << ") for DeltaTInitialRange "
             << "is outside the range [" << minValue << ", " << maxValue << "]. "
             << "Resetting value.";
         VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
@@ -748,29 +752,8 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
         return;
       }
 
-      simTime->m_initial_delt_range = newValue;
-      visit_VarModifiedMessage( sim, "InitialDeltaRange", oldValue, newValue );
-    }
-    break;
-  case 8:  // OverrideRestartDelta
-    {
-      double minValue = 0;
-      double maxValue = 1.0e99;
-      oldValue = simTime->m_override_restart_delt;
-      
-      if( newValue < minValue || maxValue < newValue )
-      {
-        std::stringstream msg;
-        msg << "Visit libsim - the value (" << newValue << ") for OverrideRestartDelta "
-            << "is outside the range [" << minValue << ", " << maxValue << "]. "
-            << "Resetting value.";
-        VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
-        visit_SetDeltaTValues( sim );
-        return;
-      }
-
-      simTime->m_override_restart_delt = newValue;
-      visit_VarModifiedMessage( sim, "OverrideRestartDelta", oldValue, newValue );
+      appInterface->setDelTInitialRange( newValue );
+      visit_VarModifiedMessage( sim, "DeltaTInitialRange", oldValue, newValue );
     }
     break;
   }
@@ -783,8 +766,9 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 void visit_WallTimesVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-  SimulationTime* simTime =
-    sim->simController->getApplicationInterface()->getSimulationTime();
+
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
 
   unsigned int row, column;
   double oldValue, newValue;
@@ -793,9 +777,9 @@ void visit_WallTimesVariableCallback(char *val, void *cbdata)
 
   if( row == 5 )
   {
-    oldValue = simTime->m_max_wall_time;
-    simTime->m_max_wall_time = newValue;
-    visit_VarModifiedMessage( sim, "MaxWallTime", oldValue, newValue );
+    oldValue = appInterface->getWallTimeMax();
+    appInterface->setWallTimeMax( newValue );
+    visit_VarModifiedMessage( sim, "WallTimeMax", oldValue, newValue );
   }
 }
 
@@ -809,8 +793,6 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
 
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
-
-  SimulationStateP simStateP = appInterface->getSimulationStateP();
 
   unsigned int row, column;
   std::string text;
@@ -1011,16 +993,17 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
 
 
 //---------------------------------------------------------------------
-// ClampTimeStepsToOutputCallback
+// ClampTimeToOutputCallback
 //     Custom UI callback for a check box
 //---------------------------------------------------------------------
-void visit_ClampTimeStepsToOutputCallback(int val, void *cbdata)
+void visit_ClampTimeToOutputCallback(int val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-  SimulationTime* simTime =
-    sim->simController->getApplicationInterface()->getSimulationTime();
 
-  simTime->m_clamp_time_to_output = val;
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
+
+  appInterface->setSimTimeClampToOutput( val );
 }
 
 
@@ -1147,8 +1130,6 @@ void visit_StateVariableCallback(char *val, void *cbdata)
 
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
-
-  SimulationStateP simStateP = appInterface->getSimulationStateP();
 
   unsigned int row, column;
   std::string text;

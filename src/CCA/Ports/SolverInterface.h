@@ -31,7 +31,7 @@
 #include <Core/Grid/LevelP.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -53,7 +53,7 @@ namespace Uintah {
                          symmetric(true),
                          solveOnExtraCells(false),
                          residualNormalizationFactor(1),
-                         restartableTimestep(false),
+                         recomputableTimeStep(false),
                          setupFrequency(1),
                          updateCoefFrequency(1),
                          outputFileName("nullptr"),
@@ -91,13 +91,13 @@ namespace Uintah {
       return residualNormalizationFactor;
     }
     
-    //If convergence fails call for the timestep to be restarted.
-    void setRestartTimestepOnFailure(bool s){
-      restartableTimestep=s;
+    // If convergence fails call for the time step to be recomputed.
+    void setRecomputeTimeStepOnFailure(bool s) {
+      recomputableTimeStep = s;
     }
     
-    bool getRestartTimestepOnFailure() const {
-      return restartableTimestep;
+    bool getRecomputeTimeStepOnFailure() const {
+      return recomputableTimeStep;
     }
     
     // Used for outputting A, X & B to files
@@ -143,7 +143,7 @@ namespace Uintah {
     bool        symmetric;
     bool        solveOnExtraCells;
     double      residualNormalizationFactor;
-    bool        restartableTimestep;
+    bool        recomputableTimeStep;
     int         setupFrequency;        // delete matrix and recreate it and update coefficients. Needed if Stencil changes.
     int         updateCoefFrequency;   // do not modify matrix stencil/sparsity - only change values of coefficients
     std::string outputFileName;

@@ -34,8 +34,8 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <vector>
@@ -44,12 +44,12 @@ using namespace std;
 using namespace Uintah;
 
 ContactStressDependent::ContactStressDependent(const ProcessorGroup* myworld,
-                                 ProblemSpecP& ps, SimulationStateP& d_sS, 
+                                 ProblemSpecP& ps, MaterialManagerP& d_sS, 
                                  MPMLabel* Mlb)
   : Dissolution(myworld, Mlb, ps)
 {
   // Constructor
-  d_sharedState = d_sS;
+  d_materialManager = d_sS;
   lb = Mlb;
   ps->require("masterModalID",        d_masterModalID);
   ps->require("InContactWithModalID", d_inContactWithModalID);
@@ -85,7 +85,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw)
 {
-   int numMatls = d_sharedState->getNumMPMMatls();
+   int numMatls = d_materialManager->getNumMatls("MPM");
    ASSERTEQ(numMatls, matls->size());
 
   if(d_phase=="hold"){
@@ -115,7 +115,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
       new_dw->getModifiable(massBurnRate[m], 
                                 lb->massBurnFractionLabel, dwi, patch);
       
-      MPMMaterial* mat = d_sharedState->getMPMMaterial(m);
+      MPMMaterial* mat=(MPMMaterial *) d_materialManager->getMaterial("MPM", m);
       if(mat->getModalID()==d_masterModalID){
         mat->setNeedSurfaceParticles(true);
         masterMatls[m]=true;

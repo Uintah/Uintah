@@ -21,16 +21,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       VarInterpolation* build()
-      { return scinew VarInterpolation<T, IT>( _task_name, _matl_index ); }
+      { return scinew VarInterpolation<T, IT>( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
     };
 
@@ -152,7 +152,6 @@ template <typename T, typename IT>
 void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   IT& int_var = tsk_info->get_uintah_field_add<IT>(m_inter_var_name);
-  T& var = tsk_info->get_const_uintah_field_add<T>(m_var_name);
   int_var.initialize(0.0);
 
 }

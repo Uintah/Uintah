@@ -46,8 +46,8 @@
 using namespace Uintah;
 
 GaussSolve::GaussSolve(const ProcessorGroup* myworld,
-		       const SimulationStateP sharedState)
-  : ApplicationCommon(myworld, sharedState)
+		       const MaterialManagerP materialManager)
+  : ApplicationCommon(myworld, materialManager)
 {
   d_lb = scinew FVMLabel();
 
@@ -111,8 +111,8 @@ void GaussSolve::problemSetup(const ProblemSpecP& prob_spec,
   if( !d_with_mpm ){
     for ( ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
 
-      FVMMaterial *mat = scinew FVMMaterial( ps, m_sharedState, FVMMaterial::Gauss );
-      m_sharedState->registerFVMMaterial( mat );
+      FVMMaterial *mat = scinew FVMMaterial( ps, m_materialManager, FVMMaterial::Gauss );
+      m_materialManager->registerMaterial( "FVM",  mat );
     }
   }
 }
@@ -128,7 +128,7 @@ void
 GaussSolve::scheduleInitialize( const LevelP     & level,
                                       SchedulerP & sched )
 {
-  const MaterialSet* fvm_matls = m_sharedState->allFVMMaterials();
+  const MaterialSet* fvm_matls = m_materialManager->allMaterials( "FVM" );
 
   Task* t = scinew Task( "GaussSolve::initialize", this, &GaussSolve::initialize );
 
@@ -150,7 +150,7 @@ GaussSolve::initialize( const ProcessorGroup *,
                               DataWarehouse  * new_dw )
 {
   FVMBoundCond bc;
-  int num_matls = m_sharedState->getNumFVMMatls();
+  int num_matls = m_materialManager->getNumMatls( "FVM" );
 
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -165,7 +165,7 @@ GaussSolve::initialize( const ProcessorGroup *,
     neg_charge.initialize(0.0);
     permittivity.initialize(0.0);
     for(int m = 0; m < num_matls; m++){
-      FVMMaterial* fvm_matl = m_sharedState->getFVMMaterial(m);
+      FVMMaterial* fvm_matl = (FVMMaterial* ) m_materialManager->getMaterial( "FVM", m);
       fvm_matl->initializePermittivityAndCharge(permittivity, pos_charge,
                                                 neg_charge, patch);
       //bc.setConductivityBC(patch, idx, conductivity);
@@ -186,7 +186,7 @@ void GaussSolve::scheduleComputeStableTimeStep(const LevelP& level,
   Task* task = scinew Task("computeStableTimeStep",this, 
                            &GaussSolve::computeStableTimeStep);
   task->computes(getDelTLabel(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), m_sharedState->allFVMMaterials());
+  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials( "FVM" ));
 }
 //__________________________________
 //

@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_CoalGasDevolMom_h
 #define Uintah_Component_Arches_CoalGasDevolMom_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
@@ -11,7 +11,7 @@ class CoalGasDevolMom: public SourceTermBase {
 
   public: 
 
-  CoalGasDevolMom( std::string src_name, std::vector<std::string> required_label_names, ArchesLabel* field_labels, SimulationStateP& shared_state, std::string type );
+  CoalGasDevolMom( std::string src_name, std::vector<std::string> required_label_names, ArchesLabel* field_labels, MaterialManagerP& materialManager, std::string type );
 
   ~CoalGasDevolMom();
 
@@ -43,21 +43,21 @@ class CoalGasDevolMom: public SourceTermBase {
 
     public: 
 
-      Builder( std::string name, std::vector<std::string> required_label_names, ArchesLabel* field_labels, SimulationStateP& shared_state )
-        : _name(name), _required_label_names(required_label_names), _field_labels(field_labels), _shared_state(shared_state){ 
+      Builder( std::string name, std::vector<std::string> required_label_names, ArchesLabel* field_labels, MaterialManagerP& materialManager )
+        : _name(name), _required_label_names(required_label_names), _field_labels(field_labels), _materialManager(materialManager){ 
           _type = "coal_gas_devol_mom"; 
         };
       ~Builder(){}; 
 
       CoalGasDevolMom* build()
-      { return scinew CoalGasDevolMom( _name, _required_label_names, _field_labels,  _shared_state, _type ); };
+      { return scinew CoalGasDevolMom( _name, _required_label_names, _field_labels,  _materialManager, _type ); };
 
     private: 
 
       std::string _name; 
       std::vector<std::string> _required_label_names;
       ArchesLabel* _field_labels; 
-      SimulationStateP& _shared_state; 
+      MaterialManagerP& _materialManager; 
       std::string _type; 
 
   }; // class Builder 

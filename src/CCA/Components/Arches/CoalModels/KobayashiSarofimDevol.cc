@@ -33,7 +33,7 @@
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/InvalidValue.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
@@ -50,27 +50,27 @@ KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder( const std::string   
                                                             const vector<std::string> & reqICLabelNames,
                                                             const vector<std::string> & reqScalarLabelNames,
                                                             ArchesLabel         * fieldLabels,
-                                                            SimulationStateP          & sharedState,
+                                                            MaterialManagerP          & materialManager,
                                                             int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, materialManager, qn )
 {
 }
 
 KobayashiSarofimDevolBuilder::~KobayashiSarofimDevolBuilder(){}
 
 ModelBase* KobayashiSarofimDevolBuilder::build() {
-  return scinew KobayashiSarofimDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return scinew KobayashiSarofimDevol( d_modelName, d_materialManager, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
 KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName, 
-                                              SimulationStateP& sharedState,
+                                              MaterialManagerP& materialManager,
                                               ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames, 
                                               vector<std::string> scalarLabelNames,
                                               int qn ) 
-: Devolatilization(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+: Devolatilization(modelName, materialManager, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   R   =  1.987;       // [=] kcal/kmol; ideal gas constant
   pi = 3.141592653589793;
@@ -319,7 +319,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     }
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 
 }
 
@@ -340,7 +340,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     delt_vartype DT;
     old_dw->get(DT, d_fieldLabels->d_delTLabel);

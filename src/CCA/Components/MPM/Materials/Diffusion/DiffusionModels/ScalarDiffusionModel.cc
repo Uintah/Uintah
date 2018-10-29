@@ -46,13 +46,13 @@ static DebugStream cout_doing("AMRMPM", false);
 
 ScalarDiffusionModel::ScalarDiffusionModel(
                                            ProblemSpecP     & ps,
-                                           SimulationStateP & sS,
+                                           MaterialManagerP & sS,
                                            MPMFlags         * Mflag,
                                            std::string        diff_type
                                           ) 
 {
   d_Mflag = Mflag;
-  d_sharedState = sS;
+  d_materialManager = sS;
 
   d_lb = scinew MPMLabel;
 

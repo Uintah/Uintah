@@ -28,7 +28,6 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <CCA/Components/Application/ApplicationCommon.h>
 
 //--------------------------------------------------------------------------------------------------
 /**
@@ -51,25 +50,22 @@
 //--------------------------------------------------------------------------------------------------
 
 namespace Uintah {
-class TimeIntegratorLabel;
-class PartVel;
-class DQMOM;
-class CQMOM;
-class CQMOM_Convection;
-class CQMOMSourceWrapper;
+class ProcessorGroup;
+class ApplicationCommon;
 class ArchesBCHelper;
+
 class NonlinearSolver {
 
 public:
 
   NonlinearSolver( const ProcessorGroup* myworld,
-                   const ApplicationCommon* arches );
+                   ApplicationCommon* arches );
 
   virtual ~NonlinearSolver();
 
   void commonProblemSetup( ProblemSpecP db );
 
-  virtual void problemSetup( const ProblemSpecP& db, SimulationStateP&, GridP& ) = 0;
+  virtual void problemSetup( const ProblemSpecP& db, MaterialManagerP&, GridP& ) = 0;
 
   virtual int sched_nonlinearSolve( const LevelP& level,
                                     SchedulerP& sched ) = 0;
@@ -78,7 +74,7 @@ public:
 
   virtual double recomputeDelT(const double delT) = 0;
 
-  virtual bool restartableTimeSteps() = 0;
+  virtual bool mayRecomputeTimeStep() = 0;
 
   virtual void sched_initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
 
@@ -86,9 +82,9 @@ public:
 
   virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0;
 
-  virtual int getTaskGraphIndex(const int timeStep ) = 0;
+  virtual int getTaskGraphIndex(const int timeStep ) const = 0;
 
-  virtual int taskGraphsRequested() = 0;
+  // virtual int taskGraphsRequested() const = 0;
 
   class NLSolverBuilder {
 
@@ -111,7 +107,7 @@ public:
 protected:
 
    const ProcessorGroup * d_myworld;
-   const ApplicationCommon* m_arches;
+   ApplicationCommon*     m_arches;
    std::string            d_timeIntegratorType;
    double                 d_initial_dt;
    bool                   d_underflow;

@@ -38,7 +38,7 @@ using namespace Uintah;
 
 NonLinearDiff1::NonLinearDiff1(
                                ProblemSpecP     & ps,
-                               SimulationStateP & sS,
+                               MaterialManagerP & sS,
                                MPMFlags         * Mflag,
                                std::string        diff_type
                               ) : ScalarDiffusionModel(ps,
@@ -135,7 +135,7 @@ void NonLinearDiff1::computeFlux(
                                 )
 {
   // Get the current simulation time
-  // double simTime = d_sharedState->getElapsedSimTime();
+  // double simTime = d_materialManager->getElapsedSimTime();
 
   simTime_vartype simTime;
   old_dw->get(simTime, d_lb->simulationTimeLabel);

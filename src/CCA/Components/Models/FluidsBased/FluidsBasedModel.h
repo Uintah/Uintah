@@ -32,8 +32,8 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 
@@ -104,24 +104,24 @@ namespace Uintah {
   class FluidsBasedModel : public ModelInterface {
   public:
     FluidsBasedModel(const ProcessorGroup* myworld,
-  		const SimulationStateP sharedState);
+                     const MaterialManagerP materialManager);
 
     virtual ~FluidsBasedModel();
 
     virtual void problemSetup(GridP& grid,
-  			       const bool isRestart) = 0;
+                               const bool isRestart) = 0;
       
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
     virtual void scheduleInitialize(SchedulerP& scheduler,
-  				    const LevelP& level) = 0;
+                                    const LevelP& level) = 0;
 
       
     virtual void scheduleComputeStableTimeStep(SchedulerP& scheduler,
-  					       const LevelP& level) = 0;
+                                               const LevelP& level) = 0;
       
     virtual void scheduleComputeModelSources(SchedulerP& scheduler,
-					     const LevelP& level) = 0;
+                                             const LevelP& level) = 0;
                                                 
     virtual void computeSpecificHeat(CCVariable<double>&,
                                      const Patch* patch,
@@ -132,19 +132,19 @@ namespace Uintah {
                                        SchedulerP& sched) = 0;
                                                
     virtual void scheduleTestConservation(SchedulerP&,
-					  const PatchSet* patches) = 0;
+                                          const PatchSet* patches) = 0;
 
     virtual void scheduleModifyThermoTransportProperties(SchedulerP& scheduler,
-  							 const LevelP& level,
-  							 const MaterialSet*) = 0;
+                                                         const LevelP& level,
+                                                         const MaterialSet*) = 0;
 
     // Method specific to FluidsBasedModels
     virtual void registerTransportedVariable(const MaterialSet* matlSet,
-  					     const VarLabel* var,
-  					     const VarLabel* src);
+                                             const VarLabel* var,
+                                             const VarLabel* src);
                                         
     virtual void registerAMRRefluxVariable(const MaterialSet* matlSet,
-  					   const VarLabel* var);
+                                           const VarLabel* var);
 
     virtual std::vector<TransportedVariable*> getTransportedVars() {return d_trans_vars; }
     virtual std::vector<AMRRefluxVariable*> getAMRRefluxVars() { return d_reflux_vars; }

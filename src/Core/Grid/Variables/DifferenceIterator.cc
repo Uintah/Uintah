@@ -28,7 +28,7 @@
 namespace Uintah
 {
 
-  DifferenceIterator::DifferenceIterator(Iterator iter1, Iterator iter2) : ListOfCellsIterator()
+  DifferenceIterator::DifferenceIterator(Iterator iter1, Iterator iter2) : ListOfCellsIterator(iter1.size())
   {
     iter1.reset();
     iter2.reset();

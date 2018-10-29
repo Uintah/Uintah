@@ -38,7 +38,7 @@
 
 using namespace Uintah;
 
-FVMMaterial::FVMMaterial( ProblemSpecP& ps, SimulationStateP& shared_state,
+FVMMaterial::FVMMaterial( ProblemSpecP& ps, MaterialManagerP& materialManager,
                           FVMMethod method_type )
 {
   d_method_type = method_type;

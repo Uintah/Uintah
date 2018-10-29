@@ -31,12 +31,13 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/SolverInterface.h>
 
+#include <CCA/Components/Application/ApplicationReductionVariable.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationTime.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Handle.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -45,7 +46,7 @@
 
 namespace Uintah {
 
-  class DataWarehouse;  
+  class DataWarehouse;
   class Output;
   class Regridder;
 
@@ -68,7 +69,7 @@ GENERAL INFORMATION
   
    
 KEYWORDS
-   Simulation_Interface
+   Application Interface
 
 DESCRIPTION
    Long description...
@@ -76,15 +77,15 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-
   class ApplicationCommon : public UintahParallelComponent,
                             public ApplicationInterface {
 
     friend class Switcher;
+    friend class PostProcessUda;
 
   public:
     ApplicationCommon(const ProcessorGroup* myworld,
-                      const SimulationStateP sharedState);
+                      const MaterialManagerP materialManager);
 
     virtual ~ApplicationCommon();
   
@@ -96,6 +97,9 @@ WARNING
     virtual Scheduler *getScheduler() { return m_scheduler; }
     virtual Regridder *getRegridder() { return m_regridder; }
     virtual Output    *getOutput()    { return m_output; }
+
+    virtual void setReductionVariables( UintahParallelComponent *comp );
+    virtual void resetReductionVariables();
     
     // Top level problem set up called by sus.
     virtual void problemSetup( const ProblemSpecP &prob_spec );
@@ -119,6 +123,9 @@ WARNING
     // On a restart schedule an initialization task.
     virtual void scheduleRestartInitialize( const LevelP     & level,
                                                   SchedulerP & scheduler ) = 0;
+
+    // Used by the switcher
+    virtual void setupForSwitching() {}
 
     // restartInitialize() is called once and only once if and when a
     // simulation is restarted.  This allows the simulation component
@@ -217,13 +224,11 @@ WARNING
     virtual void   recomputeDelT();
     virtual double recomputeDelT( const double delT );
 
-    virtual bool restartableTimeSteps() { return false; }
-
     // Updates the time step and the delta T.
     virtual void prepareForNextTimeStep();
 
     // Asks the application if it needs to be recompiled.
-    virtual bool needRecompile( const GridP & grid );
+    virtual bool needRecompile( const GridP & grid ) { return false; };
 
     // Labels for access value in the data warehouse.
     virtual const VarLabel* getTimeStepLabel() const { return m_timeStepLabel; }
@@ -254,55 +259,172 @@ WARNING
       m_isRegridTimeStep = val;
       
       if( m_isRegridTimeStep )
-	m_lastRegridTimestep = m_timeStep;
+        m_lastRegridTimestep = m_timeStep;
     }
     virtual int  getLastRegridTimeStep() { return m_lastRegridTimestep; }
 
-    // Some applications can adjust the output interval.
-    virtual void adjustOutputInterval(bool val) { m_adjustOutputInterval = val; }
-    virtual bool adjustOutputInterval() const { return m_adjustOutputInterval; }
-     
-    // Some applications can adjust the checkpoint interval.
-    virtual void adjustCheckpointInterval(bool val) { m_adjustCheckpointInterval = val; }
-    virtual bool adjustCheckpointInterval() const { return m_adjustCheckpointInterval; }
+    // Some applications can set reduction variables
+    virtual unsigned int numReductionVariable() const
+    {
+      return m_appReductionVars.size();
+    }
 
-    // Some applications can end the simulation early.
-    virtual void mayEndSimulation(bool val) { m_mayEndSimulation = val; }
-    virtual bool mayEndSimulation() const { return m_mayEndSimulation; }
+    virtual void addReductionVariable( std::string name,
+				       const TypeDescription *varType,
+				       bool varActive = false )
+    {
+      m_appReductionVars[name] = new ApplicationReductionVariable( name, varType, varActive );
+    }
+    
+    virtual void activateReductionVariable(std::string name, bool val) { m_appReductionVars[name]->setActive( val ); }
+    virtual bool activeReductionVariable(std::string name) {
+      if( m_appReductionVars.find(name) != m_appReductionVars.end() )
+	  return m_appReductionVars[name]->getActive();
+      else
+	return false;
+    }
 
+    virtual bool isBenignReductionVariable( std::string name ) { return m_appReductionVars[name]->isBenignValue(); }
+    virtual void overrideReductionVariable( DataWarehouse * new_dw, std::string name,   bool val) { m_appReductionVars[name]->setValue( new_dw, val ); }
+    virtual void overrideReductionVariable( DataWarehouse * new_dw, std::string name, double val) { m_appReductionVars[name]->setValue( new_dw, val ); }
+    virtual void setReductionVariable( DataWarehouse * new_dw, std::string name,   bool val) { m_appReductionVars[name]->setValue( new_dw, val ); }
+    virtual void setReductionVariable( DataWarehouse * new_dw, std::string name, double val) { m_appReductionVars[name]->setValue( new_dw, val ); }
+    // Get application specific reduction values all cast to doubles.
+    virtual double getReductionVariable( std::string name ) const
+    {
+      if( m_appReductionVars.find(name) != m_appReductionVars.end() )
+        return m_appReductionVars.at(name)->getValue();
+      else
+        return 0;
+    }
+    
+    virtual double getReductionVariable( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->getValue();
+        else
+          --index;
+      }
+
+      return 0;
+    }
+    
+    virtual std::string getReductionVariableName( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->getName();
+        else
+          --index;
+      }
+
+      return "Unknown";
+    }
+    
+    virtual unsigned int getReductionVariableCount( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->getCount();
+        else
+          --index;
+      }
+
+      return 0;
+    }
+    
+    virtual bool overriddenReductionVariable( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->overridden();
+        else
+          --index;
+      }
+
+      return false;
+    }
+    
     // Access methods for member classes.
-    virtual SimulationTime * getSimulationTime() const { return m_simulationTime; }
-    virtual SimulationStateP getSimulationStateP() const { return m_sharedState; }
+    virtual MaterialManagerP getMaterialManagerP() const { return m_materialManager; }
   
+    virtual ReductionInfoMapper< ApplicationStatsEnum,
+                                 double > & getApplicationStats()
+    { return m_application_stats; };
+
+    virtual void resetApplicationStats( double val )
+    { m_application_stats.reset( val ); };
+      
+    virtual void reduceApplicationStats( bool allReduce,
+                                         const ProcessorGroup* myWorld )
+    { m_application_stats.reduce( allReduce, myWorld ); };      
+ 
+  public:
+    virtual void   setDelTOverrideRestart( double val ) { m_delTOverrideRestart = val; }
+    virtual double getDelTOverrideRestart() const { return m_delTOverrideRestart; }
+
+    virtual void   setDelTInitialMax( double val ) { m_delTInitialMax = val; }
+    virtual double getDelTInitialMax() const { return m_delTInitialMax; }
+
+    virtual void   setDelTInitialRange( double val ) { m_delTInitialRange = val; }
+    virtual double getDelTInitialRange() const { return m_delTInitialRange; }
+
+    virtual void   setDelTMultiplier( double val ) { m_delTMultiplier = val; }
+    virtual double getDelTMultiplier() const { return m_delTMultiplier; }
+
+    virtual void   setDelTMaxIncrease( double val ) { m_delTMaxIncrease = val; }
+    virtual double getDelTMaxIncrease() const { return m_delTMaxIncrease; }
+    
+    virtual void   setDelTMin( double val ) { m_delTMin = val; }
+    virtual double getDelTMin() const { return m_delTMin; }
+
+    virtual void   setDelTMax( double val ) { m_delTMax = val; }
+    virtual double getDelTMax() const { return m_delTMax; }
+
+    virtual void   setSimTimeEndAtMax( bool val ) { m_simTimeEndAtMax = val; }
+    virtual bool   getSimTimeEndAtMax() const  { return m_simTimeEndAtMax; }
+
+    virtual void   setSimTimeMax( double val ) { m_simTimeMax = val; }
+    virtual double getSimTimeMax() const { return m_simTimeMax; }
+
+    virtual void   setSimTimeClampToOutput( bool val ) { m_simTimeClampToOutput = val; }
+    virtual bool   getSimTimeClampToOutput() const { return m_simTimeClampToOutput; }
+
+    virtual void   setTimeStepsMax( int val ) { m_timeStepsMax = val; }
+    virtual int    getTimeStepsMax() const { return m_timeStepsMax; }
+
+    virtual void   setWallTimeMax( double val ) { m_wallTimeMax = val; }
+    virtual double getWallTimeMax() const { return m_wallTimeMax; }
+
+    virtual void     outputIfInvalidNextDelT( ValidateFlag flag );
+    virtual void checkpointIfInvalidNextDelT( ValidateFlag flag );
+
   private:
     // The classes are private because only the top level application
-    // should be changing them. This only really matter when there are
-    // application built upon multiple application. The children
+    // should be changing them. This only really matters when there are
+    // applications built upon multiple applications. The children
     // applications will not have valid values. They should ALWAYS get
     // the values via the data warehouse.
     
     //////////
-    virtual   void setDelT( double delT ) { m_delT = delT; }
+    virtual void   setDelT( double delT ) { m_delT = delT; }
     virtual double getDelT() const { return m_delT; }
-    virtual   void setDelTForAllLevels( SchedulerP& scheduler,
+    virtual void   setDelTForAllLevels( SchedulerP& scheduler,
                                         const GridP & grid,
                                         const int totalFine );
 
-    virtual   void setNextDelT( double delT );
-    virtual double getNextDelT() const { return m_nextDelT; }
-    virtual   void validateNextDelT( DataWarehouse  * new_dw );
-
+    virtual void         setNextDelT( double delT, bool restart = false );
+    virtual double       getNextDelT() const { return m_delTNext; }
+    virtual ValidateFlag validateNextDelT( double &delTNext, unsigned int level );
+    
     //////////
     virtual   void setSimTime( double simTime );
     virtual double getSimTime() const { return m_simTime; };
-
-    virtual   void setSimTimeStart( double simTime )
-    {
-      m_simTimeStart = simTime;
-      setSimTime(simTime);
-    }
-    
-    virtual double getSimTimeStart() const { return m_simTimeStart; }
     
     // Returns the integer time step index of the simulation.  All
     // simulations start with a time step number of 0.  This value is
@@ -314,20 +436,10 @@ WARNING
     virtual void incrementTimeStep();
     virtual int  getTimeStep() const { return m_timeStep; }
 
-    virtual bool isLastTimeStep( double walltime ) const;
+    virtual bool isLastTimeStep( double walltime );
     virtual bool maybeLastTimeStep( double walltime ) const;
 
-    virtual ReductionInfoMapper< ApplicationStatsEnum,
-                                 double > & getApplicationStats()
-    { return m_application_stats; };
 
-    virtual void resetApplicationStats( double val )
-    { m_application_stats.reset( val ); };
-      
-    virtual void reduceApplicationStats( bool allReduce,
-                                         const ProcessorGroup* myWorld )
-    { m_application_stats.reduce( allReduce, myWorld ); };      
-    
   protected:
     Scheduler       * m_scheduler    {nullptr};
     LoadBalancer    * m_loadBalancer {nullptr};
@@ -335,10 +447,20 @@ WARNING
     Regridder       * m_regridder    {nullptr};
     Output          * m_output       {nullptr};
 
-    bool m_recompile {false};
+    // Use a map to store the reduction variables. 
+    std::map< std::string, ApplicationReductionVariable* > m_appReductionVars;
     
-    const VarLabel* m_endSimulationLabel;
-    bool   m_endSimulation{false};
+    enum VALIDATE_ENUM  // unsigned char
+    {
+      DELTA_T_MAX_INCREASE     = 0x01,
+      DELTA_T_MIN              = 0x02,
+      DELTA_T_MAX              = 0x04,
+      DELTA_T_INITIAL_MAX      = 0x08,
+
+      CLAMP_TIME_TO_OUTPUT     = 0x10,
+      CLAMP_TIME_TO_CHECKPOINT = 0x20,
+      CLAMP_TIME_TO_MAX        = 0x40
+    };
 
   private:
     bool m_AMR {false};
@@ -353,40 +475,46 @@ WARNING
 
     bool m_haveModifiedVars {false};
 
-    bool m_adjustCheckpointInterval {false};
-    bool m_adjustOutputInterval {false};
-
-    bool m_mayEndSimulation {false};
-  
     const VarLabel* m_timeStepLabel;
     const VarLabel* m_simulationTimeLabel;
     const VarLabel* m_delTLabel;
   
-    const VarLabel* m_outputIntervalLabel;
-    const VarLabel* m_outputTimeStepIntervalLabel;
-    const VarLabel* m_checkpointIntervalLabel;
-    const VarLabel* m_checkpointTimeStepIntervalLabel;
 
-//    const VarLabel* m_endSimulationLabel;
-
-    SimulationTime* m_simulationTime {nullptr};
-  
+    // The simulation runs to either the maximum number of time steps
+    // (timeStepsMax) or the maximum simulation time (simTimeMax), which
+    // ever comes first. If the "max_Timestep" is not specified in the .ups
+    // file, then it is set to zero.
     double m_delT{0.0};
-    double m_nextDelT{0.0};
+    double m_delTNext{0.0};
 
-    double m_simTime{0.0};             // current sim time
-    double m_simTimeStart{0.0};        // starting sim time
+    double m_delTOverrideRestart{0}; // Override the restart delta T value
+    double m_delTInitialMax{0};      // Maximum initial delta T
+    double m_delTInitialRange{0};    // Simulation time range for the initial delta T
 
-    // The time step that the simulation is at.
-    int    m_timeStep{0};
+    double m_delTMin{0};             // Minimum delta T
+    double m_delTMax{0};             // Maximum delta T
+    double m_delTMultiplier{1.0};    // Multiple for increasing delta T
+    double m_delTMaxIncrease{0};     // Maximum delta T increase.
 
-//    bool   m_endSimulation{false};
+    double m_simTime{0.0};           // Current sim time
+    double m_simTimeMax{0};          // Maximum simulation time
+    bool   m_simTimeEndAtMax{false}; // End the simulation at exactly this sim time.
+    bool   m_simTimeClampToOutput{false}; // Clamp the simulation time to the next output or checkpoint
 
-  protected:    
-    SimulationStateP m_sharedState{nullptr};
+    int    m_timeStep{0};            // Current time step
+    int    m_timeStepsMax{0};        // Maximum number of time steps to run.  
+
+    double m_wallTimeMax{0};         // Maximum wall time.
+  
+    ValidateFlag     m_outputIfInvalidNextDelTFlag{0};
+    ValidateFlag m_checkpointIfInvalidNextDelTFlag{0};
+
+  protected:
+    
+    MaterialManagerP m_materialManager{nullptr};
 
     ReductionInfoMapper< ApplicationStatsEnum,
-                         double > m_application_stats;    
+                         double > m_application_stats;
     
   private:
     ApplicationCommon(const ApplicationCommon&);

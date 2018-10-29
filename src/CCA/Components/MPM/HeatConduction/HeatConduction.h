@@ -27,7 +27,7 @@
 
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 namespace Uintah {
 
@@ -39,7 +39,7 @@ namespace Uintah {
   class HeatConduction {
   public:
     
-    HeatConduction(SimulationStateP& ss,MPMLabel* lb, MPMFlags* mflags);
+    HeatConduction(MaterialManagerP& ss,MPMLabel* lb, MPMFlags* mflags);
     ~HeatConduction();
 
     void scheduleComputeInternalHeatRate(SchedulerP&, const PatchSet*,
@@ -81,7 +81,7 @@ namespace Uintah {
   private:
     MPMLabel* d_lb;
     MPMFlags* d_flag;
-    SimulationStateP d_sharedState;
+    MaterialManagerP d_materialManager;
     int NGP, NGN;
 
     HeatConduction(const HeatConduction&);

@@ -42,16 +42,16 @@ namespace Uintah{
     public:
 
       Builder( std::string task_name, int matl_index, std::string base_var_name, const int N ) :
-      _task_name(task_name), _matl_index(matl_index), m_base_var_name(base_var_name), m_N(N){}
+      m_task_name(task_name), m_matl_index(matl_index), m_base_var_name(base_var_name), m_N(N){}
       ~Builder(){}
 
       BodyForce* build()
-      { return scinew BodyForce<IT, DT>( _task_name, _matl_index, m_base_var_name, m_N ); }
+      { return scinew BodyForce<IT, DT>( m_task_name, m_matl_index, m_base_var_name, m_N ); }
 
     private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
       std::string m_base_var_name;
       const int m_N;
 

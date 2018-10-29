@@ -5,7 +5,7 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   SGSforTransport::SGSforTransport( std::string task_name, int matl_index ) :
     TaskInterface( task_name, matl_index ) {
-      // Create SGS stress 
+      // Create SGS stress
       m_SgsStress_names.resize(9);
       m_SgsStress_names[0] = "ucell_xSgsStress";
       m_SgsStress_names[1] = "ucell_ySgsStress";
@@ -68,7 +68,7 @@ namespace Uintah{
     SGSforTransport::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
         variable_registry , const bool packed_tasks){
       for (auto iter = m_fmom_source_names.begin(); iter != m_fmom_source_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
       }
 
     }
@@ -89,7 +89,7 @@ namespace Uintah{
     SGSforTransport::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>&
         variable_registry , const bool packed_tasks){
       for (auto iter = m_fmom_source_names.begin(); iter != m_fmom_source_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
       }
 
     }
@@ -97,11 +97,12 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   void
     SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-    
-      SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
-      SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
-      SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
-    
+
+      // Unused - creating a compiler warning
+      // SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
+      // SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
+      // SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
+
     }
 
   //--------------------------------------------------------------------------------------------------
@@ -110,10 +111,10 @@ namespace Uintah{
         variable_registry, const int time_substep , const bool packed_tasks){
 
       for (auto iter = m_SgsStress_names.begin(); iter != m_SgsStress_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry, _task_name );
+        register_variable( *iter, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry, m_task_name );
       }
       for (auto iter = m_fmom_source_names.begin(); iter != m_fmom_source_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
+        register_variable( *iter, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
       }
 
     }
@@ -123,9 +124,9 @@ namespace Uintah{
     SGSforTransport::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       Vector Dx=patch->dCell();
       //  double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();
-      double vol = Dx.x()*Dx.y()*Dx.z();
-      double Area_NS =Dx.x()*Dx.z(); 
-      double Area_EW =Dx.y()*Dx.z(); 
+      // double vol = Dx.x()*Dx.y()*Dx.z();
+      double Area_NS =Dx.x()*Dx.z();
+      double Area_EW =Dx.y()*Dx.z();
       double Area_TB =Dx.x()*Dx.y();
       double densitygas=1.0;//kg/m3
       double cellvol=Dx.x()*Dx.y()*Dx.z();

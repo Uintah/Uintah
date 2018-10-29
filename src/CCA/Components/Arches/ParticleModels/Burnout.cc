@@ -37,7 +37,7 @@ Burnout::problemSetup( ProblemSpecP& db ){
 void
 Burnout::create_local_labels(){
 
-  register_new_variable<CCVariable<double> >( _task_name );
+  register_new_variable<CCVariable<double> >( m_task_name );
 
 }
 
@@ -45,7 +45,7 @@ Burnout::create_local_labels(){
 void
 Burnout::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
 }
 
@@ -53,7 +53,7 @@ Burnout::register_initialize( std::vector<ArchesFieldContainer::VariableInformat
 void
 Burnout::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& burnout = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
+  CCVariable<double>& burnout = *(tsk_info->get_uintah_field<CCVariable<double> >( m_task_name ));
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     burnout(i,j,k) = 0.0;
@@ -65,7 +65,7 @@ Burnout::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 void
 Burnout::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
 }
 
@@ -73,7 +73,7 @@ Burnout::register_timestep_init( std::vector<ArchesFieldContainer::VariableInfor
 void
 Burnout::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& burnout = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
+  CCVariable<double>& burnout = *(tsk_info->get_uintah_field<CCVariable<double> >( m_task_name ));
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     burnout(i,j,k) = 0.0;
@@ -90,7 +90,7 @@ Burnout::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfor
     register_variable( m_rc_names[qn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
     register_variable( m_char_names[qn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
   }
-  register_variable( _task_name, ArchesFieldContainer::MODIFIES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::MODIFIES, variable_registry );
   register_variable( m_vol_fraction_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW, variable_registry );
 }
 
@@ -103,7 +103,7 @@ Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& denominator_sum = tsk_info->get_uintah_field_add< CCVariable<double> >("denominator_sum", 0);
   numerator_sum.initialize(0.0);
   denominator_sum.initialize(0.0);
-  CCVariable<double>& burnout = tsk_info->get_uintah_field_add<CCVariable<double> >( _task_name );
+  CCVariable<double>& burnout = tsk_info->get_uintah_field_add<CCVariable<double> >( m_task_name );
   constCCVariable<double>& vol_frac = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_vol_fraction_name);
 
   for ( int qn = 0; qn < _Nenv; qn++ ){

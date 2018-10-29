@@ -92,7 +92,6 @@ namespace WasatchCore{
     MomentTransportEquation( const std::string thisPhiName,
                              GraphCategories& gc,
                              const double momentOrder,
-                             const bool isConstDensity,
                              Uintah::ProblemSpecP params,
                              const double initialMoment );
 

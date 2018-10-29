@@ -34,7 +34,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Task.h>
 
 namespace Uintah {
@@ -69,7 +69,7 @@ WARNING
         ContactStressDependent(const ContactStressDependent &con);
         ContactStressDependent& operator=(const ContactStressDependent &con);
 
-        SimulationStateP    d_sharedState;
+        MaterialManagerP    d_materialManager;
 
         // Dissolution rate
         double d_Vm;
@@ -84,7 +84,7 @@ WARNING
       public:
          // Constructor
          ContactStressDependent(const ProcessorGroup* myworld,
-                          ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb);
+                          ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb);
 
          // Destructor
          virtual ~ContactStressDependent();

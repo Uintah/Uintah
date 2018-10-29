@@ -68,6 +68,8 @@
 #include <string>
 #include <vector>
 
+#include <unistd.h>
+
 using namespace Uintah;
 
 namespace {
@@ -182,7 +184,7 @@ void SchedulerCommon::releaseComponents()
   m_output       = nullptr;
   m_application  = nullptr;
 
-  m_sharedState = nullptr;
+  m_materialManager = nullptr;
 }
 
 //______________________________________________________________________
@@ -241,10 +243,22 @@ SchedulerCommon::makeTaskGraphDoc( const DetailedTasks * /* dt*/
                                  ,       int             rank
                                  )
 {
+  // This only happens if "-emit_taskgraphs" is passed to sus
   if (!m_emit_task_graph) {
     return;
   }
 
+  // ARS NOTE: Outputing and Checkpointing may be done out of snyc
+  // now. I.e. turned on just before it happens rather than turned on
+  // before the task graph execution.  As such, one should also be
+  // checking:
+  
+  // m_application->activeReductionVariable( "outputInterval" );
+  
+  // However, if active the code below would be called regardless if
+  // an output or checkpoint time step or not. That is probably not
+  // desired. However, given this code is for debuging it probably
+  // fine that it does not happen if doing an output of sync.
   if (!m_output->isOutputTimeStep()) {
     return;
   }
@@ -287,7 +301,9 @@ SchedulerCommon::emitNode( const DetailedTask * dtask
                          ,       double         execution_duration
                          )
 {  
-  if ( m_graph_nodes == nullptr ) {
+  // This only happens if "-emit_taskgraphs" is passed to sus
+  // See makeTaskGraphDoc
+  if (m_graph_nodes == nullptr) {
     return;
   }
 
@@ -308,33 +324,34 @@ SchedulerCommon::emitNode( const DetailedTask * dtask
 void
 SchedulerCommon::finalizeNodes( int process /* = 0 */ )
 {
-  if (!m_graph_doc) {
+  // This only happens if "-emit_taskgraphs" is passed to sus
+  // See makeTaskGraphDoc
+  if (m_graph_doc == nullptr) {
     return;
   }
 
-  if (m_output->isOutputTimeStep()) {
-    std::string timestep_dir(m_output->getLastTimeStepOutputLocation());
+  std::string timestep_dir(m_output->getLastTimeStepOutputLocation());
+  
+  std::ostringstream fname;
+  fname << "/taskgraph_" << std::setw(5) << std::setfill('0') << process << ".xml";
+  std::string file_name(timestep_dir + fname.str());
+  m_graph_doc->output(file_name.c_str());
 
-    std::ostringstream fname;
-    fname << "/taskgraph_" << std::setw(5) << std::setfill('0') << process << ".xml";
-    std::string file_name(timestep_dir + fname.str());
-    m_graph_doc->output(file_name.c_str());
-  }
-
-  // TODO: figure out why this was commented out - APH 08/06/16
-  //m_graph_doc->releaseDocument();
-  //m_graph_doc = nullptr;
-  //m_graph_nodes = nullptr;
+  // Releasing the document causes a hard crash. All calls
+  // to releaseDocument are commented out.  
+  // m_graph_doc->releaseDocument();
+  m_graph_doc = nullptr;
+  m_graph_nodes = nullptr;
 }
 
 //______________________________________________________________________
 //
 void
 SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
-                             , const SimulationStateP & state
+                             , const MaterialManagerP & materialManager
                              )
 {
-  m_sharedState = state;
+  m_materialManager = materialManager;
 
   m_tracking_vars_print_location = PRINT_AFTER_EXEC;
 
@@ -722,7 +739,7 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
       IntVector end   = Min(patch->getExtraHighIndex(basis, IntVector(0, 0, 0)), m_tracking_end_index);
 
       // Loop over matls too...
-      for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+      for (unsigned int m = 0; m < m_materialManager->getNumMatls(); m++) {
 
         if (!dw->exists(label, m, patch)) {
           std::ostringstream mesg;
@@ -824,7 +841,7 @@ SchedulerCommon::addTaskGraph( Scheduler::tgType type
                              , int               index
                              )
 {
-  TaskGraph* tg = scinew TaskGraph(this, m_sharedState, d_myworld, type, index);
+  TaskGraph* tg = scinew TaskGraph(this, d_myworld, type, index);
   tg->initialize();
   m_task_graphs.push_back(tg);
 }
@@ -1188,14 +1205,6 @@ SchedulerCommon::replaceDataWarehouse(       int     index
     }
   }
   m_dws[index]->doReserve();
-}
-
-//______________________________________________________________________
-//
-void 
-SchedulerCommon::setRestartable( bool restartable )
-{
-  m_restartable = restartable;
 }
 
 //______________________________________________________________________
@@ -1706,7 +1715,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
         DOUT(g_schedulercommon_dbg, "  Scheduling copy for var " << *var << " matl " << *matls << " Copies: " << *copyPatchSets[L].get_rep());
         dataTasks.back()->computes(var, matls);
       }
-      addTask(dataTasks.back(), copyPatchSets[L].get_rep(), m_sharedState->allMaterials());
+      addTask(dataTasks.back(), copyPatchSets[L].get_rep(), m_materialManager->allMaterials());
 
       // Monitoring tasks must be scheduled last!!
       scheduleTaskMonitoring( copyPatchSets[L].get_rep() );      
@@ -1725,7 +1734,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
         DOUT(g_schedulercommon_dbg, "  Scheduling modify for var " << *var << " matl " << *matls << " Modifies: " << *refinePatchSets[L].get_rep());
         dataTasks.back()->modifies(var, matls);
       }
-      addTask(dataTasks.back(), refinePatchSets[L].get_rep(), m_sharedState->allMaterials());
+      addTask(dataTasks.back(), refinePatchSets[L].get_rep(), m_materialManager->allMaterials());
 
       // Monitoring tasks must be scheduled last!!
       scheduleTaskMonitoring( refinePatchSets[L].get_rep());      
@@ -1849,7 +1858,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
     const Level* newLevel = newPatch->getLevel();
 
     // to create once per matl instead of once per matl-var
-    std::vector<ParticleSubset*> oldsubsets(m_sharedState->getNumMatls()), newsubsets(m_sharedState->getNumMatls());
+    std::vector<ParticleSubset*> oldsubsets(m_materialManager->getNumMatls()), newsubsets(m_materialManager->getNumMatls());
 
     // If there is a level that didn't exist, we don't need to copy it
     if (newLevel->getIndex() >= oldDataWarehouse->getGrid()->numLevels()) {
@@ -2192,7 +2201,7 @@ SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
     }
   }
 
-  addTask(t, level->eachPatch(), m_sharedState->allMaterials());
+  addTask(t, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________
@@ -2224,7 +2233,7 @@ SchedulerCommon::scheduleTaskMonitoring( const PatchSet* patches )
     }
   }
 
-  addTask(t, patches, m_sharedState->allMaterials());
+  addTask(t, patches, m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________

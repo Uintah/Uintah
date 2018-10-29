@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Wasatch/Transport/SpeciesTransportEquation.h>
 
+#include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
@@ -169,7 +170,7 @@ SpeciesTransportEquation( Uintah::ProblemSpecP params,
                           const Expr::Tag mmwTag,
                           WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
                           const bool computeKineticsJacobian )
-: TransportEquation( gc, "rho_"+CanteraObjects::species_name(specNum), NODIR, false ),  // jcs should we allow constant density?  possibly...
+: TransportEquation( gc, "rho_"+CanteraObjects::species_name(specNum), NODIR ),  // jcs should we allow constant density?  possibly...
   params_     ( params      ),
   wasatchSpec_( wasatchSpec ),
   turbParams_ ( turbParams  ),

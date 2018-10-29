@@ -40,8 +40,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
@@ -82,29 +82,37 @@ PressureSolver::PressureSolver(ArchesLabel* label,
 PressureSolver::~PressureSolver()
 {
   delete d_source;
+
+  if(do_custom_arches_linear_solve){
+    delete custom_solver;
+  }
 }
 
 //______________________________________________________________________
 // Problem Setup
 //______________________________________________________________________
 void
-PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
+PressureSolver::problemSetup(ProblemSpecP& params,MaterialManagerP& materialManager)
 {
+  //do_custom_arches_linear_solve=true; //  Don't use hypre, use proto-type solver
+
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();
   db->getWithDefault("normalize_pressure",      d_norm_press, false);
   db->getWithDefault("do_only_last_projection", d_do_only_last_projection, false);
 
   // make source and boundary_condition objects
-  d_source = scinew Source(d_physicalConsts);
+  d_source = scinew Source(d_physicalConsts, d_boundaryCondition);
 
-  d_hypreSolver->readParameters(db, "pressure" );
-  
-  d_hypreSolver->getParameters()->setSolveOnExtraCells(false);
+  if(!do_custom_arches_linear_solve){
+    d_hypreSolver->readParameters(db, "pressure" );
 
-  //force a zero setup frequency since nothing else
-  //makes any sense at the moment.
-  d_hypreSolver->getParameters()->setSetupFrequency(0.0);
+    d_hypreSolver->getParameters()->setSolveOnExtraCells(false);
+
+    //force a zero setup frequency since nothing else
+    //makes any sense at the moment.
+    d_hypreSolver->getParameters()->setSetupFrequency(0.0);
+  }
 
   d_enforceSolvability = false;
   if ( db->findBlock("enforce_solvability")){
@@ -162,16 +170,27 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
 
 //______________________________________________________________________
 //
-void PressureSolver::scheduleInitialize( const LevelP& level, 
-                                         SchedulerP& sched, 
+void PressureSolver::scheduleInitialize( const LevelP& level,
+                                         SchedulerP& sched,
                                          const MaterialSet* matls)
 {
-  d_hypreSolver->scheduleInitialize( level, sched, matls );
+  if(do_custom_arches_linear_solve){
+    int archIndex = 0; // only one arches material
+    custom_solver = scinew linSolver(d_MAlab,   this, d_boundaryCondition ,d_physicalConsts ,d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(),
+                                                                                             d_lab->d_mmgasVolFracLabel,
+                                                                                             d_lab->d_cellTypeLabel,
+                                                                                             d_lab->d_presCoefPBLMLabel,
+                                                                                             d_lab->d_materialManager->allMaterials("Arches")
+                                                                                                                       );
+    custom_solver->sched_PreconditionerConstruction( sched, matls, level );// hard coded for level 0
+  }else{
+    d_hypreSolver->scheduleInitialize( level, sched, matls );
+  }
 }
 //______________________________________________________________________
 //
-void PressureSolver::scheduleRestartInitialize( const LevelP& level, 
-                                                SchedulerP& sched, 
+void PressureSolver::scheduleRestartInitialize( const LevelP& level,
+                                                SchedulerP& sched,
                                                 const MaterialSet* matls)
 {
   d_hypreSolver->scheduleRestartInitialize( level, sched, matls );
@@ -194,8 +213,8 @@ void PressureSolver::sched_solve(const LevelP& level,
     sched->getLoadBalancer()->getPerProcessorPatchSet(level);
 
   int archIndex = 0; // only one arches material
-  d_indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  d_indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
   string pressLabel = "nullptr";
 
   sched_buildLinearMatrix( sched, perproc_patches, matls,
@@ -372,10 +391,12 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
                                           &vars,
-                                          &constVars);
+                                          &constVars,
+                                          new_dw );
+
     Vector Dx = patch->dCell();
     double volume = Dx.x()*Dx.y()*Dx.z();
-    
+
     // Add other source terms to the pressure:
     for ( auto iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
 
@@ -529,7 +550,7 @@ PressureSolver::setGuessForX ( const ProcessorGroup* pg,
   // set outputfile name
   string desc  = timelabels->integrator_step_name;
 
-  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // int timeStep = d_lab->d_materialManager->getCurrentTopLevelTimeStep();
   timeStep_vartype timeStep;
   old_dw->get( timeStep, d_lab->d_timeStepLabel );
 
@@ -537,7 +558,9 @@ PressureSolver::setGuessForX ( const ProcessorGroup* pg,
 
   ostringstream fname;
   fname << "." << desc.c_str() << "." << timeStep << "." << d_iteration;
-  d_hypreSolver->getParameters()->setOutputFileName(fname.str());
+  if(!do_custom_arches_linear_solve){
+    d_hypreSolver->getParameters()->setOutputFileName(fname.str());
+  }
 
 }
 
@@ -588,16 +611,28 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
 
   IntVector periodic_vector = level->getPeriodicBoundaries();
   const bool isPeriodic =periodic_vector.x() == 1 && periodic_vector.y() == 1 && periodic_vector.z() ==1;
-  if ( isPeriodic || d_enforceSolvability ) {
-    d_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, rk_stage);
-  }
 
-  d_hypreSolver->scheduleSolve(level, sched,  matls,
-                               A,      Task::NewDW,
-                               x,      modifies_x,
-                               b,      Task::NewDW,
-                               guess,  Task::NewDW,
-                               isFirstSolve);
+
+
+  if(do_custom_arches_linear_solve){
+
+    custom_solver->sched_customSolve(sched,  matls, patches,
+                                     A,      Task::NewDW,
+                                     x,      Task::NewDW,
+                                     b,      Task::NewDW,
+                                     guess,  Task::NewDW, rk_stage ,level);
+  }else{
+    if ( isPeriodic || d_enforceSolvability ) {
+      d_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, rk_stage);
+    }
+
+    d_hypreSolver->scheduleSolve(level, sched,  matls,
+                                 A,      Task::NewDW,
+                                 x,      modifies_x,
+                                 b,      Task::NewDW,
+                                 guess,  Task::NewDW,
+                                 isFirstSolve);
+  }
 
   //add this?
   //if ( d_ref_value != 0. ) {
@@ -837,7 +872,7 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
     double gy = d_physicalConsts->getGravity(2);
     double gz = d_physicalConsts->getGravity(3);
 
-    int indx = d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", 0)->getDWIndex();
 
     Ghost::GhostType  gn = Ghost::None;
     old_dw->get(prel,     d_lab->d_pressurePSLabel,     indx, patch, gn, 0);

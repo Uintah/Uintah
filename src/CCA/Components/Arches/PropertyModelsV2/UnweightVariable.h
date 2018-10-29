@@ -22,16 +22,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       UnweightVariable* build()
-      { return scinew UnweightVariable<T>( _task_name, _matl_index ); }
+      { return scinew UnweightVariable<T>( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
     };
 
@@ -73,6 +73,15 @@ private:
     };
     std::map<std::string, Scaling_info> m_scaling_info;
     std::string m_volFraction_name{"volFraction"};
+
+    struct Clipping_info {
+      std::string var; // 
+      double high; // 
+      double low;
+    };
+    std::map<std::string, Clipping_info> m_clipping_info;
+    
+    
     //bool m_compute_mom;
 
   };
@@ -138,7 +147,6 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
 
     m_un_var_name = eqn_name;
 
-    //if (m_eqn_class == ArchesCore::DQMOM) {
     if (db_eqn->findBlock("no_weight_factor") == nullptr ){
       m_un_eqn_names.push_back(m_un_var_name);
       m_eqn_names.push_back(m_var_name);
@@ -159,28 +167,43 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
       // weight do not performe division 
     }  
 
+    //Clipping
+    if ( db_eqn->findBlock("clip")){
+      double low; double high;
+      db_eqn->findBlock("clip")->getAttribute("low", low);
+      db_eqn->findBlock("clip")->getAttribute("high", high);
+
+      Clipping_info clipping_eqn ;
+      clipping_eqn.var = eqn_name;
+      clipping_eqn.high = high;
+      clipping_eqn.low  = low;
+      m_clipping_info.insert(std::make_pair(m_var_name, clipping_eqn));
+    }
+    
+
   }
+  
   //m_compute_mom = false;
-  if (_task_name == "uVel"){
+  if (m_task_name == "uVel"){
     m_eqn_class = ArchesCore::MOMENTUM;
     m_var_name = "x-mom";
-    m_un_var_name = _task_name;
+    m_un_var_name = m_task_name;
     m_un_eqn_names.push_back(m_un_var_name);
     m_eqn_names.push_back(m_var_name);
     //m_compute_mom = true;
 
-  } else if (_task_name == "vVel"){
+  } else if (m_task_name == "vVel"){
     m_eqn_class = ArchesCore::MOMENTUM;
     m_var_name = "y-mom";
-    m_un_var_name = _task_name;
+    m_un_var_name = m_task_name;
     m_un_eqn_names.push_back(m_un_var_name);
     m_eqn_names.push_back(m_var_name);
     //m_compute_mom = true;
 
-  } else if (_task_name == "wVel"){
+  } else if (m_task_name == "wVel"){
     m_eqn_class = ArchesCore::MOMENTUM;
     m_var_name = "z-mom";
-    m_un_var_name = _task_name;
+    m_un_var_name = m_task_name;
     m_un_eqn_names.push_back(m_un_var_name);
     m_eqn_names.push_back(m_var_name);
     //m_compute_mom = true;
@@ -194,6 +217,7 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
     db->findBlock("weight_factor")->getAttribute("label", m_rho_name);
     Nghost_cells = 1;
   }
+  
 
 }
 
@@ -291,7 +315,7 @@ void UnweightVariable<T>::register_compute_bcs(
     // scalar at cc
     
     if (m_eqn_class ==ArchesCore::DQMOM) {
-      register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name  );
+      register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
       for (int ieqn = istart; ieqn < iend; ieqn++ ){
         register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
         register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
@@ -331,7 +355,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
 
     if ( on_this_patch ){
       //Get the iterator
-      Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+      Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
       //std::string facename = i_bc->second.name;
       IntVector iDir = patch->faceDirection( i_bc->second.face );
 
@@ -351,32 +375,31 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
             constCCVariable<double>& vol_fraction = 
             tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
           
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              un_var[c] = var[c]/(rho[c]+ SMALL)*vol_fraction[c] ;
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              un_var(i,j,k) = var(i,j,k)/(rho(i,j,k)+ SMALL)*vol_fraction(i,j,k);
+            });
           }
          // unscaling only DQMOM
           for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
             Scaling_info info = ieqn->second;
             T&  un_var = tsk_info->get_uintah_field_add<T>(info.unscaled_var);
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              un_var[c] *= info.constant;
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              un_var(i,j,k) *= info.constant;
+            });
           }
         } else {
           for (int ieqn = istart; ieqn < iend; ieqn++ ){
             T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
             CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]);
           
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              IntVector cp = *cell_iter - iDir;
-              const double rho_inter = 0.5 * (rho[c] + rho[cp]);
-              const double phi_inter = 0.5 * (un_var[c] + un_var[cp]);
-              var[c] = 2.0*rho_inter*phi_inter - un_var[cp]*rho[cp];
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              int ip=i - iDir[0];
+              int jp=j - iDir[1];
+              int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k) + rho(ip,jp,kp));
+              const double phi_inter = 0.5 * (un_var(i,j,k) + un_var(ip,jp,kp));
+              var(i,j,k) = 2.0*rho_inter*phi_inter - un_var(ip,jp,kp)*rho(ip,jp,kp);
+            });
           } 
         }
       
@@ -390,21 +413,23 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
       
             if ( dot == -1 ){
             // face (-) in Staggered Variablewe set BC at 0
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              IntVector cp = *cell_iter - iDir;
-              const double rho_inter = 0.5 * (rho[c]+rho[cp]);
-              var[cp] = un_var[cp]*rho_inter; // BC
-              var[c]  = var[cp]; // extra cell
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              const int ip=i - iDir[0];
+              const int jp=j - iDir[1];
+              const int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
+              var(ip,jp,kp) = un_var(ip,jp,kp)*rho_inter; // BC
+              var(i,j,k)  = var(ip,jp,kp); // extra cell
+            });
           } else {
          // face (+) in Staggered Variablewe set BC at extra cell
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              IntVector cp = *cell_iter - iDir;
-              const double rho_inter = 0.5 * (rho[c]+rho[cp]);
-              var[c] = un_var[c]*rho_inter; // BC and extra cell value
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              const int ip=i - iDir[0];
+              const int jp=j - iDir[1];
+              const int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
+              var(i,j,k) = un_var(i,j,k)*rho_inter; // BC and extra cell value
+            });
          }
          }
       } else {
@@ -416,21 +441,37 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
 
           if ( dot == -1 ){
             // face (-) in Staggered Variablewe set BC at 0
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              IntVector cp = *cell_iter - iDir;
-              const double rho_inter = 0.5 * (rho[c]+rho[cp]);
-              un_var[cp] = var[cp]/rho_inter; // BC
-              un_var[c] = un_var[cp]; // extra cell
-            }
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              const int ip=i - iDir[0];
+              const int jp=j - iDir[1];
+              const int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
+              un_var(ip,jp,kp) = var(ip,jp,kp)/rho_inter; // BC
+              un_var(i,j,k) = un_var(ip,jp,kp); // extra cell
+            });
+          } else if ( dot == 1 ){
+            // face (+) in Staggered Variablewe set BC at 0
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              const int ip=i - iDir[0];
+              const int jp=j - iDir[1];
+              const int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
+              un_var(i,j,k) = var(i,j,k)/rho_inter; // extra cell
+              // aditional extra cell for staggered variables on face (+)
+              const int ie = i + iDir[0];
+              const int je = j + iDir[1];
+              const int ke = k + iDir[2];
+              un_var(ie,je,ke) = un_var(i,j,k);  
+            });
           } else {
-         // face (+) in Staggered Variablewe set BC at extra cell
-            for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-              IntVector c = *cell_iter;
-              IntVector cp = *cell_iter - iDir;
-              const double rho_inter = 0.5 * (rho[c]+rho[cp]);
-              un_var[c] = var[c]/rho_inter; // BC and extra cell value
-            }
+         // other direction that are not staggered  
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              const int ip=i - iDir[0];
+              const int jp=j - iDir[1];
+              const int kp=k - iDir[2];
+              const double rho_inter = 0.5 * (rho(i,j,k)+rho(ip,jp,kp));
+              un_var(i,j,k) = var(i,j,k)/rho_inter; // BC and extra cell value
+            });
          }
          }
 
@@ -447,8 +488,8 @@ void UnweightVariable<T>::register_timestep_eval(
   const int istart = 0;
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
-    register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-    register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry );
+    register_variable( m_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry );
   }
   register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
@@ -460,7 +501,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   ArchesCore::VariableHelper<T> helper;
 
-  typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+  //typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>>(m_rho_name);
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];
@@ -476,7 +517,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
     T& un_var = tsk_info->get_uintah_field_add<T>(m_un_eqn_names[ieqn]);
-    CT& var = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
+    T& var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
     Uintah::parallel_for( range, [&](int i, int j, int k){
       const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
       un_var(i,j,k) = var(i,j,k)/rho_inter;
@@ -492,8 +533,27 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
     Uintah::parallel_for( range, [&](int i, int j, int k){
       un_var(i,j,k) *= info.constant;
     });
-    //eqn += 1;
   }
+  
+  // clipping   
+  for ( auto ieqn = m_clipping_info.begin(); ieqn != m_clipping_info.end(); ieqn++ ){
+    Clipping_info info = ieqn->second;
+    T& var = tsk_info->get_uintah_field_add<T>(info.var);
+    T& rho_var = tsk_info->get_uintah_field_add<T>(ieqn->first);
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+    if ( var(i,j,k) > info.high ) {
+
+      var(i,j,k)     = info.high;
+      rho_var(i,j,k) = rho(i,j,k)*var(i,j,k); 
+
+    } else if ( var(i,j,k) < info.low ) {
+      var(i,j,k) = info.low;
+      rho_var(i,j,k) = rho(i,j,k)*var(i,j,k); 
+    }
+    });
+  }
+  
+  
 
 }
 }

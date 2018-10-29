@@ -40,6 +40,7 @@ SRCS += \
         $(SRCDIR)/lineExtract.cc           \
         $(SRCDIR)/MinMax.cc                \
         $(SRCDIR)/momentumAnalysis.cc      \
+        $(SRCDIR)/planeAverage.cc          \
         $(SRCDIR)/planeExtract.cc          \
         $(SRCDIR)/statistics.cc            \
         $(SRCDIR)/FileInfoVar.cc

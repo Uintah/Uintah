@@ -26,7 +26,7 @@
 #define _PARTICLECREATORFACTORY_H_
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <string>
 
 namespace Uintah {

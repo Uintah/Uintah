@@ -26,7 +26,7 @@
 #define _FLUXBCMODELFACTORY_H_
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 #include <string>
@@ -38,7 +38,7 @@ namespace Uintah {
   public:
     // this function has a switch for all known types
     
-    static FluxBCModel* create(SimulationStateP& ss, MPMFlags* flags);
+    static FluxBCModel* create(MaterialManagerP& ss, MPMFlags* flags);
 
   };
 } // End namespace Uintah

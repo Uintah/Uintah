@@ -143,12 +143,14 @@ public:
              const double w,
              const double k,
              const double uf,
-             const double vf);
+             const double vf,
+             const bool atNP1 );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
     const double r0_, r1_, w_, k_, uf_, vf_;
     const Expr::Tag xTag_, yTag_, tTag_;
+    const bool atNP1_;
   };
   void evaluate();
   
@@ -162,10 +164,12 @@ private:
                    const double w,
                    const double k,
                    const double uf,
-                   const double vf );
+                   const double vf,
+                   const bool atNP1 );
   const double r0_, r1_, w_, k_, uf_, vf_;
+  const bool atNP1_;
   DECLARE_FIELDS(FieldT, x_, y_)
-  DECLARE_FIELD (TimeField, t_)
+  DECLARE_FIELDS (TimeField, t_, dt_)
 };
 
 //**********************************************************************

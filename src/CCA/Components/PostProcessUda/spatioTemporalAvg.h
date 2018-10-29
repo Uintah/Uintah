@@ -61,7 +61,7 @@ WARNING
   class spatioTemporalAvg : public Module {
   public:
     spatioTemporalAvg(ProblemSpecP    & prob_spec,
-                      SimulationStateP& sharedState,
+                      MaterialManagerP& materialManager,
                       Output          * dataArchiver,
                       DataArchive     * dataArchive);
 

@@ -54,16 +54,16 @@ namespace Uintah{
 
         public:
 
-          Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+          Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
           ~Builder(){}
 
           FractalUD* build()
-          { return scinew FractalUD( _task_name, _matl_index ); }
+          { return scinew FractalUD( m_task_name, m_matl_index ); }
 
         private:
 
-          std::string _task_name;
-          int _matl_index;
+          std::string m_task_name;
+          int m_matl_index;
       };
 
     private:

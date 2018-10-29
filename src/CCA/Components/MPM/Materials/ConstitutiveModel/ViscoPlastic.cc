@@ -58,9 +58,10 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 
-#include <math.h>
-
 #include <iostream>
+
+#include <math.h>
+#include <unistd.h>
 
 
 using namespace std;
@@ -933,8 +934,8 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
       //}
 
       if (cout_visco.active()) {
-	cout_visco << " totalLocalizedParticle = " << totalLocalizedParticle
-	           << " pLocalized_new[idx] = " << pLocalized_new[idx] <<endl;
+        cout_visco << " totalLocalizedParticle = " << totalLocalizedParticle
+                   << " pLocalized_new[idx] = " << pLocalized_new[idx] <<endl;
       }
 
       // Compute wave speed at each particle, store the maximum

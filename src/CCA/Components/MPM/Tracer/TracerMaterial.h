@@ -32,8 +32,8 @@
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <CCA/Components/MPM/Tracer/Tracer.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <Core/Geometry/Point.h>
@@ -82,11 +82,13 @@ WARNING
    TracerMaterial();
 
    // Standard Tracer Material Constructor
-   TracerMaterial(ProblemSpecP&, SimulationStateP& ss, MPMFlags* flags);
+   TracerMaterial(ProblemSpecP&, MaterialManagerP& ss, MPMFlags* flags);
 
    ~TracerMaterial();
 
-   virtual void registerParticleState(SimulationState* ss);
+   virtual void registerParticleState(
+             std::vector<std::vector<const VarLabel* > > &TracerState,
+             std::vector<std::vector<const VarLabel* > > &TracerState_preReloc);
 
    virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 

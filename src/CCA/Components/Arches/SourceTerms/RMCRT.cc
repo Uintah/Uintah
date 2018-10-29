@@ -50,7 +50,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
                                   const ProcessorGroup* my_world,
                                   std::string type )
 : SourceTermBase( src_name,
-                  labels->d_sharedState,
+                  labels->d_materialManager,
                   req_label_names, type ),
   _labels( labels ),
   _MAlab(MAlab),
@@ -61,12 +61,12 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
 
   //Declare the source type:
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
-  _sharedState      = labels->d_sharedState;
+  _materialManager      = labels->d_materialManager;
 
   //__________________________________
   //  define the material index
   int archIndex = 0;                // HARDWIRED
-  _matl = _sharedState->getArchesMaterial(archIndex)->getDWIndex();
+  _matl = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   _radFluxE_Label = VarLabel::create("radiationFluxE",  CC_double);
@@ -470,7 +470,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
-      _RMCRT->sched_Refine_Q( sched, patches, _sharedState->allArchesMaterials() );
+      _RMCRT->sched_Refine_Q( sched, patches, _materialManager->allMaterials( "Arches" ) );
     }
 
     // convert boundaryFlux<Stencil7> -> 6 doubles
@@ -553,7 +553,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
         tsk->computes(_src_label);
       }
     }
-    sched->addTask( tsk, myLevel->eachPatch(), _sharedState->allArchesMaterials() );
+    sched->addTask( tsk, myLevel->eachPatch(), _materialManager->allMaterials( "Arches" ) );
   }
 
   //__________________________________
@@ -562,7 +562,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     const LevelP& level = grid->getLevel(l);
     if( level->getIndex() != _archesLevelIndex ){
       // Set the BC on the coarse level
-      _boundaryCondition->sched_cellTypeInit( sched, level, _sharedState->allArchesMaterials() );
+      _boundaryCondition->sched_cellTypeInit( sched, level, _materialManager->allMaterials( "Arches" ) );
 
       // Coarsen the interior cells
        _RMCRT->sched_computeCellType ( level, sched, Ray::modifiesVar);
@@ -683,7 +683,7 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
       t1->computes(_radFluxB_Label);
     }
     t1->computes(_tempLabel);          // needed by sched_sigmaT4
-    sched->addTask(t1, archesLevel->eachPatch(), _sharedState->allArchesMaterials());
+    sched->addTask(t1, archesLevel->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
     //__________________________________
     //  convert flux from 6 doubles -> CCVarible
@@ -756,7 +756,7 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
   tsk->modifies( _RMCRT->d_sigmaT4Label );
   tsk->modifies( _RMCRT->d_abskgLabel );         // this label changes name if using floats
 
-  sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials(), RMCRT_Radiation::TG_RMCRT );
+  sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ), RMCRT_Radiation::TG_RMCRT );
 }
 //______________________________________________________________________
 
@@ -892,7 +892,7 @@ RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level,
     tsk->computes( _radFluxT_Label );
     tsk->computes( _radFluxB_Label );
 
-    sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
+    sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) );
   }
 }
 
@@ -918,7 +918,7 @@ RMCRT_Radiation::sched_fluxInit( const LevelP& level,
     tsk->computes( _radFluxT_Label );
     tsk->computes( _radFluxB_Label );
 
-    sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
+    sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) );
   }
 }
 //______________________________________________________________________
@@ -1017,7 +1017,7 @@ RMCRT_Radiation::sched_DBLsToStencil( const LevelP& level,
 
     tsk->computes( _RMCRT->d_boundFluxLabel );
 
-    sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
+    sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) );
   }
 }
 

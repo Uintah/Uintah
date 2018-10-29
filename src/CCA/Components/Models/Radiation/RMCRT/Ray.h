@@ -63,6 +63,8 @@
  */
 class MTRand; // forward declaration for use in updateSumI
 
+class ApplicationInterface;
+
 namespace Uintah{
 
   class Ray : public RMCRTCommon  {
@@ -223,6 +225,8 @@ namespace Uintah{
       const VarLabel* d_ROI_HiCellLabel;
       const VarLabel* d_PPTimerLabel;        // perPatch timer
 
+      ApplicationInterface* m_application{nullptr};
+    
       // const VarLabel* d_divQFiltLabel;
       // const VarLabel* d_boundFluxFiltLabel;
 
@@ -283,7 +287,7 @@ namespace Uintah{
                                  void* stream,
                                  int deviceID,
                                  bool modifies_divQ,
-				 int timeStep,
+                                 int timeStep,
                                  Task::WhichDW which_abskg_dw,
                                  Task::WhichDW whichd_sigmaT4_dw,
                                  Task::WhichDW which_celltype_dw );

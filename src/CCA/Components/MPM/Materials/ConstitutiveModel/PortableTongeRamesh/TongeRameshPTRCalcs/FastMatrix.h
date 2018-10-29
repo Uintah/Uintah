@@ -61,58 +61,58 @@ namespace PTR{
 class FastMatrix
 {
 public:
-	FastMatrix(int rows, int cols);
-	~FastMatrix();
+        FastMatrix(int rows, int cols);
+        ~FastMatrix();
 
-	int numRows() const
-	{
-		return rows;
-	}
-	int numCols() const
-	{
-		return cols;
-	}
-	double& operator()(int r, int c)
-	{
-		return mat[r][c];
-	}
-	double operator()(int r, int c) const
-	{
-		return mat[r][c];
-	}
+        int numRows() const
+        {
+                return rows;
+        }
+        int numCols() const
+        {
+                return cols;
+        }
+        double& operator()(int r, int c)
+        {
+                return mat[r][c];
+        }
+        double operator()(int r, int c) const
+        {
+                return mat[r][c];
+        }
 
-	void destructiveInvert(FastMatrix& inverse);
-	// Warning - this do not do any pivoting...
-	void destructiveSolve(double* b);
-	void destructiveSolve(double* b1, double* b2);
-	void destructiveSolve(Vector3* b);
+        void destructiveInvert(FastMatrix& inverse);
+        // Warning - this do not do any pivoting...
+        void destructiveSolve(double* b);
+        void destructiveSolve(double* b1, double* b2);
+        void destructiveSolve(Vector3* b);
 
-	void transpose(const FastMatrix& transpose);
-	void multiply(const std::vector<double>& b, std::vector<double>& X) const;
-	void multiply(const double* b, double* X) const;
-	void multiply(const FastMatrix& a, const FastMatrix& b);
-	void multiply(double s);
-	double conditionNumber() const;
-	void identity();
-	void zero();
-	void copy(const FastMatrix& copy);
-	void print(std::ostream& out);
+        void transpose(const FastMatrix& transpose);
+        void multiply(const std::vector<double>& b, std::vector<double>& X) const;
+        void multiply(const double* b, double* X) const;
+        void multiply(const FastMatrix& a, const FastMatrix& b);
+        void multiply(double s);
+        double conditionNumber() const;
+        void identity();
+        void zero();
+        void copy(const FastMatrix& copy);
+        void print(std::ostream& out);
 
-	enum {
-		MaxSize = 16
-	};
+        enum {
+                MaxSize = 16
+        };
 private:
 
-	double mat[MaxSize][MaxSize];
-	int rows, cols;
+        double mat[MaxSize][MaxSize];
+        int rows, cols;
 
-	void big_destructiveInvert(FastMatrix& inverse);
-	void big_destructiveSolve(double* b);
-	void big_destructiveSolve(double* b1, double* b2);
-	void big_destructiveSolve(Vector3* b);
+        void big_destructiveInvert(FastMatrix& inverse);
+        void big_destructiveSolve(double* b);
+        void big_destructiveSolve(double* b1, double* b2);
+        void big_destructiveSolve(Vector3* b);
 
-	FastMatrix(const FastMatrix&);
-	FastMatrix& operator=(const FastMatrix&);
+        FastMatrix(const FastMatrix&);
+        FastMatrix& operator=(const FastMatrix&);
 };
 
 }

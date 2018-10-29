@@ -10,18 +10,18 @@
 
    <SimulationComponent type="ice" />
     
-    
+    <Solver type="hypre"/>
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            2          </maxTime>
+       <maxTime>            5          </maxTime>
        <initTime>           0.0        </initTime>
        <delt_min>           0.0        </delt_min>
        <delt_max>           1.e-2      </delt_max>
        <delt_init>          1.0e-7     </delt_init>
        <max_delt_increase>  0.5        </max_delt_increase>       
-       <max_initial_delt>   1.e-4      </max_initial_delt>
+       <delt_init>          1.e-4      </delt_init>
        <timestep_multiplier> 1        </timestep_multiplier>
    </Time>
    
@@ -128,7 +128,7 @@
               <lower>        [0,0,0]        </lower>
               <upper>        [1.0,2.0,0.04] </upper>
               <extraCells>   [1,1,1]        </extraCells>
-              <patches>      [1,1,1]        </patches>
+              <patches>      [2,4,1]        </patches>
               <resolution>   [50,100,1]     </resolution>
            </Box>
        </Level>
@@ -158,7 +158,7 @@
     <CFD>
        <cfl>0.1</cfl>
        <ICE>
-        <advection type = "FirstOrder" />
+        <advection type = "SecondOrder" />
          <TimeStepControl>
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.00         </knob_for_speedSound>
@@ -169,21 +169,15 @@
            <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
            <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
-            <!-- Common options -->
-              <tolerance>1.e-8    </tolerance>
-
-            <!-- CGSolver options -->
-              <norm>     LInfinity  </norm>
-              <criteria> Absolute   </criteria>
-
-            <!-- Hypre options -->
-            <solver>         cg  </solver>
+            
+            <tolerance>     1.e-10  </tolerance>
+            <solver>         cg     </solver>
             <preconditioner> pfmg   </preconditioner>
-            <maxiterations>  50    </maxiterations>
-            <npre>           1       </npre>
-            <npost>          1       </npost>
-            <skip>           0       </skip>
-            <jump>           0       </jump>
+            <maxiterations>  50     </maxiterations>
+            <npre>           1     </npre>   
+            <npost>          1     </npost>  
+            <skip>           0     </skip>   
+            <jump>           0     </jump>   
            </Parameters>
         </ImplicitSolver>       
       </ICE>        
@@ -246,27 +240,29 @@
     <!--         - diffusivity = thermal diffusivity of air                 -->
     <!--____________________________________________________________________--> 
       <Model type="flameSheet_rxn">
-        <material>source</material>
-        <scalar name="f">
-          <reaction_constants>
-            <f_stoichometric>        0.06207  </f_stoichometric>
-            <delta_H_combustion>     1000     </delta_H_combustion>
-            <oxidizer_temp_infinity> 300      </oxidizer_temp_infinity>
-            <initial_fuel_temp>      300      </initial_fuel_temp>
-            <diffusivity>            22.5e-6  </diffusivity>
-          </reaction_constants>
-          <geom_object>
-            <difference>
-              <box label="world">           </box>
-              <cylinder label = "fuelSlug"> </cylinder>
-            </difference>
-            <scalar>    0.00   </scalar>
-          </geom_object>
-          <geom_object>
-            <cylinder label = "fuelSlug">  </cylinder>
-            <scalar>    1.00   </scalar>
-          </geom_object>
-        </scalar>
+        <flameSheet_rxn>
+          <material>source</material>
+          <scalar name="f">
+            <reaction_constants>
+              <f_stoichometric>        0.06207  </f_stoichometric>
+              <delta_H_combustion>     1000     </delta_H_combustion>
+              <oxidizer_temp_infinity> 300      </oxidizer_temp_infinity>
+              <initial_fuel_temp>      300      </initial_fuel_temp>
+              <diffusivity>            22.5e-6  </diffusivity>
+            </reaction_constants>
+            <geom_object>
+              <difference>
+                <box label="world">           </box>
+                <cylinder label = "fuelSlug"> </cylinder>
+              </difference>
+              <scalar>    0.00   </scalar>
+            </geom_object>
+            <geom_object>
+              <cylinder label = "fuelSlug">  </cylinder>
+              <scalar>    1.00   </scalar>
+            </geom_object>
+          </scalar>
+        </flameSheet_rxn>
       </Model>
 
     </Models>

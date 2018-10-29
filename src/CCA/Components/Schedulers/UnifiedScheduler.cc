@@ -311,7 +311,7 @@ UnifiedScheduler::verifyAnyGpuActive()
 //
 void
 UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                              , const SimulationStateP & state
+                              , const MaterialManagerP & materialManager
                               )
 {
   // Default taskReadyQueueAlg
@@ -391,7 +391,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 #endif
   }
 
-  SchedulerCommon::problemSetup(prob_spec, state);
+  SchedulerCommon::problemSetup(prob_spec, materialManager);
 
 #ifdef HAVE_CUDA
   // Now pick out the materials out of the file.  This is done with an assumption that there
@@ -740,7 +740,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   m_exec_timer.stop();
 
   // compute the net timings
-  if ( m_sharedState != nullptr ) {
+  if( d_runtimeStats ) {
 
     // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
     for (int i = 1; i < m_num_threads; ++i) {
@@ -1207,6 +1207,19 @@ UnifiedScheduler::runTasks( int thread_id )
           // (It would be nice if the task graph didn't have this OutputVariables task if
           // it wasn't going to output data, but that would require more task graph recompilations,
           // which can be even costlier overall.  So we do the check here.)
+
+          // ARS NOTE: Outputing and Checkpointing may be done out of
+          // snyc now. I.e. turned on just before it happens rather
+          // than turned on before the task graph execution.  As such,
+          // one should also be checking:
+
+          // m_application->activeReductionVariable( "outputInterval" );
+          // m_application->activeReductionVariable( "checkpointInterval" );
+
+          // However, if active the code below would be called regardless
+          // if an output or checkpoint time step or not. Not sure that is
+          // desired but not sure of the effect of not calling it and doing
+          // an out of sync output or checkpoint.
 
           if ((m_output->isOutputTimeStep() || m_output->isCheckpointTimeStep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
@@ -4326,7 +4339,22 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           }
           continue;
         }
+
         // if we send/recv to an output task, don't send/recv if not an output timestep
+
+        // ARS NOTE: Outputing and Checkpointing may be done out of
+        // snyc now. I.e. turned on just before it happens rather than
+        // turned on before the task graph execution.  As such, one
+        // should also be checking:
+        
+        // m_application->activeReductionVariable( "outputInterval" );
+        // m_application->activeReductionVariable( "checkpointInterval" );
+        
+        // However, if active the code below would be called regardless
+        // if an output or checkpoint time step or not. Not sure that is
+        // desired but not sure of the effect of not calling it and doing
+        // an out of sync output or checkpoint.
+        
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();

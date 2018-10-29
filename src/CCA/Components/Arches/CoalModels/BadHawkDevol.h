@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_BadHawkDevol_h
 #define Uintah_Component_Arches_BadHawkDevol_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 
@@ -35,7 +35,7 @@ public:
                            const vector<std::string>  & reqICLabelNames,
                            const vector<std::string>  & reqScalarLabelNames,
                            ArchesLabel          * fieldLabels,
-                           SimulationStateP           & sharedState,
+                           MaterialManagerP           & materialManager,
                            int qn );
 
   ~BadHawkDevolBuilder(); 
@@ -52,7 +52,7 @@ class BadHawkDevol: public ModelBase {
 public: 
 
   BadHawkDevol( std::string modelName, 
-                    SimulationStateP& shared_state, 
+                    MaterialManagerP& materialManager, 
                     ArchesLabel* fieldLabels,
                     vector<std::string> reqICLabelNames, 
                     vector<std::string> reqScalarLabelNames,

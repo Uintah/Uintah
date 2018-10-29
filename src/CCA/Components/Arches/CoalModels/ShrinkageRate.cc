@@ -10,7 +10,7 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -28,27 +28,27 @@ ShrinkageRateBuilder::ShrinkageRateBuilder( const std::string         & modelNam
                                                             const vector<std::string> & reqICLabelNames,
                                                             const vector<std::string> & reqScalarLabelNames,
                                                             ArchesLabel         * fieldLabels,
-                                                            SimulationStateP          & sharedState,
+                                                            MaterialManagerP          & materialManager,
                                                             int qn ) :
-  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
+  ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, materialManager, qn )
 {
 }
 
 ShrinkageRateBuilder::~ShrinkageRateBuilder(){}
 
 ModelBase* ShrinkageRateBuilder::build() {
-  return scinew ShrinkageRate( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return scinew ShrinkageRate( d_modelName, d_materialManager, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
 ShrinkageRate::ShrinkageRate( std::string modelName,
-                                              SimulationStateP& sharedState,
+                                              MaterialManagerP& materialManager,
                                               ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames,
                                               vector<std::string> scalarLabelNames,
                                               int qn )
-: ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
+: ModelBase(modelName, materialManager, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Create a label for this model
   d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
@@ -130,7 +130,7 @@ ShrinkageRate::sched_initVars( const LevelP& level, SchedulerP& sched )
 
   tsk->computes(d_modelLabel);
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
 
 //-------------------------------------------------------------------------
@@ -147,7 +147,7 @@ ShrinkageRate::initVars( const ProcessorGroup * pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> shr_rate;
 
@@ -183,7 +183,7 @@ ShrinkageRate::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
   tsk->requires( Task::NewDW, m_charoxiSize_varlabel, gn, 0 ); 
   tsk->requires( which_dw, m_weight_scaled_varlabel, gn, 0 ); 
   
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 
 }
 
@@ -202,7 +202,7 @@ ShrinkageRate::computeModel( const ProcessorGroup * pc,
     Ghost::GhostType  gn  = Ghost::None;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
  
     CCVariable<double> shr_rate;
     //Task::WhichDW which_dw;

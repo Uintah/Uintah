@@ -27,7 +27,7 @@
 
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 namespace Uintah {
 
@@ -43,7 +43,7 @@ namespace Uintah {
     // and calls the proper class' readParameters()
     // addMaterial() calls this
     static Contact* create(const ProcessorGroup* myworld,
-                           const ProblemSpecP& ps,SimulationStateP& ss,
+                           const ProblemSpecP& ps,MaterialManagerP& ss,
                            MPMLabel* lb, MPMFlags* MFlag, bool &needNormals);
   };
 } // End namespace Uintah

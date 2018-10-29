@@ -30,7 +30,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
@@ -38,7 +38,7 @@ namespace Uintah {
 
   class FluxBCModel {
     public:
-      FluxBCModel(SimulationStateP& shared_state, MPMFlags* mpm_flags);
+      FluxBCModel(MaterialManagerP& materialManager, MPMFlags* mpm_flags);
 
       virtual ~FluxBCModel();
 
@@ -67,7 +67,7 @@ namespace Uintah {
       FluxBCModel& operator=(const FluxBCModel&);
 
       MaterialSubset*  d_load_curve_index;
-      SimulationStateP d_shared_state;
+      MaterialManagerP d_materialManager;
       MPMLabel* d_mpm_lb;
       MPMFlags* d_mpm_flags;
 

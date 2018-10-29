@@ -164,6 +164,9 @@ namespace WasatchCore{
     info[ fs ] = convFluxTag;
   }
   
+
+  //-----------------------------------------------------------------
+
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag& solnVarTag,
@@ -193,10 +196,11 @@ namespace WasatchCore{
                                               factory,
                                               info );
   }
-  
-  //-----------------------------------------------------------------
-  
-  template< typename FluxT >
+
+
+  //------------------------------------------------------------------
+
+template< typename FluxT >
   Expr::ExpressionBuilder*
   build_diff_flux_expr( Uintah::ProblemSpecP diffFluxParams,
                        const Expr::Tag& diffFluxTag,
@@ -232,11 +236,14 @@ namespace WasatchCore{
     }
     else {
       std::ostringstream msg;
-      msg << "You mus provide a coefficient for your diffusive flux expressions. Please revise your input file." << std::endl;
+      msg << "You must provide a coefficient for your diffusive flux expressions. Please revise your input file." << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
     return nullptr;
   }
+
+
+  //------------------------------------------------------------------
   
   template< typename FieldT>
   void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
@@ -244,7 +251,9 @@ namespace WasatchCore{
                                        const Expr::Tag primVarTag,
                                        const Expr::Tag turbDiffTag,
                                        Expr::ExpressionFactory& factory,
-                                       FieldTagInfo& info )
+                                       FieldTagInfo& info,
+                                       const Expr::Context context,
+                                       const std::string suffix )
   {
     typedef typename FaceTypes<FieldT>::XFace XFaceT;
     typedef typename FaceTypes<FieldT>::YFace YFaceT;
@@ -265,6 +274,13 @@ namespace WasatchCore{
         msg << "You cannot build a diffusive flux expression with a specified nametag for '" << primVarName << "' in multiple directions" << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
+
+      if( context != Expr::STATE_NONE && context != diffFluxTag.context() ){
+        std::ostringstream msg;
+        msg << "Context specified for diffusive in '" << direction << "' direction must be set to " << Expr::context2str(context) << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+
       FieldSelector fs;
       if     ( direction == "X" ) fs=DIFFUSIVE_FLUX_X;
       else if( direction == "Y" ) fs=DIFFUSIVE_FLUX_Y;
@@ -282,9 +298,7 @@ namespace WasatchCore{
       for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
         std::string dir(1,*it);
         const TagNames& tagNames = TagNames::self();
-        diffFluxTag = Expr::Tag( primVarName + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
-        // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
-        // is because we need the ScalarRHS at time step n+1 for our pressure projection method
+        diffFluxTag = Expr::Tag( primVarName + tagNames.diffusiveflux + dir + suffix, context );
         
         Expr::ExpressionBuilder* builder = nullptr;
         if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
@@ -315,6 +329,47 @@ namespace WasatchCore{
   
   //------------------------------------------------------------------
   
+  template< typename FieldT>
+  void register_diffusive_flux_placeholders( Expr::ExpressionFactory& factory,
+                                             FieldTagInfo& info )
+  {
+    typedef typename Expr::PlaceHolder<typename FaceTypes<FieldT>::XFace>::Builder BuilderX;
+    typedef typename Expr::PlaceHolder<typename FaceTypes<FieldT>::YFace>::Builder BuilderY;
+    typedef typename Expr::PlaceHolder<typename FaceTypes<FieldT>::ZFace>::Builder BuilderZ;
+
+    bool hasDiffusiveFlux = false;
+
+    auto iEnd = info.end();
+    if( info.find(DIFFUSIVE_FLUX_X) != iEnd ){
+      const Expr::Tag diffFluxTag = info[DIFFUSIVE_FLUX_X];
+      factory.register_expression( new BuilderX(diffFluxTag) );
+      hasDiffusiveFlux = true;
+    }
+
+    if( info.find(DIFFUSIVE_FLUX_Y) != iEnd ){
+      const Expr::Tag diffFluxTag = info[DIFFUSIVE_FLUX_Y];
+      factory.register_expression( new BuilderY(diffFluxTag) );
+      hasDiffusiveFlux = true;
+    }
+
+    if( info.find(DIFFUSIVE_FLUX_Z) != iEnd ){
+      const Expr::Tag diffFluxTag = info[DIFFUSIVE_FLUX_Z];
+      factory.register_expression( new BuilderZ(diffFluxTag) );
+      hasDiffusiveFlux = true;
+    }
+
+    if(!hasDiffusiveFlux){
+      std::ostringstream msg;
+      msg << "Attempted to register Placeholders for diffusive flux expressions but no valid tags were detected. "
+          << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+
+  }
+
+  //------------------------------------------------------------------
+
+
   template< typename VelT >
   Expr::ExpressionBuilder*
   build_diff_vel_expr( Uintah::ProblemSpecP diffVelParams,
@@ -429,6 +484,12 @@ Uintah::ProblemSpecP diffFluxParams,                     \
 const Expr::Tag densityTag,                              \
 const Expr::Tag primVarTag,                              \
 const Expr::Tag turbDiffTag,                             \
+Expr::ExpressionFactory& factory,                        \
+FieldTagInfo& info,                                      \
+const Expr::Context context,                             \
+const std::string suffix );                              \
+\
+template void register_diffusive_flux_placeholders<FIELDT>(  \
 Expr::ExpressionFactory& factory,                        \
 FieldTagInfo& info );                                    \
 \

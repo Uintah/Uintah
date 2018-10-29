@@ -123,12 +123,12 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
 
   std::string timeStr("seconds");
 
-  mpi_info_.insert( TotalSend  , std::string("TotalSend")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalRecv  , std::string("TotalRecv")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalTest  , std::string("TotalTest")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalWait  , std::string("TotalWait")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalReduce, std::string("TotalReduce"),    timeStr, 0 );
-  mpi_info_.insert( TotalTask  , std::string("TotalTask")  ,    timeStr, 0 );
+  mpi_info_.insert( TotalSend  , std::string("TotalSend")  ,    timeStr );
+  mpi_info_.insert( TotalRecv  , std::string("TotalRecv")  ,    timeStr );
+  mpi_info_.insert( TotalTest  , std::string("TotalTest")  ,    timeStr );
+  mpi_info_.insert( TotalWait  , std::string("TotalWait")  ,    timeStr );
+  mpi_info_.insert( TotalReduce, std::string("TotalReduce"),    timeStr );
+  mpi_info_.insert( TotalTask  , std::string("TotalTask")  ,    timeStr );
 }
 
 //______________________________________________________________________
@@ -150,10 +150,10 @@ MPIScheduler::~MPIScheduler()
 //
 void
 MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                          , const SimulationStateP & state
+                          , const MaterialManagerP & materialManager
                           )
 {
-  SchedulerCommon::problemSetup(prob_spec, state);
+  SchedulerCommon::problemSetup(prob_spec, materialManager);
 }
 
 //______________________________________________________________________
@@ -164,7 +164,7 @@ MPIScheduler::createSubScheduler()
   MPIScheduler * newsched = scinew MPIScheduler( d_myworld, this );
 
   newsched->setComponents( this );
-  newsched->m_sharedState = m_sharedState;
+  newsched->m_materialManager = m_materialManager;
   return newsched;
 }
 
@@ -373,7 +373,21 @@ MPIScheduler::postMPISends( DetailedTask * dtask
      }
 
      // if we send/recv to an output task, don't send/recv if not an output timestep
-     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
+
+     // ARS NOTE: Outputing and Checkpointing may be done out of snyc
+     // now. I.e. turned on just before it happens rather than turned
+     // on before the task graph execution.  As such, one should also
+     // be checking:
+     
+     // m_application->activeReductionVariable( "outputInterval" );
+     // m_application->activeReductionVariable( "checkpointInterval" );
+      
+     // However, if active the code below would be called regardless
+     // if an output or checkpoint time step or not. Not sure that is
+     // desired but not sure of the effect of not calling it and doing
+     // an out of sync output or checkpoint.
+     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output &&
+         !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
        DOUT(g_dbg, "Rank-" << my_rank << "   Ignoring non-output-timestep send for " << *req);
        continue;
      }
@@ -563,6 +577,19 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
+
+        // ARS NOTE: Outputing and Checkpointing may be done out of
+        // snyc now. I.e. turned on just before it happens rather than
+        // turned on before the task graph execution.  As such, one
+        // should also be checking:
+        
+        // m_application->activeReductionVariable( "outputInterval" );
+        // m_application->activeReductionVariable( "checkpointInterval" );
+        
+        // However, if active the code below would be called regardless
+        // if an output or checkpoint time step or not. Not sure that is
+        // desired but not sure of the effect of not calling it and doing
+        // an out of sync output or checkpoint.
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep()
             && !m_output->isCheckpointTimeStep()) {
           DOUT(g_dbg, "Rank-" << my_rank << "   Ignoring non-output-timestep receive for " << *req);
@@ -834,11 +861,16 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       printTaskLevels( d_myworld, g_task_level, dtask );
     }
 
-    if(!abort && m_dws[m_dws.size()-1] && m_dws[m_dws.size()-1]->timestepAborted()){
+    // ARS - FIXME CHECK THE WAREHOUSE
+    OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
+    if (!abort && dw && dw->abortTimeStep()) {
+      // TODO - abort might not work with external queue...
       abort = true;
       abort_point = dtask->getTask()->getSortedOrder();
 
-      DOUT(true, "  WARNING:  Aborting timestep after task: " << dtask->getTask()->getName());
+      DOUT(true,  "Rank-" << d_myworld->myRank()
+                          << "  WARNING: Aborting time step after task: "
+                          << dtask->getTask()->getName());
     }
 
   } // end while( numTasksDone < ntasks )
@@ -890,7 +922,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
         
         // Go through all materials since getting an MPMMaterial
         // correctly would depend on MPM
-        for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+        for (unsigned int m = 0; m < m_materialManager->getNumMatls(); m++) {
           if (dw->haveParticleSubset(m, patch)) {
             numParticles += dw->getParticleSubset(m, patch)->numParticles();
           }

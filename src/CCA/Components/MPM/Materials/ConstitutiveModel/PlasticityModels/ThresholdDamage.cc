@@ -36,7 +36,7 @@ static DebugStream dbg("DamageModel", false);
 //
 ThresholdDamage::ThresholdDamage( ProblemSpecP    & ps,
                                   MPMFlags        * flags,
-                                  SimulationState * sharedState )
+                                  MaterialManager * materialManager )
 {
   Algorithm = DamageAlgo::threshold;
   printTask( dbg, "ThresholdDamage constructor" );

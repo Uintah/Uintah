@@ -33,7 +33,7 @@ namespace Uintah {
 
   public:
   
-    logLawModel(ProblemSpecP& ps, SimulationStateP& sharedState);
+    logLawModel(ProblemSpecP& ps, MaterialManagerP& materialManager);
     
     virtual ~logLawModel();
     
@@ -77,7 +77,7 @@ namespace Uintah {
     
       const VarLabel* d_roughnessLabel;
       
-      SimulationStateP d_sharedState;
+      MaterialManagerP d_materialManager;
       Patch::FaceType d_face;
       double d_roughnessConstant;
       double d_vonKarman; 

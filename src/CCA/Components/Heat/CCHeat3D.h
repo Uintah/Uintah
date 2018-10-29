@@ -31,7 +31,7 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/BlockRange.hpp>
@@ -116,7 +116,7 @@ protected:
 
 public:
     CCHeat3D ( const ProcessorGroup * myworld,
-	       const SimulationStateP sharedState,
+	       const MaterialManagerP materialManager,
 	       int verbosity = 0 );
   
     virtual ~CCHeat3D();

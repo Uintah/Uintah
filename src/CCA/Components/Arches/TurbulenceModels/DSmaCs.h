@@ -39,16 +39,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       DSmaCs* build()
-      { return scinew DSmaCs<TT>( _task_name, _matl_index ); }
+      { return scinew DSmaCs<TT>( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
     };
 
 private:
@@ -56,15 +56,15 @@ private:
     std::string m_Cs_name; //DSmaCs constant
     std::string m_turb_viscosity_name;
     double m_molecular_visc;
-    //std::string m_t_vis_name_production; 
+    //std::string m_t_vis_name_production;
     std::string m_t_vis_name;
     //int Type_filter ;
-    Uintah::FILTER Type_filter;
+    Uintah::ArchesCore::FILTER Type_filter;
     std::string m_volFraction_name;
     std::string m_density_name;
     std::string m_IsI_name;
-    bool m_create_labels_IsI_t_viscosity{true};   
-    FilterTest m_Filter;
+    bool m_create_labels_IsI_t_viscosity{true};
+    Uintah::ArchesCore::TestFilter m_Filter;
   };
 
 //--------------------------------------------------------------------------------------------------
@@ -206,12 +206,12 @@ DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
   register_variable( m_density_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
-  register_variable( "filterML" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "filterMM" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  register_variable( "filterML" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "filterMM" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
 
-  register_variable("MM" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-  register_variable("ML" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-  register_variable(m_IsI_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+  register_variable("MM" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
+  register_variable("ML" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
+  register_variable(m_IsI_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
 
 
 }
@@ -226,6 +226,8 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
   Cs.initialize(0.0);
+  mu_sgc.initialize(0.0);
+  mu_turb.initialize(0.0);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   int nG = -1;
@@ -258,7 +260,7 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   m_Filter.applyFilter<TT>((*MM),filterMM,range,vol_fraction);
   m_Filter.applyFilter<TT>((*ML),filterML,range,vol_fraction);
 
-  const double m_MM_lower_value = 1.0e-14; 
+  const double m_MM_lower_value = 1.0e-14;
   const double m_ML_lower_value = 1.0e-14;
   Uintah::parallel_for( range, [&](int i, int j, int k){
     double value = 0;
@@ -269,25 +271,25 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
      //value  = (*ML)(i,j,k)/(*MM)(i,j,k);
       value  = filterML(i,j,k)/filterMM(i,j,k);
     }
-    
+
     //double value  = filterML(i,j,k)/filterMM(i,j,k);
     //if (value < 0 || filterMM(i,j,k) < m_MM_lower_value) {
-    //  value = 0; 
-    //} 
+    //  value = 0;
+    //}
 
 
     Cs(i,j,k) = vol_fraction(i,j,k)*Min(value,10.0);
-    mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*(*IsI)(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); // 
-    mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; // 
+    mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*(*IsI)(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); //
+    mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; //
 
   });
-  BCfilter bcfilter;
-  bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction); 
-  bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction); 
-  bcfilter.apply_zero_neumann(patch,Cs,vol_fraction); 
+  Uintah::ArchesCore::BCFilter bcfilter;
+  bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction);
+  bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction);
+  bcfilter.apply_zero_neumann(patch,Cs,vol_fraction);
 
   //Uintah::parallel_for( range, [&](int i, int j, int k){
-  //  mu_sgc_p(i,j,k) = mu_sgc(i,j,k); 
+  //  mu_sgc_p(i,j,k) = mu_sgc(i,j,k);
   //});
 }
 //--------------------------------------------------------------------------------------------------

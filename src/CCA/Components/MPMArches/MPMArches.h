@@ -86,14 +86,14 @@ namespace Uintah {
 
 namespace Uintah {
 
+  class ArchesLabel;
 
-
- const TypeDescription* fun_getTypeDescription(cutcell*);
+  const TypeDescription* fun_getTypeDescription(cutcell*);
 
 class MPMArches : public ApplicationCommon {
 public:
   MPMArches(const ProcessorGroup* myworld,
-	    const SimulationStateP sharedState);
+	    const MaterialManagerP materialManager);
   
   virtual ~MPMArches();
 
@@ -234,8 +234,6 @@ public:
   ///////////////////////////////////////////////////////////////////////
   virtual double recomputeDelT(const double delT);
       
-  virtual bool restartableTimeSteps();
-
  protected:
 
     void initializeKStability(const ProcessorGroup*,
@@ -382,7 +380,6 @@ public:
   bool d_calcEnergyExchange;
   bool d_DORad;
   bool d_radiation;
-  int nofTimesteps;
   double prturb;
   double cpfluid;
   bool d_useCutCell;
@@ -395,7 +392,6 @@ public:
   bool calcVolFracMPM;
   bool calcVel;
   bool d_stairstep;
-  bool d_doingRestart; 
 
   enum CENTROID {CENX=1, CENY, CENZ};    
   enum SURFNORM {NORMX=4, NORMY, NORMZ};

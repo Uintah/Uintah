@@ -47,7 +47,6 @@
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
-#include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
 #include <CCA/Components/Arches/WBCHelper.h>
@@ -112,6 +111,7 @@
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/ArchesStatsEnum.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/MomentumSolver.h>
@@ -129,14 +129,17 @@
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <CCA/Components/Arches/Filter.h>
+
+#include <sci_defs/visit_defs.h>
 
 #include <cmath>
 
@@ -149,15 +152,15 @@ static DebugStream dbg("ARCHES", false);
 // Default constructor for ExplicitSolver
 // ****************************************************************************
 ExplicitSolver::
-ExplicitSolver(SimulationStateP& sharedState,
+ExplicitSolver(MaterialManagerP& materialManager,
                const MPMArchesLabel* MAlb,
                PhysicalConstants* physConst,
                const ProcessorGroup* myworld,
                ArchesParticlesHelper* particle_helper,
                SolverInterface* hypreSolver,
-               const ApplicationCommon* arches ):
+               ApplicationCommon* arches ):
                NonlinearSolver(myworld, arches),
-               d_sharedState(sharedState),
+               d_materialManager(materialManager),
                d_MAlab(MAlb),
                d_physicalConsts(physConst),
                _particlesHelper( particle_helper ),
@@ -165,7 +168,7 @@ ExplicitSolver(SimulationStateP& sharedState,
 {
 
   d_lab  = scinew ArchesLabel();
-  d_lab->setSharedState(sharedState);
+  d_lab->setMaterialManager(materialManager);
   d_props = 0;
   d_turbModel = 0;
   d_pressSolver = 0;
@@ -195,7 +198,6 @@ ExplicitSolver(SimulationStateP& sharedState,
   d_cqmomSource = 0;
   d_cqmomSolver = 0;
   d_cqmomConvect = 0;
-
 }
 
 // ****************************************************************************
@@ -243,7 +245,7 @@ ExplicitSolver::~ExplicitSolver()
 // ****************************************************************************
 void
 ExplicitSolver::problemSetup( const ProblemSpecP & params,
-                              SimulationStateP & state,
+                              MaterialManagerP & materialManager,
                               GridP& grid )
 {
 
@@ -270,7 +272,12 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     }
   }
 
-
+  if( d_num_taskgraphs == 2 ) {
+    // Tell the infrastructure how many tasksgraphs are needed. The
+    // defaul is 1.
+    m_arches->getScheduler()->setNumTaskGraphs( d_num_taskgraphs );
+  }
+  
   ProblemSpecP db_es = params->findBlock("ExplicitSolver");
   ProblemSpecP db = params;
 
@@ -320,7 +327,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
-    i->second->set_shared_state(d_sharedState);
+    i->second->set_materialManager(d_materialManager);
     i->second->register_all_tasks(db);
 
   }
@@ -438,7 +445,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   // read properties
   // d_MAlab = multimaterial arches common labels
   d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts, d_myworld);
-  d_tabulated_properties = scinew TableLookup( d_lab->d_sharedState );
+  d_tabulated_properties = scinew TableLookup( d_lab->d_materialManager );
   d_tabulated_properties->problemSetup( db );
 
   d_props->problemSetup(db);
@@ -492,9 +499,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   if ( whichTurbModel == "smagorinsky") {
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else if ( whichTurbModel == "dynamicprocedure") {
-    d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
-                                             d_boundaryCondition);
   }else if ( whichTurbModel == "compdynamicprocedure") {
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                               d_boundaryCondition);
@@ -760,7 +764,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   if ( db->findBlock("BoundaryConditions") ){
     if ( db->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
       ProblemSpecP db_wall_ht = db->findBlock("BoundaryConditions")->findBlock( "WallHT" );
-      d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState );
+      d_wall_ht_models = scinew WallModelDriver( d_lab->d_materialManager );
       d_wall_ht_models->problemSetup( db_wall_ht );
     }
   }
@@ -770,14 +774,14 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
                                          d_boundaryCondition,
                                          d_physicalConsts, d_myworld,
                                          d_hypreSolver );
-  d_pressSolver->problemSetup( db_es, state );
+  d_pressSolver->problemSetup( db_es, materialManager );
 
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
                                       d_turbModel, d_boundaryCondition,
                                       d_physicalConsts,
                                       &_task_factory_map );
 
-  d_momSolver->problemSetup(db_es, state);
+  d_momSolver->problemSetup(db_es, materialManager);
 
   const ProblemSpecP params_root = db->getRootNode();
   std::string t_order;
@@ -855,7 +859,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   db_es->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);
 
   db_es->getWithDefault("restartOnNegativeDensityGuess",
-                     d_restart_on_negative_density_guess,false);
+                     d_recompute_on_negative_density_guess,false);
   db_es->getWithDefault("NoisyDensityGuess",
                      d_noisyDensityGuess, false);
   db_es->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
@@ -884,6 +888,24 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     d_solvability = true;
   }
 
+#ifdef HAVE_VISIT
+
+#define IGNORE_LEVEL -2
+    
+    static bool initialized = false;
+
+    if( m_arches->getVisIt() && !initialized ) {
+      ApplicationInterface::analysisVar aVar;
+      aVar.component = "Arches/ExplicitSolver";
+      aVar.name  = d_lab->d_totalKineticEnergyLabel->getName();
+      aVar.matl  = -1; // Ignore the material
+      aVar.level = IGNORE_LEVEL;
+      aVar.labels.push_back( d_lab->d_totalKineticEnergyLabel );
+      m_arches->getAnalysisVars().push_back(aVar);
+
+      initialized = true;
+    }
+#endif
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -919,8 +941,26 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   }
 
   tsk->computes(d_lab->d_delTLabel,level.get_rep());
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
+#ifdef OUTPUT_WITH_BAD_DELTA_T
+  // This method is called at both initialization and
+  // otherwise. At initialization the old DW, i.e. DW(0) will not
+  // exist so require the value from the new DW.  Otherwise for a
+  // normal time step require the time step from the old DW.
+  if(sched->get_dw(0) ) {
+    tsk->requires( Task::OldDW, VarLabel::find(timeStep_name) );
+  }
+  else if(sched->get_dw(1) ) {
+    tsk->requires( Task::NewDW, VarLabel::find(timeStep_name) );
+  }
+
+  // For when delta T goes below a value output and checkpoint
+  tsk->computes( VarLabel::find(    outputTimeStep_name) );
+  tsk->computes( VarLabel::find(checkpointTimeStep_name) );
+  tsk->computes( VarLabel::find(     endSimulation_name) );
+#endif
+
+  sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -931,15 +971,27 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
+  // This method is called at both initialization and otherwise. At
+  // initialization the old DW will not exist so get the value from
+  // the new DW.  Otherwise for a normal time step get the time step
+  // from the old DW.
+  timeStep_vartype timeStep(0);
+
+  if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
+    old_dw->get(timeStep, VarLabel::find(timeStep_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
+    new_dw->get(timeStep, VarLabel::find(timeStep_name) );
+
   const Level* level = getLevel(patches);
   // You have to compute it on every level but
   // only computethe real delT on the archesLevel
   if( level->getIndex() == d_archesLevelIndex ) {
 
     for (int p = 0; p < patches->size(); p++) {
+
       const Patch* patch = patches->get(p);
       int archIndex = 0; // only one arches material
-      int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+      int indx = d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
       constSFCXVariable<double> uVelocity;
       constSFCYVariable<double> vVelocity;
@@ -1041,7 +1093,7 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
 
             tmp_time=1.0;
             if (flag != false) {
-              tmp_time=Abs(uvel)/(DX.x())+
+              tmp_time= Abs(uvel)/(DX.x())+
                         Abs(vvel)/(DX.y())+
                         Abs(wvel)/(DX.z())+
                         (visc[currCell]/den[currCell])*
@@ -1052,11 +1104,20 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
             }
 
             delta_t2=Min(1.0/tmp_time, delta_t2);
+
           }
         }
       }
 
+      //Check intrusion velocities:
+      Vector max_intrusion_vel = d_boundaryCondition->getMaxIntrusionVelocity(level);
+      double tmp_time= Abs(max_intrusion_vel.x())/(DX.x())+
+                       Abs(max_intrusion_vel.y())/(DX.y())+
+                       Abs(max_intrusion_vel.z())/(DX.z())+small_num;
+      delta_t2=Min(1.0/tmp_time, delta_t2);
+
       if (d_underflow) {
+
         indexLow = patch->getFortranCellLowIndex();
         indexHigh = patch->getFortranCellHighIndex();
 
@@ -1091,10 +1152,19 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
         }
       }
 
-
       delta_t = delta_t2;
       new_dw->put(delt_vartype(delta_t), d_lab->d_delTLabel, level);
 
+#ifdef OUTPUT_WITH_BAD_DELTA_T
+      // If after the first 10 time steps delta T goes below this
+      // value immediately output and checkpoint. Then end the simulation.
+      if( 10 < timeStep && delta_t <= 0.01 )
+      {
+        new_dw->put( bool_or_vartype(true), VarLabel::find(    outputTimeStep_name) );
+        new_dw->put( bool_or_vartype(true), VarLabel::find(checkpointTimeStep_name) );
+        new_dw->put( bool_or_vartype(true), VarLabel::find(     endSimulation_name) );
+      }
+#endif
     }
   } else { // if not on the arches level
 
@@ -1109,7 +1179,7 @@ ExplicitSolver::sched_initialize( const LevelP& level,
                                   const bool doing_restart )
 {
 
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
 
   setupBoundaryConditions( level, sched, false );
 
@@ -1134,7 +1204,6 @@ ExplicitSolver::sched_initialize( const LevelP& level,
     BFM::iterator i_partmod_fac = _task_factory_map.find("particle_model_factory");
     BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
     BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
-    BFM::iterator i_turb_model_fac = _task_factory_map.find("turbulence_model_factory");
 
     i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
     i_util_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
@@ -1142,9 +1211,9 @@ ExplicitSolver::sched_initialize( const LevelP& level,
     const bool dont_pack_tasks = false;
     TaskFactoryBase::TaskMap all_tasks;
 
-//utility factory
-// _task_factory_map["utility_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
-_task_factory_map["utility_factory"]->schedule_task_group( "base_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+    //utility factory
+    // _task_factory_map["utility_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+    _task_factory_map["utility_factory"]->schedule_task_group( "base_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
     //transport factory
     //  initialize
@@ -1300,7 +1369,6 @@ _task_factory_map["utility_factory"]->schedule_task_group( "base_tasks", TaskInt
     // Utility Factory : Balance Terms computation
     _task_factory_map["utility_factory"]->schedule_task_group( "mass_flow_rate", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
   }
-
 }
 
 void
@@ -1357,7 +1425,7 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
   if ( VarLabel::find("thermal_cond_sb_l"))
     tsk->computes(VarLabel::find("thermal_cond_sb_l"));
 
-sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+sched->addTask(tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ));
 
 }
 
@@ -1367,7 +1435,7 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
 
   bool doingRestart = true;
 
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
 
@@ -1441,7 +1509,7 @@ ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, Schedul
 {
 
   bool doingRegrid  = true;
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
 
   d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, false, doingRegrid);
 
@@ -1481,7 +1549,7 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     //const Level* level = patch->getLevel();
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     // Initialize cellInformation
     PerPatch<CellInformationP> cellInfoP;
@@ -1600,7 +1668,7 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
 {
 
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
   IntVector periodic_vector = level->getPeriodicBoundaries();
   d_3d_periodic = (periodic_vector == IntVector(1,1,1));
   d_turbModel->set3dPeriodic(d_3d_periodic);
@@ -1954,10 +2022,10 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
     // STAGE 0
     //these equations use a density guess
 
-    sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
+    sched_saveTempCopies( sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
-    sched_getDensityGuess(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level]);
+    sched_getDensityGuess( sched, patches, matls,
+                           d_timeIntegratorLabels[curr_level] );
 
     //------------------ New Task Interface (start) ------------------------------------------------
     // i_property_models->second->schedule_task_group("density_predictor", TaskInterface::TIMESTEP_EVAL,
@@ -2015,7 +2083,6 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
     i_property_models->second->schedule_task_group("pre_table_post_iv_update", TaskInterface::TIMESTEP_EVAL,
       dont_pack_tasks, level, sched, matls, curr_level );
     //------------------ New Task Interface (end) ------------------------------------------------
-
 
     //1st TABLE LOOKUP
     bool initialize_it  = false;
@@ -2449,7 +2516,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> divergence;
     CCVariable<double> residual;
@@ -2750,7 +2817,7 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> vorticityX, vorticityY, vorticityZ, vorticity;
 
@@ -2827,7 +2894,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     constCCVariable<double> denMicro;
     CCVariable<double> denMicro_new;
@@ -3002,8 +3069,8 @@ ExplicitSolver::saveTempCopies(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> temp_density;
     new_dw->getModifiable(temp_density, d_lab->d_densityTempLabel,indx, patch);
@@ -3053,9 +3120,9 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
-
-
+  tsk->requires(Task::NewDW, d_lab->d_volFractionLabel,   gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+
 
   //__________________________________
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
@@ -3091,7 +3158,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
                                 DataWarehouse* new_dw,
                                 const TimeIntegratorLabel* timelabels)
 {
-  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // int timeStep = d_lab->d_materialManager->getCurrentTopLevelTimeStep();
   timeStep_vartype timeStep;
   old_dw->get( timeStep, d_lab->d_timeStepLabel );
 
@@ -3112,12 +3179,14 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    Vector Dx = patch->dCell();
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> densityGuess;
     constCCVariable<double> density;
+    constCCVariable<double> volFraction;
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
@@ -3126,6 +3195,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
+
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values){
@@ -3146,13 +3216,13 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;
 
     new_dw->get(density,   d_lab->d_densityCPLabel,     indx,patch, gac, 1);
+    new_dw->get(volFraction  ,   d_lab->d_volFractionLabel, indx,patch, gac, 1);
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx,patch, gaf, 1);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx,patch, gaf, 1);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx,patch, gaf, 1);
     new_dw->get(cellType,  d_lab->d_cellTypeLabel,      indx,patch, gn, 0);
 
     // For adding other source terms as specified in the pressure solver section
-    SourceTermFactory& factory = SourceTermFactory::self();
     std::vector<std::string> extra_sources;
     extra_sources = d_pressSolver->get_pressure_source_ref();
     std::vector<constCCVariable<double> > src_values;
@@ -3181,36 +3251,42 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 
-          IntVector currCell   = *iter;
-          IntVector xplusCell  = *iter + IntVector(1,0,0);
-          IntVector xminusCell = *iter + IntVector(-1,0,0);
-          IntVector yplusCell  = *iter + IntVector(0,1,0);
-          IntVector yminusCell = *iter + IntVector(0,-1,0);
-          IntVector zplusCell  = *iter + IntVector(0,0,1);
-          IntVector zminusCell = *iter + IntVector(0,0,-1);
+          IntVector c   = *iter;
+          IntVector cxp  = *iter + IntVector(1,0,0);
+          IntVector cxm = *iter + IntVector(-1,0,0);
+          IntVector cyp  = *iter + IntVector(0,1,0);
+          IntVector cym = *iter + IntVector(0,-1,0);
+          IntVector czp  = *iter + IntVector(0,0,1);
+          IntVector czm = *iter + IntVector(0,0,-1);
 
-          densityGuess[currCell] -= delta_t * 0.5* (
-          ((density[currCell]+density[xplusCell])*uVelocity[xplusCell] -
-           (density[currCell]+density[xminusCell])*uVelocity[currCell]) /
-          cellinfo->sew[currCell.x()] +
-          ((density[currCell]+density[yplusCell])*vVelocity[yplusCell] -
-           (density[currCell]+density[yminusCell])*vVelocity[currCell]) /
-          cellinfo->sns[currCell.y()] +
-          ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
-           (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
-          cellinfo->stb[currCell.z()]);
+          double epsE = volFraction[c]*volFraction[cxp] < 1. ? 0 : 1;
+          double epsW = volFraction[c]*volFraction[cxm] < 1. ? 0 : 1;
+          double epsN = volFraction[c]*volFraction[cyp] < 1. ? 0 : 1;
+          double epsS = volFraction[c]*volFraction[cym] < 1. ? 0 : 1;
+          double epsT = volFraction[c]*volFraction[czp] < 1. ? 0 : 1;
+          double epsB = volFraction[c]*volFraction[czm] < 1. ? 0 : 1;
 
-          for ( std::vector<constCCVariable<double> >::iterator viter = src_values.begin(); viter != src_values.end(); viter++ ){
+          densityGuess[c] -= delta_t * 0.5* (
+          ((density[c]+density[cxp])*uVelocity[cxp]*epsE -
+           (density[c]+density[cxm])*uVelocity[c]*epsW) / cellinfo->sew[c.x()] +
+          ((density[c]+density[cyp])*vVelocity[cyp]*epsN -
+           (density[c]+density[cym])*vVelocity[c]*epsS) / cellinfo->sns[c.y()] +
+          ((density[c]+density[czp])*wVelocity[czp]*epsT -
+           (density[c]+density[czm])*wVelocity[c]*epsB) / cellinfo->stb[c.z()]);
 
-            densityGuess[currCell] += delta_t*((*viter)[currCell]);
+          for ( std::vector<constCCVariable<double> >::iterator viter = src_values.begin();
+            viter != src_values.end(); viter++ ){
+
+            densityGuess[c] += delta_t*((*viter)[c]);
 
           }
 
-          if (densityGuess[currCell] < 0.0 && d_noisyDensityGuess) {
-            proc0cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
+          if (densityGuess[c] < 0.0 && d_noisyDensityGuess) {
+            proc0cout << "Negative density guess occured at " << c
+              << " with a value of " << densityGuess[c] << endl;
             negativeDensityGuess = 1.0;
           }
-          else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess)) {
+          else if (densityGuess[c] < 0.0 && !(d_noisyDensityGuess)) {
             negativeDensityGuess = 1.0;
           }
         }
@@ -3219,34 +3295,65 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 
-          IntVector currCell   = *iter;
-          IntVector xplusCell  = *iter + IntVector(1,0,0);
-          IntVector xminusCell = *iter + IntVector(-1,0,0);
-          IntVector yplusCell  = *iter + IntVector(0,1,0);
-          IntVector yminusCell = *iter + IntVector(0,-1,0);
-          IntVector zplusCell  = *iter + IntVector(0,0,1);
-          IntVector zminusCell = *iter + IntVector(0,0,-1);
+          IntVector c   = *iter;
+          IntVector cxp  = *iter + IntVector(1,0,0);
+          IntVector cxm = *iter + IntVector(-1,0,0);
+          IntVector cyp  = *iter + IntVector(0,1,0);
+          IntVector cym = *iter + IntVector(0,-1,0);
+          IntVector czp  = *iter + IntVector(0,0,1);
+          IntVector czm = *iter + IntVector(0,0,-1);
 
-          densityGuess[currCell] -= delta_t * 0.5* (
-          ((density[currCell]+density[xplusCell])*uVelocity[xplusCell] -
-           (density[currCell]+density[xminusCell])*uVelocity[currCell]) /
-          cellinfo->sew[currCell.x()] +
-          ((density[currCell]+density[yplusCell])*vVelocity[yplusCell] -
-           (density[currCell]+density[yminusCell])*vVelocity[currCell]) /
-          cellinfo->sns[currCell.y()] +
-          ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
-           (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
-          cellinfo->stb[currCell.z()]);
+          double epsE = volFraction[c]*volFraction[cxp] < 1. ? 0 : 1;
+          double epsW = volFraction[c]*volFraction[cxm] < 1. ? 0 : 1;
+          double epsN = volFraction[c]*volFraction[cyp] < 1. ? 0 : 1;
+          double epsS = volFraction[c]*volFraction[cym] < 1. ? 0 : 1;
+          double epsT = volFraction[c]*volFraction[czp] < 1. ? 0 : 1;
+          double epsB = volFraction[c]*volFraction[czm] < 1. ? 0 : 1;
 
-          if (densityGuess[currCell] < 0.0 && d_noisyDensityGuess) {
-            cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
+          densityGuess[c] -= delta_t * 0.5* (
+          ((density[c]+density[cxp])*uVelocity[cxp]*epsE -
+           (density[c]+density[cxm])*uVelocity[c]*epsW) / cellinfo->sew[c.x()] +
+          ((density[c]+density[cyp])*vVelocity[cyp]*epsN -
+           (density[c]+density[cym])*vVelocity[c]*epsS) / cellinfo->sns[c.y()] +
+          ((density[c]+density[czp])*wVelocity[czp]*epsT -
+           (density[c]+density[czm])*wVelocity[c]*epsB) / cellinfo->stb[c.z()]);
+
+          if (densityGuess[c] < 0.0 && d_noisyDensityGuess) {
+            cout << "Negative density guess occured at " << c
+              << " with a value of " << densityGuess[c] << endl;
+            negativeDensityGuess = 1.0;
+          } else if (densityGuess[c] < 0.0 && !(d_noisyDensityGuess) && cellType[c] == -1 ) {
             negativeDensityGuess = 1.0;
           }
-          else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess) && cellType[currCell] == -1 ) {
-            negativeDensityGuess = 1.0;
-          }
+
         }
       }
+
+      // For intrusion inlets:
+      if ( d_boundaryCondition->is_using_new_intrusion() ){
+        
+        CCVariable<double> mass_src;
+        new_dw->allocateTemporary(mass_src, patch);
+        mass_src.initialize(0.0);
+        d_boundaryCondition->addIntrusionMassRHS(patch, mass_src);
+        double vol = Dx.x() * Dx.y() * Dx.z();
+
+        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+
+          IntVector c = *iter;
+          densityGuess[c] += delta_t / vol * mass_src[c] * volFraction[c];
+
+          if (densityGuess[c] < 0.0 && d_noisyDensityGuess) {
+            cout << "Negative density guess occured at " << c
+              << " with a value of " << densityGuess[c] << endl;
+            negativeDensityGuess = 1.0;
+          } else if (densityGuess[c] < 0.0 && !(d_noisyDensityGuess) && cellType[c] == -1 ) {
+            negativeDensityGuess = 1.0;
+          }
+
+        }
+      }
+      //-------------------
 
       std::vector<BoundaryCondition::BC_TYPE> bc_types;
       bc_types.push_back( BoundaryCondition::OUTLET );
@@ -3294,6 +3401,9 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
 
   tsk->modifies(d_lab->d_densityGuessLabel);
 
+  tsk->computes( VarLabel::find(abortTimeStep_name) );
+  tsk->computes( VarLabel::find(recomputeTimeStep_name) );
+
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -3323,8 +3433,8 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> densityGuess;
     DataWarehouse* old_values_dw;
@@ -3335,10 +3445,10 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
 
     new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel, indx, patch);
     if (negativeDensityGuess > 0.0) {
-      if (d_restart_on_negative_density_guess) {
-        proc0cout << "NOTICE: Negative density guess(es) occurred. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
-        new_dw->abortTimestep();
-        new_dw->restartTimestep();
+      if (d_recompute_on_negative_density_guess) {
+        proc0cout << "NOTICE: Negative density guess(es) occurred. Timestep restart has been requested under this condition by the user. Recomputing timestep." << endl;
+        new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+        new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name) );
       }
       else {
         proc0cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density." << endl;
@@ -3382,8 +3492,8 @@ ExplicitSolver::updateDensityGuess(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> densityGuess;
     constCCVariable<double> density;
@@ -3439,8 +3549,8 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->
+                     getMaterial( "Arches", archIndex)->getDWIndex();
 
     constCCVariable<double> densityGuess;
     constCCVariable<double> density;
@@ -3499,6 +3609,9 @@ ExplicitSolver::sched_checkDensityLag(SchedulerP& sched,
     tsk->requires(Task::NewDW, timelabels->densityLag);
   }
 
+  tsk->computes( VarLabel::find(abortTimeStep_name) );
+  tsk->computes( VarLabel::find(recomputeTimeStep_name) );
+
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -3533,9 +3646,9 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
         if (pc->myRank() == 0)
           proc0cout << "WARNING: density lag " << densityLag
                << " exceeding maximium "<< d_maxDensityLag
-               << " specified. Restarting timestep." << endl;
-        new_dw->abortTimestep();
-        new_dw->restartTimestep();
+               << " specified. Recomputing timestep." << endl;
+        new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+        new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name) );
     }
   }
 }
@@ -3568,7 +3681,7 @@ void ExplicitSolver::setInitVelCond( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     constCCVariable<double> rho;
     SFCXVariable<double> u;
@@ -3614,7 +3727,7 @@ void ExplicitSolver::computeKE( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     constSFCXVariable<double> u;
     constSFCYVariable<double> v;
@@ -3685,7 +3798,7 @@ ExplicitSolver::sched_weightInit( const LevelP& level,
 
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
 
-  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ));
 }
 //______________________________________________________________________
 //
@@ -3701,7 +3814,7 @@ ExplicitSolver::weightInit( const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     //assume only one material for now.
     int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     const Patch* patch=patches->get(p);
 
     CCVariable<Vector> partVel;
@@ -3781,7 +3894,7 @@ ExplicitSolver::sched_weightedAbsInit( const LevelP& level,
 
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
 
-  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ));
 }
 //______________________________________________________________________
 //
@@ -3799,7 +3912,7 @@ ExplicitSolver::weightedAbsInit( const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     //assume only one material for now.
     int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     const Patch* patch=patches->get(p);
 
     CCVariable<Vector> partVel;
@@ -3886,7 +3999,7 @@ ExplicitSolver::sched_momentInit( const LevelP& level,
 
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
 
-  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ));
 }
 //______________________________________________________________________
 //
@@ -3902,7 +4015,7 @@ ExplicitSolver::momentInit( const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     //assume only one material for now.
     int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     const Patch* patch=patches->get(p);
 
     constCCVariable<double> eps_v;
@@ -3966,7 +4079,7 @@ ExplicitSolver::sched_scalarInit( const LevelP     & level,
 
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
 
-  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ));
 
   //__________________________________
   //  initialize src terms
@@ -3992,7 +4105,7 @@ ExplicitSolver::scalarInit( const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     //assume only one material for now
     int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     const Patch* patch=patches->get(p);
 
     EqnFactory& eqnFactory = EqnFactory::self();
@@ -4041,7 +4154,7 @@ ExplicitSolver::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
   tsk->modifies(d_lab->d_CCVVelocityLabel);
   tsk->modifies(d_lab->d_CCWVelocityLabel);
 
-  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ));
 }
 
 // ****************************************************************************
@@ -4057,7 +4170,7 @@ ExplicitSolver::getCCVelocities(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     constSFCXVariable<double> uvel_FC;
     constSFCYVariable<double> vvel_FC;
@@ -4277,56 +4390,56 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
 
         if ( model_type == "ConstantModel" ) {
           // Model term G = constant (G = 1)
-          ModelBuilder* modelBuilder = scinew ConstantModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew ConstantModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "KobayashiSarofimDevol" ) {
           // Kobayashi Sarofim devolatilization model
-          ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "RichardsFletcherDevol" ) {
           // Richards Fletcher devolatilization model
-          ModelBuilder* modelBuilder = scinew RichardsFletcherDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew RichardsFletcherDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "FOWYDevol" ) {
           // Biagini Tognotti devolatilization model
-          ModelBuilder* modelBuilder = scinew FOWYDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew FOWYDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "YamamotoDevol" ) {
-          //ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          //ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           //model_factory.register_model( temp_model_name, modelBuilder );
           throw InvalidValue("Error: YamamotoDevol is not currently supported. The model needs to be updated/fixed. See FOWYDevol as an example.", __FILE__,__LINE__);
         } else if ( model_type == "CharOxidationShaddix" ) {
-          ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "CharOxidationSmith" ) {
-          ModelBuilder* modelBuilder = scinew CharOxidationSmithBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew CharOxidationSmithBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "CharOxidationSmith2016" ) {
-          ModelBuilder* modelBuilder = scinew CharOxidationSmith2016Builder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew CharOxidationSmith2016Builder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "EnthalpyShaddix" ) {
-          ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
+          ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, d_props, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "MaximumTemperature" ) {
-          ModelBuilder* modelBuilder = scinew MaximumTemperatureBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew MaximumTemperatureBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Thermophoresis" ) {
-          ModelBuilder* modelBuilder = scinew ThermophoresisBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew ThermophoresisBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "LinearSwelling" ) {
-          ModelBuilder* modelBuilder = scinew LinearSwellingBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew LinearSwellingBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "ShrinkageRate" ) {
-          ModelBuilder* modelBuilder = scinew ShrinkageRateBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew ShrinkageRateBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Drag" ) {
-          ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "BirthDeath" ) {
-          ModelBuilder* modelBuilder = scinew BirthDeathBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew BirthDeathBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Deposition" ) {
-          ModelBuilder* modelBuilder = scinew DepositionBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew DepositionBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_materialManager, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;
@@ -4407,61 +4520,61 @@ void ExplicitSolver::registerPropertyModels(ProblemSpecP& db)
       if ( prop_type == "cc_constant" ) {
 
         // An example of a constant CC variable property
-        PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_lab->d_sharedState );
+        PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_lab->d_materialManager );
         prop_factory.register_property_model( prop_name, the_builder );
 
       }  else if ( prop_type == "extent_rxn" ) {
 
         // Scalar dissipation rate calculation
-        PropertyModelBase::Builder* the_builder = new ExtentRxn::Builder( prop_name, d_lab->d_sharedState );
+        PropertyModelBase::Builder* the_builder = new ExtentRxn::Builder( prop_name, d_lab->d_materialManager );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "tab_strip_factor" ) {
 
         // Scalar dissipation rate calculation
-        PropertyModelBase::Builder* the_builder = new TabStripFactor::Builder( prop_name, d_lab->d_sharedState );
+        PropertyModelBase::Builder* the_builder = new TabStripFactor::Builder( prop_name, d_lab->d_materialManager );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "fx_constant" ) {
 
         // An example of a constant FCX variable property
-        PropertyModelBase::Builder* the_builder = new ConstProperty<SFCXVariable<double>, constCCVariable<double> >::Builder( prop_name, d_lab->d_sharedState );
+        PropertyModelBase::Builder* the_builder = new ConstProperty<SFCXVariable<double>, constCCVariable<double> >::Builder( prop_name, d_lab->d_materialManager );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "empirical_soot" ) {
 
         // emperical soot model (computes soot volume fraction and abskp)
-        PropertyModelBase::Builder* the_builder = new EmpSoot::Builder( prop_name, d_lab->d_sharedState );
+        PropertyModelBase::Builder* the_builder = new EmpSoot::Builder( prop_name, d_lab->d_materialManager );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "algebraic_scalar_diss" ) {
 
         // Algebraic scalar dissipation rate
-        PropertyModelBase::Builder* the_builder = new AlgebraicScalarDiss::Builder( prop_name, d_lab->d_sharedState );
+        PropertyModelBase::Builder* the_builder = new AlgebraicScalarDiss::Builder( prop_name, d_lab->d_materialManager );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "heat_loss" ) {
 
         // Heat loss
-        PropertyModelBase::Builder* the_builder = new HeatLoss::Builder( prop_name, d_lab->d_sharedState );
+        PropertyModelBase::Builder* the_builder = new HeatLoss::Builder( prop_name, d_lab->d_materialManager );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "scalsim_variance" ) {
 
         //Scalar variance using a scale similarity concept
-        PropertyModelBase::Builder* the_builder = new ScalarVarianceScaleSim::Builder( prop_name, d_lab->d_sharedState );
+        PropertyModelBase::Builder* the_builder = new ScalarVarianceScaleSim::Builder( prop_name, d_lab->d_materialManager );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "norm_scalar_var") {
 
         //Normalized scalar variance based on second mixfrac moment
-        PropertyModelBase::Builder* the_builder = new NormScalarVariance::Builder( prop_name, d_lab->d_sharedState );
+        PropertyModelBase::Builder* the_builder = new NormScalarVariance::Builder( prop_name, d_lab->d_materialManager );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "scalar_diss") {
 
         //Scalar dissipation based on the transported squared gradient of mixture fraction for 2-eqn scalar var model
-        PropertyModelBase::Builder* the_builder = new ScalarDissipation::Builder( prop_name, d_lab->d_sharedState );
+        PropertyModelBase::Builder* the_builder = new ScalarDissipation::Builder( prop_name, d_lab->d_materialManager );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else {
@@ -4546,7 +4659,7 @@ ExplicitSolver::setupBoundaryConditions( const LevelP& level,
   //set a reference to BChelper map
   d_boundaryCondition->setBCHelper( &m_bcHelper );
 
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
 
   //this is creating a WBCHelper for this specific Level (need one/level)
   //the check ensures that, in the case of multiple patches/core, we only
@@ -4588,5 +4701,14 @@ ExplicitSolver::setupBoundaryConditions( const LevelP& level,
 
     d_turbModel->sched_computeFilterVol( sched, level, matls );
 
+  }
+}
+
+int
+ExplicitSolver::getTaskGraphIndex(const int time_step ) const {
+  if (d_num_taskgraphs==1){
+    return 0;
+  }else{
+    return ((time_step % d_rad_calc_frequency == 0));
   }
 }

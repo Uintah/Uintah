@@ -34,7 +34,7 @@
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 
@@ -116,7 +116,7 @@ TurbulenceModel::computeFilterVol( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double>   filter_volume;
     CCVariable<double>   dissipation_rate;
@@ -159,7 +159,7 @@ TurbulenceModel::carryForwardFilterVol( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double>   filter_vol;
     constCCVariable<double> old_filter_vol;

@@ -1,4 +1,6 @@
 #!/bin/csh -f
+
+setenv NCURSES_NO_UTF8_ACS 1   # fix for dialog issue with certain terminals
 #______________________________________________________________________
 # This script is a gui for replacing the gold standards
 set tmp = (`which dialog` `which awk`)

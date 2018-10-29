@@ -32,7 +32,7 @@
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
@@ -52,7 +52,7 @@ public:
                                const std::vector<std::string>  & reqICLabelNames,
                                const std::vector<std::string>  & reqScalarLabelNames,
                                ArchesLabel          * fieldLabels,
-                               SimulationStateP           & sharedState,
+                               MaterialManagerP           & materialManager,
                                int qn );
 
   ~CharOxidationSmithBuilder();
@@ -70,7 +70,7 @@ class CharOxidationSmith: public CharOxidation {
 public:
 
   CharOxidationSmith( std::string modelName,
-                        SimulationStateP& shared_state,
+                        MaterialManagerP& materialManager,
                         ArchesLabel* fieldLabels,
                         std::vector<std::string> reqICLabelNames,
                         std::vector<std::string> reqScalarLabelNames,

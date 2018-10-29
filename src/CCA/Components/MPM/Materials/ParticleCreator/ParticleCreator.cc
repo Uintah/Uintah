@@ -532,6 +532,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pvars.pdisp,         d_lb->pDispLabel,         subset);
   new_dw->allocateAndPut(pvars.psurface,      d_lb->pSurfLabel,         subset);
   new_dw->allocateAndPut(pvars.pmodalID,      d_lb->pModalIDLabel,      subset);
+  new_dw->allocateAndPut(pvars.psurfgrad,     d_lb->pSurfGradLabel,     subset);
 
   if(d_flags->d_integrator_type=="explicit"){
     new_dw->allocateAndPut(pvars.pvelGrad,    d_lb->pVelGradLabel,      subset);
@@ -727,6 +728,12 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
   pvars.plocalized[i]   = 0;
+#if 0
+//  if(p.z()>0.04 && p.z()<0.0444){
+  if(p.z()>0.0424 && p.z()<0.0468){
+    pvars.plocalized[i] = 1.0;
+  }
+#endif
 
   // For AMR
   const Level* curLevel = patch->getLevel();
@@ -804,6 +811,14 @@ ParticleCreator::initializeParticle(const Patch* patch,
   GeometryPieceP piece = (*obj)->getPiece();
   pvars.psurface[i] = checkForSurface2(piece,p,dxpp);
   pvars.pmodalID[i]  = matl->getModalID();
+  pvars.psurfgrad[i] = Vector(0.,0.,0.);
+
+#if 0
+//  if(p.z()>0.0424 && p.z()<0.0468){
+  if(p.z()>0.0424 && p.z()<0.0474){
+    pvars.psurface[i] = 1.0;
+  }
+#endif
 
   Vector pExtForce(0,0,0);
   applyForceBC(dxpp, p, pvars.pmass[i], pExtForce);
@@ -1072,6 +1087,8 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if(d_flags->d_SingleFieldMPM){
     particle_state.push_back(d_lb->pSurfLabel);
     particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
+    particle_state.push_back(d_lb->pSurfGradLabel);
+    particle_state_preReloc.push_back(d_lb->pSurfGradLabel_preReloc);
   }
 
   if (d_artificial_viscosity) {
@@ -1229,7 +1246,7 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
     }
   }
   if(ss>0){
-    return 0.5;
+    return 0.0;
   } else {
     return 0.0;
   }

@@ -44,7 +44,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
@@ -147,7 +147,7 @@ CompLocalDynamicProcedure::initializeSmagCoeff( const ProcessorGroup*,
                                                 DataWarehouse* new_dw,
                                                 const TimeIntegratorLabel* ) {
   int archIndex = 0; // only one arches material
-  int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+  int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -560,7 +560,7 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     // Variables
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
@@ -935,7 +935,7 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     // Variables
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
@@ -1470,7 +1470,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<Vector> ccVel;
     constCCVariable<double> den;
@@ -2232,13 +2232,13 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
   old_dw->get( timeStep, d_lab->d_timeStepLabel );
 
   int nofTimeSteps = timeStep;
-  // int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // int nofTimeSteps=d_lab->d_materialManager->getCurrentTopLevelTimeStep();
 
   int initialTimeStep=2;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> IsI;
     constCCVariable<double> MLI;
@@ -2881,7 +2881,7 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
@@ -3073,7 +3073,7 @@ CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> viscosity;
     constCCVariable<double> scalar;

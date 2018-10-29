@@ -43,56 +43,56 @@ namespace Uintah {
     (Zerilli, F.J., 2004, Metall. Materials Trans. A, v. 35A, p.2547)
 
     Flow rule: (the general form implemented in Uintah) 
-	
-	sigma = sigma_a + B*exp(-beta*T) + B_0*sqrt(ep)*exp(-alpha*T)
+        
+        sigma = sigma_a + B*exp(-beta*T) + B_0*sqrt(ep)*exp(-alpha*T)
 
-	where 
-		if(c_0 == 0)
-			sigma_a = sigma_g + (k_H/sqrt(l)) + K*(ep)^n;
-		else
-			sigma_a = c_0 + K*(ep)^n;
-		end
-		beta = beta_0 - beta_1*ln(epdot);
-		alpha = alpha_0 - alpha1*ln(epdot)
+        where 
+                if(c_0 == 0)
+                        sigma_a = sigma_g + (k_H/sqrt(l)) + K*(ep)^n;
+                else
+                        sigma_a = c_0 + K*(ep)^n;
+                end
+                beta = beta_0 - beta_1*ln(epdot);
+                alpha = alpha_0 - alpha1*ln(epdot)
 
    Flow rule : Original form (1987)
 
-	Y =  A + (C1 + C2*sqrt(ep))*(exp(-C3 + C4*ln(epdot))*T) + C5*(ep)^n
+        Y =  A + (C1 + C2*sqrt(ep))*(exp(-C3 + C4*ln(epdot))*T) + C5*(ep)^n
 
   Corelation between these  two forms:
-		A  = c_0
-		C1 = B
-		C2 = B_0
-		C3 = beta_0 = alpha_0
-		C4 = beta_1 = alpha_1
-		C5 = K
+                A  = c_0
+                C1 = B
+                C2 = B_0
+                C3 = beta_0 = alpha_0
+                C4 = beta_1 = alpha_1
+                C5 = K
 
    
   FCC Metals :
 
-	General Form : B = 0 ; K = 0; beta_0 = beta_1 = 0
-	Original From : C1 = 0; C5 = 0;
+        General Form : B = 0 ; K = 0; beta_0 = beta_1 = 0
+        Original From : C1 = 0; C5 = 0;
 
   BCC Metals :
 
-	General Form : B_0 = 0 ; alpha_0 = alpha_1 = 0
-	Original From : C2 = 0; 
+        General Form : B_0 = 0 ; alpha_0 = alpha_1 = 0
+        Original From : C2 = 0; 
 
   HCP Metals :
 
-	All constants are non-zero
+        All constants are non-zero
 
 
   Terms :
 
-	ep    =  equvivalent plastic strain
-	epdot =  equvivalent plastic strain rate
+        ep    =  equvivalent plastic strain
+        epdot =  equvivalent plastic strain rate
         C1, C2, C3, C4, C5, A =  Constants, choose appropriately according to the model (fcc or bcc or hcp)
-	T     = Temperature
-	sigma_a = athermal component of the flow stress
-	k_H   = Microstructural stress intensity
-	l     = Average grain diameter
-	sigma_g = stres contribution due to solutes and initial dislocation density
+        T     = Temperature
+        sigma_a = athermal component of the flow stress
+        k_H   = Microstructural stress intensity
+        l     = Average grain diameter
+        sigma_g = stres contribution due to solutes and initial dislocation density
 
   */
   /////////////////////////////////////////////////////////////////////////////

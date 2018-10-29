@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_CLASSNAME_h
 #define Uintah_Component_Arches_CLASSNAME_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
@@ -54,7 +54,7 @@ template < TEMP_PARAMS >
 class CLASSNAME: public SourceTermBase {
 public: 
 
-  CLASSNAME<TEMP_PARAMS>( std::string srcName, SimulationStateP& shared_state, 
+  CLASSNAME<TEMP_PARAMS>( std::string srcName, MaterialManagerP& materialManager, 
                           vector<std::string> reqLabelNames );
   ~CLASSNAME<TEMP_PARAMS>();
 
@@ -79,17 +79,17 @@ public:
 
     public: 
 
-      Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+      Builder( std::string name, vector<std::string> required_label_names, MaterialManagerP& materialManager ) 
+        : _name(name), _materialManager(materialManager), _required_label_names(required_label_names){};
       ~Builder(){}; 
 
       CLASSNAME<TEMP_PARAMS>* build()
-      { return scinew CLASSNAME<TEMP_PARAMS>( _name, _shared_state, _required_label_names ); };
+      { return scinew CLASSNAME<TEMP_PARAMS>( _name, _materialManager, _required_label_names ); };
 
     private: 
 
       std::string _name; 
-      SimulationStateP& _shared_state; 
+      MaterialManagerP& _materialManager; 
       vector<std::string> _required_label_names; 
 
   }; // class Builder 
@@ -104,9 +104,9 @@ private:
 //Method: Constructor
 //---------------------------------------------------------------------------
 template<TEMP_PARAMS>
-CLASSNAME<TEMP_PARAMS>::CLASSNAME( std::string src_name, SimulationStateP& shared_state,
+CLASSNAME<TEMP_PARAMS>::CLASSNAME( std::string src_name, MaterialManagerP& materialManager,
                       vector<std::string> req_label_names ) 
-: SourceTermBase( src_name, shared_state, req_label_names )
+: SourceTermBase( src_name, materialManager, req_label_names )
 {
 
   _src_label = VarLabel::create( src_name, sT::getTypeDescription() ); 
@@ -190,7 +190,7 @@ void CLASSNAME<TEMP_PARAMS>::sched_computeSource( const LevelP& level, Scheduler
     //tsk->requires( Task::OldDW, .... ); 
   }
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" )); 
 
 }
 //---------------------------------------------------------------------------
@@ -209,7 +209,7 @@ void CLASSNAME<TEMP_PARAMS>::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     sT src; 
     if ( new_dw->exists( _src_label, matlIndex, patch ) ){
@@ -276,7 +276,7 @@ void CLASSNAME<TEMP_PARAMS>::sched_initialize( const LevelP& level, SchedulerP& 
 
   }
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 template <TEMP_PARAMS>
@@ -291,7 +291,7 @@ void CLASSNAME<TEMP_PARAMS>::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> src;
 

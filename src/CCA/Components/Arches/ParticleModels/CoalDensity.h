@@ -49,16 +49,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, const int N ) : _task_name(task_name), _matl_index(matl_index), _Nenv(N){}
+      Builder( std::string task_name, int matl_index, const int N ) : m_task_name(task_name), m_matl_index(matl_index), _Nenv(N){}
       ~Builder(){}
 
       CoalDensity* build()
-      { return scinew CoalDensity( _task_name, _matl_index, _Nenv ); }
+      { return scinew CoalDensity( m_task_name, m_matl_index, _Nenv ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
       int _Nenv;
 
     };

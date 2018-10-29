@@ -21,8 +21,8 @@ C LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 C FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 C IN THE SOFTWARE.
 C
-C 
-C 
+C
+C
 c*********************************************************************
 c
 c
@@ -78,11 +78,11 @@ c*********************************************************************
 
       DO 220 K = KSTU,KENDU
          DO 210 J = JSTU,JENDU
-            DO 200 I = ISTU,IENDU   
+            DO 200 I = ISTU,IENDU
 
               EPSP = eps(I,J,K)*eps(I-1,J,K)
 
-            IF ( EPSP .gt. small ) THEN 
+            IF ( EPSP .gt. small ) THEN
 
               EPSE = eps(I+1,J,K)
               EPSW = eps(I-2,J,K)
@@ -106,27 +106,27 @@ C-----------------------------------------------------------------------
                GTP = PT5*(DEN(I,J,K)+DEN(I,J,K-1))*WW(I,J,K)
                GBW = PT5*(DEN(I-1,J,K)+DEN(I-1,J,K-1))*WW(I-1,J,K)
 
-               CE = PT5*(GE+GP)*AREAEW * EPSE 
+               CE = PT5*(GE+GP)*AREAEW * EPSE
                CW = PT5*(GP+GW)*AREAEW * EPSW
                CN = (PT5*GN+PT5*GNW)*AREANS * EPSN
                CS = (PT5*GS+PT5*GSW)*AREANS * EPSS
                CT = (PT5*GT+PT5*GTW)*AREATB * EPST
                CB = (PT5*GTP+PT5*GBW)*AREATB * EPSB
 
-               CESAV(I,J,K) = CE 
-               CWSAV(I,J,K) = CW 
-               CNSAV(I,J,K) = CN 
-               CSSAV(I,J,K) = CS 
-               CTSAV(I,J,K) = CT 
-               CBSAV(I,J,K) = CB 
+               CESAV(I,J,K) = CE
+               CWSAV(I,J,K) = CW
+               CNSAV(I,J,K) = CN
+               CSSAV(I,J,K) = CS
+               CTSAV(I,J,K) = CT
+               CBSAV(I,J,K) = CB
 
 C-----------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C-----------------------------------------------------------------------
                VISE = VIS(I,J,K)
-               VISW = VIS(I-1,J,K) 
+               VISW = VIS(I-1,J,K)
                VISN = PT25*( VIS(I,J+1,K) + VIS(I-1,J+1,K) +
-     +                         VIS(I,J,K) + VIS(I-1,J,K) ) 
+     +                         VIS(I,J,K) + VIS(I-1,J,K) )
                VISS = PT25*( VIS(I,J-1,K) + VIS(I-1,J-1,K) +
      +                         VIS(I,J,K)   + VIS(I-1,J,K) )
                VIST = PT25*( VIS(I,J,K+1) + VIS(I-1,J,K+1) +
@@ -161,7 +161,7 @@ C-----------------------------------------------------------------------
                DWDXT  = (WW(I,J,K+1)-WW(I-1,J,K+1))/dx
                DWDXB  = (WW(I,J,K)-WW(I-1,J,K))/dx
 
-               SU(I,J,K) = 
+               SU(I,J,K) =
      &              ((VISE*DUDXE - VISW*DUDXW)/dx +
      &               (VISN*DVDXN - VISS*DVDXS)/dy +
      &               (VIST*DWDXT - VISB*DWDXB)/dz +
@@ -172,10 +172,10 @@ C-----------------------------------------------------------------------
      $              GRAV )*VOL*EPSP
 
                 SU(I,J,K) = SU(I,J,K) - UU(I,J,K)*(
-     $               CE - CW + CN - CS + CT - CB ) 
+     $               CE - CW + CN - CS + CT - CB )
 
              else
-               
+
                CESAV(I,J,K) = 0.0D0
                CWSAV(I,J,K) = 0.0D0
                CNSAV(I,J,K) = 0.0D0
@@ -190,7 +190,7 @@ C-----------------------------------------------------------------------
                AB(I,J,K) = 0.0D0
                SU(I,J,K) = 0.0D0
 
-             endif 
+             endif
 
  200        CONTINUE
  210     CONTINUE

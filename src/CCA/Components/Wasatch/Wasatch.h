@@ -186,7 +186,7 @@ namespace WasatchCore{
     typedef std::map< int, std::pair<Expr::DualTime::BDFDualTimeIntegrator*, WasatchCore::DualTimeMatrixManager* > > DualTimePatchMapT; //<<< PatchID, Pair<DualTimeIntegrator, DualTimeMatrixManager> >>>
     
     Wasatch( const Uintah::ProcessorGroup* myworld,
-	     const Uintah::SimulationStateP sharedState );
+	     const Uintah::MaterialManagerP materialManager );
     
     ~Wasatch();
 

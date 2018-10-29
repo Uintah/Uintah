@@ -7,8 +7,8 @@
 
 using namespace Uintah;
 
-DepositionEnthalpy::DepositionEnthalpy( std::string task_name, int matl_index, const int N, SimulationStateP shared_state  ) :
-TaskInterface( task_name, matl_index ), _Nenv(N),_shared_state(shared_state) {
+DepositionEnthalpy::DepositionEnthalpy( std::string task_name, int matl_index, const int N, MaterialManagerP materialManager  ) :
+TaskInterface( task_name, matl_index ), _Nenv(N),_materialManager(materialManager) {
 
 }
 
@@ -47,7 +47,7 @@ DepositionEnthalpy::problemSetup( ProblemSpecP& db ){
   // Need a density
   _density_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);
   double init_particle_density = ArchesCore::get_inlet_particle_density( db );
-  double ash_mass_frac = coal_helper.get_coal_db().ash_mf; 
+  double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
   double initial_diameter = 0.0;
   double p_volume = 0.0;
   for ( int i = 0; i < _Nenv; i++ ){
@@ -63,13 +63,11 @@ DepositionEnthalpy::problemSetup( ProblemSpecP& db ){
     throw ProblemSetupException("Error: <Coal> is missing the <Properties> section.", __FILE__, __LINE__);
   }
 
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
-
 }
 
 void
 DepositionEnthalpy::create_local_labels(){
-  register_new_variable<CCVariable<double> >( _task_name );
+  register_new_variable<CCVariable<double> >( m_task_name );
   register_new_variable<CCVariable<double> >( _ash_enthalpy_src );
 }
 
@@ -82,14 +80,14 @@ DepositionEnthalpy::create_local_labels(){
 void
 DepositionEnthalpy::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _ash_enthalpy_src, ArchesFieldContainer::COMPUTES, variable_registry );
 }
 
 void
 DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
+  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(m_task_name);
   CCVariable<double>& ash_enthalpy_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_enthalpy_src);
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -106,7 +104,7 @@ DepositionEnthalpy::register_timestep_eval(
   const int time_substep, const bool packed_tasks ){
 
   register_variable( _cellType_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _ash_enthalpy_src, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _gasT_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
@@ -170,7 +168,7 @@ DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
-  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
+  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(m_task_name);
   ash_enthalpy_flux.initialize(0.0);
   CCVariable<double>& ash_enthalpy_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_enthalpy_src);
   ash_enthalpy_src.initialize(0.0);

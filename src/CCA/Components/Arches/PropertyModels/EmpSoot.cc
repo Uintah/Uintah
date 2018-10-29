@@ -7,8 +7,8 @@ using namespace std;
 //---------------------------------------------------------------------------
 //Method: Constructor
 //---------------------------------------------------------------------------
-EmpSoot::EmpSoot( std::string prop_name, SimulationStateP& shared_state ) : 
-  PropertyModelBase( prop_name, shared_state ), 
+EmpSoot::EmpSoot( std::string prop_name, MaterialManagerP& materialManager ) : 
+  PropertyModelBase( prop_name, materialManager ), 
   _cmw(12.0)
 {
 
@@ -97,7 +97,7 @@ void EmpSoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int tim
   }
 
   tsk->modifies( _prop_label ); 
-  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+  sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
     
 }
 
@@ -116,7 +116,7 @@ void EmpSoot::computeProp(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> soot_vf; 
     CCVariable<double> absorp_coef; 
@@ -203,7 +203,7 @@ void EmpSoot::sched_initialize( const LevelP& level, SchedulerP& sched )
   tsk->computes(_prop_label); 
   tsk->computes(_absorp_label); 
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -220,7 +220,7 @@ void EmpSoot::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex(); 
 
     CCVariable<double> prop; 
     CCVariable<double> absorp_coef; 

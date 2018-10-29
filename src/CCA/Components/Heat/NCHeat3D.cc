@@ -37,9 +37,9 @@
 using namespace Uintah;
 
 NCHeat3D::NCHeat3D ( const ProcessorGroup * myworld,
-		     const SimulationStateP sharedState,
+		     const MaterialManagerP materialManager,
 		     int verbosity )
-  : ApplicationCommon ( myworld, sharedState )
+  : ApplicationCommon ( myworld, materialManager )
   , dbg_out1 ( "NCHeat3D", verbosity > 0 )
   , dbg_out2 ( "NCHeat3D", verbosity > 1 )
   , dbg_out3 ( "NCHeat3D", verbosity > 2 )
@@ -87,7 +87,7 @@ void NCHeat3D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & 
 {
     setLockstepAMR( true );
 
-    m_sharedState->registerSimpleMaterial ( scinew SimpleMaterial() );
+    m_materialManager->registerSimpleMaterial ( scinew SimpleMaterial() );
 
     ProblemSpecP heat = params->findBlock ( "FDHeat" );
     std::string scheme;
@@ -116,14 +116,14 @@ void NCHeat3D::scheduleInitialize ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "NCHeat3D::task_initialize", this, &NCHeat3D::task_initialize );
     task->computes ( u_label );
-    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 void NCHeat3D::scheduleComputeStableTimeStep ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "NCHeat3D::task_compute_stable_timestep", this, &NCHeat3D::task_compute_stable_timestep );
     task->computes ( getDelTLabel(), level.get_rep() );
-    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 void NCHeat3D::scheduleTimeAdvance ( LevelP const & level, SchedulerP & sched )
@@ -152,7 +152,7 @@ void NCHeat3D::scheduleTimeAdvance_forward_euler ( LevelP const & level, Schedul
     Task * task = scinew Task ( "NCHeat3D::task_farward_euler_time_advance", this, &NCHeat3D::task_farward_euler_time_advance );
     task->requires ( Task::OldDW, u_label, Ghost::AroundNodes, 1 );
     task->computes ( u_label );
-    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_materialManager->allMaterials() );
 }
 
 // void NCHeat3D::scheduleTimeAdvance_backward_euler_assemble ( LevelP const & level, SchedulerP & sched )
@@ -170,12 +170,12 @@ void NCHeat3D::scheduleTimeAdvance_forward_euler ( LevelP const & level, Schedul
 //  task->computes ( At_label );
 //  task->computes ( Ab_label );
 // #endif
-//  sched->addTask ( task, level->allPatches(), m_sharedState->allMaterials() );
+//  sched->addTask ( task, level->allPatches(), m_materialManager->allMaterials() );
 // }
 
 // void NCHeat3D::scheduleTimeAdvance_backward_euler_solve ( LevelP const & level, SchedulerP & sched )
 // {
-//  solver->scheduleSolve ( level, sched, m_sharedState->allMaterials(),
+//  solver->scheduleSolve ( level, sched, m_materialManager->allMaterials(),
 //                          matrix_label, Task::NewDW, // A
 //                          u_label, false,            // x
 //                          rhs_label, Task::NewDW,    // b
@@ -188,7 +188,7 @@ void NCHeat3D::scheduleTimeAdvance_save ( LevelP const & level, SchedulerP & sch
 {
     Task * task = scinew Task ( "NCHeat3D::task_save", this, &NCHeat3D::task_save );
     task_save->requires ( Task::NewDW, u_label, Ghost::AroundNodes, 1 );
-    sched->addTask ( task_save, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task_save, level->eachPatch(), m_materialManager->allMaterials() );
 }
 #endif
 

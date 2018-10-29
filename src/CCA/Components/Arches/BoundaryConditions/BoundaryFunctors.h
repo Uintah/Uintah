@@ -20,6 +20,14 @@ static Uintah::DebugStream dbgbc("ARCHES_BC_FUNCTORS", false);
 
 namespace Uintah { namespace ArchesCore{
 
+  struct DepBCInfo {
+    std::string variable_name;
+    int n_ghosts{0};
+    ArchesFieldContainer::WHICH_DW dw{ArchesFieldContainer::NEWDW};
+  };
+
+  typedef std::vector<DepBCInfo> FunctorDepList;
+
   template <typename T>
   class BCFunctors {
 
@@ -42,7 +50,6 @@ namespace Uintah { namespace ArchesCore{
     BCFunctors(){}
     ~BCFunctors(){}
 
-
     std::string pair_face_var_names( std::string face_name, std::string var_name ){
       return face_name + "_" + var_name;
     }
@@ -55,6 +62,7 @@ namespace Uintah { namespace ArchesCore{
     struct MMSshunn;
     struct SecondaryVariableBC;
     struct VelocityBC;
+    struct PressureOutletBC;
     struct SubGridInjector;
 
     void create_bcs( ProblemSpecP& db, std::vector<std::string> variables );
@@ -81,7 +89,7 @@ namespace Uintah { namespace ArchesCore{
     }
 
     void get_bc_dependencies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
-                              std::vector<std::string>& dep );
+                              FunctorDepList& dep );
 
     void get_bc_modifies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
                           std::vector<std::string>& mod );
@@ -271,6 +279,29 @@ void BCFunctors<T>::build_bcs( ProblemSpecP db_bc, const std::vector<std::string
 
            insert_functor( face_name, varname, fun );
 
+         } else if ( custom_type == "PressureOutlet" ){
+           // HARD CODED! - fix me 
+           std::string vel_name = "uVel";
+           if (varname == "x-mom"){
+             vel_name = "uVel";
+             //vel_name = "x-mom";
+           } else if (varname == "y-mom") {
+             vel_name = "vVel";
+             //vel_name = "y-mom";
+           } else if  (varname == "z-mom") {
+             vel_name = "wVel";
+             //vel_name = "z-mom";
+           } else {
+             throw InvalidValue("Error: can not find velocity name "+type, __FILE__, __LINE__);
+           } 
+           double vel_value=0.0;
+           db_bc_type->require("value", vel_value);
+
+           std::shared_ptr<BaseFunctor> fun( scinew PressureOutletBC(vel_name, vel_value));
+
+           insert_functor( face_name, varname, fun );
+
+
          } else if ( custom_type == "subgrid_injector" ){
 
            std::shared_ptr<BaseFunctor> fun( scinew SubGridInjector(varname, db_bc_type));
@@ -296,6 +327,8 @@ void BCFunctors<T>::build_bcs( ProblemSpecP db_bc, const std::vector<std::string
 
 //--------------------------------------------------------------------------------------------------
 // BASE FUNCTOR
+template<typename  ExecutionSpace,typename MemorySpace> // THIS IS A PLACEHOLDER DEFINITION, It should be removed upon merging of the kokkos branch
+using ExecutionObject = std::iterator<ExecutionSpace,MemorySpace>;
 
 template <typename T>
 struct BCFunctors<T>::BaseFunctor {
@@ -307,30 +340,59 @@ public:
 
   /** @brief Add dependancies onto the Arches Task for the proper execution of the boundary
              condition. This may be a nullptr op.**/
-  virtual void add_dep( std::vector<std::string>& master_dep ) = 0;
+  virtual void add_dep( FunctorDepList& master_dep ) = 0;
   /** @brief Add additional modifies onto the Arches Task (outside the root variable) for
              proper execution of the boundary condition. This may be a nullptr op. **/
   virtual void add_mod( std::vector<std::string>& master_mod ) = 0;
   /** @brief Actually evaluate the boundary condition **/
-  virtual void eval_bc(
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval_bc( ExecutionObject<ExecutionSpace,MemorySpace> executionObject,
     std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
-    const BndSpec* bnd, Uintah::Iterator bndIter ) = 0;
+    const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter ) {
+    if (BCFunctors<T>::Dirichlet*             child   = dynamic_cast<BCFunctors<T>::Dirichlet*           >(this)){
+      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+    }else if (BCFunctors<T>::Neumann*               child   = dynamic_cast<BCFunctors<T>::Neumann*             >(this)){
+      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+    }else if (BCFunctors<T>::MassFlow*              child   = dynamic_cast<BCFunctors<T>::MassFlow*            >(this)){
+      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+    }else if (BCFunctors<T>::MMSalmgren*            child   = dynamic_cast<BCFunctors<T>::MMSalmgren*          >(this)){
+      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+    }else if (BCFunctors<T>::MMSshunn*              child   = dynamic_cast<BCFunctors<T>::MMSshunn*            >(this)){
+      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+    }else if (BCFunctors<T>::SecondaryVariableBC*   child   = dynamic_cast<BCFunctors<T>::SecondaryVariableBC* >(this)){
+      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+    }else if (BCFunctors<T>::VelocityBC*            child   = dynamic_cast<BCFunctors<T>::VelocityBC*          >(this)){
+      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+    }else if (BCFunctors<T>::PressureOutletBC*      child   = dynamic_cast<BCFunctors<T>::PressureOutletBC*          >(this)){
+      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+    }else if (BCFunctors<T>::SubGridInjector*       chile   = dynamic_cast<BCFunctors<T>::SubGridInjector*     >(this)){
+      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+    }else {
+          throw InvalidValue("Portable Boundary condition not properly included in source code.",__FILE__,__LINE__);
+   }
+}
 
 protected:
 
-  std::vector<std::string> m_dep;
+  FunctorDepList m_dep;
   std::vector<std::string> m_mod;
 
-  void check_master_list( std::vector<std::string>& local_dep ,
-    std::vector<std::string>& master_list ){
+  /** @brief Check the master list of all dependencies for the requirements of this specific bc functor **/
+  void check_master_list( FunctorDepList& local_dep ,
+    FunctorDepList& master_list ){
 
     for ( auto ilocal = local_dep.begin(); ilocal != local_dep.end(); ilocal++ ){
 
-      auto imaster = std::find( master_list.begin(), master_list.end(), *ilocal );
-      if ( imaster == master_list.end() ){
-        master_list.push_back( *ilocal );
+      bool found_match = false;
+      for ( auto imaster = master_list.begin(); imaster != master_list.end(); imaster++ ){
+        if ( ((*ilocal).variable_name == (*imaster).variable_name) && ((*ilocal).dw == (*imaster).dw) ){
+          found_match = true;
+        }
       }
 
+      if ( !found_match ){
+        master_list.push_back(*ilocal);
+      }
     }
   }
 
@@ -345,45 +407,53 @@ public:
   Dirichlet(){}
   ~Dirichlet(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){}
+  void add_dep( FunctorDepList& master_dep ){}
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-  void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                const BndSpec* bnd, Uintah::Iterator bndIter ){
+  template <typename ES, typename MS>
+  void eval_bc( ExecutionObject<ES,MS>& executionObject,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter ){
 
     VariableHelper<T> var_help;
     T& var = *( tsk_info->get_uintah_field<T>(var_name));
-    IntVector iDir = patch->faceDirection( bnd->face );
-    IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
+    const IntVector iDir = patch->faceDirection( bnd->face );
+    const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
     const BndCondSpec* spec = bnd->find(var_name);
 
+    const double spec_value=spec->value;
+
     if ( var_help.dir == ArchesCore::NODIR || dot == 0){
 
+
       // CCVariable or CC position in the staggered variable
-      for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-
-        var[*bndIter] = 2.0 * spec->value - var[*bndIter-iDir];
-
-      }
+      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+        int im=i - iDir[0];
+        int jm=j - iDir[1];
+        int km=k - iDir[2];
+        var(i,j,k) = 2.0 * spec_value - var(im,jm,km);
+      });
 
     } else {
 
       // Staggered Variable
       if ( dot == -1 ){
       // Normal face -
-        for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-          var[*bndIter] = spec->value;
-          var[*bndIter - iDir] = spec->value;
-        }
+      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+          int im=i - iDir[0];
+          int jm=j - iDir[1];
+          int km=k - iDir[2];
+          var(i,j,k) = spec_value;
+          var(im,jm,km) = spec_value;
+        });
       } else if ( dot == 1 ){
       // Normal face +
-        for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-          var[*bndIter] = spec->value;
-        }
+      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+          var(i,j,k) = spec_value;
+        });
       } else {
           throw InvalidValue("Error: ...",__FILE__,__LINE__);
       }
@@ -401,55 +471,60 @@ public:
   Neumann(){}
   ~Neumann(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){}
+  void add_dep( FunctorDepList& master_dep ){}
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-  void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                const BndSpec* bnd, Uintah::Iterator bndIter ){
+template <typename ES, typename MS>
+  void eval_bc( ExecutionObject<ES,MS>& executionObject,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
     T& var = *( tsk_info->get_uintah_field<T>(var_name));
-    IntVector iDir = patch->faceDirection( bnd->face );
-    IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
-    Vector Dx = patch->dCell();
-    double dx = 0.;
+    const IntVector iDir = patch->faceDirection( bnd->face );
+    const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
+    const Vector Dx = patch->dCell();
     const double norm = iDir[0]+iDir[1]+iDir[2];
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
     if ( var_help.dir == ArchesCore::NODIR || dot == 0  ){
     // CCvariables and CC positions in a staggered variable
 
-      IntVector normIDir = iDir * iDir;
-      if ( normIDir == IntVector(1,0,0) ){
-        dx = Dx.x();
-      } else if ( normIDir == IntVector(0,1,0) ){
-        dx = Dx.y();
-      } else {
-        dx = Dx.z();
-      }
+      const IntVector normIDir = iDir * iDir;
+      const double dx = normIDir == IntVector(1,0,0) ? Dx.x() : normIDir == IntVector(0,1,0) ? Dx.y() : Dx.z() ;
 
-      const BndCondSpec* spec = bnd->find(var_name);
+      const double spec_value = bnd->find(var_name)->value;
 
-      for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+        int im = i - iDir[0];
+        int jm = j - iDir[1];
+        int km = k - iDir[2];
 
-        var[*bndIter] = norm*dx * spec->value + var[*bndIter-iDir];
+        var(i,j,k) = norm*dx * spec_value + var(im,jm,km);
 
-      }
+      });
     } else {
 
       // for staggered variables, only going to allow for zero gradient, one-sided for now
-
       if ( dot == -1 ){
-        for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-          IntVector two_iDir(iDir[0]*2,iDir[1]*2,iDir[2]*2);
-          var[*bndIter - iDir] = var[*bndIter - two_iDir];
-          var[*bndIter] = var[*bndIter-iDir];
-        }
+      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+          int im=i - iDir[0];
+          int jm=j - iDir[1];
+          int km=k - iDir[2];
+          int imm=i - 2*iDir[0];
+          int jmm=j - 2*iDir[1];
+          int kmm=k - 2*iDir[2];
+
+          var(im,jm,km) = var(imm,jmm,kmm);
+          var(i,j,k) = var(im,jm,km);
+        });
       } else if ( dot == 1 ){
-        for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-          var[*bndIter] = var[*bndIter-iDir];
-        }
+      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+          int im=i - iDir[0];
+          int jm=j - iDir[1];
+          int km=k - iDir[2];
+          var(i,j,k) = var(im,jm,km);
+        });
       }
 
     }
@@ -469,41 +544,55 @@ public:
     m_density_name(density_name) {}
   ~MassFlow(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){
+  void add_dep( FunctorDepList& master_dep ){
 
-    BaseFunctor::m_dep.push_back( m_density_name );
+    // Note that the brace initializer won't work with compilers < c++14 because
+    // of the default values set in the struct for n_ghosts and dw.
+    DepBCInfo density_info;
+    density_info.variable_name = m_density_name;
+
+    BaseFunctor::m_dep.push_back( density_info );
+
     BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-  void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                const BndSpec* bnd, Uintah::Iterator bndIter ){
+template <typename ES, typename MS>
+  void eval_bc( ExecutionObject<ES,MS>& executionObject,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     T& var = *( tsk_info->get_uintah_field<T>(var_name));
     constCCVariable<double> rho =
       *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
 
     VariableHelper<T> var_help;
-    IntVector iDir = patch->faceDirection( bnd->face );
-    IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
+    const IntVector iDir = patch->faceDirection( bnd->face );
+    const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
+    const double bound_area = bnd->area;
     if ( dot == -1 ){
     // Normal face (-)  staggered variables
-      for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-        const double rho_face = 0.5*(rho[*bndIter] + rho[*bndIter - iDir]);
-        var[*bndIter] = m_mdot / (rho_face * bnd->area );
-        var[*bndIter - iDir] = var[*bndIter];
-      }
+      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+          int im=i - iDir[0];
+          int jm=j - iDir[1];
+          int km=k - iDir[2];
+          const double rho_face = 0.5*(rho(i,j,k)+ rho(im,jm,km));
+          var(i,j,k) = m_mdot / (rho_face * bound_area);
+          var(im,jm,km) = var(i,j,k);
+      });
     } else if ( dot == 1 ){
     // Normal face (+)  staggered variables
-      for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-        double rho_face = 0.5*(rho[*bndIter] + rho[*bndIter - iDir]);
-        var[*bndIter] = m_mdot / (rho_face * bnd->area );
-      }
+      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+          int im=i - iDir[0];
+          int jm=j - iDir[1];
+          int km=k - iDir[2];
+          double rho_face = 0.5*(rho(i,j,k) + rho(im,jm,km));
+          var[*bndIter] = m_mdot / (rho_face * bound_area );
+      });
     } else {
       throw InvalidValue("Error: Trying to set a massflow rate for a non-normal velocoty", __FILE__, __LINE__);
     }
@@ -526,21 +615,24 @@ public:
     m_y_name(y_name), m_which_vel(which_vel){}
   ~MMSalmgren(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){
+  void add_dep( FunctorDepList& master_dep ){
 
-    BaseFunctor::m_dep.push_back( m_y_name );
-    BaseFunctor::m_dep.push_back( m_x_name );
+    DepBCInfo y_info; y_info.variable_name = m_y_name;
+    DepBCInfo x_info; x_info.variable_name = m_x_name;
+    BaseFunctor::m_dep.push_back( y_info );
+    BaseFunctor::m_dep.push_back( x_info );
     BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-  void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                const BndSpec* bnd, Uintah::Iterator bndIter ){
+template <typename ES, typename MS>
+  void eval_bc( ExecutionObject<ES,MS>& executionObject,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
-    double m_two_pi = 2.0*acos(-1.0);
-    double m_amp = 1.0;
+    const double m_two_pi = 2.0*acos(-1.0);
+    const double m_amp = 1.0;
 
     T& var = *( tsk_info->get_uintah_field<T>(var_name));
 
@@ -551,8 +643,8 @@ public:
       *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_y_name));
 
     VariableHelper<T> var_help;
-    IntVector iDir = patch->faceDirection( bnd->face );
-    IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
+    const IntVector iDir = patch->faceDirection( bnd->face );
+    const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
@@ -561,63 +653,69 @@ public:
 
       if (var_help.dir == ArchesCore::NODIR ){
         // scalar or CCvariable
-        for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-          var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter] )
-                                  * sin( m_two_pi * y[*bndIter] );
-        }
+        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+          var(i,j,k) = 1.0  - m_amp * cos( m_two_pi * x(i,j,k) )
+                                  * sin( m_two_pi * y(i,j,k) );
+        });
       } else {
         // SFCX or SFCY or SFCZ variable
           if (dot == -1){
-            for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
               // (-) faces  two cells at the begin of the domain
               // value are the same because we do not resolve extra cell (i=-1), and we set the BC at i = 0
 //                    var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter] )
 //                                      * sin( m_two_pi * y[*bndIter] );
+                int im=i - iDir[0];
+                int jm=j - iDir[1];
+                int km=k - iDir[2];
 
-                var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter- iDir] )
-                                  * sin( m_two_pi * y[*bndIter- iDir] );
+                var(i,j,k) = 1.0  - m_amp * cos( m_two_pi * x(im,jm,km) )
+                                  * sin( m_two_pi * y(im,jm,km) );
 
 
-                 var[*bndIter- iDir] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter - iDir] )
-                                  * sin( m_two_pi * y[*bndIter- iDir] );
-            }
+                 var(im,jm,km) = 1.0  - m_amp * cos( m_two_pi * x(im,jm,km) )
+                                  * sin( m_two_pi * y(im,jm,km) );
+            });
           } else {
-             for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
                // (+) faces one cell at the end of the domain
-               var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter] )
-                                  * sin( m_two_pi * y[*bndIter] );
-              }
+               var(i,j,k) = 1.0  - m_amp * cos( m_two_pi * x(i,j,k) )
+                                  * sin( m_two_pi * y(i,j,k) );
+              });
           }
       }
     } else if ( m_which_vel == "v" ){
 
       if (var_help.dir == ArchesCore::NODIR ){
         // scalar
-        for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-          var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter] )
-                              * cos( m_two_pi * y[*bndIter] );
-        }
+        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+          var(i,j,k) = 1.0  + m_amp * sin( m_two_pi * x(i,j,k) )
+                              * cos( m_two_pi * y(i,j,k) );
+        });
       } else {
       // SFCX or SFCY or SFCZ variable
         if (dot == -1){
-          for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+          int im=i - iDir[0];
+          int jm=j - iDir[1];
+          int km=k - iDir[2];
             // (-) faces  two cells
 //                var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter] )
 //                                      * cos( m_two_pi * y[*bndIter] );
-            var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter- iDir] )
-                   * cos( m_two_pi * y[*bndIter- iDir] );
+            var(i,j,k) = 1.0  + m_amp * sin( m_two_pi * x(im,jm,km) )
+                   * cos( m_two_pi * y(im,jm,km) );
 
 
-            var[*bndIter- iDir] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter- iDir] )
-                                  * cos( m_two_pi * y[*bndIter- iDir] );
-          }
+            var(im,jm,km) = 1.0  + m_amp * sin( m_two_pi * x(im,jm,km) )
+                                  * cos( m_two_pi * y(im,jm,km) );
+          });
         } else {
-        for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
           // (+) faces
-          var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter] )
-                                  * cos( m_two_pi * y[*bndIter] );
+        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+          var(i,j,k) = 1.0  + m_amp * sin( m_two_pi * x(i,j,k) )
+                                  * cos( m_two_pi * y(i,j,k) );
 
-        }
+        });
       }
   }
     } else {
@@ -641,17 +739,19 @@ public:
   MMSshunn( std::string x_name) : BaseFunctor(), m_x_name(x_name) {}
   ~MMSshunn(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){
+  void add_dep( FunctorDepList& master_dep ){
 
-    BaseFunctor::m_dep.push_back( m_x_name );
+    DepBCInfo x_info; x_info.variable_name = m_x_name;
+    BaseFunctor::m_dep.push_back( x_info );
     BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-  void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                const BndSpec* bnd, Uintah::Iterator bndIter ){
+template <typename ES, typename MS>
+  void eval_bc( ExecutionObject<ES,MS>& executionObject,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     //const double m_two_pi = 2.0*acos(-1.0);
     //const double m_amp = 1.0;
@@ -681,12 +781,12 @@ public:
     const double z1 = std::exp(-m_k1 * time_d);
     if (var_help.dir == ArchesCore::NODIR ){
       // scalar or CCvariable
-      for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-        const double z2 = std::cosh(m_w0 * std::exp (-m_k2 * time_d) *x[*bndIter]); // x is cc value
+        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+        const double z2 = std::cosh(m_w0 * std::exp (-m_k2 * time_d) *x(i,j,k)); // x is cc value
         const double phi = (z1-z2)/(z1 * (1.0 - m_rho0/m_rho1)-z2);
         const double rho = 1.0/(phi/m_rho1 + (1.0- phi )/m_rho0);
-        var[*bndIter] = phi*rho;
-       }
+        var(i,j,k) = phi*rho;
+       });
      }
 
 
@@ -704,11 +804,12 @@ struct BCFunctors<T>::SecondaryVariableBC : BaseFunctor {
 public:
 
   SecondaryVariableBC( std::string sec_var_name ) : m_sec_var_name(sec_var_name){
-    BaseFunctor::m_dep.push_back( m_sec_var_name );
+    DepBCInfo sec_info; sec_info.variable_name = m_sec_var_name;
+    BaseFunctor::m_dep.push_back( sec_info );
   }
   ~SecondaryVariableBC(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){
+  void add_dep( FunctorDepList& master_dep ){
 
     // Now adding dependencies to the master list.
     // This checks for repeats to ensure a variable isn't added twice.
@@ -718,28 +819,125 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-  void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                const BndSpec* bnd, Uintah::Iterator bndIter ){
+template <typename ES, typename MS>
+  void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
     typedef typename VariableHelper<T>::ConstType CT;
     T& var = *( tsk_info->get_uintah_field<T>(var_name));
-    IntVector iDir = patch->faceDirection( bnd->face );
+    const IntVector iDir = patch->faceDirection( bnd->face );
     CT& sec_var = *( tsk_info->get_const_uintah_field<CT>(m_sec_var_name));
 
-    for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-      double interp_sec_var = (sec_var[*bndIter] + sec_var[*bndIter - iDir])/2.;
-      var[*bndIter] = 2. * interp_sec_var - var[*bndIter - iDir];
-    }
+    parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+          int im=i - iDir[0];
+          int jm=j - iDir[1];
+          int km=k - iDir[2];
+          double interp_sec_var = (sec_var(i,j,k) + sec_var(im,jm,km))/2.;
+          var(i,j,k) = 2. * interp_sec_var - var(im,jm,km);
+    });
 
   }
 
 private:
 
   std::string m_sec_var_name;
-  SimulationStateP m_shared_state;
+  MaterialManagerP m_materialManager;
 
 };
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+struct BCFunctors<T>::PressureOutletBC : BaseFunctor {
+
+public:
+
+  PressureOutletBC( std::string vel_name, double value ):m_vel_name(vel_name), m_vel_value(value){
+  }
+  ~PressureOutletBC(){}
+
+  void add_dep( FunctorDepList& master_dep ){
+    // Now adding dependencies to the master list.
+    // This checks for repeats to ensure a variable isn't added twice.
+    //DepBCInfo vel_info; vel_info.variable_name = m_vel_name;
+    //vel_info.dw = ArchesFieldContainer::LATEST; 
+    //BaseFunctor::m_dep.push_back( vel_info );
+    //BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
+
+  }
+
+  void add_mod( std::vector<std::string>& master_mod ){}
+  
+
+template <typename ES, typename MS>
+  void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
+
+    // There is an issue with register variable for old_var. This BC is being applied in VelRhoHatBC.cc 
+
+    //typedef typename VariableHelper<T>::ConstType CT;
+    //T& var = *( tsk_info->get_uintah_field<T>(var_name));
+
+    //constCCVariable<double>& old_var =
+    //tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_vel_name);
+
+    //const double possmall = 1e-16;
+    //const IntVector iDir = patch->faceDirection( bnd->face );
+    //Patch::FaceType face = bnd->face;
+    //BndTypeEnum my_type  = bnd->type;
+    //int sign = iDir[0] + iDir[1] + iDir[2];
+    //int bc_sign = 0;
+    //int move_to_face_value = ( sign < 1 ) ? 1 : 0;
+
+    //IntVector move_to_face(std::abs(iDir[0])*move_to_face_value,
+    //                       std::abs(iDir[1])*move_to_face_value,
+    //                       std::abs(iDir[2])*move_to_face_value);
+
+    //if ( my_type == OUTLET ){
+    //  bc_sign = 1.;
+    //} else if ( my_type == PRESSURE){
+    //  bc_sign = -1.;
+    //}
+
+    //sign = bc_sign * sign;
+
+    //if ( my_type == OUTLET || my_type == PRESSURE ){
+      // This applies the mostly in (pressure)/mostly out (outlet) boundary condition
+    //  parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (const int i,const int j,const int k) {
+    //    int i_f = i + move_to_face[0]; // cell on the face
+    //    int j_f = j + move_to_face[1];
+    //    int k_f = k + move_to_face[2];
+  
+    //    int im = i_f - iDir[0];// first interior cell
+    //    int jm = j_f - iDir[1];
+    //    int km = k_f - iDir[2];
+  
+    //    int ipp = i_f + iDir[0];// extra cell face in the last index (mostly outwardly position) 
+    //    int jpp = j_f + iDir[1];
+    //    int kpp = k_f + iDir[2];
+  
+    //    if ( sign * old_var(i_f,j_f,k_f) > possmall ){
+        //if ( sign * var(i_f,j_f,k_f) > possmall ){
+          // du/dx = 0
+    //      var(i_f,j_f,k_f)= var(im,jm,km);
+    //    } else {
+          // shut off the hatted value to encourage the mostly-* condition
+    //      var(i_f,j_f,k_f) = 0.0;
+    //    }
+  
+    //    var(ipp,jpp,kpp) = var(i_f,j_f,k_f);
+  
+    //  });
+    //}
+
+    }
+
+private:
+
+  std::string m_vel_name;
+  const double m_vel_value;
+
+};
+
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
@@ -748,22 +946,24 @@ struct BCFunctors<T>::VelocityBC : BaseFunctor {
 public:
 
   VelocityBC( std::string density_name, double value ):m_density_name(density_name), m_vel_value(value){
-    BaseFunctor::m_dep.push_back( m_density_name );
   }
   ~VelocityBC(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){
+  void add_dep( FunctorDepList& master_dep ){
 
     // Now adding dependencies to the master list.
     // This checks for repeats to ensure a variable isn't added twice.
+    DepBCInfo den_info; den_info.variable_name = m_density_name;
+    BaseFunctor::m_dep.push_back( den_info );
     BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-  void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                const BndSpec* bnd, Uintah::Iterator bndIter ){
+template <typename ES, typename MS>
+  void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
     //typedef typename VariableHelper<T>::ConstType CT;
@@ -771,7 +971,7 @@ public:
     constCCVariable<double>& rho =
       *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
 
-    IntVector iDir = patch->faceDirection( bnd->face );
+    const IntVector iDir = patch->faceDirection( bnd->face );
 
     //
     IntVector offset(0,0,0);
@@ -808,7 +1008,7 @@ public:
 
     }
 
-    IntVector offset_iDir = iDir + offset;
+    const IntVector offset_iDir = iDir + offset;
 
     IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
@@ -818,31 +1018,43 @@ public:
         //The face normal and the velocity are in parallel
         if (dot == -1) {
             //Face +
-            for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-                  const double interp_rho = 0.5*(rho[*bndIter-iDir]+rho[*bndIter]);
-                 var[*bndIter-iDir] = interp_rho*m_vel_value;
-                  var[*bndIter] = var[*bndIter-iDir];
-            }
+           parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+                 int im=i - iDir[0];
+                 int jm=j - iDir[1];
+                 int km=k - iDir[2];
+                 const double interp_rho = 0.5*(rho(im,jm,km)+rho(i,j,k));
+                 var(im,jm,km) = interp_rho*m_vel_value;
+                 var(i,j,k) = var(im,jm,km);
+            });
         } else {
             // Face -
-            for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-                  const double interp_rho = 0.5*(rho[*bndIter-iDir]+rho[*bndIter]);
-                  var[*bndIter] = interp_rho*m_vel_value;
+           parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+                 const double interp_rho = 0.5*(rho[*bndIter-iDir]+rho[*bndIter]);
+                  var(i,j,k) = interp_rho*m_vel_value;
                   //var[*bndIter] = var[*bndIter-iDir];
-        }
-
-        }
-
+           });
+       }
     } else {
       //The face normal and the velocity are tangential
-      for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+        int im=i - iDir[0];
+        int jm=j - iDir[1];
+        int km=k - iDir[2];
 
-        const double interp_rho =0.5*(0.5*(rho[*bndIter-iDir]+rho[*bndIter]) +
-                                      0.5*(rho[*bndIter-offset_iDir]+rho[*bndIter + offset]));
+        int imo=i - offset_iDir[0];
+        int jmo=j - offset_iDir[1];
+        int kmo=k - offset_iDir[2];
 
-        var[*bndIter] = 2.*interp_rho*m_vel_value - var[*bndIter-iDir];
+        int ipo=i + offset[0];
+        int jpo=j + offset[1];
+        int kpo=k + offset[2];
 
-      }
+        const double interp_rho =0.5*(0.5*(rho(im,jm,km)+rho(i,j,k)) +
+                                      0.5*(rho(imo,jmo,kmo)+rho(ipo,jpo,kpo)));
+
+        var(i,j,k) = 2.*interp_rho*m_vel_value - var(im,jm,km);
+
+      });
     }
   }
 
@@ -874,13 +1086,12 @@ public:
   }
   ~SubGridInjector(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){}
+  void add_dep( FunctorDepList& master_dep ){}
 
   void add_mod( std::vector<std::string>& master_mod ){
 
     const std::string rhs_name = m_phi_name+"_rhs";
 
-    std::cout << " Setting up for : " << rhs_name << std::endl;
     auto i = find(master_mod.begin(), master_mod.end(), rhs_name);
 
     if ( i == master_mod.end() ){
@@ -889,15 +1100,16 @@ public:
 
   }
 
-  void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                const BndSpec* bnd, Uintah::Iterator bndIter ){
+template <typename ES, typename MS>
+  void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
     T& var = tsk_info->get_uintah_field_add<T>(var_name);
 
     T& rhs = tsk_info->get_uintah_field_add<T>(m_phi_name+"_rhs");
 
-    IntVector iDir = patch->faceDirection( bnd->face );
+    const IntVector iDir = patch->faceDirection( bnd->face );
 
     double area = 0.0;
     Vector DX = patch->dCell();
@@ -909,13 +1121,11 @@ public:
       area = m_area;
     }
 
-    for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+    parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
 
-      IntVector c = *bndIter;
+      rhs(i,j,k) += m_rho_phi_u * area;
 
-      rhs[c] += m_rho_phi_u * area;
-
-    }
+    });
   }
 
 private:
@@ -934,7 +1144,7 @@ private:
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 void BCFunctors<T>::get_bc_dependencies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
-                                         std::vector<std::string>& dep ){
+                                         FunctorDepList& dep ){
 
   const BndMapT& bc_info = bc_helper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -1031,7 +1241,7 @@ void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_h
     if ( on_this_patch ){
 
       //Get the iterator
-      Uintah::Iterator cell_iter = bc_helper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+      Uintah::ListOfCellsIterator& cell_iter = bc_helper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
       std::string facename = i_bc->second.name;
 
@@ -1067,7 +1277,9 @@ void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_h
 
           // Actually applying the boundary condition here:
           if ( bc_fun != nullptr ){
-            bc_fun->eval_bc( *i_eqn, patch, tsk_info, &bndSpec, cell_iter );
+            //bc_fun->eval_bc<UintahSpaces::CPU, UintahSpaces::HostSpace>( *i_eqn, patch, tsk_info, &bndSpec, cell_iter );
+            ExecutionObject<int,int> place_holder;
+            bc_fun->eval_bc(place_holder, *i_eqn, patch, tsk_info, &bndSpec, cell_iter );
           } else {
             std::stringstream msg;
             msg << "Error: Boundary condition implementation not found." << " \n " <<

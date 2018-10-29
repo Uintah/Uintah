@@ -32,7 +32,7 @@
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 
@@ -226,7 +226,7 @@ private:
   BoundaryCondition    * _boundaryCondition{nullptr};
   Properties           * d_props{nullptr};
   const ProcessorGroup * _my_world;
-  SimulationStateP       _sharedState;
+  MaterialManagerP       _materialManager;
   ProblemSpecP           _ps;              // needed for extraSetup()
 
   std::string  _abskt_label_name;

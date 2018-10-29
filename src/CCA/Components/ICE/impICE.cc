@@ -31,7 +31,7 @@
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -162,6 +162,9 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
     t->modifies(lb->rhsLabel,          one_matl,oims);
   }
   
+  t->computes( VarLabel::find(abortTimeStep_name) );
+  t->computes( VarLabel::find(recomputeTimeStep_name) );
+
   sched->addTask(t, patches, all_matls);                     
 }
 
@@ -274,6 +277,7 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
   //__________________________________
   //  add exchange contribution
   d_exchModel->sched_AddExch_VelFC( sched, patches, ice_matls,
+                                                    mpm_matls,
                                                     all_matls,
                                                     d_BC_globalVars,
                                                     recursion);
@@ -413,6 +417,9 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->modifies(lb->vol_fracY_FCLabel);
   t->modifies(lb->vol_fracZ_FCLabel);  
   
+  t->computes( VarLabel::find(abortTimeStep_name) );
+  t->computes( VarLabel::find(recomputeTimeStep_name) );
+
   const PatchSet * perproc_patches = m_loadBalancer->getPerProcessorPatchSet(level);
 
   sched->addTask( t, perproc_patches, all_matls );
@@ -445,7 +452,7 @@ ICE::setupMatrix( const ProcessorGroup *,
     delt_vartype delT;
     parent_old_dw->get(delT, lb->delTLabel,level);
     Vector dx     = patch->dCell();
-    int numMatls  = m_sharedState->getNumMatls();
+    int numMatls  = m_materialManager->getNumMatls();
     CCVariable<Stencil7> A; 
     CCVariable<double> imp_delP;
     constCCVariable<double> sumKappa;
@@ -472,7 +479,7 @@ ICE::setupMatrix( const ProcessorGroup *,
     } 
   
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = m_sharedState->getMaterial( m );
+      Material* matl = m_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       constSFCXVariable<double> sp_volX_FC, vol_fracX_FC;
       constSFCYVariable<double> sp_volY_FC, vol_fracY_FC;
@@ -571,7 +578,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       pOldDW  = old_dw;
     }
            
-    int numMatls  = m_sharedState->getNumMatls();
+    int numMatls  = m_materialManager->getNumMatls();
     delt_vartype delT;
     pOldDW->get(delT, lb->delTLabel, level);
     
@@ -605,7 +612,7 @@ void ICE::setupRHS(const ProcessorGroup*,
 
     
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = m_sharedState->getMaterial( m );
+      Material* matl = m_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       constSFCXVariable<double> uvel_FC;
       constSFCYVariable<double> vvel_FC;
@@ -802,7 +809,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     
     printTask(patches, patch, cout_doing, "Doing ICE::updatePressure" );
                     
-    int numMatls  = m_sharedState->getNumMatls(); 
+    int numMatls  = m_materialManager->getNumMatls(); 
     Ghost::GhostType  gn = Ghost::None;
           
     CCVariable<double> press_CC;     
@@ -821,7 +828,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     press_CC.initialize(d_EVIL_NUM);
     
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = m_sharedState->getMaterial( m );
+      Material* matl = m_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       parent_new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel, indx,patch,gn,0);
     }             
@@ -844,17 +851,17 @@ void ICE::updatePressure(const ProcessorGroup*,
                             lb,  patch, 999, d_BC_globalVars, BC_localVars );
 
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
-          "sp_vol", "Pressure", patch ,m_sharedState, 0, new_dw, 
+          "sp_vol", "Pressure", patch ,m_materialManager, 0, new_dw, 
           d_BC_globalVars, BC_localVars, isNotInitialTimeStep );
            
     delete_CustomBCs(d_BC_globalVars, BC_localVars);
 
     //____ B U L L E T   P R O O F I N G----
-    // ignore BP if a timestep restart has already been requested
+    // ignore BP if a recompute time step has already been requested
     IntVector neg_cell;
-    bool tsr = new_dw->timestepRestarted();
+    bool rts = new_dw->recomputeTimeStep();
     
-    if(!areAllValuesPositive(press_CC, neg_cell) && !tsr) {
+    if(!areAllValuesPositive(press_CC, neg_cell) && !rts) {
       ostringstream warn;
       warn <<"ERROR ICE::updatePressure cell "
            << neg_cell << " negative pressure\n ";        
@@ -877,7 +884,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
     
     printTask(patches, patch, cout_doing, "Doing ICE::computeDel_P" );
             
-    int numMatls  = m_sharedState->getNumMatls(); 
+    int numMatls  = m_materialManager->getNumMatls(); 
       
     CCVariable<double> delP_Dilatate;
     CCVariable<double> delP_MassX;
@@ -903,7 +910,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
     delP_MassX.initialize(0.0); 
          
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = m_sharedState->getMaterial( m );
+      Material* matl = m_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       new_dw->get(rho_CC,      lb->rho_CCLabel,    indx,patch,gn,0);
       //__________________________________
@@ -941,7 +948,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   
   //__________________________________
   // define Matl sets and subsets
-  const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* all_matls = m_materialManager->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   MaterialSubset* one_matl    = d_press_matl;
   
@@ -1008,7 +1015,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   max_vartype max_RHS = 1/d_SMALL_NUM;
   double smallest_max_RHS_sofar = max_RHS; 
   int counter = 0;
-  bool restart    = false;
+  bool recompute = false;
   Vector dx = level->dCell();
   double vol = dx.x() * dx.y() * dx.z();
   
@@ -1016,7 +1023,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
   d_subsched->setInitTimestep(false);
   
-  while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance && !restart) {
+  while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance && !recompute) {
   //__________________________________
   // recompile the subscheduler
     if (counter == 0 && d_recompileSubsched) {
@@ -1075,53 +1082,54 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     
     //__________________________________
     // diagnostics
+    int proc = d_myworld->myRank();
+    
     subNewDW->get(max_RHS,     lb->max_RHSLabel);
     subOldDW->get(max_RHS_old, lb->max_RHSLabel);
-    
-    DOUTR0(  "  Outer iteration " << counter
-            << " max_rhs before solve "<< max_RHS_old
-            << " after solve " << max_RHS << "\n" );
+
+    DOUT( proc == 0, "  Outer iteration " << counter
+          << " max_rhs before solve "<< max_RHS_old
+          << " after solve " << max_RHS );
     
     // output files for debugging
-    // double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    // double timeStep = m_materialManager->getCurrentTopLevelTimeStep();
 
     timeStep_vartype timeStepVar;
     ParentOldDW->get(timeStepVar, lb->timeStepLabel);
     double timeStep = timeStepVar;
 
-    int proc = d_myworld->myRank();
     ostringstream fname;
     
     fname << "." << proc <<"." << timeStep << "." << counter;
     m_solver->getParameters()->setOutputFileName(fname.str());
    
     //__________________________________
-    // restart timestep
-                                          //  too many outer iterations
-    if (counter > d_iters_before_timestep_restart ){
-      restart = true;
-      DOUTR0("\nWARNING:  max iterations before timestep restart reached\n" );
+    // recompute timestep
+    //  too many outer iterations
+    if (counter > d_iters_before_timestep_recompute ){
+      recompute = true;
+      DOUT( proc == 0, "\nWARNING: The max iterations occurred before a time step recompute was reached" );
     }
-                                          //  solver or advection has requested a restart
-    if (subNewDW->timestepRestarted() ) {
-      DOUTR0( "\n  WARNING:  impICE:implicitPressureSolve timestep restart.\n" );
-      restart = true;
+    //  The solver or advection has requested to recompute the time step
+    if (subNewDW->recomputeTimeStep() ) {
+      DOUT( proc == 0, "\n  WARNING:  impICE:implicitPressureSolve time step recompute." );
+      recompute = true;
     }
     
-                                           //  solution is diverging
+    //  solution is diverging
     if(max_RHS < smallest_max_RHS_sofar){
       smallest_max_RHS_sofar = max_RHS;
     }
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
-      DOUTR0( "\nWARNING: outer iteration is diverging now "
-                << "restarting the timestep"
-                << " Max_RHS " << max_RHS 
-                << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar << "\n");
-      restart = true;
+      DOUT( proc == 0, "\nWARNING: outer iteration is diverging now "
+            << "recomputing the timestep"
+            << " Max_RHS " << max_RHS 
+            << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar);
+      recompute = true;
     }
-    if( restart ) {
-      ParentNewDW->abortTimestep();
-      ParentNewDW->restartTimestep();
+    if( recompute ) {
+      ParentNewDW->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+      ParentNewDW->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
     }
   }  // outer iteration loop
   

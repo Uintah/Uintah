@@ -28,7 +28,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
@@ -39,8 +39,8 @@ using namespace std;
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 Smagorinsky_Model::Smagorinsky_Model(ProblemSpecP& ps,
-                                     SimulationStateP& sharedState)
-  : Turbulence(ps, sharedState)
+                                     MaterialManagerP& materialManager)
+  : Turbulence(ps, materialManager)
 {
   //__________________________________
   //typically filter_width=grid spacing(uniform) for implicit filter.
@@ -69,7 +69,7 @@ void Smagorinsky_Model::computeTurbViscosity(DataWarehouse* new_dw,
                                             constSFCZVariable<double>& wvel_FC,
                                             constCCVariable<double>& rho_CC,
                                             const int indx,
-                                            SimulationStateP&  d_sharedState,
+                                            MaterialManagerP&  d_materialManager,
                                             CCVariable<double>& turb_viscosity)
 {
   //__________________________________
@@ -88,7 +88,7 @@ void Smagorinsky_Model::computeTurbViscosity(DataWarehouse* new_dw,
     SIJ[comp].initialize(0.0);
   }
    
-  computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, indx, d_sharedState, new_dw, SIJ);
+  computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, indx, d_materialManager, new_dw, SIJ);
 
   //__________________________________
   //  At patch boundaries you need to extend
@@ -114,7 +114,7 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
                                     const SFCYVariable<double>& vvel_FC,
                                     const SFCZVariable<double>& wvel_FC,
                                     const int indx,
-                                    SimulationStateP&  d_sharedState,
+                                    MaterialManagerP&  d_materialManager,
                                     DataWarehouse* new_dw,
                                     std::vector<CCVariable<double> >& SIJ)
 {
@@ -217,7 +217,7 @@ void Smagorinsky_Model::computeVariance(const ProcessorGroup*,
         df *= inv_dx;
         fvar[c] = scale * df.length2();
       }
-      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw, isNotInitialTimeStep);
+      setBC(fvar,s->scalarVariance->getName(),patch, d_materialManager, matl, new_dw, isNotInitialTimeStep);
     }
   }
 }

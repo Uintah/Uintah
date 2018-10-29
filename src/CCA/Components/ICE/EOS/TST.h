@@ -108,10 +108,10 @@ WARNING
         double   b;
         double   u;
         double   w;
-	double   Gamma;
-	
-	/* The following are constants */
-	double bb, bu, bw, bbuw, b1uw, bbuwuw, bubw, ab;
+        double   Gamma;
+        
+        /* The following are constants */
+        double bb, bu, bw, bbuw, b1uw, bbuwuw, bubw, ab;
       };
 } // End namespace Uintah
       

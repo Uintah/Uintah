@@ -1,6 +1,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasOxiMom.h>
@@ -18,8 +18,8 @@
 using namespace std;
 using namespace Uintah;
 
-CoalGasOxiMom::CoalGasOxiMom( std::string src_name, vector<std::string> label_names, ArchesLabel* field_labels, SimulationStateP& shared_state, std::string type )
-: SourceTermBase( src_name, field_labels->d_sharedState, label_names, type ),
+CoalGasOxiMom::CoalGasOxiMom( std::string src_name, vector<std::string> label_names, ArchesLabel* field_labels, MaterialManagerP& materialManager, std::string type )
+: SourceTermBase( src_name, field_labels->d_materialManager, label_names, type ),
   _field_labels(field_labels)
 {
   _src_label = VarLabel::create( src_name, CCVariable<Vector>::getTypeDescription() );
@@ -79,7 +79,7 @@ CoalGasOxiMom::sched_computeSource( const LevelP& level, SchedulerP& sched, int 
     tsk->requires( Task::NewDW, i->second, Ghost::None, 0 );
   }
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 struct sumCharOxyGasSourceMom{
@@ -122,7 +122,7 @@ CoalGasOxiMom::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
     CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -177,7 +177,7 @@ CoalGasOxiMom::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   tsk->computes(_src_label);
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
 void
@@ -192,7 +192,7 @@ CoalGasOxiMom::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<Vector> src;
 

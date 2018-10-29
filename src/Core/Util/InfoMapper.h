@@ -31,6 +31,7 @@
 
 #include <sci_defs/visit_defs.h>
 
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -55,6 +56,7 @@ public:
   InfoMapper()
   {
     m_values.clear();
+    m_counts.clear();
     m_names.clear();
     m_units.clear();
   };
@@ -69,6 +71,7 @@ public:
   virtual void clear()
   {
     m_values.clear();
+    m_counts.clear();
     m_names.clear();
     m_units.clear();
   };
@@ -77,6 +80,7 @@ public:
   {
     for (unsigned int i = 0; i < m_values.size(); ++i) {
       m_values[i] = val;
+      m_counts[i] = 0;
     }
   };
 
@@ -110,12 +114,13 @@ public:
   };
 
   virtual void insert( const E key, const std::string name,
-                                    const std::string units, const T value )
+                                    const std::string units )
   {
     if (!exists(key) && !exists(name)) {
       unsigned int index = m_keys.size();
       m_keys[key] = index;
-      m_values.push_back(value);
+      m_values.push_back(0);
+      m_counts.push_back(0);
       m_names.push_back(name);
       m_units.push_back(units);
     }
@@ -139,28 +144,76 @@ public:
     validKey( key );
 
     m_values[ m_keys[key] ] = value;
+    m_counts[ m_keys[key] ] = 0;
   };
 
   // Get value
-  virtual T getValue( const E key )
+  virtual T getRankValue( const E key )
   {
     validKey( key );
 
-    return m_values[ m_keys[key] ];
+    if( m_counts[ m_keys[key] ] )
+      return m_values[ m_keys[key] ] / m_counts[ m_keys[key] ];
+    else
+      return m_values[ m_keys[key] ];
   };
 
-  virtual T getValue( const unsigned int index )
+  virtual T getRankValue( const unsigned int index )
   {
     const E key = getKey(index);
 
-    return getValue( key );
+    return getRankValue( key );
   };
 
-  virtual T getValue( const std::string name )
+  virtual T getRankValue( const std::string name )
   {
     const E key = getKey(name);
 
-    return getValue( key );
+    return getRankValue( key );
+  };
+
+  // Get count
+  virtual unsigned int getCount( const E key )
+  {
+    validKey( key );
+
+    return m_counts[ m_keys[key] ];
+  };
+
+  virtual unsigned int getCount( const unsigned int index )
+  {
+    const E key = getKey(index);
+
+    return getCount( key );
+  };
+
+  virtual unsigned int getCount( const std::string name )
+  {
+    const E key = getKey(name);
+
+    return getCount( key );
+  };
+
+  // Increment count
+  virtual unsigned int incrCount( const E key )
+  {
+    validKey( key );
+
+    return ++m_counts[ m_keys[key] ];
+  };
+
+  virtual unsigned int incrCount( const unsigned int index )
+  {
+    const E key = getKey(index);
+
+    return incrCount( key );
+  };
+
+  virtual unsigned int incrCount( const std::string name )
+  {
+    const E key = getKey(name);
+
+    return incrCount( key );
   };
 
   // Get name
@@ -238,6 +291,7 @@ public:
 protected:
   std::map< E, unsigned int > m_keys;
   std::vector< T >            m_values;
+  std::vector< unsigned int > m_counts;
   std::vector< std::string >  m_names;
   std::vector< std::string >  m_units;
 };
@@ -249,114 +303,218 @@ public:
   ReductionInfoMapper()
   {
     m_rank_average.clear();
+    m_rank_minimum.clear();
     m_rank_maximum.clear();
+    m_rank_std_dev.clear();
   };
 
   virtual ~ReductionInfoMapper() {};
 
+  virtual void calculateAverage( bool val ) { calculate_average = val; }
+  virtual void calculateMinimum( bool val ) { calculate_minimum = val; }
+  virtual void calculateMaximum( bool val ) { calculate_maximum = val; }
+  virtual void calculateStdDev ( bool val ) { calculate_std_dev = val; }
+  
+  virtual bool calculateAverage() { return calculate_average; }
+  virtual bool calculateMinimum() { return calculate_minimum; }
+  virtual bool calculateMaximum() { return calculate_maximum; }
+  virtual bool calculateStdDev () { return calculate_std_dev; }
+  
   virtual void clear()
   {
     InfoMapper<E, T>::clear();
 
     m_rank_average.clear();
+    m_rank_minimum.clear();
     m_rank_maximum.clear();
+    m_rank_std_dev.clear();
   };
 
   virtual void insert( const E key, const std::string name,
-                       const std::string units, const T value )
+                       const std::string units )
   {
-    InfoMapper<E, T>::insert( key, name, units, value );
+    InfoMapper<E, T>::insert( key, name, units );
 
-    m_rank_average.push_back(-1);
+    m_rank_average.push_back(0);
+    m_rank_minimum.push_back(double_int(0,-1));
     m_rank_maximum.push_back(double_int(0,-1));
+    m_rank_std_dev.push_back(0);
   }
 
-  // Get sum
-  virtual double getSum( const E key )
+  // Get the sum for all ranks on a single node
+  virtual double getNodeSum( const E key )
   {
     InfoMapper<E, T>::validKey( key );
 
     return m_node_sum[ InfoMapper<E, T>::m_keys[key] ];
   };
 
-  virtual double getSum( const unsigned int index )
+  virtual double getNodeSum( const unsigned int index )
   {
     const E key = InfoMapper<E, T>::getKey(index);
 
-    return getSum( key );
+    return getNodeSum( key );
   };
   
-  virtual double getSum( const std::string name )
+  virtual double getNodeSum( const std::string name )
   {
     const E key = InfoMapper<E, T>::getKey(name);
 
-    return getSum( key );
+    return getNodeSum( key );
   };
 
-  // Get average
-  virtual double getAverage( const E key )
+  // Get the average for all ranks on a single node
+  virtual double getNodeAverage( const E key )
+  {
+    InfoMapper<E, T>::validKey( key );
+
+    return m_node_average[ InfoMapper<E, T>::m_keys[key] ];
+  };
+
+  virtual double getNodeAverage( const unsigned int index )
+  {
+    const E key = InfoMapper<E, T>::getKey(index);
+
+    return getNodeAverage( key );
+  };
+  
+  virtual double getNodeAverage( const std::string name )
+  {
+    const E key = InfoMapper<E, T>::getKey(name);
+
+    return getNodeAverage( key );
+  };
+
+  // Get average over all ranks
+  virtual double getRankAverage( const E key )
   {
     InfoMapper<E, T>::validKey( key );
 
     return m_rank_average[ InfoMapper<E, T>::m_keys[key] ];
   };
 
-  virtual double getAverage( const unsigned int index )
+  virtual double getRankAverage( const unsigned int index )
   {
     const E key = InfoMapper<E, T>::getKey(index);
 
-    return getAverage( key );
+    return getRankAverage( key );
   };
 
-  virtual double getAverage( const std::string name )
+  virtual double getRankAverage( const std::string name )
   {
     const E key = InfoMapper<E, T>::getKey(name);
 
-    return getAverage( key );
+    return getRankAverage( key );
   };
 
-  // Get maxium
-  virtual double getMaximum( const E key )
+  // Get minium over all ranks
+  virtual double getRankMinimum( const E key )
+  {
+    InfoMapper<E, T>::validKey( key );
+
+    return m_rank_minimum[ InfoMapper<E, T>::m_keys[key] ].val;
+  };
+
+  virtual double getRankMinimum( const unsigned int index )
+  {
+    const E key = InfoMapper<E, T>::getKey(index);
+
+    return getRankMinimum( key );
+  };
+
+  virtual double getRankMinimum( const std::string name )
+  {
+    const E key = InfoMapper<E, T>::getKey(name);
+
+    return getRankMinimum( key );
+  };
+
+  // Get minimum rank
+  virtual unsigned int getRankForMinimum( const E key )
+  {
+    InfoMapper<E, T>::validKey( key );
+
+    return m_rank_minimum[ InfoMapper<E, T>::m_keys[key] ].rank;
+  };
+
+  virtual unsigned int getRankForMinimum( const unsigned int index )
+  {
+    const E key = InfoMapper<E, T>::getKey(index);
+
+    return getRankForMinimum( key );
+  };
+
+  virtual unsigned int getRankForMinimum( const std::string name )
+  {
+    const E key = InfoMapper<E, T>::getKey(name);
+
+    return getRankForMinimum( key );
+  };
+
+  // Get maximum over all ranks
+  virtual double getRankMaximum( const E key )
   {
     InfoMapper<E, T>::validKey( key );
 
     return m_rank_maximum[ InfoMapper<E, T>::m_keys[key] ].val;
   };
 
-  virtual double getMaximum( const unsigned int index )
+  virtual double getRankMaximum( const unsigned int index )
   {
     const E key = InfoMapper<E, T>::getKey(index);
 
-    return getMaximum( key );
+    return getRankMaximum( key );
   };
 
-  virtual double getMaximum( const std::string name )
+  virtual double getRankMaximum( const std::string name )
   {
     const E key = InfoMapper<E, T>::getKey(name);
 
-    return getMaximum( key );
+    return getRankMaximum( key );
   };
 
-  // Get rank
-  virtual unsigned int getRank( const E key )
+  // Get maximmum rank
+  virtual unsigned int getRankForMaximum( const E key )
   {
     InfoMapper<E, T>::validKey( key );
 
     return m_rank_maximum[ InfoMapper<E, T>::m_keys[key] ].rank;
   };
 
-  virtual unsigned int getRank( const unsigned int index )
+  virtual unsigned int getRankForMaximum( const unsigned int index )
   {
     const E key = InfoMapper<E, T>::getKey(index);
 
-    return getRank( key );
+    return getRankForMaximum( key );
   };
 
-  virtual unsigned int getRank( const std::string name )
+  virtual unsigned int getRankForMaximum( const std::string name )
   {
     const E key = InfoMapper<E, T>::getKey(name);
 
-    return getRank( key );
+    return getRankForMaximum( key );
+  };
+
+  // Get std dev over all ranks
+  virtual double getRankStdDev( const E key )
+  {
+    InfoMapper<E, T>::validKey( key );
+
+    return m_rank_std_dev[ InfoMapper<E, T>::m_keys[key] ];
+  };
+
+  virtual double getRankStdDev( const unsigned int index )
+  {
+    const E key = InfoMapper<E, T>::getKey(index);
+
+    return getRankStdDev( key );
+  };
+
+  virtual double getRankStdDev( const std::string name )
+  {
+    const E key = InfoMapper<E, T>::getKey(name);
+
+    return getRankStdDev( key );
   };
 
   // Reduce
@@ -370,69 +528,156 @@ public:
 
     if (myWorld->nRanks() > 1) {
       m_node_sum.resize(nStats);
+      m_node_average.resize(nStats);
+
       m_rank_average.resize(nStats);
+      m_rank_minimum.resize(nStats);
       m_rank_maximum.resize(nStats);
+      m_rank_std_dev.resize(nStats);
 
       std::vector<double>      toReduce( nStats );
+      std::vector<double_int>  toReduceMin( nStats );
       std::vector<double_int>  toReduceMax( nStats );
+      std::vector<double>      toReduceStdDev( nStats );
 
       // Do the reductions across all ranks.
 
       // A little ugly, but do it anyway so only one reduction is needed
-      // for the sum and one for the maximum. 
+      // for the sum, std. dev., minimum, and maximum (four total)
       for (size_t i = 0; i < nStats; ++i) {
-        toReduce[i] = InfoMapper<E, T>::m_values[i];
-        toReduceMax[i] =
-	  double_int(InfoMapper<E, T>::m_values[i], myWorld->myRank());
+        double val;
+        if( InfoMapper<E, T>::m_counts[i] )
+          val = InfoMapper<E, T>::m_values[i] / InfoMapper<E, T>::m_counts[i];
+        else
+          val = InfoMapper<E, T>::m_values[i];
+
+        toReduce[i] = val;
+        toReduceMin[i] = double_int( val, myWorld->myRank());
+        toReduceMax[i] = double_int( val, myWorld->myRank());
+        toReduceStdDev[i] = val;
       }
 
       // Reduction across each node.
 #ifdef HAVE_VISIT
       Uintah::MPI::Allreduce(&toReduce[0], &m_node_sum[0], nStats,
-			     MPI_DOUBLE, MPI_SUM, myWorld->getNodeComm());
+                             MPI_DOUBLE, MPI_SUM, myWorld->getNodeComm());
+
+      for (size_t i = 0; i < nStats; ++i) {
+        m_node_average[i] = m_node_sum[i] / myWorld->myNode_nRanks();
+      }      
 #endif
       
-      // Reductions across all ranks.
-      if (allReduce) {
-        Uintah::MPI::Allreduce(&toReduce[0], &m_rank_average[0], nStats,
-			       MPI_DOUBLE, MPI_SUM, myWorld->getComm());
-        Uintah::MPI::Allreduce(&toReduceMax[0], &m_rank_maximum[0], nStats,
-			       MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm());
-      }
-      else {
-        Uintah::MPI::Reduce(&toReduce[0], &m_rank_average[0], nStats,
-			    MPI_DOUBLE, MPI_SUM, 0, myWorld->getComm());
-        Uintah::MPI::Reduce(&toReduceMax[0], &m_rank_maximum[0], nStats,
-			    MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm());
+      // Sum reductions across all ranks.
+      if( calculate_average || calculate_std_dev )
+      {
+        if (allReduce || calculate_std_dev ) {
+          Uintah::MPI::Allreduce(&toReduce[0], &m_rank_average[0], nStats,
+                                 MPI_DOUBLE, MPI_SUM, myWorld->getComm());
+        }
+        else {
+          Uintah::MPI::Reduce(&toReduce[0], &m_rank_average[0], nStats,
+                              MPI_DOUBLE, MPI_SUM, 0, myWorld->getComm());      
+        }
+
+        // Calculate the averages.
+        for (size_t i = 0; i < nStats; ++i) {
+          m_rank_average[i] /= myWorld->nRanks();
+        }
+        
+        if( calculate_std_dev )
+        {
+          //  Calculate the squared differences
+          for (size_t i = 0; i < nStats; ++i) {
+            double val = toReduceStdDev[i] - m_rank_average[i];
+            toReduceStdDev[i] = val * val;
+          }
+          
+          // Sum of squared differences reductions across all ranks.
+          if (allReduce) {
+            Uintah::MPI::Allreduce(&toReduceStdDev[0], &m_rank_std_dev[0], nStats,
+                                   MPI_DOUBLE, MPI_SUM, myWorld->getComm());
+          }
+          else {
+            Uintah::MPI::Reduce(&toReduceStdDev[0], &m_rank_std_dev[0], nStats,
+                                MPI_DOUBLE, MPI_SUM, 0, myWorld->getComm());
+          }
+
+          // Calculate the std. dev.
+          for (size_t i = 0; i < nStats; ++i) {
+            m_rank_std_dev[i] = std::sqrt(m_rank_std_dev[i] / (myWorld->nRanks()-1) );  
+          }
+        }
       }
 
-      // Calculate the averages.
-      for (unsigned i = 0; i < nStats; ++i)
-        m_rank_average[i] /= myWorld->nRanks();
+      // Min reductions across all ranks.
+      if( calculate_minimum )
+      {
+        if (allReduce) {
+          Uintah::MPI::Allreduce(&toReduceMin[0], &m_rank_minimum[0], nStats,
+                                 MPI_DOUBLE_INT, MPI_MINLOC, myWorld->getComm());
+        }
+        else {
+          Uintah::MPI::Reduce(&toReduceMin[0], &m_rank_minimum[0], nStats,
+                              MPI_DOUBLE_INT, MPI_MINLOC, 0, myWorld->getComm());
+        }
+      }
+      
+      // Max reductions across all ranks.
+      if( calculate_maximum )
+      {
+        if (allReduce) {
+          Uintah::MPI::Allreduce(&toReduceMax[0], &m_rank_maximum[0], nStats,
+                                 MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm());
+        }
+        else {
+          Uintah::MPI::Reduce(&toReduceMax[0], &m_rank_maximum[0], nStats,
+                              MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm());
+        }
+      }
     }
 
     // Single rank so just copy the values.
     else {
       m_node_sum.resize(nStats);
+      m_node_average.resize(nStats);
 
       m_rank_average.resize(nStats);
+      m_rank_minimum.resize(nStats);
       m_rank_maximum.resize(nStats);
+      m_rank_std_dev.resize(nStats);
 
       for (size_t i = 0; i < nStats; ++i) {
-        double val = InfoMapper<E, T>::m_values[i];
+        double val;
+
+        if(InfoMapper<E, T>::m_counts[i] )
+          val = InfoMapper<E, T>::m_values[i] / InfoMapper<E, T>::m_counts[i];
+        else
+          val = InfoMapper<E, T>::m_values[i];
 
         m_node_sum[i] = val;
+        m_node_average[i] = val;
+
         m_rank_average[i] = val;
+        m_rank_minimum[i] = double_int(val, 0);
         m_rank_maximum[i] = double_int(val, 0);
+        m_rank_std_dev[i] = 0;
       }
     }
   };
 
 protected:
-
-  std::vector< double >     m_node_sum;
-  std::vector< double >     m_rank_average;
-  std::vector< double_int > m_rank_maximum;
+  bool calculate_average{true};
+  bool calculate_minimum{false};
+  bool calculate_maximum{true};
+  bool calculate_std_dev{false};
+  
+  std::vector< double > m_node_sum;     // Sum of all ranks on a single node
+  std::vector< double > m_node_average; // Average of all ranks on a single node
+  
+  std::vector< double >     m_rank_average;      // Average over all ranks
+  std::vector< double_int > m_rank_minimum;      // Minimum over all ranks
+  std::vector< double_int > m_rank_maximum;      // Maximum over all ranks
+  std::vector< double >     m_rank_std_dev;      // Standard deviation over all ranks
 };
 
 } // End namespace Uintah

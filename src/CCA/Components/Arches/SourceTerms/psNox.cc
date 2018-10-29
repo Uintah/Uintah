@@ -4,7 +4,7 @@
 // Parameters fitted based on DTF experimental data of a Chinese bituminous coal Tsinghua.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -19,7 +19,7 @@ using namespace std;
 using namespace Uintah;
 psNox::psNox( std::string src_name, ArchesLabel* field_labels,
     vector<std::string> req_label_names, std::string type )
-: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
+: SourceTermBase(src_name, field_labels->d_materialManager, req_label_names, type), _field_labels(field_labels)
 {
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() );
   _source_grid_type = CC_SRC;
@@ -222,7 +222,7 @@ psNox::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
   tsk->requires( which_dw, m_NH3_RHS_label,       Ghost::None, 0 );
   tsk->requires( which_dw, m_HCN_RHS_label,       Ghost::None, 0 );
   tsk->requires( Task::OldDW, _field_labels->d_volFractionLabel, Ghost::None, 0 );
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term
@@ -240,7 +240,7 @@ psNox::computeSource( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> NO_src;
     CCVariable<double> HCN_src;
@@ -652,7 +652,7 @@ psNox::sched_initialize( const LevelP& level, SchedulerP& sched )
   tsk->computes(HCN_src_label);
   tsk->computes(NH3_src_label);
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
   void
@@ -667,7 +667,7 @@ psNox::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> NO_src;
     CCVariable<double> HCN_src;

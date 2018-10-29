@@ -54,7 +54,7 @@ void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = d_materialManager->getNumMatls( "MPM" );
     Vector zero(0.0,0.0,0.);
     SFCXVariable<double> uvel_FC, uvel_FCME;
     SFCYVariable<double> vvel_FC, vvel_FCME;
@@ -64,7 +64,7 @@ void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
     NCVariable<Vector> gvelocity;
 
     for(int m = 0; m < numMatls; m++) {
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = d_materialManager->getMaterial( "MPM",  m );
       int dwindex = mpm_matl->getDWIndex();
       new_dw->get(uvel_FC,   Ilb->uvel_FCLabel,   dwindex, patch,Ghost::None,0);
       new_dw->get(vvel_FC,   Ilb->vvel_FCLabel,   dwindex, patch,Ghost::None,0);
@@ -157,7 +157,7 @@ ______________________________________________________________________
     // CODE IN THE REPOSITORY BEFORE I FORGET.  JIM
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       for (int m = 0; m < numALLMatls; m++) {
-        Material* matl = d_sharedState->getMaterial( m );
+        Material* matl = d_materialManager->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         if(ice_matl){                // I C E
           rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
@@ -165,7 +165,7 @@ ______________________________________________________________________
       }
     }
       for (int m = 0; m < numALLMatls; m++) {
-        Material* matl = d_sharedState->getMaterial( m );
+        Material* matl = d_materialManager->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         if(ice_matl){                // I C E
           d_ice->setBC(rho_micro[m],"Density",patch,ice_matl->getDWIndex());
@@ -173,7 +173,7 @@ ______________________________________________________________________
       }
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       for (int m = 0; m < numALLMatls; m++) {
-        Material* matl = d_sharedState->getMaterial( m );
+        Material* matl = d_materialManager->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         if(ice_matl){                // I C E
           sp_vol_CC[m][*iter] = 1.0/rho_micro[m][*iter];
@@ -198,7 +198,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
                <<"\t\t\t\t MPMICE" << endl;
     delt_vartype delT;
     old_dw->get(delT, Ilb->delTLabel);
-    int numALLMatls=d_sharedState->getNumMatls();
+    int numALLMatls=d_materialManager->getNumMatls();
     std::vector<CCVariable<double> > burnedMass(numALLMatls);
     std::vector<CCVariable<double> > createdVol(numALLMatls);
     std::vector<CCVariable<double> > int_eng_react(numALLMatls); 
@@ -218,7 +218,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     int prod_indx = -1;
     Ghost::GhostType  gn  = Ghost::None;    
     for(int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = d_materialManager->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       int indx = matl->getDWIndex();
       //__________________________________
@@ -274,7 +274,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
    tstep++;
    if(d_ice->d_massExchange && tstep <= 1500)  {
     for(int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = d_materialManager->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl); 
 
 
@@ -299,12 +299,12 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     //__________________________________
     //  set symetric BC
     for(int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = d_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      setBC(burnedMass[m], "set_if_sym_BC",patch, d_sharedState, indx);
+      setBC(burnedMass[m], "set_if_sym_BC",patch, d_materialManager, indx);
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)) {
-        setBC(sumBurnedMass, "set_if_sym_BC",patch, d_sharedState, indx);
+        setBC(sumBurnedMass, "set_if_sym_BC",patch, d_materialManager, indx);
       }
     }
   }  // patches
@@ -357,7 +357,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
     //__________________________________
     // This is where I interpolate the CC
     // changes to NCs for the MPMMatls
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    int numMPMMatls = d_materialManager->getNumMatls( "MPM" );
                                                                                 
     delt_vartype delT;
     old_dw->get(delT, Ilb->delTLabel);
@@ -365,7 +365,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
     Ghost::GhostType  gn  = Ghost::None;
                                                                                 
     for (int m = 0; m < numMPMMatls; m++) {
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = d_materialManager->getMaterial( "MPM",  m );
       int indx = mpm_matl->getDWIndex();
       NCVariable<Vector> gacceleration, gvelocity;
       NCVariable<double> dTdt_NC;
@@ -496,7 +496,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/MaterialManager.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMICELabel.h>
@@ -525,9 +525,9 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     }
 
     double tmp;
-    double press_ref= d_sharedState->getRefPress();
-    int numICEMatls = d_sharedState->getNumICEMatls();
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    double press_ref= d_materialManager->getRefPress();
+    int numICEMatls = d_materialManager->getNumMatls( "ICE" );
+    int numMPMMatls = d_materialManager->getNumMatls( "MPM" );
     int numALLMatls = numICEMatls + numMPMMatls;
 
     Vector dx       = patch->dCell(); 
@@ -564,7 +564,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;   
    
     for (int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = d_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -608,7 +608,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
         double total_mat_vol = 0.0;
         double total_ice_vol=0.0;
         for (int m = 0; m < numALLMatls; m++) {
-          Material* matl = d_sharedState->getMaterial( m );
+          Material* matl = d_materialManager->getMaterial( m );
           ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
           MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
           if(ice_matl){                // I C E
@@ -631,7 +631,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
           if(total_mat_vol > cell_vol){ // For cells that are too full
             double extra_vol = total_mat_vol - cell_vol;
             for (int m = 0; m < numALLMatls; m++) {
-             Material* matl = d_sharedState->getMaterial( m );
+             Material* matl = d_materialManager->getMaterial( m );
              ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
              // Remove a proportional amount of each ice material's mass & vol
              if(ice_matl){                // I C E
@@ -644,7 +644,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
            if(total_mat_vol < cell_vol){ // For cells that aren't full enough
             double missing_vol = cell_vol - total_mat_vol;
             for (int m = 0; m < numALLMatls; m++) {
-             Material* matl = d_sharedState->getMaterial( m );
+             Material* matl = d_materialManager->getMaterial( m );
              ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
              // Add an equal amount of each ice material's mass & vol
              if(ice_matl){                // I C E
@@ -665,7 +665,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
       IntVector c = *iter;
       double total_mat_vol = 0.0;
       for (int m = 0; m < numALLMatls; m++) {
-        Material* matl = d_sharedState->getMaterial( m );
+        Material* matl = d_materialManager->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
@@ -723,7 +723,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     // Now change how rho_CC is defined to 
     // rho_CC = mass/cell_volume  NOT mass/mat_volume 
     for (int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = d_materialManager->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       if(ice_matl){
@@ -744,10 +744,10 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     // - make copy of press for implicit calc.
     for (int m = 0; m < numALLMatls; m++)   {
       setBC(matl_press[m],rho_micro, placeHolder,d_ice->d_surroundingMatl_indx,
-           "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
+           "rho_micro", "Pressure", patch, d_materialManager, 0, new_dw);
     }  
     setBC(press_new, rho_micro, placeHolder,d_ice->d_surroundingMatl_indx,
-          "rho_micro", "Pressure", patch, d_sharedState, 0,  new_dw);
+          "rho_micro", "Pressure", patch, d_materialManager, 0,  new_dw);
           
     press_copy.copyData(press_new);
     //__________________________________
@@ -767,7 +767,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
       d_ice->printData( 0, patch, 1, desc.str(), "Press_CC_RF", press_new);
 
       for (int m = 0; m < numALLMatls; m++)  {
-        Material* matl = d_sharedState->getMaterial( m );
+        Material* matl = d_materialManager->getMaterial( m );
         int indx = matl->getDWIndex(); 
         ostringstream desc;
         desc<< "BOT_computeRFPress_Mat_"<< indx << "_patch_"<<patch->getID();

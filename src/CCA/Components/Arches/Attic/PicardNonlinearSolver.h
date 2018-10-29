@@ -196,7 +196,7 @@ public:
     return delT / 2.0;
   }
 
-  inline bool restartableTimeSteps() {
+  inline bool mayRecomputeTimeStep() {
     return true;
   }
 

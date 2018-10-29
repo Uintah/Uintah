@@ -22,6 +22,8 @@
  * IN THE SOFTWARE.
  */
 
+#include <CCA/Ports/Output.h>
+
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/LinearInterpolator.h>
@@ -46,6 +48,9 @@ static DebugStream dbg("MPMFlags", false);
 
 MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 {
+  d_particle_ghost_type           = Ghost::None;
+  d_particle_ghost_layer          = 0;
+
   d_gravity                       =  Vector(0.,0.,0.);
   d_interpolator_type             =  "linear";
   d_integrator_type               =  "explicit";

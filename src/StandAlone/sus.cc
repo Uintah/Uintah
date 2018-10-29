@@ -53,11 +53,11 @@
 #include <CCA/Components/Models/ModelFactory.h>
 #include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <CCA/Components/Regridder/RegridderFactory.h>
 #include <CCA/Components/Schedulers/SchedulerFactory.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
+#include <CCA/Ports/SolverInterface.h>
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Schedulers/UnifiedScheduler.h>
@@ -103,6 +103,8 @@
 #include <vector>
 #include <stdexcept>
 
+#include <unistd.h>
+
 using namespace Uintah;
 
 
@@ -140,8 +142,8 @@ static void quit(const std::string& msg = "")
 
 
 static void usage( const std::string& message,
-		   const std::string& badarg,
-		   const std::string& progname )
+                   const std::string& badarg,
+                   const std::string& progname )
 {
   start();
   
@@ -512,9 +514,11 @@ int main( int argc, char *argv[], char *env[] )
     udaDir = filename;
     filename = filename + "/input.xml";
 
-    // If restarting (etc), make sure that the uda specified is not a symbolic link to an Uda.
-    // This is because the sym link can (will) be updated to point to a new uda, thus creating
-    // an inconsistency.  Therefore it is just better not to use the sym link in the first place.
+    // If restarting (etc), make sure that the uda specified is not a
+    // symbolic link to an Uda.  This is because the sym link can
+    // (will) be updated to point to a new uda, thus creating an
+    // inconsistency.  Therefore it is just better not to use the sym
+    // link in the first place.
     if( isSymLink( udaDir.c_str() ) ) {
       std::cout << "\n";
       std::cout << "ERROR: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
@@ -920,4 +924,3 @@ int main( int argc, char *argv[], char *env[] )
   return 0;
 
 } // end main()
-

@@ -35,7 +35,7 @@
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/LinearInterpolator.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Util/DebugStream.h>
 
@@ -45,12 +45,12 @@ using namespace Uintah;
 
 static DebugStream cout_doing("ImplicitHeatConduction", false);
 
-ImplicitHeatConduction::ImplicitHeatConduction(SimulationStateP& sS,
+ImplicitHeatConduction::ImplicitHeatConduction(MaterialManagerP& sS,
                                                MPMLabel* labels,MPMFlags* flags)
 {
   d_lb = labels;
   d_flag = flags;
-  d_sharedState = sS;
+  d_materialManager = sS;
   d_perproc_patches=0;
   do_IHC=d_flag->d_doImplicitHeatConduction;
   d_HC_transient=d_flag->d_doTransientImplicitHeatConduction;
@@ -260,10 +260,11 @@ void ImplicitHeatConduction::destroyHCMatrix(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-  if (cout_doing.active())
+  if (cout_doing.active()){
     cout_doing <<"Doing destroyHCMatrix " <<"\t\t\t\t\t IMPM" << "\n" << "\n";
+  }
 
-    d_HC_solver->destroyMatrix(false);
+  d_HC_solver->destroyMatrix(false);
 }
 
 void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
@@ -272,7 +273,7 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
                                             DataWarehouse* old_dw,
                                             DataWarehouse* new_dw)
 {
-  int numMatls = d_sharedState->getNumMPMMatls();
+  unsigned int numMatls = d_materialManager->getNumMatls( "MPM" );
 
   map<int,int> dof_diag;
   d_HC_solver->createLocalToGlobalMapping(pg,d_perproc_patches,
@@ -303,8 +304,8 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
     new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
     visited.initialize(0);
     
-    for (int m = 0; m < numMatls; m++){                                                                                
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    for (unsigned int m = 0; m < numMatls; m++){                                                                                
+      MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       constParticleVariable<Point> px;
       ParticleSubset* pset;
@@ -445,8 +446,8 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
         continue;
     }  // faces
 
-    for (int m = 0; m < d_sharedState->getNumMPMMatls();m++) {
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    for (unsigned int m = 0; m < d_materialManager->getNumMatls( "MPM" );m++) {
+      MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM", m);
       int matlindex = mpm_matl->getDWIndex();
       
       constNCVariable<double> gheatflux;
@@ -490,14 +491,14 @@ void ImplicitHeatConduction::findFixedHCDOF(const ProcessorGroup*,
     }
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    unsigned int numMatls = d_materialManager->getNumMatls( "MPM" );
     d_HC_solver->copyL2G(l2g,patch);
     NCVariable<double> GMASS;
     new_dw->allocateTemporary(GMASS,     patch,Ghost::None,0);
     GMASS.initialize(0.);
 
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    for(unsigned int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
       int matlindex = mpm_matl->getDWIndex();
       constNCVariable<double> gmass;
       new_dw->get(gmass,   d_lb->gMassLabel,matlindex,patch,Ghost::None,0);
@@ -551,9 +552,9 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
     LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
 
     d_HC_solver->copyL2G(l2g,patch);
-    int numMatls = d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    unsigned int numMatls = d_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
       int matlindex = mpm_matl->getDWIndex();
                                                                                
       delt_vartype dt;
@@ -658,9 +659,9 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
     }
 #endif
 
-    int numMatls = d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    unsigned int numMatls = d_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
                                                                                
       delt_vartype dt;

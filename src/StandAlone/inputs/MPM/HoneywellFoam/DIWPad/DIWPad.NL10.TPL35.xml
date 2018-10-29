@@ -1,0 +1,1763 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!--
+  threadDiameter = 0.0355
+  threadSpacing  = 0.071
+  threadOverlap  = 0.1
+  threadLength   = 2.485
+  Qtr_or_Full    = Qtr
+  TOP OF PAD     = 0.32305
+-->
+<Uintah_Include>
+<union>
+  <cylinder label = "0">
+     <top>   [0.0355, 0, 0.01775]</top>
+     <bottom>[0.0355, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "1">
+     <top>   [0.1065, 0, 0.01775]</top>
+     <bottom>[0.1065, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "2">
+     <top>   [0.1775, 0, 0.01775]</top>
+     <bottom>[0.1775, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "3">
+     <top>   [0.2485, 0, 0.01775]</top>
+     <bottom>[0.2485, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "4">
+     <top>   [0.3195, 0, 0.01775]</top>
+     <bottom>[0.3195, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "5">
+     <top>   [0.3905, 0, 0.01775]</top>
+     <bottom>[0.3905, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "6">
+     <top>   [0.4615, 0, 0.01775]</top>
+     <bottom>[0.4615, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "7">
+     <top>   [0.5325, 0, 0.01775]</top>
+     <bottom>[0.5325, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "8">
+     <top>   [0.6035, 0, 0.01775]</top>
+     <bottom>[0.6035, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "9">
+     <top>   [0.6745, 0, 0.01775]</top>
+     <bottom>[0.6745, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "10">
+     <top>   [0.7455, 0, 0.01775]</top>
+     <bottom>[0.7455, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "11">
+     <top>   [0.8165, 0, 0.01775]</top>
+     <bottom>[0.8165, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "12">
+     <top>   [0.8875, 0, 0.01775]</top>
+     <bottom>[0.8875, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "13">
+     <top>   [0.9585, 0, 0.01775]</top>
+     <bottom>[0.9585, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "14">
+     <top>   [1.0295, 0, 0.01775]</top>
+     <bottom>[1.0295, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "15">
+     <top>   [1.1005, 0, 0.01775]</top>
+     <bottom>[1.1005, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "16">
+     <top>   [1.1715, 0, 0.01775]</top>
+     <bottom>[1.1715, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "17">
+     <top>   [1.2425, 0, 0.01775]</top>
+     <bottom>[1.2425, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "18">
+     <top>   [1.3135, 0, 0.01775]</top>
+     <bottom>[1.3135, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "19">
+     <top>   [1.3845, 0, 0.01775]</top>
+     <bottom>[1.3845, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "20">
+     <top>   [1.4555, 0, 0.01775]</top>
+     <bottom>[1.4555, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "21">
+     <top>   [1.5265, 0, 0.01775]</top>
+     <bottom>[1.5265, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "22">
+     <top>   [1.5975, 0, 0.01775]</top>
+     <bottom>[1.5975, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "23">
+     <top>   [1.6685, 0, 0.01775]</top>
+     <bottom>[1.6685, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "24">
+     <top>   [1.7395, 0, 0.01775]</top>
+     <bottom>[1.7395, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "25">
+     <top>   [1.8105, 0, 0.01775]</top>
+     <bottom>[1.8105, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "26">
+     <top>   [1.8815, 0, 0.01775]</top>
+     <bottom>[1.8815, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "27">
+     <top>   [1.9525, 0, 0.01775]</top>
+     <bottom>[1.9525, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "28">
+     <top>   [2.0235, 0, 0.01775]</top>
+     <bottom>[2.0235, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "29">
+     <top>   [2.0945, 0, 0.01775]</top>
+     <bottom>[2.0945, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "30">
+     <top>   [2.1655, 0, 0.01775]</top>
+     <bottom>[2.1655, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "31">
+     <top>   [2.2365, 0, 0.01775]</top>
+     <bottom>[2.2365, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "32">
+     <top>   [2.3075, 0, 0.01775]</top>
+     <bottom>[2.3075, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "33">
+     <top>   [2.3785, 0, 0.01775]</top>
+     <bottom>[2.3785, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "34">
+     <top>   [2.4495, 0, 0.01775]</top>
+     <bottom>[2.4495, 2.485, 0.01775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "35">
+     <top>   [0.0355, 0, 0.08165]</top>
+     <bottom>[0.0355, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "36">
+     <top>   [0.1065, 0, 0.08165]</top>
+     <bottom>[0.1065, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "37">
+     <top>   [0.1775, 0, 0.08165]</top>
+     <bottom>[0.1775, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "38">
+     <top>   [0.2485, 0, 0.08165]</top>
+     <bottom>[0.2485, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "39">
+     <top>   [0.3195, 0, 0.08165]</top>
+     <bottom>[0.3195, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "40">
+     <top>   [0.3905, 0, 0.08165]</top>
+     <bottom>[0.3905, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "41">
+     <top>   [0.4615, 0, 0.08165]</top>
+     <bottom>[0.4615, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "42">
+     <top>   [0.5325, 0, 0.08165]</top>
+     <bottom>[0.5325, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "43">
+     <top>   [0.6035, 0, 0.08165]</top>
+     <bottom>[0.6035, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "44">
+     <top>   [0.6745, 0, 0.08165]</top>
+     <bottom>[0.6745, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "45">
+     <top>   [0.7455, 0, 0.08165]</top>
+     <bottom>[0.7455, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "46">
+     <top>   [0.8165, 0, 0.08165]</top>
+     <bottom>[0.8165, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "47">
+     <top>   [0.8875, 0, 0.08165]</top>
+     <bottom>[0.8875, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "48">
+     <top>   [0.9585, 0, 0.08165]</top>
+     <bottom>[0.9585, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "49">
+     <top>   [1.0295, 0, 0.08165]</top>
+     <bottom>[1.0295, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "50">
+     <top>   [1.1005, 0, 0.08165]</top>
+     <bottom>[1.1005, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "51">
+     <top>   [1.1715, 0, 0.08165]</top>
+     <bottom>[1.1715, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "52">
+     <top>   [1.2425, 0, 0.08165]</top>
+     <bottom>[1.2425, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "53">
+     <top>   [1.3135, 0, 0.08165]</top>
+     <bottom>[1.3135, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "54">
+     <top>   [1.3845, 0, 0.08165]</top>
+     <bottom>[1.3845, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "55">
+     <top>   [1.4555, 0, 0.08165]</top>
+     <bottom>[1.4555, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "56">
+     <top>   [1.5265, 0, 0.08165]</top>
+     <bottom>[1.5265, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "57">
+     <top>   [1.5975, 0, 0.08165]</top>
+     <bottom>[1.5975, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "58">
+     <top>   [1.6685, 0, 0.08165]</top>
+     <bottom>[1.6685, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "59">
+     <top>   [1.7395, 0, 0.08165]</top>
+     <bottom>[1.7395, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "60">
+     <top>   [1.8105, 0, 0.08165]</top>
+     <bottom>[1.8105, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "61">
+     <top>   [1.8815, 0, 0.08165]</top>
+     <bottom>[1.8815, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "62">
+     <top>   [1.9525, 0, 0.08165]</top>
+     <bottom>[1.9525, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "63">
+     <top>   [2.0235, 0, 0.08165]</top>
+     <bottom>[2.0235, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "64">
+     <top>   [2.0945, 0, 0.08165]</top>
+     <bottom>[2.0945, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "65">
+     <top>   [2.1655, 0, 0.08165]</top>
+     <bottom>[2.1655, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "66">
+     <top>   [2.2365, 0, 0.08165]</top>
+     <bottom>[2.2365, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "67">
+     <top>   [2.3075, 0, 0.08165]</top>
+     <bottom>[2.3075, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "68">
+     <top>   [2.3785, 0, 0.08165]</top>
+     <bottom>[2.3785, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "69">
+     <top>   [2.4495, 0, 0.08165]</top>
+     <bottom>[2.4495, 2.485, 0.08165]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "70">
+     <top>   [0.0355, 0, 0.14555]</top>
+     <bottom>[0.0355, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "71">
+     <top>   [0.1065, 0, 0.14555]</top>
+     <bottom>[0.1065, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "72">
+     <top>   [0.1775, 0, 0.14555]</top>
+     <bottom>[0.1775, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "73">
+     <top>   [0.2485, 0, 0.14555]</top>
+     <bottom>[0.2485, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "74">
+     <top>   [0.3195, 0, 0.14555]</top>
+     <bottom>[0.3195, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "75">
+     <top>   [0.3905, 0, 0.14555]</top>
+     <bottom>[0.3905, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "76">
+     <top>   [0.4615, 0, 0.14555]</top>
+     <bottom>[0.4615, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "77">
+     <top>   [0.5325, 0, 0.14555]</top>
+     <bottom>[0.5325, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "78">
+     <top>   [0.6035, 0, 0.14555]</top>
+     <bottom>[0.6035, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "79">
+     <top>   [0.6745, 0, 0.14555]</top>
+     <bottom>[0.6745, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "80">
+     <top>   [0.7455, 0, 0.14555]</top>
+     <bottom>[0.7455, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "81">
+     <top>   [0.8165, 0, 0.14555]</top>
+     <bottom>[0.8165, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "82">
+     <top>   [0.8875, 0, 0.14555]</top>
+     <bottom>[0.8875, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "83">
+     <top>   [0.9585, 0, 0.14555]</top>
+     <bottom>[0.9585, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "84">
+     <top>   [1.0295, 0, 0.14555]</top>
+     <bottom>[1.0295, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "85">
+     <top>   [1.1005, 0, 0.14555]</top>
+     <bottom>[1.1005, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "86">
+     <top>   [1.1715, 0, 0.14555]</top>
+     <bottom>[1.1715, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "87">
+     <top>   [1.2425, 0, 0.14555]</top>
+     <bottom>[1.2425, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "88">
+     <top>   [1.3135, 0, 0.14555]</top>
+     <bottom>[1.3135, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "89">
+     <top>   [1.3845, 0, 0.14555]</top>
+     <bottom>[1.3845, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "90">
+     <top>   [1.4555, 0, 0.14555]</top>
+     <bottom>[1.4555, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "91">
+     <top>   [1.5265, 0, 0.14555]</top>
+     <bottom>[1.5265, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "92">
+     <top>   [1.5975, 0, 0.14555]</top>
+     <bottom>[1.5975, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "93">
+     <top>   [1.6685, 0, 0.14555]</top>
+     <bottom>[1.6685, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "94">
+     <top>   [1.7395, 0, 0.14555]</top>
+     <bottom>[1.7395, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "95">
+     <top>   [1.8105, 0, 0.14555]</top>
+     <bottom>[1.8105, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "96">
+     <top>   [1.8815, 0, 0.14555]</top>
+     <bottom>[1.8815, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "97">
+     <top>   [1.9525, 0, 0.14555]</top>
+     <bottom>[1.9525, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "98">
+     <top>   [2.0235, 0, 0.14555]</top>
+     <bottom>[2.0235, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "99">
+     <top>   [2.0945, 0, 0.14555]</top>
+     <bottom>[2.0945, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "100">
+     <top>   [2.1655, 0, 0.14555]</top>
+     <bottom>[2.1655, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "101">
+     <top>   [2.2365, 0, 0.14555]</top>
+     <bottom>[2.2365, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "102">
+     <top>   [2.3075, 0, 0.14555]</top>
+     <bottom>[2.3075, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "103">
+     <top>   [2.3785, 0, 0.14555]</top>
+     <bottom>[2.3785, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "104">
+     <top>   [2.4495, 0, 0.14555]</top>
+     <bottom>[2.4495, 2.485, 0.14555]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "105">
+     <top>   [0.0355, 0, 0.20945]</top>
+     <bottom>[0.0355, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "106">
+     <top>   [0.1065, 0, 0.20945]</top>
+     <bottom>[0.1065, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "107">
+     <top>   [0.1775, 0, 0.20945]</top>
+     <bottom>[0.1775, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "108">
+     <top>   [0.2485, 0, 0.20945]</top>
+     <bottom>[0.2485, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "109">
+     <top>   [0.3195, 0, 0.20945]</top>
+     <bottom>[0.3195, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "110">
+     <top>   [0.3905, 0, 0.20945]</top>
+     <bottom>[0.3905, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "111">
+     <top>   [0.4615, 0, 0.20945]</top>
+     <bottom>[0.4615, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "112">
+     <top>   [0.5325, 0, 0.20945]</top>
+     <bottom>[0.5325, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "113">
+     <top>   [0.6035, 0, 0.20945]</top>
+     <bottom>[0.6035, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "114">
+     <top>   [0.6745, 0, 0.20945]</top>
+     <bottom>[0.6745, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "115">
+     <top>   [0.7455, 0, 0.20945]</top>
+     <bottom>[0.7455, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "116">
+     <top>   [0.8165, 0, 0.20945]</top>
+     <bottom>[0.8165, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "117">
+     <top>   [0.8875, 0, 0.20945]</top>
+     <bottom>[0.8875, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "118">
+     <top>   [0.9585, 0, 0.20945]</top>
+     <bottom>[0.9585, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "119">
+     <top>   [1.0295, 0, 0.20945]</top>
+     <bottom>[1.0295, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "120">
+     <top>   [1.1005, 0, 0.20945]</top>
+     <bottom>[1.1005, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "121">
+     <top>   [1.1715, 0, 0.20945]</top>
+     <bottom>[1.1715, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "122">
+     <top>   [1.2425, 0, 0.20945]</top>
+     <bottom>[1.2425, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "123">
+     <top>   [1.3135, 0, 0.20945]</top>
+     <bottom>[1.3135, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "124">
+     <top>   [1.3845, 0, 0.20945]</top>
+     <bottom>[1.3845, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "125">
+     <top>   [1.4555, 0, 0.20945]</top>
+     <bottom>[1.4555, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "126">
+     <top>   [1.5265, 0, 0.20945]</top>
+     <bottom>[1.5265, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "127">
+     <top>   [1.5975, 0, 0.20945]</top>
+     <bottom>[1.5975, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "128">
+     <top>   [1.6685, 0, 0.20945]</top>
+     <bottom>[1.6685, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "129">
+     <top>   [1.7395, 0, 0.20945]</top>
+     <bottom>[1.7395, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "130">
+     <top>   [1.8105, 0, 0.20945]</top>
+     <bottom>[1.8105, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "131">
+     <top>   [1.8815, 0, 0.20945]</top>
+     <bottom>[1.8815, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "132">
+     <top>   [1.9525, 0, 0.20945]</top>
+     <bottom>[1.9525, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "133">
+     <top>   [2.0235, 0, 0.20945]</top>
+     <bottom>[2.0235, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "134">
+     <top>   [2.0945, 0, 0.20945]</top>
+     <bottom>[2.0945, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "135">
+     <top>   [2.1655, 0, 0.20945]</top>
+     <bottom>[2.1655, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "136">
+     <top>   [2.2365, 0, 0.20945]</top>
+     <bottom>[2.2365, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "137">
+     <top>   [2.3075, 0, 0.20945]</top>
+     <bottom>[2.3075, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "138">
+     <top>   [2.3785, 0, 0.20945]</top>
+     <bottom>[2.3785, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "139">
+     <top>   [2.4495, 0, 0.20945]</top>
+     <bottom>[2.4495, 2.485, 0.20945]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "140">
+     <top>   [0.0355, 0, 0.27335]</top>
+     <bottom>[0.0355, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "141">
+     <top>   [0.1065, 0, 0.27335]</top>
+     <bottom>[0.1065, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "142">
+     <top>   [0.1775, 0, 0.27335]</top>
+     <bottom>[0.1775, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "143">
+     <top>   [0.2485, 0, 0.27335]</top>
+     <bottom>[0.2485, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "144">
+     <top>   [0.3195, 0, 0.27335]</top>
+     <bottom>[0.3195, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "145">
+     <top>   [0.3905, 0, 0.27335]</top>
+     <bottom>[0.3905, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "146">
+     <top>   [0.4615, 0, 0.27335]</top>
+     <bottom>[0.4615, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "147">
+     <top>   [0.5325, 0, 0.27335]</top>
+     <bottom>[0.5325, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "148">
+     <top>   [0.6035, 0, 0.27335]</top>
+     <bottom>[0.6035, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "149">
+     <top>   [0.6745, 0, 0.27335]</top>
+     <bottom>[0.6745, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "150">
+     <top>   [0.7455, 0, 0.27335]</top>
+     <bottom>[0.7455, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "151">
+     <top>   [0.8165, 0, 0.27335]</top>
+     <bottom>[0.8165, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "152">
+     <top>   [0.8875, 0, 0.27335]</top>
+     <bottom>[0.8875, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "153">
+     <top>   [0.9585, 0, 0.27335]</top>
+     <bottom>[0.9585, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "154">
+     <top>   [1.0295, 0, 0.27335]</top>
+     <bottom>[1.0295, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "155">
+     <top>   [1.1005, 0, 0.27335]</top>
+     <bottom>[1.1005, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "156">
+     <top>   [1.1715, 0, 0.27335]</top>
+     <bottom>[1.1715, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "157">
+     <top>   [1.2425, 0, 0.27335]</top>
+     <bottom>[1.2425, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "158">
+     <top>   [1.3135, 0, 0.27335]</top>
+     <bottom>[1.3135, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "159">
+     <top>   [1.3845, 0, 0.27335]</top>
+     <bottom>[1.3845, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "160">
+     <top>   [1.4555, 0, 0.27335]</top>
+     <bottom>[1.4555, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "161">
+     <top>   [1.5265, 0, 0.27335]</top>
+     <bottom>[1.5265, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "162">
+     <top>   [1.5975, 0, 0.27335]</top>
+     <bottom>[1.5975, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "163">
+     <top>   [1.6685, 0, 0.27335]</top>
+     <bottom>[1.6685, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "164">
+     <top>   [1.7395, 0, 0.27335]</top>
+     <bottom>[1.7395, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "165">
+     <top>   [1.8105, 0, 0.27335]</top>
+     <bottom>[1.8105, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "166">
+     <top>   [1.8815, 0, 0.27335]</top>
+     <bottom>[1.8815, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "167">
+     <top>   [1.9525, 0, 0.27335]</top>
+     <bottom>[1.9525, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "168">
+     <top>   [2.0235, 0, 0.27335]</top>
+     <bottom>[2.0235, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "169">
+     <top>   [2.0945, 0, 0.27335]</top>
+     <bottom>[2.0945, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "170">
+     <top>   [2.1655, 0, 0.27335]</top>
+     <bottom>[2.1655, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "171">
+     <top>   [2.2365, 0, 0.27335]</top>
+     <bottom>[2.2365, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "172">
+     <top>   [2.3075, 0, 0.27335]</top>
+     <bottom>[2.3075, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "173">
+     <top>   [2.3785, 0, 0.27335]</top>
+     <bottom>[2.3785, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "174">
+     <top>   [2.4495, 0, 0.27335]</top>
+     <bottom>[2.4495, 2.485, 0.27335]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "175">
+     <top>   [0, 0.0355, 0.0497]</top>
+     <bottom>[2.485, 0.0355, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "176">
+     <top>   [0, 0.1065, 0.0497]</top>
+     <bottom>[2.485, 0.1065, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "177">
+     <top>   [0, 0.1775, 0.0497]</top>
+     <bottom>[2.485, 0.1775, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "178">
+     <top>   [0, 0.2485, 0.0497]</top>
+     <bottom>[2.485, 0.2485, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "179">
+     <top>   [0, 0.3195, 0.0497]</top>
+     <bottom>[2.485, 0.3195, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "180">
+     <top>   [0, 0.3905, 0.0497]</top>
+     <bottom>[2.485, 0.3905, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "181">
+     <top>   [0, 0.4615, 0.0497]</top>
+     <bottom>[2.485, 0.4615, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "182">
+     <top>   [0, 0.5325, 0.0497]</top>
+     <bottom>[2.485, 0.5325, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "183">
+     <top>   [0, 0.6035, 0.0497]</top>
+     <bottom>[2.485, 0.6035, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "184">
+     <top>   [0, 0.6745, 0.0497]</top>
+     <bottom>[2.485, 0.6745, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "185">
+     <top>   [0, 0.7455, 0.0497]</top>
+     <bottom>[2.485, 0.7455, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "186">
+     <top>   [0, 0.8165, 0.0497]</top>
+     <bottom>[2.485, 0.8165, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "187">
+     <top>   [0, 0.8875, 0.0497]</top>
+     <bottom>[2.485, 0.8875, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "188">
+     <top>   [0, 0.9585, 0.0497]</top>
+     <bottom>[2.485, 0.9585, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "189">
+     <top>   [0, 1.0295, 0.0497]</top>
+     <bottom>[2.485, 1.0295, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "190">
+     <top>   [0, 1.1005, 0.0497]</top>
+     <bottom>[2.485, 1.1005, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "191">
+     <top>   [0, 1.1715, 0.0497]</top>
+     <bottom>[2.485, 1.1715, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "192">
+     <top>   [0, 1.2425, 0.0497]</top>
+     <bottom>[2.485, 1.2425, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "193">
+     <top>   [0, 1.3135, 0.0497]</top>
+     <bottom>[2.485, 1.3135, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "194">
+     <top>   [0, 1.3845, 0.0497]</top>
+     <bottom>[2.485, 1.3845, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "195">
+     <top>   [0, 1.4555, 0.0497]</top>
+     <bottom>[2.485, 1.4555, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "196">
+     <top>   [0, 1.5265, 0.0497]</top>
+     <bottom>[2.485, 1.5265, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "197">
+     <top>   [0, 1.5975, 0.0497]</top>
+     <bottom>[2.485, 1.5975, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "198">
+     <top>   [0, 1.6685, 0.0497]</top>
+     <bottom>[2.485, 1.6685, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "199">
+     <top>   [0, 1.7395, 0.0497]</top>
+     <bottom>[2.485, 1.7395, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "200">
+     <top>   [0, 1.8105, 0.0497]</top>
+     <bottom>[2.485, 1.8105, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "201">
+     <top>   [0, 1.8815, 0.0497]</top>
+     <bottom>[2.485, 1.8815, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "202">
+     <top>   [0, 1.9525, 0.0497]</top>
+     <bottom>[2.485, 1.9525, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "203">
+     <top>   [0, 2.0235, 0.0497]</top>
+     <bottom>[2.485, 2.0235, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "204">
+     <top>   [0, 2.0945, 0.0497]</top>
+     <bottom>[2.485, 2.0945, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "205">
+     <top>   [0, 2.1655, 0.0497]</top>
+     <bottom>[2.485, 2.1655, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "206">
+     <top>   [0, 2.2365, 0.0497]</top>
+     <bottom>[2.485, 2.2365, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "207">
+     <top>   [0, 2.3075, 0.0497]</top>
+     <bottom>[2.485, 2.3075, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "208">
+     <top>   [0, 2.3785, 0.0497]</top>
+     <bottom>[2.485, 2.3785, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "209">
+     <top>   [0, 2.4495, 0.0497]</top>
+     <bottom>[2.485, 2.4495, 0.0497]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "210">
+     <top>   [0, 0.0355, 0.1136]</top>
+     <bottom>[2.485, 0.0355, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "211">
+     <top>   [0, 0.1065, 0.1136]</top>
+     <bottom>[2.485, 0.1065, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "212">
+     <top>   [0, 0.1775, 0.1136]</top>
+     <bottom>[2.485, 0.1775, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "213">
+     <top>   [0, 0.2485, 0.1136]</top>
+     <bottom>[2.485, 0.2485, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "214">
+     <top>   [0, 0.3195, 0.1136]</top>
+     <bottom>[2.485, 0.3195, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "215">
+     <top>   [0, 0.3905, 0.1136]</top>
+     <bottom>[2.485, 0.3905, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "216">
+     <top>   [0, 0.4615, 0.1136]</top>
+     <bottom>[2.485, 0.4615, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "217">
+     <top>   [0, 0.5325, 0.1136]</top>
+     <bottom>[2.485, 0.5325, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "218">
+     <top>   [0, 0.6035, 0.1136]</top>
+     <bottom>[2.485, 0.6035, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "219">
+     <top>   [0, 0.6745, 0.1136]</top>
+     <bottom>[2.485, 0.6745, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "220">
+     <top>   [0, 0.7455, 0.1136]</top>
+     <bottom>[2.485, 0.7455, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "221">
+     <top>   [0, 0.8165, 0.1136]</top>
+     <bottom>[2.485, 0.8165, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "222">
+     <top>   [0, 0.8875, 0.1136]</top>
+     <bottom>[2.485, 0.8875, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "223">
+     <top>   [0, 0.9585, 0.1136]</top>
+     <bottom>[2.485, 0.9585, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "224">
+     <top>   [0, 1.0295, 0.1136]</top>
+     <bottom>[2.485, 1.0295, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "225">
+     <top>   [0, 1.1005, 0.1136]</top>
+     <bottom>[2.485, 1.1005, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "226">
+     <top>   [0, 1.1715, 0.1136]</top>
+     <bottom>[2.485, 1.1715, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "227">
+     <top>   [0, 1.2425, 0.1136]</top>
+     <bottom>[2.485, 1.2425, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "228">
+     <top>   [0, 1.3135, 0.1136]</top>
+     <bottom>[2.485, 1.3135, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "229">
+     <top>   [0, 1.3845, 0.1136]</top>
+     <bottom>[2.485, 1.3845, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "230">
+     <top>   [0, 1.4555, 0.1136]</top>
+     <bottom>[2.485, 1.4555, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "231">
+     <top>   [0, 1.5265, 0.1136]</top>
+     <bottom>[2.485, 1.5265, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "232">
+     <top>   [0, 1.5975, 0.1136]</top>
+     <bottom>[2.485, 1.5975, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "233">
+     <top>   [0, 1.6685, 0.1136]</top>
+     <bottom>[2.485, 1.6685, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "234">
+     <top>   [0, 1.7395, 0.1136]</top>
+     <bottom>[2.485, 1.7395, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "235">
+     <top>   [0, 1.8105, 0.1136]</top>
+     <bottom>[2.485, 1.8105, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "236">
+     <top>   [0, 1.8815, 0.1136]</top>
+     <bottom>[2.485, 1.8815, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "237">
+     <top>   [0, 1.9525, 0.1136]</top>
+     <bottom>[2.485, 1.9525, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "238">
+     <top>   [0, 2.0235, 0.1136]</top>
+     <bottom>[2.485, 2.0235, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "239">
+     <top>   [0, 2.0945, 0.1136]</top>
+     <bottom>[2.485, 2.0945, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "240">
+     <top>   [0, 2.1655, 0.1136]</top>
+     <bottom>[2.485, 2.1655, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "241">
+     <top>   [0, 2.2365, 0.1136]</top>
+     <bottom>[2.485, 2.2365, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "242">
+     <top>   [0, 2.3075, 0.1136]</top>
+     <bottom>[2.485, 2.3075, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "243">
+     <top>   [0, 2.3785, 0.1136]</top>
+     <bottom>[2.485, 2.3785, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "244">
+     <top>   [0, 2.4495, 0.1136]</top>
+     <bottom>[2.485, 2.4495, 0.1136]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "245">
+     <top>   [0, 0.0355, 0.1775]</top>
+     <bottom>[2.485, 0.0355, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "246">
+     <top>   [0, 0.1065, 0.1775]</top>
+     <bottom>[2.485, 0.1065, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "247">
+     <top>   [0, 0.1775, 0.1775]</top>
+     <bottom>[2.485, 0.1775, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "248">
+     <top>   [0, 0.2485, 0.1775]</top>
+     <bottom>[2.485, 0.2485, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "249">
+     <top>   [0, 0.3195, 0.1775]</top>
+     <bottom>[2.485, 0.3195, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "250">
+     <top>   [0, 0.3905, 0.1775]</top>
+     <bottom>[2.485, 0.3905, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "251">
+     <top>   [0, 0.4615, 0.1775]</top>
+     <bottom>[2.485, 0.4615, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "252">
+     <top>   [0, 0.5325, 0.1775]</top>
+     <bottom>[2.485, 0.5325, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "253">
+     <top>   [0, 0.6035, 0.1775]</top>
+     <bottom>[2.485, 0.6035, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "254">
+     <top>   [0, 0.6745, 0.1775]</top>
+     <bottom>[2.485, 0.6745, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "255">
+     <top>   [0, 0.7455, 0.1775]</top>
+     <bottom>[2.485, 0.7455, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "256">
+     <top>   [0, 0.8165, 0.1775]</top>
+     <bottom>[2.485, 0.8165, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "257">
+     <top>   [0, 0.8875, 0.1775]</top>
+     <bottom>[2.485, 0.8875, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "258">
+     <top>   [0, 0.9585, 0.1775]</top>
+     <bottom>[2.485, 0.9585, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "259">
+     <top>   [0, 1.0295, 0.1775]</top>
+     <bottom>[2.485, 1.0295, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "260">
+     <top>   [0, 1.1005, 0.1775]</top>
+     <bottom>[2.485, 1.1005, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "261">
+     <top>   [0, 1.1715, 0.1775]</top>
+     <bottom>[2.485, 1.1715, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "262">
+     <top>   [0, 1.2425, 0.1775]</top>
+     <bottom>[2.485, 1.2425, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "263">
+     <top>   [0, 1.3135, 0.1775]</top>
+     <bottom>[2.485, 1.3135, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "264">
+     <top>   [0, 1.3845, 0.1775]</top>
+     <bottom>[2.485, 1.3845, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "265">
+     <top>   [0, 1.4555, 0.1775]</top>
+     <bottom>[2.485, 1.4555, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "266">
+     <top>   [0, 1.5265, 0.1775]</top>
+     <bottom>[2.485, 1.5265, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "267">
+     <top>   [0, 1.5975, 0.1775]</top>
+     <bottom>[2.485, 1.5975, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "268">
+     <top>   [0, 1.6685, 0.1775]</top>
+     <bottom>[2.485, 1.6685, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "269">
+     <top>   [0, 1.7395, 0.1775]</top>
+     <bottom>[2.485, 1.7395, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "270">
+     <top>   [0, 1.8105, 0.1775]</top>
+     <bottom>[2.485, 1.8105, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "271">
+     <top>   [0, 1.8815, 0.1775]</top>
+     <bottom>[2.485, 1.8815, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "272">
+     <top>   [0, 1.9525, 0.1775]</top>
+     <bottom>[2.485, 1.9525, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "273">
+     <top>   [0, 2.0235, 0.1775]</top>
+     <bottom>[2.485, 2.0235, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "274">
+     <top>   [0, 2.0945, 0.1775]</top>
+     <bottom>[2.485, 2.0945, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "275">
+     <top>   [0, 2.1655, 0.1775]</top>
+     <bottom>[2.485, 2.1655, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "276">
+     <top>   [0, 2.2365, 0.1775]</top>
+     <bottom>[2.485, 2.2365, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "277">
+     <top>   [0, 2.3075, 0.1775]</top>
+     <bottom>[2.485, 2.3075, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "278">
+     <top>   [0, 2.3785, 0.1775]</top>
+     <bottom>[2.485, 2.3785, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "279">
+     <top>   [0, 2.4495, 0.1775]</top>
+     <bottom>[2.485, 2.4495, 0.1775]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "280">
+     <top>   [0, 0.0355, 0.2414]</top>
+     <bottom>[2.485, 0.0355, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "281">
+     <top>   [0, 0.1065, 0.2414]</top>
+     <bottom>[2.485, 0.1065, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "282">
+     <top>   [0, 0.1775, 0.2414]</top>
+     <bottom>[2.485, 0.1775, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "283">
+     <top>   [0, 0.2485, 0.2414]</top>
+     <bottom>[2.485, 0.2485, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "284">
+     <top>   [0, 0.3195, 0.2414]</top>
+     <bottom>[2.485, 0.3195, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "285">
+     <top>   [0, 0.3905, 0.2414]</top>
+     <bottom>[2.485, 0.3905, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "286">
+     <top>   [0, 0.4615, 0.2414]</top>
+     <bottom>[2.485, 0.4615, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "287">
+     <top>   [0, 0.5325, 0.2414]</top>
+     <bottom>[2.485, 0.5325, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "288">
+     <top>   [0, 0.6035, 0.2414]</top>
+     <bottom>[2.485, 0.6035, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "289">
+     <top>   [0, 0.6745, 0.2414]</top>
+     <bottom>[2.485, 0.6745, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "290">
+     <top>   [0, 0.7455, 0.2414]</top>
+     <bottom>[2.485, 0.7455, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "291">
+     <top>   [0, 0.8165, 0.2414]</top>
+     <bottom>[2.485, 0.8165, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "292">
+     <top>   [0, 0.8875, 0.2414]</top>
+     <bottom>[2.485, 0.8875, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "293">
+     <top>   [0, 0.9585, 0.2414]</top>
+     <bottom>[2.485, 0.9585, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "294">
+     <top>   [0, 1.0295, 0.2414]</top>
+     <bottom>[2.485, 1.0295, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "295">
+     <top>   [0, 1.1005, 0.2414]</top>
+     <bottom>[2.485, 1.1005, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "296">
+     <top>   [0, 1.1715, 0.2414]</top>
+     <bottom>[2.485, 1.1715, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "297">
+     <top>   [0, 1.2425, 0.2414]</top>
+     <bottom>[2.485, 1.2425, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "298">
+     <top>   [0, 1.3135, 0.2414]</top>
+     <bottom>[2.485, 1.3135, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "299">
+     <top>   [0, 1.3845, 0.2414]</top>
+     <bottom>[2.485, 1.3845, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "300">
+     <top>   [0, 1.4555, 0.2414]</top>
+     <bottom>[2.485, 1.4555, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "301">
+     <top>   [0, 1.5265, 0.2414]</top>
+     <bottom>[2.485, 1.5265, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "302">
+     <top>   [0, 1.5975, 0.2414]</top>
+     <bottom>[2.485, 1.5975, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "303">
+     <top>   [0, 1.6685, 0.2414]</top>
+     <bottom>[2.485, 1.6685, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "304">
+     <top>   [0, 1.7395, 0.2414]</top>
+     <bottom>[2.485, 1.7395, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "305">
+     <top>   [0, 1.8105, 0.2414]</top>
+     <bottom>[2.485, 1.8105, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "306">
+     <top>   [0, 1.8815, 0.2414]</top>
+     <bottom>[2.485, 1.8815, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "307">
+     <top>   [0, 1.9525, 0.2414]</top>
+     <bottom>[2.485, 1.9525, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "308">
+     <top>   [0, 2.0235, 0.2414]</top>
+     <bottom>[2.485, 2.0235, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "309">
+     <top>   [0, 2.0945, 0.2414]</top>
+     <bottom>[2.485, 2.0945, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "310">
+     <top>   [0, 2.1655, 0.2414]</top>
+     <bottom>[2.485, 2.1655, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "311">
+     <top>   [0, 2.2365, 0.2414]</top>
+     <bottom>[2.485, 2.2365, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "312">
+     <top>   [0, 2.3075, 0.2414]</top>
+     <bottom>[2.485, 2.3075, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "313">
+     <top>   [0, 2.3785, 0.2414]</top>
+     <bottom>[2.485, 2.3785, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "314">
+     <top>   [0, 2.4495, 0.2414]</top>
+     <bottom>[2.485, 2.4495, 0.2414]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "315">
+     <top>   [0, 0.0355, 0.3053]</top>
+     <bottom>[2.485, 0.0355, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "316">
+     <top>   [0, 0.1065, 0.3053]</top>
+     <bottom>[2.485, 0.1065, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "317">
+     <top>   [0, 0.1775, 0.3053]</top>
+     <bottom>[2.485, 0.1775, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "318">
+     <top>   [0, 0.2485, 0.3053]</top>
+     <bottom>[2.485, 0.2485, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "319">
+     <top>   [0, 0.3195, 0.3053]</top>
+     <bottom>[2.485, 0.3195, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "320">
+     <top>   [0, 0.3905, 0.3053]</top>
+     <bottom>[2.485, 0.3905, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "321">
+     <top>   [0, 0.4615, 0.3053]</top>
+     <bottom>[2.485, 0.4615, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "322">
+     <top>   [0, 0.5325, 0.3053]</top>
+     <bottom>[2.485, 0.5325, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "323">
+     <top>   [0, 0.6035, 0.3053]</top>
+     <bottom>[2.485, 0.6035, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "324">
+     <top>   [0, 0.6745, 0.3053]</top>
+     <bottom>[2.485, 0.6745, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "325">
+     <top>   [0, 0.7455, 0.3053]</top>
+     <bottom>[2.485, 0.7455, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "326">
+     <top>   [0, 0.8165, 0.3053]</top>
+     <bottom>[2.485, 0.8165, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "327">
+     <top>   [0, 0.8875, 0.3053]</top>
+     <bottom>[2.485, 0.8875, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "328">
+     <top>   [0, 0.9585, 0.3053]</top>
+     <bottom>[2.485, 0.9585, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "329">
+     <top>   [0, 1.0295, 0.3053]</top>
+     <bottom>[2.485, 1.0295, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "330">
+     <top>   [0, 1.1005, 0.3053]</top>
+     <bottom>[2.485, 1.1005, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "331">
+     <top>   [0, 1.1715, 0.3053]</top>
+     <bottom>[2.485, 1.1715, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "332">
+     <top>   [0, 1.2425, 0.3053]</top>
+     <bottom>[2.485, 1.2425, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "333">
+     <top>   [0, 1.3135, 0.3053]</top>
+     <bottom>[2.485, 1.3135, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "334">
+     <top>   [0, 1.3845, 0.3053]</top>
+     <bottom>[2.485, 1.3845, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "335">
+     <top>   [0, 1.4555, 0.3053]</top>
+     <bottom>[2.485, 1.4555, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "336">
+     <top>   [0, 1.5265, 0.3053]</top>
+     <bottom>[2.485, 1.5265, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "337">
+     <top>   [0, 1.5975, 0.3053]</top>
+     <bottom>[2.485, 1.5975, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "338">
+     <top>   [0, 1.6685, 0.3053]</top>
+     <bottom>[2.485, 1.6685, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "339">
+     <top>   [0, 1.7395, 0.3053]</top>
+     <bottom>[2.485, 1.7395, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "340">
+     <top>   [0, 1.8105, 0.3053]</top>
+     <bottom>[2.485, 1.8105, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "341">
+     <top>   [0, 1.8815, 0.3053]</top>
+     <bottom>[2.485, 1.8815, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "342">
+     <top>   [0, 1.9525, 0.3053]</top>
+     <bottom>[2.485, 1.9525, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "343">
+     <top>   [0, 2.0235, 0.3053]</top>
+     <bottom>[2.485, 2.0235, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "344">
+     <top>   [0, 2.0945, 0.3053]</top>
+     <bottom>[2.485, 2.0945, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "345">
+     <top>   [0, 2.1655, 0.3053]</top>
+     <bottom>[2.485, 2.1655, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "346">
+     <top>   [0, 2.2365, 0.3053]</top>
+     <bottom>[2.485, 2.2365, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "347">
+     <top>   [0, 2.3075, 0.3053]</top>
+     <bottom>[2.485, 2.3075, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "348">
+     <top>   [0, 2.3785, 0.3053]</top>
+     <bottom>[2.485, 2.3785, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+  <cylinder label = "349">
+     <top>   [0, 2.4495, 0.3053]</top>
+     <bottom>[2.485, 2.4495, 0.3053]</bottom>
+     <radius>0.01775</radius>
+  </cylinder>
+</union>
+</Uintah_Include>

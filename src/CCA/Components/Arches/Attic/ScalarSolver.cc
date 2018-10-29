@@ -43,7 +43,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -366,8 +366,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                    getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->
+                    getMaterial( "Arches", archIndex)->getDWIndex(); 
     ArchesVariables scalarVars;
     ArchesConstVariables constScalarVars;
     
@@ -699,8 +699,8 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                    getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_materialManager->
+                    getMaterial( "Arches", archIndex)->getDWIndex(); 
     ArchesVariables scalarVars;
     ArchesConstVariables constScalarVars;
 

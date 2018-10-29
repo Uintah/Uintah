@@ -1,0 +1,76 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test Boundary Conditions</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+  
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>u</SolutionVariable>
+      <DiffusiveFlux direction="Z" coefficient="1.0"/>
+    </TransportEquation>
+
+    </Wasatch>
+
+
+  <Time>
+    <maxTime>0.0005</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.00001</delt_max>
+    <max_Timesteps> 3 </max_Timesteps>    
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>bc-test-fluxbc-zdir.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.00001"/>
+    <compression>gzip</compression>
+    <save label="u"/>
+    <save label="u_diffVelocity_Z"/>
+    <save label="u_rhs"/>
+  </DataArchiver> 
+
+  <Grid>
+	<BoundaryConditions>      
+      <DefaultMaterial>all</DefaultMaterial>
+      <!-- BOUNDARY CONDITIONS -->
+      <Face side="z-" name="left-wall">
+        <BCType var="Dirichlet" label="u_diffVelocity_Z" value="-11.0"/>
+      </Face>      
+      <Face side="z+" name="right-wall">
+        <BCType var="Dirichlet" label="u_diffVelocity_Z" value="11"/>
+      </Face>
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[0.01,0.01,1]</upper>
+        <resolution>[1,1,20]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

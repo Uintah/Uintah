@@ -48,10 +48,6 @@ SRCS   += \
           $(SRCDIR)/UintahPetscError.cc        \
           $(SRCDIR)/NotYetImplemented.cc       \
           $(SRCDIR)/VariableNotFoundInGrid.cc  
-          
-ifeq ($(HAVE_PAPI),yes)
-  SRCS += $(SRCDIR)/PapiInitializationError.cc
-endif
 
 PSELIBS :=
 

@@ -26,7 +26,7 @@
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
 
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 
 using namespace std;
@@ -85,7 +85,7 @@ void preprocess_CustomBCs(const string& where,
     
     preprocess_Lodi_BCs( old_dw, new_dw, lb, patch, where,
                        indx,  
-                       gv->sharedState,
+                       gv->materialManager,
                        lv->setLodiBcs,
                        lv->lodi, 
                        gv->lodi);        
@@ -97,7 +97,7 @@ void preprocess_CustomBCs(const string& where,
     
     preprocess_MicroSlip_BCs( old_dw, new_dw, lb, patch, where,
                               indx,  
-                              gv->sharedState,
+                              gv->materialManager,
                               lv->setMicroSlipBcs,
                               lv->slip, 
                               gv->slip);        

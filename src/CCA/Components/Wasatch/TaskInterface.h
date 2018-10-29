@@ -30,8 +30,8 @@
 //-- Uintah includes --//
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <expression/dualtime/BDFDualTimeIntegrator.h>
 //-- Wasatch includes --//
 #include "PatchInfo.h"

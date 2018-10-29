@@ -37,8 +37,8 @@ using namespace Uintah;
 static DebugStream cout_doing("MPM", false);
 
 MPMCommon::MPMCommon(const ProcessorGroup* myworld,
-		     SimulationStateP sharedState) :
-  ApplicationCommon(myworld, sharedState)
+                     MaterialManagerP materialManager) :
+  ApplicationCommon(myworld, materialManager)
 {
   lb = scinew MPMLabel();
 }
@@ -55,6 +55,10 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
                                      bool isRestart)
 {
   d_flags = flags;
+
+  //! so all components can know how many particle ghost cells to ask for
+  d_flags->d_particle_ghost_type  = particle_ghost_type;
+  d_flags->d_particle_ghost_layer = particle_ghost_layer;
   
   //Search for the MaterialProperties block and then get the MPM section
   ProblemSpecP mat_ps     = prob_spec->findBlockWithOutAttribute( "MaterialProperties" );
@@ -78,17 +82,21 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, m_sharedState, flags,isRestart);
+    MPMMaterial *mat = scinew MPMMaterial(ps, m_materialManager, flags,isRestart);
+
+    mat->registerParticleState( d_particleState,
+                                d_particleState_preReloc );
+    
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
     // ALWAYS have an index number as in <material index = "0">.
     // Index_val = -1 means that we don't register the material by its 
     // index number.
     if (index_val > -1){
-      m_sharedState->registerMPMMaterial(mat,index_val);
+      m_materialManager->registerMaterial( "MPM", mat,index_val);
     }
     else{
-      m_sharedState->registerMPMMaterial(mat);
+      m_materialManager->registerMaterial( "MPM", mat);
     }
   }
 }
@@ -97,7 +105,7 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
 void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec, 
                                          MPMFlags* flags)
 {
-  //Search for the MaterialProperties block and then get the MPM section
+  // Search for the MaterialProperties block and then get the MPM section
   ProblemSpecP mat_ps     = prob_spec->findBlockWithOutAttribute( "MaterialProperties" );
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock( "MPM" );
   for( ProblemSpecP ps = mpm_mat_ps->findBlock("cohesive_zone"); ps != nullptr; ps = ps->findNextBlock("cohesive_zone") ) {
@@ -119,8 +127,11 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
     }
     // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
 
-    //Create and register as an MPM material
-    CZMaterial *mat = scinew CZMaterial(ps, m_sharedState, flags);
+    // Create and register as an MPM material
+    CZMaterial *mat = scinew CZMaterial(ps, m_materialManager, flags);
+
+    mat->registerParticleState( d_cohesiveZoneState,
+                                d_cohesiveZoneState_preReloc );
 
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
@@ -128,10 +139,10 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
     // Index_val = -1 means that we don't register the material by its 
     // index number.
     if (index_val > -1){
-      m_sharedState->registerCZMaterial(mat,index_val);
+      m_materialManager->registerMaterial( "CZ", mat,index_val);
     }
     else{
-      m_sharedState->registerCZMaterial(mat);
+      m_materialManager->registerMaterial( "CZ", mat);
     }
   }
 }
@@ -164,7 +175,10 @@ void MPMCommon::tracerProblemSetup(const ProblemSpecP& prob_spec,
     // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
 
     //Create and register as an Tracer material
-    TracerMaterial *mat = scinew TracerMaterial(ps, m_sharedState, flags);
+    TracerMaterial *mat = scinew TracerMaterial(ps, m_materialManager, flags);
+
+    mat->registerParticleState( d_tracerState,
+                                d_tracerState_preReloc );
 
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
@@ -172,10 +186,10 @@ void MPMCommon::tracerProblemSetup(const ProblemSpecP& prob_spec,
     // Index_val = -1 means that we don't register the material by its 
     // index number.
     if (index_val > -1){
-      m_sharedState->registerTracerMaterial(mat,index_val);
+      m_materialManager->registerMaterial("Tracer", mat,index_val);
     }
     else{
-      m_sharedState->registerTracerMaterial(mat);
+      m_materialManager->registerMaterial("Tracer", mat);
     }
   }
 }
@@ -209,9 +223,9 @@ void MPMCommon::scheduleUpdateStress_DamageErosionModels(SchedulerP   & sched,
 
   t->requires(Task::OldDW, lb->simulationTimeLabel);
   
-  int numMatls = m_sharedState->getNumMPMMatls();
+  int numMatls = m_materialManager->getNumMatls( "MPM" );
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     
     DamageModel* dm = mpm_matl->getDamageModel();
     dm->addComputesAndRequires(t, mpm_matl);
@@ -236,10 +250,10 @@ void MPMCommon::updateStress_DamageErosionModels(const ProcessorGroup *,
     printTask(patches, patch,cout_doing,
               "Doing updateStress_DamageModel");
 
-    int numMPMMatls = m_sharedState->getNumMPMMatls();
+    int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
     for(int m = 0; m < numMPMMatls; m++){
     
-      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       

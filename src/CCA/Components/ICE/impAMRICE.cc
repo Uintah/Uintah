@@ -34,7 +34,7 @@
 
 #include <Core/Grid/Task.h>
 #include <Core/Grid/AMR.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ConvergenceFailure.h>
@@ -51,8 +51,8 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
 static DebugStream cout_dbg("impAMRICE_DBG", false);
 
 impAMRICE::impAMRICE(const ProcessorGroup* myworld,
-		     const SimulationStateP sharedState) :
-  AMRICE(myworld, sharedState)
+                     const MaterialManagerP materialManager) :
+  AMRICE(myworld, materialManager)
 {
 }   
 
@@ -72,13 +72,13 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   GridP grid = level->getGrid();
   int maxLevel = grid->numLevels();
 
-  const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
-  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
-  const MaterialSet* all_matls = m_sharedState->allMaterials();  
+  const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
+  const MaterialSet* mpm_matls = m_materialManager->allMaterials( "MPM" );
+  const MaterialSet* all_matls = m_materialManager->allMaterials();  
 
   MaterialSubset* one_matl = d_press_matl;
-  const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
-  const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
+  const MaterialSubset* ice_matls_sub = (ice_matls ? ice_matls->getUnion() : nullptr);
+  const MaterialSubset* mpm_matls_sub = (mpm_matls ? mpm_matls->getUnion() : nullptr);
   
   cout_doing << "--------------------------------------------------------"<< endl;
   cout_doing << "impAMRICE::scheduleLockstepTimeAdvance"<< endl;  
@@ -119,6 +119,7 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                                             all_matls);        
                           
     d_exchModel->sched_AddExch_VelFC(       sched, patches, ice_matls_sub,
+                                                            mpm_matls_sub,
                                                             all_matls,
                                                             d_BC_globalVars,
                                                             false);
@@ -312,8 +313,9 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     
     //__________________________________
     // ImplicitVel_FC
-    t->requires(Task::OldDW,lb->vel_CCLabel, patches, ice_matls,  gac,1);    
-    t->requires(Task::NewDW,lb->vel_CCLabel, patches, mpm_matls,  gac,1);
+    t->requires(Task::OldDW,lb->vel_CCLabel, patches, ice_matls,  gac,1);
+    if( mpm_matls)
+      t->requires(Task::NewDW,lb->vel_CCLabel, patches, mpm_matls,  gac,1);
     
     //__________________________________
     //  what's produced from this task
@@ -338,6 +340,10 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     t->modifies(lb->vol_frac_Y_FC_fluxLabel, patches, all_matls_sub);
     t->modifies(lb->vol_frac_Z_FC_fluxLabel, patches, all_matls_sub); 
   }
+  
+  t->computes( VarLabel::find(abortTimeStep_name) );
+  t->computes( VarLabel::find(recomputeTimeStep_name) );
+
   t->setType(Task::OncePerProc);
 
   const PatchSet * perprocPatches = m_loadBalancer->getPerProcessorPatchSet( grid );
@@ -350,13 +356,13 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
  Function~  impAMRICE::multiLevelPressureSolve-- 
 _____________________________________________________________________*/
 void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
-                                  const PatchSubset* patches, 
-                                  const MaterialSubset*,       
-                                  DataWarehouse* ParentOldDW,    
-                                  DataWarehouse* ParentNewDW,    
-                                  GridP grid,
-                                  const MaterialSubset* ice_matls,
-                                  const MaterialSubset* mpm_matls)
+                                        const PatchSubset* patches,
+                                        const MaterialSubset*,
+                                        DataWarehouse* ParentOldDW,
+                                        DataWarehouse* ParentNewDW,
+                                        GridP grid,
+                                        const MaterialSubset* ice_matls,
+                                        const MaterialSubset* mpm_matls)
 {
   // this function will be called exactly once per processor, regardless of the number of patches assigned
   // get the patches our processor is responsible for
@@ -364,7 +370,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   cout_doing << d_myworld->myRank() << " impAMRICE::MultiLevelPressureSolve on patch " << *patches << endl;
   //__________________________________
   // define Matl sets and subsets
-  const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* all_matls = m_materialManager->allMaterials();
   MaterialSubset* one_matl    = d_press_matl;
   
   //__________________________________
@@ -415,7 +421,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   max_vartype max_RHS = 1/d_SMALL_NUM;
   double smallest_max_RHS_sofar = max_RHS; 
   int counter = 0;
-  bool restart   = false;
+  bool recompute = false;
   bool recursion = true;
   //bool firstIter = true;
   bool modifies_X = true;
@@ -453,7 +459,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       
 #else
       const PatchSet* perProcPatches = 
-	m_loadBalancer->getPerProcessorPatchSet(grid);
+        m_loadBalancer->getPerProcessorPatchSet(grid);
       schedule_bogus_imp_delP(d_subsched,  perProcPatches,        d_press_matl,
                               all_matls);   
 #endif
@@ -531,35 +537,35 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     }
     
     //__________________________________
-    // restart timestep
-                                          //  too many outer iterations
-    if (counter > d_iters_before_timestep_restart ){
-      restart = true;
+    // recompute time step
+    //  too many outer iterations
+    if (counter > d_iters_before_timestep_recompute ){
+      recompute = true;
       if(pg->myRank() == 0)
-        cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
+        cout <<"\nWARNING: The max iterations occured before a time step recompute was reached\n"<<endl;
     }
-                                          //  solver has requested a restart
-    if (d_subsched->get_dw(3)->timestepRestarted() ) {
+    //  Solver has requested to recompute the time step
+    if (d_subsched->get_dw(3)->recomputeTimeStep() ) {
       if(pg->myRank() == 0)
-        cout << "\nWARNING: Solver had requested a restart\n" <<endl;
-      restart = true;
+        cout << "\nWARNING: The solver has requested to recompute the time step\n" <<endl;
+      recompute = true;
     }
     
-                                           //  solution is diverging
+    //  solution is diverging
     if(max_RHS < smallest_max_RHS_sofar){
       smallest_max_RHS_sofar = max_RHS;
     }
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
       if(pg->myRank() == 0)
         cout << "\nWARNING: outer iteration is diverging now "
-             << "restarting the timestep"
+             << "recomputing the time step"
              << " Max_RHS " << max_RHS 
              << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
-      restart = true;
+      recompute = true;
     }
-    if(restart){
-      ParentNewDW->abortTimestep();
-      ParentNewDW->restartTimestep();
+    if(recompute){
+      ParentNewDW->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+      ParentNewDW->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
       //return; - don't return - just break, some operations may require the transfers below to complete
       break;
     }
@@ -826,7 +832,7 @@ void impAMRICE::scheduleCoarsen_delP(SchedulerP& sched,
 
   t->modifies(variable, d_press_matl, oims);        
 
-  sched->addTask(t, coarseLevel->eachPatch(), m_sharedState->allICEMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), m_materialManager->allMaterials( "ICE" ));
 }
 
 /* _____________________________________________________________________
@@ -932,7 +938,7 @@ void impAMRICE::scheduleZeroMatrix_UnderFinePatches(SchedulerP& sched,
   if(coarseLevel->hasFinerLevel()){                                                                      
     t->modifies(lb->matrixLabel, one_matl, oims);
   }   
-  sched->addTask(t, coarseLevel->eachPatch(), m_sharedState->allICEMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), m_materialManager->allMaterials( "ICE" ));
 }
 /* _____________________________________________________________________
  Function~  impAMRICE::zeroMatrix_UnderFinePatches

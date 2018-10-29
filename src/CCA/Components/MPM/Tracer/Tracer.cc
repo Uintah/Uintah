@@ -35,13 +35,13 @@ using namespace std;
 
 //______________________________________________________________________
 Tracer::Tracer(TracerMaterial* tm, MPMFlags* flags,
-                           SimulationStateP& ss)
+                           MaterialManagerP& ss)
 {
   d_lb = scinew MPMLabel();
 
   d_flags = flags;
 
-  d_sharedState = ss;
+  d_materialManager = ss;
 
   registerPermanentTracerState(tm);
 }
@@ -191,7 +191,12 @@ void Tracer::scheduleInitialize(const LevelP& level,
   t->computes(d_lb->tracerIDLabel);
   t->computes(d_lb->pCellNATracerIDLabel,zeroth_matl);
 
-  sched->addTask(t, level->eachPatch(), d_sharedState->allTracerMaterials());
+  vector<int> m(1);
+  m[0] = trmat->getDWIndex();
+  MaterialSet* tr_matl_set = scinew MaterialSet();
+  tr_matl_set->addAll(m);
+  tr_matl_set->addReference();
+  sched->addTask(t, level->eachPatch(), tr_matl_set);
 
   // The task will have a reference to zeroth_matl
   if (zeroth_matl->removeReference())
@@ -213,7 +218,8 @@ void Tracer::initialize(const ProcessorGroup*,
     //printTask(patches, patch,cout_doing,"Doing initialize for Tracers\t");
 
     for(int m=0;m<tracer_matls->size();m++){
-      TracerMaterial* tracer_matl = d_sharedState->getTracerMaterial( m );
+      TracerMaterial* tracer_matl = 
+                  (TracerMaterial*) d_materialManager->getMaterial("Tracer", m);
       string filename = tracer_matl->getTracerFilename();
       particleIndex numTracers = countTracers(patch,filename);
       totalTracers+=numTracers;

@@ -45,7 +45,7 @@ WallShearStressFactory::~WallShearStressFactory()
 //______________________________________________________________________
 //
 WallShearStress* WallShearStressFactory::create( ProblemSpecP& ps, 
-                                                 SimulationStateP& sharedState )
+                                                 MaterialManagerP& materialManager )
 {
   ProblemSpecP wss_ps = ps->findBlock("wallShearStress");
   
@@ -57,10 +57,10 @@ WallShearStress* WallShearStressFactory::create( ProblemSpecP& ps,
     }
     
     if (WSS_model == "logLawModel"){
-      return( scinew logLawModel( wss_ps, sharedState ) );
+      return( scinew logLawModel( wss_ps, materialManager ) );
     }
     else if (WSS_model == "smoothWall"){
-      return( scinew smoothwall( wss_ps, sharedState) );
+      return( scinew smoothwall( wss_ps, materialManager) );
     }
 else{
       ostringstream warn;

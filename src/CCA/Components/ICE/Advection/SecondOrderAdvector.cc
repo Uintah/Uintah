@@ -25,6 +25,7 @@
 #include <CCA/Components/ICE/Advection/SecondOrderAdvector.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Disclosure/TypeDescription.h>
@@ -208,11 +209,11 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
   // if total_fluxout > vol then 
   // -find the cell, 
   // -set the outflux slab vol in all cells = 0.0,
-  // -request that the timestep be restarted. 
-  // -ignore if a timestep restart has already been requested
-  bool tsr = new_dw->timestepRestarted();
-  
-  if (error && bulletProof_test && !tsr) {
+  // -request that the time step be recomputed. 
+  // -ignore if a recompute time step has already been requested
+  bool rts = new_dw->recomputeTimeStep();
+
+  if (error && bulletProof_test && !rts) {
     vector<IntVector> badCells;
     vector<fflux>  badOutflux;
   
@@ -232,8 +233,15 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
         badOutflux.push_back(ofs);
       }
     }  // cell iter
-    warning_restartTimestep( badCells,badOutflux, vol, indx, patch, new_dw);
+    warning_recomputeTimeStep( badCells,badOutflux, vol, indx, patch);
+    cout << "\nA time step recompute has been requested \n " << endl;
+    
   }  // if total_fluxout > vol  
+
+  if (error && bulletProof_test) {
+    new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+    new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
+  }
   
   if (error && !bulletProof_test) {
     ostringstream mesg;

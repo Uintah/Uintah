@@ -30,7 +30,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 #include <string>
 
@@ -60,7 +60,7 @@ namespace Uintah{
   
   class ESConductivityModel{
     public:
-      ESConductivityModel(SimulationStateP& shared_state,
+      ESConductivityModel(MaterialManagerP& materialManager,
                           MPMFlags* mpm_flags,
                           MPMLabel* mpm_lb,
 			  FVMLabel* fvm_lb,
@@ -87,7 +87,7 @@ namespace Uintah{
 
       Ghost::GhostType d_gac;
       double d_TINY_RHO;
-      SimulationStateP d_shared_state;
+      MaterialManagerP d_materialManager;
       MPMLabel* d_mpm_lb;
       FVMLabel* d_fvm_lb;
       MPMFlags* d_mpm_flags;

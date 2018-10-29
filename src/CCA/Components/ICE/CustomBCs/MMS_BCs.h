@@ -29,8 +29,8 @@
 #include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <typeinfo>
@@ -82,7 +82,7 @@ namespace Uintah {
                            const std::string& var_desc,
                            Iterator& bound_ptr,
                            const std::string& bc_kind,
-                           SimulationStateP& sharedState,
+                           MaterialManagerP& materialManager,
                            mms_globalVars* gv,
                            mms_localVars* lv);
                            
@@ -99,7 +99,7 @@ namespace Uintah {
                         CCVariable<double>& press_CC,
                         Iterator& bound_ptr,
                         const std::string& bc_kind,
-                        SimulationStateP& sharedState,
+                        MaterialManagerP& materialManager,
                         mms_globalVars* gv,
                         mms_localVars* lv);  
                         
@@ -114,7 +114,7 @@ int set_MMS_BCs_FC( const Patch* patch,
                       T& vel_FC,
                       Iterator& bound_ptr,
                       const Vector& dx,
-                      SimulationStateP& sharedState,
+                      MaterialManagerP& materialManager,
                       mms_globalVars* gv,
                       mms_localVars* lv)
 {
@@ -142,7 +142,7 @@ int set_MMS_BCs_FC( const Patch* patch,
   double nu = gv->viscosity;
   double A =  gv->A;
   double t = lv->simTime + lv->delT;
-  // double t  = sharedState->getElapsedSimTime();
+  // double t  = materialManager->getElapsedSimTime();
   // t += lv->delT;
     
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {

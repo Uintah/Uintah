@@ -47,7 +47,7 @@
  */
 
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
@@ -68,7 +68,7 @@ namespace Uintah {
     
      NonLinearDiff1(
                     ProblemSpecP      & ps,
-                    SimulationStateP  & sS,
+                    MaterialManagerP  & sS,
                     MPMFlags          * Mflag,
                     std::string         diff_type
                    );

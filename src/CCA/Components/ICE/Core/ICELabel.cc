@@ -65,41 +65,6 @@ ICELabel::ICELabel()
   nonconstDelt->allowMultipleComputes();
   delTLabel = nonconstDelt;
 
-  // output interval
-  VarLabel* nonconstOutputInv =
-    VarLabel::create(outputInterval_name,
-		     min_vartype::getTypeDescription() );
-  nonconstOutputInv->allowMultipleComputes();
-  outputIntervalLabel = nonconstOutputInv;
-
-  // output time step interval
-  VarLabel* nonconstOutputTimeStepInv =
-    VarLabel::create(outputTimeStepInterval_name,
-  		     min_vartype::getTypeDescription() );
-  nonconstOutputTimeStepInv->allowMultipleComputes();
-  outputTimeStepIntervalLabel = nonconstOutputTimeStepInv;
-
-  // check point interval
-  VarLabel* nonconstCheckpointInv =
-    VarLabel::create(checkpointInterval_name,
-		     min_vartype::getTypeDescription() );
-  nonconstCheckpointInv->allowMultipleComputes();
-  checkpointIntervalLabel = nonconstCheckpointInv;
-  
-  // check point time step interval
-  VarLabel* nonconstCheckpointTimeStepInv =
-    VarLabel::create(checkpointTimeStepInterval_name,
-  		     min_vartype::getTypeDescription() );
-  nonconstCheckpointTimeStepInv->allowMultipleComputes();
-  checkpointTimeStepIntervalLabel = nonconstCheckpointTimeStepInv;
-
-  // End Simulation  
-  VarLabel* nonconstEndSimulation =
-    VarLabel::create(endSimulation_name,
-		     bool_or_vartype::getTypeDescription() );
-  nonconstEndSimulation->allowMultipleComputes();
-  endSimulationLabel = nonconstEndSimulation;
-  
   //__________________________________
   // Cell Centered variables
   TMV_CCLabel             = VarLabel::create("TMV_CC",        CC_double);
@@ -308,13 +273,6 @@ ICELabel::~ICELabel()
     VarLabel::destroy(timeStepLabel);
     VarLabel::destroy(simulationTimeLabel);
     VarLabel::destroy(delTLabel);
-    
-    VarLabel::destroy(outputIntervalLabel);
-    VarLabel::destroy(outputTimeStepIntervalLabel);
-    VarLabel::destroy(checkpointIntervalLabel);
-    VarLabel::destroy(checkpointTimeStepIntervalLabel);
-    
-    VarLabel::destroy(endSimulationLabel);
 
     // Cell centered variables
     VarLabel::destroy(press_CCLabel);

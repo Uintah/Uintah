@@ -33,7 +33,7 @@ namespace Uintah {
   class Smagorinsky_Model : public Turbulence {
 
   public:
-    Smagorinsky_Model(ProblemSpecP& ps, SimulationStateP& sharedState);
+    Smagorinsky_Model(ProblemSpecP& ps, MaterialManagerP& materialManager);
     Smagorinsky_Model();
     
     virtual ~Smagorinsky_Model();
@@ -49,7 +49,7 @@ namespace Uintah {
                                       constSFCZVariable<double>& wvel_FC,
                                       constCCVariable<double>& rho_CC,
                                       const int indx,
-                                      SimulationStateP&  d_sharedState,
+                                      MaterialManagerP&  d_materialManager,
                                       CCVariable<double>& turb_viscosity);    
                                          
     virtual void scheduleComputeVariance(SchedulerP& sched, 
@@ -66,7 +66,7 @@ namespace Uintah {
                            const SFCYVariable<double>& vvel_FC,
                            const SFCZVariable<double>& wvel_FC,
                            const int indx,
-                           SimulationStateP&  d_sharedState,
+                           MaterialManagerP&  d_materialManager,
                            DataWarehouse* new_dw,
                            std::vector<CCVariable<double> >& SIJ);
                            

@@ -26,7 +26,7 @@
 #define _SDINTERFACEMODELFACTORY_H_
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <string>
 #include <CCA/Components/MPM/Materials/Diffusion/DiffusionInterfaces/SDInterfaceModel.h>
 
@@ -42,7 +42,7 @@ namespace Uintah {
     // this function has a switch for all known mat_types
     
     static SDInterfaceModel* create(ProblemSpecP& ps,
-                                    SimulationStateP& ss,
+                                    MaterialManagerP& ss,
                                     MPMFlags* flags,
                                     MPMLabel* mpm_lb);
 

@@ -36,7 +36,7 @@ using namespace std;
 using namespace Uintah;
 
 // Standard Constructor
-TracerMaterial::TracerMaterial(ProblemSpecP& ps, SimulationStateP& ss, 
+TracerMaterial::TracerMaterial(ProblemSpecP& ps, MaterialManagerP& ss, 
                                                  MPMFlags* flags)
   : Material(ps), d_tracer(0)
 {
@@ -67,10 +67,12 @@ TracerMaterial::~TracerMaterial()
   delete d_tracer;
 }
 
-void TracerMaterial::registerParticleState(SimulationState* sharedState)
+void TracerMaterial::registerParticleState(
+               std::vector<std::vector<const VarLabel*> > &TracerState,
+               std::vector<std::vector<const VarLabel*> > &TracerState_preReloc)
 {
-  sharedState->d_tracerState.push_back(d_tracer->returnTracerState());
-  sharedState->d_tracerState_preReloc.push_back(d_tracer->returnTracerStatePreReloc());
+  TracerState.push_back         (d_tracer->returnTracerState());
+  TracerState_preReloc.push_back(d_tracer->returnTracerStatePreReloc());
 }
 
 ProblemSpecP TracerMaterial::outputProblemSpec(ProblemSpecP& ps)

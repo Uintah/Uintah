@@ -88,7 +88,7 @@ DSFTv2::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
                                        variable_registry , const bool packed_tasks){
 
 
-  register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
+  register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry,  m_task_name, packed_tasks);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ DSFTv2::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filterRhoU.initialize(0.0);
   filterRhoV.initialize(0.0);
   filterRhoW.initialize(0.0);
-  
+
 
 }
 //--------------------------------------------------------------------------------------------------
@@ -136,35 +136,35 @@ DSFTv2::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInform
   register_variable( m_cc_u_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_v_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_w_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
-   
+
   register_variable( m_ref_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cell_type_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
 
-  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta11", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta12", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta13", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta22", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta23", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta33", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta11", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta12", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta13", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta22", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta23", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta33", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
 
-  register_variable( "s11", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "s12", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "s13", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "s22", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "s23", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "s33", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  register_variable( "s11", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "s12", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "s13", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "s22", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "s23", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "s33", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
 
-  register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
-  register_variable( "rhoUU", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
-  register_variable( "rhoVV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
-  register_variable( "rhoWW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoUV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoUW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoVW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoU", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
+  register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , m_task_name, packed_tasks);
+  register_variable( "rhoUU", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , m_task_name, packed_tasks);
+  register_variable( "rhoVV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , m_task_name, packed_tasks);
+  register_variable( "rhoWW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoUV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoUW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoVW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoU", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
 
 }
 
@@ -178,7 +178,7 @@ DSFTv2::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
   constCCVariable<double>& ref_rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_ref_density_name));
   constCCVariable<int>& cell_type = *(tsk_info->get_const_uintah_field<constCCVariable<int> >(m_cell_type_name));
-  
+
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
   constCCVariable<double>& CCuVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_u_vel_name));
   constCCVariable<double>& CCvVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_v_vel_name));
@@ -206,7 +206,7 @@ DSFTv2::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::BlockRange range2(low_filter2, high_filter2 );
   Uintah::BlockRange range1(low_filter, high_filter );
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex( ));
-  
+
 
   CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >(m_IsI_name,nGhosts2 );
   CCVariable<double>& s11 = tsk_info->get_uintah_field_add< CCVariable<double> >("s11",nGhosts2 );
@@ -236,7 +236,8 @@ DSFTv2::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Beta23.initialize(0.0);
   Beta33.initialize(0.0);
 
-  computeIsInsij get_IsIsij(IsI, s11, s22, s33, s12, s13, s23, uVel, vVel, wVel, CCuVel, CCvVel, CCwVel, Dx);
+  Uintah::ArchesCore::computeIsInsij get_IsIsij( IsI, s11, s22, s33, s12, s13, s23,
+                                                 uVel, vVel, wVel, CCuVel, CCvVel, CCwVel, Dx);
   Uintah::parallel_for(range2,get_IsIsij);
 
   Uintah::parallel_for( range2, [&](int i, int j, int k){
@@ -251,11 +252,11 @@ DSFTv2::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   // Filter rho
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho", nGhosts1);
   filterRho.initialize(0.0);
-  //Uintah::FilterVarT< constCCVariable<double> > get_frho(rho, filterRho, 
+  //Uintah::FilterVarT< constCCVariable<double> > get_frho(rho, filterRho,
   //                                              vol_fraction, 0,0,0, Type_filter);
   //Uintah::parallel_for(range1,get_frho);
   m_Filter.applyFilter(rho,filterRho,vol_fraction,range1);
-  
+
   Uintah::parallel_for( range, [&](int i, int j, int k){
   if (cell_type(i,j,k) > 0){
     if (filterRho(i,j,k) < 1e-14) {
@@ -264,8 +265,8 @@ DSFTv2::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     }
   }
   });
-  
- 
+
+
 
   // Compute rhouiuj at cc
   CCVariable<double>& rhoUU = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoUU",nGhosts2);

@@ -40,8 +40,8 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
@@ -89,9 +89,9 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
     
     MPI_Datatype MPI_POINT=fun_getTypeDescription((Point*)0)->getMPIType();
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=d_materialManager->getNumMatls( "MPM" );
     for(int m=0; m<numMPMMatls; m++) {
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      MPMMaterial* mpm_matl = d_materialManager->getMaterial( "MPM", m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 
       // Cell mass of the material
@@ -348,19 +348,19 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
                       DataWarehouse* old_dw,
                       DataWarehouse* /*new_dw*/)
 {
-  // double time=d_sharedState->getElapsedSimTime();
+  // double time=d_materialManager->getElapsedSimTime();
 
   // simTime_vartype simTime;
   // old_dw->get(simTime, lb->simulationTimeLabel);
 
   // delt_vartype delT;
   // old_dw->get(delT, lb->delTLabel, getLevel(patches) );
-	  
+          
   for(int p=0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double dx_bar=(dx.x()+dx.y()+dx.z())/3.;
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=d_materialManager->getNumMatls( "MPM" );
 
     for(int m=0; m<numMPMMatls; m++) {
       if(doCrackPropagation) {
@@ -430,7 +430,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
 
           // Calculate crack propagation velocity
           double vc1=0.,vc2=0.,vcc=0.;
-	  /*
+          /*
           if(sp) { // Record crack incremental and time instant 
             cfSegDis[m][2*i]=(p1p-p1).length();
             cfSegTime[m][2*i] =simTime-delT;            
@@ -446,7 +446,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
             vc2=cfSegDis[m][2*i+1]/(simTime-cfSegTime[m][2*i+1]);
             vcc=(vc1+vc2)/2.;
           }  
-	  */
+          */
           short CASE=0;             // No propagation
           if(l12/css[m]<0.25) {
             CASE=1;                 // Too short segment, drop it

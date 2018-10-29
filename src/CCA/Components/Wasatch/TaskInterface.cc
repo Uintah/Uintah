@@ -47,8 +47,8 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Level.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <sci_defs/cuda_defs.h>
 
 //-- Wasatch includes --//

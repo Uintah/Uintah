@@ -3,7 +3,7 @@
 
 #include <Core/Grid/LevelP.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
@@ -35,7 +35,7 @@ namespace Uintah{
 
       enum RAD_MODEL_TYPE { DORADIATION, RMCRT };
 
-      WallModelDriver( SimulationStateP& shared_state );
+      WallModelDriver( MaterialManagerP& materialManager );
       ~WallModelDriver();
 
       /** @brief Input file interface **/
@@ -102,13 +102,13 @@ namespace Uintah{
       std::string _dep_vel_name;
       std::vector<std::string> _extra_src_flux_names;
       int _num_extra_src;
-      int _k_ash_uncertain;
+      double _k_ash_uncertain;
       int _Nenv;
       bool do_coal_region;
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency
       std::string _T_label_name;         ///< Temperature label name
-      SimulationStateP& _shared_state;
-      int _matl_index;                   ///< Material index
+      MaterialManagerP& _materialManager;
+      int m_matl_index;                   ///< Material index
 
       const VarLabel* _timeStepLabel;
       const VarLabel* _simulationTimeLabel;

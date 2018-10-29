@@ -49,7 +49,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 
 #ifndef PIDOFFSET
 #define PIDOFFSET 1000000000000ul

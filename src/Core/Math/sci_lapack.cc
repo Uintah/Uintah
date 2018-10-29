@@ -35,7 +35,6 @@
 
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/lapack_defs.h>
-#include <sci_defs/magma_defs.h>
 #include <sci_defs/uintah_defs.h> // For FIX_NAME
 
 #include <Core/Math/sci_lapack.h>
@@ -49,7 +48,7 @@
 
 namespace Uintah {
 
-double *ctof(double **c, int rows, int cols)
+double* ctof(double **c, int rows, int cols)
 {
   double *f;
   int i, j;
@@ -119,73 +118,6 @@ extern "C" {
 bool
 lapackinvert(double *A, int n)
 {
-  
-#if defined(HAVE_MAGMA)
-
-  // d_A    is the device matrix
-  // h_R    is the host result (pinned buffer)
-  // n      is the order of A (A is n*n)
-  // ipiv   an int array to store the permutations
-  // lda,   lwork, info The leading dimension of the host matrix A.
-  // ldda,  ldwork, info The leading dimension of the device matrix A.
-
-  // CUDA and CUBLAS initialization
-  MAGMA_CUDA_INIT();
-
-  // things we'll be working with
-  double* h_R = 0;
-  double* d_A = 0;
-  double* dwork = 0;
-  magma_int_t n2, lda, ldda;
-  magma_int_t info;
-  double* work;
-  magma_int_t *ipiv;
-  magma_int_t lwork, ldwork;
-
-  // query for Magma workspace size and pad for device memory
-  lwork = int(n * 64);
-  ldwork = n * magma_get_dgetri_nb(n);
-  n2 = n * n;
-  ldda = ((n + 31) / 32) * 32;
-  lda = n;
-  lwork = n;
-
-  // allocate host memory, pinned host memory and device memory
-  ipiv = new int[n];
-  work = new double[n*64];
-  MAGMA_HOSTALLOC(h_R, double, n2);
-  MAGMA_DEVALLOC(d_A, double, n * ldda);
-  MAGMA_DEVALLOC(dwork, int, ldwork);
-
-  // make the MAGMA calls and get results back host-side
-  magma_dsetmatrix(n, n, A, lda, d_A, ldda);
-  magma_dgetrf_gpu(n, n, d_A, ldda, ipiv, &info);
-  magma_dgetmatrix(n, n, d_A, ldda, A, lda);
-  magma_dgetri_gpu(n, d_A, ldda, ipiv, dwork, ldwork, &info);
-  magma_dgetmatrix(n, n, d_A, ldda, h_R, lda);
-
-  // swap pointers with pinned memory host version of A and A itself
-  A = h_R;
-
-  // clean up CPU memory allocations
-  delete[] work;
-  delete[] ipiv;
-
-  // clean up device memory allocations
-  MAGMA_HOSTFREE(h_R);
-  MAGMA_DEVFREE(d_A);
-  MAGMA_DEVFREE(dwork);
-
-  // shutdown CUDA and CUBLAS
-  MAGMA_CUDA_FINALIZE();
-
-  if (info == 0) {
-    return true;
-  } else {
-    return false;
-  }
-
-#else
 
   // A is the matrix
   // n is the order of A (A is n*n)
@@ -211,9 +143,6 @@ lapackinvert(double *A, int n)
     return true;
   else
     return false;
-
-#endif
-
 }
 
 // This is for Vulcan@LLNL:
@@ -222,31 +151,7 @@ lapackinvert(double *A, int n)
 void
 lapacksvd( double **A, int m, int n, double *S, double **U, double **VT )
 {
-#if defined(HAVE_MAGMA)
-
-//  magma_dgesvd(char jobu,
-//               char jobvt,
-//               magma_int_t m,
-//               magma_int_t n,
-//               double *A,
-//               magma_int_t lda,
-//               double *s,
-//               double *U,
-//               magma_int_t ldu,
-//               double *VT,
-//               magma_int_t ldvt,
-//               double *work,
-//               magma_int_t lwork,
-//               magma_int_t *info )
-
-//  magma_dgesvd(jobu, jobvt, m, n, a, lda, S, u,
-//               ldu, vt, ldvt, work, lwork, &info);
-
-  printf( "!!!WARNING!!! (magma) lapacksvd (in sci_lapack.cc) called, but not implemented!!!\n" );
-
-#else
-
-# if defined( HAVE_DGESVD )
+#if defined( HAVE_DGESVD )
   char jobu, jobvt;
   int lda, ldu, ldvt, lwork, info;
   double *a, *u, *vt, *work;
@@ -303,11 +208,9 @@ lapacksvd( double **A, int m, int n, double *S, double **U, double **VT )
   delete [] u;
   delete [] vt;
   delete [] work;
-# else
+#else
   printf( "!!!WARNING!!! lapacksvd (in sci_lapack.cc) called, but not implemented!!!\n" );
-# endif
 #endif
-
 }
 
 
@@ -341,32 +244,8 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
 
   work = new double[lwork];
   
-#if defined(HAVE_MAGMA)
-
-//  magma_dgeev(char jobvl,
-//              char jobvr,
-//              magma_int_t n,
-//              double *a,
-//              magma_int_t lda,
-//              double *WR,
-//              double *WI,
-//              double *vl,
-//              magma_int_t ldvl,
-//              double *vr,
-//              magma_int_t ldvr,
-//              double *work,
-//              magma_int_t lwork,
-//              magma_int_t *info)
-
-  magma_dgeev(jobvl, jobvr, n, a, lda, Er, Ei, vl,
-              ldvl, vr, ldvr, work, lwork, &info);
-
-#else
-
   DGEEV( &jobvl, &jobvr, &n, a, &lda, Er, Ei, vl,
          &ldvl, vr, &ldvr, work, &lwork, &info );
-
-#endif
 
   if (Evecs) {
     ftoc(vr, Evecs, n, ldvr);

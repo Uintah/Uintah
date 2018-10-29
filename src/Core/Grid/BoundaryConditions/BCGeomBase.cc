@@ -126,7 +126,6 @@ void BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
   
   std::vector<Point>::const_iterator pts = test_pts.begin();
   
-  ListOfCellsIterator list_cells;
   std::vector<IntVector> vec_cells;
   
   for (cell_itr.reset(); !cell_itr.done();cell_itr++,pts++) {
@@ -135,7 +134,6 @@ void BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
     }
   }
   
-  ListOfCellsIterator list_nodes;
   std::vector<IntVector> vec_nodes;
   
   for (node_itr.reset(); !node_itr.done();node_itr++) {
@@ -149,6 +147,7 @@ void BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
     d_cells = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
+    ListOfCellsIterator list_cells(vec_cells.size());
     for (std::vector<IntVector>::const_iterator i = vec_cells.begin();
          i != vec_cells.end(); ++i) {
       list_cells.add(*i);
@@ -159,6 +158,7 @@ void BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
     d_nodes = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
+    ListOfCellsIterator list_nodes(vec_nodes.size());
     for (std::vector<IntVector>::const_iterator i = vec_nodes.begin();
          i != vec_nodes.end(); ++i) {
       list_nodes.add(*i);
@@ -244,7 +244,6 @@ void BCGeomBase::determineInteriorBndIteratorLimits( const Patch::FaceType   fac
   Iterator cell_itr(cells);
   std::vector<Point>::const_iterator pts = test_pts.begin();
 
-  ListOfCellsIterator list_cells;
   std::vector<IntVector> vec_cells;
 
   cell_itr.reset();
@@ -262,6 +261,7 @@ void BCGeomBase::determineInteriorBndIteratorLimits( const Patch::FaceType   fac
     d_cells = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
+  ListOfCellsIterator list_cells(vec_cells.size());
     for (std::vector<IntVector>::const_iterator i = vec_cells.begin();
          i != vec_cells.end(); ++i) {
       list_cells.add(*i);
@@ -275,7 +275,6 @@ void BCGeomBase::determineInteriorBndIteratorLimits( const Patch::FaceType   fac
   patch->getFaceNodes(face,-offset[pdir],ln,hn);
   GridIterator nodes(ln,hn);
   Iterator node_itr(nodes);
-  ListOfCellsIterator list_nodes;
   std::vector<IntVector> vec_nodes;
   for (node_itr.reset(); !node_itr.done();node_itr++) {
     Point p = patch->getLevel()->getNodePosition(*node_itr);
@@ -287,6 +286,7 @@ void BCGeomBase::determineInteriorBndIteratorLimits( const Patch::FaceType   fac
     d_nodes = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
+  ListOfCellsIterator list_nodes(vec_nodes.size());
     for (std::vector<IntVector>::const_iterator i = vec_nodes.begin();
          i != vec_nodes.end(); ++i) {
       list_nodes.add(*i);

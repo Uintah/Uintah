@@ -26,7 +26,7 @@
 #define Packages_Uintah_CCA_Components_OnTheFlyAnalysis_Factory_h
 
 #include <CCA/Ports/Output.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 
@@ -42,8 +42,8 @@ namespace Uintah {
   public:      
     static
     std::vector< AnalysisModule*> create( const ProcessorGroup* myworld,
-					  const SimulationStateP sharedState,
-					  const ProblemSpecP& prob_spec );
+                                          const MaterialManagerP materialManager,
+                                          const ProblemSpecP& prob_spec );
   };
 }
 

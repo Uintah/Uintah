@@ -33,8 +33,8 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
@@ -42,12 +42,12 @@
 using namespace Uintah;
 
 NullDissolution::NullDissolution(const ProcessorGroup* myworld,
-                         SimulationStateP& d_sS,
+                         MaterialManagerP& d_sS,
                          MPMLabel* Mlb)
   : Dissolution(myworld, Mlb, 0)
 {
   // Constructor
-  d_sharedState = d_sS;
+  d_materialManager = d_sS;
   lb = Mlb;
 }
 

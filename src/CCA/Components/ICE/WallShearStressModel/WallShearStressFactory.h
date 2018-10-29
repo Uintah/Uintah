@@ -26,7 +26,7 @@
 #define _WALLSHEARSTRESSFACTORY_H_
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 
 namespace Uintah {
 
@@ -40,7 +40,7 @@ namespace Uintah {
     ~WallShearStressFactory();
     
     static WallShearStress* create( ProblemSpecP& ps, 
-                                    SimulationStateP& sharedState );
+                                    MaterialManagerP& materialManager );
                               
   };
 

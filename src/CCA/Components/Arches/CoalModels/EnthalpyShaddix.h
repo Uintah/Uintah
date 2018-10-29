@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_EnthalpyShaddix_h
 #define Uintah_Component_Arches_EnthalpyShaddix_h
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
@@ -35,7 +35,7 @@ public:
                           const std::vector<std::string>  & reqICLabelNames,
                           const std::vector<std::string>  & reqScalarLabelNames,
                           ArchesLabel                * fieldLabels,
-                          SimulationStateP           & sharedState,
+                          MaterialManagerP           & materialManager,
                           Properties                 * props,
                           int qn );
 
@@ -65,7 +65,7 @@ public:
   typedef std::map< std::string, Devolatilization*> DevolModelMap;
 
   EnthalpyShaddix( std::string modelName,
-                   SimulationStateP& shared_state,
+                   MaterialManagerP& materialManager,
                    ArchesLabel* fieldLabels,
                    std::vector<std::string> reqICLabelNames,
                    std::vector<std::string> reqScalarLabelNames,

@@ -79,7 +79,7 @@ ContinuityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::V
   register_variable( "y-mom", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
   register_variable( "z-mom", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
-  register_variable( m_label_drhodt , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( m_label_drhodt , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
   register_variable( m_label_balance , ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
 
 

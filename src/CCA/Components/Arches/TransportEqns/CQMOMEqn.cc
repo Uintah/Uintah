@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -326,7 +326,7 @@ CQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
 // Method: Actually initialize the variables.
@@ -344,7 +344,7 @@ void CQMOMEqn::initializeVariables( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> newVar;
     CCVariable<double> rkoldVar;
@@ -400,7 +400,7 @@ CQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int time
   } else {
     tsk->modifies(d_sourceLabel);
   }
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -418,7 +418,7 @@ CQMOMEqn::computeSources( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> totalSource;
     if (new_dw->exists(d_sourceLabel, matlIndex, patch)) {
@@ -489,7 +489,7 @@ CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
     tsk->modifies(d_FconvLabel);
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
 // Method: Actually build the transport equation.
@@ -512,7 +512,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     const Level* level = patch->getLevel();
     const int ilvl = level->getID();
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
 
     constCCVariable<double> oldPhi;
@@ -648,7 +648,7 @@ CQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
   tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0 );
   tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::None, 0 );
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
 // Method: Actually solve the transport equation.
@@ -668,7 +668,7 @@ CQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     delt_vartype DT;
     old_dw->get(DT, d_fieldLabels->d_delTLabel);
@@ -737,7 +737,7 @@ CQMOMEqn::sched_buildXConvection( const LevelP& level, SchedulerP& sched, int ti
     tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -757,7 +757,7 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     constCCVariable<double> oldPhi;
     constCCVariable<int> cellType;
@@ -841,7 +841,7 @@ CQMOMEqn::sched_buildYConvection( const LevelP& level, SchedulerP& sched, int ti
     tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -861,7 +861,7 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     constCCVariable<double> oldPhi;
     constCCVariable<int> cellType;
@@ -939,7 +939,7 @@ CQMOMEqn::sched_buildZConvection( const LevelP& level, SchedulerP& sched, int ti
     tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 
 //---------------------------------------------------------------------------
@@ -959,7 +959,7 @@ CQMOMEqn::buildZConvection( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     constCCVariable<double> oldPhi;
     constCCVariable<int> cellType;
@@ -1049,7 +1049,7 @@ CQMOMEqn::sched_buildSplitRHS( const LevelP& level, SchedulerP& sched, int timeS
     tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 1 );
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
 // Method: Actually build the transport equation.
@@ -1071,7 +1071,7 @@ CQMOMEqn::buildSplitRHS( const ProcessorGroup* pc,
     const Level* level = patch->getLevel();
     const int ilvl = level->getID();
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
 
     constCCVariable<double> oldPhi;

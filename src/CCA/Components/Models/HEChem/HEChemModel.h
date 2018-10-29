@@ -32,8 +32,8 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 /**************************************
@@ -73,8 +73,8 @@ namespace Uintah {
   class HEChemModel : public ModelInterface {
   public:
     HEChemModel(const ProcessorGroup* myworld,
-		const SimulationStateP sharedState)
-      : ModelInterface(myworld, sharedState) {};
+                const MaterialManagerP materialManager)
+      : ModelInterface(myworld, materialManager) {};
 
     virtual ~HEChemModel() {};
 
@@ -83,23 +83,39 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
     virtual void scheduleInitialize(SchedulerP& scheduler,
-				    const LevelP& level) = 0;
+                                    const LevelP& level) = 0;
 
     virtual void scheduleComputeStableTimeStep(SchedulerP& scheduler,
-					       const LevelP& level) = 0;
+                                               const LevelP& level) = 0;
 
     // Used by DDT1 ONLY.
     virtual void scheduleRefine(const PatchSet* patches,
-				SchedulerP& sched) {};
+                                SchedulerP& sched) {};
 
     virtual void scheduleComputeModelSources(SchedulerP& scheduler,
-					     const LevelP& level) = 0;
+                                             const LevelP& level) = 0;
 
     // Used by LightTime ONLY.
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched) {};
                                                
-  private:     
+    // Particle state - communicated from MPM 
+    inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
+      particle_ghost_type = type;
+      particle_ghost_layer = ngc;
+    }
+      
+    inline void getParticleGhostLayer(Ghost::GhostType& type, int& ngc) {
+      type = particle_ghost_type;
+      ngc = particle_ghost_layer;
+    }
+      
+  protected:
+    //! so all components can know how many particle ghost cells to ask for
+    Ghost::GhostType particle_ghost_type{Ghost::None};
+    int particle_ghost_layer{0};
+
+  private:    
     HEChemModel(const HEChemModel&);
     HEChemModel& operator=(const HEChemModel&);
   };

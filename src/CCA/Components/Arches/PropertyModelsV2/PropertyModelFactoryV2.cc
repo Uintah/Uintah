@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 #include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
 #include <CCA/Components/Arches/PropertyModelsV2/DensityStar.h>
+#include <CCA/Components/Arches/PropertyModelsV2/DensityRK.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ContinuityPredictor.h>
 #include <CCA/Components/Arches/PropertyModelsV2/Drhodt.h>
 #include <CCA/Components/Arches/PropertyModelsV2/OneDWallHT.h>
@@ -25,6 +26,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 #include <CCA/Components/Arches/PropertyModelsV2/UnweightVariable.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ConsScalarDiffusion.h>
+#include <CCA/Components/Arches/PropertyModelsV2/GasKineticEnergy.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -33,7 +35,7 @@ using namespace Uintah;
 PropertyModelFactoryV2::PropertyModelFactoryV2( const ApplicationCommon* arches ) :
 TaskFactoryBase(arches)
 {
-  _factory_name = "PropertyModelFactory";
+  _factory_name = "PropertyModelFactoryV2";
 }
 
 PropertyModelFactoryV2::~PropertyModelFactoryV2()
@@ -67,7 +69,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       if ( type == "wall_heatflux_variable" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
+        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _materialManager );
         register_task( name, tsk );
 
       } else if ( type == "Interpolation_var" ){
@@ -148,6 +150,12 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 );
         register_task( name, tsk );
+
+      } else if ( type == "gas_kinetic_energy" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew GasKineticEnergy::Builder( name, 0 );
+        register_task( name, tsk );
+        _post_update_property_tasks.push_back( name );
 
       } else if ( type == "one_d_wallht" ) {
 
@@ -370,6 +378,9 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
     if (compute_density_star){
       TaskInterface::TaskBuilder* ds = scinew DensityStar::Builder( "density_star", 0 );
       register_task( "density_star", ds );
+
+      TaskInterface::TaskBuilder* drk = scinew DensityRK::Builder( "density_rk", 0 );
+      register_task( "density_rk", drk );
     }
 
     TaskInterface::TaskBuilder* con = scinew ContinuityPredictor::Builder( "continuity_check", 0 );
@@ -497,6 +508,10 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
       tsk = retrieve_task("density_star");
       tsk->problemSetup(db);
       tsk->create_local_labels();
+
+      tsk = retrieve_task("density_rk");
+      tsk->problemSetup(db);
+      tsk->create_local_labels();
     }
 
     tsk = retrieve_task("continuity_check");
@@ -538,7 +553,7 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
 
       if ( type == "wall_heatflux_variable" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
+        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _materialManager );
         register_task( name, tsk );
 
       } else if ( type == "variable_stats" ){

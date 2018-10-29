@@ -42,17 +42,17 @@
       <property name="title">
        <string>TIme Info</string>
       </property>
-      <widget class="QLineEdit" name="MaxTime">
+      <widget class="QLineEdit" name="SimTimeMax">
        <property name="geometry">
         <rect>
-         <x>300</x>
+         <x>330</x>
          <y>60</y>
          <width>81</width>
          <height>20</height>
         </rect>
        </property>
       </widget>
-      <widget class="QLabel" name="MaxTimeLabel">
+      <widget class="QLabel" name="SimTimeMaxLabel">
        <property name="geometry">
         <rect>
          <x>230</x>
@@ -62,16 +62,16 @@
         </rect>
        </property>
        <property name="text">
-        <string>Max Time</string>
+        <string>Max Sim Time</string>
        </property>
       </widget>
-      <widget class="QLabel" name="TimestepLabel">
+      <widget class="QLabel" name="TimeStepLabel">
        <property name="geometry">
         <rect>
          <x>10</x>
          <y>30</y>
-         <width>100</width>
-         <height>15</height>
+         <width>111</width>
+         <height>16</height>
         </rect>
        </property>
        <property name="text">
@@ -81,86 +81,86 @@
       <widget class="QLineEdit" name="TimeStep">
        <property name="geometry">
         <rect>
-         <x>110</x>
+         <x>120</x>
          <y>30</y>
          <width>81</width>
          <height>20</height>
         </rect>
        </property>
       </widget>
-      <widget class="QLineEdit" name="Time">
+      <widget class="QLineEdit" name="SimTime">
        <property name="geometry">
         <rect>
-         <x>300</x>
+         <x>330</x>
          <y>30</y>
          <width>81</width>
          <height>20</height>
         </rect>
        </property>
       </widget>
-      <widget class="QLabel" name="TimeLabel">
+      <widget class="QLabel" name="SimTimeLabel">
        <property name="geometry">
         <rect>
          <x>230</x>
          <y>30</y>
-         <width>60</width>
-         <height>15</height>
+         <width>91</width>
+         <height>16</height>
         </rect>
        </property>
        <property name="text">
-        <string>Time</string>
+        <string>Sim Time</string>
        </property>
       </widget>
-      <widget class="QLabel" name="TimestepLabel_2">
+      <widget class="QLabel" name="TimeStepMaxLabel">
        <property name="geometry">
         <rect>
          <x>10</x>
          <y>60</y>
-         <width>100</width>
-         <height>15</height>
+         <width>111</width>
+         <height>16</height>
         </rect>
        </property>
        <property name="text">
-        <string>Max Time Step</string>
+        <string>Max Time Steps</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="MaxTimeStep">
+      <widget class="QLineEdit" name="TimeStepsMax">
        <property name="geometry">
         <rect>
-         <x>110</x>
+         <x>120</x>
          <y>60</y>
          <width>81</width>
          <height>20</height>
         </rect>
        </property>
       </widget>
-      <widget class="QCheckBox" name="EndOnMaxTime">
+      <widget class="QCheckBox" name="SimTimeEndAtMax">
        <property name="geometry">
         <rect>
-         <x>410</x>
+         <x>440</x>
          <y>60</y>
-         <width>191</width>
+         <width>211</width>
          <height>20</height>
         </rect>
        </property>
        <property name="text">
-        <string>End execution at max time</string>
+        <string>End at max sim time exactly</string>
        </property>
       </widget>
-      <widget class="QCheckBox" name="ClampTimestepsToOutput">
+      <widget class="QCheckBox" name="SimTimeClampToOutput">
        <property name="geometry">
         <rect>
-         <x>410</x>
+         <x>440</x>
          <y>30</y>
-         <width>181</width>
+         <width>211</width>
          <height>20</height>
         </rect>
        </property>
        <property name="text">
-        <string>Clamp time to output</string>
+        <string>Clamp sim time to output times</string>
        </property>
       </widget>
-      <widget class="QLabel" name="StopATimestepLabel">
+      <widget class="QLabel" name="StopATimeStepLabel">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -554,7 +554,22 @@
        </column>
        <column>
         <property name="text">
+         <string>Minimum</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Rank</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
          <string>Average</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Std. Dev.</string>
         </property>
        </column>
        <column>
@@ -565,11 +580,6 @@
        <column>
         <property name="text">
          <string>Rank</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>%</string>
         </property>
        </column>
       </widget>
@@ -782,9 +792,9 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>460</y>
+         <y>480</y>
          <width>641</width>
-         <height>201</height>
+         <height>181</height>
         </rect>
        </property>
        <property name="title">
@@ -796,7 +806,7 @@
           <x>10</x>
           <y>30</y>
           <width>621</width>
-          <height>161</height>
+          <height>141</height>
          </rect>
         </property>
         <column>
@@ -858,9 +868,9 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>240</y>
+         <y>300</y>
          <width>641</width>
-         <height>211</height>
+         <height>181</height>
         </rect>
        </property>
        <property name="title">
@@ -872,7 +882,7 @@
           <x>10</x>
           <y>30</y>
           <width>621</width>
-          <height>171</height>
+          <height>141</height>
          </rect>
         </property>
         <column>
@@ -900,8 +910,8 @@
       <widget class="QGroupBox" name="groupBox">
        <property name="geometry">
         <rect>
-         <x>10</x>
-         <y>170</y>
+         <x>340</x>
+         <y>240</y>
          <width>311</width>
          <height>61</height>
         </rect>
@@ -948,6 +958,49 @@
         </property>
        </widget>
       </widget>
+      <widget class="QGroupBox" name="ReductionVariableGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>160</y>
+         <width>311</width>
+         <height>141</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Reduction variables</string>
+       </property>
+       <widget class="QTableWidget" name="ReductionVariableTable">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>291</width>
+          <height>101</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>Variable</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Value</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Count</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Overridden</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
      </widget>
     </widget>
    </widget>
@@ -967,11 +1020,10 @@
  <tabstops>
   <tabstop>tabWidget</tabstop>
   <tabstop>TimeStep</tabstop>
-  <tabstop>MaxTimeStep</tabstop>
-  <tabstop>Time</tabstop>
-  <tabstop>MaxTime</tabstop>
-  <tabstop>ClampTimestepsToOutput</tabstop>
-  <tabstop>EndOnMaxTime</tabstop>
+  <tabstop>TimeStepsMax</tabstop>
+  <tabstop>SimTime</tabstop>
+  <tabstop>SimTimeMax</tabstop>
+  <tabstop>SimTimeEndAtMax</tabstop>
   <tabstop>StopAtTimeStep</tabstop>
   <tabstop>StopAtLastTimeStep</tabstop>
   <tabstop>DeltaTVariableTable</tabstop>
@@ -988,6 +1040,9 @@
   <tabstop>ImageWidth</tabstop>
   <tabstop>ImageFormat</tabstop>
   <tabstop>StateVariableTable</tabstop>
+  <tabstop>LoadExtraElements</tabstop>
+  <tabstop>OutputIntervalVariableTable</tabstop>
+  <tabstop>DoutTable</tabstop>
   <tabstop>DebugStreamTable</tabstop>
  </tabstops>
  <resources/>

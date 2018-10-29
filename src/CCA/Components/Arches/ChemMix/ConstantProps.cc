@@ -32,7 +32,7 @@
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
@@ -46,8 +46,8 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 // Default Constructor
 //---------------------------------------------------------------------------
-ConstantProps::ConstantProps( SimulationStateP& sharedState ) :
-  MixingRxnModel( sharedState )
+ConstantProps::ConstantProps( MaterialManagerP& materialManager ) :
+  MixingRxnModel( materialManager )
 {}
 
 //---------------------------------------------------------------------------
@@ -125,14 +125,14 @@ ConstantProps::sched_getState( const LevelP& level,
 
       MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old");
       if ( check_iter != d_oldDvVarMap.end() ){
-        // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+        // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
 
         timeStep_vartype timeStep(0);
         if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
           sched->get_dw(0)->get( timeStep, m_timeStepLabel );
         else if( sched->get_dw(1) && sched->get_dw(1)->exists( m_timeStepLabel ) )
           sched->get_dw(1)->get( timeStep, m_timeStepLabel );
-        
+
         if ( timeStep != 0 ){
           tsk->requires( Task::OldDW, i->second, Ghost::None, 0 );
         }
@@ -170,7 +170,7 @@ ConstantProps::sched_getState( const LevelP& level,
 
   tsk->requires( Task::NewDW, m_volFractionLabel, gn, 0 );
 
-  sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
 }
 
 //---------------------------------------------------------------------------
@@ -293,7 +293,7 @@ ConstantProps::getState( const ProcessorGroup* pc,
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-        std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first );
+        //std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); //unused 
 
         if ( i->first == "density" ){
           (*i->second.var)[c] *= eps_vol[c];
