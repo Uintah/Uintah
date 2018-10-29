@@ -148,6 +148,9 @@ private:
   std::string m_p_rho_root;
   std::string m_rc_mass_root;
   std::string m_char_mass_root;
+  std::vector<double > m_initial_rc; // kg_i/#
+  double m_Fd_M; 
+  double m_Fd_B; 
 
   const VarLabel* NO_src_label;
   const VarLabel* HCN_src_label;
