@@ -40,26 +40,27 @@ if [ "$MACHINE" == "uintah-build" ]; then
   TEST_DATA_DIR=/home/${LOGNAME}/"$OS"/TestData
   TEMP_DIR=/home/${LOGNAME}/"$OS"
   SCRIPT_DIR=/home/${LOGNAME}/scripts
-  CHECKPOINTS=/home/${LOGNAME}/CheckPoints         
-  
+  CHECKPOINTS=/home/${LOGNAME}/CheckPoints
+
   # Where the webpage will be, and init webpage
   # Note you need the following directory structure:
-  #     public_html/ 
+  #     public_html/
   #       opt/
-  #       dbg/         
+  #       dbg/
   #       Plots/
   #          Memory/
   #          simRunTime/
-  
+
   PUBLIC_HTML=/home/${LOGNAME}/public_html
   HTMLLOG=${PUBLIC_HTML}/Uintah.html
   RT_URL=http://uintah-build.chpc.utah.edu/~$LOGNAME
-  
+
   if [ "$LOGNAME" == "gpu_rt" ]; then
     names=(\
       "ahumphrey@sci.utah.edu,"            \
       "t.harman@utah.edu,"                 \
       "bradpeterson@gmail.com,"            \
+      "jholmen@sci.utah.edu,"              \
       "jthornock@gmail.com,"               \
       "derkhar@gmail.com,"                 \
       "bisaac2@gmail.com,"                 \
@@ -69,18 +70,24 @@ if [ "$MACHINE" == "uintah-build" ]; then
     export TEST_COMPONENTS="Examples ARCHES"
     IFS=" "
   fi
-  
+
   if [ "$LOGNAME" == "kokkos_rt" ]; then
-    names=( "bradpeterson@gmail.com," "jholmen@sci.utah.edu," "derkhar@gmail.com", "t.harman@utah.edu" )
+    names=(\
+    "bradpeterson@gmail.com,"     \
+    "jholmen@sci.utah.edu,"       \
+    "jthornock@gmail.com,"        \
+    "derkhar@gmail.com,"          \
+    "ohdiazi@gmail.com,"          \
+    "t.harman@utah.edu" )
     IFS=""    # used to elimnate spaces between array elements
     DEFAULT_MAIL_TO=${names[*]}
-    
+
     SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/branches/kokkos_dev/src"
     export TEST_COMPONENTS="Examples ARCHES"
     WHICH_TESTS="KOKKOSTESTS"
     IFS=" "
   fi
-  
+
 fi
 
 #______________________________________________________________________
@@ -248,7 +255,7 @@ else
 
   BUILDROOT="${BUILD_DIR}/Uintah.${ID}"
   if [ -d "$BUILDROOT" ]; then
-    
+
     # don\t just set the ID directly, we have two different possibilities for ID
     NID=`date +_%H`
     ID="${ID}${NID}"
@@ -274,12 +281,12 @@ else
   mkdir "$BUILDROOT"
 
   if [ -L "${BUILD_DIR}/last_ran.lock" ]; then
-    rm -f "${BUILD_DIR}/last_ran.lock" 
+    rm -f "${BUILD_DIR}/last_ran.lock"
   fi
   ln -s "$BUILDROOT" "${BUILD_DIR}/last_ran.lock"
 
   if [ $VERBOSE = "yes" ]; then
-    echo "Checking out latest version of Uintah at `date`" 
+    echo "Checking out latest version of Uintah at `date`"
   fi
   echo "Checking out latest version of Uintah at `date` to " > "$BUILDROOT"/log
   echo "$BUILDROOT" >> "$BUILDROOT"/log
@@ -292,7 +299,7 @@ else
 
 
   echo $PATH
-  
+
   #__________________________________
   # Try checking out the src tree 10 times
   # Occassionally it will fail with svn: REPORT of '/svn/uintah/!svn/vcc/default': Could not read response body: Secure connection truncated (https://gforge.sci.utah.edu)
@@ -300,7 +307,7 @@ else
   counter=1
   while [[ $counter -le 10  &&  $retval -ne 0 ]]
   do
-    
+
     svn co "$SVN_trunk" src  --username=anonymous --password=\"\"> "$BUILDROOT"/svn_co.log 2>&1
     retval=$?
 
@@ -314,13 +321,13 @@ else
       sleep 60
     fi
     counter=$(( $counter + 1 ))
-    
+
     if [ $counter -gt 10 ]; then
       exit -1
     fi
-    
+
   done
-  
+
   cd "$BUILD_DIR"
 
   if [ $VERBOSE = "yes" ]; then
@@ -334,7 +341,7 @@ fi
 # create html web page
 rm -f $HTMLLOG
 TITLE=`date`
-echo "<HTML><HEAD><TITLE> $OS tests on $TITLE</TITLE></HEAD><BODY><pre>" >> $HTMLLOG 
+echo "<HTML><HEAD><TITLE> $OS tests on $TITLE</TITLE></HEAD><BODY><pre>" >> $HTMLLOG
 echo "`date +'%r %D'`" >> $HTMLLOG
 echo "Regression Tester results from `hostname`" >> $HTMLLOG
 echo "Architecture: ${OS}" >> $HTMLLOG

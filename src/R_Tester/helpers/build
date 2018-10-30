@@ -63,6 +63,10 @@ if [ "$OS" = "Linux" ]; then
       --enable-examples \\
       --enable-arches \\
       LDFLAGS='-ldl'\\"
+      
+      DBG_CONFIGURE="    --enable-debug \\
+          --enable-64bit \\
+          --enable-scinew-line-numbers \\"
     fi
 
     ENV="     CC=mpicc \\
