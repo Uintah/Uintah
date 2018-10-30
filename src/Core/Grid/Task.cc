@@ -998,8 +998,8 @@ Task::display( std::ostream & out ) const
   }
 
   out << " (" << d_tasktype << ")";
-
-  if ( (d_tasktype == Task::Normal || d_tasktype == Task::Output || d_tasktype == OncePerProc) && m_patch_set != nullptr) {
+ 
+  if ( (d_tasktype == Task::Normal || d_tasktype == Task::Output ) && m_patch_set != nullptr) {
     out << ", Level " << getLevel(m_patch_set)->getIndex();
   }
 
