@@ -65,7 +65,6 @@ static DebugStream do_cout("planeAverage", "OnTheFlyAnalysis", "planeAverage deb
 /*
      This module computes the spatial average of a variable over a plane
 TO DO:
-    - Multiple levels
     - allow user to control the number of planes
     - add delT to now.
 
@@ -87,6 +86,13 @@ planeAverage::planeAverage( const ProcessorGroup    * myworld,
                                               max_vartype::getTypeDescription() );
   d_lb->fileVarsStructLabel = VarLabel::create("FileInfo_planeAvg",
                                                PerPatch<FileInfoP>::getTypeDescription() );
+
+  d_allLevels_planarVars.resize( d_MAXLEVELS );
+  
+  d_progressVar.resize( N_TASKS );
+  for (auto i =0;i<N_TASKS; i++){
+    d_progressVar[i].resize( d_MAXLEVELS, false );
+  } 
 }
 
 //__________________________________
@@ -182,6 +188,8 @@ void planeAverage::problemSetup(const ProblemSpecP&,
   //__________________________________
   //  Now loop over all the variables to be analyzed
 
+  std::vector< std::shared_ptr< planarVarBase >  >planarVars;
+  
   for( ProblemSpecP var_spec = vars_ps->findBlock( "analyze" ); var_spec != nullptr; var_spec = var_spec->findNextBlock( "analyze" ) ) {
 
     var_spec->getAttributes( attribute );
@@ -275,7 +283,7 @@ void planeAverage::problemSetup(const ProblemSpecP&,
            << td->getName() << " ) has not been implemented" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-
+  
     //__________________________________
     //  populate the vector of averages
     // double
@@ -288,7 +296,7 @@ void planeAverage::problemSetup(const ProblemSpecP&,
       me->subType    = subType;
       me->weightType = weight;
       
-      d_planarVars.push_back( std::shared_ptr<planarVarBase>(me) );
+     planarVars.push_back( std::shared_ptr<planarVarBase>(me) );
     
     }
     // Vectors
@@ -301,10 +309,13 @@ void planeAverage::problemSetup(const ProblemSpecP&,
       me->subType    = subType;
       me->weightType = weight;
 
-      d_planarVars.push_back( std::shared_ptr<planarVarBase>(me) );
+      planarVars.push_back( std::shared_ptr<planarVarBase>(me) );
     }
   }
-
+  
+  // fill with d_MAXLEVELS copies of planarVars
+  std::fill_n( d_allLevels_planarVars.begin(), d_MAXLEVELS, planarVars );
+  
   //__________________________________
   //
   // remove any duplicate entries
@@ -332,6 +343,8 @@ void planeAverage::scheduleInitialize(SchedulerP   & sched,
   Task* t = scinew Task("planeAverage::initialize",
                   this, &planeAverage::initialize);
 
+
+  t->setType( Task::OncePerProc );
   t->computes(d_lb->lastCompTimeLabel );
   t->computes(d_lb->fileVarsStructLabel, d_zero_matl);
   sched->addTask(t, level->eachPatch(),  d_matl_set);
@@ -346,7 +359,7 @@ void planeAverage::initialize(const ProcessorGroup  *,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask( patch, do_cout,"Doing planeAverage::initialize");
+    printTask( patch, do_cout,"Doing planeAverage::initialize 1/2");
 
     double tminus = -1.0/d_writeFreq;
     new_dw->put(max_vartype(tminus), d_lb->lastCompTimeLabel );
@@ -360,6 +373,7 @@ void planeAverage::initialize(const ProcessorGroup  *,
     new_dw->put(fileInfo,    d_lb->fileVarsStructLabel, 0, patch);
 
     if( patch->getGridIndex() == 0 ){   // only need to do this once
+    
       string udaDir = m_output->getOutputLocation();
 
       //  Bulletproofing
@@ -376,42 +390,48 @@ void planeAverage::initialize(const ProcessorGroup  *,
   //__________________________________
   //  reserve space for each of the VarLabels and weighting vars
   const LevelP level = getLevelP(patches);
-  const int L_indx   = level->getIndex();
-  
-  //  Loop over variables */
-  
-  for (unsigned int i =0 ; i < d_planarVars.size(); i++) {
-    const int myLevel              = d_planarVars[i]->level;
-    const TypeDescription::Type td = d_planarVars[i]->baseType;
+  int L_indx = level->getIndex();
 
-    // is this the right level for this variable?
-    if ( isRightLevel( myLevel, L_indx, level ) ){
-      IntVector L_lo_EC;      // includes extraCells
-      IntVector L_hi_EC;
-      
-      level->computeVariableExtents( td, L_lo_EC, L_hi_EC );
-      
-      int nPlanes = 0;
-      switch( d_planeOrientation ){
-        case XY:{
-          nPlanes = L_hi_EC.z() - L_lo_EC.z() - 2 ;   // subtract 2 for interior cells
-          break;
-        }
-        case XZ:{
-          nPlanes = L_hi_EC.y() - L_lo_EC.y() - 2 ;
-          break;
-        }
-        case YZ:{
-          nPlanes = L_hi_EC.x() - L_lo_EC.x() - 2 ;
-          break;
-        }
-        default:
-          break;
-      }
-      d_planarVars[i]->set_nPlanes(nPlanes);     // number of planes that will be averaged
-      d_planarVars[i]->reserve();
-    }
+  if ( d_progressVar[INITIALIZE][L_indx] == true ){
+    return;
   }
+   
+   printTask( patches, do_cout,"Doing planeAverage::initialize 2/2");
+
+  //  Loop over variables */
+  std::vector< std::shared_ptr< planarVarBase > > planarVars = d_allLevels_planarVars[L_indx];
+  
+  for (unsigned int i =0 ; i < planarVars.size(); i++) {
+    
+    const TypeDescription::Type td = planarVars[i]->baseType;
+
+    IntVector L_lo_EC;      // includes extraCells
+    IntVector L_hi_EC;
+
+    level->computeVariableExtents( td, L_lo_EC, L_hi_EC );
+
+    int nPlanes = 0;
+    switch( d_planeOrientation ){
+      case XY:{
+        nPlanes = L_hi_EC.z() - L_lo_EC.z() - 2 ;   // subtract 2 for interior cells
+        break;
+      }
+      case XZ:{
+        nPlanes = L_hi_EC.y() - L_lo_EC.y() - 2 ;
+        break;
+      }
+      case YZ:{
+        nPlanes = L_hi_EC.x() - L_lo_EC.x() - 2 ;
+        break;
+      }
+      default:
+        break;
+    }
+    planarVars[i]->level = L_indx;
+    planarVars[i]->set_nPlanes(nPlanes);     // number of planes that will be averaged
+    planarVars[i]->reserve();                // reserve space for the planar variables
+  }
+  d_progressVar[INITIALIZE][L_indx] = true;
 }
 
 //______________________________________________________________________
@@ -422,7 +442,8 @@ void planeAverage::scheduleRestartInitialize(SchedulerP   & sched,
 
   Task* t = scinew Task("planeAverage::initialize",
                   this, &planeAverage::initialize);
-
+  
+  t->setType( Task::OncePerProc );
   t->computes(d_lb->lastCompTimeLabel );
   t->computes(d_lb->fileVarsStructLabel, d_zero_matl);
   sched->addTask(t, level->eachPatch(),  d_matl_set);
@@ -446,10 +467,13 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
   Ghost::GhostType gn = Ghost::None;
   const int L_indx = level->getIndex();
 
+  std::vector< std::shared_ptr< planarVarBase > > planarVars = d_allLevels_planarVars[L_indx];
 
-  GridP grid = level->getGrid();
-  const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(grid);
+  const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
+  
 
+
+  cout << " perProcPatches: " << *perProcPatches << endl;
   //__________________________________
   //  Task to zero the summed variables;
   Task* t0 = scinew Task( "planeAverage::zeroPlanarVars",
@@ -461,39 +485,33 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
   
   sched->addTask( t0, perProcPatches, d_matl_set );
 
-
   //__________________________________
   //  compute the planar sums task;
   Task* t1 = scinew Task( "planeAverage::computePlanarSums",
                      this,&planeAverage::computePlanarSums );
 
-  t1->setType( Task::OncePerProc );
+  t0->setType( Task::OncePerProc );
   t1->requires( Task::OldDW, m_simulationTimeLabel );
   t1->requires( Task::OldDW, d_lb->lastCompTimeLabel );
 
-  for ( unsigned int i =0 ; i < d_planarVars.size(); i++ ) {
-    VarLabel* label   = d_planarVars[i]->label;
-    const int myLevel = d_planarVars[i]->level;
+  for ( unsigned int i =0 ; i < planarVars.size(); i++ ) {
+    VarLabel* label   = planarVars[i]->label;
 
-    // is this the right level for this variable?
-    if ( isRightLevel( myLevel, L_indx, level ) ){
+    // bulletproofing
+    if( label == nullptr ){
+      string name = label->getName();
+      throw InternalError("planeAverage: scheduleDoAnalysis label not found: "
+                         + name , __FILE__, __LINE__);
+    }
 
-      // bulletproofing
-      if( label == nullptr ){
-        string name = label->getName();
-        throw InternalError("planeAverage: scheduleDoAnalysis label not found: "
-                           + name , __FILE__, __LINE__);
-      }
+    MaterialSubset* matSubSet = scinew MaterialSubset();
+    matSubSet->add( planarVars[i]->matl );
+    matSubSet->addReference();
 
-      MaterialSubset* matSubSet = scinew MaterialSubset();
-      matSubSet->add( d_planarVars[i]->matl );
-      matSubSet->addReference();
+    t1->requires( Task::NewDW, label, matSubSet, gn, 0 );
 
-      t1->requires( Task::NewDW, label, matSubSet, gn, 0 );
-
-      if(matSubSet && matSubSet->removeReference()){
-        delete matSubSet;
-      }
+    if(matSubSet && matSubSet->removeReference()){
+      delete matSubSet;
     }
   }
 
@@ -509,7 +527,6 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
   t2->requires( Task::OldDW, d_lb->lastCompTimeLabel );
   
   // only compute task on 1 patch in this proc
-
   sched->addTask( t2, perProcPatches, d_matl_set );
 
   //__________________________________
@@ -523,19 +540,15 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
   t3->requires( Task::OldDW, d_lb->lastCompTimeLabel );
   t3->requires( Task::OldDW, d_lb->fileVarsStructLabel, d_zero_matl, gn, 0 );
 
-  for ( unsigned int i =0 ; i < d_planarVars.size(); i++ ) {
-
-    int myLevel = d_planarVars[i]->level;
-    if ( isRightLevel( myLevel, L_indx, level) ){
-      MaterialSubset* matSubSet = scinew MaterialSubset();
-      matSubSet->add( d_planarVars[i]->matl );
-      matSubSet->addReference();
-    }
+  for ( unsigned int i =0 ; i < planarVars.size(); i++ ) {
+    MaterialSubset* matSubSet = scinew MaterialSubset();
+    matSubSet->add( planarVars[i]->matl );
+    matSubSet->addReference();
   }
 
   t3->computes( d_lb->lastCompTimeLabel );
   t3->computes( d_lb->fileVarsStructLabel, d_zero_matl );
-  
+
   // first patch on this level
   const Patch* p = level->getPatch(0);
   PatchSet* zeroPatch = scinew PatchSet();
@@ -550,64 +563,67 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
 //  This task is a set the variables sum = 0 for each variable type
 //
 void planeAverage::zeroPlanarVars(const ProcessorGroup * pg,
-                               const PatchSubset    * perProcPatches,   
-                               const MaterialSubset *,           
-                               DataWarehouse        * old_dw,    
-                               DataWarehouse        * new_dw)    
+                                  const PatchSubset    * patches,   
+                                  const MaterialSubset *,           
+                                  DataWarehouse        * old_dw,    
+                                  DataWarehouse        * new_dw)    
 {
-  printTask( do_cout,"Doing planeAverage::zeroPlanarVars" );
-    
-  if( isItTime( old_dw ) == false ){
+  //__________________________________
+  // zero variables if it's time to write if this MPIRank hasn't excuted this
+  // task on this level
+  const LevelP level = getLevelP( patches );
+  const int L_indx = level->getIndex();
+      
+  if( isItTime( old_dw ) == false || d_progressVar[ZERO][L_indx] == true){
     return;
   }
   
-  //__________________________________
-  // zero variables if it's time to write
-  const LevelP level = getLevelP( perProcPatches );
-  const int L_indx = level->getIndex();
+  printTask( patches, do_cout,"Doing planeAverage::zeroPlanarVars" );
 
   //__________________________________
   // Loop over variables
-  for (unsigned int i =0 ; i < d_planarVars.size(); i++) {
-    std::shared_ptr<planarVarBase> analyzeVar = d_planarVars[i];
-
-    const int myLevel = d_planarVars[i]->level;
-    if ( !isRightLevel( myLevel, L_indx, level) ){
-      continue;
-    }
-    
+  std::vector< std::shared_ptr< planarVarBase > > planarVars = d_allLevels_planarVars[L_indx];
+  
+  for (unsigned int i =0 ; i < planarVars.size(); i++) {
+    std::shared_ptr<planarVarBase> analyzeVar = planarVars[i];
     analyzeVar->zero_all_vars();
   } 
+  d_progressVar[ZERO][L_indx] = true;
 }
 
 //______________________________________________________________________
 //  Computes planar sum of each variable type
 //
 void planeAverage::computePlanarSums(const ProcessorGroup * pg,
-                                     const PatchSubset    * perProcPatches,
+                                     const PatchSubset    * patches,
                                      const MaterialSubset *,
                                      DataWarehouse        * old_dw,
                                      DataWarehouse        * new_dw)
 {
-  if( isItTime( old_dw ) == false ){
+
+  // Is it the right time and has this MPIRank executed this task on this level?
+  const LevelP level = getLevelP( patches );
+  const int L_indx = level->getIndex();
+  
+  if( isItTime( old_dw ) == false || d_progressVar[COMPUTE][L_indx] == true){
     return;
   }
   
-  const LevelP level = getLevelP( perProcPatches );
-  const int L_indx = level->getIndex();
-
   //__________________________________
   // Loop over patches 
-  for(int p=0;p<perProcPatches->size();p++){
-    const Patch* patch = perProcPatches->get(p);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    printTask( patch, do_cout, "Doing planeAverage::computePlanarSums" );
 
     //__________________________________
     // Loop over variables
-    for (unsigned int i =0 ; i < d_planarVars.size(); i++) {
+    std::vector< std::shared_ptr< planarVarBase > > planarVars = d_allLevels_planarVars[L_indx];
+    
+    for (unsigned int i =0 ; i < planarVars.size(); i++) {
+      std::shared_ptr<planarVarBase> analyzeVar = planarVars[i];
 
-      std::shared_ptr<planarVarBase> analyzeVar = d_planarVars[i];
-
-      VarLabel* label = d_planarVars[i]->label;
+      VarLabel* label = planarVars[i]->label;
       string labelName = label->getName();
 
       // bulletproofing
@@ -615,14 +631,6 @@ void planeAverage::computePlanarSums(const ProcessorGroup * pg,
         throw InternalError("planeAverage: analyze label not found: "
                              + labelName , __FILE__, __LINE__);
       }
-
-      // Are we on the right level for this level
-      const int myLevel = d_planarVars[i]->level;
-      if ( !isRightLevel( myLevel, L_indx, level) ){
-        continue;
-      }
-
-      printTask( patch, do_cout, "Doing planeAverage::computePlanarSums" );
 
       const TypeDescription::Type type    = analyzeVar->baseType;
       const TypeDescription::Type subType = analyzeVar->subType;
@@ -676,6 +684,8 @@ void planeAverage::computePlanarSums(const ProcessorGroup * pg,
       }
     }  // VarLabel loop
   }  // patches
+  
+  d_progressVar[COMPUTE][L_indx] = true;
 }
 
 
@@ -806,32 +816,29 @@ void planeAverage::planarSum_Q( DataWarehouse * new_dw,
 //______________________________________________________________________
 //  This task performs a reduction (sum) over all ranks
 void planeAverage::sumOverAllProcs(const ProcessorGroup * pg,
-                                   const PatchSubset    * patch0,
+                                   const PatchSubset    * patch,
                                    const MaterialSubset *,
                                    DataWarehouse        * old_dw,
                                    DataWarehouse        * new_dw)
 {
 
-  printTask( patch0, do_cout,"Doing planeAverage::sumOverAllProcs");
+  printTask( patch, do_cout,"Doing planeAverage::sumOverAllProcs");
 
-  if( isItTime( old_dw ) == false ){
+  const LevelP level = getLevelP( patch );
+  const int L_indx = level->getIndex();
+  
+  // Is it the right time and has this rank performed the reduction
+  if( isItTime( old_dw ) == false || d_progressVar[SUM][L_indx] == true){
     return;
   }
 
-  const LevelP level = getLevelP( patch0 );
-  const int L_indx = level->getIndex();
-
   //__________________________________
   // Loop over variables
-  for (unsigned int i =0 ; i < d_planarVars.size(); i++) {
+  std::vector< std::shared_ptr< planarVarBase > >planarVars = d_allLevels_planarVars[L_indx];
+  
+  for (unsigned int i =0 ; i < planarVars.size(); i++) {
 
-    std::shared_ptr<planarVarBase> analyzeVar = d_planarVars[i];
-
-    // Are we on the right level
-    const int myLevel = analyzeVar->level;
-    if ( !isRightLevel( myLevel, L_indx, level) ){
-      continue;
-    }
+    std::shared_ptr<planarVarBase> analyzeVar = planarVars[i];
     
     int rank = pg->myRank();
     analyzeVar->ReduceWeight( rank );
@@ -839,19 +846,19 @@ void planeAverage::sumOverAllProcs(const ProcessorGroup * pg,
     analyzeVar->ReduceVar( rank );
 
   }  // loop over planarVars
+  d_progressVar[SUM][L_indx] = true;
 }
 
 
 //______________________________________________________________________
 //  This task writes out the plane average of each VarLabel to a separate file.
 void planeAverage::writeToFiles(const ProcessorGroup* pg,
-                                const PatchSubset   * perProcPatches,
+                                const PatchSubset   * patches,
                                 const MaterialSubset*,
                                 DataWarehouse       * old_dw,
                                 DataWarehouse       * new_dw)
 {
-  const Level* level  = getLevel(  perProcPatches );
-  const LevelP levelP = getLevelP( perProcPatches );
+  const LevelP level = getLevelP( patches );
   int L_indx = level->getIndex();
 
   max_vartype writeTime;
@@ -870,8 +877,8 @@ void planeAverage::writeToFiles(const ProcessorGroup* pg,
 
   //__________________________________
   //
-  for(int p=0;p<perProcPatches->size();p++){                  // IS THIS LOOP NEEDED?? Todd
-    const Patch* patch = perProcPatches->get(p);
+  for(int p=0;p<patches->size();p++){                  // IS THIS LOOP NEEDED?? Todd
+    const Patch* patch = patches->get(p);
     
     // open the struct that contains a map of the file pointers
     // Note: after regridding this may not exist for this patch in the old_dw
@@ -898,23 +905,19 @@ void planeAverage::writeToFiles(const ProcessorGroup* pg,
     // may not own the patch
     if( proc == pg->myRank() && now >= nextWriteTime){
 
-      printTask( patch, do_cout,"Doing planeAverage::doAnalysis" );
+      printTask( patch, do_cout,"Doing planeAverage::writeToFiles" );
 
-      for (unsigned int i =0 ; i < d_planarVars.size(); i++) {
-        VarLabel* label = d_planarVars[i]->label;
+
+      std::vector< std::shared_ptr< planarVarBase > > planarVars = d_allLevels_planarVars[L_indx];
+      
+      for (unsigned int i =0 ; i < planarVars.size(); i++) {
+        VarLabel* label = planarVars[i]->label;
         string labelName = label->getName();
 
         // bulletproofing
         if(label == nullptr){
           throw InternalError("planeAverage: analyze label not found: "
                           + labelName , __FILE__, __LINE__);
-        }
-
-        // Are we on the right level for this variable?
-        const int myLevel = d_planarVars[i]->level;
-
-        if ( !isRightLevel( myLevel, L_indx, levelP ) ){
-          continue;
         }
 
         //__________________________________
@@ -941,7 +944,7 @@ void planeAverage::writeToFiles(const ProcessorGroup* pg,
         } 
         
         ostringstream fname;
-        fname << udaDir << "/" << path << "/" << labelName << "_" << d_planarVars[i]->matl;
+        fname << udaDir << "/" << path << "/" << labelName << "_" << planarVars[i]->matl;
         string filename = fname.str();
         
         //__________________________________
@@ -961,10 +964,10 @@ void planeAverage::writeToFiles(const ProcessorGroup* pg,
 
         //__________________________________
         //  Write to the file
-        d_planarVars[i]->printAverage( fp, L_indx, now );
+        planarVars[i]->printAverage( fp, L_indx, now );
         
         fflush(fp);
-      }  // d_planarVars loop
+      }  // planarVars loop
 
       lastWriteTime = now;
     }  // time to write data

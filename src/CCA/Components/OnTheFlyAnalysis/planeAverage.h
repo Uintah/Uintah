@@ -400,10 +400,11 @@ ______________________________________________________________________*/
         ~planarVar_Vector(){}
     };
 
-    // Each element of the vector contains
+    // For each level there's a vector of planeVarBases
     //
-    std::vector< std::shared_ptr< planarVarBase > > d_planarVars;
-
+    std::vector<  std::vector< std::shared_ptr< planarVarBase > > > d_allLevels_planarVars;  
+    
+          
 
     //______________________________________________________________________
     //
@@ -495,7 +496,12 @@ ______________________________________________________________________*/
     MaterialSet*     d_matl_set;
     std::set<std::string> d_isDirCreated;
     MaterialSubset*  d_zero_matl;
-    PatchSet*        d_zeroPatch;
+
+    const int d_MAXLEVELS {5};               // HARDCODED
+    
+    // Flag: has this rank has executed this task on this level
+    std::vector< std::vector< bool > > d_progressVar;
+    enum taskNames { INITIALIZE=0, ZERO=1, COMPUTE=2, SUM=3, N_TASKS=4 };
 
     enum orientation { XY, XZ, YZ };        // plane orientation
     orientation d_planeOrientation;
