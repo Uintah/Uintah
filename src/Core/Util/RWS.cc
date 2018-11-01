@@ -43,7 +43,7 @@ bool remove_lt_white_space(string &str)
   while ((iter < str.end())) 
   {
     if (*iter == ' '  || *iter == '\t' || 
-	*iter == '\n' || *iter == '\r') 
+        *iter == '\n' || *iter == '\r') 
     {
       ++iter; ++idx1;
     } 
@@ -56,7 +56,7 @@ bool remove_lt_white_space(string &str)
   while ((riter < str.rend())) 
   {
     if (*riter == ' '  || *riter == '\t' || 
-	*riter == '\n' || *riter == '\r') 
+        *riter == '\n' || *riter == '\r') 
     {
       ++riter; --idx2;
     } 

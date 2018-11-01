@@ -92,7 +92,7 @@ Vector::find_orthogonal(Vector& v1, Vector& v2) const
 {
     Vector v0(Cross(*this, Vector(1,0,0)));
     if(v0.length2() == 0){
-	v0=Cross(*this, Vector(0,1,0));
+        v0=Cross(*this, Vector(0,1,0));
     }
     v1=Cross(*this, v0);
     v1.normalize();
@@ -105,7 +105,7 @@ Vector::check_find_orthogonal(Vector& v1, Vector& v2) const
 {
     Vector v0(Cross(*this, Vector(1,0,0)));
     if(v0.length2() == 0){
-	v0=Cross(*this, Vector(0,1,0));
+        v0=Cross(*this, Vector(0,1,0));
     }
     v1=Cross(*this, v0);
     double length1 = v1.length();
@@ -125,7 +125,7 @@ Vector::normal() const
 {
    Vector v(*this);
    v.normalize();
-   return v;			// 
+   return v;                    // 
 }
 
 ostream& operator<<( ostream& os, const Vector& v )
@@ -161,29 +161,29 @@ Vector::rotz90(const int c)
     // Rotate by c*90 degrees counter clockwise
     switch(c%4){
     case 0:
-	// 0 degrees, do nothing
-	break;
+        // 0 degrees, do nothing
+        break;
     case 1:
-	// 90 degrees
-	{
-	    double newx=-y_;
-	    y_=x_;
-	    x_=newx;
-	}
-	break;
+        // 90 degrees
+        {
+            double newx=-y_;
+            y_=x_;
+            x_=newx;
+        }
+        break;
     case 2:
-	// 180 degrees
-	x_=-x_;
-	y_=-y_;
-	break;
+        // 180 degrees
+        x_=-x_;
+        y_=-y_;
+        break;
     case 3:
-	// 270 degrees
-	{
-	    double newy=-x_;
-	    x_=y_;
-	    y_=newy;
-	}
-	break;
+        // 270 degrees
+        {
+            double newy=-x_;
+            x_=y_;
+            y_=newy;
+        }
+        break;
     }
 }
 

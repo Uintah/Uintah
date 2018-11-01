@@ -48,10 +48,10 @@ TangentModulusTensor::TangentModulusTensor(const FastMatrix& C_6x6):
     for (int jj = 0; jj < 3; ++jj) {
       int row = index[ii][jj];
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           int col = index[kk][ll];
           (*this)(ii,jj,kk,ll) = C_6x6(row,col);
-	}
+        }
       }
     }
   }
@@ -96,7 +96,7 @@ TangentModulusTensor::convertToVoigtForm(FastMatrix& C_6x6) const
   for (int ii = 0; ii < 6; ++ii) {
     for (int jj = 0; jj < 6; ++jj) {
       C_6x6(ii,jj) = (*this)(index[ii][0], index[ii][1], 
-			     index[jj][0], index[jj][1]);
+                             index[jj][0], index[jj][1]);
     }
   }
 }
@@ -116,10 +116,10 @@ TangentModulusTensor::convertToTensorForm(const FastMatrix& C_6x6)
     for (int jj = 0; jj < 3; ++jj) {
       int row = index[ii][jj];
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           int col = index[kk][ll];
           (*this)(ii,jj,kk,ll) = C_6x6(row,col);
-	}
+        }
       }
     }
   }
@@ -132,9 +132,9 @@ TangentModulusTensor::contract(const Matrix3& D, Matrix3& sigrate) const
     for (int jj = 0; jj < 3; ++jj) {
       sigrate(ii,jj) = 0.0;
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           sigrate(ii,jj) += (*this)(ii,jj,kk,ll)*D(kk,ll);
-	}
+        }
       }
     }
   }

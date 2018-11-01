@@ -58,38 +58,38 @@ class LU
 
 
    Array2D<Real> permute_copy(const Array2D<Real> &A, 
-   			const Array1D<int> &piv, int j0, int j1)
-	{
-		int piv_length = piv.dim();
+                        const Array1D<int> &piv, int j0, int j1)
+        {
+                int piv_length = piv.dim();
 
-		Array2D<Real> X(piv_length, j1-j0+1);
+                Array2D<Real> X(piv_length, j1-j0+1);
 
 
          for (int i = 0; i < piv_length; i++) 
             for (int j = j0; j <= j1; j++) 
                X[i][j-j0] = A[piv[i]][j];
 
-		return X;
-	}
+                return X;
+        }
 
    Array1D<Real> permute_copy(const Array1D<Real> &A, 
-   		const Array1D<int> &piv)
-	{
-		int piv_length = piv.dim();
-		if (piv_length != A.dim())
-			return Array1D<Real>();
+                const Array1D<int> &piv)
+        {
+                int piv_length = piv.dim();
+                if (piv_length != A.dim())
+                        return Array1D<Real>();
 
-		Array1D<Real> x(piv_length);
+                Array1D<Real> x(piv_length);
 
 
          for (int i = 0; i < piv_length; i++) 
                x[i] = A[piv[i]];
 
-		return x;
-	}
+                return x;
+        }
 
 
-	public :
+        public :
 
    /** LU Decomposition
    @param  A   Rectangular matrix
@@ -97,15 +97,15 @@ class LU
    */
 
     LU (const Array2D<Real> &A) : LU_(A.copy()), m(A.dim1()), n(A.dim2()), 
-		piv(A.dim1())
-	
-	{
+                piv(A.dim1())
+        
+        {
 
    // Use a "left-looking", dot-product, Crout/Doolittle algorithm.
 
-	  int i=0;
-	  int j=0;
-	  int k=0;
+          int i=0;
+          int j=0;
+          int k=0;
 
       for (i = 0; i < m; i++) {
          piv[i] = i;
@@ -151,12 +151,12 @@ class LU
          if (p != j) {
             for (k = 0; k < n; k++) {
                double t = LU_[p][k]; 
-			   LU_[p][k] = LU_[j][k]; 
-			   LU_[j][k] = t;
+                           LU_[p][k] = LU_[j][k]; 
+                           LU_[j][k] = t;
             }
             k = piv[p]; 
-			piv[p] = piv[j]; 
-			piv[j] = k;
+                        piv[p] = piv[j]; 
+                        piv[j] = k;
             pivsign = -pivsign;
          }
 
@@ -173,7 +173,7 @@ class LU
 
    /** Is the matrix nonsingular?
    @return     1 (true)  if upper triangular factor U (and hence A) 
-   				is nonsingular, 0 otherwise.
+                                is nonsingular, 0 otherwise.
    */
 
    int isNonsingular () {
@@ -209,7 +209,7 @@ class LU
    */
 
    Array2D<Real> getU () {
-   	  Array2D<Real> U_(n,n);
+          Array2D<Real> U_(n,n);
       for (int i = 0; i < n; i++) {
          for (int j = 0; j < n; j++) {
             if (i <= j) {
@@ -249,16 +249,16 @@ class LU
    /** Solve A*X = B
    @param  B   A Matrix with as many rows as A and any number of columns.
    @return     X so that L*U*X = B(piv,:), if B is nonconformant, returns
-   					0x0 (null) array.
+                                        0x0 (null) array.
    */
 
    Array2D<Real> solve (const Array2D<Real> &B) 
    {
 
-	  /* Dimensions: A is mxn, X is nxk, B is mxk */
+          /* Dimensions: A is mxn, X is nxk, B is mxk */
       
       if (B.dim1() != m) {
-	  	return Array2D<Real>(0,0);
+                return Array2D<Real>(0,0);
       }
       if (!isNonsingular()) {
         return Array2D<Real>(0,0);
@@ -268,7 +268,7 @@ class LU
       int nx = B.dim2();
 
 
-	  Array2D<Real> X = permute_copy(B, piv, 0, nx-1);
+          Array2D<Real> X = permute_copy(B, piv, 0, nx-1);
 
       // Solve L*Y = B(piv,:)
       for (int k = 0; k < n; k++) {
@@ -293,29 +293,29 @@ class LU
    }
 
 
-   /** Solve A*x = b, where x and b are vectors of length equal	
-   		to the number of rows in A.
+   /** Solve A*x = b, where x and b are vectors of length equal 
+                to the number of rows in A.
 
    @param  b   a vector (Array1D> of length equal to the first dimension
-   						of A.
+                                                of A.
    @return x a vector (Array1D> so that L*U*x = b(piv), if B is nonconformant,
-   					returns 0x0 (null) array.
+                                        returns 0x0 (null) array.
    */
 
    Array1D<Real> solve (const Array1D<Real> &b) 
    {
 
-	  /* Dimensions: A is mxn, X is nxk, B is mxk */
+          /* Dimensions: A is mxn, X is nxk, B is mxk */
       
       if (b.dim1() != m) {
-	  	return Array1D<Real>();
+                return Array1D<Real>();
       }
       if (!isNonsingular()) {
         return Array1D<Real>();
       }
 
 
-	  Array1D<Real> x = permute_copy(b, piv);
+          Array1D<Real> x = permute_copy(b, piv);
 
       // Solve L*Y = B(piv)
       for (int k = 0; k < n; k++) {
@@ -324,11 +324,11 @@ class LU
             }
          }
       
-	  // Solve U*X = Y;
+          // Solve U*X = Y;
       for (int k = n-1; k >= 0; k--) {
             x[k] /= LU_[k][k];
-      		for (int i = 0; i < k; i++) 
-            	x[i] -= x[k]*LU_[i][k];
+                for (int i = 0; i < k; i++) 
+                x[i] -= x[k]*LU_[i][k];
       }
      
 

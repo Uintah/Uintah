@@ -51,17 +51,17 @@ namespace JAMA
    rank can be computed from this decomposition.
 
    <p>
-	(Adapted from JAMA, a Java Matrix Library, developed by jointly 
-	by the Mathworks and NIST; see  http://math.nist.gov/javanumerics/jama).
+        (Adapted from JAMA, a Java Matrix Library, developed by jointly 
+        by the Mathworks and NIST; see  http://math.nist.gov/javanumerics/jama).
    */
 template <class Real>
 class SVD 
 {
 
 
-	Array2D<Real> U, V;
-	Array1D<Real> s;
-	int m, n;
+        Array2D<Real> U, V;
+        Array1D<Real> s;
+        int m, n;
 
   public:
 
@@ -77,10 +77,10 @@ class SVD
       V = Array2D<Real>(n,n);
       Array1D<Real> e(n);
       Array1D<Real> work(m);
-	  Array2D<Real> A(Arg.copy());
-      int wantu = 1;  					/* boolean */
-      int wantv = 1;  					/* boolean */
-	  int i=0, j=0, k=0;
+          Array2D<Real> A(Arg.copy());
+      int wantu = 1;                                    /* boolean */
+      int wantv = 1;                                    /* boolean */
+          int i=0, j=0, k=0;
 
       // Reduce A to bidiagonal form, storing the diagonal elements
       // in s and the super-diagonal elements in e.
@@ -268,7 +268,7 @@ class SVD
       double eps = pow(2.0,-52.0);
       while (p > 0) {
          int k=0;
-		 int kase=0;
+                 int kase=0;
 
          // Here is where a test for too many iterations would go.
 
@@ -484,21 +484,21 @@ class SVD
 
    void getU (Array2D<Real> &A) 
    {
-   	  int minm = min(m+1,n);
+          int minm = min(m+1,n);
 
-	  A = Array2D<Real>(m, minm);
+          A = Array2D<Real>(m, minm);
 
-	  for (int i=0; i<m; i++)
-	  	for (int j=0; j<minm; j++)
-			A[i][j] = U[i][j];
-   	
+          for (int i=0; i<m; i++)
+                for (int j=0; j<minm; j++)
+                        A[i][j] = U[i][j];
+        
    }
 
    /* Return the right singular vectors */
 
    void getV (Array2D<Real> &A) 
    {
-   	  A = V;
+          A = V;
    }
 
    /** Return the one-dimensional array of singular values */
@@ -513,7 +513,7 @@ class SVD
    */
 
    void getS (Array2D<Real> &A) {
-   	  A = Array2D<Real>(n,n);
+          A = Array2D<Real>(n,n);
       for (int i = 0; i < n; i++) {
          for (int j = 0; j < n; j++) {
             A[i][j] = 0.0;

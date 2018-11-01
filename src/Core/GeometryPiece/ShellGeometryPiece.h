@@ -39,13 +39,13 @@ namespace Uintah {
   /////////////////////////////////////////////////////////////////////////////
   /*!
     \class ShellGeometryPiece
-	
+        
     \brief Abstract class for shell geometries
-	
+        
     \author Biswajit Banerjee \n
     C-SAFE and Department of Mechanical Engineering \n
     University of Utah \n
-	
+        
     Creates a shell from the xml input file description.
     The input form looks like this:
    
@@ -62,18 +62,18 @@ namespace Uintah {
     b) Cylinder
       <cylinder_shell>
       </cylinder_shell>
-	
+        
     c) Plane
       <plane_shell>
       </plane_shell>
 
     \endverbatim
-	
+        
   */
   /////////////////////////////////////////////////////////////////////////////
 
   class ShellGeometryPiece : public GeometryPiece {
-	 
+         
   public:
     //////////////////////////////////////////////////////////////////////
     /*! \brief Destructor */
@@ -85,7 +85,7 @@ namespace Uintah {
 
     /// Make a clone
     virtual GeometryPieceP clone() const = 0;
-	 
+         
     //////////////////////////////////////////////////////////////////////
     /*! \brief Returns the bounding box surrounding the box. */
     //////////////////////////////////////////////////////////////////////
@@ -95,7 +95,7 @@ namespace Uintah {
     /*! \brief Determines whether a point is inside the shell */
     //////////////////////////////////////////////////////////////////////
     virtual bool inside(const Point &p) const = 0;
-	 
+         
     //////////////////////////////////////////////////////////////////////
     /*! \brief Returns the number of particles associated with the shell */
     //////////////////////////////////////////////////////////////////////
@@ -105,13 +105,13 @@ namespace Uintah {
     /*! \brief Create the particles in the shell */
     //////////////////////////////////////////////////////////////////////
     virtual int createParticles(const Patch* patch,
-				ParticleVariable<Point>&  pos,
-				ParticleVariable<double>& vol,
-				ParticleVariable<double>& pThickTop,
-				ParticleVariable<double>& pThickBot,
-				ParticleVariable<Vector>& pNormal,
-				ParticleVariable<Matrix3>& psize,
-				particleIndex start) = 0;
+                                ParticleVariable<Point>&  pos,
+                                ParticleVariable<double>& vol,
+                                ParticleVariable<double>& pThickTop,
+                                ParticleVariable<double>& pThickBot,
+                                ParticleVariable<Vector>& pNormal,
+                                ParticleVariable<Matrix3>& psize,
+                                particleIndex start) = 0;
 
   protected:
     virtual void outputHelper( ProblemSpecP & ps ) const = 0;

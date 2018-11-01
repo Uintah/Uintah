@@ -57,8 +57,8 @@ namespace TNT
 
 /**
  <b>[Deprecatred]</b>  Value-based vector class from pre-1.0
- 	TNT version.  Kept here for backward compatiblity, but should
-	use the newer TNT::Array1D classes instead.
+        TNT version.  Kept here for backward compatiblity, but should
+        use the newer TNT::Array1D classes instead.
 
 */
 

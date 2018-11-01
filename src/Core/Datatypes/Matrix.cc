@@ -112,9 +112,9 @@ Matrix::cg_solve(const DenseMatrix& rhs, DenseMatrix& lhs) const
 
 int 
 Matrix::cg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
-		 double &err, int &niter,
-		 int &flops, int &memrefs,
-		 double max_error, int toomany, int useLhsAsGuess) const
+                 double &err, int &niter,
+                 int &flops, int &memrefs,
+                 double max_error, int toomany, int useLhsAsGuess) const
 {
   if (rhs.ncols() != lhs.ncols()) return 0;
   for (int i=0; i<rhs.ncols(); i++) {
@@ -123,7 +123,7 @@ Matrix::cg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
     for (j=0; j<rh.nrows(); j++)
       rh[j]=rhs[i][j];
     if (!cg_solve(rh, lh, err, niter, flops, memrefs, max_error, 
-		  toomany, useLhsAsGuess)) return 0;
+                  toomany, useLhsAsGuess)) return 0;
     for (j=0; j<rh.nrows(); j++)
       lhs[i][j]=lh[j];
   }
@@ -132,9 +132,9 @@ Matrix::cg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
 
 int
 Matrix::cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
-		 double &err, int &niter, 
-		 int& flops, int& memrefs,
-		 double max_error, int toomany, int useLhsAsGuess) const
+                 double &err, int &niter, 
+                 int& flops, int& memrefs,
+                 double max_error, int toomany, int useLhsAsGuess) const
 {
   int size=nrows();  
   niter=0;
@@ -226,9 +226,9 @@ Matrix::bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs) const
 
 int 
 Matrix::bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
-		   double &err, int &niter,
-		   int &flops, int &memrefs,
-		   double max_error, int /*toomany*/, int useLhsAsGuess) const
+                   double &err, int &niter,
+                   int &flops, int &memrefs,
+                   double max_error, int /*toomany*/, int useLhsAsGuess) const
 {
   if (rhs.ncols() != lhs.ncols()) return 0;
   for (int i=0; i<rhs.ncols(); i++) {
@@ -237,7 +237,7 @@ Matrix::bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
     for (j=0; j<rh.nrows(); j++)
       rh[j]=rhs[i][j];
     if (!bicg_solve(rh, lh, err, niter, flops, memrefs, 
-		    max_error, useLhsAsGuess)) return 0;
+                    max_error, useLhsAsGuess)) return 0;
     for (j=0; j<rh.nrows(); j++)
       lhs[i][j]=lh[j];
   }
@@ -246,9 +246,9 @@ Matrix::bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
 
 int
 Matrix::bicg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
-		   double &err, int &niter, 
-		   int& flops, int& memrefs,
-		   double max_error, int toomany, int useLhsAsGuess) const
+                   double &err, int &niter, 
+                   int& flops, int& memrefs,
+                   double max_error, int toomany, int useLhsAsGuess) const
 {
   int size=nrows();  
   niter=0;

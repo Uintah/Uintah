@@ -53,7 +53,7 @@ public:
   virtual ~ErrnoException();
   virtual const char* message() const;
   virtual const char* type() const;
-	 
+         
   int getErrno() const;
 
 private:

@@ -49,8 +49,8 @@ namespace Uintah {
 class AssertionFailed : public Exception {
 public:
   AssertionFailed(const char* msg,
-		  const char* file,
-		  int line);
+                  const char* file,
+                  int line);
   AssertionFailed(const AssertionFailed&);
   virtual ~AssertionFailed();
   virtual const char* message() const;

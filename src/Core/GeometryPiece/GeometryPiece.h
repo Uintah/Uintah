@@ -46,39 +46,39 @@ template<class T> class Handle;
 typedef Handle<GeometryPiece> GeometryPieceP;
 
 /**************************************
-	
+        
 CLASS
    GeometryPiece
-	
+        
    Short description...
-	
+        
 GENERAL INFORMATION
-	
+        
    GeometryPiece.h
-	
+        
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
-	
+        
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
+        
 KEYWORDS
    GeometryPiece
-	
+        
 DESCRIPTION
    Long description...
-	
+        
 WARNING
-	
+        
 ****************************************/
       
 class GeometryPiece : public RefCounted {
-	 
+         
 public:
   //////////
   // Insert Documentation Here:
   GeometryPiece();
-	 
+         
   //////////
   // Insert Documentation Here:
   virtual ~GeometryPiece();
@@ -91,10 +91,10 @@ public:
   //////////
   // Insert Documentation Here:
   virtual Box getBoundingBox() const = 0;
-	 
+         
     //////////
     // Insert Documentation Here:
-  virtual bool inside(const Point &p) const = 0;	 
+  virtual bool inside(const Point &p) const = 0;         
 
   std::string getName() const {
     return name_;

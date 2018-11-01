@@ -41,7 +41,7 @@
 // x0 is set and 1 is returned).
 // Return values will only be 1 or 3.
 int cubic_poly_roots(double b, double c, double d,
-		     double& x0, double& x1, double& x2);
+                     double& x0, double& x1, double& x2);
 
 
 

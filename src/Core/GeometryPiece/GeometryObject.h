@@ -44,32 +44,32 @@ class GeometryPiece;
 
 
 /**************************************
-	
+        
 CLASS
    GeometryObject
-	
+        
    Short description...
-	
+        
 GENERAL INFORMATION
-	
+        
    GeometryObject.h
-	
+        
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
-	
+        
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
+        
  
-	
+        
 KEYWORDS
    GeometryObject
-	
+        
 DESCRIPTION
    Long description...
-	
+        
 WARNING
-	
+        
 ****************************************/
 
 class GeometryObject {

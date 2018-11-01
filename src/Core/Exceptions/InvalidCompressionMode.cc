@@ -29,7 +29,7 @@ using namespace Uintah;
 
 
 InvalidCompressionMode::InvalidCompressionMode(const std::string& invalidmode,
-					       const std::string& vartype,
+                                               const std::string& vartype,
                                                const char* file,
                                                int line)
 {

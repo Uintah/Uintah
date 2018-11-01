@@ -99,7 +99,7 @@ operator+( const Array2D<T> &A, const Array2D<T> &B )
 
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	C[i][j] = A[i][j] + B[i][j];
+        C[i][j] = A[i][j] + B[i][j];
       }
     }
     return C;
@@ -121,7 +121,7 @@ operator-( const Array2D<T> &A, const Array2D<T> &B )
 
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	C[i][j] = A[i][j] - B[i][j];
+        C[i][j] = A[i][j] - B[i][j];
       }
     }
     return C;
@@ -143,7 +143,7 @@ operator*( const Array2D<T> &A, const Array2D<T> &B )
 
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	C[i][j] = A[i][j] * B[i][j];
+        C[i][j] = A[i][j] * B[i][j];
       }
     }
     return C;
@@ -165,7 +165,7 @@ operator/( const Array2D<T> &A, const Array2D<T> &B )
 
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	C[i][j] = A[i][j] / B[i][j];
+        C[i][j] = A[i][j] / B[i][j];
       }
     }
     return C;
@@ -182,7 +182,7 @@ operator+=( Array2D<T> &A, const Array2D<T> &B )
   if (B.dim1() == m ||  B.dim2() == n ) {
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	A[i][j] += B[i][j];
+        A[i][j] += B[i][j];
       }
     }
   }
@@ -199,7 +199,7 @@ operator-=( Array2D<T> &A, const Array2D<T> &B )
   if (B.dim1() == m ||  B.dim2() == n ) {
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	A[i][j] -= B[i][j];
+        A[i][j] -= B[i][j];
       }
     }
   }
@@ -216,7 +216,7 @@ operator*=( Array2D<T> &A, const Array2D<T> &B )
   if (B.dim1() == m ||  B.dim2() == n ) {
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	A[i][j] *= B[i][j];
+        A[i][j] *= B[i][j];
       }
     }
   }
@@ -233,7 +233,7 @@ operator/=( Array2D<T> &A, const Array2D<T> &B )
   if (B.dim1() == m ||  B.dim2() == n ) {
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	A[i][j] /= B[i][j];
+        A[i][j] /= B[i][j];
       }
     }
   }
@@ -272,7 +272,7 @@ matmult( const Array2D<T> &A, const Array2D<T> &B )
       T sum = 0;
 
       for (int k=0; k<N; k++) {
-	sum += A[i][k] * B [k][j];
+        sum += A[i][k] * B [k][j];
       }
 
       C[i][j] = sum;

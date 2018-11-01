@@ -251,8 +251,8 @@ DataArchive::queryProcessors( unsigned int & nProcs )
     else {
       vector<string> pieces = UintahXML::splitXMLtag( line );
       if( pieces[0] == "<numberOfProcessors>" ) {
-	nProcs = atoi( pieces[1].c_str() );
-	return;
+        nProcs = atoi( pieces[1].c_str() );
+        return;
       }
     }
   }

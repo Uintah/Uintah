@@ -73,8 +73,8 @@ SparseRowMatrix::SparseRowMatrix() :
 
 
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
-				 int* rows, int* columns,
-				 int nnz, double* a_) :
+                                 int* rows, int* columns,
+                                 int nnz, double* a_) :
   Matrix(nnrows, nncols),
   rows(rows),
   columns(columns),
@@ -205,11 +205,11 @@ SparseRowMatrix::column()
       // If the first column entry for the row is a zero.
       if (columns[rows[i]] == 0)
       {
-	(*cm)[i] = a[rows[i]];
+        (*cm)[i] = a[rows[i]];
       }
       else
       {
-	(*cm)[i] = 0;
+        (*cm)[i] = 0;
       }
     }
   }
@@ -241,7 +241,7 @@ SparseRowMatrix::transpose() const
   int t_nncols = nrows_;
   int t_nnrows = ncols_;
   SparseRowMatrix *t = scinew SparseRowMatrix(t_nnrows, t_nncols, t_rows,
-					      t_columns, t_nnz, t_a);
+                                              t_columns, t_nnz, t_a);
 
   int *at = scinew int[t_nnrows+1];
   int i;
@@ -286,7 +286,7 @@ SparseRowMatrix::transpose()
   int t_nncols = nrows_;
   int t_nnrows = ncols_;
   SparseRowMatrix *t = scinew SparseRowMatrix(t_nnrows, t_nncols, t_rows,
-					      t_columns, t_nnz, t_a);
+                                              t_columns, t_nnz, t_a);
 
   int *at = scinew int[t_nnrows+1];
   int i;
@@ -475,8 +475,8 @@ SparseRowMatrix::solve(ColumnMatrix&)
 
 void
 SparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
-		      int& flops, int& memrefs, int beg, int end,
-		      int) const
+                      int& flops, int& memrefs, int beg, int end,
+                      int) const
 {
   // Compute A*x=b
   ASSERT(x.nrows() == ncols_);
@@ -496,8 +496,8 @@ SparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
 
 void
 SparseRowMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-				int& flops, int& memrefs,
-				int beg, int end, int) const
+                                int& flops, int& memrefs,
+                                int beg, int end, int) const
 {
   // Compute At*x=b
   ASSERT(x.nrows() == nrows_);
@@ -543,7 +543,7 @@ SparseRowMatrix::sparse_mult(const DenseMatrix& x, DenseMatrix& b) const
       double sum = 0.0;
       for (k = rows[i]; k < rows[i+1]; k++)
       {
-	sum += a[k] * x.get(columns[k], j);
+        sum += a[k] * x.get(columns[k], j);
       }
       b.put(i, j, sum);
     }
@@ -721,43 +721,43 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
     {
       if (ca >= a.rows[r+1] && cb >= b.rows[r+1])
       {
-	break;
+        break;
       }
       else if (ca >= a.rows[r+1])
       {
-	cols.push_back(b.columns[cb]);
-	vals.push_back(b.a[cb]);
-	rows[r+1]++;
-	cb++;
+        cols.push_back(b.columns[cb]);
+        vals.push_back(b.a[cb]);
+        rows[r+1]++;
+        cb++;
       }
       else if (cb >= b.rows[r+1])
       {
-	cols.push_back(a.columns[ca]);
-	vals.push_back(a.a[ca]);
-	rows[r+1]++;
-	ca++;
+        cols.push_back(a.columns[ca]);
+        vals.push_back(a.a[ca]);
+        rows[r+1]++;
+        ca++;
       }
       else if (a.columns[ca] < b.columns[cb])
       {
-	cols.push_back(a.columns[ca]);
-	vals.push_back(a.a[ca]);
-	rows[r+1]++;
-	ca++;
+        cols.push_back(a.columns[ca]);
+        vals.push_back(a.a[ca]);
+        rows[r+1]++;
+        ca++;
       }
       else if (a.columns[ca] > b.columns[cb])
       {
-	cols.push_back(b.columns[cb]);
-	vals.push_back(b.a[cb]);
-	rows[r+1]++;
-	cb++;
+        cols.push_back(b.columns[cb]);
+        vals.push_back(b.a[cb]);
+        rows[r+1]++;
+        cb++;
       }
       else
       {
-	cols.push_back(a.columns[ca]);
-	vals.push_back(a.a[ca] + b.a[cb]);
-	rows[r+1]++;
-	ca++;
-	cb++;
+        cols.push_back(a.columns[ca]);
+        vals.push_back(a.a[ca] + b.a[cb]);
+        rows[r+1]++;
+        ca++;
+        cb++;
       }
     }
   }
@@ -775,7 +775,7 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
   }
 
   return scinew SparseRowMatrix(a.nrows(), a.ncols(), rows,
-				vcols, (int)vals.size(), vvals);
+                                vcols, (int)vals.size(), vvals);
 }
 
 
@@ -800,43 +800,43 @@ SubSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
     {
       if (ca >= a.rows[r+1] && cb >= b.rows[r+1])
       {
-	break;
+        break;
       }
       else if (ca >= a.rows[r+1])
       {
-	cols.push_back(b.columns[cb]);
-	vals.push_back(-b.a[cb]);
-	rows[r+1]++;
-	cb++;
+        cols.push_back(b.columns[cb]);
+        vals.push_back(-b.a[cb]);
+        rows[r+1]++;
+        cb++;
       }
       else if (cb >= b.rows[r+1])
       {
-	cols.push_back(a.columns[ca]);
-	vals.push_back(a.a[ca]);
-	rows[r+1]++;
-	ca++;
+        cols.push_back(a.columns[ca]);
+        vals.push_back(a.a[ca]);
+        rows[r+1]++;
+        ca++;
       }
       else if (a.columns[ca] < b.columns[cb])
       {
-	cols.push_back(a.columns[ca]);
-	vals.push_back(a.a[ca]);
-	rows[r+1]++;
-	ca++;
+        cols.push_back(a.columns[ca]);
+        vals.push_back(a.a[ca]);
+        rows[r+1]++;
+        ca++;
       }
       else if (a.columns[ca] > b.columns[cb])
       {
-	cols.push_back(b.columns[cb]);
-	vals.push_back(-b.a[cb]);
-	rows[r+1]++;
-	cb++;
+        cols.push_back(b.columns[cb]);
+        vals.push_back(-b.a[cb]);
+        rows[r+1]++;
+        cb++;
       }
       else
       {
-	cols.push_back(a.columns[ca]);
-	vals.push_back(a.a[ca] - b.a[cb]);
-	rows[r+1]++;
-	ca++;
-	cb++;
+        cols.push_back(a.columns[ca]);
+        vals.push_back(a.a[ca] - b.a[cb]);
+        rows[r+1]++;
+        ca++;
+        cb++;
       }
     }
   }
@@ -855,7 +855,7 @@ SubSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
   }
 
   return scinew SparseRowMatrix(a.nrows(), a.ncols(), rows,
-				vcols, (int)vals.size(), vvals);
+                                vcols, (int)vals.size(), vvals);
 }
 
 
@@ -880,9 +880,9 @@ SparseRowMatrix::submatrix(int r1, int c1, int r2, int c2)
     {
       if (columns[j] >= c1 && columns[j] <= c2)
       {
-	csv.push_back(columns[j] - c1);
-	valsv.push_back(a[j]);
-	rs[i-r1+1]++;
+        csv.push_back(columns[j] - c1);
+        valsv.push_back(a[j]);
+        rs[i-r1+1]++;
       }
     }
   }

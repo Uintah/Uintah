@@ -81,11 +81,11 @@ public:
   virtual DenseMatrix* transpose();
   void gettranspose( DenseMatrix& out);
   virtual void    mult(const ColumnMatrix& x, ColumnMatrix& b,
-		       int& flops, int& memrefs, int beg=-1, int end=-1, 
-		       int spVec=0) const;
+                       int& flops, int& memrefs, int beg=-1, int end=-1, 
+                       int spVec=0) const;
   virtual void    mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-				 int& flops, int& memrefs,
-				 int beg=-1, int end=-1, int spVec=0) const;
+                                 int& flops, int& memrefs,
+                                 int beg=-1, int end=-1, int spVec=0) const;
   virtual void scalar_multiply(double s);
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
@@ -94,10 +94,10 @@ public:
   
   int     solve(ColumnMatrix&, int overwrite=0);
   int     solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
-		int overwrite=0);
+                int overwrite=0);
   int     solve(std::vector<double>& sol, int overwrite=0);
   int     solve(const std::vector<double>& rhs, std::vector<double>& lhs,
-		int overwrite=0);
+                int overwrite=0);
 
   //! fast accessors
   inline double*  operator[](int r) {

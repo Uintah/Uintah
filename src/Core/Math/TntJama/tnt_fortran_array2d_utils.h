@@ -102,7 +102,7 @@ operator+( const Fortran_Array2D<T> &A, const Fortran_Array2D<T> &B )
 
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	C(i,j) = A(i,j) + B(i,j);
+        C(i,j) = A(i,j) + B(i,j);
       }
     }
     return C;
@@ -124,7 +124,7 @@ operator-( const Fortran_Array2D<T> &A, const Fortran_Array2D<T> &B )
 
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	C(i,j) = A(i,j) - B(i,j);
+        C(i,j) = A(i,j) - B(i,j);
       }
     }
     return C;
@@ -146,7 +146,7 @@ operator*( const Fortran_Array2D<T> &A, const Fortran_Array2D<T> &B )
 
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	C(i,j) = A(i,j) * B(i,j);
+        C(i,j) = A(i,j) * B(i,j);
       }
     }
     return C;
@@ -168,7 +168,7 @@ operator/( const Fortran_Array2D<T> &A, const Fortran_Array2D<T> &B )
 
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	C(i,j) = A(i,j) / B(i,j);
+        C(i,j) = A(i,j) / B(i,j);
       }
     }
     return C;
@@ -185,7 +185,7 @@ operator+=( Fortran_Array2D<T> &A, const Fortran_Array2D<T> &B )
   if (B.dim1() == m ||  B.dim2() == n ) {
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	A(i,j) += B(i,j);
+        A(i,j) += B(i,j);
       }
     }
   }
@@ -202,7 +202,7 @@ operator-=( Fortran_Array2D<T> &A, const Fortran_Array2D<T> &B )
   if (B.dim1() == m ||  B.dim2() == n ) {
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	A(i,j) -= B(i,j);
+        A(i,j) -= B(i,j);
       }
     }
   }
@@ -219,7 +219,7 @@ operator*=( Fortran_Array2D<T> &A, const Fortran_Array2D<T> &B )
   if (B.dim1() == m ||  B.dim2() == n ) {
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	A(i,j) *= B(i,j);
+        A(i,j) *= B(i,j);
       }
     }
   }
@@ -236,7 +236,7 @@ operator/=( Fortran_Array2D<T> &A, const Fortran_Array2D<T> &B )
   if (B.dim1() == m ||  B.dim2() == n ) {
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	A(i,j) /= B(i,j);
+        A(i,j) /= B(i,j);
       }
     }
   }

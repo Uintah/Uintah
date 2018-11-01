@@ -64,39 +64,39 @@ class Fortran_Array2D
 
 
   private: 
-  		i_refvec<T> v_;
-		int m_;
-		int n_;
-		T* data_;
+                i_refvec<T> v_;
+                int m_;
+                int n_;
+                T* data_;
 
 
-    	void initialize_(int n);
-    	void copy_(T* p, const T*  q, int len);
-    	void set_(T* begin,  T* end, const T& val);
+        void initialize_(int n);
+        void copy_(T* p, const T*  q, int len);
+        void set_(T* begin,  T* end, const T& val);
  
   public:
 
     typedef         T   value_type;
 
-	       Fortran_Array2D();
-	       Fortran_Array2D(int m, int n);
-	       Fortran_Array2D(int m, int n,  T *a);
-	       Fortran_Array2D(int m, int n, const T &a);
+               Fortran_Array2D();
+               Fortran_Array2D(int m, int n);
+               Fortran_Array2D(int m, int n,  T *a);
+               Fortran_Array2D(int m, int n, const T &a);
     inline Fortran_Array2D(const Fortran_Array2D &A);
-	inline Fortran_Array2D & operator=(const T &a);
-	inline Fortran_Array2D & operator=(const Fortran_Array2D &A);
-	inline Fortran_Array2D & ref(const Fortran_Array2D &A);
-	       Fortran_Array2D copy() const;
-		   Fortran_Array2D & inject(const Fortran_Array2D & A);
-	inline T& operator()(int i, int j);
-	inline const T& operator()(int i, int j) const ;
-	inline int dim1() const;
-	inline int dim2() const;
+        inline Fortran_Array2D & operator=(const T &a);
+        inline Fortran_Array2D & operator=(const Fortran_Array2D &A);
+        inline Fortran_Array2D & ref(const Fortran_Array2D &A);
+               Fortran_Array2D copy() const;
+                   Fortran_Array2D & inject(const Fortran_Array2D & A);
+        inline T& operator()(int i, int j);
+        inline const T& operator()(int i, int j) const ;
+        inline int dim1() const;
+        inline int dim2() const;
                ~Fortran_Array2D();
 
-	/* extended interface */
+        /* extended interface */
 
-	inline int ref_count() const;
+        inline int ref_count() const;
 
 };
 
@@ -106,25 +106,25 @@ Fortran_Array2D<T>::Fortran_Array2D() : v_(), m_(0), n_(0), data_(0) {}
 
 template <class T>
 Fortran_Array2D<T>::Fortran_Array2D(const Fortran_Array2D<T> &A) : v_(A.v_),
-		m_(A.m_), n_(A.n_), data_(A.data_) {}
+                m_(A.m_), n_(A.n_), data_(A.data_) {}
 
 
 
 template <class T>
 Fortran_Array2D<T>::Fortran_Array2D(int m, int n) : v_(m*n), m_(m), n_(n),
-	data_(v_.begin()) {}
+        data_(v_.begin()) {}
 
 template <class T>
 Fortran_Array2D<T>::Fortran_Array2D(int m, int n, const T &val) : 
-	v_(m*n), m_(m), n_(n), data_(v_.begin())
+        v_(m*n), m_(m), n_(n), data_(v_.begin())
 {
-	set_(data_, data_+m*n, val);
+        set_(data_, data_+m*n, val);
 }
 
 
 template <class T>
 Fortran_Array2D<T>::Fortran_Array2D(int m, int n, T *a) : v_(a),
-	m_(m), n_(n), data_(v_.begin()) {}
+        m_(m), n_(n), data_(v_.begin()) {}
 
 
 
@@ -133,13 +133,13 @@ template <class T>
 inline T& Fortran_Array2D<T>::operator()(int i, int j) 
 { 
 #ifdef TNT_BOUNDS_CHECK
-	assert(i >= 1);
-	assert(i <= m_);
-	assert(j >= 1);
-	assert(j <= n_);
+        assert(i >= 1);
+        assert(i <= m_);
+        assert(j >= 1);
+        assert(j <= n_);
 #endif
 
-	return v_[ (j-1)*m_ + (i-1) ];
+        return v_[ (j-1)*m_ + (i-1) ];
 
 }
 
@@ -147,13 +147,13 @@ template <class T>
 inline const T& Fortran_Array2D<T>::operator()(int i, int j) const
 { 
 #ifdef TNT_BOUNDS_CHECK
-	assert(i >= 1);
-	assert(i <= m_);
-	assert(j >= 1);
-	assert(j <= n_);
+        assert(i >= 1);
+        assert(i <= m_);
+        assert(j >= 1);
+        assert(j <= n_);
 #endif
 
-	return v_[ (j-1)*m_ + (i-1) ];
+        return v_[ (j-1)*m_ + (i-1) ];
 
 }
 
@@ -161,28 +161,28 @@ inline const T& Fortran_Array2D<T>::operator()(int i, int j) const
 template <class T>
 Fortran_Array2D<T> & Fortran_Array2D<T>::operator=(const T &a)
 {
- 	set_(data_, data_+m_*n_, a);
-	return *this;
+        set_(data_, data_+m_*n_, a);
+        return *this;
 }
 
 template <class T>
 Fortran_Array2D<T> Fortran_Array2D<T>::copy() const
 {
 
-	Fortran_Array2D B(m_,n_);
-	
-	B.inject(*this);
-	return B;
+        Fortran_Array2D B(m_,n_);
+        
+        B.inject(*this);
+        return B;
 }
 
 
 template <class T>
 Fortran_Array2D<T> & Fortran_Array2D<T>::inject(const Fortran_Array2D &A)
 {
-	if (m_ == A.m_ && n_ == A.n_)
-		copy_(data_, A.data_, m_*n_);
+        if (m_ == A.m_ && n_ == A.n_)
+                copy_(data_, A.data_, m_*n_);
 
-	return *this;
+        return *this;
 }
 
 
@@ -190,20 +190,20 @@ Fortran_Array2D<T> & Fortran_Array2D<T>::inject(const Fortran_Array2D &A)
 template <class T>
 Fortran_Array2D<T> & Fortran_Array2D<T>::ref(const Fortran_Array2D<T> &A)
 {
-	if (this != &A)
-	{
-		v_ = A.v_;
-		m_ = A.m_;
-		n_ = A.n_;
-		data_ = A.data_;
-	}
-	return *this;
+        if (this != &A)
+        {
+                v_ = A.v_;
+                m_ = A.m_;
+                n_ = A.n_;
+                data_ = A.data_;
+        }
+        return *this;
 }
 
 template <class T>
 Fortran_Array2D<T> & Fortran_Array2D<T>::operator=(const Fortran_Array2D<T> &A)
 {
-	return ref(A);
+        return ref(A);
 }
 
 template <class T>
@@ -227,17 +227,17 @@ inline int Fortran_Array2D<T>::ref_count() const { return v_.ref_count(); }
 template <class T>
 void Fortran_Array2D<T>::set_(T* begin, T* end, const T& a)
 {
-	for (T* p=begin; p<end; p++)
-		*p = a;
+        for (T* p=begin; p<end; p++)
+                *p = a;
 
 }
 
 template <class T>
 void Fortran_Array2D<T>::copy_(T* p, const T* q, int len) 
 {
-	T *end = p + len;
-	while (p<end )
-		*p++ = *q++;
+        T *end = p + len;
+        while (p<end )
+                *p++ = *q++;
 
 }
 

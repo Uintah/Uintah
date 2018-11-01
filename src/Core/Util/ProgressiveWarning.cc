@@ -35,8 +35,8 @@ namespace {
 }
 
 ProgressiveWarning::ProgressiveWarning(const std::string & message,
-				       int multiplier /* = -1 */, 
-				       std::ostream & stream /* = cerr */)
+                                       int multiplier /* = -1 */, 
+                                       std::ostream & stream /* = cerr */)
 {
   d_message = message;
   d_multiplier = multiplier;

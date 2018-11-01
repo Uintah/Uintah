@@ -64,7 +64,7 @@ operator<<( std::ostream &s, const Fortran_Array3D<T> &A )
   for (int i=1; i<=M; i++) {
     for (int j=1; j<=N; j++) {
       for (int k=1; k<=K; k++) {
-	s << A(i,j,k) << " ";
+        s << A(i,j,k) << " ";
       }
       s << "\n";
     }
@@ -85,9 +85,9 @@ operator>>( std::istream &s, Fortran_Array3D<T> &A )
 
   for (int i=1; i<=M; i++)  {
     for (int j=1; j<=N; j++) {
-	  for (int k=1; k<=K; k++) {
-            	s >>  B(i,j,k);
-	  }
+          for (int k=1; k<=K; k++) {
+                s >>  B(i,j,k);
+          }
     }
   }
 
@@ -111,9 +111,9 @@ operator+( const Fortran_Array3D<T> &A, const Fortran_Array3D<T> &B )
 
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	for (int k=1; k<=p; k++) {
-	  C(i,j,k) = A(i,j,k)+ B(i,j,k);
-	}
+        for (int k=1; k<=p; k++) {
+          C(i,j,k) = A(i,j,k)+ B(i,j,k);
+        }
       }
     }
     return C;
@@ -136,9 +136,9 @@ operator-( const Fortran_Array3D<T> &A, const Fortran_Array3D<T> &B )
 
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	for (int k=1; k<=p; k++) {
-	  C(i,j,k) = A(i,j,k)- B(i,j,k);
-	}
+        for (int k=1; k<=p; k++) {
+          C(i,j,k) = A(i,j,k)- B(i,j,k);
+        }
       }
     }
     return C;
@@ -161,9 +161,9 @@ operator*( const Fortran_Array3D<T> &A, const Fortran_Array3D<T> &B )
 
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	for (int k=1; k<=p; k++) {
-	  C(i,j,k) = A(i,j,k)* B(i,j,k);
-	}
+        for (int k=1; k<=p; k++) {
+          C(i,j,k) = A(i,j,k)* B(i,j,k);
+        }
       }
     }
     return C;
@@ -186,9 +186,9 @@ operator/( const Fortran_Array3D<T> &A, const Fortran_Array3D<T> &B )
 
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	for (int k=1; k<=p; k++) {
-	  C(i,j,k) = A(i,j,k)/ B(i,j,k);
-	}
+        for (int k=1; k<=p; k++) {
+          C(i,j,k) = A(i,j,k)/ B(i,j,k);
+        }
       }
     }
     return C;
@@ -206,9 +206,9 @@ operator+=( Fortran_Array3D<T> &A, const Fortran_Array3D<T> &B )
   if (B.dim1() == m &&  B.dim2() == n && B.dim3() == p ) {
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	for (int k=1; k<=p; k++) {
-	  A(i,j,k) += B(i,j,k);
-	}
+        for (int k=1; k<=p; k++) {
+          A(i,j,k) += B(i,j,k);
+        }
       }
     }
   }
@@ -226,9 +226,9 @@ operator-=( Fortran_Array3D<T> &A, const Fortran_Array3D<T> &B )
   if (B.dim1() == m &&  B.dim2() == n && B.dim3() == p ) {
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	for (int k=1; k<=p; k++) {
-	  A(i,j,k) -= B(i,j,k);
-	}
+        for (int k=1; k<=p; k++) {
+          A(i,j,k) -= B(i,j,k);
+        }
       }
     }
   }
@@ -247,9 +247,9 @@ operator*=( Fortran_Array3D<T> &A, const Fortran_Array3D<T> &B )
   if (B.dim1() == m &&  B.dim2() == n && B.dim3() == p ) {
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	for (int k=1; k<=p; k++) {
-	  A(i,j,k) *= B(i,j,k);
-	}
+        for (int k=1; k<=p; k++) {
+          A(i,j,k) *= B(i,j,k);
+        }
       }
     }
   }
@@ -267,9 +267,9 @@ operator/=( Fortran_Array3D<T> &A, const Fortran_Array3D<T> &B )
   if (B.dim1() == m &&  B.dim2() == n && B.dim3() == p ) {
     for (int i=1; i<=m; i++) {
       for (int j=1; j<=n; j++) {
-	for (int k=1; k<=p; k++) {
-	  A(i,j,k) /= B(i,j,k);
-	}
+        for (int k=1; k<=p; k++) {
+          A(i,j,k) /= B(i,j,k);
+        }
       }
     }
   }
