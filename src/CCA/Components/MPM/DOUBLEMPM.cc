@@ -1970,6 +1970,14 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 						gvelocity[node] += pmom * S[k];
 						gPorosity[node] += pPorosity[idx] * pMassSolid[idx] * S[k];
 						gDragging[node] += pMassLiquid[idx] * 9.81 / pPermeability[idx] * S[k];
+
+						//std::cerr << pMassSolid[idx] << std::endl;
+						//std::cerr << gmass_solid[node] << std::endl;
+						//std::cerr << pMassLiquid[idx] << std::endl;
+						//std::cerr << gmass_liquid[node] << std::endl;
+						//std::cerr << " " << std::endl;
+
+
 					}
 				}
 				if (flags->d_useCBDI && pLoadCurveID[idx].x() > 0) {
@@ -3180,35 +3188,45 @@ void DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM (const ProcessorGroup*
 				!iter.done(); iter++) {
 				IntVector c = *iter;
 
-				Vector acc(0., 0., 0.);
-
-				if (mass[c] > flags->d_min_mass_for_acceleration) {
-					acc = (internalforce[c] + externalforce[c]) / mass[c];
-					acc -= damp_coef * velocity[c];
-				}
-				
+				Vector acc(0., 0., 0.);			
 				Vector accLiquid(0., 0., 0.);
 				Vector InternalforceLiquid(0., 0., 0.);
 				Vector GradientVelocity(0., 0., 0.);
 				Vector DraggingForce(0., 0., 0.);
 
 				if (gMassLiquid[c] > flags->d_min_mass_for_acceleration) {
-
 					InternalforceLiquid = gPorosity[c] * gInternalForceLiquid[c];
 					GradientVelocity = gVelocityLiquid[c] - velocity[c];
-					DraggingForce = gDragging [c] * GradientVelocity;
+					DraggingForce = gPorosity[c] * gDragging [c] * GradientVelocity;
 
 					accLiquid = (InternalforceLiquid - DraggingForce) / gMassLiquid[c]; 
 					accLiquid -= damp_coef * gVelocityLiquid[c];
+				}
 
-					//std::cerr << InternalforceLiquid << std::endl;
-					//std::cerr << DraggingForce << std::endl;
-					//std::cerr << accLiquid << std::endl;
-				}			
 				gAccelerationLiquid[c] = accLiquid + gravity;
 				gVelocityStarLiquid[c] = gVelocityLiquid[c] + gAccelerationLiquid[c] * delT;
+
+				if (mass[c] > flags->d_min_mass_for_acceleration) {
+					acc = (internalforce[c] + InternalforceLiquid + gMassLiquid[c] * (gravity - gAccelerationLiquid[c]) + externalforce[c]) / mass[c];
+					acc -= damp_coef * velocity[c];
+				}			
 				acceleration[c] = acc + gravity;
-				velocity_star[c] = velocity[c] + acceleration[c] * delT;				
+				velocity_star[c] = velocity[c] + acceleration[c] * delT;	
+				
+				//std::cerr << gMassLiquid[c] << std::endl;
+				//std::cerr << gAccelerationLiquid[c] << std::endl;
+				//std::cerr << gVelocityLiquid[c] << std::endl;
+
+				//std::cerr << gVelocityStarLiquid[c] << std::endl;
+				//std::cerr << acceleration[c] << std::endl;
+				//std::cerr << velocity[c] << std::endl;
+				//std::cerr << velocity_star[c] << std::endl;
+				//std::cerr << DraggingForce << std::endl;
+				//std::cerr << InternalforceLiquid << std::endl;
+				//std::cerr << internalforce[c] << std::endl;
+				//std::cerr << " " << std::endl;
+
+				
 			}
 		}    // matls
 	}
@@ -4659,13 +4677,19 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 				partvoldef += pvolume[idx];
 
 				// Update pore water pressure
-				StrainRateSolid = (tensorLLiquid + tensorLLiquid.Transpose()) / 2;
+				StrainRateSolid = (tensorL + tensorL.Transpose()) / 2;
 				StrainRateLiquid = (tensorLLiquid + tensorLLiquid.Transpose()) / 2;
 
-				VolumeRateSolid		= delT * StrainRateSolid.Trace() * (1 - pPorosity[idx]) / pPorosity[idx];
-				VolumeRateLiquid	= delT * StrainRateLiquid.Trace() * (- pPorosity[idx]) / pPorosity[idx];;
+				VolumeRateSolid		= delT * StrainRateSolid.Trace() * (- pPorosity[idx]) / pPorosity[idx];
+				VolumeRateLiquid	= delT * StrainRateLiquid.Trace() * (1 - pPorosity[idx]) / pPorosity[idx];;
 
 				pPorePressurenew[idx] = pPorePressure[idx] + pBulkModulLiquid[idx] * (VolumeRateSolid + VolumeRateLiquid);
+				 
+				 //std::cerr << StrainRateSolid << std::endl;
+				 //std::cerr << StrainRateLiquid << std::endl;
+				// std::cerr << VolumeRateSolid << std::endl;
+				 //std::cerr << VolumeRateLiquid << std::endl;
+				 //std::cerr << pPorePressurenew[idx] << std::endl;
 
 				// Update porosity
 				pPorositynew[idx] = 1 - (1 - mpm_matl->getInitialPorosity()) / J;
@@ -4858,7 +4882,7 @@ void DOUBLEMPM::computeAccStrainEnergy(const ProcessorGroup*,
 }
 
 
-// Update other quantities of particles: Temperature
+// Update other quantities of particles
 void DOUBLEMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)

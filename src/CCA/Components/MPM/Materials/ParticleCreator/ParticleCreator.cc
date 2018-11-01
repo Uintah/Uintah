@@ -835,7 +835,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
 	  pvars.pVelocityLiquid[i]		= Vector(0., 0., 0.);
 	  pvars.pVelocityGradLiquid[i]  = Matrix3(0.0);
 
-	  pvars.pMassLiquid[i] = matl->getInitialDensity()*matl->getInitialPorosity()*pvars.pvolume[i];
+	  pvars.pMassLiquid[i] = matl->getInitialDensityLiquid()*matl->getInitialPorosity()*pvars.pvolume[i];
 	  pvars.pMassSolid[i] = matl->getInitialDensity()*(1 - matl->getInitialPorosity())*pvars.pvolume[i];
 
 	  pvars.pBulkModulLiquid[i] = matl->getBulkLiquidModulus();
