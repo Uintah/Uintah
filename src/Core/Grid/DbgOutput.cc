@@ -221,6 +221,26 @@ printTask( const PatchSubset * patches
 }
 
 //______________________________________________________________________
+//
+void
+printTask( const PatchSubset * patches
+         ,       Dout        & out
+         , const std::string & where
+         )
+{
+  if (out){
+    std::ostringstream msg;
+    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << std::left;
+    msg.width(50);
+    msg << where << "  \tL-"
+        << getLevel(patches)->getIndex()
+        << " patches " << *patches;
+    DOUT(out, msg.str());
+  }
+}
+
+//______________________________________________________________________
 //  Output the task name and the level it's executing on only first patch of that level
 void
 printTaskLevels( const ProcessorGroup * d_myworld

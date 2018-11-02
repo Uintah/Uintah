@@ -100,6 +100,11 @@ void printTask( const PatchSubset * patches
               ,       Dout        & out
               , const std::string & where
               );
+              
+void printTask( const PatchSubset * patches
+              ,       Dout        & out
+              , const std::string & where
+              );
 
 // Output the task name and the level it's executing on only first patch of that level
 void printTaskLevels( const ProcessorGroup * d_myworld
