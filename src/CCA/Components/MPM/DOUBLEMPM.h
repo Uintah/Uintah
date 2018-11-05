@@ -244,17 +244,6 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* new_dw);
 
   // Particle to grid
-  virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
-	  const MaterialSet*);
-
-  // Insert Documentation Here:
-  virtual void interpolateParticlesToGrid(const ProcessorGroup*,
-	  const PatchSubset* patches,
-	  const MaterialSubset* matls,
-	  DataWarehouse* old_dw,
-	  DataWarehouse* new_dw);
-
-  // Particle to grid
   virtual void scheduleInterpolateParticlesToGrid_DOUBLEMPM(SchedulerP&, const PatchSet*,
 	  const MaterialSet*);
 
@@ -266,11 +255,11 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* new_dw);
 
   // Compute normal vectors (optional for flags->d_computeNormals)
-  virtual void scheduleComputeNormals(SchedulerP        & sched,
+  virtual void scheduleComputeNormals_DOUBLEMPM(SchedulerP        & sched,
                                       const PatchSet    * patches,
                                       const MaterialSet * matls );
 
-  virtual void computeNormals(const ProcessorGroup  *,
+  virtual void computeNormals_DOUBLEMPM(const ProcessorGroup  *,
 	  const PatchSubset     * patches,
 	  const MaterialSubset  *,
 	  DataWarehouse   * old_dw,
@@ -291,32 +280,10 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* new_dw);
 
   // Compute internal forces
-  virtual void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
-	  const MaterialSet*);
-
-  virtual void computeInternalForce(const ProcessorGroup*,
-	  const PatchSubset* patches,
-	  const MaterialSubset* matls,
-	  DataWarehouse* old_dw,
-	  DataWarehouse* new_dw);
-
-  // Compute internal forces
   virtual void scheduleComputeInternalForce_DOUBLEMPM(SchedulerP&, const PatchSet*,
 	  const MaterialSet*);
 
   virtual void computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
-	  const PatchSubset* patches,
-	  const MaterialSubset* matls,
-	  DataWarehouse* old_dw,
-	  DataWarehouse* new_dw);
-
-
-  // Compute the acceleration
-  virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
-	  const PatchSet*,
-	  const MaterialSet*);
-
-  virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
 	  const PatchSubset* patches,
 	  const MaterialSubset* matls,
 	  DataWarehouse* old_dw,
@@ -337,16 +304,6 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
   // Compute extra momentum from the contact
   virtual void scheduleExMomIntegrated(SchedulerP&, const PatchSet*,
 	  const MaterialSet*);
-
-  // Boundary condition
-  void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
-	  const MaterialSet* matls);
-
-  void setGridBoundaryConditions(const ProcessorGroup*,
-	  const PatchSubset* patches,
-	  const MaterialSubset*,
-	  DataWarehouse* old_dw,
-	  DataWarehouse* new_dw);
 
   // Boundary condition for DOUBLEMPM
   void scheduleSetGridBoundaryConditions_DOUBLEMPM(SchedulerP&, const PatchSet*,
@@ -369,17 +326,6 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* old_dw,
 	  DataWarehouse* new_dw);
 
-  // Update particle quantities
-  virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&,
-	  const PatchSet*,
-	  const MaterialSet*);
-
-  virtual void interpolateToParticlesAndUpdate(const ProcessorGroup*,
-	  const PatchSubset* patches,
-	  const MaterialSubset* matls,
-	  DataWarehouse* old_dw,
-	  DataWarehouse* new_dw);
-
   virtual void scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(SchedulerP&,
 	  const PatchSet*,
 	  const MaterialSet*);
@@ -391,16 +337,6 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* new_dw);
 
   // Compute particle gradents
-  virtual void scheduleComputeParticleGradients(SchedulerP&,
-	  const PatchSet*,
-	  const MaterialSet*);
-
-  virtual void computeParticleGradients(const ProcessorGroup*,
-	  const PatchSubset* patches,
-	  const MaterialSubset* matls,
-	  DataWarehouse* old_dw,
-	  DataWarehouse* new_dw);
-
   virtual void scheduleComputeParticleGradientsAndPorePressure_DOUBLEMPM(SchedulerP&,
 	  const PatchSet*,
 	  const MaterialSet*);

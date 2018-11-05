@@ -152,11 +152,11 @@
       
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
-    <density                         	spec="REQUIRED DOUBLE" />
-	<density_liquid                  	spec="REQUIRED DOUBLE" />
-	<Porosity                			spec="REQUIRED DOUBLE" />
-	<Permeability            			spec="REQUIRED DOUBLE" />
-	<BulkLiquidModulus          		spec="REQUIRED DOUBLE" />
+        <density                       spec="REQUIRED DOUBLE" />
+	<density_liquid                 spec="OPTIONAL DOUBLE" />
+	<Porosity                	spec="OPTIONAL DOUBLE" />
+	<Permeability            	spec="OPTIONAL DOUBLE" />
+	<BulkLiquidModulus          	spec="OPTIONAL DOUBLE" />
 	
         <include href="constitutive_models.xml" />
         <!--__________________________________-->
