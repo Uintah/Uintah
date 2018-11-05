@@ -2460,10 +2460,15 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 //        gColor[c]         /= gmass[c];
         gTemperatureNoBC[c] = gTemperature[c];
         gSp_vol[c]        /= gmass[c];
-        if (flags->d_doScalarDiffusion) {
-          gConcentration[c]       /= gmass[c];
-          gHydrostaticStress[c]   /= gmass[c];
-          gConcentrationNoBC[c]    = gConcentration[c];
+      }
+
+      if (flags->d_doScalarDiffusion) {
+        for (NodeIterator iter=patch->getExtraNodeIterator();
+             !iter.done(); ++iter) {
+          IntVector c = *iter;
+          gConcentration[c]     /= gmass[c];
+          gHydrostaticStress[c] /= gmass[c];
+          gConcentrationNoBC[c]  = gConcentration[c];
         }
       }
 
