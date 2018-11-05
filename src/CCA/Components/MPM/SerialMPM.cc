@@ -681,9 +681,13 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   const MaterialSet* tracer_matls = m_materialManager->allMaterials("Tracer");
   const MaterialSet* all_matls    = m_materialManager->allMaterials();
 
-  const MaterialSubset* mpm_matls_sub = (   matls ?    matls->getUnion() : nullptr);;
-  const MaterialSubset*  cz_matls_sub = (cz_matls ? cz_matls->getUnion() : nullptr);
-  const MaterialSubset* tracer_matls_sub  = tracer_matls->getUnion();
+  const MaterialSubset* mpm_matls_sub    = 
+                            (   matls ?            matls->getUnion() : nullptr);
+  const MaterialSubset* cz_matls_sub     = 
+                            (cz_matls ?         cz_matls->getUnion() : nullptr);
+  const MaterialSubset* tracer_matls_sub = 
+                            (tracer_matls ? tracer_matls->getUnion() : nullptr);
+
 
   if (flags->d_useLoadCurves){
     scheduleModifyLoadCurves(             level, sched,   matls);
@@ -3109,6 +3113,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
+
     for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = 
                  (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
