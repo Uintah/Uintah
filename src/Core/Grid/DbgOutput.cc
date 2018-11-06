@@ -75,9 +75,16 @@ printTask( const PatchSubset * patches
     dbg << Uintah::Parallel::getMPIRank() << " ";
     dbg << std::left;
     dbg.width(50);
-    dbg << where << "  \tL-"
-        << getLevel(patches)->getIndex()
-        << " patch " << patch->getGridIndex()<< std::endl;
+    dbg << where;
+    
+    if ( patches->empty() ){
+      dbg << "  \tEmpty patch subset\n";
+    } 
+    else {
+      dbg << "  \tL-"
+          << getLevel(patches)->getIndex()
+          << " patch " << patch->getGridIndex()<< std::endl;
+    }
   }
 }
 
@@ -93,9 +100,17 @@ printTask( const PatchSubset * patches
     dbg << Uintah::Parallel::getMPIRank() << " ";
     dbg << std::left;
     dbg.width(50);
-    dbg << where << "  \tL-"
+    dbg << where;
+    
+    
+    if ( patches->empty() ){
+      dbg << "  \tEmpty patch subset\n";
+    } 
+    else {
+      dbg << "  \tL-"
         << getLevel(patches)->getIndex()
         << " patches " << *patches << std::endl;
+    }
   }
 }
 
@@ -213,9 +228,17 @@ printTask( const PatchSubset * patches
     msg << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
-    msg << where << "  \tL-"
-        << getLevel(patches)->getIndex()
-        << " patch " << patch->getGridIndex();
+    msg << where;
+    
+    if ( patches->empty() ){
+      msg << "  \tEmpty patch subset";
+    } 
+    else {
+      msg << "  \tL-"
+          << getLevel(patches)->getIndex()
+          << " patch " << patch->getGridIndex();
+    }
+    
     DOUT(out, msg.str());
   }
 }
@@ -233,9 +256,17 @@ printTask( const PatchSubset * patches
     msg << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
-    msg << where << "  \tL-"
-        << getLevel(patches)->getIndex()
-        << " patches " << *patches;
+    msg << where;
+    
+    if ( patches->empty() ){
+      msg << "  \tEmpty patch subset";
+    } 
+    else {
+      msg << "  \tL-"
+          << getLevel(patches)->getIndex()
+          << " patches " << *patches;
+    }
+    
     DOUT(out, msg.str());
   }
 }

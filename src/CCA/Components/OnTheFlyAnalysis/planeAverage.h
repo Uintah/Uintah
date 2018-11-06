@@ -95,6 +95,9 @@ ______________________________________________________________________*/
                                              const LevelP & level) {};
 
     enum weightingType { NCELLS, MASS, NONE };
+    
+    static MPI_Comm d_my_MPI_COMM_WORLD;
+    
 
   private:
 
@@ -152,12 +155,15 @@ ______________________________________________________________________*/
         // sum over all procs the weight and nPlanar cells
         void ReduceWeight( const int rank )
         {
+
+          const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
+          
           if( rank == rootRank ){
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &weight.front(), nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, MPI_COMM_WORLD);
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &nCells.front(), nPlanes, MPI_INT,    MPI_SUM, rootRank, MPI_COMM_WORLD);
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &weight.front(), nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, com );
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &nCells.front(), nPlanes, MPI_INT,    MPI_SUM, rootRank, com );
           } else {
-            Uintah::MPI::Reduce(  &weight.front(), 0,            nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, MPI_COMM_WORLD);
-            Uintah::MPI::Reduce(  &nCells.front(), 0,            nPlanes, MPI_INT,    MPI_SUM, rootRank, MPI_COMM_WORLD);
+            Uintah::MPI::Reduce(  &weight.front(), 0,            nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, com );
+            Uintah::MPI::Reduce(  &nCells.front(), 0,            nPlanes, MPI_INT,    MPI_SUM, rootRank, com );
           }
         }
 
@@ -181,10 +187,12 @@ ______________________________________________________________________*/
           MPI_Op opt_point;
           MPI_Op_create( (MPI_User_function*) MPI_OP_point, 1, &opt_point );
 
+          const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
+          
           if( rank == rootRank ){
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &CC_pos.front(), nPlanes, mpitype, opt_point, rootRank, MPI_COMM_WORLD );
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &CC_pos.front(), nPlanes, mpitype, opt_point, rootRank, com );
           } else {
-            Uintah::MPI::Reduce(  &CC_pos.front(), 0,            nPlanes, mpitype, opt_point, rootRank, MPI_COMM_WORLD );
+            Uintah::MPI::Reduce(  &CC_pos.front(), 0,            nPlanes, mpitype, opt_point, rootRank, com );
           }
           MPI_Op_free( &opt_point );
         }
@@ -257,10 +265,11 @@ ______________________________________________________________________*/
         //__________________________________
         void ReduceVar( const int rank )
         {
+          const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
           if( rank == rootRank ){
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, MPI_COMM_WORLD);
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, com );
           } else {
-            Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, MPI_COMM_WORLD);
+            Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, com );
           }
         }
 
@@ -365,10 +374,12 @@ ______________________________________________________________________*/
           MPI_Op vector_add;
           MPI_Op_create( (MPI_User_function*) plusEqualVector, 1, &vector_add );
 
+          const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
+          
           if( rank == rootRank ){
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, mpitype, vector_add, rootRank, MPI_COMM_WORLD );
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, mpitype, vector_add, rootRank, com );
           } else {
-            Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, mpitype, vector_add, rootRank, MPI_COMM_WORLD );
+            Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, mpitype, vector_add, rootRank, com );
           }
           MPI_Op_free( &vector_add );
         }
@@ -420,18 +431,6 @@ ______________________________________________________________________*/
     //______________________________________________________________________
     //
     //
-
-
-    IntVector findCellIndex(const int i,
-                            const int j,
-                            const int k);
-
-    bool isItTime( DataWarehouse * old_dw);
-
-    bool isRightLevel( const int myLevel,
-                       const int L_indx,
-                       const LevelP& level);
-
     void initialize(const ProcessorGroup *,
                     const PatchSubset    * patches,
                     const MaterialSubset *,
@@ -462,14 +461,6 @@ ______________________________________________________________________*/
                       DataWarehouse         *,
                       DataWarehouse         * new_dw);
 
-    void createFile(std::string & filename,
-                    FILE*       & fp,
-                    std::string & levelIndex);
-
-    int createDirectory( mode_t mode,
-                         const std::string & rootPath,
-                         std::string       & path );
-
     template <class Tvar, class Ttype>
     void planarSum_Q( DataWarehouse  * new_dw,
                       std::shared_ptr< planarVarBase > analyzeVars,
@@ -487,7 +478,26 @@ ______________________________________________________________________*/
                           DataWarehouse        *,
                           DataWarehouse        *);
 
+    void createMPICommunicator(const PatchSet* perProcPatches);
 
+    void createFile(std::string & filename,
+                    FILE*       & fp,
+                    std::string & levelIndex);
+
+    int createDirectory( mode_t mode,
+                         const std::string & rootPath,
+                         std::string       & path );
+
+    IntVector findCellIndex(const int i,
+                            const int j,
+                            const int k);
+
+    bool isItTime( DataWarehouse * old_dw);
+
+    bool isRightLevel( const int myLevel,
+                       const int L_indx,
+                       const LevelP& level);
+    
     void planeIterator( const GridIterator& patchIter,
                         IntVector & lo,
                         IntVector & hi );
@@ -518,7 +528,7 @@ ______________________________________________________________________*/
 
     // Flag: has this rank has executed this task on this level
     std::vector< std::vector< bool > > d_progressVar;
-    enum taskNames { INITIALIZE=0, ZERO=1, SUM=3, N_TASKS=4 };
+    enum taskNames { INITIALIZE=0, ZERO=1, SUM=2, N_TASKS=3 };
 
     enum orientation { XY, XZ, YZ };        // plane orientation
     orientation d_planeOrientation;
