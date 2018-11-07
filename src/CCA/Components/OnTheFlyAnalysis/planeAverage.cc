@@ -779,7 +779,7 @@ void planeAverage::planarSum_weight( DataWarehouse * new_dw,
 
         if ( analyzeVar->weightType == MASS ){
           IntVector c(x,y,z);
-          c = findCellIndex(x, y, z);
+          c = transformCellIndex(x, y, z);
           sum = sum + weight[c];
         }
 
@@ -826,7 +826,17 @@ void planeAverage::planarSum_Q( DataWarehouse * new_dw,
 
   const int nPlanes = analyzeVar->get_nPlanes();
   local_Q_sum.resize( nPlanes, zero );
-  local_CC_pos.resize( nPlanes, Point(0,0,0) );
+  local_CC_pos.resize( nPlanes, Point(-DBL_MAX, -DBL_MAX, -DBL_MAX) );
+
+  //__________________________________
+  // compute mid point of the level
+  const Level* level = patch->getLevel();
+  IntVector L_lo;
+  IntVector L_hi;
+  level->findInteriorCellIndexRange( L_lo, L_hi );
+  IntVector L_midPt = Uintah::roundNearest( ( L_hi - L_lo ).asVector()/2.0 );
+  
+  IntVector plane_midPt = transformCellIndex( L_midPt.x(), L_midPt.y(), L_midPt.z() );
 
   IntVector lo;
   IntVector hi;
@@ -840,15 +850,13 @@ void planeAverage::planarSum_Q( DataWarehouse * new_dw,
       for ( auto x = lo.x(); x<hi.x(); x++ ) {
         IntVector c(x,y,z);
 
-        c = findCellIndex(x, y, z);
+        c = transformCellIndex(x, y, z);
         Q_sum = Q_sum + Q_var[c];
       }
     }
 
-    // cdll-centered position
-    IntVector here = findCellIndex( Uintah::Round( ( hi.x() - lo.x() )/2 ),
-                                    Uintah::Round( ( hi.y() - lo.y() )/2 ),
-                                    z );
+    // cell-centered position
+    IntVector here = transformCellIndex( plane_midPt.x(), plane_midPt.y(), z );
 
     local_CC_pos[z] = patch->cellPosition( here );
     local_Q_sum[z]  = Q_sum;
@@ -1161,33 +1169,6 @@ planeAverage::createDirectory( mode_t mode,
   return 0;
 }
 
-
-//______________________________________________________________________
-//
-IntVector planeAverage::findCellIndex(const int i,
-                                      const int j,
-                                      const int k)
-{
-  IntVector c(-9,-9,-9);
-  switch( d_planeOrientation ){
-    case XY:{
-      c = IntVector( i,j,k );
-      break;
-    }
-    case XZ:{
-      c = IntVector( i,k,j );
-      break;
-    }
-    case YZ:{
-      c = IntVector( j,k,i );
-      break;
-    }
-    default:
-      break;
-  }
-  return c;
-}
-
 //______________________________________________________________________
 //
 bool planeAverage::isItTime( DataWarehouse * old_dw)
@@ -1225,6 +1206,34 @@ bool planeAverage::isRightLevel(const int myLevel,
     return false;
   }
 }
+
+//______________________________________________________________________
+// k is the plane
+IntVector planeAverage::transformCellIndex(const int i,
+                                           const int j,
+                                           const int k)
+{
+  IntVector c(-9,-9,-9);
+  switch( d_planeOrientation ){
+    case XY:{                   // z is constant
+      c = IntVector( i,j,k );
+      break;
+    }
+    case XZ:{                   // y is constant
+      c = IntVector( i,k,j );
+      break;
+    }
+    case YZ:{                   // x is constant
+      c = IntVector( j,k,i );
+      break;
+    }
+    default:
+      break;
+  }
+  return c;
+}
+
+
 //______________________________________________________________________
 //
 void planeAverage::planeIterator( const GridIterator& patchIter,
@@ -1235,12 +1244,12 @@ void planeAverage::planeIterator( const GridIterator& patchIter,
   IntVector patchHi = patchIter.end();
 
   switch( d_planeOrientation ){
-    case XY:{
+    case XY:{                 // z is constant
       lo = patchLo;
       hi = patchHi;
       break;
     }
-    case XZ:{
+    case XZ:{                 // y is constant
       lo.x( patchLo.x() );
       lo.y( patchLo.z() );
       lo.z( patchLo.y() );
@@ -1250,7 +1259,7 @@ void planeAverage::planeIterator( const GridIterator& patchIter,
       hi.z( patchHi.y() );
       break;
     }
-    case YZ:{
+    case YZ:{                 // x is constant
       lo.x( patchLo.y() );
       lo.y( patchLo.z() );
       lo.z( patchLo.x() );

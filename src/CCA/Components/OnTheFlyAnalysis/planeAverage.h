@@ -51,7 +51,7 @@ GENERAL INFORMATION
 
    planeAverage.h
 
-   This computes the spatial average over a plane in the domain
+   This computes the spatial average over plane(s) in the domain.
 
    Todd Harman
    Department of Mechanical Engineering
@@ -113,6 +113,7 @@ ______________________________________________________________________*/
                                 int   * len,
                                 MPI_Datatype * type)
       {
+      
         for (auto i=0; i< *len; i++){
           inOut[i] = Uintah::Max( inOut[i], in[i] );
         }
@@ -241,7 +242,7 @@ ______________________________________________________________________*/
         //__________________________________
         void reserve()
         {
-          CC_pos.resize(nPlanes, Point(0.,0.,0.));
+          CC_pos.resize(nPlanes, Point(-DBL_MAX,-DBL_MAX,-DBL_MAX) );
           sum.resize(   nPlanes, 0.);
           weight.resize(nPlanes, 0.);
           nCells.resize(nPlanes, 0 );
@@ -255,7 +256,7 @@ ______________________________________________________________________*/
         void zero_all_vars()
         {
           for(unsigned i=0; i<sum.size(); i++ ){
-            CC_pos[i] = Point(0,0,0);
+            CC_pos[i] = Point( -DBL_MAX,-DBL_MAX,-DBL_MAX );
             sum[i]    = 0.0;
             weight[i] = 0.0;
             nCells[i] = 0;
@@ -344,7 +345,7 @@ ______________________________________________________________________*/
         void reserve()
         {
           Vector zero(0.);
-          CC_pos.resize( nPlanes, Point(0,0,0) );
+          CC_pos.resize( nPlanes, Point(-DBL_MAX,-DBL_MAX,-DBL_MAX) );
           sum.resize(    nPlanes, Vector(0,0,0) );
           weight.resize( nPlanes, 0 );
           nCells.resize( nPlanes, 0 );
@@ -357,7 +358,7 @@ ______________________________________________________________________*/
         void zero_all_vars()
         {
           for(unsigned i=0; i<sum.size(); i++ ){
-            CC_pos[i] = Point(0,0,0);
+            CC_pos[i] = Point( -DBL_MAX,-DBL_MAX,-DBL_MAX );
             sum[i]    = Vector(0,0,0);
             weight[i] = 0;
             nCells[i] = 0;
@@ -488,7 +489,7 @@ ______________________________________________________________________*/
                          const std::string & rootPath,
                          std::string       & path );
 
-    IntVector findCellIndex(const int i,
+    IntVector transformCellIndex(const int i,
                             const int j,
                             const int k);
 
