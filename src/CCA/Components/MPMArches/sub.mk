@@ -46,7 +46,6 @@ PSELIBS := \
 	CCA/Components/MPM              \
 	CCA/Components/MPM/Core         \
 	CCA/Components/MPM/Materials    \
-	CCA/Components/OnTheFlyAnalysis \
 	CCA/Ports          \
 	Core/Grid          \
 	Core/Util          \

@@ -113,15 +113,6 @@ MPMArches::~MPMArches()
   delete d_arches;
   delete d_Alab;
 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->releaseComponents();
-      delete am;
-    }
-  }
 }
 
 // ****************************************************************************
@@ -211,24 +202,6 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   d_DORad = false;
   d_radiation = false;
 
-  //__________________________________
-  //  create analysis modules
-  // call problemSetup
-  d_analysisModules = AnalysisModuleFactory::create(d_myworld,
-                                                    m_materialManager,
-                                                    prob_spec);
-
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
-      am->problemSetup(prob_spec, materials_ps, grid,
-		       d_mpm->d_particleState, d_mpm->d_particleState_preReloc);
-    }
-  }
-
   // make an allowance for an enthalpy variable with a different name:
   d_enthalpy_name = "enthalpySP";
   if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Properties")->findBlock("ClassicTable") ){
@@ -244,18 +217,6 @@ void MPMArches::outputProblemSpec(ProblemSpecP& root_ps)
 {
   d_mpm->outputProblemSpec(root_ps);
   
-  //__________________________________
-  //  output data analysis modules
-  if( d_analysisModules.size() != 0 ){
-
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-
-      am->outputProblemSpec( root_ps );
-    }
-  }
 }
 
 void
@@ -295,16 +256,6 @@ void MPMArches::scheduleInitialize(const LevelP& level,
 
   //  cerr << "Doing Initialization \t\t\t MPMArches" <<endl;
   //  cerr << "--------------------------------\n"<<endl;
-
-  // dataAnalysis
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleInitialize( sched, level);
-    }
-  }
 
 }
 
@@ -1164,24 +1115,6 @@ void MPMArches::scheduleTimeAdvance( const LevelP & level,
                                     d_mpm->d_particleState,
                                     Mlb->pParticleIDLabel,
                                     mpm_matls);
-}
-
-//______________________________________________________________________
-//
-
-void MPMArches::scheduleAnalysis( const LevelP & level,
-                                  SchedulerP   & sched)
-{
-  //__________________________________
-  //  on the fly analysis
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleDoAnalysis( sched, level);
-    }
-  }
 }
 
 //______________________________________________________________________
