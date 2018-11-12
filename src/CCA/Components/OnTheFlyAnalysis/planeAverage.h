@@ -62,12 +62,13 @@ ______________________________________________________________________*/
 
 //______________________________________________________________________
 
-  class planeAverage : public AnalysisModule {
+  class planeAverage : virtual public AnalysisModule {
   public:
 
     planeAverage(const ProcessorGroup   * myworld,
                  const MaterialManagerP   materialManager,
                  const ProblemSpecP     & module_spec);
+    
     planeAverage();
 
     virtual ~planeAverage();
