@@ -3,6 +3,7 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/Parallel/MasterLock.h>
 
 namespace Uintah{
 
@@ -60,13 +61,15 @@ namespace Uintah{
   private:
 
     std::vector<std::string> m_var_names;
+    
+    Uintah::MasterLock m_intrusion_lock{};
 
     struct IntrusionBoundary{
       std::vector<GeometryPieceP> geometry;
     };
 
     std::vector<IntrusionBoundary> m_intrusions;
-    std::map<const int, std::vector<IntrusionBoundary> > m_intrusion_map; 
+    std::map<const int, std::vector<IntrusionBoundary> > m_intrusion_map;
 
   }; // class SurfaceVolumeFractionCalc
 

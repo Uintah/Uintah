@@ -206,7 +206,11 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
 
   }
 
+  m_intrusion_lock.lock();
+
   m_intrusion_map.insert(std::make_pair(pID, intrusions));
+
+  m_intrusion_lock.unlock(); 
 
 }
 
