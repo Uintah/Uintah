@@ -83,6 +83,8 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
   //Get the boundary conditions:
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
 
+  const int pID = patch->getID();
+
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
     const bool on_this_patch = i_bc->second.has_patch(patch->getID());
@@ -128,6 +130,11 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
   }
 
   //Clean out all intrusions that don't intersect with this patch:
+  // This needs to be done to limit the amount of information/patch
+  // in cases where there are many intrusions.
+  // NEEDS TO BE MADE THREAD SAFE - lock m_intrusion_map
+  std::vector<IntrusionBoundary> intrusions;
+
   for ( auto i = m_intrusions.begin(); i != m_intrusions.end(); i++ ){
 
     std::vector<GeometryPieceP> intersecting_geometry;
@@ -135,8 +142,9 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
     for ( auto i_geom  = i->geometry.begin(); i_geom != i->geometry.end(); i_geom++ ){
 
       //Adding a buffer to ensure that patch-to-patch boundaries arent ignored
-      IntVector low(patch->getCellLowIndex() - IntVector(2,2,2));
-      IntVector high(patch->getCellHighIndex() + IntVector(2,2,2));
+      const int Nbuff = 2;
+      IntVector low(patch->getCellLowIndex() - IntVector(Nbuff, Nbuff, Nbuff));
+      IntVector high(patch->getCellHighIndex() + IntVector(Nbuff, Nbuff, Nbuff));
       Point low_pt = patch->getCellPosition(low);
       Point high_pt = patch->getCellPosition(high);
       Box patch_box(low_pt, high_pt);
@@ -191,9 +199,14 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
       }
     }
 
-    i->geometry = intersecting_geometry;
+    IntrusionBoundary IB;
+    IB.geometry = intersecting_geometry;
+
+    intrusions.push_back(IB);
 
   }
+
+  m_intrusion_map.insert(std::make_pair(pID, intrusions));
 
 }
 

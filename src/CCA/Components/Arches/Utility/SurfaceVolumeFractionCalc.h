@@ -66,6 +66,7 @@ namespace Uintah{
     };
 
     std::vector<IntrusionBoundary> m_intrusions;
+    std::map<const int, std::vector<IntrusionBoundary> > m_intrusion_map; 
 
   }; // class SurfaceVolumeFractionCalc
 
