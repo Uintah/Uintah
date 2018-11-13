@@ -819,6 +819,9 @@ void printParticleVariables(DataArchive* da,
   // Make sure other variables requested are in the saved data
   for(unsigned int pv=0;pv<particleVariable.size();pv++){
     bool variableFound = false;
+    if(particleVariable[pv]=="t.tracerID"){
+      have_partIDs = false;
+    }
     for(unsigned int v=0;v<vars.size();v++){
       std::string var = vars[v];
       const Uintah::TypeDescription* td = types[v];
