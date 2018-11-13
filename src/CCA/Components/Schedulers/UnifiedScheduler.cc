@@ -84,6 +84,8 @@ namespace Uintah {
   DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "detailed GPU statistics on H2D and D2H data movement", false );
   DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "UnifiedScheduler", "simulate multiple GPUs, when using only one", false );
   DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
+
+  Dout gpu_ids( "GPUIDs", "UnifiedScheduler", "detailed information to identify GPU(s) used when using multiple per node", false );
 }
 
 namespace {
@@ -374,7 +376,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
         << m_num_threads + 1 << ").\n" << std::endl;
 
 #ifdef HAVE_CUDA
-    if (Uintah::Parallel::usingDevice()) {
+    if ( !gpu_ids && Uintah::Parallel::usingDevice() ) {
       cudaError_t retVal;
       int availableDevices;
       CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
@@ -390,6 +392,29 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
     }
 #endif
   }
+
+#ifdef HAVE_CUDA
+  if ( gpu_ids && Uintah::Parallel::usingDevice() ) {
+    cudaError_t retVal;
+    int availableDevices;
+    std::ostringstream message;
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
+    message << "   Rank-" << d_myworld->myRank()
+            << " using " << m_num_devices << "/" << availableDevices
+            << " available GPU(s)\n";
+
+    for ( int device_id = 0; device_id < availableDevices; device_id++ ) {
+      cudaDeviceProp device_prop;
+      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&device_prop, device_id));
+      message << "   Rank-" << d_myworld->myRank()
+              << " using GPU Device " << device_id
+              << ": \"" << device_prop.name << "\""
+              << " with compute capability " << device_prop.major << "." << device_prop.minor
+              << " on PCI " << device_prop.pciDomainID << ":" << device_prop.pciBusID << ":" << device_prop.pciDeviceID << "\n";
+    }
+    DOUT(true, message.str());
+  }
+#endif
 
   SchedulerCommon::problemSetup(prob_spec, materialManager);
 
