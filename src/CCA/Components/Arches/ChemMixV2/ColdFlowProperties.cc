@@ -223,7 +223,7 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 
         const double f_interp = 0.5 *( f(i,j,k) + f(ip,jp,kp) );
 
-        const double value = ( volumetric ) ?
+        const double value = volumetric ?
                              1./(f_interp / stream_1 + ( 1. - f_interp ) / stream_2) :
                              f_interp * stream_1 + ( 1. - f_interp ) * stream_2;
 
