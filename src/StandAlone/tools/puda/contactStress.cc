@@ -292,11 +292,14 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
           }
         }
 
+        pout << "%outputting for time["<< t <<"] = " << time << endl;
         pout << "%Material " << m1[0] << " is in contact with these materials:";
         for(unsigned int j = 0;j<inContactMatls.size();j++){
           pout << " " << inContactMatls[j];
         }
         pout << endl;
+        pout << "%GrainPair grain1 grain2 ContactArea ContactTraction" << endl;
+
 
         // Find grain contact pairs
         pair <double, double> grainPair;
