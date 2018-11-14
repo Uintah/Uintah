@@ -1023,10 +1023,10 @@
                                                                                    for small thermal resisitance, recommend relaxation_coef=1.0 -->
 
                                                                                   <!--To approximate relaxation_coef, we recommend the following equation:-->
-                                                                                  <!--R = 1 / (1 + tau / dt) where:-->
+                                                                                  <!--R = 1 / (1 + f*tau / dt) where:-->
                                                                                   <!--tau -> is the desired averaging window for all dynamic wall properties (use an upper limit of residence time)-->
                                                                                   <!--dt  -> the simulated time between wall model solves (dictated by the radiation solve frequency)-->
- 
+                                                                                  <!--f  -> factor for the averaging window, since its bounds are somewhat ambigous.  Should be between 0.5 to 1.5. This results in the window boundary definitions capturing 63% and 95% of the data respectively.-->
                
         <temperature_label              spec="OPTIONAL STRING"/> <!-- tabluated name for temperature.  Default: temperature -->
         <model                          spec="MULTIPLE NO_DATA"
