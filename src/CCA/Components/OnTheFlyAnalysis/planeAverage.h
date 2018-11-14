@@ -62,14 +62,13 @@ ______________________________________________________________________*/
 
 //______________________________________________________________________
 
-  class planeAverage : virtual public AnalysisModule {
+  class planeAverage : public AnalysisModule {
   public:
 
     planeAverage(const ProcessorGroup   * myworld,
                  const MaterialManagerP   materialManager,
-                 const ProblemSpecP     & module_spec);
-    
-    planeAverage();
+                 const ProblemSpecP     & module_spec,
+                 const bool               parse_ups_variables);
 
     virtual ~planeAverage();
 
@@ -504,7 +503,6 @@ ______________________________________________________________________*/
                         IntVector & lo,
                         IntVector & hi );
 
-
     // general labels
     class planeAverageLabel {
     public:
@@ -520,6 +518,8 @@ ______________________________________________________________________*/
     double d_writeFreq;
     double d_startTime;
     double d_stopTime;
+    bool   d_parse_ups_variables;              // parse ups file to define d_allLevels_planarVars
+                                               // this switch is needed for meanTurbFluxes module
 
     const Material*  d_matl;
     MaterialSet*     d_matl_set;

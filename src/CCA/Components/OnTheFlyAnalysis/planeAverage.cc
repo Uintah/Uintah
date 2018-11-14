@@ -79,14 +79,17 @@ ______________________________________________________________________*/
 
 planeAverage::planeAverage( const ProcessorGroup    * myworld,
                             const MaterialManagerP    materialManager,
-                            const ProblemSpecP      & module_spec )
+                            const ProblemSpecP      & module_spec,
+                            const bool                parse_ups_vars )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_matl_set  = nullptr;
   d_zero_matl = nullptr;
   d_lb        = scinew planeAverageLabel();
-
-  d_lb->lastCompTimeLabel =  VarLabel::create("lastCompTime_planeAvg",
+  
+  d_parse_ups_variables     = parse_ups_vars;
+  
+  d_lb->lastCompTimeLabel   =  VarLabel::create("lastCompTime_planeAvg",
                                               max_vartype::getTypeDescription() );
   d_lb->fileVarsStructLabel = VarLabel::create("FileInfo_planeAvg",
                                                PerPatch<FileInfoP>::getTypeDescription() );
@@ -98,6 +101,8 @@ planeAverage::planeAverage( const ProcessorGroup    * myworld,
     d_progressVar[i].resize( d_MAXLEVELS, false );
   }
 }
+
+
 
 //__________________________________
 planeAverage::~planeAverage()
@@ -126,8 +131,6 @@ void planeAverage::problemSetup(const ProblemSpecP&,
 {
   DOUT(dbg_OTF_PA , "Doing problemSetup \t\t\t\tplaneAverage" );
 
-  int numMatls  = m_materialManager->getNumMatls();
-
   //__________________________________
   //  Read in timing information
   m_module_spec->require("samplingFrequency", d_writeFreq);
@@ -146,22 +149,31 @@ void planeAverage::problemSetup(const ProblemSpecP&,
   //  <materialIndex> 1 </materialIndex>
   if(m_module_spec->findBlock("material") ){
     d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
-  } else if (m_module_spec->findBlock("materialIndex") ){
-    int indx;
-    m_module_spec->get("materialIndex", indx);
-    d_matl = m_materialManager->getMaterial(indx);
   } else {
     d_matl = m_materialManager->getMaterial(0);
   }
 
   int defaultMatl = d_matl->getDWIndex();
 
-  //__________________________________
   vector<int> m;
   m.push_back(0);            // matl for FileInfo label
   m.push_back(defaultMatl);
-  map<string,string> attribute;
 
+  // remove any duplicate entries
+  sort(m.begin(), m.end());
+  vector<int>::iterator it = unique(m.begin(), m.end());
+  m.erase(it, m.end());
+
+  //Construct the matl_set
+  d_matl_set = scinew MaterialSet();
+  d_matl_set->addAll(m);
+  d_matl_set->addReference();
+
+  // for fileInfo variable
+  d_zero_matl = scinew MaterialSubset();
+  d_zero_matl->add(0);
+  d_zero_matl->addReference();
+  
 
   //__________________________________
   //  Plane orientation
@@ -177,6 +189,7 @@ void planeAverage::problemSetup(const ProblemSpecP&,
 
   //__________________________________
   //  OPTIONAL weighting label
+  map<string,string> attribute;
   ProblemSpecP w_ps = m_module_spec->findBlock( "weight" );
 
   if( w_ps ) {
@@ -189,152 +202,127 @@ void planeAverage::problemSetup(const ProblemSpecP&,
     }
   }
 
-  //__________________________________
-  //  Now loop over all the variables to be analyzed
-
-  std::vector< std::shared_ptr< planarVarBase >  >planarVars;
-
-  for( ProblemSpecP var_spec = vars_ps->findBlock( "analyze" ); var_spec != nullptr; var_spec = var_spec->findNextBlock( "analyze" ) ) {
-
-    var_spec->getAttributes( attribute );
-
+  if ( d_parse_ups_variables ) {                        // the MeanTurbFluxes module defines the planarVars
     //__________________________________
-    // Read in the variable name
-    string labelName = attribute["label"];
-    VarLabel* label = VarLabel::find(labelName);
-    if( label == nullptr ){
-      throw ProblemSetupException("planeAverage: analyze label not found: " + labelName , __FILE__, __LINE__);
+    //  Now loop over all the variables to be analyzed
+
+    std::vector< std::shared_ptr< planarVarBase >  >planarVars;
+
+    for( ProblemSpecP var_spec = vars_ps->findBlock( "analyze" ); var_spec != nullptr; var_spec = var_spec->findNextBlock( "analyze" ) ) {
+
+      var_spec->getAttributes( attribute );
+
+      //__________________________________
+      // Read in the variable name
+      string labelName = attribute["label"];
+      VarLabel* label = VarLabel::find(labelName);
+      if( label == nullptr ){
+        throw ProblemSetupException("planeAverage: analyze label not found: " + labelName , __FILE__, __LINE__);
+      }
+
+      //__________________________________
+      //  read in the weighting type for this variable
+      weightingType weight = NONE;
+
+      string w = attribute["weighting"];
+      if(w == "nCells" ){
+        weight = NCELLS;
+      }else if( w == "mass" ){
+        weight = MASS;
+      }
+
+      // Bulletproofing - The user must specify the matl for single matl
+      // variables
+      if ( labelName == "press_CC" && attribute["matl"].empty() ){
+        throw ProblemSetupException("planeAverage: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
+      }
+
+      // Read in the optional level index
+      int level = ALL_LEVELS;
+      if (attribute["level"].empty() == false){
+        level = atoi(attribute["level"].c_str());
+      }
+
+      //  Read in the optional material index 
+      int matl = defaultMatl;
+      if (attribute["matl"].empty() == false){
+        matl = atoi(attribute["matl"].c_str());
+      }
+
+      //__________________________________
+      bool throwException = false;
+
+      const TypeDescription* td = label->typeDescription();
+      const TypeDescription* subtype = td->getSubType();
+
+      const TypeDescription::Type baseType = td->getType();
+      const TypeDescription::Type subType  = subtype->getType();
+
+      // only CC, SFCX, SFCY, SFCZ variables
+      if(baseType != TypeDescription::CCVariable &&
+         baseType != TypeDescription::NCVariable &&
+         baseType != TypeDescription::SFCXVariable &&
+         baseType != TypeDescription::SFCYVariable &&
+         baseType != TypeDescription::SFCZVariable ){
+         throwException = true;
+      }
+      // CC Variables, only Doubles and Vectors
+      if(baseType != TypeDescription::CCVariable &&
+         subType  != TypeDescription::double_type &&
+         subType  != TypeDescription::Vector  ){
+        throwException = true;
+      }
+      // NC Variables, only Doubles and Vectors
+      if(baseType != TypeDescription::NCVariable &&
+         subType  != TypeDescription::double_type &&
+         subType  != TypeDescription::Vector  ){
+        throwException = true;
+      }
+      // Face Centered Vars, only Doubles
+      if( (baseType == TypeDescription::SFCXVariable ||
+           baseType == TypeDescription::SFCYVariable ||
+           baseType == TypeDescription::SFCZVariable) &&
+           subType != TypeDescription::double_type) {
+        throwException = true;
+      }
+
+      if(throwException){
+        ostringstream warn;
+        warn << "ERROR:AnalysisModule:planeAverage: ("<<label->getName() << " "
+             << td->getName() << " ) has not been implemented" << endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
+
+      //__________________________________
+      //  populate the vector of averages
+      // double
+      if( subType == TypeDescription::double_type ) {
+        planarVar_double* me = new planarVar_double();
+        me->label      = label;
+        me->matl       = matl;
+        me->level      = level;
+        me->baseType   = baseType;
+        me->subType    = subType;
+        me->weightType = weight;
+
+        planarVars.push_back( std::shared_ptr<planarVarBase>(me) );
+
+      }
+      // Vectors
+      if( subType == TypeDescription::Vector ) {
+        planarVar_Vector* me = new planarVar_Vector();
+        me->label      = label;
+        me->matl       = matl;
+        me->level      = level;
+        me->baseType   = baseType;
+        me->subType    = subType;
+        me->weightType = weight;
+
+        planarVars.push_back( std::shared_ptr<planarVarBase>(me) );
+      }
     }
-
-    //__________________________________
-    //  read in the weighting type for this variable
-    weightingType weight = NONE;
-
-    string w = attribute["weighting"];
-    if(w == "nCells" ){
-      weight = NCELLS;
-    }else if( w == "mass" ){
-      weight = MASS;
-    }
-
-    // Bulletproofing - The user must specify the matl for single matl
-    // variables
-    if ( labelName == "press_CC" && attribute["matl"].empty() ){
-      throw ProblemSetupException("planeAverage: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
-    }
-
-    // Read in the optional level index
-    int level = ALL_LEVELS;
-    if (attribute["level"].empty() == false){
-      level = atoi(attribute["level"].c_str());
-    }
-
-    //  Read in the optional material index from the variables that
-    //  may be different from the default index and construct the
-    //  material set
-    int matl = defaultMatl;
-    if (attribute["matl"].empty() == false){
-      matl = atoi(attribute["matl"].c_str());
-    }
-
-    // Bulletproofing
-    if(matl < 0 || matl > numMatls){
-      throw ProblemSetupException("planeAverage: Invalid material index specified for a variable", __FILE__, __LINE__);
-    }
-
-    m.push_back(matl);
-
-    //__________________________________
-    bool throwException = false;
-
-    const TypeDescription* td = label->typeDescription();
-    const TypeDescription* subtype = td->getSubType();
-
-    const TypeDescription::Type baseType = td->getType();
-    const TypeDescription::Type subType  = subtype->getType();
-
-    // only CC, SFCX, SFCY, SFCZ variables
-    if(baseType != TypeDescription::CCVariable &&
-       baseType != TypeDescription::NCVariable &&
-       baseType != TypeDescription::SFCXVariable &&
-       baseType != TypeDescription::SFCYVariable &&
-       baseType != TypeDescription::SFCZVariable ){
-       throwException = true;
-    }
-    // CC Variables, only Doubles and Vectors
-    if(baseType != TypeDescription::CCVariable &&
-       subType  != TypeDescription::double_type &&
-       subType  != TypeDescription::Vector  ){
-      throwException = true;
-    }
-    // NC Variables, only Doubles and Vectors
-    if(baseType != TypeDescription::NCVariable &&
-       subType  != TypeDescription::double_type &&
-       subType  != TypeDescription::Vector  ){
-      throwException = true;
-    }
-    // Face Centered Vars, only Doubles
-    if( (baseType == TypeDescription::SFCXVariable ||
-         baseType == TypeDescription::SFCYVariable ||
-         baseType == TypeDescription::SFCZVariable) &&
-         subType != TypeDescription::double_type) {
-      throwException = true;
-    }
-
-    if(throwException){
-      ostringstream warn;
-      warn << "ERROR:AnalysisModule:planeAverage: ("<<label->getName() << " "
-           << td->getName() << " ) has not been implemented" << endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-
-    //__________________________________
-    //  populate the vector of averages
-    // double
-    if( subType == TypeDescription::double_type ) {
-      planarVar_double* me = new planarVar_double();
-      me->label      = label;
-      me->matl       = matl;
-      me->level      = level;
-      me->baseType   = baseType;
-      me->subType    = subType;
-      me->weightType = weight;
-
-     planarVars.push_back( std::shared_ptr<planarVarBase>(me) );
-
-    }
-    // Vectors
-    if( subType == TypeDescription::Vector ) {
-      planarVar_Vector* me = new planarVar_Vector();
-      me->label      = label;
-      me->matl       = matl;
-      me->level      = level;
-      me->baseType   = baseType;
-      me->subType    = subType;
-      me->weightType = weight;
-
-      planarVars.push_back( std::shared_ptr<planarVarBase>(me) );
-    }
+    d_allLevels_planarVars.at(0) = planarVars;
   }
-
-  d_allLevels_planarVars.at(0) = planarVars;
-
-  //__________________________________
-  //
-  // remove any duplicate entries
-  sort(m.begin(), m.end());
-  vector<int>::iterator it = unique(m.begin(), m.end());
-  m.erase(it, m.end());
-
-  //Construct the matl_set
-  d_matl_set = scinew MaterialSet();
-  d_matl_set->addAll(m);
-  d_matl_set->addReference();
-
-  // for fileInfo variable
-  d_zero_matl = scinew MaterialSubset();
-  d_zero_matl->add(0);
-  d_zero_matl->addReference();
 }
 
 //______________________________________________________________________

@@ -59,7 +59,6 @@ GENERAL INFORMATION
      ( u'Q'_bar(y), v'Q'_bar(y), w'Q'_bar(y) )
    end
 
-
    Todd Harman
    Department of Mechanical Engineering
    University of Utah
@@ -69,13 +68,13 @@ ______________________________________________________________________*/
 
 //______________________________________________________________________
 
-  class meanTurbFluxes : public planeAverage, virtual public AnalysisModule {
+  class meanTurbFluxes :  public AnalysisModule{
   public:
 
     meanTurbFluxes(const ProcessorGroup   * myworld,
                    const MaterialManagerP   materialManager,
                    const ProblemSpecP     & module_spec);
-                   
+
     meanTurbFluxes();
 
     virtual ~meanTurbFluxes();
@@ -107,18 +106,20 @@ ______________________________________________________________________*/
     //__________________________________
     //  all variables except velocity
     struct Qvar{
-    
+
       int matl;
-      VarLabel * Label;                   // Q
+      int level;
+      VarLabel * label;                   // Q
       VarLabel * primeLabel;              // Q'
       VarLabel * turbFluxLabel;           // u'Q', v'Q', w'Q'
-      
+
       MaterialSubset * matSubSet;
-      const TypeDescription * subtype;
-      
+      TypeDescription::Type baseType;
+      TypeDescription::Type subType;
+
       void print(){
-        const std::string name = Label->getName();
-        std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() <<"\n";
+        const std::string name = label->getName();
+        std::cout << name << " matl: " << matl <<"\n";
       };
 
       ~Qvar()
@@ -126,23 +127,25 @@ ______________________________________________________________________*/
         if(matSubSet && matSubSet->removeReference()){
           delete matSubSet;
         }
-        VarLabel::destroy( Label );
-        VarLabel::destroy( primeLabel );   
+        VarLabel::destroy( label );
+        VarLabel::destroy( primeLabel );
         VarLabel::destroy( turbFluxLabel );
       }
     };
-    
+
     //__________________________________
-    //  Velocity  
+    //  Velocity
     struct velocityVar: public Qvar{
-      VarLabel * diagTurbStrssLabel;        //u'u', v'v', w'w'
-      VarLabel * offdiagTurbStrssLabel;     //u'v', v'w', w'u'
-      
+      VarLabel * normalTurbStrssLabel;        //u'u', v'v', w'w'
+      VarLabel * shearTurbStrssLabel;     //u'v', v'w', w'u'
+
       ~velocityVar()
       {
-        VarLabel::destroy( diagTurbStrssLabel );
-        VarLabel::destroy( offdiagTurbStrssLabel );
+        VarLabel::destroy( normalTurbStrssLabel );
+        VarLabel::destroy( shearTurbStrssLabel );
       }
+      std::string normalTurbStrssName  = "normalTurbStrss";
+      std::string shearTurbStrssName   = "shearTurbStrss";
     };
 
 
@@ -163,20 +166,20 @@ ______________________________________________________________________*/
                                const MaterialSubset * ,
                                DataWarehouse        * ,
                                DataWarehouse        * new_dw);
-                               
+
     template <class T>
-    void calc_Q_prime( DataWarehouse * new_dw,
-                       const Patch   * patch,    
-                       const Qvar    & Q );
+    void calc_Q_prime( DataWarehouse       * new_dw,
+                       const Patch         * patch,
+                       std::shared_ptr<Qvar> Q );
 
     void sched_TurbFluxes(SchedulerP   & sched,
                           const LevelP & level);
-                      
+
     void calc_TurbFluxes(const ProcessorGroup * ,
-                         const PatchSubset    * patches,              
-                         const MaterialSubset * ,                     
-                         DataWarehouse        * ,                     
-                         DataWarehouse        * new_dw);         
+                         const PatchSubset    * patches,
+                         const MaterialSubset * ,
+                         DataWarehouse        * ,
+                         DataWarehouse        * new_dw);
 
     //______________________________________________________________________
     // general labels
@@ -191,9 +194,9 @@ ______________________________________________________________________*/
 
     //__________________________________
     // global constants always begin with "d_"
-    std::vector< Qvar >  d_Qvars;
-    velocityVar  d_velVar;
-    
+    std::vector< std::shared_ptr< Qvar > >  d_Qvars;
+    std::shared_ptr< velocityVar >          d_velVar;
+
     double d_writeFreq;
     double d_startTime;
     double d_stopTime;
@@ -207,12 +210,12 @@ ______________________________________________________________________*/
 
     enum orientation { XY, XZ, YZ };        // plane orientation
     orientation d_planeOrientation;
-    
-    
+
+
     private:
       planeAverage * d_planeAve_1;
-    
-    
+      planeAverage * d_planeAve_2;
+
 
   };
 }
