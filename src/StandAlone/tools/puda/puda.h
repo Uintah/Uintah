@@ -81,6 +81,7 @@ namespace Uintah {
     int tskip;
     int matl;
     int m_all;
+    double sepfac;
     std::string i_xd;
     std::string filebase;
     std::string particleVariable;
