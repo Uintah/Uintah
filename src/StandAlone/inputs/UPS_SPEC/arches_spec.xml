@@ -1021,6 +1021,13 @@
                                                                                    instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation.
                                                                                    for wall with large thermal resistance, recommend relaxation_coef=0.1-0.8,
                                                                                    for small thermal resisitance, recommend relaxation_coef=1.0 -->
+
+                                                                                  <!--To approximate relaxation_coef, we recommend the following equation:-->
+                                                                                  <!--R = 1 / (1 + tau / dt) where:-->
+                                                                                  <!--tau -> is the desired averaging window for all dynamic wall properties (use an upper limit of residence time)-->
+                                                                                  <!--dt  -> the simulated time between wall model solves (dictated by the radiation solve frequency)-->
+ 
+               
         <temperature_label              spec="OPTIONAL STRING"/> <!-- tabluated name for temperature.  Default: temperature -->
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="type REQUIRED STRING 'simple_ht, region_ht, coal_region_ht'">
