@@ -599,7 +599,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
   void KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
     auto eps =
-    tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_eps_name);
+    tsk_info->get_const_uintah_field_add<CT,const double, MemSpace >(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
