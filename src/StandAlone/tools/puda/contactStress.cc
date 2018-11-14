@@ -91,7 +91,7 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
   string pout_filename;
   string pairOutRoot("contactPairs.");
 
-  for(int mthis= 0; mthis<=maxMatl; mthis++){
+  for(int mthis= 0; mthis<maxMatl; mthis++){
     ostringstream gnum;
     gnum << mthis;
 
