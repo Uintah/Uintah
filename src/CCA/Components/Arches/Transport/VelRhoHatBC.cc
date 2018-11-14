@@ -122,8 +122,8 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
   auto zmom = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >( m_zmom );
   
   auto old_uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >( m_uVel );
-  auto old_vVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >( m_vVel );
-  auto old_wVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >( m_wVel );
+  auto old_vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >( m_vVel );
+  auto old_wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace >( m_wVel );
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   const double possmall = 1e-16;
