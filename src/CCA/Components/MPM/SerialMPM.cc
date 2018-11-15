@@ -1298,7 +1298,9 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
-  t->requires(Task::NewDW, lb->gSurfNormLabel,                  gac,NGN);
+  if(flags->d_computeNormals){
+    t->requires(Task::NewDW, lb->gSurfNormLabel,                gac,NGN);
+  }
   if(flags->d_XPIC2){
     t->requires(Task::NewDW, lb->gVelSPSSPLabel,                gac,NGN);
     t->requires(Task::NewDW, lb->pVelocitySSPlusLabel,          gnone);
@@ -3757,16 +3759,24 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
-      new_dw->get(gSurfNorm,       lb->gSurfNormLabel,       dwi,patch,gac,NGP);
       if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
-      }
-      else{
+      } else{
         NCVariable<double> dTdt_create;
         new_dw->allocateTemporary(dTdt_create,                   patch,gac,NGP);
         dTdt_create.initialize(0.);
         dTdt = dTdt_create;                         // reference created data
       }
+
+      if(flags->d_computeNormals){
+        new_dw->get(gSurfNorm,     lb->gSurfNormLabel,       dwi,patch,gac,NGP);
+      } else{
+        NCVariable<Vector> gSN_create;
+        new_dw->allocateTemporary(gSN_create,                    patch,gac,NGP);
+        gSN_create.initialize(Vector(0.));
+        gSurfNorm = gSN_create;                     // reference created data
+      }
+      
       new_dw->get(massBurnFrac,    lb->massBurnFractionLabel,dwi,patch,gac,NGP);
 
       double Cp=mpm_matl->getSpecificHeat();
