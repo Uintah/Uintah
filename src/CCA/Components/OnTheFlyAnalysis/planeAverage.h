@@ -95,9 +95,9 @@ ______________________________________________________________________*/
                                              const LevelP & level) {};
 
     enum weightingType { NCELLS, MASS, NONE };
-    
+
     static MPI_Comm d_my_MPI_COMM_WORLD;
-    
+
 
   private:
 
@@ -113,7 +113,7 @@ ______________________________________________________________________*/
                                 int   * len,
                                 MPI_Datatype * type)
       {
-      
+
         for (auto i=0; i< *len; i++){
           inOut[i] = Uintah::Max( inOut[i], in[i] );
         }
@@ -158,7 +158,7 @@ ______________________________________________________________________*/
         {
 
           const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
-          
+
           if( rank == rootRank ){
             Uintah::MPI::Reduce(  MPI_IN_PLACE, &weight.front(), nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, com );
             Uintah::MPI::Reduce(  MPI_IN_PLACE, &nCells.front(), nPlanes, MPI_INT,    MPI_SUM, rootRank, com );
@@ -189,7 +189,7 @@ ______________________________________________________________________*/
           MPI_Op_create( (MPI_User_function*) MPI_OP_point, 1, &opt_point );
 
           const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
-          
+
           if( rank == rootRank ){
             Uintah::MPI::Reduce(  MPI_IN_PLACE, &CC_pos.front(), nPlanes, mpitype, opt_point, rootRank, com );
           } else {
@@ -376,7 +376,7 @@ ______________________________________________________________________*/
           MPI_Op_create( (MPI_User_function*) plusEqualVector, 1, &vector_add );
 
           const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
-          
+
           if( rank == rootRank ){
             Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, mpitype, vector_add, rootRank, com );
           } else {
@@ -427,16 +427,36 @@ ______________________________________________________________________*/
     //
     std::vector<  std::vector< std::shared_ptr< planarVarBase > > > d_allLevels_planarVars;
 
-
-
     //______________________________________________________________________
     //
     //
+  public:
+    void sched_computePlanarAve( SchedulerP   & sched,
+                                 const LevelP & level );
+
+    void sched_writeToFiles( SchedulerP   &    sched,
+                             const LevelP &    level,
+                             const std::string  dirName );
+
+    void sched_resetProgressVar( SchedulerP   & sched,
+                                 const LevelP & level );
+
+    void sched_updateTimeVar( SchedulerP   & sched,
+                              const LevelP & level );
+
+    void createMPICommunicator(const PatchSet* perProcPatches);
+
+
+  private:
     void initialize(const ProcessorGroup *,
                     const PatchSubset    * patches,
                     const MaterialSubset *,
                     DataWarehouse        *,
                     DataWarehouse        * new_dw);
+
+
+    void sched_zeroPlanarVars( SchedulerP   & sched,
+                               const LevelP & level );
 
     void zeroPlanarVars(const ProcessorGroup * pg,
                      const PatchSubset    * patches,
@@ -444,11 +464,19 @@ ______________________________________________________________________*/
                      DataWarehouse        * old_dw,
                      DataWarehouse        * new_dw);
 
+
+    void sched_computePlanarSums( SchedulerP   & sched,
+                                  const LevelP & level );
+
     void computePlanarSums(const ProcessorGroup * pg,
                            const PatchSubset    * patches,
                            const MaterialSubset *,
                            DataWarehouse        * old_dw,
                            DataWarehouse        * new_dw);
+
+
+    void sched_sumOverAllProcs( SchedulerP   & sched,
+                                const LevelP & level);
 
     void sumOverAllProcs(const ProcessorGroup * pg,
                          const PatchSubset    * patches,
@@ -456,11 +484,19 @@ ______________________________________________________________________*/
                          DataWarehouse        * old_dw,
                          DataWarehouse        * new_dw);
 
+
     void writeToFiles(const ProcessorGroup  * pg,
                       const PatchSubset     * patches,
                       const MaterialSubset  *,
                       DataWarehouse         *,
-                      DataWarehouse         * new_dw);
+                      DataWarehouse         * new_dw,
+                      const std::string       dirName);
+
+    void updateTimeVar( const ProcessorGroup* pg,
+                        const PatchSubset   * patches,
+                        const MaterialSubset* matSubSet,
+                        DataWarehouse       * old_dw,
+                        DataWarehouse       * new_dw );
 
     template <class Tvar, class Ttype>
     void planarSum_Q( DataWarehouse  * new_dw,
@@ -479,7 +515,7 @@ ______________________________________________________________________*/
                           DataWarehouse        *,
                           DataWarehouse        *);
 
-    void createMPICommunicator(const PatchSet* perProcPatches);
+
 
     void createFile(std::string & filename,
                     FILE*       & fp,
@@ -498,7 +534,7 @@ ______________________________________________________________________*/
     bool isRightLevel( const int myLevel,
                        const int L_indx,
                        const LevelP& level);
-    
+
     void planeIterator( const GridIterator& patchIter,
                         IntVector & lo,
                         IntVector & hi );
