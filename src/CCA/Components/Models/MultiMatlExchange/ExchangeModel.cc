@@ -50,7 +50,7 @@ DebugStream dbgExch("EXCHANGEMODELS", false);
 ExchangeModel::ExchangeModel(const ProblemSpecP     & prob_spec,
                              const MaterialManagerP & materialManager )
 {
-  d_materialManager = materialManager;
+  d_matlManager = materialManager;
   d_numMatls    = materialManager->getNumMatls();
   d_zero_matl   = scinew MaterialSubset();
   d_zero_matl->add(0);
@@ -79,17 +79,15 @@ ExchangeModel::~ExchangeModel()
 
 //______________________________________________________________________
 //
-void ExchangeModel::schedComputeSurfaceNormal( SchedulerP     & sched,        
-                                               const PatchSet * patches)      
+void ExchangeModel::schedComputeSurfaceNormal( SchedulerP           & sched,        
+                                               const PatchSet       * patches,
+                                               const MaterialSubset * mpm_matls )      
 {
   std::string name = "ExchangeModel::ComputeSurfaceNormal";
 
   Task* t = scinew Task( name, this, &ExchangeModel::ComputeSurfaceNormal);
 
   printSchedule( patches, dbgExch, name );
-
-  const MaterialSet* mpm_ms       = d_materialManager->allMaterials( "MPM" );
-  const MaterialSubset* mpm_matls = mpm_ms->getUnion();
 
   Ghost::GhostType  gac  = Ghost::AroundCells;
   t->requires( Task::NewDW, Mlb->gMassLabel,       mpm_matls,   gac, 1 );
@@ -98,15 +96,16 @@ void ExchangeModel::schedComputeSurfaceNormal( SchedulerP     & sched,
   t->computes( d_surfaceNormLabel,   mpm_matls );
   t->computes( d_isSurfaceCellLabel, d_zero_matl ); 
   
-  sched->addTask(t, patches, mpm_ms );
+  const MaterialSet* mpm_matlset = d_matlManager->allMaterials( "MPM" );
+  sched->addTask(t, patches, mpm_matlset );
 }
 //______________________________________________________________________
 //
 void ExchangeModel::ComputeSurfaceNormal( const ProcessorGroup*,
-                                          const PatchSubset* patches,           
-                                          const MaterialSubset* mpm_matls,      
-                                          DataWarehouse* old_dw,                
-                                          DataWarehouse* new_dw )               
+                                          const PatchSubset    * patches,           
+                                          const MaterialSubset * mpm_matls,      
+                                          DataWarehouse        * old_dw,                
+                                          DataWarehouse        * new_dw )               
 {
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -127,10 +126,10 @@ void ExchangeModel::ComputeSurfaceNormal( const ProcessorGroup*,
 
     //__________________________________
     //    loop over MPM matls
-    int numMPM_matls = d_materialManager->getNumMatls( "MPM" );
+    int numMPM_matls = d_matlManager->getNumMatls( "MPM" );
     
     for(int m=0; m<numMPM_matls; m++){
-      MPMMaterial* matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM", m);
+      MPMMaterial* matl = (MPMMaterial*) d_matlManager->getMaterial( "MPM", m);
       int dwindex = matl->getDWIndex();
 
       CCVariable<Vector> surfaceNorm;

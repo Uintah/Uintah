@@ -54,7 +54,8 @@ namespace ExchangeModels{
 
     virtual void sched_PreExchangeTasks(SchedulerP           & sched,
                                         const PatchSet       * patches,
-                                        const MaterialSubset * iceMatls,
+                                        const MaterialSubset * ice_matls,
+                                        const MaterialSubset * mpm_matls,
                                         const MaterialSet    * allMatls);
 
     virtual void addExchangeModelRequires ( Task* t,

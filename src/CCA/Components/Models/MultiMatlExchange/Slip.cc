@@ -94,7 +94,7 @@ void SlipExch::problemSetup(const ProblemSpecP & matl_ps)
 
 
   proc0cout << " fluidMatlIndex: " << d_fluidMatlIndx << " thermal_accommodation_coeff " << d_thermal_accommodation_coeff << endl;
-//  d_exchCoeff->problemSetup(mat_ps, d_materialManager);
+//  d_exchCoeff->problemSetup(mat_ps, d_matlManager);
 }
 
 //______________________________________________________________________
@@ -119,12 +119,13 @@ void SlipExch::outputProblemSpec(ProblemSpecP & matl_ps )
 //  All computed variables live in the parent NewDW
 void SlipExch::sched_PreExchangeTasks(SchedulerP           & sched,
                                       const PatchSet       * patches,
-                                      const MaterialSubset * iceMatls,
+                                      const MaterialSubset * ice_matls,
+                                      const MaterialSubset * mpm_matls,
                                       const MaterialSet    * allMatls)
 {
   //__________________________________
   // compute surface normal and isSurfaceCell
-  schedComputeSurfaceNormal( sched, patches );
+  schedComputeSurfaceNormal( sched, patches, mpm_matls );
 
   //__________________________________
   //  compute Mean Free Path
@@ -142,9 +143,8 @@ void SlipExch::addExchangeModelRequires ( Task* t,
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires( Task::NewDW, d_meanFreePathLabel,   ice_matls, gac, 1);
-  if( mpm_matls )
-    t->requires( Task::NewDW, d_surfaceNormLabel,    mpm_matls, gac, 1);
   t->requires( Task::NewDW, d_isSurfaceCellLabel,  zeroMatl,  gac, 1);
+  t->requires( Task::NewDW, d_surfaceNormLabel,    mpm_matls, gac, 1);
 }
 
 
@@ -354,7 +354,7 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
     //__________________________________
     //  Multimaterial arrays
     for(int m = 0; m < d_numMatls; m++) {
-      Material* matl = d_materialManager->getMaterial( m );
+      Material* matl = d_matlManager->getMaterial( m );
 
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -447,7 +447,7 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
     //________________________________
     //  Boundary Conditons
     for (int m = 0; m < d_numMatls; m++)  {
-      Material* matl = d_materialManager->getMaterial( m );
+      Material* matl = d_matlManager->getMaterial( m );
       int indx = matl->getDWIndex();
 
       customBC_localVars* BC_localVars = scinew customBC_localVars();
@@ -457,11 +457,11 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
                             BC_globalVars, BC_localVars);
 
       setBC<SFCXVariable<double> >(uvel_FCME[m], "Velocity", patch, indx,
-                                    d_materialManager, BC_globalVars, BC_localVars);
+                                    d_matlManager, BC_globalVars, BC_localVars);
       setBC<SFCYVariable<double> >(vvel_FCME[m], "Velocity", patch, indx,
-                                    d_materialManager, BC_globalVars, BC_localVars);
+                                    d_matlManager, BC_globalVars, BC_localVars);
       setBC<SFCZVariable<double> >(wvel_FCME[m], "Velocity", patch, indx,
-                                    d_materialManager, BC_globalVars, BC_localVars);
+                                    d_matlManager, BC_globalVars, BC_localVars);
       delete_CustomBCs( BC_globalVars, BC_localVars );
     }
   }  // patch loop
@@ -695,7 +695,7 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
     new_dw->get( isSurfaceCell, d_isSurfaceCellLabel, 0, patch, gn, 0);
 
     for (int m = 0; m < d_numMatls; m++) {
-      Material* matl = d_materialManager->getMaterial( m );
+      Material* matl = d_matlManager->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
@@ -857,7 +857,7 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
       std::vector<CCVariable<Vector> > vel_CC_Xchange(d_numMatls);
 
       for (int m = 0; m < d_numMatls; m++) {
-        Material* matl = d_materialManager->getMaterial(m);
+        Material* matl = d_matlManager->getMaterial(m);
         int indx = matl->getDWIndex();
 
         new_dw->allocateAndPut(temp_CC_Xchange[m], Ilb->temp_CC_XchangeLabel, indx, patch);
@@ -870,15 +870,15 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
     //__________________________________
     //  Set boundary conditions
     for (int m = 0; m < d_numMatls; m++)  {
-      Material* matl = d_materialManager->getMaterial( m );
+      Material* matl = d_matlManager->getMaterial( m );
       int indx = matl->getDWIndex();
 
       customBC_localVars* BC_localVars   = scinew customBC_localVars();
       preprocess_CustomBCs("CC_Exchange", old_dw, new_dw, Ilb, patch, indx, BC_globalVars, BC_localVars);
 
-      setBC(vel_CC[m], "Velocity",   patch, d_materialManager, indx, new_dw,
+      setBC(vel_CC[m], "Velocity",   patch, d_matlManager, indx, new_dw,
                                                         BC_globalVars, BC_localVars, isNotInitialTimeStep);
-      setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, d_materialManager,
+      setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, d_matlManager,
                                          indx, new_dw,  BC_globalVars, BC_localVars, isNotInitialTimeStep);
 #if SET_CFI_BC
 //      set_CFI_BC<Vector>(vel_CC[m],  patch);
@@ -918,7 +918,7 @@ void SlipExch::schedComputeMeanFreePath(SchedulerP       & sched,
 
   t->computes(d_meanFreePathLabel);
 
-  const MaterialSet* ice_matls = d_materialManager->allMaterials( "ICE" );
+  const MaterialSet* ice_matls = d_matlManager->allMaterials( "ICE" );
   sched->addTask(t, patches, ice_matls);
 }
 
@@ -934,11 +934,11 @@ void SlipExch::computeMeanFreePath(const ProcessorGroup *,
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbgExch, "Doing SlipExch::computeMeanFreePath" );
 
-    int numICEMatls = d_materialManager->getNumMatls( "ICE" );
+    int numICEMatls = d_matlManager->getNumMatls( "ICE" );
     Ghost::GhostType  gn = Ghost::None;
 
     for (int m = 0; m < numICEMatls; m++) {
-      ICEMaterial* ice_matl = (ICEMaterial*) d_materialManager->getMaterial( "ICE", m);
+      ICEMaterial* ice_matl = (ICEMaterial*) d_matlManager->getMaterial( "ICE", m);
       int indx = ice_matl->getDWIndex();
       constCCVariable<double> temp;
       constCCVariable<double> sp_vol;
