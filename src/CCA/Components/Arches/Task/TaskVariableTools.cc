@@ -63,13 +63,20 @@ namespace Uintah {
       DOUT( dbg_arches_task, " latest DW is: " << get_which_dw_string(dw) );
     }
 
-    /// ERROR CHECKING ///
+    /// ERROR/CONFLICT CHECKING ///
     bool add_variable = true;
 
     for ( auto i = variable_registry.begin(); i != variable_registry.end(); i++ ){
 
       //check if this name is already in the list:
       if ( (*i).name == name ){
+
+        //Deal with cases of computescratchghost + requires in a packed task. 
+        if ( (*i).depend == ArchesFieldContainer::COMPUTESCRATCHGHOST 
+              && dep == ArchesFieldContainer::REQUIRES ){ 
+          //Don't add this variable because it is computed in this task upstream in a packed neighbor task
+          add_variable = false; 
+        }
 
         //does it have the same dependency?
         if ( (*i).depend == dep ){

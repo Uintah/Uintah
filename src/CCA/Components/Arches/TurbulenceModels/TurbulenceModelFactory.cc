@@ -87,6 +87,7 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
         const TaskController::Packing& packed_tasks = tsk_controller.get_packing_info();
 
         if ( packed_tasks.turbulence ){
+
           name = "DS_task1";
           TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( name, 0 );
           register_task( name, tsk_builder );
@@ -101,7 +102,9 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
           TaskInterface::TaskBuilder* tsk_builder3 = scinew DSmaCs< CCVariable<double> >::Builder( name, 0 );
           register_task( name, tsk_builder3 );
           m_momentum_closure_tasks.push_back(name);
+
         } else {
+
           name = "DS_task1";
           TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( name, 0 );
           register_task( name, tsk_builder );
@@ -116,6 +119,7 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
           TaskInterface::TaskBuilder* tsk_builder3 = scinew DSmaCs< constCCVariable<double> >::Builder( name, 0 );
           register_task( name, tsk_builder3 );
           m_momentum_closure_tasks.push_back(name);
+
         }
 
       } else if (type == "multifractal"){
@@ -125,37 +129,37 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
 
         if ( packed_tasks.turbulence ){
 
-         name="fractal_UD";
-        TaskInterface::TaskBuilder* tsk_builder = scinew FractalUD::Builder( name, 0 );
-        register_task( name, tsk_builder );
-        m_momentum_closure_tasks.push_back(name);
+          name="fractal_UD";
+          TaskInterface::TaskBuilder* tsk_builder = scinew FractalUD::Builder( name, 0 );
+          register_task( name, tsk_builder );
+          m_momentum_closure_tasks.push_back(name);
 
-        name="MultifractalSGS";
-        TaskInterface::TaskBuilder* tsk_builder2 = scinew MultifractalSGS::Builder( name, 0 );
-        register_task( name, tsk_builder2 );
-        m_momentum_closure_tasks.push_back(name);
+          name="MultifractalSGS";
+          TaskInterface::TaskBuilder* tsk_builder2 = scinew MultifractalSGS::Builder( name, 0 );
+          register_task( name, tsk_builder2 );
+          m_momentum_closure_tasks.push_back(name);
 
-        name="TransportCouple";
-        TaskInterface::TaskBuilder* tsk_builder3 = scinew SGSforTransport::Builder( name, 0 );
-        register_task( name, tsk_builder3 );
-        m_momentum_closure_tasks.push_back(name);
+          name="TransportCouple";
+          TaskInterface::TaskBuilder* tsk_builder3 = scinew SGSforTransport::Builder( name, 0 );
+          register_task( name, tsk_builder3 );
+          m_momentum_closure_tasks.push_back(name);
 
         } else {
 
-        name="fractal_UD";
-        TaskInterface::TaskBuilder* tsk_builder = scinew FractalUD::Builder( name, 0 );
-        register_task( name, tsk_builder );
-        m_momentum_closure_tasks.push_back(name);
+          name="fractal_UD";
+          TaskInterface::TaskBuilder* tsk_builder = scinew FractalUD::Builder( name, 0 );
+          register_task( name, tsk_builder );
+          m_momentum_closure_tasks.push_back(name);
 
-        name="MultifractalSGS";
-        TaskInterface::TaskBuilder* tsk_builder2 = scinew MultifractalSGS::Builder( name, 0 );
-        register_task( name, tsk_builder2 );
-        m_momentum_closure_tasks.push_back(name);
+          name="MultifractalSGS";
+          TaskInterface::TaskBuilder* tsk_builder2 = scinew MultifractalSGS::Builder( name, 0 );
+          register_task( name, tsk_builder2 );
+          m_momentum_closure_tasks.push_back(name);
 
-        name="TransportCouple";
-        TaskInterface::TaskBuilder* tsk_builder3 = scinew SGSforTransport::Builder( name, 0 );
-        register_task( name, tsk_builder3 );
-        m_momentum_closure_tasks.push_back(name);
+          name="TransportCouple";
+          TaskInterface::TaskBuilder* tsk_builder3 = scinew SGSforTransport::Builder( name, 0 );
+          register_task( name, tsk_builder3 );
+          m_momentum_closure_tasks.push_back(name);
 
         }
 
@@ -205,22 +209,6 @@ TurbulenceModelFactory::build_all_tasks( ProblemSpecP& db )
         tsk3->problemSetup(db_model);
         tsk3->create_local_labels();
 
-      } else if (type == "dynamic_smagorinsky_v2" ) {
-
-        name = "DS_task1";
-        TaskInterface* tsk = retrieve_task(name);
-        tsk->problemSetup(db_model);
-        tsk->create_local_labels();
-
-        name = "DS_task2";
-        TaskInterface* tsk2 = retrieve_task(name);
-        tsk2->problemSetup(db_model);
-        tsk2->create_local_labels();
-
-        name = "DS_task3";
-        TaskInterface* tsk3 = retrieve_task(name);
-        tsk3->problemSetup(db_model);
-        tsk3->create_local_labels();
       }else if (type == "multifractal" ) {
 
          name="fractal_UD";
