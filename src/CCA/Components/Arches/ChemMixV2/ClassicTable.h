@@ -43,10 +43,10 @@
  * @todo
  *
  * @details
- * This class stores object for storing dependent variables for a classic arches table.  
- * In the header there are also utilities for populating the table using an input file using the 
+ * This class stores object for storing dependent variables for a classic arches table.
+ * In the header there are also utilities for populating the table using an input file using the
  * classic arches table format.
- * 
+ *
  *UPDATE: The table is now standalone, with static members for data construction.  THe table has the option to load
  *        only dependent variables requeseted by the class creating the object.  Additionally,  an access function
  *        that avoids indirection  within an i,j,k, loop is provided.
@@ -69,7 +69,7 @@ struct ClassicTableInfo {
  const std::vector<int>    &d_allIndepVarNum;            ///< std::vector storing the grid size for the Independent variables
   std::vector<std::string> d_allIndepVarNames;     ///< Vector storing all independent variable names from table file
   std::vector<std::string> d_savedDep_var;         ///< std::vector storing  saved dependent variable names from the table file
-  std::vector<std::string>   d_allDepVarUnits;     
+  std::vector<std::string>   d_allDepVarUnits;
   std::map<std::string, double > d_constants;                           ///< List of constants in table header
 
 
@@ -82,11 +82,11 @@ struct ClassicTableInfo {
   const std::vector<std::string> &arg5,              ///< Units for the dependent variables
   const std::map<std::string, double > &arg6 ) :     ///< List of constants in table header
   indep_headers(arg1),
-  d_allIndepVarNum(arg2),      
-  d_allIndepVarNames (arg3),   
-  d_savedDep_var (arg4),     
-  d_allDepVarUnits(arg5),    
-  d_constants(arg6)  {}         
+  d_allIndepVarNum(arg2),
+  d_allIndepVarNames (arg3),
+  d_savedDep_var (arg4),
+  d_allDepVarUnits(arg5),
+  d_constants(arg6)  {}
 
 };
 
@@ -105,22 +105,21 @@ struct ClassicTableInfo {
     {}
 
            ~Interp_class() {
-            delete &ind_1; 
-            delete &d_allIndepVarNo; 
-            delete &indep; 
+            delete &ind_1;
+            delete &d_allIndepVarNo;
+            delete &indep;
 #ifdef UINTAH_ENABLE_KOKKOS
         // no delete needed due to kokkos smart pointers
 #else
-            delete &table2; 
+            delete &table2;
 #endif
                 }
 
-
-
   template<class TYPE>
-  void getState(std::vector< TYPE > &indep_storage,        
-              std::vector<CCVariable<double> > &dep_storage,  std::vector<std::string> requestedInd_var,
-              const Patch* patch, const std::vector<int> depVar_indices={} ){
+  void getState( std::vector< TYPE > &indep_storage,
+                 std::vector<CCVariable<double> > &dep_storage,
+                 std::vector<std::string> requestedInd_var,
+                 const Patch* patch, const std::vector<int> depVar_indices={} ){
 
     std::vector<int>     index_map (indep_storage.size());
     for (unsigned int ix = 0 ; ix<indep_storage.size(); ix++){
@@ -181,14 +180,14 @@ struct ClassicTableInfo {
 
       double table_vals[npts];   // container for values read from the table needed to compute the interpolent
       double distal_val[nDim-1+oneD_switch]; //  delta_x / DX   (nDim + 1  except for 1D)
-      int table_indices[npts];   // container for table indices 
+      int table_indices[npts];   // container for table indices
       int theSpecial[2][oneD_switch]; // high and low indexes of the special IV (first independent variable)
-      
+
 
 
       std::vector<double> var_values (var_index.size(), 0.0 ); // This needs to be removed for portability and replaced with a view;
 
-      dliniate[0]=1; 
+      dliniate[0]=1;
       for( int  i=1 ; i<nDim; i++){
         dliniate[i]=dliniate[i-1]*d_allIndepVarNo[i-1]; // compute effective 1-D index
       }
@@ -217,7 +216,7 @@ struct ClassicTableInfo {
 
        // ----------------perform search AGAIN for special IV  (indepednent variable-------//
        // LINEAR search
-      for (int iSp=0;  iSp< oneD_switch; iSp++){ 
+      for (int iSp=0;  iSp< oneD_switch; iSp++){
           const int cur_index=index[iSp][nDim_withSwitch-1];
         if (iv[0] <  ind_1[cur_index][d_allIndepVarNo[0]-1]){
           int i=1;
@@ -235,9 +234,9 @@ struct ClassicTableInfo {
       }
 
 
-          // compute table indices 
+          // compute table indices
         for (int j=0; j<npts/2; j++){
-          int table_index=0;  
+          int table_index=0;
           int base2=npts/4;
           int high_or_low=false;
           for (int i=1; i<nDim; i++){
@@ -249,7 +248,7 @@ struct ClassicTableInfo {
           table_indices[npts/2+j]=table_index+theSpecial[iHigh][high_or_low];
         }
 
-  
+
         for (unsigned int k = 0; k < var_index.size(); k++) {
  /////      get values from table
         for (int j=0; j<npts; j++){
@@ -261,14 +260,14 @@ struct ClassicTableInfo {
           }
 
 
- /////     do special interpolation for the first IV 
+ /////     do special interpolation for the first IV
             int remaining_points=npts/2;
-              for (int i=0; i < remaining_points; i++) {    
+              for (int i=0; i < remaining_points; i++) {
                 table_vals[i]=table_vals[i]*(1. - distal_val[i % 2]) + table_vals[i+remaining_points]*distal_val[i % 2];
               }
 
- /////     do interpolation for all other IVs 
-            for (int j = 0; j < nDim-1; j++) { 
+ /////     do interpolation for all other IVs
+            for (int j = 0; j < nDim-1; j++) {
               remaining_points /= 2;
               const double distl=distal_val[j+2];
               for (int i=0; i < remaining_points; i++) {
@@ -294,11 +293,5 @@ struct ClassicTableInfo {
     const ClassicTableInfo tableInfo; // variable names, units, and table keys
 
   };
-
-
-
-
-
-
 }
 #endif

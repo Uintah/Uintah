@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-//----- ColdFlow.h --------------------------------------------------
+//----- PCProperties.h --------------------------------------------------
 
 #ifndef Uintah_Component_Arches_ColdFlow_h
 #define Uintah_Component_Arches_ColdFlow_h
@@ -30,37 +30,16 @@
 #include   <string>
 
 /**
- * @class  ColdFlow
+ * @class  PCProperties
  * @author Jeremy Thornock
- * @date   Jan 2011
+ * @date   Nov 2018
  *
- * @brief ColdFlow interface
+ * @brief PCProperties interface
  *
  * @todo
  *
  * @details
- * This class computes the density and temperature for two non-reacting
- * streams.
-
-This code checks for the following tags/attributes in the input file:
-The UPS interface is:
-
-\code
-<ColdFlow                       spec="OPTIONAL NO_DATA" >
-  <mixture_fraction_label       spec="REQUIRED STRING"/>
-  <Stream_1                     spec="MULTIPLE NO_DATA">
-    <density                    spec="REQUIRED DOUBLE 'positive'"/>
-    <temperature                spec="REQUIRED DOUBLE 'positive'"/>
-  </Stream_1>
-  <Stream_2                     spec="MULTIPLE NO_DATA">
-    <density                    spec="REQUIRED DOUBLE 'positive'"/>
-    <temperature                spec="REQUIRED DOUBLE 'positive'"/>
-  </Stream_2>
-</ColdFlow>
-\endcode
-
- * If you have trouble reading your table, you can "setenv SCI_DEBUG TABLE_DEBUG:+" to get a
- * report of what is going on in the table reader.
+ *
  *
  *
 */
@@ -68,32 +47,27 @@ The UPS interface is:
 
 namespace Uintah {
 
-
 class ArchesLabel;
 class MPMArchesLabel;
 class TimeIntegratorLabel;
-class ColdFlow : public MixingRxnModel {
+class PCProperties : public MixingRxnModel {
 
 public:
 
-  ColdFlow( MaterialManagerP& materialManager );
+  PCProperties( MaterialManagerP& materialManager );
 
-  ~ColdFlow();
+  ~PCProperties();
 
   void problemSetup( const ProblemSpecP& params );
 
-  /** @brief Gets the thermochemical state for a patch
-      @param initialize         Tells the method to allocateAndPut
-      @param modify_ref_den     Tells the method to modify the reference density */
+  /** @brief Gets the thermochemical state for a patch **/
   void sched_getState( const LevelP& level,
                        SchedulerP& sched,
                        const int time_substep,
                        const bool initialize,
                        const bool modify_ref_den );
 
-  /** @brief Gets the thermochemical state for a patch
-      @param initialize         Tells the method to allocateAndPut
-      @param modify_ref_den     Tells the method to modify the reference density */
+  /** @brief Gets the thermochemical state for a patch **/
   void getState( const ProcessorGroup* pc,
                  const PatchSubset* patches,
                  const MaterialSubset* matls,
@@ -102,11 +76,6 @@ public:
                  const int time_substep,
                  const bool initialize,
                  const bool modify_ref_den );
-
-  /** @brief Compute cold flow density and temperature for simple two stream mixing */
-  double coldFlowMixing( std::vector<double>& iv, int pos );
-
-  enum BoundaryType { DIRICHLET, NEUMANN, FROMFILE };
 
   typedef std::map<std::string, DepVarCont >       DepVarMap;
   typedef std::map<std::string, int >               IndexMap;
@@ -123,18 +92,7 @@ public:
 
 private:
 
-  double d_stream[2][2];
-
-  IntVector d_ijk_den_ref;                ///< Reference density location
-
-  std::vector<std::string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
-
-  std::string d_cold_flow_mixfrac;
-
-  std::map<std::string, double> species_s1;
-  std::map<std::string, double> species_s2;
-
-}; // end class ColdFlow
+}; // end class PCProperties
 
 } // end namespace Uintah
 
