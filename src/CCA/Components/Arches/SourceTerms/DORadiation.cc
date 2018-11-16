@@ -95,6 +95,12 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb;
 
   db->getWithDefault( "calc_frequency", _radiation_calc_freq, 3 );
+
+  // For the dynamic radiation frequency radiation solve used the base
+  // static radiation calculation frequency.
+
+  // NOTE: for this stepping to work correctly there must be one patch
+  // per rank because the reduction is rank based.
   do_rad_in_n_timesteps = _radiation_calc_freq;
 
   // Check to see if the dynamic frequency radiation solve should be used. 
@@ -369,16 +375,17 @@ void
 DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   // A pointer to the application so to get a handle to the
-  // performanance stats.  This is a bit of hack so to get the
-  // application passed down to other classes like the
-  if( _DO_model )
-    _DO_model->setApplicationInterface( sched->getApplication() );
-
-  m_arches=sched->getApplication();
+  // performanance stats.  This step is a hack so to get the
+  // application passed down to other classes like the model.
+  m_arches = sched->getApplication();
   
+  if( _DO_model )
+    _DO_model->setApplicationInterface( m_arches );
+
   if(_dynamicSolveFrequency) { 
-    // Use dynamic frequency radiation solve so create a new reduction variable.
-    // NOTE : the name is in ArchesStatsEnum.h
+    // Use dynamic frequency radiation solve so create a new reduction
+    // variable that keeps track of the number of time steps before
+    // the next raditaion solve. NOTE : the name is in ArchesStatsEnum.h
     m_arches->addReductionVariable( dynamicSolveCount_name,
                                     min_vartype::getTypeDescription(), true );
   }
@@ -1182,10 +1189,12 @@ DORadiation::profileDynamicRadiation( const ProcessorGroup* pc,
 
   // For the dynamic frequency radiation solve get the new number of
   // time steps to skip before doing the next radiation solve.
+
+  // NOTE: for this stepping to work correctly there must be one patch
+  // per rank because the reduction is rank based.
   delt_vartype delT;
   old_dw->get(delT,_labels->d_delTLabel);
   do_rad_in_n_timesteps = min ((int) (dt_min / delT), _radiation_calc_freq);
-  DOUTALL( true, " ***************  " << dt_min / delT << "  " << _radiation_calc_freq);
   new_dw->put( min_vartype(do_rad_in_n_timesteps), VarLabel::find(dynamicSolveCount_name) );
 }
 
@@ -1241,8 +1250,10 @@ DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
   new_dw->transferFrom(old_dw, _src_label,patches,matls);
 
   // Reduce the dynamic radiation solve time step counter.
+
+  // NOTE: for this stepping to work correctly there must be one patch
+  // per rank because the reduction is rank based.
   if(_dynamicSolveFrequency) {
-    // DOUTALL( true, " ***************  " << do_rad_in_n_timesteps );
     --do_rad_in_n_timesteps;
     new_dw->put( min_vartype(do_rad_in_n_timesteps), VarLabel::find(dynamicSolveCount_name) );
   }
