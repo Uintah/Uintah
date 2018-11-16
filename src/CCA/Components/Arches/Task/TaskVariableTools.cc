@@ -4,7 +4,8 @@
 
 namespace {
 
-  Uintah::Dout dbg_arches_task{"Arches_Task_Var_DBG", "Arches::TaskVariableTools", "Information regarding the variable registration per task.", false };
+  Uintah::Dout dbg_arches_task{"Arches_Task_Var_DBG", "Arches::TaskVariableTools",
+    "Information regarding the variable registration per task.", false };
 
   std::string get_var_depend_string( Uintah::ArchesFieldContainer::VAR_DEPEND dep ){
     if ( dep == Uintah::ArchesFieldContainer::COMPUTES ){
@@ -57,7 +58,7 @@ namespace Uintah {
       } else {
         dw = ArchesFieldContainer::NEWDW;
       }
-      DOUT( dbg_arches_task, " latest DW is: " << get_which_dw_string(dw) ); 
+      DOUT( dbg_arches_task, " latest DW is: " << get_which_dw_string(dw) );
     }
 
     /// ERROR CHECKING ///
@@ -213,11 +214,11 @@ namespace Uintah {
 
       const Uintah::TypeDescription* type_desc = the_label->typeDescription();
 
-      info.ghost_type = Ghost::None; 
+      info.ghost_type = Ghost::None;
 
       if ( dep == ArchesFieldContainer::REQUIRES || dep == ArchesFieldContainer::COMPUTESCRATCHGHOST ) {
 
-        if ( nGhost > 0 ){ 
+        if ( nGhost > 0 ){
           if ( type_desc == CCVariable<int>::getTypeDescription() ) {
               info.ghost_type = Ghost::AroundCells;
           } else if ( type_desc == CCVariable<double>::getTypeDescription() ) {
@@ -249,9 +250,9 @@ namespace Uintah {
                           const int time_substep,
                           std::string task_name,
                           const bool temporary_variable ){
-    if ( !temporary_variable ){
+    //if ( !temporary_variable ){
       register_variable_work( name, dep, nGhost, dw, var_reg, time_substep, task_name );
-    }
+    //}
   }
 
   void register_variable( std::string name,
@@ -261,9 +262,9 @@ namespace Uintah {
                           std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
                           std::string task_name,
                           const bool temporary_variable ){
-    if ( !temporary_variable ){
+    //if ( !temporary_variable ){
       register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
-    }
+    //}
   }
 
   void register_variable( std::string name,
@@ -273,9 +274,9 @@ namespace Uintah {
                           const bool temporary_variable ){
     ArchesFieldContainer::WHICH_DW dw = ArchesFieldContainer::NEWDW;
     int nGhost = 0;
-    if ( !temporary_variable ){
+    //if ( !temporary_variable ){
       register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
-    }
+    //}
   }
 
   void register_variable( std::string name,
@@ -287,8 +288,8 @@ namespace Uintah {
 
     ArchesFieldContainer::WHICH_DW dw = ArchesFieldContainer::NEWDW;
     int nGhost = 0;
-    if ( !temporary_variable ){
+    //if ( !temporary_variable ){
       register_variable_work( name, dep, nGhost, dw, var_reg, timesubstep, task_name );
-    }
+    //}
   }
 } // namespace Uintah

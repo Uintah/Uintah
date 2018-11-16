@@ -39,6 +39,7 @@ PartVariablesDQMOM::register_initialize(
   const bool pack_tasks ){
 
   register_variable( m_number_density_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_area_sum_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
     const std::string weight_name = ArchesCore::append_env( "w", ienv);
@@ -62,8 +63,49 @@ PartVariablesDQMOM::register_initialize(
 void
 PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
+  computeSurfaceAreaFraction( patch, tsk_info );
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+PartVariablesDQMOM::register_timestep_eval(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const int time_substep, const bool packed_tasks ){
+
+  register_variable( m_number_density_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_area_sum_name, ArchesFieldContainer::COMPUTES, variable_registry );
+
+  for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
+    const std::string weight_name = ArchesCore::append_env( "w", ienv);
+    const std::string length_name = ArchesCore::append_env( m_length_root, ienv);
+    const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
+
+    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0,
+                       ArchesFieldContainer::LATEST, variable_registry, time_substep);
+
+    register_variable( length_name, ArchesFieldContainer::REQUIRES, 0,
+                       ArchesFieldContainer::LATEST, variable_registry, time_substep);
+
+     register_variable( surfAreaF_name, ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
+
+  }
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+  computeSurfaceAreaFraction( patch, tsk_info );
+
+}
+
+void
+PartVariablesDQMOM::computeSurfaceAreaFraction( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
   CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
-  CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >("AreaSum",0);// temporal variable
+  CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >( m_area_sum_name );
 
   AreaSumF.initialize(0.0);
   num_den.initialize(0.0);
@@ -106,76 +148,4 @@ PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
   }
 }
 
-//--------------------------------------------------------------------------------------------------
-void
-PartVariablesDQMOM::register_timestep_eval(
-  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
-  const int time_substep, const bool packed_tasks ){
-
-  register_variable( m_number_density_name, ArchesFieldContainer::COMPUTES, variable_registry );
-
-  for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
-    const std::string weight_name = ArchesCore::append_env( "w", ienv);
-    const std::string length_name = ArchesCore::append_env( m_length_root, ienv);
-    const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
-
-    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0,
-                       ArchesFieldContainer::LATEST, variable_registry, time_substep);
-
-    register_variable( length_name, ArchesFieldContainer::REQUIRES, 0,
-                       ArchesFieldContainer::LATEST, variable_registry, time_substep);
-
-     register_variable( surfAreaF_name, ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
-
-  }
-
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-  CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
-  CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >("AreaSum",0);// temporal variable
-
-  AreaSumF.initialize(0.0);
-  num_den.initialize(0.0);
-
-  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-
-  for (int ienv = 0; ienv < m_Nenv; ienv++) {
-    const std::string weight_name = ArchesCore::append_env( "w", ienv);
-    const std::string length_name = ArchesCore::append_env( m_length_root, ienv);
-
-    constCCVariable<double>& weight =
-      tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
-
-    constCCVariable<double>& length =
-      tsk_info->get_const_uintah_field_add< constCCVariable<double> >(length_name);
-
-    Uintah::parallel_for(range,  [&]( int i,  int j, int k){
-      AreaSumF(i,j,k) +=  weight(i,j,k)*length(i,j,k)*length(i,j,k); // [#/m]
-      num_den(i,j,k)  += weight(i,j,k);
-    }); //end cell loop
-  }
-
-  for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
-
-    const std::string weight_name    = ArchesCore::append_env( "w", ienv);
-    const std::string length_name    = ArchesCore::append_env( m_length_root, ienv);
-    const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
-
-    constCCVariable<double>& weight =
-      tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
-    constCCVariable<double>& length =
-      tsk_info->get_const_uintah_field_add< constCCVariable<double> >(length_name);
-
-    CCVariable<double>& surfaceAreaFraction
-      = tsk_info->get_uintah_field_add<CCVariable<double> >( surfAreaF_name );
-
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-     surfaceAreaFraction(i,j,k) =  weight(i,j,k)*length(i,j,k)*length(i,j,k)/AreaSumF(i,j,k);
-    });
-  }
-}
 } //namespace Uintah

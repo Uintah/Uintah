@@ -184,7 +184,8 @@ DSmaCs<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
 DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
-                                          variable_registry, const int time_substep , const bool packed_tasks){
+                                    variable_registry,
+                                    const int time_substep , const bool packed_tasks ){
 
   if (m_create_labels_IsI_t_viscosity) {
     register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
@@ -206,13 +207,12 @@ DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
   register_variable( m_density_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
-  register_variable( "filterML" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
-  register_variable( "filterMM" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "filterML", ArchesFieldContainer::COMPUTES, variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "filterMM", ArchesFieldContainer::COMPUTES, variable_registry, time_substep , m_task_name, packed_tasks);
 
   register_variable("MM" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
   register_variable("ML" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
   register_variable(m_IsI_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
-
 
 }
 
@@ -250,10 +250,8 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   MM = c_field_tool.get("MM");
   IsI = c_field_tool.get(m_IsI_name);
 
-  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML", nG);
-  //CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
-  //CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
-  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM", nG);
+  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
+  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
   filterML.initialize(0.0);
   filterMM.initialize(0.0);
 

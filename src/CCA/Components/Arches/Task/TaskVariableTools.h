@@ -122,23 +122,6 @@ namespace Uintah{
           return *(_field_container->get_const_field<T>(name, which_dw));
         }
 
-        /** @brief This task provides some access to variables which may be either
-                   in the DW as const (ie, you are requiring them) or might be temp
-                   because it was computed upstream in a packed task and has no DW home **/
-        template <typename T>
-        inline
-        T*
-        get_const_or_temp_uintah_field( const std::string name,
-                                        const bool        is_temp,
-                                        const int         nGhosts = 1 ){
-          if ( is_temp ){
-            return _field_container->get_temporary_field<T>(name, nGhosts);
-          }
-          else {
-            return _field_container->get_const_field<T>(name);
-          }
-        }
-
         /** @brief Return a UINTAH field allowing the user to manage
                    the memory. **/
         template <typename T>
@@ -163,30 +146,16 @@ namespace Uintah{
         template <typename T>
         inline
         T*
-        get_uintah_field( const std::string name, const int nGhosts = -1 ){
-
-          // Only temporary variables are allowed ghost cells.
-          if ( nGhosts < 0 ){
-            return _field_container->get_field<T>(name);
-          }
-          else {
-            return _field_container->get_temporary_field<T>(name, nGhosts);
-          }
+        get_uintah_field( const std::string name ){
+          return _field_container->get_field<T>(name);
         }
 
         /** @brief Return a UINTAH field **/
         template <typename T>
         inline
         T&
-        get_uintah_field_add( const std::string name,
-                              const int         nGhosts = -1 ){
-          // Only temporary variables are allowed ghost cells.
-          if ( nGhosts < 0 ){
-            return *(_field_container->get_field<T>(name));
-          }
-          else {
-            return *(_field_container->get_temporary_field<T>(name, nGhosts));
-          }
+        get_uintah_field_add( const std::string name ){
+          return *(_field_container->get_field<T>(name));
         }
 
         /** @brief Return a UINTAH particle field **/

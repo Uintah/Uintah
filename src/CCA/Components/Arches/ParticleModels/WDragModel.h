@@ -65,7 +65,7 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::ZFaceType FZT;
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
-    int _Nenv; 
+    int _Nenv;
     std::string m_model_name;
     std::string m_gasSource_name;
     std::string m_density_gas_name;
@@ -113,7 +113,7 @@ private:
   template <typename T>
   void WDragModel<T>::problemSetup( ProblemSpecP& db ){
 
-    m_model_name     = m_task_name; 
+    m_model_name     = m_task_name;
     m_gasSource_name = m_task_name + "_gasSource";
 
     m_density_gas_name = ArchesCore::parse_ups_for_role( ArchesCore::DENSITY,   db, "density" );
@@ -128,7 +128,7 @@ private:
     std::string wp_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_ZVEL );
     std::string density_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);
     std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
-    
+
     m_up_name = ArchesCore::append_env( up_root, _Nenv);
     m_vp_name = ArchesCore::append_env( vp_root, _Nenv);
     m_wp_name = ArchesCore::append_env( wp_root, _Nenv);
@@ -137,7 +137,7 @@ private:
     m_particle_density_name  = ArchesCore::append_env( density_root, _Nenv );
     m_w_qn_name              = ArchesCore::append_qn_env("w", _Nenv ); // w_qn
     m_w_name                 = ArchesCore::append_env("w", _Nenv ); // w
-    
+
     // check for gravity
     const ProblemSpecP params_root = db->getRootNode();
     std::vector<double> gravity;
@@ -151,30 +151,30 @@ private:
 
     std::string coord;
     db->require("direction",coord);
-    
+
     if ( coord == "x" || coord == "X" ){
 
       m_scaling_constant = ArchesCore::get_scaling_constant(db,up_root,_Nenv );
       m_vel_dir_name     = m_cc_u_vel_name;
       m_pvel_dir_name    = m_up_name;
-      m_wvelp_name       = ArchesCore::append_qn_env(up_root, _Nenv ) ; 
-      m_gravity          = gravity[0]; 
+      m_wvelp_name       = ArchesCore::append_qn_env(up_root, _Nenv ) ;
+      m_gravity          = gravity[0];
 
     } else if ( coord == "y" || coord == "Y" ){
 
       m_scaling_constant = ArchesCore::get_scaling_constant(db,vp_root,_Nenv );
       m_vel_dir_name     = m_cc_v_vel_name;
       m_pvel_dir_name    = m_vp_name;
-      m_wvelp_name       = ArchesCore::append_qn_env(vp_root, _Nenv ) ; 
-      m_gravity          = gravity[1]; 
+      m_wvelp_name       = ArchesCore::append_qn_env(vp_root, _Nenv ) ;
+      m_gravity          = gravity[1];
 
     } else {
 
       m_scaling_constant = ArchesCore::get_scaling_constant(db,wp_root,_Nenv );
       m_vel_dir_name     = m_cc_w_vel_name;
       m_pvel_dir_name    = m_wp_name;
-      m_wvelp_name       = ArchesCore::append_qn_env(wp_root, _Nenv ) ; 
-      m_gravity          = gravity[2]; 
+      m_wvelp_name       = ArchesCore::append_qn_env(wp_root, _Nenv ) ;
+      m_gravity          = gravity[2];
 
     }
 
@@ -253,24 +253,24 @@ private:
   CT& den    = tsk_info->get_const_uintah_field_add<CT>( m_density_gas_name );
   CT& volFraction  = tsk_info->get_const_uintah_field_add<CT>( m_volFraction_name );
 
-  
+
   CT& up    = tsk_info->get_const_uintah_field_add< CT >( m_up_name );
   CT& vp    = tsk_info->get_const_uintah_field_add< CT >( m_vp_name );
   CT& wp    = tsk_info->get_const_uintah_field_add< CT >( m_wp_name );
   CT& rho_p = tsk_info->get_const_uintah_field_add< CT >( m_particle_density_name );
   CT& l_p   = tsk_info->get_const_uintah_field_add< CT >( m_length_name );
 
-  // DQMOM valiables 
+  // DQMOM valiables
   CT& w_qn         = tsk_info->get_const_uintah_field_add<CT>(m_w_qn_name);
   CT& weight       = tsk_info->get_const_uintah_field_add<CT>(m_w_name);
   CT& RHS_weight   = tsk_info->get_const_uintah_field_add<CT>(m_w_qn_name + "_RHS");
   CT& Vel          = tsk_info->get_const_uintah_field_add<CT>(m_vel_dir_name );
   CT& pVel         = tsk_info->get_const_uintah_field_add<CT>(m_pvel_dir_name );
-  CT& weight_p_vel = tsk_info->get_const_uintah_field_add<CT>(m_wvelp_name);// 
+  CT& weight_p_vel = tsk_info->get_const_uintah_field_add<CT>(m_wvelp_name);//
   CT& RHS_source   = tsk_info->get_const_uintah_field_add<CT>(m_wvelp_name + "_RHS");
 
-  T& lambdaBirth = tsk_info->get_uintah_field_add<T>("lambdaBirth",0);
-  lambdaBirth.initialize( 0.0 );
+  // NOTE: This is a temp placeholder for the birth model.
+  const double lambda_birth_placeholder = 0.0;
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -292,18 +292,18 @@ private:
       const double t_p = ( rho_pph * l_pph * l_pph )/( 18.0 * m_kvisc );
       const double tau=t_p/fDrag;
 
-      if (tau > dt ){ 
+      if (tau > dt ){
         model(i,j,k)      = w_qn(i,j,k) * ( fDrag / t_p * (Vel(i,j,k)-pVel(i,j,k)) + m_gravity) / m_scaling_constant;
         gas_source(i,j,k) = -weight(i,j,k) * rho_pph / 6.0 * M_PI * fDrag / t_p * ( Vel(i,j,k)-pVel(i,j,k) ) * std::pow(l_pph,3.0);
       } else {  // rate clip, if we aren't resolving timescale
         const double updated_weight = std::max(w_qn(i,j,k) + dt / vol * ( RHS_weight(i,j,k) ) , 1e-15);
-        model(i,j,k) = 1. / m_scaling_constant * ( updated_weight * Vel(i,j,k) - weight_p_vel(i,j,k) ) / dt - ( RHS_source(i,j,k) / vol + lambdaBirth(i,j,k));
+        model(i,j,k) = 1. / m_scaling_constant * ( updated_weight * Vel(i,j,k) - weight_p_vel(i,j,k) ) / dt - ( RHS_source(i,j,k) / vol + lambda_birth_placeholder );
       } // end timescale if
 
     }
 
   });
-  
+
 
   }
 }

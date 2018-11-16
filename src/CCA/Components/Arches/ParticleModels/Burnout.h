@@ -59,10 +59,12 @@ public:
 private:
 
     int _Nenv;
-    std::vector<double> m_weight_scaling_constants; 
-    std::vector<double> m_rc_scaling_constants; 
-    std::vector<double> m_char_scaling_constants; 
+    std::vector<double> m_weight_scaling_constants;
+    std::vector<double> m_rc_scaling_constants;
+    std::vector<double> m_char_scaling_constants;
     std::string m_vol_fraction_name;
+    const std::string m_numerator_name{"burnout_numerator"};
+    const std::string m_denominator_name{"burnout_denominator"};
     std::vector<std::string > m_weight_names;
     std::vector<std::string > m_rc_names;
     std::vector<std::string > m_char_names;
