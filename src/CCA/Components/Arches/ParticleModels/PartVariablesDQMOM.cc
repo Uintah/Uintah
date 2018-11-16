@@ -24,7 +24,8 @@ PartVariablesDQMOM::problemSetup( ProblemSpecP& db ){
 void
 PartVariablesDQMOM::create_local_labels(){
 
-  register_new_variable<CCVariable<double> >( m_number_density_name);
+  register_new_variable<CCVariable<double> >( m_number_density_name );
+  register_new_variable<CCVariable<double> >( m_area_sum_name );
 
   for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
     const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
