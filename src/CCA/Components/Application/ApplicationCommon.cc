@@ -687,16 +687,6 @@ ApplicationCommon::getSubCycleProgress(DataWarehouse* fineDW)
 
 //______________________________________________________________________
 //
-int
-ApplicationCommon::computeTaskGraphIndex()
-{
-  // Call the actual application method which if defined overrides the
-  // virtual default method for the index
-  return computeTaskGraphIndex( m_timeStep );
-}
-
-//______________________________________________________________________
-//
 void
 ApplicationCommon::recomputeDelT()
 {

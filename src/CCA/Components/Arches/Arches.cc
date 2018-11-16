@@ -322,7 +322,7 @@ Arches::scheduleAnalysis( const LevelP& level,
   }
 }
 
-int Arches::computeTaskGraphIndex( const int timeStep )
+int Arches::getTaskGraphIndex()
 {
   // Setup the task graph for execution on the next timestep.
 
@@ -335,8 +335,19 @@ int Arches::computeTaskGraphIndex( const int timeStep )
     else
       return 0;
   }
+
+  // Below is the original fixed execution that uses the time
+  // step. Ideally this too would be a task.
   else
+  {
+    // Ideally this step would be a task so to incapsulate it as part
+    // of the execution flow but one can get the current time step and
+    // do the modulo math for a fix stepping.
+    timeStep_vartype timeStep(0);
+    m_scheduler->get_dw(0)->get(timeStep, VarLabel::find(timeStep_name) );
+
     return m_nlSolver->getTaskGraphIndex( timeStep );
+  }
 }
 
 //--------------------------------------------------------------------------------------------------

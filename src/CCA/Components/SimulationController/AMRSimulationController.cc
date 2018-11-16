@@ -643,9 +643,15 @@ AMRSimulationController::executeTimeStep( int totalFine )
   // multiple times.
   bool success = false;
 
-  int tg_index = m_application->computeTaskGraphIndex();
+  int tg_index = m_application->getTaskGraphIndex();
 
-  // Execute at least once.
+#ifdef HAVE_VISIT
+  if( getVisIt() && m_visitSimData ) {
+    m_visitSimData->imageGenerate = tg_index;
+  }
+#endif
+  
+   // Execute at least once.
   while (!success) {
     m_application->setDelTForAllLevels( m_scheduler, m_current_gridP, totalFine );
 

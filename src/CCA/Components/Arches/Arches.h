@@ -78,7 +78,7 @@ public:
                   THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
   
   Arches(const ProcessorGroup* myworld,
-	 const MaterialManagerP materialManager);
+         const MaterialManagerP materialManager);
 
   virtual ~Arches();
 
@@ -101,9 +101,9 @@ public:
                                     SchedulerP&);
 
   virtual void scheduleAnalysis( const LevelP& level,
-				 SchedulerP&);
+                                 SchedulerP&);
 
-  virtual int computeTaskGraphIndex( const int timeStep );
+  virtual int getTaskGraphIndex();
 
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
     m_MAlab = MAlb;
