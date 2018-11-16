@@ -65,7 +65,15 @@ PCProperties::~PCProperties()
 //---------------------------------------------------------------------------
 void
 PCProperties::problemSetup( const ProblemSpecP& db )
-{}
+{
+  ProblemSpecP db_pcProps = db;
+
+  // A call to the common problem setup which
+  // sets some common label/name flags
+  // (e.g., m_densityLabel, m_volFractionLabel, _temperature_label_name )
+  problemSetupCommon( db, this );
+
+}
 
 //---------------------------------------------------------------------------
 // schedule get State
@@ -106,6 +114,6 @@ PCProperties::getState( const ProcessorGroup* pc,
   }
 }
 
-double 
+double
 PCProperties::getTableValue( std::vector<double>, std::string ){
 }
