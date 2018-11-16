@@ -230,10 +230,10 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   mu_turb.initialize(0.0);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  int nG = -1;
-  if ( tsk_info->packed_tasks() ){
-    nG = 0;
-  }
+  // int nG = -1;
+  // if ( tsk_info->packed_tasks() ){
+  //   nG = 0;
+  // }
 
 
   const Vector Dx = patch->dCell(); //

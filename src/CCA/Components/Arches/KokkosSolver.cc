@@ -721,7 +721,7 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
       i_transport->second->schedule_task_group("rk_time_ave",
         TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
      }
-     // Compute density rk 
+     // Compute density rk
      i_prop_fac->second->schedule_task( "density_rk", TaskInterface::TIMESTEP_EVAL,
        level, sched, matls, time_substep, false, true );
 
@@ -746,7 +746,7 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
        TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
      }
- 
+
    //i_prop_fac->second->schedule_task_group("phifromrhophi",
    //   TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
@@ -822,7 +822,7 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
 
     }
 
-    // Get velocities from momemtum: u = x-mom/rho 
+    // Get velocities from momemtum: u = x-mom/rho
     i_prop_fac->second->schedule_task_group("ufromrhou",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
@@ -865,7 +865,7 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
   BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
   BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
   BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
-  BFM::iterator i_particle_model_fac = m_task_factory_map.find("particle_model_factory");
+  //BFM::iterator i_particle_model_fac = m_task_factory_map.find("particle_model_factory");
 
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
   TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
@@ -884,7 +884,7 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-    // momentum closure: LES model 
+    // momentum closure: LES model
     i_turb_model_fac->second->schedule_task_group("momentum_closure",
       TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
 
@@ -907,7 +907,7 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
 
     //i_transport->second->schedule_task_group("scalar_fe_update",
     //  TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
- 
+
     // update phi
     i_transport->second->schedule_task_group("scalar_update",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
@@ -957,7 +957,7 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
       i_transport->second->schedule_task_group("rk_time_ave",
         TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
      }
-     // Compute density rk 
+     // Compute density rk
      i_prop_fac->second->schedule_task( "density_rk", TaskInterface::TIMESTEP_EVAL,
        level, sched, matls, time_substep, false, true );
 
@@ -1048,7 +1048,7 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
                                               level, sched, matls, time_substep );
 
     }
-    // Get velocities from momemtum: u = x-mom/rho 
+    // Get velocities from momemtum: u = x-mom/rho
     i_prop_fac->second->schedule_task_group("ufromrhou",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
@@ -1070,7 +1070,7 @@ KokkosSolver::SSPRKv2Solve( const LevelP     & level
 
   } // RK Integrator
 
- 
+
   //Variable stats stuff
   i_prop_fac->second->schedule_task_group( "variable_stat_models",
     TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, 1 );

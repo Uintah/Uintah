@@ -192,14 +192,14 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   int nGhosts2 = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)
   int nGhosts1 = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)
-  int nGrho = 2;
+  //int nGrho = 2;
 
   if ( tsk_info->packed_tasks() ){
     nGhosts2 = 2;
     nGhosts1 = 1;
     nG1 = nGhosts1;
     nG2 = nGhosts2;
-    nGrho = 4;
+    //nGrho = 4;
   }
 
   IntVector low_filter = patch->getCellLowIndex() + IntVector(-nG1,-nG1,-nG1);
