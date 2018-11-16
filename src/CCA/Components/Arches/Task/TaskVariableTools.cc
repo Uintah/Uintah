@@ -14,7 +14,7 @@ namespace {
       return "modifies";
     } else if ( dep == Uintah::ArchesFieldContainer::REQUIRES ){
       return "requires";
-    } else if ( dep == Uintah:;ArchesFieldContainer::COMPUTESCRATCHGHOST ){
+    } else if ( dep == Uintah::ArchesFieldContainer::COMPUTESCRATCHGHOST ){
       return "compute_with_scratch_ghosts";
     } else {
       throw Uintah::InvalidValue("Error: VAR_DEPEND enum not recognized.", __FILE__, __LINE__ );
