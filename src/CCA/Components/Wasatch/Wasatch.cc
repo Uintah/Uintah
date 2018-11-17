@@ -1979,7 +1979,7 @@ namespace WasatchCore{
    // timestep. SimController passes this to scheduler for execution.
    if (doRadiation_) {
 
-     timeStep_vartype timeStep(0);
+     Uintah::timeStep_vartype timeStep(0);
      m_scheduler->get_dw(0)->get(timeStep, VarLabel::find(timeStep_name) );
 
      // Setup the correct task graph for execution.
