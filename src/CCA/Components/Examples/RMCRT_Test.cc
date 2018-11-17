@@ -580,7 +580,7 @@ void RMCRT_Test::scheduleRefineInterface ( const LevelP&,
 //______________________________________________________________________
 // Setup the correct task graph for execution.
 //______________________________________________________________________
-int RMCRT_Test::getTaskGraphIndex( )  // Infrastructure should pass in old_dw and new_dw  -Todd  
+int RMCRT_Test::getTaskGraphIndex()
 {
   timeStep_vartype timeStep(0);
   m_scheduler->get_dw(0)->get(timeStep, VarLabel::find(timeStep_name) );
