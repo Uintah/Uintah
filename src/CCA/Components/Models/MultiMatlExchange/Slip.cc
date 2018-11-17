@@ -142,9 +142,9 @@ void SlipExch::addExchangeModelRequires ( Task* t,
                                           const MaterialSubset * mpm_matls)
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires( Task::NewDW, d_meanFreePathLabel,   ice_matls, gac, 1);
-  t->requires( Task::NewDW, d_isSurfaceCellLabel,  zeroMatl,  gac, 1);
-  t->requires( Task::NewDW, d_surfaceNormLabel,    mpm_matls, gac, 1);
+  t->requires( Task::NewDW, d_meanFreePathLabel,   ice_matls, gac, 1 );
+  t->requires( Task::NewDW, d_isSurfaceCellLabel,  zeroMatl,  gac, 1 );
+  t->requires( Task::NewDW, d_surfaceNormLabel,    mpm_matls, gac, 1 );
 }
 
 
@@ -187,21 +187,18 @@ void SlipExch::sched_AddExch_VelFC(SchedulerP           & sched,
   }
 
   // All matls
-  t->requires( pNewDW,      Ilb->rho_CCLabel,     gac, 1);
-  t->requires( pNewDW,      Ilb->sp_vol_CCLabel,  gac, 1);
-  t->requires( pNewDW,      Ilb->vol_frac_CCLabel,gac, 1);
-  t->requires( Task::NewDW, Ilb->uvel_FCLabel,    gac, 2);
-  t->requires( Task::NewDW, Ilb->vvel_FCLabel,    gac, 2);
-  t->requires( Task::NewDW, Ilb->wvel_FCLabel,    gac, 2);
-  t->requires( pNewDW,      d_meanFreePathLabel,   ice_matls,  gac, 1);
-  if( mpm_matls )
-    t->requires( pNewDW,      d_surfaceNormLabel,    mpm_matls,  gac, 1);
-  t->requires( pNewDW,      d_isSurfaceCellLabel,  d_zero_matl,gac, 1);
+  t->requires( pNewDW,      Ilb->rho_CCLabel,     gac, 1 );
+  t->requires( pNewDW,      Ilb->sp_vol_CCLabel,  gac, 1 );
+  t->requires( pNewDW,      Ilb->vol_frac_CCLabel,gac, 1 );
+  t->requires( Task::NewDW, Ilb->uvel_FCLabel,    gac, 2 );
+  t->requires( Task::NewDW, Ilb->vvel_FCLabel,    gac, 2 );
+  t->requires( Task::NewDW, Ilb->wvel_FCLabel,    gac, 2 );
 
-  t->requires( pOldDW,      Ilb->vel_CCLabel,      ice_matls,  gac, 1);
-  if( mpm_matls )
-    t->requires( pNewDW,      Ilb->vel_CCLabel,      mpm_matls,  gac, 1);
-
+  t->requires( pNewDW,      d_meanFreePathLabel,   ice_matls,  gac, 1 );
+  t->requires( pNewDW,      d_surfaceNormLabel,    mpm_matls,  gac, 1 );
+  t->requires( pNewDW,      d_isSurfaceCellLabel,  d_zero_matl,gac, 1 );
+  t->requires( pOldDW,      Ilb->vel_CCLabel,      ice_matls,  gac, 1 );
+  t->requires( pNewDW,      Ilb->vel_CCLabel,      mpm_matls,  gac, 1 );
 
   computesRequires_CustomBCs(t, "velFC_Exchange", Ilb, ice_matls,
                              BC_globalVars, recursion);
@@ -221,77 +218,150 @@ void SlipExch::sched_AddExch_VelFC(SchedulerP           & sched,
             sp_vol_FC for implicit Pressure solve
 _____________________________________________________________________*/
 template<class constSFC, class SFC>
-void SlipExch::vel_FC_exchange( CellIterator  iter,
-                                const IntVector     adj_offset,
-                                const int           pDir,
-                                const FastMatrix  & K,
-                                const double        delT,
+void SlipExch::vel_FC_exchange( CellIterator      iter,
+                                const Patch     * patch,
+                                const IntVector   adj_offset,
+                                const double      delT,
+                                constCCVariable<int> & isSurfaceCell,
+                                std::vector<constCCVariable<Vector> >& surfaceNorm,
+                                std::vector<constCCVariable<double> >& meanFreePath,
                                 std::vector<constCCVariable<double> >& vol_frac_CC,
                                 std::vector<constCCVariable<double> >& sp_vol_CC,
-                                std::vector<constCCVariable<double> >& rho_CC,
-                                std::vector<CCVariable<Vector> >     & delta_vel_exch,
                                 std::vector< constSFC>               & vel_FC,
                                 std::vector< SFC >                   & sp_vol_FC,
                                 std::vector< SFC >                   & vel_FCME)
+
 {
-  double tmp[MAX_MATLS];
+  double b[MAX_MATLS];
+  FastMatrix Q(3,3);
   double b_sp_vol[MAX_MATLS];
+  double vel[MAX_MATLS];
+  double tmp[MAX_MATLS];
   FastMatrix a(d_numMatls, d_numMatls);
 
+  int gm = d_fluidMatlIndx;
+  int sm = d_solidMatlIndx;
+
+  Vector dx = patch->dCell();
+
   //__________________________________
-  //  Specific Volume Exchange
-  //  For implicit solve we need sp_vol_FC
+  //
   for(;!iter.done(); iter++){
-    IntVector R = *iter;
-    IntVector L = R + adj_offset;
+    IntVector c   = *iter;
+    IntVector adj = c + adj_offset;
 
-    for(int m = 0; m < d_numMatls; m++) {
-      b_sp_vol[m] = 2.0 * (sp_vol_CC[m][L] * sp_vol_CC[m][R])/
-                          (sp_vol_CC[m][L] + sp_vol_CC[m][R]);
+    double K_R = 1e15;
+    double K_L = 1e15;
 
-      tmp[m] = 0.5 * delT * (vol_frac_CC[m][L] + vol_frac_CC[m][R]);
-    }
+   //  Q.identity();         // Transformation matrix is initialized
 
-    for(int m = 0; m < d_numMatls; m++) {
-      double adiag = 1.0;
-      for(int n = 0; n < d_numMatls; n++) {
-        a(m,n) = -b_sp_vol[m] * tmp[n] * K(m,n);
-        adiag -= a(m,n);
+/***** Compute K value at current cell [c] (R) *****/
+
+    if( isSurfaceCell[c] && d_useSlipCoeffs ){
+
+//__________________________________
+//  <start>                This should be put in a function, since it's a duplicate of the code below except for the cell index  --Todd
+      Q.identity();
+
+      computeSurfaceRotationMatrix(Q, surfaceNorm[sm][c]); // Makes Q at each cell c
+
+      double A_V = 1.0/( dx.x() * fabs(Q(1,0))+
+                         dx.y() * fabs(Q(1,1))+
+                         dx.z() * fabs(Q(1,2)) );
+
+      double av     = d_momentum_accommodation_coeff;
+      double Beta_v = (2 - av)/av;
+
+      K_R = A_V / (Beta_v * meanFreePath[gm][c] * vol_frac_CC[sm][c]);
+
+      if(K_R > 1e15) {
+        K_R = 1e15;                          // K > Kslip in reality, so if Kslip > K in computation, fix this.
       }
-      a(m,m) = adiag;
+
+//  < end>
+//__________________________________
+    }  // if a surface cell
+
+
+/***** Compute K value at adjacent cell [adj] (L) *****/
+
+    if( isSurfaceCell[adj] && d_useSlipCoeffs ){
+
+      Q.identity();
+
+      // This should work for more that one solid.  It's hard wired for 2 matls-- Todd
+
+      computeSurfaceRotationMatrix(Q, surfaceNorm[sm][adj]); // Makes Q at each cell c
+
+      double A_V = 1.0/( dx.x() * fabs(Q(1,0))+
+                         dx.y() * fabs(Q(1,1))+
+                         dx.z() * fabs(Q(1,2)) );
+
+      double av     = d_momentum_accommodation_coeff;
+      double Beta_v = (2 - av)/av;
+
+      K_L = A_V / (Beta_v * meanFreePath[gm][adj] * vol_frac_CC[sm][adj]);
+
+      if(K_L > 1e15) {
+        K_L = 1e15;                      // K > Kslip in reality, so if Kslip > K in computation, fix this.
+      }
+
+    }  // if a surface cell
+
+
+    //__________________________________
+    //   Compute beta and off diagonal term of
+    //   Matrix A, this includes b[m][m].
+    //   You need to make sure that mom_exch_coeff[m][m] = 0
+
+    // - Form diagonal terms of Matrix (A)
+    //  - Form RHS (b)
+    for(int m = 0; m < d_numMatls; m++)  {
+
+      b_sp_vol[m] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
+                          (sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
+
+      tmp[m] = -0.5 * delT * (vol_frac_CC[m][adj]*K_L + vol_frac_CC[m][c]*K_R);
+      vel[m] = vel_FC[m][c];
     }
 
-    a.destructiveSolve(b_sp_vol);
+    for(int m = 0; m < d_numMatls; m++)  {
+      double betasum = 1;
+      double bsum    = 0;
+      double bm      = b_sp_vol[m];
+      double vm      = vel[m];
 
+      for(int n = 0; n < d_numMatls; n++)  {
+         if ( n!=m ) {
+           double b = bm * tmp[n];
+           a(m,n)   = b;
+           betasum -= b;
+           bsum    -= b * (vel[n] - vm);
+          }
+        else{
+        double b = 0;
+        a(m,n)   = b;
+        betasum -= b;
+        bsum    -= b * (vel[n] - vm);
+        }
+      }
+      a(m,m) = betasum;
+      b[m] = bsum;
+    }
+
+    //__________________________________
+    //  - solve and backout velocities
+
+    a.destructiveSolve(b, b_sp_vol);
+    //  For implicit solve we need sp_vol_FC
     for(int m = 0; m < d_numMatls; m++) {
-      sp_vol_FC[m][R] = b_sp_vol[m];
+      vel_FCME[m][c]  = vel_FC[m][c] + b[m];
+      sp_vol_FC[m][c] = b_sp_vol[m];        // only needed by implicit Pressure
+
     }
-  }
-
-  //__________________________________
-  //  Face Centered Velocity Exchange
-  for(int m = 0; m < d_numMatls; m++) {
-    for( iter.reset() ;!iter.done(); iter++ ){
-      IntVector R = *iter;
-      IntVector L = R + adj_offset;
-
-      Vector vel_R = delta_vel_exch[m][R];
-      Vector vel_L = delta_vel_exch[m][L];
-      double rho_R = rho_CC[m][R];
-      double rho_L = rho_CC[m][L];
-
-#if 0 // Jennifer's original code:
-      double sp_vol_R = sp_vol_CC[m][R];
-      double sp_vol_L = sp_vol_CC[m][L];
-
-      double exchange = (sp_vol_L * vel_R[pDir] + sp_vol_R * vel_L[pDir])/(sp_vol_L + sp_vol_R);  // This looks like it has a bug --Todd
-#endif
-
-      double exchange = ( rho_L * vel_L[pDir] + rho_R * vel_R[pDir])/( rho_L + rho_R );
-      vel_FCME[m][R]  = vel_FC[m][R] + exchange;
-    }
-  }
+  }  // iterator
 }
+
 //______________________________________________________________________
 //
 void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
@@ -324,29 +394,22 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
     pOldDW->get(delT, Ilb->delTLabel, level);
 
     constCCVariable<int> isSurfaceCell;
+
     std::vector< constCCVariable<double> > sp_vol_CC(    d_numMatls  );
-    std::vector< constCCVariable<double> > rho_CC(       d_numMatls  );
+    std::vector< constCCVariable<double> > mass_L(       d_numMatls  );
     std::vector< constCCVariable<double> > vol_frac_CC(  d_numMatls  );
-    std::vector< constCCVariable<Vector> > vel_CC(       d_numMatls  );
 
     std::vector< constCCVariable<double> > meanFreePath( d_numMatls );
+    std::vector< constCCVariable<Vector> > vel_CC(       d_numMatls );
     std::vector< constCCVariable<Vector> > surfaceNorm(  d_numMatls );
 
     std::vector< constSFCXVariable<double> > uvel_FC( d_numMatls );
     std::vector< constSFCYVariable<double> > vvel_FC( d_numMatls );
     std::vector< constSFCZVariable<double> > wvel_FC( d_numMatls );
 
-    std::vector< CCVariable<Vector> > notUsed(   d_numMatls );
-    std::vector< CCVariable<Vector> > delta_vel_exch( d_numMatls );
     std::vector< SFCXVariable<double> >uvel_FCME( d_numMatls ), sp_vol_XFC( d_numMatls );
     std::vector< SFCYVariable<double> >vvel_FCME( d_numMatls ), sp_vol_YFC( d_numMatls );
     std::vector< SFCZVariable<double> >wvel_FCME( d_numMatls ), sp_vol_ZFC( d_numMatls );
-
-    // Extract the momentum exchange coefficients
-    FastMatrix K(d_numMatls, d_numMatls), junk(d_numMatls, d_numMatls);
-    K.zero();
-
-    d_exchCoeff->getConstantExchangeCoeff( K, junk);
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     pNewDW->get( isSurfaceCell, d_isSurfaceCellLabel, 0, patch, gac, 1);
@@ -364,7 +427,6 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
       // retreive from dw
       pNewDW->get( sp_vol_CC[m],   Ilb->sp_vol_CCLabel,  indx, patch,gac, 1);
       pNewDW->get( vol_frac_CC[m], Ilb->vol_frac_CCLabel,indx, patch,gac, 1);
-      pNewDW->get( rho_CC[m],      Ilb->rho_CCLabel,     indx, patch,gac, 1);
 
       new_dw->get( uvel_FC[m],     Ilb->uvel_FCLabel,    indx, patch,gac, 2);
       new_dw->get( vvel_FC[m],     Ilb->vvel_FCLabel,    indx, patch,gac, 2);
@@ -380,10 +442,6 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
         pNewDW->get( meanFreePath[m], d_meanFreePathLabel, indx, patch,gac, 1);
       }
 
-      // allocate
-      new_dw->allocateTemporary( notUsed[m],        patch, gac, 1 );
-      new_dw->allocateTemporary( delta_vel_exch[m], patch, gac, 1 );
-
       new_dw->allocateAndPut( uvel_FCME[m], Ilb->uvel_FCMELabel, indx, patch );
       new_dw->allocateAndPut( vvel_FCME[m], Ilb->vvel_FCMELabel, indx, patch );
       new_dw->allocateAndPut( wvel_FCME[m], Ilb->wvel_FCMELabel, indx, patch );
@@ -391,9 +449,6 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
       new_dw->allocateAndPut( sp_vol_XFC[m],Ilb->sp_volX_FCLabel,indx, patch );
       new_dw->allocateAndPut( sp_vol_YFC[m],Ilb->sp_volY_FCLabel,indx, patch );
       new_dw->allocateAndPut( sp_vol_ZFC[m],Ilb->sp_volZ_FCLabel,indx, patch );
-
-      // initialize
-      delta_vel_exch[m].initialize( Vector(-9e99,-9e99,-9e99) );
 
       // lowIndex is the same for all face centered vars
       IntVector lowIndex(patch->getExtraSFCXLowIndex());
@@ -410,39 +465,24 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
     adj_offset[0] = IntVector(-1, 0, 0);    // X faces
     adj_offset[1] = IntVector(0, -1, 0);    // Y faces
     adj_offset[2] = IntVector(0,  0, -1);   // Z faces
-    
-    const int oneGhostCell = 1;
-    CellIterator EC_iterator  = patch->getExtraCellIterator( oneGhostCell );
+
     CellIterator XFC_iterator = patch->getSFCXIterator();
     CellIterator YFC_iterator = patch->getSFCYIterator();
     CellIterator ZFC_iterator = patch->getSFCZIterator();
 
     //__________________________________
-    //  compute the change in CC velocity due to exchange
-    vel_CC_exchange( EC_iterator,  patch, K, delT,
-                    isSurfaceCell,surfaceNorm, vol_frac_CC, sp_vol_CC,
-                    meanFreePath, vel_CC, notUsed, delta_vel_exch);
-
-
-    //__________________________________
     //  tack on exchange contribution to FC velocities
     vel_FC_exchange<constSFCXVariable<double>, SFCXVariable<double> >
-                    (XFC_iterator,
-                    adj_offset[0],  0,           K,
-                    delT,           vol_frac_CC, sp_vol_CC,  rho_CC,
-                    delta_vel_exch,    uvel_FC,     sp_vol_XFC, uvel_FCME);
+                    (XFC_iterator, patch, adj_offset[0], delT, isSurfaceCell,
+                    surfaceNorm, meanFreePath, vol_frac_CC, sp_vol_CC, uvel_FC, sp_vol_XFC, uvel_FCME);
 
     vel_FC_exchange<constSFCYVariable<double>, SFCYVariable<double> >
-                    (YFC_iterator,
-                    adj_offset[1],  1,           K,
-                    delT,           vol_frac_CC, sp_vol_CC,  rho_CC,
-                    delta_vel_exch,    vvel_FC,     sp_vol_YFC, vvel_FCME);
+                    (YFC_iterator, patch, adj_offset[1], delT, isSurfaceCell,
+                    surfaceNorm, meanFreePath, vol_frac_CC, sp_vol_CC, vvel_FC, sp_vol_YFC, vvel_FCME);
 
     vel_FC_exchange<constSFCZVariable<double>, SFCZVariable<double> >
-                    (ZFC_iterator,
-                    adj_offset[2],  2,           K,
-                    delT,           vol_frac_CC, sp_vol_CC,  rho_CC,
-                    delta_vel_exch,    wvel_FC,     sp_vol_ZFC, wvel_FCME);
+                    (ZFC_iterator, patch, adj_offset[2], delT, isSurfaceCell,
+                    surfaceNorm, meanFreePath, vol_frac_CC, sp_vol_CC, wvel_FC, sp_vol_ZFC, wvel_FCME);
 
     //________________________________
     //  Boundary Conditons
@@ -483,12 +523,16 @@ void SlipExch::vel_CC_exchange( CellIterator  iter,
                                 std::vector< CCVariable<Vector> >      & delta_vel_exch)
 {
   double b[MAX_MATLS];
+  Vector bb[MAX_MATLS];
+  double tmp;
+  FastMatrix beta(  d_numMatls, d_numMatls );
   FastMatrix Q(3,3);
-  FastMatrix K(d_numMatls, d_numMatls);
-  FastMatrix Kslip(d_numMatls, d_numMatls);
-  FastMatrix a(d_numMatls, d_numMatls);
+  FastMatrix K(     d_numMatls, d_numMatls );
+  FastMatrix Kslip( d_numMatls, d_numMatls );
+  FastMatrix junk(  d_numMatls, d_numMatls );
+  FastMatrix a(     d_numMatls, d_numMatls );
   Vector vel_T[MAX_MATLS];                    // Transposed velocity
-  Vector vel_T_dbg[MAX_MATLS];                // Transposed velocity for visualizing
+  Vector vel_T_dbg[MAX_MATLS];                // Transposed velocity for visulaization
 
   // for readability
   int gm = d_fluidMatlIndx;
@@ -501,12 +545,13 @@ void SlipExch::vel_CC_exchange( CellIterator  iter,
 
     Q.identity();         // Transformation matrix is initialized
     Kslip.copy(k_org);
+    K.copy(k_org);
 
     //__________________________________
     //  If cell is a surface cell modify exchange coefficients
     if( isSurfaceCell[c] && d_useSlipCoeffs ){
 
-      // This should work for more that one solid.  It's hard wired for 2 matls-- Todd
+      //************************This looks almost identical to the code in vel_FC_exchange.  Should consider putting in a function --Todd.
 
       computeSurfaceRotationMatrix(Q, surfaceNorm[sm][c]); // Makes Q at each cell c
 
@@ -520,55 +565,57 @@ void SlipExch::vel_CC_exchange( CellIterator  iter,
       Kslip(gm,sm) = A_V / (Beta_v * meanFreePath[gm][c] * vol_frac_CC[sm][c]);
 
       if(Kslip(gm,sm) > k_org(gm,sm)) {
-        Kslip(gm,sm) = k_org(gm,sm);                                            // K > Kslip in reality, so if Kslip > K in computation, fix this.
+        Kslip(gm,sm) = k_org(gm,sm);        // K > Kslip in reality, so if Kslip > K in computation, fix this.
       }
-      Kslip(sm,gm) = Kslip(gm,sm);                                              // Make the inverse indices of the Kslip matrix equal to each other
-    }  // if a surface cell
 
+      Kslip(sm,gm) = Kslip(gm,sm);         // Make the inverse indices of the Kslip matrix equal to each other
 
-
-    //__________________________________
-    //  Perform exchange in each direction
-    for(int i = 0; i < 3; i++) {
-
-      if(i != 1) {         // if the direction is NOT the normal to the surface
-        K.copy(Kslip);
-      }
 
       //__________________________________
-      //  coordinate Transformation
-      for(int m = 0; m < d_numMatls; m++) {
-        vel_T[m][i]     = 0;
-        vel_T_dbg[m][i] = 0;
+      //
+      for(int i = 0; i < 3; i++) {
 
-        for(int j = 0; j < 3; j++) {
-          vel_T[m][i] += Q(i,j) * vel_CC[m][c][j];
+        if(i != 1) {         // if the direction is NOT the normal to the surface
+           K.copy(Kslip);
+        } else {
+           K.copy(k_org);
         }
-        vel_T_dbg[m][i] = vel_T[m][i];
-      }
 
-      //__________________________________
-      //  compute exchange using transposed velocity
-      a.zero();
+        //__________________________________
+        //  coordinate Transformation
+        for(int m = 0; m < d_numMatls; m++) {
+          vel_T[m][i]     = 0;
+          vel_T_dbg[m][i] = 0;
 
-      for(int m = 0; m < d_numMatls; m++) {
-        double adiag = 1.0;
-        b[m] = 0.0;
-
-        for(int n = 0; n < d_numMatls; n++) {
-          a(m,n) = - delT * vol_frac_CC[n][c] * sp_vol_CC[m][c] * K(m,n);
-          adiag -= a(m,n);
-          b[m]  -= a(m,n) * (vel_T[n][i] - vel_T[m][i]);
+          for(int j = 0; j < 3; j++) {
+            vel_T[m][i] += Q(i,j) * vel_CC[m][c][j];
+          }
+          vel_T_dbg[m][i] = vel_T[m][i];
         }
-        a(m,m) = adiag;
-      }
 
-      a.destructiveSolve(b);
+        //__________________________________
+        //  compute exchange using transposed velocity
 
-      for(int m = 0; m < d_numMatls; m++) {
-        vel_T[m][i] = b[m];
-      }
-    } // loop over directions
+        a.zero();
+
+        for(int m = 0; m < d_numMatls; m++) {
+          double adiag = 1.0;
+          b[m] = 0.0;
+
+          for(int n = 0; n < d_numMatls; n++) {
+            a(m,n) = - delT * vol_frac_CC[n][c] * sp_vol_CC[m][c] * K(n,m);
+            adiag -= a(m,n);
+            b[m]  -= a(m,n) * (vel_T[n][i] - vel_T[m][i]);
+          }
+          a(m,m) = adiag;
+        }
+
+        a.destructiveSolve(b);
+
+        for(int m = 0; m < d_numMatls; m++) {
+          vel_T[m][i] = b[m];
+        }
+      } // loop over directions
 
     //__________________________________
     //  coordinate transformation
@@ -583,10 +630,49 @@ void SlipExch::vel_CC_exchange( CellIterator  iter,
         }
       }
       delta_vel_exch[m][c] = vel_exch;
+
+     }
+   }  // if a surface cell
+    else{
+
+      a.zero();
+      beta.zero();
+
+      for(int m = 0; m < d_numMatls; m++)  {
+        tmp = delT*sp_vol_CC[m][c];
+        for(int n = 0; n < d_numMatls; n++) {
+          beta(m,n) = vol_frac_CC[n][c]  * K(n,m) * tmp;
+          a(m,n) = -beta(m,n);
+        }
+      }
+      //   Form matrix (a) diagonal terms
+      for(int m = 0; m < d_numMatls; m++) {
+        a(m,m) = 1.0;
+        for(int n = 0; n < d_numMatls; n++) {
+          a(m,m) +=  beta(m,n);
+        }
+      }
+
+      for(int m = 0; m < d_numMatls; m++) {
+        Vector sum(0,0,0);
+        const Vector& vel_m = vel_CC[m][c];
+
+        for(int n = 0; n < d_numMatls; n++) {
+          sum += beta(m,n) *(vel_CC[n][c] - vel_m);
+        }
+        bb[m] = sum;
+      }
+
+      a.destructiveSolve(bb);
+
+      //__________________________________
+      //  save exchange contribution of each material
+      for(int m = 0; m < d_numMatls; m++) {
+        delta_vel_exch[m][c] = bb[m];
+      }
     }
   }
 }
-
 
 //______________________________________________________________________
 //
@@ -609,15 +695,13 @@ void SlipExch::sched_AddExch_Vel_Temp_CC(SchedulerP           & sched,
   Ghost::GhostType  gn  = Ghost::None;
 
   t->requires( Task::OldDW,  Ilb->delTLabel,getLevel(patches));
-  if( mpm_matls )
-    t->requires( Task::NewDW,  d_surfaceNormLabel,    mpm_matls,   gn, 0 );
+  t->requires( Task::NewDW,  d_surfaceNormLabel,    mpm_matls,   gn, 0 );
   t->requires( Task::NewDW,  d_isSurfaceCellLabel,  d_zero_matl, gn, 0 );
                                 // I C E
   t->requires( Task::OldDW,  Ilb->temp_CCLabel,       ice_matls, gn );
   t->requires( Task::NewDW,  Ilb->specific_heatLabel, ice_matls, gn );
   t->requires( Task::NewDW,  Ilb->gammaLabel,         ice_matls, gn );
   t->requires( Task::NewDW,  d_meanFreePathLabel,     ice_matls, gn );
-
                                 // A L L  M A T L S
   t->requires( Task::NewDW,  Ilb->mass_L_CCLabel,    gn );
   t->requires( Task::NewDW,  Ilb->mom_L_CCLabel,     gn );
@@ -632,11 +716,9 @@ void SlipExch::sched_AddExch_Vel_Temp_CC(SchedulerP           & sched,
   t->computes( Ilb->eng_L_ME_CCLabel );
   t->computes( d_vel_CCTransLabel );
 
-  if (mpm_matls && mpm_matls->size() > 0){
-    t->modifies( Ilb->temp_CCLabel, mpm_matls );
-    t->modifies( Ilb->vel_CCLabel,  mpm_matls );
-  }
-  
+  t->modifies( Ilb->temp_CCLabel, mpm_matls );
+  t->modifies( Ilb->vel_CCLabel,  mpm_matls );
+
   sched->addTask(t, patches, all_matls);
 }
 
@@ -724,7 +806,8 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
         new_dw->allocateTemporary( vel_CC[m],  patch );
         new_dw->allocateTemporary( Temp_CC[m], patch );
         cv[m].copyData(cv_ice);
-      }                             // A L L  M A T L S
+      }
+                                 // A L L  M A T L S
 
       new_dw->get( mass_L[m],        Ilb->mass_L_CCLabel,   indx, patch, gn, 0 );
       new_dw->get( sp_vol_CC[m],     Ilb->sp_vol_CCLabel,   indx, patch, gn, 0 );
@@ -757,6 +840,7 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
     //__________________________________
     // declare local variables
     double b[MAX_MATLS];
+    FastMatrix beta(d_numMatls, d_numMatls);
     FastMatrix Q(3,3);
     FastMatrix a(d_numMatls, d_numMatls);
     FastMatrix K(d_numMatls, d_numMatls);
@@ -775,10 +859,11 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
     CellIterator cell_iterator = patch->getCellIterator();
 
     vel_CC_exchange( cell_iterator,  patch, K, delT,
-                    isSurfaceCell, surfaceNorm,  vol_frac_CC, sp_vol_CC,
-                    meanFreePath,  const_vel_CC, vel_T_CC,    delta_vel_exch );
+                    isSurfaceCell, surfaceNorm,  vol_frac_CC, sp_vol_CC, /*mass_L,*/
+                    meanFreePath,  const_vel_CC, vel_T_CC,  delta_vel_exch);
 
-    // update the velocity
+// update the velocity
+
     for (int m = 0; m < d_numMatls; m++) {
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
@@ -809,21 +894,22 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
 
         computeSurfaceRotationMatrix(Q, surfaceNorm[sm][c]); // Makes Q at each cell c
 
+                       // For the temperature do you need to compute Q??  --Todd
 
-         double A_V = 1.0/( dx.x()*fabs(Q(1,0)) +
+        double A_V = 1.0/( dx.x()*fabs(Q(1,0)) +
                            dx.y()*fabs(Q(1,1)) +
                            dx.z()*fabs(Q(1,2)) );
 
         // thermal
         double at     = d_thermal_accommodation_coeff;
-        double Beta_t = ((2 - at)/at) * (2/(1 + gamma[gm][c])) * (1/cv[gm][c]);    // Does this assume an ideal gas????  -Todd
+        double Beta_t = ((2 - at)/at) * (2/(1 + gamma[gm][c])) * (1/cv[gm][c]);
 
-        H(gm,sm) = A_V / (Beta_t * meanFreePath[gm][c] * vol_frac_CC[sm][c]);      // The viscosity does not appear here because it's taken out of lambda
+        H(gm,sm) = A_V / (Beta_t * meanFreePath[gm][c] * vol_frac_CC[sm][c]);  // The viscosity does not appear here because it's taken out of lambda
 
-         if(H(gm,sm) > h(gm,sm)) {
-           H(gm,sm) = h(gm,sm);
-         }
-         H(sm,gm) = H(gm,sm);
+	 if(H(gm,sm) > h(gm,sm)) {
+	   H(gm,sm) = h(gm,sm);
+	 }
+	 H(sm,gm) = H(gm,sm);
       }  // if a surface cell
 
       //__________________________________
@@ -944,7 +1030,7 @@ void SlipExch::computeMeanFreePath(const ProcessorGroup *,
       constCCVariable<double> sp_vol;
       constCCVariable<double> gamma;
       constCCVariable<double> cv;
-      CCVariable<double> meanFreePath;
+      CCVariable<double>      meanFreePath;
 
       old_dw->get(temp,   Ilb->temp_CCLabel,      indx,patch, gn,0);
       old_dw->get(sp_vol, Ilb->sp_vol_CCLabel,    indx,patch, gn,0);
@@ -980,12 +1066,11 @@ void SlipExch::computeSurfaceRotationMatrix(FastMatrix   & Q,
     double sqrtTerm = sqrt(1 - Q(1,1) * Q(1,1));
     double invTerm  = 1.0/sqrtTerm;
 
-    Q(0,0) = Q(1,1) * Q(1,0) * invTerm;
-    Q(0,1) =-sqrtTerm;
+    Q(0,0) = Q(1,1);
+    Q(0,1) =-Q(1,0);
     Q(0,2) = Q(1,1) * Q(1,2) * invTerm;
     Q(2,0) =-Q(1,2) * invTerm;
     Q(2,1) = 0.0;
     Q(2,2) = Q(1,0) * invTerm;
   }
 }
-

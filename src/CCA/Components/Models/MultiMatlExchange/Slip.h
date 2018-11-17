@@ -126,18 +126,18 @@ namespace ExchangeModels{
                           std::vector< CCVariable<Vector> >      & delta_vel_exch );
 
     template<class constSFC, class SFC>
-    void vel_FC_exchange( CellIterator       iter,
-                          const IntVector    adj_offset,
-                          const int          pDir,
-                          const FastMatrix & k_org,
-                          const double       delT,
-                          std::vector<constCCVariable<double> >& vol_frac_CC,
-                          std::vector<constCCVariable<double> >& sp_vol_CC,
-                          std::vector<constCCVariable<double> >& rho_CC,
-                          std::vector<CCVariable<Vector> >     & delta_vel_exch,
-                          std::vector< constSFC>               & vel_FC,
-                          std::vector< SFC >                   & sp_vol_FC,
-                          std::vector< SFC >                   & vel_FCME);
+    void  vel_FC_exchange( CellIterator      iter,
+                           const Patch     * patch,
+                           const IntVector   adj_offset,
+                           const double      delT,
+                           constCCVariable<int> & isSurfaceCell,
+                           std::vector<constCCVariable<Vector> >& surfaceNorm,
+                           std::vector<constCCVariable<double> >& meanFreePath,
+                           std::vector<constCCVariable<double> >& vol_frac_CC,
+                           std::vector<constCCVariable<double> >& sp_vol_CC,
+                           std::vector< constSFC>               & vel_FC,
+                           std::vector< SFC >                   & sp_vol_FC,
+                           std::vector< SFC >                   & vel_FCME );
 
     //__________________________________
     //  variables local to SlipExch
