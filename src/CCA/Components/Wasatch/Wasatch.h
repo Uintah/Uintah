@@ -285,7 +285,7 @@ namespace WasatchCore{
                                          Uintah::SchedulerP& /*scheduler*/,
                                          bool, bool);
 
-    virtual int computeTaskGraphIndex();
+    virtual int getTaskGraphIndex();
 
     const EquationAdaptors& equation_adaptors() const{ return adaptors_; }
     GraphCategories& graph_categories(){ return graphCategories_; }
