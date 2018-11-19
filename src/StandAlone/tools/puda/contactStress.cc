@@ -170,7 +170,7 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
             da->query(massother[mother],   "g.mass",          mother, patch, t);
             da->query(colorother[mother],  "g.color",         mother, patch, t);
             da->query(volumeother[mother], "g.volume",        mother, patch, t);
-            da->query(stressother[mother], "g.stressFS",      mother, patch, t);
+//          da->query(stressother[mother], "g.stressFS",      mother, patch, t);
             da->query(normother[mother],   "g.surfnorm",      mother, patch, t);
             da->query(IFother[mother],     "g.internalforce", mother, patch, t);
             da->query(posother[mother],    "g.position",      mother, patch, t);
