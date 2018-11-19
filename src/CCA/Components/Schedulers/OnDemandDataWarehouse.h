@@ -485,13 +485,15 @@ class OnDemandDataWarehouse : public DataWarehouse {
    void getNeighborPatches(const VarLabel* label, const Patch* patch, Ghost::GhostType gtype,
                                   int numGhostCells, std::vector<const Patch *>& adjacentNeighbors);
 
-   void getSizesForVar(const VarLabel* label, int matlIndex, const Patch* patch,
-                                         IntVector& low, IntVector& high, IntVector& dataLow,
-                                         IntVector& siz, IntVector& strides);
-
+   // This method will retrieve those neighbors, and also the regions (indicated in low and high) which constitute the ghost cells.
+   // Data is return in the ValidNeighbors vector. IgnoreMissingNeighbors is designed for the Unified Scheduler so that it can request what
+   // neighbor patches *should* be, and those neighbor patches we hope are found in the host side DW (this one) or the GPU DW
+   //
+   // TODO, This method might create a reference to the neighbor, and so these references
+   // need to be deleted afterward. (It's not pretty, but it seemed to be the best option.)
    void getValidNeighbors(const VarLabel* label, int matlIndex, const Patch* patch,
-           Ghost::GhostType gtype, int numGhostCells, std::vector<ValidNeighbors>& validNeighbors,
-           bool ignoreMissingNeighbors = false);
+                          Ghost::GhostType gtype, int numGhostCells, std::vector<ValidNeighbors>& validNeighbors,
+                          bool ignoreMissingNeighbors = false);
 
    void logMemoryUse(std::ostream& out,
                       unsigned long& total,
@@ -510,7 +512,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     ScrubMode getScrubMode() const { return d_scrubMode; }
 
-    // The following is for support of regriding
+    // The following is for support of regridding
     virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars) const;
 
     static bool d_combineMemory;
@@ -664,8 +666,9 @@ class OnDemandDataWarehouse : public DataWarehouse {
                           ParticleSubset *psubset);
 
     DWDatabase<Patch>  d_varDB;
-    DWDatabase<Level>  d_levelDB;
     KeyDatabase<Patch> d_varkeyDB;
+
+    DWDatabase<Level>  d_levelDB;
     KeyDatabase<Level> d_levelkeyDB;
 
     psetDBType           d_psetDB;
@@ -676,18 +679,16 @@ class OnDemandDataWarehouse : public DataWarehouse {
     // Keep track of when this DW sent some (and which) particle information to another processor
     SendState ss_;
 
-    // On a time step restart, sometimes (when an entire patch is
-    // sent) on the first try of the time step the receiving DW creates
-    // and stores ParticleSubset which throws off the sending on the
+    // On a time step restart, sometimes (when an entire patch is sent) on the first try of the time
+    // step the receiving DW creates and stores ParticleSubset which throws off the sending on the
     // next iteration. This will compensate.
-  
     // SendState d_timestepRestartPsets;
 
     // Record of which DataWarehouse has the data for each variable...
     // Allows us to look up the DW to which we will send a data request.
     dataLocationDBtype d_dataLocation;
 
-    bool                 d_finalized;
+    bool                 d_finalized{false};
     GridP                d_grid;
 
     // Is this the first DW -- created by the initialization timestep?
@@ -701,7 +702,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     std::map<std::thread::id, std::list<RunningTaskInfo> > d_runningTasks; // a list of running tasks for each std::thread::id
 
-    ScrubMode d_scrubMode;
+    ScrubMode d_scrubMode{DataWarehouse::ScrubNone};
 
     bool m_exchangeParticleQuantities {true};
 

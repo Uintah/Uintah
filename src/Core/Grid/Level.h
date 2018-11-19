@@ -27,27 +27,27 @@
 
 #include <CCA/Ports/LoadBalancer.h>
 
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/GridP.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/LevelP.h>
-#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Containers/OffsetArray1.h>
-#include <Core/Util/Handle.h>
-#include <Core/Util/RefCounted.h>
+#include <Core/Disclosure/TypeDescription.h>
 
 #ifdef max
 // some uintah 3p utilities define max, so undefine it before BBox chokes on it.
 #  undef max
 #endif
-
 #include <Core/Geometry/BBox.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <vector>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/Handle.h>
+#include <Core/Util/RefCounted.h>
+
 #include <map>
+#include <vector>
 
 namespace Uintah {
 
@@ -56,13 +56,13 @@ namespace Uintah {
   class Box;
   class Patch;
   class Task;
+
 /**************************************
 
 CLASS
    Level
    
-   Just a container class that manages a set of Patches that
-   make up this level.
+   Just a container class that manages a set of Patches that make up this level.
 
 GENERAL INFORMATION
 
@@ -156,7 +156,7 @@ public:
   void finalizeLevel( bool periodicX, bool periodicY, bool periodicZ );
   void assignBCS( const ProblemSpecP & ps, LoadBalancer * lb );
       
-  int numPatches() const;
+  int  numPatches() const;
   long totalCells() const;
   
   long getTotalCellsInRegion(const TypeDescription::Type varType,
@@ -282,16 +282,16 @@ private:
   Vector    m_dcell;
 
   // The spatial range of the level.
-  BBox      m_spatial_range;
-  BBox      m_int_spatial_range;
+  BBox      m_spatial_range{ Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN) };
+  BBox      m_int_spatial_range{ Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN) };
 
   bool      m_isNonCubicDomain{false};                    // is level non cubic level
   void      setIsNonCubicLevel();
   
   bool      m_finalized{false};
   int       m_index;                                      // number of the level
-  IntVector m_patch_distribution;
-  IntVector m_periodic_boundaries;
+  IntVector m_patch_distribution{-1,-1,-1};
+  IntVector m_periodic_boundaries{0, 0, 0};
 
   PatchSet* m_each_patch{nullptr};
   PatchSet* m_all_patches{nullptr};

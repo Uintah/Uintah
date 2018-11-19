@@ -73,8 +73,8 @@
 
 namespace {
 
-Uintah::MasterLock g_keyDB_mutex{};
-Uintah::MasterLock g_mvars_mutex{};
+Uintah::MasterLock g_keyDB_lock{};
+Uintah::MasterLock g_mvars_lock{};
 
 }
 
@@ -253,7 +253,7 @@ class DWDatabase {
                          , const DomainType * dom
                          ) const;
 
-    KeyDatabase<DomainType>* m_keyDB {};
+    KeyDatabase<DomainType>* m_keyDB { nullptr };
 
     using varDBtype = std::vector<DataItem*>;
     varDBtype m_vars;
@@ -296,7 +296,7 @@ template<class DomainType>
 void
 DWDatabase<DomainType>::cleanForeign()
 {
-  std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_mutex);
+  std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_lock);
 
   for (auto iter = m_vars.begin(); iter != m_vars.end(); ++iter) {
     if (*iter && (*iter)->m_var->isForeign()) {
@@ -352,11 +352,6 @@ DWDatabase<DomainType>::setScrubCount( const VarLabel   * label
     SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex, "DWDatabase::setScrubCount", __FILE__, __LINE__));
   }
   m_scrubs[idx] = count;
-
-  // TODO do we need this - APH 03/01/17
-//  if (!__sync_bool_compare_and_swap(&(m_scrubs[idx]), 0, count)) {
-//      SCI_THROW(InternalError("overwriting non-zero scrub counter", __FILE__, __LINE__));
-//  }
 }
 
 //______________________________________________________________________
@@ -435,7 +430,7 @@ KeyDatabase<DomainType>::lookup( const VarLabel   * label
                                , const DomainType * dom
                                )
 {
-  std::lock_guard<Uintah::MasterLock> lookup_lock(g_keyDB_mutex);
+  std::lock_guard<Uintah::MasterLock> lookup_lock(g_keyDB_lock);
 
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   typename keyDBtype::const_iterator const_iter = m_keys.find(v);
@@ -530,7 +525,7 @@ DWDatabase<DomainType>::exists( const VarLabel   * label
   int idx = m_keyDB->lookup(label, matlIndex, dom);
 
   {
-    std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_mutex);
+    std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_lock);
     if (idx == -1) {
       return false;
     }
@@ -558,7 +553,7 @@ DWDatabase<DomainType>::put( const VarLabel   * label
   ASSERT(matlIndex >= -1);
 
   {
-    std::lock_guard<Uintah::MasterLock> put_lock(g_keyDB_mutex);
+    std::lock_guard<Uintah::MasterLock> put_lock(g_keyDB_lock);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
@@ -600,7 +595,7 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
   ASSERT(matlIndex >= -1);
 
   {
-    std::lock_guard<Uintah::MasterLock> put_reduce_lock(g_keyDB_mutex);
+    std::lock_guard<Uintah::MasterLock> put_reduce_lock(g_keyDB_lock);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
@@ -645,7 +640,7 @@ DWDatabase<DomainType>::putForeign( const VarLabel   * label
   ASSERT(matlIndex >= -1);
 
   {
-    std::lock_guard<Uintah::MasterLock> put_foreign_lock(g_keyDB_mutex);
+    std::lock_guard<Uintah::MasterLock> put_foreign_lock(g_keyDB_lock);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);

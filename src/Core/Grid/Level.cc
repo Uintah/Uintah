@@ -21,13 +21,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
+#include <Core/Grid/Level.h>
+
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Grid/BoundaryConditions/BoundCondReader.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/PatchBVH/PatchBVH.h>
 #include <Core/Malloc/Allocator.h>
@@ -38,18 +40,19 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Util/Timers/Timers.hpp>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/ProgressiveWarning.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <algorithm>
 #include <atomic>
+#include <climits>
 #include <cmath>
 #include <iostream>
 #include <map>
-#include <climits>
+#include <sstream>
 
 using namespace Uintah;
 
@@ -59,8 +62,8 @@ namespace {
   Uintah::MasterLock   ids_init{};
   Uintah::MasterLock   patch_cache_mutex{};
 
-  DebugStream bcout{   "BCTypes",      "Grid_Level", "Grid Level BC debug stream", false };
-  DebugStream rgtimes{ "RGTimesLevel", "Grid_Level", "Grid regridder debug stream", false };  
+  Dout g_bc_dbg{   "BCTypes",      "Level", "Level BC debug info"        , false };
+  Dout g_rg_times{ "RGTimesLevel", "Level", "Level regridder timing info", false };
 }
 
 //______________________________________________________________________
@@ -72,16 +75,12 @@ Level::Level(       Grid      * grid
             , const IntVector   refinementRatio
             , const int         id /* = -1 */
             )
-  : m_grid( grid )
-  , m_anchor( anchor )
-  , m_dcell( dcell )
-  , m_spatial_range( Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN) )
-  , m_int_spatial_range( Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN) )
-  , m_index( index )
-  , m_patch_distribution( -1,-1,-1 )
-  , m_periodic_boundaries( 0, 0, 0 )
-  , m_id( id )
-  , m_refinement_ratio( refinementRatio )
+  : m_grid{ grid }
+  , m_anchor{ anchor }
+  , m_dcell{ dcell }
+  , m_index{ index }
+  , m_id{ id }
+  , m_refinement_ratio{ refinementRatio }
 {
   if( m_id == -1 ) {
     m_id = ids.fetch_add( 1, std::memory_order_relaxed );
@@ -96,7 +95,7 @@ Level::Level(       Grid      * grid
 Level::~Level()
 {
   // Delete all of the patches managed by this level
-  for (patch_iterator iter = m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); iter++) {
+  for (patch_iterator iter = m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); ++iter) {
     delete *iter;
   }
 
@@ -111,7 +110,7 @@ Level::~Level()
 
   int patches_stored = 0;
   int queries_stored = 0;
-  for (select_cache::iterator iter = m_select_cache.begin(); iter != m_select_cache.end(); iter++) {
+  for (select_cache::iterator iter = m_select_cache.begin(); iter != m_select_cache.end(); ++iter) {
     queries_stored++;
     patches_stored += iter->second.size();
   }
@@ -227,7 +226,7 @@ Level::getPatchFromPoint( const Point & p, const bool includeExtraCells ) const
 {
   selectType patch;
   IntVector c = getCellIndex(p);
-  //point is within the bounding box so query the bvh
+  // Point is within the bounding box so query the BVH
   m_bvh->query(c, c + IntVector(1, 1, 1), patch, includeExtraCells);
 
   if (patch.size() == 0) {
@@ -245,7 +244,7 @@ Level::getPatchFromIndex( const IntVector & c, const bool includeExtraCells ) co
 {
   selectType patch;
 
-  // Point is within the bounding box so query the bvh.
+  // Point is within the bounding box so query the BVH.
   m_bvh->query(c, c + IntVector(1, 1, 1), patch, includeExtraCells);
 
   if (patch.size() == 0) {
@@ -273,17 +272,17 @@ Level::performConsistencyCheck() const
     SCI_THROW(InvalidGrid("Consistency check cannot be performed until Level is finalized",__FILE__,__LINE__));
   }
 
-  for (int i = 0; i < (int)m_virtual_and_real_patches.size(); i++) {
+  for (size_t i = 0; i < m_virtual_and_real_patches.size(); ++i) {
     Patch* r = m_virtual_and_real_patches[i];
     r->performConsistencyCheck();
   }
 
   // This is O(n^2) - we should fix it someday if it ever matters
   //   This checks that patches do not overlap
-  for (int i = 0; i < (int)m_virtual_and_real_patches.size(); i++) {
+  for (size_t i = 0; i < m_virtual_and_real_patches.size(); ++i) {
     Patch* r1 = m_virtual_and_real_patches[i];
 
-    for (int j = i + 1; j < (int)m_virtual_and_real_patches.size(); j++) {
+    for (size_t j = i + 1; j < m_virtual_and_real_patches.size(); j++) {
       Patch* r2 = m_virtual_and_real_patches[j];
       Box b1 = getBox(r1->getCellLowIndex(), r1->getCellHighIndex());
       Box b2 = getBox(r2->getCellLowIndex(), r2->getCellHighIndex());
@@ -415,16 +414,16 @@ Level::getTotalCellsInRegion(const TypeDescription::Type varType,
   }
 
   Patch::VariableBasis basis = Patch::translateTypeToBasis(varType, false);
-  
-  for( int i = 0; i < (int)m_real_patches.size(); i++ ) {
-    IntVector patchLow  =  m_real_patches[i]->getExtraLowIndex(  basis, boundaryLayer );
-    IntVector patchHigh =  m_real_patches[i]->getExtraHighIndex( basis, boundaryLayer );
 
-    if( doesIntersect(lowIndex, highIndex, patchLow, patchHigh) ){
+  for (size_t i = 0; i < m_real_patches.size(); ++i) {
+    IntVector patchLow = m_real_patches[i]->getExtraLowIndex(basis, boundaryLayer);
+    IntVector patchHigh = m_real_patches[i]->getExtraHighIndex(basis, boundaryLayer);
 
-      IntVector regionLo = Uintah::Max( lowIndex,  patchLow );
-      IntVector regionHi = Uintah::Min( highIndex, patchHigh );
-      IntVector diff( regionHi - regionLo );
+    if (doesIntersect(lowIndex, highIndex, patchLow, patchHigh)) {
+
+      IntVector regionLo = Uintah::Max(lowIndex, patchLow);
+      IntVector regionHi = Uintah::Min(highIndex, patchHigh);
+      IntVector diff(regionHi - regionLo);
       cellsInRegion += diff.x() * diff.y() * diff.z();
     }
   }
@@ -508,64 +507,58 @@ void Level::selectPatches( const IntVector  & low
                          ) const
 {
   if (cache_patches) {
-    // look it up in the cache first
-    patch_cache_mutex.lock();
-    {
-      select_cache::const_iterator iter = m_select_cache.find(std::make_pair(low, high));
+    std::lock_guard<Uintah::MasterLock> cache_lock(patch_cache_mutex);
 
-      if (iter != m_select_cache.end()) {
-        const std::vector<const Patch*>& cache = iter->second;
-        for (unsigned i = 0; i < cache.size(); i++) {
-          neighbors.push_back(cache[i]);
-        }
-        patch_cache_mutex.unlock();
-        return;
+    // look it up in the cache first
+    select_cache::const_iterator iter = m_select_cache.find(std::make_pair(low, high));
+    if (iter != m_select_cache.end()) {
+      const std::vector<const Patch*>& cache = iter->second;
+      for (size_t i = 0; i < cache.size(); ++i) {
+        neighbors.push_back(cache[i]);
       }
-      ASSERT(neighbors.size() == 0);
+      return;
     }
-    patch_cache_mutex.unlock();
+    ASSERT(neighbors.size() == 0);
   }
 
 
   m_bvh->query(low, high, neighbors, withExtraCells);
+
   std::sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 
 
 #ifdef CHECK_SELECT
   // Double-check the more advanced selection algorithms against the slow (exhaustive) one.
-  std::vector<const Patch*> tneighbors;
-  for(const_patch_iterator iter=m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); iter++) {
+  std::vector<const Patch*> check_select_neighbors;
+  for (const_patch_iterator iter = m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); ++iter) {
     const Patch* patch = *iter;
 
-    IntVector l=Max(patch->getCellLowIndex(), low);
-    IntVector u=Min(patch->getCellHighIndex(), high);
+    IntVector l = Max(patch->getCellLowIndex(), low);
+    IntVector u = Min(patch->getCellHighIndex(), high);
 
-    if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z()) {
-      tneighbors.push_back(*iter);
+    if (u.x() > l.x() && u.y() > l.y() && u.z() > l.z()) {
+      check_select_neighbors.push_back(*iter);
     }
   }
 
-  ASSERTEQ( neighbors.size(), tneighbors.size() );
+  ASSERTEQ(neighbors.size(), check_select_neighbors.size());
 
-  std::sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
-  for( int i = 0; i < (int)neighbors.size(); i++ ) {
-    ASSERT(neighbors[i] == tneighbors[i]);
+  std::sort(check_select_neighbors.begin(), check_select_neighbors.end(), Patch::Compare());
+  for (size_t i = 0; i < neighbors.size(); ++i) {
+    ASSERT(neighbors[i] == check_select_neighbors[i]);
   }
 #endif
 
 
   if (cache_patches) {
-    patch_cache_mutex.lock();
-    {
-      // put it in the cache - start at orig_size in case there was something in
-      // neighbors before this query
-      std::vector<const Patch*>& cache = m_select_cache[std::make_pair(low, high)];
-      cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
-      for (unsigned int i = 0; i < neighbors.size(); i++) {
-        cache.push_back(neighbors[i]);
-      }
+    std::lock_guard<Uintah::MasterLock> cache_lock(patch_cache_mutex);
+
+    // put it in the cache - start at orig_size in case there was something in neighbors before this query
+    std::vector<const Patch*>& cache = m_select_cache[std::make_pair(low, high)];
+    cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
+    for (size_t i = 0; i < neighbors.size(); ++i) {
+      cache.push_back(neighbors[i]);
     }
-    patch_cache_mutex.unlock();
   }
 }
 
@@ -574,7 +567,7 @@ void Level::selectPatches( const IntVector  & low
 bool Level::containsPointIncludingExtraCells( const Point & p ) const
 {
   bool includeExtraCells = true;
-  return getPatchFromPoint(p, includeExtraCells) != 0;
+  return getPatchFromPoint(p, includeExtraCells) != nullptr;
 }
 
 //______________________________________________________________________
@@ -583,7 +576,7 @@ bool Level::containsPoint( const Point & p ) const
 {
   bool includeExtraCells = false;
   const Patch* patch = getPatchFromPoint(p, includeExtraCells);
-  return patch != 0;
+  return patch != nullptr;
 }
 
 //______________________________________________________________________
@@ -592,7 +585,7 @@ bool Level::containsCell( const IntVector & idx ) const
 {
   bool includeExtraCells = false;
   const Patch* patch = getPatchFromIndex(idx, includeExtraCells);
-  return patch != 0;
+  return patch != nullptr;
 }
 
 /*______________________________________________________________________
@@ -607,7 +600,7 @@ Level::setIsNonCubicLevel()
   double patchesVol = 0.0;
   
   // loop over all patches and sum the patch's volume
-  for (int p = 0; p < (int)m_real_patches.size(); p++) {
+  for (size_t p = 0; p < m_real_patches.size(); ++p) {
     const Patch* patch = m_real_patches[p];
 
     Box box = patch->getBox();
@@ -647,7 +640,7 @@ void Level::setOverlappingPatches()
     return;
   }
 
-  for (unsigned i = 0; i < m_real_patches.size(); i++) {
+  for (size_t i = 0; i < m_real_patches.size(); ++i) {
     const Patch* patch = m_real_patches[i];
     Box b1 = patch->getExtraBox();
     IntVector lowEC   = patch->getExtraCellLowIndex();
@@ -657,7 +650,7 @@ void Level::setOverlappingPatches()
     Patch::selectType neighborPatches;
     selectPatches(lowEC, highEC, neighborPatches, includeExtraCells);
     
-    for ( unsigned int j = 0; j < neighborPatches.size(); j++) {
+    for ( size_t j = 0; j < neighborPatches.size(); ++j) {
       const Patch* neighborPatch = neighborPatches[j];
       
       if ( patch != neighborPatch){
@@ -718,8 +711,8 @@ Level::getOverlapCellsInRegion( const selectType & patches,
   int totalOverlapCells = 0;
   
   // loop over patches in this region
-  for (int i = 0; i < (int) patches.size(); i++) {
-    for (int j = i+1; j < (int) patches.size(); j++) {    //  the i+1 prevents examining the transposed key pairs, i.e. 8,9 and 9,8
+  for (size_t i = 0; i < patches.size(); ++i) {
+    for (size_t j = i+1; j < patches.size(); ++j) {    //  the i+1 prevents examining the transposed key pairs, i.e. 8,9 and 9,8
 
       int Id         = patches[i]->getID();
       int neighborId = patches[j]->getID();
@@ -764,7 +757,7 @@ Level::finalizeLevel()
 
   // The compute set requires an array const Patch*, we must copy d_realPatches
   std::vector<const Patch*> tmp_patches(m_real_patches.size());
-  for (int i = 0; i < (int)m_real_patches.size(); i++) {
+  for (size_t i = 0; i < m_real_patches.size(); ++i) {
     tmp_patches[i] = m_real_patches[i];
   }
 
@@ -781,20 +774,20 @@ Level::finalizeLevel()
   setBCTypes();
 
   // finalize the patches - Currently, finalizePatch() does nothing... empty method - APH 09/10/15
-  for (patch_iterator iter = m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); iter++) {
+  for (patch_iterator iter = m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); ++iter) {
     (*iter)->finalizePatch();
   }
 
   // compute the number of cells in the level
   m_total_cells = 0;
-  for (int i = 0; i < (int)m_real_patches.size(); i++) {
+  for (size_t i = 0; i < m_real_patches.size(); ++i) {
     m_total_cells += m_real_patches[i]->getNumExtraCells();
   }
 
   // compute the max number of cells over all patches  Needed by PIDX
   m_numcells_patch_max = IntVector(0, 0, 0);
   int nCells = 0;
-  for (int i = 0; i < (int)m_real_patches.size(); i++) {
+  for (size_t i = 0; i < m_real_patches.size(); ++i) {
 
     if (m_real_patches[i]->getNumExtraCells() > nCells) {
       IntVector lo = m_real_patches[i]->getExtraCellLowIndex();
@@ -804,7 +797,7 @@ Level::finalizeLevel()
   }
 
   // compute and store the spatial ranges now that BCTypes are set
-  for (int i = 0; i < (int)m_real_patches.size(); i++) {
+  for (size_t i = 0; i < m_real_patches.size(); ++i) {
     Patch* r = m_real_patches[i];
     m_spatial_range.extend(r->getExtraBox().lower());
     m_spatial_range.extend(r->getExtraBox().upper());
@@ -831,7 +824,7 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
   // The compute set requires an array const Patch*, we must copy d_realPatches
   std::vector<const Patch*> tmp_patches(m_real_patches.size());
 
-  for (int i = 0; i < (int)m_real_patches.size(); i++) {
+  for (size_t i = 0; i < m_real_patches.size(); ++i) {
     tmp_patches[i] = m_real_patches[i];
   }
 
@@ -845,23 +838,26 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
 
   if (m_index > 0) {
     m_grid->getLevel(0)->getInteriorSpatialRange(bbox);
-  } else {
+  }
+  else {
     getInteriorSpatialRange(bbox);
   }
 
   Box domain(bbox.min(), bbox.max());
   Vector vextent = positionToIndex(bbox.max()) - positionToIndex(bbox.min());
-  IntVector extent((int)rint(vextent.x()), (int)rint(vextent.y()), (int)rint(vextent.z()));
+  IntVector extent(static_cast<int>(rint(vextent.x())),
+                   static_cast<int>(rint(vextent.y())),
+                   static_cast<int>(rint(vextent.z())));
 
   m_periodic_boundaries = IntVector( periodicX ? 1 : 0, periodicY ? 1 : 0, periodicZ ? 1 : 0 );
   IntVector periodicBoundaryRange = m_periodic_boundaries * extent;
 
   int x, y, z;
-  for (int i = 0; i < (int)tmp_patches.size(); i++) {
+  for (size_t i = 0; i < tmp_patches.size(); ++i) {
 
-    for (x = -m_periodic_boundaries.x(); x <= m_periodic_boundaries.x(); x++) {
-      for (y = -m_periodic_boundaries.y(); y <= m_periodic_boundaries.y(); y++) {
-        for (z = -m_periodic_boundaries.z(); z <= m_periodic_boundaries.z(); z++) {
+    for (x = -m_periodic_boundaries.x(); x <= m_periodic_boundaries.x(); ++x) {
+      for (y = -m_periodic_boundaries.y(); y <= m_periodic_boundaries.y(); ++y) {
+        for (z = -m_periodic_boundaries.z(); z <= m_periodic_boundaries.z(); ++z) {
 
           IntVector offset = IntVector(x, y, z) * periodicBoundaryRange;
           if (offset == IntVector(0, 0, 0)) {
@@ -887,13 +883,13 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
   setBCTypes();
 
   //finalize the patches
-  for (patch_iterator iter = m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); iter++) {
+  for (patch_iterator iter = m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); ++iter) {
     (*iter)->finalizePatch();
   }
 
   //compute the number of cells in the level
   m_total_cells = 0;
-  for (int i = 0; i < (int)m_real_patches.size(); i++) {
+  for (size_t i = 0; i < m_real_patches.size(); ++i) {
     m_total_cells += m_real_patches[i]->getNumExtraCells();
   }
 
@@ -901,7 +897,7 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
   m_numcells_patch_max = IntVector(0, 0, 0);
   int nCells = 0;
 
-  for (int i = 0; i < (int)m_real_patches.size(); i++) {
+  for (size_t i = 0; i < m_real_patches.size(); ++i) {
     if (m_real_patches[i]->getNumExtraCells() > nCells) {
       IntVector lo = m_real_patches[i]->getExtraCellLowIndex();
       IntVector hi = m_real_patches[i]->getExtraCellHighIndex();
@@ -911,7 +907,7 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
   }
 
   //compute and store the spatial ranges now that BCTypes are set
-  for (int i = 0; i < (int)m_real_patches.size(); i++) {
+  for (size_t i = 0; i < m_real_patches.size(); ++i) {
     Patch* r = m_real_patches[i];
 
     m_spatial_range.extend(r->getExtraBox().lower());
@@ -953,8 +949,7 @@ Level::setBCTypes()
   int rank = 0;
 
   if (Parallel::isInitialized()) {
-    // only sus uses Parallel, but anybody else who uses DataArchive
-    // to read data does not
+    // only sus uses Parallel, but anybody else who uses DataArchive to read data does not
     myworld = Parallel::getRootProcessorGroup();
     numProcs = myworld->nRanks();
     rank = myworld->myRank();
@@ -967,16 +962,17 @@ Level::setBCTypes()
   int div = m_virtual_and_real_patches.size() / numProcs;
   int mod = m_virtual_and_real_patches.size() % numProcs;
 
-  for (int p = 0; p < numProcs; p++) {
+  for (int p = 0; p < numProcs; ++p) {
     if (p < mod) {
       recvcounts[p] = div + 1;
-    } else {
+    }
+    else {
       recvcounts[p] = div;
     }
   }
 
   displacements[0] = 0;
-  for (int p = 1; p < numProcs; p++) {
+  for (int p = 1; p < numProcs; ++p) {
     displacements[p] = displacements[p - 1] + recvcounts[p - 1];
   }
 
@@ -989,7 +985,7 @@ Level::setBCTypes()
   patch_iterator endpatch = startpatch + recvcounts[rank];
 
   // for each of my patches
-  for (iter = startpatch, idx = 0; iter != endpatch; iter++, idx++) {
+  for (iter = startpatch, idx = 0; iter != endpatch; ++iter, ++idx) {
     Patch* patch = *iter;
     // See if there are any neighbors on the 6 faces
     int bitfield = 0;
@@ -1050,11 +1046,13 @@ Level::setBCTypes()
     // allgather bctypes
     if (mybctypes.size() == 0) {
       Uintah::MPI::Allgatherv(0, 0, MPI_UNSIGNED, &bctypes[0], &recvcounts[0], &displacements[0], MPI_UNSIGNED, myworld->getComm());
-    } else {
+    }
+    else {
       Uintah::MPI::Allgatherv(&mybctypes[0], mybctypes.size(), MPI_UNSIGNED, &bctypes[0], &recvcounts[0], &displacements[0],
                               MPI_UNSIGNED, myworld->getComm());
     }
-  } else {
+  }
+  else {
     bctypes.swap(mybctypes);
   }
 
@@ -1063,7 +1061,7 @@ Level::setBCTypes()
 
   int i;
   // loop through patches
-  for (iter = m_virtual_and_real_patches.begin(), i = 0, idx = 0; iter != m_virtual_and_real_patches.end(); iter++, i++) {
+  for (iter = m_virtual_and_real_patches.begin(), i = 0, idx = 0; iter != m_virtual_and_real_patches.end(); ++iter, ++i) {
     Patch *patch = *iter;
 
     if (patch->isVirtual()) {
@@ -1076,20 +1074,20 @@ Level::setBCTypes()
     int mask = 3;
 
     // loop through faces
-    for (int j = 5; j >= 0; j--) {
+    for (int j = 5; j >= 0; --j) {
 
       int bc_type = bitfield & mask;
 
       if (rank == 0) {
         switch (bc_type) {
           case Patch::None :
-            bcout << "  Setting Patch " << patch->getID() << " face " << j << " to None\n";
+            DOUT(g_bc_dbg, "  Setting Patch " << patch->getID() << " face " << j << " to None");
             break;
           case Patch::Coarse :
-            bcout << "  Setting Patch " << patch->getID() << " face " << j << " to Coarse\n";
+            DOUT(g_bc_dbg, "  Setting Patch " << patch->getID() << " face " << j << " to Coarse");
             break;
           case Patch::Neighbor :
-            bcout << "  Setting Patch " << patch->getID() << " face " << j << " to Neighbor\n";
+            DOUT(g_bc_dbg, "  Setting Patch " << patch->getID() << " face " << j << " to Neighbor");
             break;
         }
       }
@@ -1114,33 +1112,35 @@ Level::setBCTypes()
   rtimes[2] += timer().seconds();
   timer.reset( true );
 
-  if (rgtimes.active()) {
+  if (g_rg_times.active()) {
+    std::ostringstream mesg;
     double avg[ nTimes ] = { 0 };
     Uintah::MPI::Reduce(rtimes, avg, nTimes, MPI_DOUBLE, MPI_SUM, 0, myworld->getComm());
 
     if (myworld->myRank() == 0) {
 
-      std::cout << "SetBCType Avg Times: ";
-      for (int i = 0; i < nTimes; i++) {
+      mesg << "SetBCType Avg Times: ";
+      for (int i = 0; i < nTimes; ++i) {
         avg[i] /= myworld->nRanks();
-        std::cout << avg[i] << " ";
+        mesg << avg[i] << " ";
       }
-      std::cout << std::endl;
+      mesg << std::endl;
     }
 
     double max[nTimes] = { 0 };
     Uintah::MPI::Reduce(rtimes, max, nTimes, MPI_DOUBLE, MPI_MAX, 0, myworld->getComm());
 
     if (myworld->myRank() == 0) {
-      std::cout << "SetBCType Max Times: ";
-      for (int i = 0; i < nTimes; i++) {
-        std::cout << max[i] << " ";
+      mesg << "SetBCType Max Times: ";
+      for (int i = 0; i < nTimes; ++i) {
+        mesg << max[i] << " ";
       }
-      std::cout << std::endl;
+      mesg << std::endl;
     }
+    DOUT(true, mesg.str());
   }
 
-  // recreate BVH with extracells
+  // recreate BVH with extra cells
   if (m_bvh != nullptr) {
     delete m_bvh;
   }
@@ -1220,9 +1220,9 @@ Level::selectPatchForCellIndex( const IntVector & idx ) const
 
   if (pv.size() == 0) {
     return nullptr;
-  } else {
+  }
+  else {
     selectType::iterator it;
-
     for (it = pv.begin(); it != pv.end(); it++) {
       if ((*it)->containsCell(idx)) {
         return *it;
@@ -1244,11 +1244,12 @@ Level::selectPatchForNodeIndex( const IntVector & idx ) const
 
   if (pv.size() == 0) {
     return nullptr;
-  } else {
-    selectType::iterator it;
-    for (it = pv.begin(); it != pv.end(); it++) {
-      if ((*it)->containsNode(idx)) {
-        return *it;
+  }
+  else {
+    selectType::iterator iter;
+    for (iter = pv.begin(); iter != pv.end(); ++iter) {
+      if ((*iter)->containsNode(idx)) {
+        return *iter;
       }
     }
   }
@@ -1381,7 +1382,7 @@ Level::mapCellToFinestNoAdjustments( const IntVector & idx ) const
 {
 
       IntVector r_ratio  = IntVector(1,1,1);
-      for (int i=m_index; i< m_grid->numLevels()-1; i++){
+      for (int i=m_index; i< m_grid->numLevels()-1; ++i){
        r_ratio  = r_ratio*m_grid->getLevel(i+1)->getRefinementRatio();
       }
       return idx * r_ratio;
@@ -1442,7 +1443,7 @@ const Level* getLevel( const PatchSubset * subset )
   ASSERT(subset->size() > 0);
   const Level* level = subset->get(0)->getLevel();
 #if SCI_ASSERTION_LEVEL>0
-  for (int i = 1; i < subset->size(); i++) {
+  for (int i = 1; i < subset->size(); ++i) {
     ASSERT(level == subset->get(i)->getLevel());
   }
 #endif
@@ -1455,7 +1456,7 @@ const LevelP& getLevelP( const PatchSubset * subset )
   ASSERT(subset->size() > 0);
   const LevelP& level = subset->get(0)->getLevelP();
 #if SCI_ASSERTION_LEVEL>0
-  for (int i = 1; i < subset->size(); i++) {
+  for (int i = 1; i < subset->size(); ++i) {
     ASSERT(level == subset->get(i)->getLevelP());
   }
 #endif
@@ -1471,7 +1472,7 @@ const Level* getLevel( const PatchSet * set )
 }
 
 //______________________________________________________________________
-// We may need to put coutLocks around this?
+// We may need to put a lock around this?
 std::ostream& operator<<( std::ostream & out, const Level & level )
 {
   IntVector lo, hi;
