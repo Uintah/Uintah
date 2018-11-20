@@ -279,6 +279,7 @@ OnDemandDataWarehouse::put(       Variable* var,
   union {
       ReductionVariableBase* reduction;
       SoleVariableBase* sole;
+      PerPatchBase* perpatch;
       ParticleVariableBase* particle;
       GridVariableBase* gv;
   } castVar;
@@ -288,6 +289,9 @@ OnDemandDataWarehouse::put(       Variable* var,
   }
   else if ((castVar.sole = dynamic_cast<SoleVariableBase*>(var)) != nullptr) {
     put(*castVar.sole, label, patch ? patch->getLevel() : nullptr, matlIndex);
+  }
+  else if ((castVar.perpatch = dynamic_cast<PerPatchBase*>(var)) != nullptr) {
+    put(*castVar.perpatch, label, matlIndex, patch);
   }
   else if ((castVar.particle = dynamic_cast<ParticleVariableBase*>(var)) != nullptr) {
     put(*castVar.particle, label);
