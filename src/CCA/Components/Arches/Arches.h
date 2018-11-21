@@ -103,8 +103,13 @@ public:
   virtual void scheduleAnalysis( const LevelP& level,
                                  SchedulerP&);
 
-  virtual int getTaskGraphIndex();
-
+  // An optional call for the application to check their reduction vars.
+  virtual void checkReductionVars( const ProcessorGroup * pg,
+                                   const PatchSubset    * patches,
+                                   const MaterialSubset * matls,
+                                         DataWarehouse  * old_dw,
+                                         DataWarehouse  * new_dw );
+    
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
     m_MAlab = MAlb;
   }
@@ -114,7 +119,7 @@ public:
   void setWithMPMARCHES() {
     m_with_mpmarches = true;
   };
-
+  
   //________________________________________________________________________________________________
   //  Multi-level/AMR
   // stub functions.  Needed for multi-level RMCRT and

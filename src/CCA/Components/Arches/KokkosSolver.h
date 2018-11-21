@@ -145,10 +145,6 @@ namespace Uintah{
 
     void setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSet* matls );
 
-    int getTaskGraphIndex(const int timeStep ) const {
-      return 0;
-    }
-
     MaterialManagerP& m_materialManager;
 
     std::map<std::string,std::shared_ptr<TaskFactoryBase> > m_task_factory_map;

@@ -92,15 +92,13 @@ WARNING
     virtual void scheduleRefine                ( const PatchSet* patches, SchedulerP& scheduler );
     virtual void scheduleRefineInterface       ( const LevelP& level, SchedulerP& scheduler, bool needCoarseOld, bool needCoarseNew);
 
-    virtual int getTaskGraphIndex();
-
   private:
     void initialize ( const ProcessorGroup*,
                       const PatchSubset* patches, 
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw );
-                      
+
     void initializeWithUda (const ProcessorGroup*,
                             const PatchSubset* patches,
                             const MaterialSubset* ,

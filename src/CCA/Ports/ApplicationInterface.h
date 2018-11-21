@@ -167,7 +167,8 @@ WARNING
 
     // Get the task graph the application wants to execute. Returns an
     // index into the scheduler's list of task graphs.
-    virtual int getTaskGraphIndex() = 0;
+    virtual void setTaskGraphIndex( int index ) = 0;
+    virtual int  getTaskGraphIndex() = 0;
 
     // Schedule the initial switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,

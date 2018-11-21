@@ -66,6 +66,7 @@ public:
                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw, 
                       int timeSubStep );
+
   void sched_initialize( const LevelP& level, SchedulerP& sched );
   void initialize( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
@@ -73,8 +74,14 @@ public:
                    DataWarehouse* old_dw, 
                    DataWarehouse* new_dw );
 
-
-//-------- Functiosn relevant to sweeps ----//
+  void sched_restartInitialize( const LevelP& level, SchedulerP& sched );
+  void restartInitialize( const ProcessorGroup* pc, 
+                          const PatchSubset* patches, 
+                          const MaterialSubset* matls, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw );
+  
+//-------- Functions relevant to sweeps ----//
 void init_all_intensities( const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
                          const MaterialSubset* matls, 
@@ -118,6 +125,12 @@ void TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
                                  DataWarehouse* old_dw, 
                                  DataWarehouse* new_dw);
 
+void checkReductionVars( const ProcessorGroup * pg,
+                         const PatchSubset    * patches,
+                         const MaterialSubset * matls,
+                               DataWarehouse  * old_dw,
+                               DataWarehouse  * new_dw );
+  
 //---End of Functiosn relevant to sweeps ----//
   class Builder
     : public SourceTermBase::Builder { 
@@ -150,7 +163,7 @@ void TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
 
 
 private:
-      enum DORadType {enum_linearSolve, enum_sweepSpatiallyParallel};
+  enum DORadType {enum_linearSolve, enum_sweepSpatiallyParallel};
   int _nDir;
   int _nphase;
   int _nstage;
@@ -158,6 +171,9 @@ private:
 
   bool _multiBox; 
   bool _dynamicSolveFrequency{false};  /// turns on the radiation profiler, tool to identifying if radiation is being resolved
+  const std::string dynamicSolveCountPatch_name {"dynamicSolveCountPatch"};
+  const std::string dynamicSolveCountRank_name  {"dynamicSolveCountRank"};
+  
   std::vector<std::vector<double> > _xyzPatch_boundary;/// all patch boundaries (approximate), needed for multi-box weeps, 
 
   std::vector< std::vector < std::vector < bool > > > _doesPatchExist;
@@ -224,8 +240,10 @@ private:
   const PatchSet* _perproc_patches;
   std::vector< std::vector < std::vector < Ghost::GhostType > > >   _gv; 
 
+  const VarLabel* _dynamicSolveCountPatchLabel;
+  const VarLabel* _dynamicSolveCountRankLabel;
+
   int last_rad_solve_timestep={0};
-  int do_rad_in_n_timesteps={5};
 
   std::vector<const VarLabel*>  _radIntSource;
   std::vector<std::string> _radIntSource_names;

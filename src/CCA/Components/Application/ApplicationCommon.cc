@@ -433,9 +433,9 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
 //______________________________________________________________________
 //
 void
-ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
+ApplicationCommon::reduceSystemVars( const ProcessorGroup * pg,
                                      const PatchSubset    * patches,
-                                     const MaterialSubset * /*matls*/,
+                                     const MaterialSubset * matls,
                                            DataWarehouse  * old_dw,
                                            DataWarehouse  * new_dw )
 {
@@ -542,6 +542,8 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
     m_output->setCheckpointInterval(getReductionVariable(checkpointInterval_name));
   }
 
+  checkReductionVars( pg, patches, matls, old_dw, new_dw );
+  
 }  // end reduceSysVar()
 
 

@@ -1913,6 +1913,19 @@ namespace WasatchCore{
                   getDelTLabel(),
                   Uintah::getLevel(patches) );
     }
+
+    // The component specifies task graph index for next
+    // timestep.
+    if (doRadiation_) {
+      // Setup the correct task graph for execution for the NEXT time
+      // step.  Also do radiation solve on time step 1.
+      int task_graph_index =
+        ((((timeStep+1) % radCalcFrequency_ == 0) || ((timeStep+1) == 1)) ?
+         Uintah::RMCRTCommon::TG_RMCRT :
+         Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+      
+      setTaskGraphIndex( task_graph_index );
+    }
   }
 
   //------------------------------------------------------------------
@@ -1972,27 +1985,6 @@ namespace WasatchCore{
    // do nothing for now
  }
 
- int
- Wasatch::getTaskGraphIndex()
- {
-   // The component specifies task graph index for next
-   // timestep. SimController passes this to scheduler for execution.
-   if (doRadiation_) {
-
-     Uintah::timeStep_vartype timeStep(0);
-     m_scheduler->get_dw(0)->get(timeStep, getTimeStepLabel() );
-
-     // Setup the correct task graph for execution.
-     // Also do radiation solve on timestep 1.
-     int task_graph_index =
-       ((timeStep % radCalcFrequency_ == 0) ||
-        (timeStep == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
-
-     return task_graph_index;
-   }
-
-   return 0;
- }
 //------------------------------------------------------------------
 
 } // namespace WasatchCore

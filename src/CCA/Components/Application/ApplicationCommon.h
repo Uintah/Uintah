@@ -135,7 +135,8 @@ WARNING
 
     // Get the task graph the application wants to execute. Returns an
     // index into the scheduler's list of task graphs.
-    virtual int getTaskGraphIndex() { return 0; }
+    virtual void setTaskGraphIndex( int index ) { m_taskGraphIndex = index; }
+    virtual int  getTaskGraphIndex() { return m_taskGraphIndex; }
 
     // Schedule the inital switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,
@@ -167,10 +168,17 @@ WARNING
 
     void reduceSystemVars( const ProcessorGroup *,
                            const PatchSubset    * patches,
-                           const MaterialSubset * /*matls*/,
-                                 DataWarehouse  * /*old_dw*/,
+                           const MaterialSubset * matls,
+                                 DataWarehouse  * old_dw,
                                  DataWarehouse  * new_dw );
-      
+
+    // An optional call for the application to check their reduction vars.
+    virtual void checkReductionVars( const ProcessorGroup * pg,
+                                     const PatchSubset    * patches,
+                                     const MaterialSubset * matls,
+                                           DataWarehouse  * old_dw,
+                                           DataWarehouse  * new_dw ) {};
+    
     // Schedule the initialization of system values such at the time step.
     virtual void scheduleInitializeSystemVars(const GridP      & grid,
                                               const PatchSet   * perProcPatchSet,
@@ -268,8 +276,8 @@ WARNING
     }
 
     virtual void addReductionVariable( std::string name,
-				       const TypeDescription *varType,
-				       bool varActive = false )
+                                       const TypeDescription *varType,
+                                       bool varActive = false )
     {
       m_appReductionVars[name] = new ApplicationReductionVariable( name, varType, varActive );
     }
@@ -277,9 +285,9 @@ WARNING
     virtual void activateReductionVariable(std::string name, bool val) { m_appReductionVars[name]->setActive( val ); }
     virtual bool activeReductionVariable(std::string name) {
       if( m_appReductionVars.find(name) != m_appReductionVars.end() )
-	  return m_appReductionVars[name]->getActive();
+          return m_appReductionVars[name]->getActive();
       else
-	return false;
+        return false;
     }
 
     virtual bool isBenignReductionVariable( std::string name ) { return m_appReductionVars[name]->isBenignValue(); }
@@ -469,7 +477,9 @@ WARNING
     bool m_isRestartTimestep {false};
     
     bool m_isRegridTimeStep {false};
-    int  m_lastRegridTimestep { 0 }; // While it may not have been a "re"-grid, the original grid is created on TS 0.
+    // While it may not have been a "re"-grid, the original grid is
+    // created on time step 0.
+    int m_lastRegridTimestep { 0 };
 
     bool m_haveModifiedVars {false};
 
@@ -477,7 +487,9 @@ WARNING
     const VarLabel* m_simulationTimeLabel;
     const VarLabel* m_delTLabel;
   
-
+    // Some applications may use multiple task graphs.
+    int m_taskGraphIndex{0};
+    
     // The simulation runs to either the maximum number of time steps
     // (timeStepsMax) or the maximum simulation time (simTimeMax), which
     // ever comes first. If the "max_Timestep" is not specified in the .ups

@@ -91,22 +91,18 @@ DORadiation::~DORadiation()
 void
 DORadiation::problemSetup(const ProblemSpecP& inputdb)
 {
-
   ProblemSpecP db = inputdb;
 
   db->getWithDefault( "calc_frequency", _radiation_calc_freq, 3 );
-
-  // For the dynamic radiation frequency radiation solve used the base
-  // static radiation calculation frequency.
-
-  // NOTE: for this stepping to work correctly there must be one patch
-  // per rank because the reduction is rank based.
-  do_rad_in_n_timesteps = _radiation_calc_freq;
 
   // Check to see if the dynamic frequency radiation solve should be used. 
   if(db->findBlock("use_dynamic_frequency") != nullptr) {
     db->getWithDefault( "use_dynamic_frequency", _nsteps_calc_freq, 25 );
     _dynamicSolveFrequency = true;
+
+    _dynamicSolveCountPatchLabel =
+      VarLabel::create( dynamicSolveCountPatch_name,
+                        PerPatch< int >::getTypeDescription() );  
   } 
 
   db->getWithDefault( "checkForMissingIntensities", _checkForMissingIntensities  , false );
@@ -374,22 +370,6 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 void
 DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  // A pointer to the application so to get a handle to the
-  // performanance stats.  This step is a hack so to get the
-  // application passed down to other classes like the model.
-  m_arches = sched->getApplication();
-  
-  if( _DO_model )
-    _DO_model->setApplicationInterface( m_arches );
-
-  if(_dynamicSolveFrequency) { 
-    // Use dynamic frequency radiation solve so create a new reduction
-    // variable that keeps track of the number of time steps before
-    // the next raditaion solve. NOTE : the name is in ArchesStatsEnum.h
-    m_arches->addReductionVariable( dynamicSolveCount_name,
-                                    min_vartype::getTypeDescription(), true );
-  }
-
   _T_label = VarLabel::find(_T_label_name);
   if ( _T_label == 0){
     throw InvalidValue("Error: For DO Radiation source term -- Could not find the radiation temperature label.", __FILE__, __LINE__);
@@ -509,8 +489,11 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
         tsk_noRad->computes( *iter );
       }
 
-      if (_dynamicSolveFrequency ){
-        tsk_noRad->computes( VarLabel::find(dynamicSolveCount_name) );
+      if (_dynamicSolveFrequency ) {
+        tsk_noRad->requires( Task::OldDW, _dynamicSolveCountPatchLabel, Ghost::None, 0 );
+        
+        tsk_noRad->computes( _dynamicSolveCountPatchLabel );
+        tsk_noRad->computes( _dynamicSolveCountRankLabel );
       }
 
       sched->addTask(tsk_noRad, level->eachPatch(), _materialManager->allMaterials( "Arches" ),no_Rad_TG);
@@ -527,7 +510,8 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     tsk4->requires( Task::NewDW, _T_label, Ghost::None, 0 );
     tsk4->requires( Task::OldDW, _labels->d_delTLabel, Ghost::None, 0 );
     
-    tsk4->computes( VarLabel::find(dynamicSolveCount_name) );
+    tsk4->computes( _dynamicSolveCountPatchLabel );
+    tsk4->computes( _dynamicSolveCountRankLabel );
 
     sched->addTask(tsk4, level->eachPatch(), _materialManager->allMaterials( "Arches" ), Rad_TG);
   }
@@ -689,6 +673,25 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 void
 DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
+  // A pointer to the application so to get a handle to the
+  // performanance stats.  This step is a hack so to get the
+  // application passed down to other classes like the model.
+  m_arches = sched->getApplication();
+  
+  if( _DO_model )
+    _DO_model->setApplicationInterface( m_arches );
+
+  if(_dynamicSolveFrequency) {
+
+    // Use dynamic frequency radiation solve so create a new reduction
+    // variable that keeps track of the number of time steps before
+    // the next raditaion solve. NOTE : the name is in ArchesStatsEnum.h
+    m_arches->addReductionVariable( dynamicSolveCountRank_name,
+                                    min_vartype::getTypeDescription(), true );
+
+    _dynamicSolveCountRankLabel = VarLabel::find(dynamicSolveCountRank_name);
+  }
+
   string taskname = "DORadiation::initialize";
   Task* tsk = scinew Task(taskname, this, &DORadiation::initialize);
 
@@ -699,9 +702,17 @@ DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
     tsk->computes(*iter);
   }
 
+  if(_dynamicSolveFrequency) {
+    tsk->computes(_dynamicSolveCountPatchLabel);
+  }
+  
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
 }
+
+//---------------------------------------------------------------------------
+// Method: initialization
+//---------------------------------------------------------------------------
 void
 DORadiation::initialize( const ProcessorGroup* pc,
                          const PatchSubset* patches,
@@ -729,16 +740,82 @@ DORadiation::initialize( const ProcessorGroup* pc,
       new_dw->allocateAndPut(temp_var, *iter, matlIndex, patch );
       temp_var.initialize(0.0);
     }
+
+    if(_dynamicSolveFrequency) {
+      // Add the per patch dynamicSolveCount so there is something to
+      // transfer initially.
+      PerPatch< int > ppVar = _radiation_calc_freq;
+      new_dw->put( ppVar, _dynamicSolveCountPatchLabel, 0, patch );
+    }
+  }    
+}
+
+//---------------------------------------------------------------------------
+// Method: Schedule restart initialization
+//---------------------------------------------------------------------------
+void
+DORadiation::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
+{
+  // A pointer to the application so to get a handle to the
+  // performanance stats.  This step is a hack so to get the
+  // application passed down to other classes like the model.
+  m_arches = sched->getApplication();
+  
+  if( _DO_model )
+    _DO_model->setApplicationInterface( m_arches );
+
+  if(_dynamicSolveFrequency) {
+
+    // Use dynamic frequency radiation solve so create a new reduction
+    // variable that keeps track of the number of time steps before
+    // the next raditaion solve. NOTE : the name is in ArchesStatsEnum.h
+    m_arches->addReductionVariable( dynamicSolveCountRank_name,
+                                    min_vartype::getTypeDescription(), true );
+
+    _dynamicSolveCountRankLabel = VarLabel::find(dynamicSolveCountRank_name);
+
+    string taskname = "DORadiation::restartInitialize";
+    Task* tsk = scinew Task(taskname, this, &DORadiation::restartInitialize);
+
+    tsk->requires( Task::NewDW, _dynamicSolveCountRankLabel, Ghost::None, 0 );
+    
+    sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
+
   }
 }
 
+//---------------------------------------------------------------------------
+// Method: restart initialization
+//---------------------------------------------------------------------------
+void
+DORadiation::restartInitialize( const ProcessorGroup* pc,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw )
+{
+  const Patch *patch = nullptr;
+  
+  // Make sure the reduction variable exists - it should and it will
+  // be the same across all ranks.
+  if (new_dw->exists(_dynamicSolveCountRankLabel, -1, patch)) {
+    min_vartype var;
+    new_dw->get( var, _dynamicSolveCountRankLabel );
 
+    // Set the task graph that needs to be used.
+    m_arches->setTaskGraphIndex( var <= 1 );
+  }
+}
+
+//---------------------------------------------------------------------------
+// Method: init_all_intensities
+//---------------------------------------------------------------------------
 void
 DORadiation::init_all_intensities( const ProcessorGroup* pc,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw )
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw )
 {
 
   for (int p=0; p < patches->size(); p++){
@@ -752,12 +829,15 @@ DORadiation::init_all_intensities( const ProcessorGroup* pc,
 
 void
 DORadiation::doSweepAdvanced( const ProcessorGroup* pc,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw ,
-                        const int ixx_orig       , int intensity_iter        )
-{   // This version relies on FULL spatial scheduling to reduce work, to see logic needed for partial spatial scheduling see revision 57848 or earlier
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
+                              const int ixx_orig,
+                              int intensity_iter )
+{
+  // This version relies on FULL spatial scheduling to reduce work, to see
+  // logic needed for partial spatial scheduling see revision 57848 or earlier
   int archIndex = 0;
   int matlIndex = _labels->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
   for (int p=0; p < patches->size(); p++){
@@ -784,7 +864,7 @@ DORadiation::computeFluxDivQ( const ProcessorGroup* pc,
 void
 DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
- if (timeSubStep==0){
+  if (timeSubStep==0){
 
 
   Ghost::GhostType  gn = Ghost::None;
@@ -845,7 +925,10 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
     }
 
     if (_dynamicSolveFrequency ) {
-      tsk_noRadiation->computes( VarLabel::find(dynamicSolveCount_name) );
+      tsk_noRadiation->requires( Task::OldDW, _dynamicSolveCountPatchLabel, Ghost::None, 0 );
+
+      tsk_noRadiation->computes( _dynamicSolveCountPatchLabel );
+      tsk_noRadiation->computes( _dynamicSolveCountRankLabel );
     }
 
     sched->addTask(tsk_noRadiation, level->eachPatch(), _materialManager->allMaterials( "Arches" ),no_Rad_TG);
@@ -1185,27 +1268,55 @@ DORadiation::profileDynamicRadiation( const ProcessorGroup* pc,
         double timescale = fabs((T_eql - gasTemp(i,j,k) *Cp_vol) / divQ(i,j,k));
         dt_min = std::min( timescale / _nsteps_calc_freq,  dt_min ); // min for zero divQ
       } );
+
+    // For the dynamic frequency radiation solve get the new number of
+    // time steps to skip before doing the next radiation solve.
+    
+    // For the dynamic radiation solve use the base static radiation
+    // calculation frequency as a maximum limit.
+    delt_vartype delT;
+    old_dw->get(delT,_labels->d_delTLabel);
+    int do_rad_in_n_timesteps =
+      min ((int) (dt_min / delT), _radiation_calc_freq);
+
+    // Store the patch value.
+    PerPatch< int > ppVar = do_rad_in_n_timesteps;
+    new_dw->put( ppVar, _dynamicSolveCountPatchLabel, 0, patch );
+
+    // Check to see if the patch value is the min for all patches on this rank.
+    patch = nullptr;
+
+    // If the rank value does not exist save it.
+    if (!new_dw->exists(_dynamicSolveCountRankLabel, -1, patch)) {
+      new_dw->put( min_vartype(do_rad_in_n_timesteps),
+                   _dynamicSolveCountRankLabel );
+    }
+    else {
+      // The rank value exists so check to see if the patch value is the
+      // min value.
+      min_vartype var;
+      
+      new_dw->get( var, _dynamicSolveCountRankLabel );
+
+      if( var > do_rad_in_n_timesteps ) {
+        new_dw->put( min_vartype(do_rad_in_n_timesteps),
+                     _dynamicSolveCountRankLabel );
+      }
+    }
   }
-
-  // For the dynamic frequency radiation solve get the new number of
-  // time steps to skip before doing the next radiation solve.
-
-  // NOTE: for this stepping to work correctly there must be one patch
-  // per rank because the reduction is rank based.
-  delt_vartype delT;
-  old_dw->get(delT,_labels->d_delTLabel);
-  do_rad_in_n_timesteps = min ((int) (dt_min / delT), _radiation_calc_freq);
-  new_dw->put( min_vartype(do_rad_in_n_timesteps), VarLabel::find(dynamicSolveCount_name) );
 }
 
 
+//---------------------------------------------------------------------------
+// Method: setIntensityBC
+//---------------------------------------------------------------------------
 void
 DORadiation::setIntensityBC( const ProcessorGroup* pc,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw,
-                         int ix )
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw,
+                                   int ix )
 {
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -1221,7 +1332,9 @@ DORadiation::setIntensityBC( const ProcessorGroup* pc,
   }
 }
 
-
+//---------------------------------------------------------------------------
+// Method: TransferRadFieldsFromOldDW
+//---------------------------------------------------------------------------
 void
 DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
                                          const PatchSubset* patches,
@@ -1249,12 +1362,68 @@ DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
   new_dw->transferFrom(old_dw,_radiationVolqLabel,patches,matls);
   new_dw->transferFrom(old_dw, _src_label,patches,matls);
 
-  // Reduce the dynamic radiation solve time step counter.
-
-  // NOTE: for this stepping to work correctly there must be one patch
-  // per rank because the reduction is rank based.
+  // Reduce the dynamic radiation solve time step counter for each
+  // patch and then store the minimum value.
   if(_dynamicSolveFrequency) {
-    --do_rad_in_n_timesteps;
-    new_dw->put( min_vartype(do_rad_in_n_timesteps), VarLabel::find(dynamicSolveCount_name) );
+        
+    for (int p=0; p < patches->size(); p++) {
+      const Patch* patch = patches->get(p);
+      
+      // Get the previous per patch value.
+      PerPatch< int > ppVar = _radiation_calc_freq;
+
+      if (old_dw->exists(_dynamicSolveCountPatchLabel, 0, patch)) {
+        old_dw->get( ppVar, _dynamicSolveCountPatchLabel, 0, patch );
+      }
+      
+      // Decrement the patch count by one and save the new value.
+      ppVar = ppVar - 1;
+      new_dw->put( ppVar, _dynamicSolveCountPatchLabel, 0, patch );
+      
+      // Check to see if the patch count is the minimum for all
+      // patches on this rank.
+      patch = nullptr;
+
+      // If the rank value does not exist save the patch count.
+      if (!new_dw->exists(_dynamicSolveCountRankLabel, -1, patch)) {
+        new_dw->put( min_vartype( ppVar), _dynamicSolveCountRankLabel );
+      }
+      else {
+        // The rank value exists so check to see if the patch value is the
+        // min value.
+        min_vartype var;
+        
+        new_dw->get( var, _dynamicSolveCountRankLabel );
+        
+        if( var > ppVar ) {
+          new_dw->put( min_vartype( ppVar ), _dynamicSolveCountRankLabel );
+        }
+      }
+    }
+  }
+}
+
+//---------------------------------------------------------------------------
+// Method: checkReductionVars
+//---------------------------------------------------------------------------
+void
+DORadiation::checkReductionVars( const ProcessorGroup * pg,
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset * matls,
+                                       DataWarehouse  * old_dw,
+                                       DataWarehouse  * new_dw )
+{
+  // Calculate the task graph index to be used on the NEXT time step.
+  if(_dynamicSolveFrequency) {
+  
+    // Check to see if the DORadiation is using the dynamic solve frequency.
+    if( m_arches->activeReductionVariable( dynamicSolveCountRank_name ) ) {
+      // If the variable is not benign then at least one rank set the value.
+      // The bengin value is realy large so this check is somewhat moot.
+      if( !m_arches->isBenignReductionVariable( dynamicSolveCountRank_name ) )
+        m_arches->setTaskGraphIndex( m_arches->getReductionVariable( dynamicSolveCountRank_name ) <= 1 );
+      else
+        m_arches->setTaskGraphIndex( 0 );
+    }
   }
 }

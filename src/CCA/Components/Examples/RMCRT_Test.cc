@@ -578,29 +578,14 @@ void RMCRT_Test::scheduleRefineInterface ( const LevelP&,
 }
 
 //______________________________________________________________________
-// Setup the correct task graph for execution.
-//______________________________________________________________________
-int RMCRT_Test::getTaskGraphIndex()
-{
-  timeStep_vartype timeStep(0);
-  m_scheduler->get_dw(0)->get(timeStep, VarLabel::find(timeStep_name) );
-  
-  // Also do radiation solve on timestep 1.
-  int task_graph_index = ((timeStep % d_radCalc_freq == 0) ||
-                          (timeStep == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
-
-  return task_graph_index;
-}
-
-//______________________________________________________________________
 //
 //______________________________________________________________________
 
 void RMCRT_Test::initialize (const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
-                             DataWarehouse*,
-                             DataWarehouse* new_dw)
+                                   DataWarehouse*,
+                                   DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   
@@ -943,13 +928,33 @@ void RMCRT_Test::sched_initProperties( const LevelP& finestLevel,
 void RMCRT_Test::computeStableTimeStep (const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* /*matls*/,
-                                        DataWarehouse* /*old_dw*/,
+                                        DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
+  // This method is called at both initialization and otherwise. At
+  // initialization the old DW will not exist so get the value from
+  // the new DW.  Otherwise for a normal time step get the time step
+  // from the old DW.
+  timeStep_vartype timeStep(0);
+
+  if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
+    old_dw->get(timeStep, VarLabel::find(timeStep_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
+    new_dw->get(timeStep, VarLabel::find(timeStep_name) );
+
   const Level* level = getLevel(patches);
   double delt = level->dCell().x();
 
   new_dw->put(delt_vartype(delt), getDelTLabel(), level);
+
+  // Setup the correct task graph for execution for the NEXT time
+  // step. Also do radiation solve on time step 1.
+  int task_graph_index =
+    ((((timeStep+1) % d_radCalc_freq == 0) || ((timeStep+1) == 1)) ?
+     Uintah::RMCRTCommon::TG_RMCRT :
+     Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+  
+  setTaskGraphIndex( task_graph_index );
 }
 
 //______________________________________________________________________
