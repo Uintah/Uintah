@@ -339,8 +339,8 @@ namespace Uintah{
               db_model->getWithDefault( "sb_ash_composition", sb_ash_comp, default_comp);
               db_model->getWithDefault( "enamel_deposit_porosity", en_porosity, 0.6);
               db_model->getWithDefault( "sb_deposit_porosity", sb_porosity, 0.6);
-	            //T_mid = coal_helper.get_coal_db().T_porosity;
-	            T_fluid = coal_helper.get_coal_db().T_fluid;
+                    //T_mid = coal_helper.get_coal_db().T_porosity;
+                    T_fluid = coal_helper.get_coal_db().T_fluid;
               if (en_ash_comp.size() != 8 || sb_ash_comp.size() != 8){
                 throw InvalidValue("Error ash_compositions (enamel_ash_composition and sb_ash_composition) must have 8 entries: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. ", __FILE__, __LINE__);
               }
@@ -575,7 +575,7 @@ namespace Uintah{
               std::string ash_type;
               db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
               db_model->getWithDefault( "coordination_number", CN, 2);
-	            T_fluid = coal_helper.get_coal_db().T_fluid;
+                    T_fluid = coal_helper.get_coal_db().T_fluid;
               if (ash_type == "indonesian"){
                 a_sv = -1.47871222e+04;
                 b_sv = -1.02820241e+00;
@@ -703,7 +703,7 @@ namespace Uintah{
                 (pokluda[0]*std::exp(pokluda[1]*x_time) + pokluda[2]*std::exp(pokluda[3]*x_time));
               double x_r = std::pow(std::max(d_eff - c_xr,0.0)/a_xr, 1.0/b_xr);
               d_eff = d_eff*Dp + (std::pow(CN,1./3.) - std::pow(2,1./3.))*x_r*Dp;// linear scale d_eff with respect to x_r
-	      d_eff = std::max(5e-6,std::min(300e-6,d_eff)); // limit size to the bounds of the regression
+              d_eff = std::max(5e-6,std::min(300e-6,d_eff)); // limit size to the bounds of the regression
               // as a function of the coordination number.
               // mie emissivity as a function of temperature and effective particle size
               // rational quardratice fit: y = (a1+a2*x1+a3*x2+a4*x1^2+a5*x1*x2+a6*x2^2)/(b1+b2*x1+b3*x2+b4*x1^2+b5*x1*x2+b6*x2^2)
@@ -724,7 +724,7 @@ namespace Uintah{
               e = (T>=T_fluid) ? ef :  // slagging is set to fresnel emissivity.
                 (Dp<=min_p_diam) ? C : // if not slagging than use wall emissivity if flux is small.
                 std::min(ef,e);  // if flux is positive you predicted emissivity.
-	      e = std::max(0.0,std::min(1.0,e)); // emissivity safety
+              e = std::max(0.0,std::min(1.0,e)); // emissivity safety
             }
             ~pokluda_e(){}
           };
@@ -750,15 +750,15 @@ namespace Uintah{
               }
               std::string ash_type;
               db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
-	            T_fluid = coal_helper.get_coal_db().T_fluid;
-	            double A = coal_helper.get_coal_db().visc_pre_exponential_factor;
+                    T_fluid = coal_helper.get_coal_db().T_fluid;
+                    double A = coal_helper.get_coal_db().visc_pre_exponential_factor;
               lnA = std::log(A);
-	            B = coal_helper.get_coal_db().visc_activation_energy;
+                    B = coal_helper.get_coal_db().visc_activation_energy;
               if (A==-999 || B==-999){
                 throw ProblemSetupException("Error: PokludaVisc requires specification of ash viscosity parameters.", __FILE__, __LINE__);
               }
               if (ash_type == "indonesian"){
-		emiss_coeff = {0.42210472, -0.29718513, 0.52847460, -0.66785780, 0.36898482, -0.13952110, -0.00351870, 0.07376239, 0.20998621, -0.26403539, 0.07380761, 0.08677416, -0.05871292, 0.08181048, -0.07999015, 0.02236591, -0.03759233, 0.04154652, -0.03584659, 0.01244171, 0.00649477, -0.00330030, 0.00378924, 0.01575434, -0.00453514, 0.56640113, -0.00770423, -0.07205439};                
+                emiss_coeff = {0.42210472, -0.29718513, 0.52847460, -0.66785780, 0.36898482, -0.13952110, -0.00351870, 0.07376239, 0.20998621, -0.26403539, 0.07380761, 0.08677416, -0.05871292, 0.08181048, -0.07999015, 0.02236591, -0.03759233, 0.04154652, -0.03584659, 0.01244171, 0.00649477, -0.00330030, 0.00378924, 0.01575434, -0.00453514, 0.56640113, -0.00770423, -0.07205439};                
                 xmean = {9.50000000e+02, 2.90527950e-04};
                 xstd = {4.15013986e+02, 2.96789673e-04};
                 ymean = 6.90652085e-01;
@@ -842,7 +842,7 @@ namespace Uintah{
               // for each size compute the effective size and the effective emissivity
               double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T);
               for(int env = 0; env != Nenv; env++) {
-		            //// MILO
+                            //// MILO
                 //T = 1535.09;
                 //tau = 1485.441;
                 //Dp_vec[0] = 1.46777e-05;
@@ -860,7 +860,7 @@ namespace Uintah{
                 surface_tension = surfT[0] + surfT[1]*T; // kg / s^2 
                 log10tau = std::log10(tau*surface_tension/visc/Dp_vec[env]); // non-dimensionalized time
                 d_eff =  Dp_vec[env] + 0.5*(Dp_vec[env]*std::cbrt(6.)-Dp_vec[env]) + 0.5*(Dp_vec[env]*std::cbrt(6.)-Dp_vec[env])*std::erf((log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1]));
-		            d_eff = std::max(5e-6,std::min(400e-6,d_eff)); // limit size to the bounds of the regression
+                            d_eff = std::max(5e-6,std::min(400e-6,d_eff)); // limit size to the bounds of the regression
                 //std::cout << "surface_tension " << surface_tension << std::endl;
                 //std::cout << "visc " << visc << std::endl;
                 //std::cout << "T: " << T << " tau: " << tau << " Dp_vec[env]: " << Dp_vec[env] << " d_eff: " << d_eff << std::endl; 
@@ -875,7 +875,7 @@ namespace Uintah{
                 double e_i = e_sc_c*ystd + ymean; 
                 e_i = (tau>=8640000.) ? C : // if no deposition use wall emissivity. This corresponds to a replacement time-scale of 100 days.
                     (T>=T_fluid || d_eff >= 400e-6) ? ef :  // if slagging use fresnel emissivity.
-	                  std::min(ef,e_i);  // predicted emissivity.
+                          std::min(ef,e_i);  // predicted emissivity.
                 e += (vdot[env]+1e-100)*e_i; // sum in this environments emissivity weighted by flow rate
                 //std::cout << "env " << env << std::endl;
                 //std::cout << "e_i: " << e_i << std::endl; 
@@ -884,7 +884,7 @@ namespace Uintah{
               e = e/vdot_sum;
               //std::cout << "T_fluid: " << T_fluid << std::endl;
               //std::cout << "d_eff: " << d_eff << std::endl;
-	            e = std::max(0.0,std::min(1.0,e)); // emissivity safety
+                    e = std::max(0.0,std::min(1.0,e)); // emissivity safety
               //std::cout << "e after clipping: " << e << std::endl; 
             }
             ~pokluda_v(){}
