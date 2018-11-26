@@ -1225,8 +1225,6 @@ ExplicitSolver::computeTaskGraphIndex(const ProcessorGroup*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
-  DOUT( true, "****************** " << __FUNCTION__ );
-
   // This method is called at both initialization and otherwise. At
   // initialization the old DW will not exist so get the value from
   // the new DW.  Otherwise for a normal time step get the time step
