@@ -272,7 +272,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
           // Check to see if the dynamic frequency radiation solve
           // should be used.
-          if(rad_src_ps->findBlock("use_dynamic_frequency") != nullptr) {
+          if(1 < d_rad_calc_frequency &&
+             rad_src_ps->findBlock("use_dynamic_frequency") != nullptr) {
             d_dynamicSolveFrequency = true;
           }
           

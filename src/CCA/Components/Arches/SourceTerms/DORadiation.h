@@ -173,6 +173,8 @@ private:
   bool _dynamicSolveFrequency{false};  /// turns on the radiation profiler, tool to identifying if radiation is being resolved
   const std::string dynamicSolveCountPatch_name {"dynamicSolveCountPatch"};
   const std::string dynamicSolveCountRank_name  {"dynamicSolveCountRank"};
+
+  const std::string performWallCalculation_name  {"performWallCalculation"};
   
   std::vector<std::vector<double> > _xyzPatch_boundary;/// all patch boundaries (approximate), needed for multi-box weeps, 
 
@@ -242,6 +244,7 @@ private:
 
   const VarLabel* _dynamicSolveCountPatchLabel;
   const VarLabel* _dynamicSolveCountRankLabel;
+  const VarLabel* _performWallCalculationLabel;
 
   int last_rad_solve_timestep={0};
 

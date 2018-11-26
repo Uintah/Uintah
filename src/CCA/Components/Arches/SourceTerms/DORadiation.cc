@@ -96,7 +96,8 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "calc_frequency", _radiation_calc_freq, 3 );
 
   // Check to see if the dynamic frequency radiation solve should be used. 
-  if(db->findBlock("use_dynamic_frequency") != nullptr) {
+  if(1 < _radiation_calc_freq &&
+     db->findBlock("use_dynamic_frequency") != nullptr) {
     db->getWithDefault( "use_dynamic_frequency", _nsteps_calc_freq, 25 );
     _dynamicSolveFrequency = true;
 
@@ -512,7 +513,9 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     
     tsk4->computes( _dynamicSolveCountPatchLabel );
     tsk4->computes( _dynamicSolveCountRankLabel );
-
+#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
+    tsk4->computes( _performWallCalculationLabel );
+#endif
     sched->addTask(tsk4, level->eachPatch(), _materialManager->allMaterials( "Arches" ), Rad_TG);
   }
 }
@@ -689,7 +692,14 @@ DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
     m_arches->addReductionVariable( dynamicSolveCountRank_name,
                                     min_vartype::getTypeDescription(), true );
 
-    _dynamicSolveCountRankLabel = VarLabel::find(dynamicSolveCountRank_name);
+    _dynamicSolveCountRankLabel  = VarLabel::find(dynamicSolveCountRank_name);
+
+#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
+    m_arches->addReductionVariable( performWallCalculation_name,
+                                    bool_or_vartype::getTypeDescription(), true );
+    
+    _performWallCalculationLabel = VarLabel::find(performWallCalculation_name);
+#endif
   }
 
   string taskname = "DORadiation::initialize";
@@ -772,13 +782,21 @@ DORadiation::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
     m_arches->addReductionVariable( dynamicSolveCountRank_name,
                                     min_vartype::getTypeDescription(), true );
 
-    _dynamicSolveCountRankLabel = VarLabel::find(dynamicSolveCountRank_name);
+    _dynamicSolveCountRankLabel  = VarLabel::find(dynamicSolveCountRank_name);
 
+#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
+    m_arches->addReductionVariable( performWallCalculation_name,
+                                    bool_or_vartype::getTypeDescription(), true );
+    
+    _performWallCalculationLabel = VarLabel::find(performWallCalculation_name);
+#endif
     string taskname = "DORadiation::restartInitialize";
     Task* tsk = scinew Task(taskname, this, &DORadiation::restartInitialize);
 
-    tsk->requires( Task::NewDW, _dynamicSolveCountRankLabel, Ghost::None, 0 );
-    
+    tsk->requires( Task::NewDW, _dynamicSolveCountRankLabel,  Ghost::None, 0 );
+#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
+    tsk->requires( Task::NewDW, _performWallCalculationLabel, Ghost::None, 0 );
+#endif    
     sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
   }
@@ -795,6 +813,9 @@ DORadiation::restartInitialize( const ProcessorGroup* pc,
                                 DataWarehouse* new_dw )
 {
   const Patch *patch = nullptr;
+
+  bool radiation = false;
+  bool wall      = false;
   
   // Make sure the reduction variable exists - it should and it will
   // be the same across all ranks.
@@ -802,9 +823,26 @@ DORadiation::restartInitialize( const ProcessorGroup* pc,
     min_vartype var;
     new_dw->get( var, _dynamicSolveCountRankLabel );
 
-    // Set the task graph that needs to be used.
-    m_arches->setTaskGraphIndex( var <= 1 );
+    radiation = (var <= 1);
   }
+  
+#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
+  // Make sure the reduction variable exists - it should and it will
+  // be the same across all ranks.
+  if (new_dw->exists(_performWallCalculationLabel, -1, patch)) {
+    bool_or_vartype var;
+    new_dw->get( var, _performWallCalculationLabel );
+
+    wall = var;
+  }
+#endif
+  int tg = radiation + (wall << 1);
+
+  // DOUT( true, "*************** Radiation " << radiation << " wall " << wall
+  //    << " should task graph " << tg << " but using " << radiation );
+  
+  // Set the task graph that needs to be used.
+  m_arches->setTaskGraphIndex( radiation );
 }
 
 //---------------------------------------------------------------------------
@@ -1304,6 +1342,11 @@ DORadiation::profileDynamicRadiation( const ProcessorGroup* pc,
       }
     }
   }
+
+#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
+  // Performing radiation so a wall calculation is needed next.
+  new_dw->put( bool_or_vartype(true), _performWallCalculationLabel );
+#endif  
 }
 
 
@@ -1415,15 +1458,38 @@ DORadiation::checkReductionVars( const ProcessorGroup * pg,
 {
   // Calculate the task graph index to be used on the NEXT time step.
   if(_dynamicSolveFrequency) {
-  
+
+    bool radiation = false;
+    bool wall      = false;
+
     // Check to see if the DORadiation is using the dynamic solve frequency.
     if( m_arches->activeReductionVariable( dynamicSolveCountRank_name ) ) {
       // If the variable is not benign then at least one rank set the value.
       // The bengin value is realy large so this check is somewhat moot.
       if( !m_arches->isBenignReductionVariable( dynamicSolveCountRank_name ) )
-        m_arches->setTaskGraphIndex( m_arches->getReductionVariable( dynamicSolveCountRank_name ) <= 1 );
-      else
-        m_arches->setTaskGraphIndex( 0 );
+
+        radiation =
+          (m_arches->getReductionVariable( dynamicSolveCountRank_name ) <= 1);
     }
+
+#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
+    // Check to see if the DORadiation is using the perform wall calulation.
+    if( m_arches->activeReductionVariable( performWallCalculation_name ) ) {
+      // If the variable is not benign then at least one rank set the value.
+      // The bengin value is realy large so this check is somewhat moot.
+      if( !m_arches->isBenignReductionVariable( performWallCalculation_name ) )
+
+        wall =
+          (m_arches->getReductionVariable( performWallCalculation_name ) <= 1);
+    }
+#endif
+    
+    int tg = radiation + (wall << 1);
+
+    // DOUT( true, "*************** Radiation " << radiation << " wall " << wall
+    //    << " should task graph " << tg << " but using " << radiation );
+    
+    // Set the task graph that needs to be used.
+    m_arches->setTaskGraphIndex( radiation );
   }
 }
