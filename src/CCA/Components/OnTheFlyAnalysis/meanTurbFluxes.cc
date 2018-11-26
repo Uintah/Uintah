@@ -71,6 +71,8 @@ meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
   d_matl_set  = nullptr;
   d_zero_matl = nullptr;
 
+  d_monitorCell = IntVector(0,0,0);
+
   d_planeAve_1 = scinew planeAverage( myworld, materialManager, module_spec, true);
   d_planeAve_2 = scinew planeAverage( myworld, materialManager, module_spec, true);
 
@@ -124,6 +126,8 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
   m_module_spec->require("samplingFrequency", d_writeFreq);
   m_module_spec->require("timeStart",         d_startTime);
   m_module_spec->require("timeStop",          d_stopTime);
+  // debugging
+  m_module_spec->get(    "monitorCell",      d_monitorCell);
 
   ProblemSpecP vars_ps = m_module_spec->findBlock("Variables");
   if (!vars_ps){
@@ -200,8 +204,6 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
   //__________________________________
   //  Now loop over all the variables to be analyzed
 
-//  std::vector< std::shared_ptr< planarVarBase >  >planarVars;
-
   for( ProblemSpecP var_spec = vars_ps->findBlock( "analyze" ); var_spec != nullptr; var_spec = var_spec->findNextBlock( "analyze" ) ) {
 
     var_spec->getAttributes( attribute );
@@ -232,7 +234,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     }
 
     //__________________________________
-    //define intermdiate variable label names
+    //define intermediate quantity label names
     const TypeDescription * td_D   = CCVariable<double>::getTypeDescription();
     const TypeDescription * td_V   = CCVariable<Vector>::getTypeDescription();
     VarLabel* primeLabel     = VarLabel::create( labelName + "_prime",    td_D );        // Q'
@@ -277,16 +279,18 @@ void meanTurbFluxes::scheduleInitialize(SchedulerP   & sched,
                                       const LevelP & level)
 {
   printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::scheduleInitialize");
-//  planeAverage::scheduleInitialize( sched, level);
+  
+  d_planeAve_1->scheduleInitialize( sched, level);
+
+
+
+
 #if 0
-
-
   Task* t = scinew Task("meanTurbFluxes::initialize",
                   this, &meanTurbFluxes::initialize);
 
   t->setType( Task::OncePerProc );
   t->computes(d_lb->lastCompTimeLabel );
-  t->computes(d_lb->fileVarsStructLabel, d_zero_matl);
 
   const PatchSet * perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
   sched->addTask(t, perProcPatches,  d_matl_set);
@@ -319,16 +323,15 @@ void meanTurbFluxes::scheduleRestartInitialize(SchedulerP   & sched,
 {
   printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::scheduleRestartInitialize");
 
-//  planeAverage::scheduleRestartInitialize( sched, level);
+  d_planeAve_1->scheduleRestartInitialize( sched, level);
+  
 
 #if 0
   Task* t = scinew Task("meanTurbFluxes::initialize",
                   this, &meanTurbFluxes::initialize);
 
-
   t->setType( Task::OncePerProc );
   t->computes(d_lb->lastCompTimeLabel );
-  t->computes(d_lb->fileVarsStructLabel, d_zero_matl);
 
   const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
 
@@ -346,13 +349,21 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
                                         const LevelP & level)
 {
   printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::scheduleDoAnalysis");
+  
+  //__________________________________
+  //  Not all ranks own patches, need custom MPI communicator
+  const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
+  d_planeAve_1->createMPICommunicator( perProcPatches );
+  
+  d_planeAve_1->sched_computePlanarAve( sched, level );
+  
+  d_planeAve_1->sched_resetProgressVar( sched, level );
+  
+  d_planeAve_1->sched_updateTimeVar(    sched, level );
 
   sched_TurbFluctuations( sched, level );
   
   sched_TurbFluxes(       sched, level );
-  
-//  planeAverage::scheduleDoAnalysis( sched, level );
-
 }
 
 //______________________________________________________________________
@@ -404,6 +415,8 @@ void meanTurbFluxes::calc_TurbFluctuations(const ProcessorGroup  * ,
                                            DataWarehouse        * ,
                                            DataWarehouse        * new_dw)
 {
+  
+  
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::calc_TurbFluctuations");
@@ -433,26 +446,38 @@ void meanTurbFluxes::calc_Q_prime( DataWarehouse         * new_dw,
   CCVariable< T > Qprime;
   new_dw->allocateAndPut( Qprime, Q->primeLabel, matl, patch );
 
-  T Qbar = T(0);           // Need to add this!
+  const Level* level = patch->getLevel();
+  const int L_indx   = level->getIndex();
+  std::vector< T > Qbar;
+  
+  d_planeAve_1->getPlanarAve< T >( L_indx, Q->label, Qbar );
+  
+  IntVector lo;
+  IntVector hi;
+  GridIterator iter=patch->getCellIterator();
+  d_planeAve_1->planeIterator( iter, lo, hi );
 
-  //__________________________________
-  //
-  for (CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-    IntVector c = *iter;
-    Qprime[c] = Qlocal[c] - Qbar;
-
-#if 0
-    //__________________________________
-    //  debugging
-    if ( c == d_monitorCell ){
-      cout << "  stats:  " << d_monitorCell <<  setw(10)<< Q.Label->getName()
-           <<"\t Q_var: " << me
-           <<"\t Qprime: "  << Qprime[c] << endl;
+  for ( auto z = lo.z(); z<hi.z(); z++ ) {          // This is the loop over all planes for this patch
+    for ( auto y = lo.y(); y<hi.y(); y++ ) {        // cells in the plane
+      for ( auto x = lo.x(); x<hi.x(); x++ ) {
+      
+        IntVector c(x,y,z);
+      
+        c = d_planeAve_1->transformCellIndex(x, y, z);
+      
+        Qprime[c] = Qlocal[c] - Qbar[z];
+        
+        //__________________________________
+        //  debugging
+        if ( c == d_monitorCell && dbg_OTF_MTF.active() ){
+          cout << "  calc_Q_prime:  " << d_monitorCell <<  setw(10)<< Q->label->getName()
+               <<"\t Q_bar: " << Qbar[z]
+               <<"\t Qprime: "  << Qprime[c] << " Qlocal: " << Qlocal[c] << endl;
+        }
+      }
     }
-#endif
   }
 }
-
 
 //______________________________________________________________________
 /*

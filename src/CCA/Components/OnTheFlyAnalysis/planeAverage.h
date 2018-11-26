@@ -97,8 +97,10 @@ ______________________________________________________________________*/
     enum weightingType { NCELLS, MASS, NONE };
 
     static MPI_Comm d_my_MPI_COMM_WORLD;
+    
 
-
+  //______________________________________________________________________
+  //
   private:
 
     //__________________________________
@@ -207,11 +209,14 @@ ______________________________________________________________________*/
 
         // virtual templated functions are not allowed in C++11
         // instantiate the various types
-        virtual  void getPlanarSum( std::vector<double>& ave ){}
-        virtual  void getPlanarSum( std::vector<Vector>& ave ){}
+        virtual void getPlanarAve( std::vector<double>& ave ){}
+        virtual void getPlanarAve( std::vector<Vector>& ave ){}
 
-        virtual  void setPlanarSum( std::vector<double> & ave ){}
-        virtual  void setPlanarSum( std::vector<Vector> & ave ){}
+        virtual  void getPlanarSum( std::vector<double>& sum ){}
+        virtual  void getPlanarSum( std::vector<Vector>& sum ){}
+
+        virtual  void setPlanarSum( std::vector<double> & sum ){}
+        virtual  void setPlanarSum( std::vector<Vector> & sum ){}
 
         virtual  void zero_all_vars(){}
 
@@ -231,6 +236,7 @@ ______________________________________________________________________*/
 
       private:
         std::vector<double> sum;
+        std::vector<double> ave;
       public:
 
         //__________________________________
@@ -251,6 +257,24 @@ ______________________________________________________________________*/
         //__________________________________
         void getPlanarSum( std::vector<double> & me ) { me = sum; }
         void setPlanarSum( std::vector<double> & me ) { sum = me; }
+
+        //__________________________________
+        void getPlanarAve( std::vector<double> & ave ) 
+        {
+          ave.resize( nPlanes, -9 );
+          
+          for ( unsigned i =0; i< sum.size(); i++ ){
+            if( weightType == NCELLS ){
+              ave[i] = sum[i]/nCells[i];
+            }
+            else if( weightType == MASS ){
+              ave[i] = sum[i]/weight[i];
+            }
+            else{   // weightType == NONE
+              ave[i] = sum[i];
+            }
+          }
+        }
 
         //__________________________________
         void zero_all_vars()
@@ -333,6 +357,7 @@ ______________________________________________________________________*/
       //__________________________________
       private:
         std::vector<Vector> sum;
+        std::vector<Vector> ave;
 
       public:
 
@@ -354,6 +379,24 @@ ______________________________________________________________________*/
         void getPlanarSum( std::vector<Vector> & me ) { me = sum; }
         void setPlanarSum( std::vector<Vector> & me ) { sum = me; }
 
+        //__________________________________
+        void getPlanarAve( std::vector<Vector> & ave )
+        {
+          ave.resize( nPlanes, Vector(-9) );
+          
+          for ( unsigned i =0; i< sum.size(); i++ ){
+            if( weightType == NCELLS ){
+              ave[i] = sum[i]/Vector( nCells[i] );
+            }
+            else if( weightType == MASS ){
+              ave[i] = sum[i]/Vector( weight[i] );
+            }
+            else{   // weightType == NONE
+              ave[i] = sum[i];
+            }
+          }
+        }        
+        
         //__________________________________
         void zero_all_vars()
         {
@@ -429,7 +472,6 @@ ______________________________________________________________________*/
 
     //______________________________________________________________________
     //
-    //
   public:
     void sched_computePlanarAve( SchedulerP   & sched,
                                  const LevelP & level );
@@ -447,6 +489,35 @@ ______________________________________________________________________*/
     void createMPICommunicator(const PatchSet* perProcPatches);
 
 
+    template< class T >
+    void getPlanarAve( const int        L_indx,
+                       VarLabel *       label,
+                       std::vector<T> & ave )
+    {
+      std::vector< std::shared_ptr< planarVarBase > > planarVars = d_allLevels_planarVars[L_indx];
+
+      // find the correct label and return it's planar average
+      for (unsigned int i =0 ; i < planarVars.size(); i++) {
+
+        VarLabel* pv_label = planarVars[i]->label;
+        if( label == pv_label ){
+          planarVars[i]->getPlanarAve( ave );
+          break;
+        }
+      }
+    }
+
+
+    IntVector transformCellIndex(const int i,
+                            const int j,
+                            const int k);
+                            
+    void planeIterator( const GridIterator& patchIter,
+                        IntVector & lo,
+                        IntVector & hi );
+
+  //______________________________________________________________________
+  //
   private:
     void initialize(const ProcessorGroup *,
                     const PatchSubset    * patches,
@@ -515,8 +586,6 @@ ______________________________________________________________________*/
                           DataWarehouse        *,
                           DataWarehouse        *);
 
-
-
     void createFile(std::string & filename,
                     FILE*       & fp,
                     std::string & levelIndex);
@@ -525,19 +594,13 @@ ______________________________________________________________________*/
                          const std::string & rootPath,
                          std::string       & path );
 
-    IntVector transformCellIndex(const int i,
-                            const int j,
-                            const int k);
+
 
     bool isItTime( DataWarehouse * old_dw);
 
     bool isRightLevel( const int myLevel,
                        const int L_indx,
                        const LevelP& level);
-
-    void planeIterator( const GridIterator& patchIter,
-                        IntVector & lo,
-                        IntVector & hi );
 
     // general labels
     class planeAverageLabel {

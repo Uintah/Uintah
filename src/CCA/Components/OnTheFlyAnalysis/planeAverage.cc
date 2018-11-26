@@ -62,7 +62,6 @@ using namespace std;
 //  setenv SCI_DEBUG "planeAverage:+"
 Dout dbg_OTF_PA("planeAverage", "OnTheFlyAnalysis", "planeAverage debug stream", false);
 
-
 MPI_Comm planeAverage::d_my_MPI_COMM_WORLD;
 
 //______________________________________________________________________
