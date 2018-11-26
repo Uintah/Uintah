@@ -106,7 +106,6 @@ namespace Uintah{
       double _k_ash_uncertain;
       int _Nenv;
       bool do_coal_region;
-      int _calc_freq;                    ///< Wall heat transfer model calculation frequency
       std::string _T_label_name;         ///< Temperature label name
       MaterialManagerP& _materialManager;
       int m_matl_index;                   ///< Material index

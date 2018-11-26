@@ -115,10 +115,8 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       src_db->getAttribute("type", type);
 
       if ( type == "do_radiation"  || type == "rmcrt_radiation" ){
-        src_db->getWithDefault("calc_frequency", _calc_freq,3);  //default matches the default of the DOradiation solve
         found_radiation_model = true;
       }
-
     }
 
   } else {
