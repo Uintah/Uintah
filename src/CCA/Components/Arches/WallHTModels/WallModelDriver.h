@@ -28,6 +28,7 @@ namespace Uintah{
   static DebugStream cout_wmd_dbg("WALL_MODEL_DRIVER",false);
 
   class VarLabel;
+  class ApplicationInterface;
 
   class WallModelDriver {
 
@@ -142,6 +143,8 @@ namespace Uintah{
       const VarLabel* _thermal_cond_sb_s_label;
       const VarLabel* _thermal_cond_sb_l_label;
 
+      ApplicationInterface* m_arches{nullptr};
+    
       void doWallHT( const ProcessorGroup* my_world,
           const PatchSubset* patches,
           const MaterialSubset* matls,

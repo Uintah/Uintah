@@ -202,6 +202,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
 void
 WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const int time_subset )
 {
+  m_arches = sched->getApplication();
 
   Task* task = scinew Task( "WallModelDriver::doWallHT", this,
                            &WallModelDriver::doWallHT, time_subset );
@@ -295,7 +296,6 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   }
 
-  task->requires( Task::OldDW, _timeStepLabel);
   task->requires( Task::OldDW, _simulationTimeLabel);
   task->requires( Task::OldDW, _delTLabel, Ghost::None, 0);
   sched->addTask(task, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
@@ -311,11 +311,6 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
                            DataWarehouse* new_dw,
                            const int time_subset )
 {
-  // int timeStep = _materialManager->getCurrentTopLevelTimeStep();
-
-  timeStep_vartype timeStep;
-  old_dw->get( timeStep, _timeStepLabel );
-
   simTime_vartype simTime;
   old_dw->get( simTime, _simulationTimeLabel );
 
@@ -331,14 +326,18 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     vars.time = simTime;
     vars.delta_t = delT;
 
-    // Note: The local T_copy is necessary because boundary conditions are being applied
-    // in the table lookup to T based on the conditions for the independent variables. These
-    // BCs are being applied regardless of the type of wall temperature model.
+    // Note: The local T_copy is necessary because boundary conditions
+    // are being applied in the table lookup to T based on the
+    // conditions for the independent variables. These BCs are being
+    // applied regardless of the type of wall temperature model.
 
-    if( time_subset == 0 && timeStep % _calc_freq == 0 ){
+    // If the task graph index is one then radiation is being
+    // performed so also perform the wall calculation.
+    bool wall = m_arches->getTaskGraphIndex();
 
-      // actually compute the wall HT model
+    if( time_subset == 0 && wall ) {
 
+      // Actually compute the wall HT model
       old_dw->get( vars.T_old      , _T_label      , m_matl_index , patch , Ghost::None , 0 );
       old_dw->get( vars.cc_vel     , _cc_vel_label , m_matl_index , patch , Ghost::None , 0 );
       old_dw->get( vars.T_real_old , VarLabel::find("temperature"), m_matl_index, patch, Ghost::None, 0 );
@@ -422,7 +421,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       //here for saftey and simplicity. Maybe rethink this if efficiency becomes an issue.
       vars.T_copy.copyData( vars.T );
 
-    } else if ( time_subset == 0 && timeStep % _calc_freq != 0 ) {
+    } else if ( time_subset == 0 && !wall ) {
 
       // no ht solve this step:
       // 1) copy T_old (from OldDW) -> T   (to preserve BCs)
@@ -1405,6 +1404,7 @@ WallModelDriver::CoalRegionHT::newton_solve(double &TW_new, double &T_shell, dou
     f1    = - TW_new + T_shell + net_q * R_tot;
   }
 }
+
 void WallModelDriver::CoalRegionHT::urbain_viscosity(double &visc, double &T, std::vector<double> &x_ash)
 {  // Urbain model 1981
   //0      1       2        3       4        5       6      7
@@ -1433,6 +1433,4 @@ void WallModelDriver::CoalRegionHT::urbain_viscosity(double &visc, double &T, st
   const double B=B0+B1*N+B2*N*N+B3*N*N*N;
   const double A=std::exp(-(0.2693*B+11.6725));
   visc=0.1*A*T*std::exp((B*1000)/T);
-
-
 };
