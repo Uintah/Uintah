@@ -513,8 +513,8 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     
     tsk4->computes( _dynamicSolveCountPatchLabel );
     tsk4->computes( _dynamicSolveCountRankLabel );
-#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
-    tsk4->computes( _performWallCalculationLabel );
+#ifdef EXAMPLE_OF_A_SECOND_TRIGGER_VARIABLE_FOR_THE_TASK_GRAPH_INDEX
+    tsk4->computes( _performedRadiationLabel );
 #endif
     sched->addTask(tsk4, level->eachPatch(), _materialManager->allMaterials( "Arches" ), Rad_TG);
   }
@@ -694,11 +694,11 @@ DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
 
     _dynamicSolveCountRankLabel  = VarLabel::find(dynamicSolveCountRank_name);
 
-#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
-    m_arches->addReductionVariable( performWallCalculation_name,
+#ifdef EXAMPLE_OF_A_SECOND_TRIGGER_VARIABLE_FOR_THE_TASK_GRAPH_INDEX
+    m_arches->addReductionVariable( performedRadiation_name,
                                     bool_or_vartype::getTypeDescription(), true );
     
-    _performWallCalculationLabel = VarLabel::find(performWallCalculation_name);
+    _performedRadiationLabel = VarLabel::find(performedRadiation_name);
 #endif
   }
 
@@ -784,19 +784,20 @@ DORadiation::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 
     _dynamicSolveCountRankLabel  = VarLabel::find(dynamicSolveCountRank_name);
 
-#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
-    m_arches->addReductionVariable( performWallCalculation_name,
+#ifdef EXAMPLE_OF_A_SECOND_TRIGGER_VARIABLE_FOR_THE_TASK_GRAPH_INDEX
+    m_arches->addReductionVariable( performedRadiation_name,
                                     bool_or_vartype::getTypeDescription(), true );
     
-    _performWallCalculationLabel = VarLabel::find(performWallCalculation_name);
+    _performedRadiationLabel = VarLabel::find(performedRadiation_name);
 #endif
     string taskname = "DORadiation::restartInitialize";
     Task* tsk = scinew Task(taskname, this, &DORadiation::restartInitialize);
 
-    tsk->requires( Task::NewDW, _dynamicSolveCountRankLabel,  Ghost::None, 0 );
-#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
-    tsk->requires( Task::NewDW, _performWallCalculationLabel, Ghost::None, 0 );
-#endif    
+    tsk->requires( Task::NewDW, VarLabel::find(simTime_name),  Ghost::None, 0 );
+    tsk->requires( Task::NewDW, _dynamicSolveCountRankLabel, Ghost::None, 0 );
+#ifdef EXAMPLE_OF_A_SECOND_TRIGGER_VARIABLE_FOR_THE_TASK_GRAPH_INDEX
+    tsk->requires( Task::NewDW, _performedRadiationLabel, Ghost::None, 0 );
+#endif
     sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
   }
@@ -812,37 +813,50 @@ DORadiation::restartInitialize( const ProcessorGroup* pc,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw )
 {
+  // This method is called at both initialization and otherwise. At
+  // initialization the old DW will not exist so get the value from
+  // the new DW.  Otherwise for a normal time step get the time step
+  // from the old DW.
+  simTime_vartype simTime(0);
+
+  if( old_dw && old_dw->exists( VarLabel::find(simTime_name) ) )
+    old_dw->get(simTime, VarLabel::find(simTime_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(simTime_name) ) )
+    new_dw->get(simTime, VarLabel::find(simTime_name) );
+
   const Patch *patch = nullptr;
 
-  bool radiation = false;
-  bool wall      = false;
-  
   // Make sure the reduction variable exists - it should and it will
   // be the same across all ranks.
+  bool radiation_next_time_step = false;
+
   if (new_dw->exists(_dynamicSolveCountRankLabel, -1, patch)) {
     min_vartype var;
     new_dw->get( var, _dynamicSolveCountRankLabel );
 
-    radiation = (var <= 1);
+    // Derek change this to be the sim time.
+    radiation_next_time_step = (var <= 1);
   }
   
-#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
+#ifdef EXAMPLE_OF_A_SECOND_TRIGGER_VARIABLE_FOR_THE_TASK_GRAPH_INDEX
+  // Check to see if the DORadiation is using the post radiation calulation.
+  bool radiation_last_time_step = false;
+
   // Make sure the reduction variable exists - it should and it will
   // be the same across all ranks.
-  if (new_dw->exists(_performWallCalculationLabel, -1, patch)) {
+  if (new_dw->exists(_performedRadiationLabel, -1, patch)) {
     bool_or_vartype var;
-    new_dw->get( var, _performWallCalculationLabel );
+    new_dw->get( var, _performedRadiationLabel );
 
-    wall = var;
+    radiation_last_time_step = var;
   }
-#endif
-  int tg = radiation + (wall << 1);
 
-  // DOUT( true, "*************** Radiation " << radiation << " wall " << wall
-  //    << " should task graph " << tg << " but using " << radiation );
-  
+  // Task graph index based on two triggers.
+  int tg_index = radiation_next_time_step + (radiation_last_time_step << 1);
+#endif
+
   // Set the task graph that needs to be used.
-  m_arches->setTaskGraphIndex( radiation );
+  m_arches->setTaskGraphIndex( radiation_next_time_step );
 }
 
 //---------------------------------------------------------------------------
@@ -1343,9 +1357,9 @@ DORadiation::profileDynamicRadiation( const ProcessorGroup* pc,
     }
   }
 
-#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
+#ifdef EXAMPLE_OF_A_SECOND_TRIGGER_VARIABLE_FOR_THE_TASK_GRAPH_INDEX
   // Performing radiation so a wall calculation is needed next.
-  new_dw->put( bool_or_vartype(true), _performWallCalculationLabel );
+  new_dw->put( bool_or_vartype(true), _performedRadiationLabel );
 #endif  
 }
 
@@ -1418,7 +1432,8 @@ DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
       if (old_dw->exists(_dynamicSolveCountPatchLabel, 0, patch)) {
         old_dw->get( ppVar, _dynamicSolveCountPatchLabel, 0, patch );
       }
-      
+
+      // Derek remove the decrement.
       // Decrement the patch count by one and save the new value.
       ppVar = ppVar - 1;
       new_dw->put( ppVar, _dynamicSolveCountPatchLabel, 0, patch );
@@ -1459,37 +1474,48 @@ DORadiation::checkReductionVars( const ProcessorGroup * pg,
   // Calculate the task graph index to be used on the NEXT time step.
   if(_dynamicSolveFrequency) {
 
-    bool radiation = false;
-    bool wall      = false;
+    // This method is called at both initialization and otherwise. At
+    // initialization the old DW will not exist so get the value from
+    // the new DW.  Otherwise for a normal time step get the time step
+    // from the old DW.
+    simTime_vartype simTime(0);
+
+    if( old_dw && old_dw->exists( VarLabel::find(simTime_name) ) )
+      old_dw->get(simTime, VarLabel::find(simTime_name) );
+    else if( new_dw && new_dw->exists( VarLabel::find(simTime_name) ) )
+      new_dw->get(simTime, VarLabel::find(simTime_name) );
 
     // Check to see if the DORadiation is using the dynamic solve frequency.
+    bool radiation_next_time_step = false;
+
     if( m_arches->activeReductionVariable( dynamicSolveCountRank_name ) ) {
       // If the variable is not benign then at least one rank set the value.
       // The bengin value is realy large so this check is somewhat moot.
       if( !m_arches->isBenignReductionVariable( dynamicSolveCountRank_name ) )
 
-        radiation =
+        // Derek change this to be the sim time.
+        radiation_next_time_step =
           (m_arches->getReductionVariable( dynamicSolveCountRank_name ) <= 1);
     }
 
-#ifdef USE_FOUR_TASKS_GRAPHS_WITH_WALL_CALC_AFTER_RADIATION_CALC    
-    // Check to see if the DORadiation is using the perform wall calulation.
-    if( m_arches->activeReductionVariable( performWallCalculation_name ) ) {
+#ifdef EXAMPLE_OF_A_SECOND_TRIGGER_VARIABLE_FOR_THE_TASK_GRAPH_INDEX
+    // Check to see if the DORadiation is using the post radiation calulation.
+    bool radiation_last_time_step = false;
+
+    if( m_arches->activeReductionVariable( performedRadiation_name ) ) {
       // If the variable is not benign then at least one rank set the value.
       // The bengin value is realy large so this check is somewhat moot.
-      if( !m_arches->isBenignReductionVariable( performWallCalculation_name ) )
+      if( !m_arches->isBenignReductionVariable( performedRadiation_name ) )
 
-        wall =
-          (m_arches->getReductionVariable( performWallCalculation_name ) <= 1);
+        radiation_last_time_step =
+          (m_arches->getReductionVariable( performedRadiation_name ) <= 1);
     }
-#endif
-    
-    int tg = radiation + (wall << 1);
 
-    // DOUT( true, "*************** Radiation " << radiation << " wall " << wall
-    //    << " should task graph " << tg << " but using " << radiation );
-    
+    // Task graph index based on two triggers.
+    int tg_index = radiation_next_time_step + (radiation_last_time_step << 1);
+#endif
+
     // Set the task graph that needs to be used.
-    m_arches->setTaskGraphIndex( radiation );
+    m_arches->setTaskGraphIndex( radiation_next_time_step );
   }
 }

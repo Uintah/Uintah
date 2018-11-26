@@ -42,8 +42,9 @@
 namespace Uintah{
 
   class DORadiationModel; 
-  class ArchesLabel; 
-
+  class ArchesLabel;
+  class ApplicationInterface;
+  
 class DORadiation: public SourceTermBase {
 public: 
 
@@ -174,7 +175,7 @@ private:
   const std::string dynamicSolveCountPatch_name {"dynamicSolveCountPatch"};
   const std::string dynamicSolveCountRank_name  {"dynamicSolveCountRank"};
 
-  const std::string performWallCalculation_name  {"performWallCalculation"};
+  const std::string performedRadiation_name  {"performedRadiation"};
   
   std::vector<std::vector<double> > _xyzPatch_boundary;/// all patch boundaries (approximate), needed for multi-box weeps, 
 
@@ -244,7 +245,7 @@ private:
 
   const VarLabel* _dynamicSolveCountPatchLabel;
   const VarLabel* _dynamicSolveCountRankLabel;
-  const VarLabel* _performWallCalculationLabel;
+  const VarLabel* _performedRadiationLabel;
 
   int last_rad_solve_timestep={0};
 
