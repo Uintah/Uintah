@@ -47,6 +47,7 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/Matrix3.h>
@@ -1068,6 +1069,11 @@ FieldComparator::makeFieldComparator( const Uintah::TypeDescription * td,
       Parallel::exitAll( -1 );
     }
   }
+
+  case Uintah::TypeDescription::PerPatch: {
+    return nullptr;
+  }
+
   default:
     cerr << "FieldComparator::makeFieldComparator: Variable of unsupported type: " << td->getName() << '\n';
     Parallel::exitAll( -1 );
