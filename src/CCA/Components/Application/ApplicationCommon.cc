@@ -1198,7 +1198,7 @@ void ApplicationCommon::setTimeStep( int timeStep )
 {
   m_timeStep = timeStep;
 
-  // Write the time step to the inital DW so apps can get to it when scheduling.
+  // Write the time step to the initial DW so apps can get to it when scheduling.
   m_scheduler->getLastDW()->override(timeStep_vartype(m_timeStep), m_timeStepLabel );
 }
 
@@ -1223,6 +1223,6 @@ void ApplicationCommon::setSimTime( double simTime )
 {
   m_simTime = simTime;
 
-  // Write the time step to the inital DW so apps can get to it when scheduling.
+  // Write the time step to the initial DW so apps can get to it when scheduling.
   m_scheduler->getLastDW()->override(simTime_vartype(m_simTime), m_simulationTimeLabel );
 }

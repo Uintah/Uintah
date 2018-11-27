@@ -110,9 +110,10 @@ namespace {
   using  data_location_monitor = Uintah::CrowdMonitor<data_location_tag>;
   using  task_access_monitor   = Uintah::CrowdMonitor<task_access_tag>;
 
-  Dout  g_foreign_dbg(    "ForeignVariables"   , "OnDemandDataWarehouse", "report when foreign variable is added to DW", false );
-  Dout  g_dw_get_put_dbg( "OnDemandDW"         , "OnDemandDataWarehouse", "report general dbg info for OnDemandDW"     , false );
-  Dout  g_particles_dbg(  "DWParticleExchanges", "OnDemandDataWarehouse", "report MPI particle exchanges (sends/recvs)", false );
+  Dout  g_foreign_dbg(    "ForeignVariables"   , "OnDemandDataWarehouse", "report when foreign variable is added to DW" , false );
+  Dout  g_dw_get_put_dbg( "OnDemandDW"         , "OnDemandDataWarehouse", "report general dbg info for OnDemandDW"      , false );
+  Dout  g_particles_dbg(  "DWParticleExchanges", "OnDemandDataWarehouse", "report MPI particle exchanges (sends/recvs)" , false );
+  Dout  g_check_accesses( "DWCheckTaskAccess"  , "OnDemandDataWarehouse", "report on task DW access checking (DBG-only)", false );
 
   Uintah::MasterLock g_running_tasks_lock{};
 
@@ -219,6 +220,7 @@ OnDemandDataWarehouse::clear()
 
   d_varDB.clear();
   d_levelDB.clear();
+  d_runningTasks.clear();
 
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
@@ -255,8 +257,7 @@ OnDemandDataWarehouse::finalize()
 void
 OnDemandDataWarehouse::unfinalize()
 {
-  // this is for processes that need to make small modifications to the DW
-  // after it has been finalized.
+  // this is for processes that need to make small modifications to the DW after it has been finalized.
   d_finalized = false;
 }
 
@@ -657,9 +658,8 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch,
     case TypeDescription::SFCYVariable :
     case TypeDescription::SFCZVariable : {
       if (!d_varDB.exists(label, matlIndex, patch)) {
-        std::cout << d_myworld->myRank() << "  Needed by " << *dep << " on task " << *dep->m_to_tasks.front() << std::endl;
-        SCI_THROW(
-            UnknownVariable(label->getName(), getID(), patch, matlIndex, "in Task OnDemandDataWarehouse::sendMPI", __FILE__, __LINE__));
+        DOUT(true, d_myworld->myRank() << "  Needed by " << *dep << " on task " << *dep->m_to_tasks.front());
+        SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "in Task OnDemandDataWarehouse::sendMPI", __FILE__, __LINE__));
       }
       GridVariableBase* var;
       var = dynamic_cast<GridVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
@@ -1055,17 +1055,14 @@ OnDemandDataWarehouse::put( const ReductionVariableBase& var,
                                   int                    matlIndex /* = -1 */ )
 {
   ASSERT( !d_finalized );
-  checkPutAccess( label, matlIndex, nullptr,
-                  false /* it actually may be replaced, but it doesn't need
-                           to explicitly modify with multiple reduces in the
-                           task graph */);
 
-  // Put it in the database:
-
-  
-  bool init = (d_scheduler->copyTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
+  // it actually may be replaced, but it doesn't need to explicitly modify with multiple ReductionVars in the task graph
+  checkPutAccess( label, matlIndex, nullptr, false);
 
   printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
+
+  // Put it in the database
+  bool init = (d_scheduler->copyTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
   d_levelDB.putReduce( label, matlIndex, level, var.clone(), init );
 }
 
@@ -1077,7 +1074,7 @@ OnDemandDataWarehouse::override( const ReductionVariableBase & var,
                                  const Level                 * level     /* =  0 */,
                                        int                     matlIndex /* = -1 */ )
 {
-//  checkPutAccess( label, matlIndex, nullptr, true );
+  checkPutAccess( label, matlIndex, nullptr, true );
 
   // Put it in the database, replace whatever may already be there
   printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
@@ -1093,11 +1090,11 @@ OnDemandDataWarehouse::override( const SoleVariableBase & var,
                                  const Level            * level     /* =  0 */,
                                        int                matlIndex /* = -1 */ )
 {
-//  checkPutAccess(label, matlIndex, nullptr, true);
+  checkPutAccess(label, matlIndex, nullptr, true);
 
-  // Put it in the database, replace whatever may already be there
   printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
   
+  // Put it in the database, replace whatever may already be there
   d_levelDB.put(label, matlIndex, level, var.clone(), d_scheduler->copyTimestep(), true);
 }
 
@@ -1106,15 +1103,14 @@ OnDemandDataWarehouse::override( const SoleVariableBase & var,
 void
 OnDemandDataWarehouse::put( const SoleVariableBase& var,
                             const VarLabel*         label,
-                            const Level*            level,
+                            const Level*            level     /* =  0 */,
                                   int               matlIndex /* = -1 */ )
 {
   ASSERT(!d_finalized);
 
-  checkPutAccess(label, matlIndex, nullptr,
-                 false /* it actually may be replaced, but it doesn't need
-                          to explicitly modify with multiple soles in the
-                          task graph */);
+  // it actually may be replaced, but it doesn't need to explicitly modify with multiple SoleVars in the task graph
+  checkPutAccess(label, matlIndex, nullptr, false);
+
   // Put it in the database
   if (!d_levelDB.exists(label, matlIndex, level)) {
     printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
@@ -3144,10 +3140,9 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
         case TypeDescription::SFCZVariable : {
           //See if it exists in the CPU or GPU
           bool found = false;
-          if( fromDW->d_varDB.exists( var, matl, patch ) ) {
+          if (fromDW->d_varDB.exists(var, matl, patch)) {
             found = true;
-            GridVariableBase* v =
-                dynamic_cast<GridVariableBase*>( fromDW->d_varDB.get( var, matl, patch ) )->clone();
+            GridVariableBase* v = dynamic_cast<GridVariableBase*>( fromDW->d_varDB.get( var, matl, patch ) )->clone();
             d_varDB.put( var, matl, copyPatch, v, d_scheduler->copyTimestep(), replace );
           }
 
@@ -3184,7 +3179,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
             SCI_THROW(UnknownVariable(var->getName(), fromDW->getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );
           }
         }
-          break;
+        break;
         case TypeDescription::ParticleVariable : {
           if( !fromDW->d_varDB.exists( var, matl, patch ) ) {
             SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );
@@ -3210,7 +3205,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
             d_varDB.put( var, matl, copyPatch, newv, d_scheduler->copyTimestep(), replace );
           }
         }
-          break;
+        break;
         case TypeDescription::PerPatch : {
           if( !fromDW->d_varDB.exists( var, matl, patch ) ) {
             SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );
@@ -3218,15 +3213,21 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
           PerPatchBase* v = dynamic_cast<PerPatchBase*>( fromDW->d_varDB.get( var, matl, patch ) );
           d_varDB.put( var, matl, copyPatch, v->clone(), d_scheduler->copyTimestep(), replace );
         }
-          break;
-        case TypeDescription::ReductionVariable :
-          SCI_THROW(InternalError("transferFrom doesn't work for reduction variable: "+var->getName(), __FILE__, __LINE__) );
-          break;
-        case TypeDescription::SoleVariable :
-          SCI_THROW(InternalError("transferFrom doesn't work for sole variable: "+var->getName(), __FILE__, __LINE__) );
-          break;
+        break;
+        case TypeDescription::SoleVariable : {
+          if( !fromDW->d_varDB.exists( var, matl, patch ) ) {
+            SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );
+          }
+          SoleVariableBase* v = dynamic_cast<SoleVariableBase*>( fromDW->d_varDB.get( var, matl, patch ) );
+          d_varDB.put( var, matl, copyPatch, v->clone(), d_scheduler->copyTimestep(), replace );
+        }
+        break;
+        case TypeDescription::ReductionVariable : {
+          SCI_THROW(InternalError("transferFrom not implemented for reduction variables: " + var->getName(), __FILE__, __LINE__) );
+        }
+        break;
         default :
-          SCI_THROW(InternalError("Unknown variable type in transferFrom: "+var->getName(), __FILE__, __LINE__) );
+          SCI_THROW(InternalError("Unknown variable type in transferFrom: " + var->getName(), __FILE__, __LINE__) );
       }
     }
   }
@@ -3262,17 +3263,18 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
                                              int              numGhostCells /* = 0 */ )
 {
 #if 0
+
 #if SCI_ASSERTION_LEVEL >= 1
-  std::list<RunningTaskInfo>* runningTasks = getRunningTasksInfo();
+
+  std::map<std::thread::id, RunningTaskInfo>* runningTasks = getRunningTasksInfo();
 
   if (runningTasks != nullptr) {
     for (auto iter = runningTasks->begin(); iter != runningTasks->end(); ++iter) {
-      RunningTaskInfo& runningTaskInfo = *iter;
-
-      //   RunningTaskInfo& runningTaskInfo = runningTasks->back();
+      RunningTaskInfo& runningTaskInfo = iter->second;
       const Task* runningTask = runningTaskInfo.d_task;
+
+      // don't check if done outside of any task (i.e. SimulationController)
       if (runningTask == nullptr) {
-        // don't check if done outside of any task (i.e. SimulationController)
         return;
       }
 
@@ -3284,11 +3286,7 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
       std::map<VarLabelMatl<Patch>, AccessInfo>::iterator findIter;
       findIter = runningTaskAccesses.find(VarLabelMatl<Patch>(label, matlIndex, patch));
 
-      if (!hasGetAccess(runningTask, label, matlIndex, patch, lowOffset, highOffset, &runningTaskInfo) && !hasPutAccess(runningTask,
-                                                                                                                        label,
-                                                                                                                        matlIndex,
-                                                                                                                        patch, true)
-          && !hasPutAccess(runningTask, label, matlIndex, patch, false)) {
+      if (!hasGetAccess(runningTask, label, matlIndex, patch, lowOffset, highOffset, &runningTaskInfo) && !hasPutAccess(runningTask, label, matlIndex, patch)) {
 
         // If it was accessed by the current task already, then it should have get access
         // (i.e. if you put it in, you should be able to get it right back out).
@@ -3296,8 +3294,7 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
           return;  // allow non ghost cell get if any access (get, put, or modify) is allowed
         }
 
-        if (runningTask == nullptr || !(std::string(runningTask->getName()) == "Relocate::relocateParticles"
-            || std::string(runningTask->getName()) == "SchedulerCommon::copyDataToNewGrid")) {
+        if (runningTask == nullptr || !(std::string(runningTask->getName()) == "Relocate::relocateParticles" || std::string(runningTask->getName()) == "SchedulerCommon::copyDataToNewGrid")) {
           std::string has{};
           switch (getWhichDW(&runningTaskInfo)) {
             case Task::NewDW :
@@ -3370,7 +3367,9 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
       }
     }
   }  // running task loop
+
 #endif // end #if 1
+
 #endif // end #if SCI_ASSERTION_LEVEL >= 1
 }
 
@@ -3383,20 +3382,24 @@ OnDemandDataWarehouse::checkPutAccess( const VarLabel* label,
                                              bool      replace )
 {
 #if 0
+
 #if SCI_ASSERTION_LEVEL >= 1
-  std::list<RunningTaskInfo>* runningTasks = getRunningTasksInfo();
+
+  std::map<std::thread::id, RunningTaskInfo>* runningTasks = getRunningTasksInfo();
+
   if (runningTasks != nullptr) {
-    for (std::list<RunningTaskInfo>::iterator iter = runningTasks->begin(); iter != runningTasks->end(); ++iter) {
-      RunningTaskInfo& runningTaskInfo = *iter;
+    for (auto iter = runningTasks->begin(); iter != runningTasks->end(); ++iter) {
+      RunningTaskInfo& runningTaskInfo = iter->second;
       const Task* runningTask = runningTaskInfo.d_task;
 
+      // don't check if outside of any task (i.e. SimulationController)
       if (runningTask == nullptr) {
-        return;  // don't check if outside of any task (i.e. SimulationController)
+        return;
       }
 
       VarAccessMap& runningTaskAccesses = runningTaskInfo.d_accesses;
 
-      if (!hasPutAccess(runningTask, label, matlIndex, patch, replace)) {
+      if (!hasPutAccess(runningTask, label, matlIndex, patch)) {
         if (std::string(runningTask->getName()) != "Relocate::relocateParticles") {
           std::string has{};
           std::string needs{};
@@ -3438,7 +3441,9 @@ OnDemandDataWarehouse::checkPutAccess( const VarLabel* label,
       }
     }
   }
+
 #endif // end #if 1
+
 #endif // end #if SCI_ASSERTION_LEVEL >= 1
 }
 
@@ -3494,8 +3499,7 @@ bool
 OnDemandDataWarehouse::hasPutAccess( const Task*     runningTask,
                                      const VarLabel* label,
                                            int       matlIndex,
-                                     const Patch*    patch,
-                                           bool      replace )
+                                     const Patch*    patch )
 {
   return runningTask->hasComputes( label, matlIndex, patch );
 }
@@ -3510,14 +3514,11 @@ OnDemandDataWarehouse::pushRunningTask( const Task* task,
 
   ASSERT(task);
 
-  std::map<std::thread::id, std::list<RunningTaskInfo> >::iterator iter = d_runningTasks.find(std::this_thread::get_id());
-  if (iter == d_runningTasks.end()) {
-    std::list<RunningTaskInfo> list;
-    d_runningTasks.insert(std::make_pair(std::this_thread::get_id(), list));
-  }
+  // true if the element was inserted, false if already exists
+  bool inserted = d_runningTasks.insert(std::make_pair(std::this_thread::get_id(), RunningTaskInfo(task, dws))).second;
 
-  // add the RunningTaskInfo to the thread-specific list of running tasks
-  d_runningTasks.find(std::this_thread::get_id())->second.push_back(RunningTaskInfo(task, dws));
+  DOUT(g_check_accesses, "Rank-" << Parallel::getMPIRank() << " TID-" << std::this_thread::get_id() << "  Task: " << task->getName() << ((inserted) ? " was pushed for access check." : " not pushed, element exists."));
+
 }
 
 //______________________________________________________________________
@@ -3527,21 +3528,26 @@ OnDemandDataWarehouse::popRunningTask()
 {
   std::lock_guard<Uintah::MasterLock> pop_lock(g_running_tasks_lock);
 
-  d_runningTasks.find(std::this_thread::get_id())->second.pop_back();
+  auto iter = d_runningTasks.find(std::this_thread::get_id());
+  if (iter != d_runningTasks.end()) {
+    size_t num_erased = d_runningTasks.erase(std::this_thread::get_id());
+    DOUT(g_check_accesses, "Rank-" << Parallel::getMPIRank() << " TID-" << std::this_thread::get_id() << "  Task: " << iter->second.d_task->getName() << " removed (" << num_erased << " total element(s))");
+  }
 }
 
 //______________________________________________________________________
 //
-inline std::list<OnDemandDataWarehouse::RunningTaskInfo>*
+inline std::map<std::thread::id, OnDemandDataWarehouse::RunningTaskInfo>*
 OnDemandDataWarehouse::getRunningTasksInfo()
 {
   std::lock_guard<Uintah::MasterLock> get_running_task_lock(g_running_tasks_lock);
 
-  if (d_runningTasks.find(std::this_thread::get_id())->second.empty()) {
+
+  if (d_runningTasks.empty()) {
     return nullptr;
   }
   else {
-    return &(d_runningTasks.find(std::this_thread::get_id())->second);
+    return &d_runningTasks;
   }
 }
 
@@ -3552,12 +3558,7 @@ OnDemandDataWarehouse::hasRunningTask()
 {
   std::lock_guard<Uintah::MasterLock> has_running_task_lock(g_running_tasks_lock);
 
-  if (d_runningTasks.find(std::this_thread::get_id())->second.empty()) {
-    return false;
-  }
-  else {
-    return true;
-  }
+  return (d_runningTasks.find(std::this_thread::get_id()) != d_runningTasks.end());
 }
 
 //______________________________________________________________________
@@ -3565,13 +3566,15 @@ OnDemandDataWarehouse::hasRunningTask()
 inline OnDemandDataWarehouse::RunningTaskInfo*
 OnDemandDataWarehouse::getCurrentTaskInfo()
 {
-  std::lock_guard<Uintah::MasterLock> get_current_task_lock(g_running_tasks_lock);
+  std::lock_guard<Uintah::MasterLock> get_running_task_lock(g_running_tasks_lock);
 
-  if( d_runningTasks.find(std::this_thread::get_id())->second.empty() ) {
+  auto iter = d_runningTasks.find(std::this_thread::get_id());
+
+  if (iter == d_runningTasks.end()) {
     return nullptr;
   }
   else {
-    return &d_runningTasks.find(std::this_thread::get_id())->second.back();
+    return &(d_runningTasks.find(std::this_thread::get_id())->second);
   }
 }
 
@@ -3611,6 +3614,7 @@ OnDemandDataWarehouse::checkTasksAccesses( const PatchSubset* patches,
 
   RunningTaskInfo* currentTaskInfo = getCurrentTaskInfo();
   ASSERT(currentTaskInfo != nullptr);
+
   const Task* currentTask = currentTaskInfo->d_task;
   ASSERT(currentTask != nullptr);
 
@@ -3652,8 +3656,9 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
   default_matls->add(-1);
 
   for (; dep != nullptr; dep = dep->m_next) {
+
 #if 0
-    if ((isFinalized() && dep->dw == Task::NewDW) || (!isFinalized() && dep->dw == Task::OldDW)) {
+    if ((isFinalized() && dep->m_whichdw == Task::NewDW) || (!isFinalized() && dep->m_whichdw == Task::OldDW)) {
       continue;
     }
 #endif

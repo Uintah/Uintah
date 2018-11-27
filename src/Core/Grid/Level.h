@@ -140,7 +140,7 @@ public:
   IntVector     mapNodeToFiner(   const IntVector & idx ) const;
   IntVector     mapCellToCoarser( const IntVector & idx, int level_offset=1 ) const;
   IntVector     mapCellToFiner(   const IntVector & idx ) const;
-  IntVector     mapCellToFinest(const IntVector& idx) const;
+  IntVector     mapCellToFinest(  const IntVector & idx ) const;
   IntVector     mapCellToFinestNoAdjustments( const IntVector & idx ) const;
 
 
@@ -159,10 +159,11 @@ public:
   int  numPatches() const;
   long totalCells() const;
   
-  long getTotalCellsInRegion(const TypeDescription::Type varType,
-                             const IntVector& boundaryLayer,
-                             const IntVector& lowIndex, 
-                             const IntVector& highIndex) const;
+  long getTotalCellsInRegion( const TypeDescription::Type   varType
+                            , const IntVector             & boundaryLayer
+                            , const IntVector             & lowIndex
+                            , const IntVector             & highIndex
+                            ) const;
                              
   IntVector nCellsPatch_max() const;
 
@@ -181,9 +182,9 @@ public:
   void findInteriorNodeIndexRange( IntVector & lowIndex, IntVector & highIndex ) const;
   void findInteriorCellIndexRange( IntVector & lowIndex, IntVector & highIndex ) const;
                                   
-  void computeVariableExtents( const TypeDescription::Type TD
-                             , IntVector& lo
-                             , IntVector& hi
+  void computeVariableExtents( const TypeDescription::Type   TD
+                             ,       IntVector             & lo
+                             ,       IntVector             & hi
                              ) const;
       
   void performConsistencyCheck() const;
@@ -259,15 +260,17 @@ public:
 
   //__________________________________
   //  overlapping patches:  Used to keep track of patches that overlap in non-cubic levels
-  struct overlap{
+  struct overlap {
     std::pair <int,int> patchIDs{-9,-9};        // overlapping patch IDs
     IntVector lowIndex{ IntVector(-9,-9,-9)};   // low/high index of overlap
     IntVector highIndex{IntVector(-9,-9,-9)};
   };
+
   // for a set of patches and region return the min/max number of overlapping cells
-  std::pair<int,int> getOverlapCellsInRegion( const selectType & patches,
-                                              const IntVector  & regionLow, 
-                                              const IntVector  & regionHigh) const;
+  std::pair<int,int> getOverlapCellsInRegion( const selectType & patches
+                                            , const IntVector  & regionLow
+                                            , const IntVector  & regionHigh
+                                            ) const;
 
 private:
 

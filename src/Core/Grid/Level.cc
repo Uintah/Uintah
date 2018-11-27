@@ -58,12 +58,12 @@ using namespace Uintah;
 
 namespace {
 
-  std::atomic<int32_t> ids{0};
-  Uintah::MasterLock   ids_init{};
-  Uintah::MasterLock   patch_cache_mutex{};
+  std::atomic<int32_t> g_ids{0};
+  Uintah::MasterLock   g_patch_cache_mutex{};
 
   Dout g_bc_dbg{   "BCTypes",      "Level", "Level BC debug info"        , false };
   Dout g_rg_times{ "RGTimesLevel", "Level", "Level regridder timing info", false };
+
 }
 
 //______________________________________________________________________
@@ -83,10 +83,10 @@ Level::Level(       Grid      * grid
   , m_refinement_ratio{ refinementRatio }
 {
   if( m_id == -1 ) {
-    m_id = ids.fetch_add( 1, std::memory_order_relaxed );
+    m_id = g_ids.fetch_add( 1, std::memory_order_relaxed );
   }
-  else if( m_id >= ids ) {
-    ids.store( m_id + 1, std::memory_order_relaxed );
+  else if( m_id >= g_ids ) {
+    g_ids.store( m_id + 1, std::memory_order_relaxed );
   }
 }
 
@@ -107,13 +107,6 @@ Level::~Level()
   if (m_all_patches && m_all_patches->removeReference()) {
     delete m_all_patches;
   }
-
-  int patches_stored = 0;
-  int queries_stored = 0;
-  for (select_cache::iterator iter = m_select_cache.begin(); iter != m_select_cache.end(); ++iter) {
-    queries_stored++;
-    patches_stored += iter->second.size();
-  }
 }
 
 //______________________________________________________________________
@@ -122,7 +115,8 @@ void Level::setPatchDistributionHint( const IntVector & hint )
 {
   if (m_patch_distribution.x() == -1) {
     m_patch_distribution = hint;
-  } else {
+  }
+  else {
     // Called more than once, we have to punt
     m_patch_distribution = IntVector(-2, -2, 2);
   }
@@ -507,7 +501,7 @@ void Level::selectPatches( const IntVector  & low
                          ) const
 {
   if (cache_patches) {
-    std::lock_guard<Uintah::MasterLock> cache_lock(patch_cache_mutex);
+    std::lock_guard<Uintah::MasterLock> cache_lock(g_patch_cache_mutex);
 
     // look it up in the cache first
     select_cache::const_iterator iter = m_select_cache.find(std::make_pair(low, high));
@@ -551,7 +545,7 @@ void Level::selectPatches( const IntVector  & low
 
 
   if (cache_patches) {
-    std::lock_guard<Uintah::MasterLock> cache_lock(patch_cache_mutex);
+    std::lock_guard<Uintah::MasterLock> cache_lock(g_patch_cache_mutex);
 
     // put it in the cache - start at orig_size in case there was something in neighbors before this query
     std::vector<const Patch*>& cache = m_select_cache[std::make_pair(low, high)];

@@ -523,10 +523,10 @@ class OnDemandDataWarehouse : public DataWarehouse {
   private:
 
     enum AccessType {
-      NoAccess = 0,
-      PutAccess,
-      GetAccess,
-      ModifyAccess
+        NoAccess = 0
+      , PutAccess
+      , GetAccess
+      , ModifyAccess
     };
 
     struct AccessInfo {
@@ -536,8 +536,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
         AccessInfo(AccessType type)
             : accessType(type), lowOffset(0, 0, 0), highOffset(0, 0, 0) { }
 
-        void encompassOffsets(IntVector low,
-                              IntVector high)
+        void encompassOffsets(IntVector low, IntVector high)
         {
           lowOffset  = Uintah::Max( low,  lowOffset );
           highOffset = Uintah::Max( high, highOffset );
@@ -548,14 +547,13 @@ class OnDemandDataWarehouse : public DataWarehouse {
         IntVector highOffset;
     };
 
-    typedef std::map<VarLabelMatl<Patch>, AccessInfo> VarAccessMap;
+    using VarAccessMap = std::map<VarLabelMatl<Patch>, AccessInfo>;
 
     struct RunningTaskInfo {
         RunningTaskInfo()
-            : d_task(0), dws(0) { }
+            : d_task(nullptr), dws(nullptr) { }
 
-        RunningTaskInfo(const Task* task,
-                        std::vector<OnDemandDataWarehouseP>* dws)
+        RunningTaskInfo(const Task* task, std::vector<OnDemandDataWarehouseP>* dws)
             : d_task(task), dws(dws) { }
 
         RunningTaskInfo(const RunningTaskInfo& copy)
@@ -613,8 +611,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
     inline bool hasPutAccess(const Task* runningTask,
                              const VarLabel* label,
                              int matlIndex,
-                             const Patch* patch,
-                             bool replace);
+                             const Patch* patch );
 
     void checkAccesses(RunningTaskInfo* runningTaskInfo,
                        const Task::Dependency* dep,
@@ -696,11 +693,11 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     inline bool hasRunningTask();
 
-    inline std::list<RunningTaskInfo>* getRunningTasksInfo();
+    inline std::map<std::thread::id, OnDemandDataWarehouse::RunningTaskInfo>* getRunningTasksInfo();
 
     inline RunningTaskInfo* getCurrentTaskInfo();
 
-    std::map<std::thread::id, std::list<RunningTaskInfo> > d_runningTasks; // a list of running tasks for each std::thread::id
+    std::map<std::thread::id, RunningTaskInfo> d_runningTasks{}; // holds info on the running task for each std::thread::id
 
     ScrubMode d_scrubMode{DataWarehouse::ScrubNone};
 
