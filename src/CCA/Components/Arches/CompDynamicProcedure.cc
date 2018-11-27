@@ -848,7 +848,7 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     }
 
     string msg = "Time for the Filter operation in Turbulence Model: (patch: ";
-    proc0cerr << msg << p << ") " << timer().seconds() << " seconds\n";
+    proc0cout << msg << p << ") " << timer().seconds() << " seconds\n";
 
     Vector Dx = patch->dCell();
     double fhat = 3.0;
