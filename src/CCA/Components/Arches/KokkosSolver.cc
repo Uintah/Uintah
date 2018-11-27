@@ -570,9 +570,8 @@ KokkosSolver::setupBCs( const LevelP      & level
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::SSPRKSolve( const LevelP     & level
-                        ,       SchedulerP & sched
-                        )
+KokkosSolver::SSPRKSolve( const LevelP & level,
+                          SchedulerP & sched )
 {
 
   using namespace Uintah::ArchesCore;

@@ -71,11 +71,11 @@ namespace Uintah {
       //check if this name is already in the list:
       if ( (*i).name == name ){
 
-        //Deal with cases of computescratchghost + requires in a packed task. 
-        if ( (*i).depend == ArchesFieldContainer::COMPUTESCRATCHGHOST 
-              && dep == ArchesFieldContainer::REQUIRES ){ 
+        //Deal with cases of computescratchghost + requires in a packed task.
+        if ( (*i).depend == ArchesFieldContainer::COMPUTESCRATCHGHOST
+              && dep == ArchesFieldContainer::REQUIRES ){
           //Don't add this variable because it is computed in this task upstream in a packed neighbor task
-          add_variable = false; 
+          add_variable = false;
         }
 
         //does it have the same dependency?
@@ -259,9 +259,7 @@ namespace Uintah {
                           const int time_substep,
                           std::string task_name,
                           const bool temporary_variable ){
-    //if ( !temporary_variable ){
-      register_variable_work( name, dep, nGhost, dw, var_reg, time_substep, task_name );
-    //}
+    register_variable_work( name, dep, nGhost, dw, var_reg, time_substep, task_name );
   }
 
   void register_variable( std::string name,
@@ -271,9 +269,7 @@ namespace Uintah {
                           std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
                           std::string task_name,
                           const bool temporary_variable ){
-    //if ( !temporary_variable ){
-      register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
-    //}
+    register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
   }
 
   void register_variable( std::string name,
@@ -283,9 +279,7 @@ namespace Uintah {
                           const bool temporary_variable ){
     ArchesFieldContainer::WHICH_DW dw = ArchesFieldContainer::NEWDW;
     int nGhost = 0;
-    //if ( !temporary_variable ){
-      register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
-    //}
+    register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
   }
 
   void register_variable( std::string name,
@@ -297,8 +291,6 @@ namespace Uintah {
 
     ArchesFieldContainer::WHICH_DW dw = ArchesFieldContainer::NEWDW;
     int nGhost = 0;
-    //if ( !temporary_variable ){
-      register_variable_work( name, dep, nGhost, dw, var_reg, timesubstep, task_name );
-    //}
+    register_variable_work( name, dep, nGhost, dw, var_reg, timesubstep, task_name );
   }
 } // namespace Uintah
