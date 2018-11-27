@@ -4792,10 +4792,10 @@ ExplicitSolver::checkReductionVars( const ProcessorGroup * pg,
                                           DataWarehouse  * old_dw,
                                           DataWarehouse  * new_dw )
 {
-    SourceTermFactory& srcFactory = SourceTermFactory::self();
-    SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
-    for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
-      SourceTermBase* src = isrc->second;
-      src->checkReductionVars( pg, patches, matls, old_dw, new_dw );
-    }
+    //SourceTermFactory& srcFactory = SourceTermFactory::self();
+    //SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
+    //for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
+      //SourceTermBase* src = isrc->second;
+      //src->checkReductionVars( pg, patches, matls, old_dw, new_dw );
+    //}
 }

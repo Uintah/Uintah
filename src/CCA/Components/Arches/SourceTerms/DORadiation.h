@@ -172,11 +172,7 @@ private:
 
   bool _multiBox; 
   bool _dynamicSolveFrequency{false};  /// turns on the radiation profiler, tool to identifying if radiation is being resolved
-  const std::string dynamicSolveCountPatch_name {"dynamicSolveCountPatch"};
-  const std::string dynamicSolveCountRank_name  {"dynamicSolveCountRank"};
 
-  const std::string performedRadiation_name  {"performedRadiation"};
-  
   std::vector<std::vector<double> > _xyzPatch_boundary;/// all patch boundaries (approximate), needed for multi-box weeps, 
 
   std::vector< std::vector < std::vector < bool > > > _doesPatchExist;
@@ -243,11 +239,9 @@ private:
   const PatchSet* _perproc_patches;
   std::vector< std::vector < std::vector < Ghost::GhostType > > >   _gv; 
 
+  const std::string dynamicSolveCountPatch_name {"dynamicSolveCountPatch"};
   const VarLabel* _dynamicSolveCountPatchLabel;
-  const VarLabel* _dynamicSolveCountRankLabel;
-  const VarLabel* _performedRadiationLabel;
-
-  int last_rad_solve_timestep={0};
+  const VarLabel* _lastRadSolvePatchLabel;
 
   std::vector<const VarLabel*>  _radIntSource;
   std::vector<std::string> _radIntSource_names;
