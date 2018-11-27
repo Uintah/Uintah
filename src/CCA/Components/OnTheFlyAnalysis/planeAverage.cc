@@ -79,14 +79,19 @@ ______________________________________________________________________*/
 planeAverage::planeAverage( const ProcessorGroup    * myworld,
                             const MaterialManagerP    materialManager,
                             const ProblemSpecP      & module_spec,
-                            const bool                parse_ups_vars )
+                            const bool                parse_ups_vars,
+                            const bool                writeOutput,
+                            const int                 ID )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
+  d_className ="planeAverage_" + to_string(ID);
+  
   d_matl_set  = nullptr;
   d_zero_matl = nullptr;
   d_lb        = scinew planeAverageLabel();
   
   d_parse_ups_variables     = parse_ups_vars;
+  d_writeOutput             = writeOutput;
   
   d_lb->lastCompTimeLabel   =  VarLabel::create("lastCompTime_planeAvg",
                                               max_vartype::getTypeDescription() );
@@ -104,7 +109,7 @@ planeAverage::planeAverage( const ProcessorGroup    * myworld,
 //__________________________________
 planeAverage::~planeAverage()
 {
-  DOUT(dbg_OTF_PA, " Doing: destorying planeAverage" );
+  DOUT(dbg_OTF_PA, " Doing: destorying "<< d_className );
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
@@ -126,7 +131,7 @@ void planeAverage::problemSetup(const ProblemSpecP&,
                                 std::vector<std::vector<const VarLabel* > > &PState,
                                 std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  DOUT(dbg_OTF_PA , "Doing problemSetup \t\t\t\tplaneAverage" );
+  DOUT(dbg_OTF_PA , "Doing problemSetup \t\t\t\t" << d_className );
 
   //__________________________________
   //  Read in timing information
@@ -326,15 +331,18 @@ void planeAverage::problemSetup(const ProblemSpecP&,
 void planeAverage::scheduleInitialize(SchedulerP   & sched,
                                       const LevelP & level)
 {
-  printSchedule(level,dbg_OTF_PA,"planeAverage::scheduleInitialize");
+  printSchedule(level,dbg_OTF_PA, d_className + "::scheduleInitialize");
 
   Task* t = scinew Task("planeAverage::initialize",
                   this, &planeAverage::initialize);
 
   t->setType( Task::OncePerProc );
   t->computes(d_lb->lastCompTimeLabel );
-  t->computes(d_lb->fileVarsStructLabel, d_zero_matl);
-
+  
+  if( d_writeOutput ){
+    t->computes(d_lb->fileVarsStructLabel, d_zero_matl);
+  }
+  
   const PatchSet * perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
   sched->addTask(t, perProcPatches,  d_matl_set);
 
@@ -355,20 +363,20 @@ void planeAverage::initialize(const ProcessorGroup  *,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask( patch, dbg_OTF_PA,"Doing planeAverage::initialize 1/2");
+    printTask( patch, dbg_OTF_PA,"Doing "+ d_className + "::initialize 1/2");
 
     double tminus = -1.0/d_writeFreq;
     new_dw->put(max_vartype(tminus), d_lb->lastCompTimeLabel );
-
+  
+    
     //__________________________________
     //  initialize fileInfo struct
-    PerPatch<FileInfoP> fileInfo;
-    FileInfo* myFileInfo = scinew FileInfo();
-    fileInfo.get() = myFileInfo;
+    if( d_writeOutput && patch->getGridIndex() == 0 ){
+      PerPatch<FileInfoP> fileInfo;
+      FileInfo* myFileInfo = scinew FileInfo();
+      fileInfo.get() = myFileInfo;
 
-    new_dw->put(fileInfo,    d_lb->fileVarsStructLabel, 0, patch);
-
-    if( patch->getGridIndex() == 0 ){   // only need to do this once
+      new_dw->put(fileInfo,    d_lb->fileVarsStructLabel, 0, patch);
 
       string udaDir = m_output->getOutputLocation();
 
@@ -392,7 +400,7 @@ void planeAverage::initialize(const ProcessorGroup  *,
     return;
   }
 
-   printTask( patches, dbg_OTF_PA,"Doing planeAverage::initialize 2/2");
+   printTask( patches, dbg_OTF_PA,"Doing "+ d_className + "::initialize 2/2");
 
   //__________________________________
   // on this level and rank create a deep copy of level 0 planarVars vector
@@ -446,7 +454,7 @@ void planeAverage::initialize(const ProcessorGroup  *,
 void planeAverage::scheduleRestartInitialize(SchedulerP   & sched,
                                              const LevelP & level)
 {
-  printSchedule(level,dbg_OTF_PA,"planeAverage::scheduleRestartInitialize");
+  printSchedule(level,dbg_OTF_PA, d_className + "::scheduleRestartInitialize");
 
   Task* t = scinew Task("planeAverage::initialize",
                   this, &planeAverage::initialize);
@@ -470,7 +478,7 @@ planeAverage::restartInitialize()
 void planeAverage::sched_computePlanarAve(SchedulerP   & sched,
                                           const LevelP & level)
 {
-  printSchedule(level,dbg_OTF_PA,"planeAverage::sched_computePlanarAve");
+  printSchedule(level,dbg_OTF_PA, d_className + "::sched_computePlanarAve");
 
   sched_zeroPlanarVars(    sched, level);
 
@@ -484,7 +492,7 @@ void planeAverage::sched_computePlanarAve(SchedulerP   & sched,
 void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
                                       const LevelP & level)
 {
-  printSchedule(level,dbg_OTF_PA,"planeAverage::scheduleDoAnalysis");
+  printSchedule(level,dbg_OTF_PA, d_className + "::scheduleDoAnalysis");
 
   // schedule tasks that calculate the planarAve
   sched_computePlanarAve( sched, level );
@@ -514,7 +522,7 @@ void planeAverage::sched_zeroPlanarVars(SchedulerP   & sched,
 {
   //__________________________________
   //  Task to zero the summed variables;
-  printSchedule(level,dbg_OTF_PA,"planeAverage::sched_zeroPlanarVars");
+  printSchedule(level,dbg_OTF_PA, d_className + "::sched_zeroPlanarVars");
   
   Task* t = scinew Task( "planeAverage::zeroPlanarVars",
                      this,&planeAverage::zeroPlanarVars );
@@ -552,7 +560,7 @@ void planeAverage::zeroPlanarVars(const ProcessorGroup * ,
     return;
   }
 
-  printTask( patches, dbg_OTF_PA,"Doing planeAverage::zeroPlanarVars" );
+  printTask( patches, dbg_OTF_PA,"Doing " + d_className + "::zeroPlanarVars" );
 
   //__________________________________
   // Loop over variables
@@ -573,7 +581,7 @@ void planeAverage::sched_computePlanarSums(SchedulerP   & sched,
 {
   //__________________________________
   //  compute the planar sums task;
-  printSchedule( level, dbg_OTF_PA,"planeAverage::sched_computePlanarSums" );
+  printSchedule( level, dbg_OTF_PA, d_className +"::sched_computePlanarSums" );
   
   Task* t = scinew Task( "planeAverage::computePlanarSums",
                      this,&planeAverage::computePlanarSums );
@@ -642,7 +650,7 @@ void planeAverage::computePlanarSums(const ProcessorGroup * pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask( patch, dbg_OTF_PA, "Doing planeAverage::computePlanarSums" );
+    printTask( patch, dbg_OTF_PA, "Doing " + d_className + "::computePlanarSums" );
 
     //__________________________________
     // Loop over variables
@@ -859,7 +867,7 @@ void planeAverage::sched_sumOverAllProcs( SchedulerP   & sched,
 {
   //__________________________________
   //  Call MPI reduce on all variables;
-  printSchedule( level, dbg_OTF_PA,"planeAverage::sched_sumOverAllProcs" );
+  printSchedule( level, dbg_OTF_PA, d_className + "::sched_sumOverAllProcs" );
   
   Task* t = scinew Task( "planeAverage::sumOverAllProcs",
                      this,&planeAverage::sumOverAllProcs );
@@ -895,7 +903,7 @@ void planeAverage::sumOverAllProcs(const ProcessorGroup * pg,
     return;
   }
 
-  printTask( patches, dbg_OTF_PA,"Doing planeAverage::sumOverAllProcs");
+  printTask( patches, dbg_OTF_PA,"Doing " + d_className + "::sumOverAllProcs");
 
   //__________________________________
   // Loop over variables
@@ -919,7 +927,7 @@ void planeAverage::sumOverAllProcs(const ProcessorGroup * pg,
 void planeAverage::sched_updateTimeVar( SchedulerP   & sched,
                                         const LevelP & level )
 {
-  printSchedule(level,dbg_OTF_PA,"planeAverage::updateTimeVar");
+  printSchedule(level,dbg_OTF_PA, d_className + "::updateTimeVar");
   
   Task* t = scinew Task( "planeAverage::updateTimeVar",
                     this,&planeAverage::updateTimeVar );
@@ -942,7 +950,7 @@ void planeAverage::updateTimeVar(const ProcessorGroup* ,
                                  DataWarehouse       * old_dw,
                                  DataWarehouse       * new_dw )
 {
-  printTask( patches, dbg_OTF_PA,"Doing planeAverage::updateTimeVar" );
+  printTask( patches, dbg_OTF_PA,"Doing " + d_className + "::updateTimeVar" );
   
   max_vartype writeTime;
   simTime_vartype simTimeVar;
@@ -973,7 +981,7 @@ void planeAverage::sched_writeToFiles(SchedulerP   &    sched,
   //__________________________________
   //  Task that writes averages to files
   // Only write data on patch 0 on each level
-  printSchedule(level,dbg_OTF_PA,"planeAverage::writeToFiles");
+  printSchedule(level,dbg_OTF_PA, d_className +"::writeToFiles");
   
   Task* t = scinew Task( "planeAverage::writeToFiles",
                      this,&planeAverage::writeToFiles,
@@ -1053,7 +1061,7 @@ void planeAverage::writeToFiles(const ProcessorGroup* pg,
     // may not own the patch
     if( proc == pg->myRank() && now >= nextWriteTime){
 
-      printTask( patch, dbg_OTF_PA,"Doing planeAverage::writeToFiles" );
+      printTask( patch, dbg_OTF_PA,"Doing " + d_className + "::writeToFiles" );
 
 
       std::vector< std::shared_ptr< planarVarBase > > planarVars = d_allLevels_planarVars[L_indx];
@@ -1171,7 +1179,7 @@ void planeAverage::resetProgressVar(const ProcessorGroup * ,
     return;
   }
 
-  printTask( patches, dbg_OTF_PA,"Doing planeAverage::resetProgressVar" );
+  printTask( patches, dbg_OTF_PA,"Doing " + d_className + "::resetProgressVar" );
 
   for (unsigned int i =0 ; i < d_progressVar.size(); i++) {
     d_progressVar[i][L_indx] = false;
@@ -1185,7 +1193,7 @@ void planeAverage::createMPICommunicator(const PatchSet* perProcPatches)
   int rank = d_myworld->myRank();
   const PatchSubset* myPatches = perProcPatches->getSubset( rank );
   
-  printTask( myPatches, dbg_OTF_PA,"Doing createMPICommunicator");
+  printTask( myPatches, dbg_OTF_PA,"Doing " + d_className + "::createMPICommunicator");
 
   int color = 1;
 

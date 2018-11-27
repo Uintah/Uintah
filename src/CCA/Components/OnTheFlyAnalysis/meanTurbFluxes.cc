@@ -69,19 +69,17 @@ meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
   : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_matl_set  = nullptr;
-  d_zero_matl = nullptr;
 
   d_monitorCell = IntVector(0,0,0);
 
-  d_planeAve_1 = scinew planeAverage( myworld, materialManager, module_spec, true);
-  d_planeAve_2 = scinew planeAverage( myworld, materialManager, module_spec, true);
+  d_planeAve_1 = scinew planeAverage( myworld, materialManager, module_spec, true,  false, 0);
+  d_planeAve_2 = scinew planeAverage( myworld, materialManager, module_spec, false, true,  1);
 
   d_lb        = scinew meanTurbFluxesLabel();
 
   d_lb->lastCompTimeLabel =  VarLabel::create("lastCompTime_planeAve",
                                               max_vartype::getTypeDescription() );
-  d_lb->fileVarsStructLabel = VarLabel::create("FileInfo_planeAve",
-                                               PerPatch<FileInfoP>::getTypeDescription() );
+
   d_velVar =std::make_shared< velocityVar >();
 }
 
@@ -92,12 +90,8 @@ meanTurbFluxes::~meanTurbFluxes()
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
-   if(d_zero_matl && d_zero_matl->removeReference()) {
-    delete d_zero_matl;
-  }
 
   VarLabel::destroy(d_lb->lastCompTimeLabel);
-  VarLabel::destroy(d_lb->fileVarsStructLabel);
 
   delete d_lb;
   delete d_planeAve_1;
@@ -136,15 +130,16 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
 
   //__________________________________
   // find the material to extract data from.  Default is matl 0.
-  // The user can use either
+  // The user should specify
   //  <material>   atmosphere </material>
+  const Material*  matl;
   if(m_module_spec->findBlock("material") ){
-    d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
+    matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
   } else {
-    d_matl = m_materialManager->getMaterial(0);
+    matl = m_materialManager->getMaterial(0);
   }
 
-  int defaultMatl = d_matl->getDWIndex();
+  int defaultMatl = matl->getDWIndex();
 
   //__________________________________
   vector<int> m;
@@ -161,23 +156,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
-  // for fileInfo variable
-  d_zero_matl = scinew MaterialSubset();
-  d_zero_matl->add(0);
-  d_zero_matl->addReference();
 
-
-  //__________________________________
-  //  Plane orientation
-  string orient;
-  m_module_spec->require("planeOrientation", orient);
-  if ( orient == "XY" ){
-    d_planeOrientation = XY;
-  } else if ( orient == "XZ" ) {
-    d_planeOrientation = XZ;
-  } else if ( orient == "YZ" ) {
-    d_planeOrientation = YZ;
-  }
 
   //__________________________________
   //  velocity label
@@ -196,10 +175,42 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     throw ProblemSetupException("meanTurbFluxes: velocity label not found: " + labelName , __FILE__, __LINE__);
   }
 
-  const TypeDescription * td     = CCVariable<Vector>::getTypeDescription();
-  d_velVar->primeLabel            = VarLabel::create( labelName + "_prime",         td);
-  d_velVar->normalTurbStrssLabel  = VarLabel::create( d_velVar->normalTurbStrssName, td);
-  d_velVar->shearTurbStrssLabel   = VarLabel::create( d_velVar->shearTurbStrssName,  td);
+  d_velVar->matl  = defaultMatl;
+  d_velVar->level = ALL_LEVELS;
+  
+  const TypeDescription * td_V     = CCVariable<Vector>::getTypeDescription();
+  d_velVar->primeLabel            = VarLabel::create( labelName + "_prime",         td_V);
+  d_velVar->normalTurbStrssLabel  = VarLabel::create( d_velVar->normalTurbStrssName, td_V);
+  d_velVar->shearTurbStrssLabel   = VarLabel::create( d_velVar->shearTurbStrssName,  td_V);
+
+
+
+
+
+  typedef planeAverage PA;
+  std::vector< std::shared_ptr< PA::planarVarBase > >planarVars;
+
+  // normal turbulent stress
+  PA::planarVar_Vector* pv = new PA::planarVar_Vector();
+  pv->label      = d_velVar->normalTurbStrssLabel;
+  pv->matl       = defaultMatl;
+  pv->level      = ALL_LEVELS;
+  pv->baseType   = td_V->getType();
+  pv->subType    = TypeDescription::Vector;
+  pv->weightType = PA::NCELLS;
+
+  planarVars.push_back( std::shared_ptr< PA::planarVarBase >(pv) );
+
+  // shear turbulent stress
+//  pv->label      = d_velVar->shearTurbStrssLabel;
+  
+//  planarVars.push_back( std::shared_ptr< PA::planarVarBase >(pv) );
+
+
+
+
+
+
 
   //__________________________________
   //  Now loop over all the variables to be analyzed
@@ -214,6 +225,10 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     VarLabel* label = VarLabel::find(labelName);
     if( label == nullptr ){
       throw ProblemSetupException("meanTurbFluxes: analyze label not found: " + labelName , __FILE__, __LINE__);
+    }
+
+    if (label == d_velVar->label ){  // velocity label has already been processed
+      continue;
     }
 
     //__________________________________
@@ -269,53 +284,32 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     me->baseType   = baseType;
     me->subType    = subType;
     d_Qvars.push_back( std::shared_ptr<Qvar>(me) );
-  }
+    
+    
+    PA::planarVar_Vector* pv = new PA::planarVar_Vector();
+    pv->label      = turbFluxLabel;          // u'Q'(y), v'Q'(y), w'Q'(y)
+    pv->matl       = matl;
+    pv->level      = level;
+    pv->baseType   = td_V->getType();
+    pv->subType    = TypeDescription::Vector;
+    pv->weightType = PA::NCELLS;
 
-//  d_allLevels_planarVars.at(0) = planarVars;
+    planarVars.push_back( std::shared_ptr< PA::planarVarBase >(pv) );
+  }
+  
+  d_planeAve_2->setAllLevels_planarVars( 0, planarVars );
 }
 
 //______________________________________________________________________
 void meanTurbFluxes::scheduleInitialize(SchedulerP   & sched,
-                                      const LevelP & level)
+                                        const LevelP & level)
 {
-  printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::scheduleInitialize");
-  
   d_planeAve_1->scheduleInitialize( sched, level);
-
-
-
-
-#if 0
-  Task* t = scinew Task("meanTurbFluxes::initialize",
-                  this, &meanTurbFluxes::initialize);
-
-  t->setType( Task::OncePerProc );
-  t->computes(d_lb->lastCompTimeLabel );
-
-  const PatchSet * perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
-  sched->addTask(t, perProcPatches,  d_matl_set);
-#endif
+  
+  d_planeAve_2->scheduleInitialize( sched, level);
 }
 
-//______________________________________________________________________
-void meanTurbFluxes::initialize(const ProcessorGroup  *,
-                                const PatchSubset     * patches,
-                                const MaterialSubset  *,
-                                DataWarehouse         *,
-                                DataWarehouse         * new_dw)
-{
 
-  // With multiple levels a rank may not own any patches
-  if(patches->size() == 0 ){
-    return;
-  }
-
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask( patch, dbg_OTF_MTF,"Doing meanTurbFluxes::initialize 1/2");
-
-  }
-}
 
 //______________________________________________________________________
 void meanTurbFluxes::scheduleRestartInitialize(SchedulerP   & sched,
@@ -325,18 +319,7 @@ void meanTurbFluxes::scheduleRestartInitialize(SchedulerP   & sched,
 
   d_planeAve_1->scheduleRestartInitialize( sched, level);
   
-
-#if 0
-  Task* t = scinew Task("meanTurbFluxes::initialize",
-                  this, &meanTurbFluxes::initialize);
-
-  t->setType( Task::OncePerProc );
-  t->computes(d_lb->lastCompTimeLabel );
-
-  const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
-
-  sched->addTask(t, perProcPatches,  d_matl_set);
-#endif
+  d_planeAve_2->scheduleRestartInitialize( sched, level);
 }
 
 //______________________________________________________________________
@@ -353,6 +336,11 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
   //__________________________________
   //  Not all ranks own patches, need custom MPI communicator
   const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
+  
+  //__________________________________
+  // This instantiation of planarAve computes the planar averages of:
+  // {u}^bar(y), {v}^bar(y), {w}^bar(y)
+  // {Q}^bar(y)   Q = P, T, scalar.....etc  
   d_planeAve_1->createMPICommunicator( perProcPatches );
   
   d_planeAve_1->sched_computePlanarAve( sched, level );
@@ -361,24 +349,47 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
   
   d_planeAve_1->sched_updateTimeVar(    sched, level );
 
+
+  //__________________________________
+  //  compute u', v', w', Q'
   sched_TurbFluctuations( sched, level );
   
+  
+  //__________________________________
+  //compute u'u', v'v', w'w'
+  //        u'v', v'w', w'u'
+  //        u'Q', v'Q', w'Q'
   sched_TurbFluxes(       sched, level );
+  
+  
+  //__________________________________
+  // This instantiation of planarAve computes:
+  // {u'u'}^bar(y), {v'v'}^bar(y), {w'w'}^bar(y)      => normalTurbStrss
+  // {u'v'}^bar(y), {v'w'}^bar(y), {w'u'}^bar(y)      => shearTurbStrss
+  // {u'Q'}^bar(y), {v'Q'}^bar(y), {w'Q'}^bar(y)   
+  d_planeAve_2->createMPICommunicator( perProcPatches );
+  
+  d_planeAve_2->sched_computePlanarAve( sched, level );
+  
+  d_planeAve_2->sched_resetProgressVar( sched, level );
+  
+  d_planeAve_2->sched_updateTimeVar(    sched, level );
+  
 }
 
 //______________________________________________________________________
 /*
     foreach y ( n_planes )
       iterate over all cells in Y plane {
-        u' = u - u_bar(y)           Each plane in the grid will have a different _bar value
-        v' = v - v_bar(y)           => CCVariable< Uintah:Vector >
-        w' = w - w_bar(y)
+        u' = u - u^bar(y)           Each plane in the grid will have a different _bar value
+        v' = v - v^bar(y)           => CCVariable< Uintah:Vector >
+        w' = w - w^bar(y)
       }
     end
 
     foreach y ( n_planes )
       foreach Q ( T, P, scalar )
-        Q' = Q - Q_bar(y)          => CCVariable< double >
+        Q' = Q - Q^bar(y)          => CCVariable< double >
       end
     end
 */
@@ -415,8 +426,6 @@ void meanTurbFluxes::calc_TurbFluctuations(const ProcessorGroup  * ,
                                            DataWarehouse        * ,
                                            DataWarehouse        * new_dw)
 {
-  
-  
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::calc_TurbFluctuations");
@@ -470,9 +479,8 @@ void meanTurbFluxes::calc_Q_prime( DataWarehouse         * new_dw,
         //__________________________________
         //  debugging
         if ( c == d_monitorCell && dbg_OTF_MTF.active() ){
-          cout << "  calc_Q_prime:  " << d_monitorCell <<  setw(10)<< Q->label->getName()
-               <<"\t Q_bar: " << Qbar[z]
-               <<"\t Qprime: "  << Qprime[c] << " Qlocal: " << Qlocal[c] << endl;
+          cout << "  calc_Q_prime:  L-"<< L_indx << " " << d_monitorCell <<  setw(10)<< Q->label->getName()
+               <<"\t Qprime: "  << Qprime[c] << " Qlocal: " << Qlocal[c] << "\t Q_bar: " << Qbar[z] << endl;
         }
       }
     }
@@ -503,13 +511,16 @@ void meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
   t->requires( Task::OldDW, d_lb->lastCompTimeLabel );
 
   Ghost::GhostType gn  = Ghost::None;
-
+  //__________________________________
+  //  scalars
   for ( unsigned int i =0 ; i < d_Qvars.size(); i++ ) {
     std::shared_ptr< Qvar > Q = d_Qvars[i];
     t->requires( Task::NewDW, Q->primeLabel, Q->matSubSet, gn, 0 );
     t->computes ( Q->turbFluxLabel );
   }
 
+  //__________________________________
+  //  velocity
   t->requires( Task::NewDW, d_velVar->primeLabel, d_velVar->matSubSet, gn, 0 );
   t->computes ( d_velVar->normalTurbStrssLabel );
   t->computes ( d_velVar->shearTurbStrssLabel );
@@ -526,6 +537,8 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
                                      DataWarehouse        * ,
                                      DataWarehouse        * new_dw)
 {
+  int L_indx = getLevelP( patches )->getIndex();
+  
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::calc_TurbFluxes");
@@ -551,6 +564,13 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
       for (CellIterator iter=patch->getCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         QturbFlux[c] = Qprime[c] * velPrime[c];
+
+        //__________________________________
+        //  debugging
+        if ( c == d_monitorCell && dbg_OTF_MTF.active() ){
+          cout << "  calc_TurbFluxes:  L-"<< L_indx << " " << d_monitorCell <<  setw(10)<< Q->label->getName()
+               <<"\t QturbFlux: "  << QturbFlux[c] << " Qprime: " << Qprime[c] << "\t velPrime: " << velPrime[c] << endl;
+        }
       }
     }    // QVars loop
 
@@ -563,7 +583,6 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
     new_dw->allocateAndPut( diag,    d_velVar->normalTurbStrssLabel, d_velVar->matl, patch );
     new_dw->allocateAndPut( offdiag, d_velVar->shearTurbStrssLabel,  d_velVar->matl, patch );
 
-
     for (CellIterator iter=patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       Vector vel = velPrime[c];
@@ -574,6 +593,13 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
       offdiag[c] = Vector( vel.x() * vel.y(),     // u'v'
                            vel.y() * vel.w(),     // v'w'
                            vel.z() * vel.z() );   // w'u'
+                           
+      //__________________________________
+      //  debugging
+      if ( c == d_monitorCell && dbg_OTF_MTF.active() ){
+        cout << "  calc_TurbFluxes:  L-"<< L_indx << " " << d_monitorCell <<  setw(10)<< d_velVar->label->getName()
+             <<"\t diag: "  << diag[c] << " offdiag: " << offdiag[c] << "\t velPrime: " << velPrime[c] << endl;
+      }
     }
   }
 }

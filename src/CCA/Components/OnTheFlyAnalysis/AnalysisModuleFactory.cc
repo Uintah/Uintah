@@ -99,7 +99,7 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
         modules.push_back(scinew lineExtract(          myworld, materialManager, module_ps ) );
       }
       else if ( module == "planeAverage" ) {
-        modules.push_back( scinew planeAverage(        myworld, materialManager, module_ps, true ) );
+        modules.push_back( scinew planeAverage(        myworld, materialManager, module_ps, true, true, 0 ) );
       }
       else if ( module == "planeExtract" ) {
         modules.push_back( scinew planeExtract(        myworld, materialManager, module_ps ) );

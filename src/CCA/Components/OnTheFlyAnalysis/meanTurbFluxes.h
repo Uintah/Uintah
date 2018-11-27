@@ -103,8 +103,9 @@ ______________________________________________________________________*/
 
 
   private:
-    //__________________________________
-    //  all variables except velocity
+    //______________________________________________________________________
+    //          STRUCTS
+    //  All variables except velocity
     struct Qvar{
 
       int matl;
@@ -137,7 +138,7 @@ ______________________________________________________________________*/
     //  Velocity
     struct velocityVar: public Qvar{
       VarLabel * normalTurbStrssLabel;        //u'u', v'v', w'w'
-      VarLabel * shearTurbStrssLabel;     //u'v', v'w', w'u'
+      VarLabel * shearTurbStrssLabel;         //u'v', v'w', w'u'
 
       ~velocityVar()
       {
@@ -150,14 +151,7 @@ ______________________________________________________________________*/
 
 
     //______________________________________________________________________
-    //
-    //
-    void initialize(const ProcessorGroup *,
-                    const PatchSubset    * patches,
-                    const MaterialSubset *,
-                    DataWarehouse        *,
-                    DataWarehouse        * new_dw);
-
+    //          TASKS AND FUNCTIONS
     void sched_TurbFluctuations(SchedulerP   & sched,
                                 const LevelP & level);
 
@@ -182,12 +176,10 @@ ______________________________________________________________________*/
                          DataWarehouse        * new_dw);
 
     //______________________________________________________________________
-    // general labels
+    //          VARIABLES 
     class meanTurbFluxesLabel {
     public:
       VarLabel* lastCompTimeLabel;
-      VarLabel* fileVarsStructLabel;
-      VarLabel* weightLabel = {nullptr};
     };
 
     meanTurbFluxesLabel* d_lb;
@@ -201,23 +193,13 @@ ______________________________________________________________________*/
     double d_startTime;
     double d_stopTime;
 
-    const Material*  d_matl;
     MaterialSet*     d_matl_set;
-    std::set<std::string> d_isDirCreated;
-    MaterialSubset*  d_zero_matl;
-
     const int d_MAXLEVELS {5};               // HARDCODED
-
-    enum orientation { XY, XZ, YZ };        // plane orientation
-    orientation d_planeOrientation;
-
 
     private:
       planeAverage * d_planeAve_1;
       planeAverage * d_planeAve_2;
       IntVector d_monitorCell;             // Monitor this cells.  Used for debugging
-
-
   };
 }
 

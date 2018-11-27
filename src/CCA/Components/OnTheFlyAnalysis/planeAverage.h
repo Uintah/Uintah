@@ -68,7 +68,9 @@ ______________________________________________________________________*/
     planeAverage(const ProcessorGroup   * myworld,
                  const MaterialManagerP   materialManager,
                  const ProblemSpecP     & module_spec,
-                 const bool               parse_ups_variables);
+                 const bool               parse_ups_variables,
+                 const bool               writeOutput,
+                 const int                ID );
 
     virtual ~planeAverage();
 
@@ -101,7 +103,7 @@ ______________________________________________________________________*/
 
   //______________________________________________________________________
   //
-  private:
+  public:
 
     //__________________________________
     //  This is a wrapper to create a vector of objects of different types(planarVar)
@@ -515,7 +517,12 @@ ______________________________________________________________________*/
     void planeIterator( const GridIterator& patchIter,
                         IntVector & lo,
                         IntVector & hi );
-
+                        
+    void setAllLevels_planarVars( const int L_indx, 
+                                  std::vector< std::shared_ptr< planarVarBase > > pv )
+    {
+      d_allLevels_planarVars.at(L_indx) = pv;
+    }
   //______________________________________________________________________
   //
   private:
@@ -614,11 +621,13 @@ ______________________________________________________________________*/
 
     //__________________________________
     // global constants always begin with "d_"
+    std::string d_className;                   // identifier for each instantiation of this class
     double d_writeFreq;
     double d_startTime;
     double d_stopTime;
     bool   d_parse_ups_variables;              // parse ups file to define d_allLevels_planarVars
                                                // this switch is needed for meanTurbFluxes module
+    bool   d_writeOutput;
 
     const Material*  d_matl;
     MaterialSet*     d_matl_set;
