@@ -1196,25 +1196,31 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
 void
 ExplicitSolver::sched_computeTaskGraphIndex(const LevelP& level, SchedulerP& sched)
 {
-  Task* task = scinew Task( "ExplicitSolver::computeTaskGraphIndex",this,
-                            &ExplicitSolver::computeTaskGraphIndex);
-
-  task->setType(Task::OncePerProc);
-
-  // This method is called at both initialization and otherwise. At
-  // initialization the old DW, i.e. DW(0) will not exist so require
-  // the value from the new DW.  Otherwise for a normal time step
-  // require the time step from the old DW.
-  if(sched->get_dw(0) ) {
-    task->requires( Task::OldDW, VarLabel::find(timeStep_name) );
-  }
-  else if(sched->get_dw(1) ) {
-    task->requires( Task::NewDW, VarLabel::find(timeStep_name) );
-  }
-
-  const PatchSet* perProcPatchSet = sched->getLoadBalancer()->getPerProcessorPatchSet( level->getGrid() );
+  // This is done ONLY for the finest level as to put a fake
+  // dependency on the new delta T.
+  if ( !level->hasFinerLevel() ) {
+    Task* task = scinew Task( "ExplicitSolver::computeTaskGraphIndex",this,
+                              &ExplicitSolver::computeTaskGraphIndex);
     
-  sched->addTask(task, perProcPatchSet, d_materialManager->allMaterials());
+    task->setType(Task::OncePerProc);
+    
+    // This method is called at both initialization and otherwise. At
+    // initialization the old DW, i.e. DW(0) will not exist so require
+    // the value from the new DW.  Otherwise for a normal time step
+    // require the time step from the old DW.
+    if(sched->get_dw(0) ) {
+      task->requires( Task::OldDW, VarLabel::find(timeStep_name) );
+    }
+    else if(sched->get_dw(1) ) {
+      task->requires( Task::NewDW, VarLabel::find(timeStep_name) );
+    }
+    
+    task->requires(Task::NewDW, d_lab->d_delTLabel, level.get_rep());
+    
+    const PatchSet* perProcPatchSet = sched->getLoadBalancer()->getPerProcessorPatchSet( level->getGrid() );
+    
+    sched->addTask(task, perProcPatchSet, d_materialManager->allMaterials());
+  }
 }
 
 //--------------------------------------------------------------------------------------------------
