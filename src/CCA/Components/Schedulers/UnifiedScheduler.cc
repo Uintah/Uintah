@@ -63,6 +63,7 @@ using namespace Uintah;
 //
 namespace Uintah {
   extern Dout g_task_dbg;
+  extern Dout g_task_run;
   extern Dout g_task_order;
   extern Dout g_exec_out;
 }
@@ -484,6 +485,8 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
       plain_old_dws[i] = m_dws[i].get_rep();
     }
 
+    DOUT(g_task_run, myRankThread() << " Running task:   " << *dtask);
+  
     dtask->doit(d_myworld, m_dws, plain_old_dws, event);
 
     if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {

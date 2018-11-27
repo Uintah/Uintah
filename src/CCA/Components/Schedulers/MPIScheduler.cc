@@ -73,7 +73,8 @@ namespace Uintah {
 
 // These are used externally, keep them visible outside this unit
   Dout g_task_order( "TaskOrder", "MPIScheduler", "task order debug stream", false );
-  Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "output each task name as it begins/ends", false );
+  Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "output each task name as it begins/ends or when threaded, ready", false );
+  Dout g_task_run(   "TaskRun"  , "MPIScheduler", "output each task name as it runs", false );
   Dout g_mpi_dbg(    "MPIDBG"   , "MPIScheduler", "MPI debug stream", false );
   Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", false );
 
@@ -266,6 +267,8 @@ MPIScheduler::runTask( DetailedTask * dtask
     plain_old_dws[i] = m_dws[i].get_rep();
   }
 
+  DOUT(g_task_run, "Rank-" << d_myworld->myRank() << " Running task:   " << *dtask);
+  
   dtask->doit( d_myworld, m_dws, plain_old_dws );
 
   if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
@@ -849,6 +852,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     if ( dtask->getTask()->getType() == Task::Reduction ) {
       if (!abort) {
         initiateReduction( dtask );
+
+        DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << " Completed task:   " << *dtask);
       }
     }
     else {
