@@ -89,5 +89,5 @@ void
 ProgressiveWarning::showWarning()
 {
   (*d_out) << d_message << "\n";
-  (*d_out) << "  This warning has occurred " << d_numOccurences << " times.\n";
+  (*d_out) << "  This warning has occurred " << d_numOccurences << ((d_numOccurences == 1) ? " time.\n" : " times.\n");
 }

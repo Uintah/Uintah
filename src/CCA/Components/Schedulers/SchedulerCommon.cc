@@ -774,7 +774,7 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
           case TypeDescription::SFCXVariable :
           case TypeDescription::SFCYVariable :
           case TypeDescription::SFCZVariable :
-            v = dynamic_cast<GridVariableBase*>(dw->d_varDB.get(label, m, patch));
+            v = dynamic_cast<GridVariableBase*>(dw->m_var_DB.get(label, m, patch));
             break;
           default :
             throw InternalError("Cannot track var type of non-grid-type", __FILE__, __LINE__);
@@ -1936,7 +1936,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                 }
 
                 std::vector<Variable *> varlist;
-                oldDataWarehouse->d_varDB.getlist(label, matl, oldPatch, varlist);
+                oldDataWarehouse->m_var_DB.getlist(label, matl, oldPatch, varlist);
                 GridVariableBase* v = nullptr;
 
                 IntVector srclow = copyLowIndex;
@@ -1960,10 +1960,10 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                     GridVariableBase* newVariable = v->cloneType();
                     newVariable->rewindow(newLowIndex, newHighIndex);
                     newVariable->copyPatch(v, srclow, srchigh);
-                    newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, copyTimestep(), false);
+                    newDataWarehouse->m_var_DB.put(label, matl, newPatch, newVariable, copyTimestep(), false);
 
                   } else {
-                    GridVariableBase* newVariable = dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl, newPatch));
+                    GridVariableBase* newVariable = dynamic_cast<GridVariableBase*>(newDataWarehouse->m_var_DB.get(label, matl, newPatch));
                     // make sure it exists in the right region (it might be ghost data)
                     newVariable->rewindow(newLowIndex, newHighIndex);
 

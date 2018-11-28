@@ -257,7 +257,7 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
     // disable memory windowing on variables.  This will ensure that
     // each variable is allocated its own memory on each patch,
     // precluding memory blocks being defined across multiple patches.
-    Uintah::OnDemandDataWarehouse::d_combineMemory = false;
+    Uintah::OnDemandDataWarehouse::s_combine_memory = false;
 
     //get the true numDevices (in case we have the simulation turned on)
     int numDevices;

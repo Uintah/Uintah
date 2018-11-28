@@ -145,7 +145,6 @@ class DWDatabase {
             ,       bool         replace
             );
 
-
     void putReduce( const VarLabel              * label
                   ,       int                     matlindex
                   , const DomainType            * dom
@@ -256,10 +255,10 @@ class DWDatabase {
     KeyDatabase<DomainType>* m_keyDB { nullptr };
 
     using varDBtype = std::vector<DataItem*>;
-    varDBtype m_vars;
+    varDBtype m_vars {};
 
     using scrubDBtype = std::vector<int>;
-    scrubDBtype m_scrubs;
+    scrubDBtype m_scrubs {};
 
     // eliminate copy, assignment and move
     DWDatabase( const DWDatabase & )            = delete;
@@ -594,13 +593,13 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
 {
   ASSERT(matlIndex >= -1);
 
-  {
+  { // scoping for std::lock_guard
     std::lock_guard<Uintah::MasterLock> put_reduce_lock(g_keyDB_lock);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
     }
-  }
+  } // end scoping for std::lock_guard
 
   // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
@@ -778,7 +777,7 @@ template<class DomainType>
 void
 DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatl<DomainType> > & v) const
 {
-  for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
+  for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); ++keyiter) {
     const VarLabelMatl<DomainType>& vlm = keyiter->first;
     if (m_vars[keyiter->second]) {
       v.push_back(vlm);
@@ -810,8 +809,8 @@ template<class DomainType>
 struct hash<VarLabelMatl<DomainType> > {
   size_t operator()( const VarLabelMatl<DomainType>& v ) const
   {
-    size_t h = 0;
-    char *str = const_cast<char*>(v.label_->getName().data());
+    size_t h = 0u;
+    char* str = const_cast<char*>(v.label_->getName().data());
     while (int c = *str++) {
       h = h * 7 + c;
     }
