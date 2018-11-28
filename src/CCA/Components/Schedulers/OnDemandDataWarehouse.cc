@@ -580,103 +580,6 @@ OnDemandDataWarehouse::createGPUReductionVariable(const TypeDescription::Type& t
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch
-                              , const VarLabel              * pos_var
-                              ,       BufferInfo            & buffer
-                              ,       OnDemandDataWarehouse * old_dw
-                              , const DetailedDep           * dep
-                              ,       LoadBalancer          * lb
-                              )
-{
-  if (dep->isNonDataDependency()) {
-    // A non-data dependency -- send an empty message.
-    // This would be used, for example, when a task is to modify data that was previously required with ghost-cells.
-    //buffer.add(0, 0, MPI_INT, false);
-    return;
-  }
-
-  const VarLabel* label = dep->m_req->m_var;
-  const Patch* patch = dep->m_from_patch;
-  int matlIndex = dep->m_matl;
-
-  switch ( label->typeDescription()->getType() ) {
-    case TypeDescription::ParticleVariable : {
-      IntVector low = dep->m_low;
-      IntVector high = dep->m_high;
-
-      if (!m_var_DB.exists(label, matlIndex, patch)) {
-        SCI_THROW( UnknownVariable(label->getName(), getID(), patch, matlIndex, "in sendMPI", __FILE__, __LINE__) );
-      }
-      ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>( m_var_DB.get( label, matlIndex, patch ) );
-
-      int dest = batch->m_to_tasks.front()->getAssignedResourceIndex();
-      ASSERTRANGE( dest, 0, d_myworld->nRanks() );
-
-      ParticleSubset* sendset = nullptr;
-      // first check to see if the receiving proc already has the (old) data
-      // if data is relocating (of a regrid or re-load-balance), then the other
-      // proc may already have it (since in most cases particle data comes from the old dw)
-      // if lb is non-null, that means the particle data is on the old dw
-      if (lb && lb->getOldProcessorAssignment(patch) == dest) {
-        if (this == old_dw) {
-          // We don't need to know how many particles there are OR send any particle data...
-          return;
-        }
-        ASSERT(old_dw->haveParticleSubset(matlIndex, patch));
-        sendset = old_dw->getParticleSubset(matlIndex, patch);
-      }
-      else {
-        sendset = old_dw->m_send_state.find_sendset(dest, patch, matlIndex, low, high, old_dw->d_generation);
-      }
-      if (!sendset) {
-        // new dw send.  The NewDW doesn't yet know (on the first time) about this subset if it is on a different process.
-        // Go ahead and calculate it, but there is no need to send it, since the other proc already knows about it.
-        ASSERT( old_dw != this );
-        ParticleSubset* pset = var->getParticleSubset();
-        sendset = scinew ParticleSubset( 0, matlIndex, patch, low, high );
-        constParticleVariable<Point> pos;
-        old_dw->get( pos, pos_var, pset );
-        for( auto iter = pset->begin(); iter != pset->end(); ++iter ) {
-          particleIndex idx = *iter;
-          if( Patch::containsIndex( low, high, patch->getCellIndex( pos[idx] ) ) ) {
-            sendset->addParticle( idx );
-          }
-        }
-        old_dw->m_send_state.add_sendset( sendset, dest, patch, matlIndex, low, high, old_dw->d_generation );
-        DOUT(g_particles_dbg, d_myworld->myRank() << "  NO SENDSET: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high);
-      }
-      ASSERT( sendset );
-      if( sendset->numParticles() > 0 ) {
-        var->getMPIBuffer( buffer, sendset );
-        buffer.addSendlist( var->getRefCounted() );
-        buffer.addSendlist( var->getParticleSubset() );
-      }
-      break;
-    }
-    case TypeDescription::NCVariable :
-    case TypeDescription::CCVariable :
-    case TypeDescription::SFCXVariable :
-    case TypeDescription::SFCYVariable :
-    case TypeDescription::SFCZVariable : {
-      if (!m_var_DB.exists(label, matlIndex, patch)) {
-        DOUT(true, d_myworld->myRank() << "  Needed by " << *dep << " on task " << *dep->m_to_tasks.front());
-        SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "in Task OnDemandDataWarehouse::sendMPI", __FILE__, __LINE__));
-      }
-      GridVariableBase* var;
-      var = dynamic_cast<GridVariableBase*>( m_var_DB.get( label, matlIndex, patch ) );
-      var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
-      buffer.addSendlist( var->getRefCounted() );
-      break;
-    }
-    default : {
-      SCI_THROW( InternalError("sendMPI not implemented for " + label->getFullName(matlIndex, patch), __FILE__, __LINE__) );
-    }
-  }  // end switch( label->getType() );
-}
-
-//______________________________________________________________________
-//
-void
 OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks * dts
                                                  ,       LoadBalancer  * lb
                                                  , const VarLabel      * pos_var
@@ -838,7 +741,8 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks * dts
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch
+OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch
+                              , const VarLabel              * pos_var
                               ,       BufferInfo            & buffer
                               ,       OnDemandDataWarehouse * old_dw
                               , const DetailedDep           * dep
@@ -847,9 +751,8 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch
 {
   if (dep->isNonDataDependency()) {
     // A non-data dependency -- send an empty message.
-    // This would be used, for example, for dependencies between a modifying
-    // task and a task the requires the data before it is to be modified.
-    // buffer.add(0, 0, MPI_INT, false);
+    // This would be used, for example, when a task is to modify data that was previously required with ghost-cells.
+    //buffer.add(0, 0, MPI_INT, false);
     return;
   }
 
@@ -861,19 +764,119 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch
     case TypeDescription::ParticleVariable : {
       IntVector low = dep->m_low;
       IntVector high = dep->m_high;
+
+      if (!m_var_DB.exists(label, matlIndex, patch)) {
+        SCI_THROW( UnknownVariable(label->getName(), getID(), patch, matlIndex, "in sendMPI", __FILE__, __LINE__) );
+      }
+      ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>( m_var_DB.get( label, matlIndex, patch ) );
+
+      int dest = batch->m_to_tasks.front()->getAssignedResourceIndex();
+      ASSERTRANGE( dest, 0, d_myworld->nRanks() );
+
+      ParticleSubset* sendset = nullptr;
+      // first check to see if the receiving proc already has the (old) data
+      // if data is relocating (of a regrid or re-load-balance), then the other
+      // proc may already have it (since in most cases particle data comes from the old dw)
+      // if lb is non-null, that means the particle data is on the old dw
+      if (lb && lb->getOldProcessorAssignment(patch) == dest) {
+        if (this == old_dw) {
+          // We don't need to know how many particles there are OR send any particle data...
+          return;
+        }
+        ASSERT(old_dw->haveParticleSubset(matlIndex, patch));
+        sendset = old_dw->getParticleSubset(matlIndex, patch);
+      }
+      else {
+        sendset = old_dw->m_send_state.find_sendset(dest, patch, matlIndex, low, high, old_dw->d_generation);
+      }
+      if (!sendset) {
+        // new dw send.  The NewDW doesn't yet know (on the first time) about this subset if it is on a different process.
+        // Go ahead and calculate it, but there is no need to send it, since the other proc already knows about it.
+        ASSERT( old_dw != this );
+        ParticleSubset* pset = var->getParticleSubset();
+        sendset = scinew ParticleSubset( 0, matlIndex, patch, low, high );
+        constParticleVariable<Point> pos;
+        old_dw->get( pos, pos_var, pset );
+        for( auto iter = pset->begin(); iter != pset->end(); ++iter ) {
+          particleIndex idx = *iter;
+          if( Patch::containsIndex( low, high, patch->getCellIndex( pos[idx] ) ) ) {
+            sendset->addParticle( idx );
+          }
+        }
+        old_dw->m_send_state.add_sendset( sendset, dest, patch, matlIndex, low, high, old_dw->d_generation );
+        DOUT(g_particles_dbg, d_myworld->myRank() << "  NO SENDSET: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high);
+      }
+      ASSERT( sendset );
+      if( sendset->numParticles() > 0 ) {
+        var->getMPIBuffer( buffer, sendset );
+        buffer.addSendlist( var->getRefCounted() );
+        buffer.addSendlist( var->getParticleSubset() );
+      }
+      break;
+    }
+    case TypeDescription::NCVariable :
+    case TypeDescription::CCVariable :
+    case TypeDescription::SFCXVariable :
+    case TypeDescription::SFCYVariable :
+    case TypeDescription::SFCZVariable : {
+      if (!m_var_DB.exists(label, matlIndex, patch)) {
+        DOUT(true, d_myworld->myRank() << "  Needed by " << *dep << " on task " << *dep->m_to_tasks.front());
+        SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "in Task OnDemandDataWarehouse::sendMPI", __FILE__, __LINE__));
+      }
+      GridVariableBase* var;
+      var = dynamic_cast<GridVariableBase*>( m_var_DB.get( label, matlIndex, patch ) );
+      var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
+      buffer.addSendlist( var->getRefCounted() );
+      break;
+    }
+    default : {
+      SCI_THROW( InternalError("sendMPI not implemented for " + label->getFullName(matlIndex, patch), __FILE__, __LINE__) );
+    }
+  }  // end switch( label->getType() );
+}
+
+//______________________________________________________________________
+//
+void
+OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch
+                              ,       BufferInfo            & buffer
+                              ,       OnDemandDataWarehouse * old_dw
+                              , const DetailedDep           * dep
+                              ,       LoadBalancer          * lb
+                              )
+{
+  if (dep->isNonDataDependency()) {
+    // A non-data dependency -- send an empty message.
+    // This would be used, for example, for dependencies between a modifying
+    // task and a task the requires the data before it is to be modified.
+
+//     // Is this needed? APH, 11/28/18
+//    buffer.add(nullptr, 0, MPI_INT, false);
+
+    return;
+  }
+
+  const VarLabel* label = dep->m_req->m_var;
+  const Patch* patch = dep->m_from_patch;
+  int matlIndex = dep->m_matl;
+  int my_rank = d_myworld->myRank();
+
+  switch ( label->typeDescription()->getType() ) {
+    case TypeDescription::ParticleVariable : {
+      IntVector low = dep->m_low;
+      IntVector high = dep->m_high;
       bool whole_patch_pset = false;
       // First, get the particle set.  We should already have it
       //      if(!old_dw->haveParticleSubset(matlIndex, patch, gt, ngc)){
-
+      //
       // if we already have a subset for the entire patch, there's little point
       // in getting another one (and if we did, it would cause synchronization problems - see
       // comment in sendMPI)
       ParticleSubset* recvset = nullptr;
-      if( lb && (lb->getOldProcessorAssignment( patch ) == d_myworld->myRank()
-             || lb->getPatchwiseProcessorAssignment( patch ) == d_myworld->myRank()) ) {
+      if( lb && (lb->getOldProcessorAssignment( patch ) == my_rank || lb->getPatchwiseProcessorAssignment( patch ) == my_rank) ) {
         // first part of the conditional means "we used to own the ghost data so use the same particles"
         // second part means "we were just assigned to this patch and need to receive the whole thing"
-        // we will never get here if they are both true, as mpi wouldn't need to be scheduled
+        // we will never get here if they are both true, as MPI wouldn't need to be scheduled
         ASSERT( old_dw->haveParticleSubset( matlIndex, patch ) );
         recvset = old_dw->getParticleSubset( matlIndex, patch );
         whole_patch_pset = true;
@@ -884,12 +887,11 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch
       ASSERT( recvset );
 
       ParticleVariableBase* var = nullptr;
-      if( m_var_DB.exists( label, matlIndex, patch ) ) {
+      if (m_var_DB.exists(label, matlIndex, patch)) {
         var = dynamic_cast<ParticleVariableBase*>( m_var_DB.get( label, matlIndex, patch ) );
         ASSERT( var->isForeign() )
       }
       else {
-
         var = dynamic_cast<ParticleVariableBase*>( label->typeDescription()->createInstance() );
         ASSERT( var != nullptr );
         var->setForeign();
@@ -910,9 +912,8 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch
                                       && this == old_dw) ) {
         var->getMPIBuffer( buffer, recvset );
       }
+      break;
     }
-    break;
-
     case TypeDescription::NCVariable :
     case TypeDescription::CCVariable :
     case TypeDescription::SFCXVariable :
@@ -927,7 +928,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch
       var->setForeign();
       var->setInvalid();
 
-      //add the var to the dependency batch and set it as invalid.  The variable is now invalid because there is outstanding MPI pointing to the variable.
+      // add the var to the dependency batch and set it as invalid.  The variable is now invalid because there is outstanding MPI pointing to the variable.
       batch->addVar( var );
       IntVector low, high, size;
       var->getSizes(low, high, size);
@@ -940,9 +941,8 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch
 
       m_var_DB.putForeign( label, matlIndex, patch, var, d_scheduler->copyTimestep() );  //put new var in data warehouse
       var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
+      break;
     }
-    break;
-
     default : {
       SCI_THROW( InternalError("recvMPI not implemented for "+label->getFullName(matlIndex, patch), __FILE__, __LINE__) );
     }

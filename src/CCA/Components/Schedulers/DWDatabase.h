@@ -649,7 +649,7 @@ DWDatabase<DomainType>::putForeign( const VarLabel   * label
   // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
-    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes - putForeign", __FILE__, __LINE__));
+    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "DWDatabase::putForeign", __FILE__, __LINE__));
   }
 
   DataItem* newdi = new DataItem();
