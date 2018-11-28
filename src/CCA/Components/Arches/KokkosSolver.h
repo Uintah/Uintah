@@ -48,7 +48,7 @@ namespace Uintah{
     Builder( MaterialManagerP& materialManager,
              const ProcessorGroup* myWorld,
              SolverInterface* solver,
-             const ApplicationCommon* arches ) :
+             ApplicationCommon* arches ) :
              m_materialManager(materialManager),
              m_myWorld(myWorld),
              m_solver(solver),
@@ -68,14 +68,14 @@ namespace Uintah{
     MaterialManagerP& m_materialManager;
     const ProcessorGroup* m_myWorld;
     SolverInterface* m_solver;
-    const ApplicationCommon* m_arches;
+    ApplicationCommon* m_arches;
 
   };
 
   KokkosSolver( MaterialManagerP& materialManager,
                 const ProcessorGroup* myworld,
                 SolverInterface* solver,
-                const ApplicationCommon* arches );
+		ApplicationCommon* arches );
 
   virtual ~KokkosSolver();
 
@@ -94,6 +94,9 @@ namespace Uintah{
 
   /** @brief Solve the system with an SSP-RK method, Gottlieb et al, 2001, SIAM Review **/
   void SSPRKSolve( const LevelP& level, SchedulerP& sched );
+
+  /** @brief Solve the system with an SSP-RK method, Gottlieb et al, 2001, SIAM Review : using production code algorithm**/
+  void SSPRKv2Solve( const LevelP& level, SchedulerP& sched );
 
   /** @brief A Sandbox solver **/
   void SandBox( const LevelP& level, SchedulerP& sched );
@@ -124,12 +127,14 @@ namespace Uintah{
   private:
 
     /** @brief Determines/schedules the work performed for the timestep **/
-    enum NONLINEARSOLVER {SSPRK, SANDBOX};
+    enum NONLINEARSOLVER {SSPRK, SANDBOX, HELIUM_PLUME};
 
     /** @brief Map a string value to the enum for the solver type **/
     void setSolver( std::string solver_string ){
       if ( solver_string == "ssprk" ){
         m_nonlinear_solver =  SSPRK;
+      } else if ( solver_string == "helium_plume" ){
+        m_nonlinear_solver = HELIUM_PLUME;
       } else if ( solver_string == "sandbox" ){
         m_nonlinear_solver = SANDBOX;
       } else {
@@ -139,14 +144,6 @@ namespace Uintah{
     }
 
     void setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSet* matls );
-
-    int getTaskGraphIndex(const int timeStep ) {
-      return 0;
-    }
-
-    int taskGraphsRequested() {
-      return 1;
-    }
 
     MaterialManagerP& m_materialManager;
 

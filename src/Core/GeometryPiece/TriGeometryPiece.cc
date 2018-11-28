@@ -54,7 +54,6 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 #ifdef USE_PLANES
   makePlanes();
 #endif
-//  makeTriBoxes();
 
   // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
 
@@ -65,9 +64,32 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   tri_list = tri.makeTriList(d_tri,d_points);
   d_grid = scinew UniformGrid(d_box);
   d_grid->buildUniformGrid(tri_list);
-
-
+  d_points.clear();
 }
+
+TriGeometryPiece::TriGeometryPiece(string filename)
+{
+  name_ = "Unnamed Tri";
+
+  d_file = filename;
+
+  readPoints(d_file);
+  readTri(d_file);
+#ifdef USE_PLANES
+  makePlanes();
+#endif
+
+  // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
+
+  // The Tri class sits inside of UniformGrid.h
+  list<Tri> tri_list;
+  Tri tri;
+
+  tri_list = tri.makeTriList(d_tri,d_points);
+  d_grid = scinew UniformGrid(d_box);
+  d_grid->buildUniformGrid(tri_list);
+}
+
 
 TriGeometryPiece::TriGeometryPiece(const TriGeometryPiece& copy)
 {
@@ -149,12 +171,20 @@ TriGeometryPiece::insideNew(const Point &p,int& cross) const
   if (!(p == Max(p,d_box.lower()) && p == Min(p,d_box.upper())))
     return false;
 
-  d_grid->countIntersections(p,cross);
+  int crossx=0;
+  int crossy=0;
+  int crossz=0;
+  d_grid->countIntersectionsx(p,crossx);
+  d_grid->countIntersectionsy(p,crossy);
+  d_grid->countIntersectionsz(p,crossz);
   //  cout << "Point " << p << " has " << cross << " crossings " << endl;
-  if (cross % 2)
+  if ((crossx % 2 == 1 && crossy % 2 ==1)||
+      (crossx % 2 == 1 && crossz % 2 ==1)||
+      (crossy % 2 == 1 && crossz % 2 ==1)){
     return true;
-  else
+  } else {
     return false;
+  }
 }
 
 
@@ -200,22 +230,22 @@ TriGeometryPiece::inside(const Point &p) const
       // intersection point is NOT behind the p.
       Vector int_ray = hit.asVector() - p.asVector();
       double cos_angle = Dot(infinity,int_ray)/
-	(infinity.length()*int_ray.length());
+        (infinity.length()*int_ray.length());
       if (cos_angle < 0.)
-	continue;
+        continue;
 
       insideTriangle(hit,i,NCS,NES);
       // cerr << "in = " << endl;
       if (NCS % 2 != 0) {
-	crossings++;
+        crossings++;
 #  if 0
-	cout << "Inside_old hit = " << hit << " vertices: " <<
-	  d_points[d_tri[i].x()] << " " << d_points[d_tri[i].y()] <<
-	  " " << d_points[d_tri[i].z()] << endl;
+        cout << "Inside_old hit = " << hit << " vertices: " <<
+          d_points[d_tri[i].x()] << " " << d_points[d_tri[i].y()] <<
+          " " << d_points[d_tri[i].z()] << endl;
 #  endif
       }
       if (NES != 0)
-	crossings -= NES/2;
+        crossings -= NES/2;
     } else
       continue;
   }
@@ -229,9 +259,9 @@ TriGeometryPiece::inside(const Point &p) const
   if (inside_new != crossing_test) {
     cout << "Point " << p << " have different inside test results" << endl;
     cout << "inside_new = " << inside_new << " crossing_test = "
-	 << crossing_test << endl;
+         << crossing_test << endl;
     cout << "cross_new = " << cross_new << " crossings = " << crossings
-	 << endl;
+         << endl;
   }
 #  endif
   return crossing_test;
@@ -312,6 +342,7 @@ TriGeometryPiece::makePlanes()
     Plane plane(pt[0],pt[1],pt[2]);
     d_planes.push_back(plane);
   }
+
 }
 #endif
 
@@ -441,14 +472,14 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
       NCS += 1;
     else if ( (trans_vt[0].x() > 0.0) || (trans_vt[1].x() > 0.0) ) {
       out_edge = (trans_vt[0].x() - trans_vt[0].y() *
-		  (trans_vt[1].x() - trans_vt[0].x())/
-		  (trans_vt[1].y() - trans_vt[0].y()) );
+                  (trans_vt[1].x() - trans_vt[0].x())/
+                  (trans_vt[1].y() - trans_vt[0].y()) );
       if (out_edge == 0.0) {
-	NES += 1;
-	NCS += 1;
+        NES += 1;
+        NCS += 1;
       }
       if (out_edge > 0.0)
-	NCS += 1;
+        NCS += 1;
     }
     SH = NSH;
   }
@@ -463,14 +494,14 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
       NCS += 1;
     else if ( (trans_vt[1].x() > 0.0) || (trans_vt[2].x() >0.0) ) {
       out_edge = (trans_vt[1].x() - trans_vt[1].y() *
-		  (trans_vt[2].x() -  trans_vt[1].x())/
-		  (trans_vt[2].y() - trans_vt[1].y()) );
+                  (trans_vt[2].x() -  trans_vt[1].x())/
+                  (trans_vt[2].y() - trans_vt[1].y()) );
       if (out_edge == 0.0){
-	NES += 1;
-	NCS += 1;
+        NES += 1;
+        NCS += 1;
       }
       if (out_edge > 0.0)
-	NCS +=1;
+        NCS +=1;
     }
     SH = NSH;
   }
@@ -487,14 +518,14 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
 
     else if ( (trans_vt[2].x() > 0.0) || (trans_vt[0].x() >0.0) ) {
       out_edge =  (trans_vt[2].x() - trans_vt[2].y() *
-		   (trans_vt[0].x() - trans_vt[2].x())/
-		   (trans_vt[0].y() - trans_vt[2].y()) );
+                   (trans_vt[0].x() - trans_vt[2].x())/
+                   (trans_vt[0].y() - trans_vt[2].y()) );
       if (out_edge == 0.0) {
-	NES +=1;
-	NCS +=1;
+        NES +=1;
+        NCS +=1;
       }
       if (out_edge > 0.0)
-	NCS += 1;
+        NCS += 1;
     }
     SH = NSH;
   }

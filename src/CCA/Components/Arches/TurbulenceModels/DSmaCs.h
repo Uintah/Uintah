@@ -39,16 +39,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       DSmaCs* build()
-      { return scinew DSmaCs<TT>( _task_name, _matl_index ); }
+      { return scinew DSmaCs<TT>( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
     };
 
 private:
@@ -184,7 +184,8 @@ DSmaCs<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
 DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
-                                          variable_registry, const int time_substep , const bool packed_tasks){
+                                    variable_registry,
+                                    const int time_substep , const bool packed_tasks ){
 
   if (m_create_labels_IsI_t_viscosity) {
     register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
@@ -206,13 +207,12 @@ DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
   register_variable( m_density_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
-  register_variable( "filterML" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "filterMM" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  register_variable( "filterML", ArchesFieldContainer::COMPUTES, variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "filterMM", ArchesFieldContainer::COMPUTES, variable_registry, time_substep , m_task_name, packed_tasks);
 
-  register_variable("MM" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-  register_variable("ML" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-  register_variable(m_IsI_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-
+  register_variable("MM" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
+  register_variable("ML" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
+  register_variable(m_IsI_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
 
 }
 
@@ -226,12 +226,14 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
   Cs.initialize(0.0);
+  mu_sgc.initialize(0.0);
+  mu_turb.initialize(0.0);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  int nG = -1;
-  if ( tsk_info->packed_tasks() ){
-    nG = 0;
-  }
+  // int nG = -1;
+  // if ( tsk_info->packed_tasks() ){
+  //   nG = 0;
+  // }
 
 
   const Vector Dx = patch->dCell(); //
@@ -248,10 +250,8 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   MM = c_field_tool.get("MM");
   IsI = c_field_tool.get(m_IsI_name);
 
-  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML", nG);
-  //CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
-  //CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
-  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM", nG);
+  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
+  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
   filterML.initialize(0.0);
   filterMM.initialize(0.0);
 

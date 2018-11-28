@@ -33,13 +33,11 @@ SRCS += \
 				$(SRCDIR)/DSmaCs.cc \
 				$(SRCDIR)/DSFT.cc \
 				$(SRCDIR)/DSmaMMML.cc \
-				$(SRCDIR)/DSmaCsv2.cc \
-				$(SRCDIR)/DSFTv2.cc \
-				$(SRCDIR)/DSmaMMMLv2.cc \
 				$(SRCDIR)/WALE.cc \
 				$(SRCDIR)/FractalUD.cc \
 				$(SRCDIR)/MultifractalSGS.cc \
 				$(SRCDIR)/SGSforTransport.cc \
+				$(SRCDIR)/WallConstSmag.cc \
 				$(SRCDIR)/TurbulenceModelFactory.cc
 
 ########################################################################

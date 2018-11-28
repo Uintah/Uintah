@@ -28,7 +28,6 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <CCA/Components/Application/ApplicationCommon.h>
 
 //--------------------------------------------------------------------------------------------------
 /**
@@ -51,19 +50,17 @@
 //--------------------------------------------------------------------------------------------------
 
 namespace Uintah {
-class TimeIntegratorLabel;
-class PartVel;
-class DQMOM;
-class CQMOM;
-class CQMOM_Convection;
-class CQMOMSourceWrapper;
+class ProcessorGroup;
+class ApplicationCommon;
 class ArchesBCHelper;
+class DataWarehouse;
+  
 class NonlinearSolver {
 
 public:
 
   NonlinearSolver( const ProcessorGroup* myworld,
-                   const ApplicationCommon* arches );
+                   ApplicationCommon* arches );
 
   virtual ~NonlinearSolver();
 
@@ -86,10 +83,13 @@ public:
 
   virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0;
 
-  virtual int getTaskGraphIndex(const int timeStep ) = 0;
-
-  virtual int taskGraphsRequested() = 0;
-
+  // An optional call for the application to check their reduction vars.
+  virtual void checkReductionVars( const ProcessorGroup * pg,
+                                   const PatchSubset    * patches,
+                                   const MaterialSubset * matls,
+                                         DataWarehouse  * old_dw,
+                                         DataWarehouse  * new_dw ) {};
+    
   class NLSolverBuilder {
 
     public:
@@ -111,7 +111,7 @@ public:
 protected:
 
    const ProcessorGroup * d_myworld;
-   const ApplicationCommon* m_arches;
+   ApplicationCommon*     m_arches;
    std::string            d_timeIntegratorType;
    double                 d_initial_dt;
    bool                   d_underflow;

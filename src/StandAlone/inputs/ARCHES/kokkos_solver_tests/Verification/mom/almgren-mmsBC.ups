@@ -49,7 +49,7 @@
     </Level>
     <BoundaryConditions>
       <DefaultMaterial>all</DefaultMaterial>
-      <Face side="x-" type = "Wall" >
+      <Face side="x-" type = "Inlet" >
         <BCType var="Custom" label="x-mom" type="MMS_almgren">
           <which_vel>u</which_vel>
           <coordinates x="ucellX" y="gridY"/>
@@ -65,7 +65,7 @@
         </BCType>
       </Face>
 
-      <Face side="x+" type ="Wall" >
+      <Face side="x+" type ="Inlet" >
         <BCType var="Custom" label="x-mom" type="MMS_almgren">
           <which_vel>u</which_vel>
           <coordinates x="ucellX" y="gridY"/>
@@ -81,7 +81,7 @@
         </BCType>
       </Face>
 
-      <Face side="y-" type ="Wall" >
+      <Face side="y-" type ="Inlet" >
         <BCType var="Custom" label="x-mom" type="MMS_almgren">
           <which_vel>u</which_vel>
           <coordinates x="ucellX" y="gridY"/>
@@ -97,7 +97,7 @@
         </BCType>
       </Face>
 
-      <Face side="y+" type ="Wall" >
+      <Face side="y+" type ="Inlet" >
         <BCType var="Custom" label="x-mom" type="MMS_almgren">
           <which_vel>u</which_vel>
           <coordinates x="ucellX" y="gridY"/>
@@ -113,7 +113,7 @@
         </BCType>
       </Face>
 
-      <Face side="z-" type ="Wall"  >
+      <Face side="z-" type ="Inlet"  >
         <BCType var="Neumann" label="x-mom">
           <value>0.</value>
         </BCType>
@@ -125,7 +125,7 @@
         </BCType>
       </Face>
 
-      <Face side="z+" type ="Wall" >
+      <Face side="z+" type ="Inlet" >
         <BCType var="Neumann" label="x-mom">
           <value>0.</value>
         </BCType>

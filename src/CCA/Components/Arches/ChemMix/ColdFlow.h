@@ -108,13 +108,6 @@ public:
 
   enum BoundaryType { DIRICHLET, NEUMANN, FROMFILE };
 
-  struct DepVarCont {
-
-    CCVariable<double>* var;
-    //int index;
-
-  };
-
   typedef std::map<std::string, DepVarCont >       DepVarMap;
   typedef std::map<std::string, int >               IndexMap;
 

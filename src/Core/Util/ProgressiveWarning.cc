@@ -35,8 +35,8 @@ namespace {
 }
 
 ProgressiveWarning::ProgressiveWarning(const std::string & message,
-				       int multiplier /* = -1 */, 
-				       std::ostream & stream /* = cerr */)
+                                       int multiplier /* = -1 */, 
+                                       std::ostream & stream /* = cerr */)
 {
   d_message = message;
   d_multiplier = multiplier;
@@ -89,5 +89,5 @@ void
 ProgressiveWarning::showWarning()
 {
   (*d_out) << d_message << "\n";
-  (*d_out) << "  This warning has occurred " << d_numOccurences << " times.\n";
+  (*d_out) << "  This warning has occurred " << d_numOccurences << ((d_numOccurences == 1) ? " time.\n" : " times.\n");
 }

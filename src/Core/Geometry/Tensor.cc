@@ -166,13 +166,13 @@ void Tensor::build_mat_from_eigens() {
     for (j=0; j<3; j++) {
       SE[i][j]=0;
       for (k=0; k<3; k++)
-	SE[i][j] += S[i][k] * E[j][k];  // S x E-transpose
+        SE[i][j] += S[i][k] * E[j][k];  // S x E-transpose
     }
   for (i=0; i<3; i++)
     for (j=0; j<3; j++) {
       mat_[i][j]=0;
       for (k=0; k<3; k++)
-	mat_[i][j] += E[i][k] * SE[k][j];
+        mat_[i][j] += E[i][k] * SE[k][j];
     }
 }
 
@@ -181,7 +181,7 @@ int Tensor::operator==(const Tensor& t) const
   for(int i=0;i<3;i++)
     for(int j=0;j<3;j++)
       if( mat_[i][j]!=t.mat_[i][j])
-	return false;
+        return false;
 
   return true;
 }
@@ -191,7 +191,7 @@ int Tensor::operator!=(const Tensor& t) const
   for(int i=0;i<3;i++)
     for(int j=0;j<3;j++)
       if( mat_[i][j]!=t.mat_[i][j])
-	return true;
+        return true;
 
   return false;
 }
@@ -296,8 +296,8 @@ Tensor Tensor::operator*(const double s) const
 Vector Tensor::operator*(const Vector v) const
 {
   return Vector(v.x()*mat_[0][0]+v.y()*mat_[0][1]+v.z()*mat_[0][2],
-		v.x()*mat_[1][0]+v.y()*mat_[1][1]+v.z()*mat_[1][2],
-		v.x()*mat_[2][0]+v.y()*mat_[2][1]+v.z()*mat_[2][2]);
+                v.x()*mat_[1][0]+v.y()*mat_[1][1]+v.z()*mat_[1][2],
+                v.x()*mat_[2][0]+v.y()*mat_[2][1]+v.z()*mat_[2][2]);
 }
 
 void Tensor::build_eigens_from_mat()
@@ -335,8 +335,8 @@ void Tensor::set_eigens(const Vector &e1, const Vector &e2, const Vector &e3) {
 }
 
 void Tensor::set_outside_eigens(const Vector &e1, const Vector &e2,
-				const Vector &e3,
-				double v1, double v2, double v3)
+                                const Vector &e3,
+                                double v1, double v2, double v3)
 {
   e1_ = e1; e2_ = e2; e3_ = e3;
   l1_ = v1; l2_ = v2; l3_ = v3;

@@ -12,6 +12,8 @@
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/SourceTerms/BowmanNOx.h>
 #include <CCA/Components/Arches/SourceTerms/BrownSoot.h>
+#include <CCA/Components/Arches/SourceTerms/MoMICSoot.h>
+#include <CCA/Components/Arches/SourceTerms/MonoSoot.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/SourceTerms/DORadiation.h>
@@ -288,6 +290,14 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         SourceTermBase::Builder* srcBuilder = scinew BrownSoot::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
+      } else if (src_type == "momic_soot") {
+        SourceTermBase::Builder* srcBuilder = scinew MoMICSoot::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+      
+      } else if (src_type == "mono_soot") {
+        SourceTermBase::Builder* srcBuilder = scinew MonoSoot::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+      
       } else if (src_type == "ht_convection") {
         SourceTermBase::Builder* srcBuilder = scinew HTConvection::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );

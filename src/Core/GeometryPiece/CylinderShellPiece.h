@@ -41,13 +41,13 @@ namespace Uintah {
   /////////////////////////////////////////////////////////////////////////////
   /*!
     \class CylinderShellPiece
-	
+        
     \brief Creates a cylindrical shell from the xml input file description.
-	
+        
     \author Biswajit Banerjee \n
     C-SAFE and Department of Mechanical Engineering \n
     University of Utah \n
-	
+        
     \warning Symmetry boundary conditions should be applied with care
 
     Creates a cylinder from the xml input file description.
@@ -62,19 +62,19 @@ namespace Uintah {
       <num_circum>40</num_circum>
     </cylinder>
     \endverbatim
-	
+        
   */
   /////////////////////////////////////////////////////////////////////////////
 
   class CylinderShellPiece : public ShellGeometryPiece {
-	 
+         
   public:
     //////////////////////////////////////////////////////////////////////
     /*! \brief  Constructor that takes a ProblemSpecP argument.   
       It reads the xml input specification and builds a cylinder. */
     //////////////////////////////////////////////////////////////////////
     CylinderShellPiece(ProblemSpecP &);
-	 
+         
     //////////////////////////////////////////////////////////////////////
     /*! \brief Destructor */
     //////////////////////////////////////////////////////////////////////
@@ -85,12 +85,12 @@ namespace Uintah {
 
     /// Make a clone
     virtual GeometryPieceP clone() const;
-	 
+         
     //////////////////////////////////////////////////////////////////////
     /*! \brief Determines whether a point is inside the cylinder.  */
     //////////////////////////////////////////////////////////////////////
     virtual bool inside(const Point &p) const;
-	 
+         
     //////////////////////////////////////////////////////////////////////
     /*! \brief Returns the bounding box surrounding the box. */
     //////////////////////////////////////////////////////////////////////
@@ -105,16 +105,16 @@ namespace Uintah {
     /*! \brief Creates the particles */
     //////////////////////////////////////////////////////////////////////
     int createParticles(const Patch* patch,
-			ParticleVariable<Point>&  pos,
-			ParticleVariable<double>& vol,
-			ParticleVariable<double>& pThickTop,
-			ParticleVariable<double>& pThickBot,
-			ParticleVariable<Vector>& pNormal,
-			ParticleVariable<Matrix3>& psize,
-			particleIndex start);
+                        ParticleVariable<Point>&  pos,
+                        ParticleVariable<double>& vol,
+                        ParticleVariable<double>& pThickTop,
+                        ParticleVariable<double>& pThickBot,
+                        ParticleVariable<Vector>& pNormal,
+                        ParticleVariable<Matrix3>& psize,
+                        particleIndex start);
 
   private:
-	 
+         
     virtual void outputHelper( ProblemSpecP & ps ) const;
 
     Point  d_bottom;

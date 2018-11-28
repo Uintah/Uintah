@@ -286,7 +286,7 @@ Grid::parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel )
       else if( !foundId ) {
         static bool warned_once = false;
         if( !warned_once ){
-	  std::cerr << "WARNING: Data archive does not have level ID.\n";
+          std::cerr << "WARNING: Data archive does not have level ID.\n";
           std::cerr << "This is okay, as long as you aren't trying to do AMR.\n";
         }
         warned_once = true;
@@ -964,11 +964,11 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         if( diff_upper > max_component_upper * epsilon ){
           
           std::cerr << " boxLabel: " << boxLabel << '\n'
-		    << "upper    = " << upper << '\n'
-		    << "lowCell  = " << lowCell << '\n'
-		    << "highCell = " << highCell << '\n'
-		    << "upper2   = " << upper2 << '\n'
-		    << "diff     = " << diff_upper << '\n';
+                    << "upper    = " << upper << '\n'
+                    << "lowCell  = " << lowCell << '\n'
+                    << "highCell = " << highCell << '\n'
+                    << "upper2   = " << upper2 << '\n'
+                    << "diff     = " << diff_upper << '\n';
           throw ProblemSetupException("Box upper corner does not coincide with grid", __FILE__, __LINE__);
         }
 
@@ -1008,7 +1008,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           
           Primes::FactorType factors;
           int numFactors = Primes::factorize(targetPatches, factors);
-	  std::list<int> primeList;
+          std::list<int> primeList;
           for(int i=0; i<numFactors; ++i) {
             primeList.push_back(factors[i]);
           }
@@ -1055,7 +1055,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         // bulletproofing: catch patches > resolution 
         for (int d=0; d<3; d++) {
           if ( patches[d] > resolution[d] ){
-	    std::ostringstream desc;
+            std::ostringstream desc;
             desc << "   ERROR: The number of patches in direction (" << d << ") is greater than the number of cells."
                  << " (patches: " << patches << ", cells: " << resolution << ")";
             throw InvalidGrid(desc.str(),__FILE__,__LINE__);

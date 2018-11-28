@@ -21,16 +21,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       Diffusion* build()
-      { return scinew Diffusion<T>( _task_name, _matl_index ); }
+      { return scinew Diffusion<T>( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
     };
 
@@ -115,7 +115,7 @@ private:
         db->findBlock("diffusion_coef")->getAttribute("label",m_D_name);
       } else {
         std::stringstream msg;
-        msg << "Error: Diffusion specified for task " << _task_name << std::endl
+        msg << "Error: Diffusion specified for task " << m_task_name << std::endl
         << "but no diffusion coefficient label specified." << std::endl;
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
       }
@@ -143,9 +143,9 @@ private:
 
     for (int ieqn = 0; ieqn < int(m_eqn_names.size()); ieqn++ ){
       if ( m_do_diff[ieqn] ){
-        register_variable(  m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
-        register_variable(  m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
-        register_variable(  m_eqn_names[ieqn]+"_z_dflux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
+        register_variable(  m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+        register_variable(  m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+        register_variable(  m_eqn_names[ieqn]+"_z_dflux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
       }
     }
 
@@ -182,16 +182,16 @@ private:
         //should this be latest?
         register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1,
                             ArchesFieldContainer::LATEST, variable_registry,
-                            time_substep, _task_name );
-        register_variable(  m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
-        register_variable(  m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
-        register_variable(  m_eqn_names[ieqn]+"_z_dflux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
+                            time_substep, m_task_name );
+        register_variable(  m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+        register_variable(  m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+        register_variable(  m_eqn_names[ieqn]+"_z_dflux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
       }
     }
     if ( m_has_D ){
-      register_variable( m_D_name, ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep, _task_name );
+      register_variable( m_D_name, ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep, m_task_name );
     }
-    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep, _task_name );
+    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
   }
 
   //------------------------------------------------------------------------------------------------

@@ -31,7 +31,6 @@
 #include <Core/Exceptions/TypeMismatchException.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
-#include <Core/IO/SpecializedRunLengthEncoder.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <CCA/Ports/InputContext.h>
@@ -97,11 +96,6 @@ WARNING
 
     static const GridVariable<T>& castFromBase(const GridVariableBase* srcptr);
 
-    //////////
-    // Insert Documentation Here:
-#if !defined(_AIX)
-    using GridVariableBase::allocate; // Quiets PGI compiler warning about hidden virtual function...
-#endif
     virtual void allocate(const IntVector& lowIndex, const IntVector& highIndex);
 
     //////////
@@ -200,25 +194,6 @@ WARNING
       }
     }
 
-    virtual bool emitRLE(std::ostream& out, const IntVector& l, const IntVector& h,
-                         ProblemSpecP /*varnode*/)
-    {
-      const TypeDescription* td = fun_getTypeDescription((T*)0);
-      if(td->isFlat()){
-        RunLengthEncoder<T> rle;
-        Array3<T> & a3 = *this;
-
-        serial_for( a3.range(), [&](int i, int j, int k) {
-          rle.addItem( a3(i,j,k) );
-        });
-
-        rle.write(out);
-      }
-      else
-        SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
-      return true;
-    }
-
     virtual void readNormal(std::istream& in, bool swapBytes)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
@@ -226,28 +201,6 @@ WARNING
         Array3<T>::read(in, swapBytes);
       else
         SCI_THROW(InternalError("Cannot yet read non-flat objects!\n", __FILE__, __LINE__));
-    }
-
-    virtual void readRLE(std::istream& in, bool swapBytes, int nByteMode)
-    {
-      const TypeDescription* td = fun_getTypeDescription((T*)0);
-      if( td->isFlat() ) {
-        RunLengthEncoder<T> rle( in, swapBytes, nByteMode );
-
-        Array3<T> & a3 = *this;
-        auto in_itr = rle.begin();
-        const auto end_itr = rle.end();
-
-        serial_for( a3.range(), [&](int i, int j, int k) {
-          if (in_itr != end_itr) {
-            a3(i,j,k) = *in_itr;
-            ++in_itr;
-          }
-        });
-      }
-      else {
-        SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
-      }
     }
 
     virtual RefCounted* getRefCounted() { return this->getWindow(); }

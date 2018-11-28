@@ -189,6 +189,8 @@ inline bool typeMatch( BC_TYPE check_type, std::vector<BC_TYPE >& type_list ){
   return found_match;
 };
 
+Vector getMaxIntrusionVelocity( const Level* level );
+
 void prune_per_patch_bcinfo( SchedulerP& sched,
                              const LevelP& level,
                              WBCHelper* bcHelper );
@@ -313,13 +315,6 @@ void sched_setupNewIntrusionCellType( SchedulerP& sched,
                                       const MaterialSet* matls,
                                       const bool doing_restart );
 
-void setHattedIntrusionVelocity( const Patch* p,
-                                 SFCXVariable<double>& u,
-                                 SFCYVariable<double>& v,
-                                 SFCZVariable<double>& w,
-                                 constCCVariable<double>& density,
-                                 bool& set_nonnormal_values );
-
 void sched_setIntrusionDensity( SchedulerP& sched,
                                 const LevelP& level,
                                 const MaterialSet* matls );
@@ -389,6 +384,22 @@ void create_radiation_temperature( const ProcessorGroup* pc,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw,
                                    const bool use_old_dw);
+
+/** @brief Add the intrusion momentum source to vel hats RHS **/
+void
+addIntrusionMomRHS( const Patch* patch,
+                    constSFCXVariable<double>& uVel,
+                    constSFCYVariable<double>& vVel,
+                    constSFCZVariable<double>& wVel,
+                    SFCXVariable<double>& usrc,
+                    SFCYVariable<double>& vsrc,
+                    SFCZVariable<double>& wsrc,
+                    constCCVariable<double>& density );
+
+/** @brief Add the intrusion mass source **/
+void
+addIntrusionMassRHS( const Patch* patch,
+                     CCVariable<double>& mass_src );
 
 BoundaryCondition(const ArchesLabel* label,
                   const MPMArchesLabel* MAlb,

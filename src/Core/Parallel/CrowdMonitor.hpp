@@ -38,9 +38,9 @@ class CrowdMonitor
 
 public:
 
-  enum Type { READER, WRITER };
+  enum MonitorType { READER, WRITER };
 
-  CrowdMonitor( Type t)
+  CrowdMonitor( MonitorType t)
     : m_type(t)
   {
     if (m_type == READER) {
@@ -74,7 +74,7 @@ private:
 
   static Uintah::MasterLock s_mutex;
   static std::atomic<int>   s_count;
-  Type                      m_type;
+  MonitorType               m_type;
 
 };
 

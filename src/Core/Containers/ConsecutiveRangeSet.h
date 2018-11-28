@@ -107,7 +107,7 @@ private:
 class ConsecutiveRangeSet
 {
   friend std::ostream& operator<<(std::ostream& out,
-				  const ConsecutiveRangeSet& set);
+                                  const ConsecutiveRangeSet& set);
 public:
   
   class iterator
@@ -160,7 +160,7 @@ public:
     { return low_ < r2.low_; }
 
     inline void display(std::ostream& out) const;
-	
+        
     int high() const { return (int)(low_ + extent_); }
     int low_;
     unsigned long extent_;

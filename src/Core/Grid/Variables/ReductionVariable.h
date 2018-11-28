@@ -26,7 +26,6 @@
 #define UINTAH_HOMEBREW_ReductionVARIABLE_H
 
 #include <Core/Grid/Variables/ReductionVariableBase.h>
-#include <Core/Grid/Variables/DataItem.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/TypeMismatchException.h>
@@ -130,7 +129,7 @@ WARNING
       void* src = (void*)(&value);
       size_t numBytes = getDataSize();
       void* retVal = std::memcpy(dst, src, numBytes);
-      return (retVal == dst) ? true : false;
+      return (retVal == dst);
     }
 
     //! Sets the value to a harmless value that will have no impact
@@ -141,10 +140,9 @@ WARNING
     }
 
     // check if the value is benign value
-    virtual bool isBenignValue() {
+    virtual bool isBenignValue() const {
       Op op;
-      if (value==op.getBenignValue()) return true;
-      else return false;
+      return (value == op.getBenignValue());
     }
 
   private:

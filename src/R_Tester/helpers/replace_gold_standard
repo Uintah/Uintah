@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #
 # replace_gold_standard
 #
@@ -18,6 +17,9 @@
 #       comment            : Required:  Comment for the log file
 #
 #__________________________________
+
+export NCURSES_NO_UTF8_ACS=1   # fix for dialog issue with certain terminals
+
 # Defaults
 do_all="false"
 do_uda="false"

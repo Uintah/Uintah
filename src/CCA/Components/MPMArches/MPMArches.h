@@ -78,7 +78,6 @@ namespace Uintah {
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/Arches/Arches.h>
-#include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Geometry/Vector.h>
 
 #undef RIGID_MPM
@@ -86,9 +85,9 @@ namespace Uintah {
 
 namespace Uintah {
 
+  class ArchesLabel;
 
-
- const TypeDescription* fun_getTypeDescription(cutcell*);
+  const TypeDescription* fun_getTypeDescription(cutcell*);
 
 class MPMArches : public ApplicationCommon {
 public:
@@ -137,7 +136,7 @@ public:
 
   //////////
   virtual void scheduleAnalysis( const LevelP& level, 
-				 SchedulerP&);
+				 SchedulerP&){};
 
   // Copy cut cell information from time step to next time step
   void scheduleCopyCutCells(SchedulerP& sched,
@@ -373,14 +372,11 @@ public:
 #endif
 
   Arches*          d_arches;
-  
-  std::vector<AnalysisModule*> d_analysisModules;
 
   double d_tcond;
   bool d_calcEnergyExchange;
   bool d_DORad;
   bool d_radiation;
-  int nofTimesteps;
   double prturb;
   double cpfluid;
   bool d_useCutCell;
@@ -393,7 +389,6 @@ public:
   bool calcVolFracMPM;
   bool calcVel;
   bool d_stairstep;
-  bool d_doingRestart; 
 
   enum CENTROID {CENX=1, CENY, CENZ};    
   enum SURFNORM {NORMX=4, NORMY, NORMZ};

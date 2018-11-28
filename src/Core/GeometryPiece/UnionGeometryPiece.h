@@ -31,28 +31,28 @@
 
 namespace Uintah {
 /**************************************
-	
+        
 CLASS
    UnionGeometryPiece
-	
+        
    Creates a collection of geometry pieces from the xml input 
    file description. 
-	
+        
 GENERAL INFORMATION
-	
+        
    UnionGeometryPiece.h
-	
+        
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
-	
+        
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
+        
  
-	
+        
 KEYWORDS
    UnionGeometryPiece BoundingBox inside
-	
+        
 DESCRIPTION
    Creates a union of different geometry pieces from the xml input 
    file description.
@@ -62,18 +62,18 @@ DESCRIPTION
    The input form looks like this:
    <union>
      <box>
-	     <min>[0.,0.,0.]</min>
-	     <max>[1.,1.,1.]</max>
-	   </box>
-	   <sphere>
-	     <origin>[.5,.5,.5]</origin>
-	     <radius>1.5</radius>
-	   </sphere>
+             <min>[0.,0.,0.]</min>
+             <max>[1.,1.,1.]</max>
+           </box>
+           <sphere>
+             <origin>[.5,.5,.5]</origin>
+             <radius>1.5</radius>
+           </sphere>
    </union>
-	
-	
+        
+        
 WARNING
-	
+        
 ****************************************/
 
   class UnionGeometryPiece : public GeometryPiece {

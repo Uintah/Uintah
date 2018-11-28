@@ -73,7 +73,8 @@ namespace Uintah {
 
 // These are used externally, keep them visible outside this unit
   Dout g_task_order( "TaskOrder", "MPIScheduler", "task order debug stream", false );
-  Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "output each task name as it begins/ends", false );
+  Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "output each task name as it begins/ends or when threaded, ready", false );
+  Dout g_task_run(   "TaskRun"  , "MPIScheduler", "output each task name as it runs", false );
   Dout g_mpi_dbg(    "MPIDBG"   , "MPIScheduler", "MPI debug stream", false );
   Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", false );
 
@@ -123,12 +124,12 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
 
   std::string timeStr("seconds");
 
-  mpi_info_.insert( TotalSend  , std::string("TotalSend")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalRecv  , std::string("TotalRecv")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalTest  , std::string("TotalTest")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalWait  , std::string("TotalWait")  ,    timeStr, 0 );
-  mpi_info_.insert( TotalReduce, std::string("TotalReduce"),    timeStr, 0 );
-  mpi_info_.insert( TotalTask  , std::string("TotalTask")  ,    timeStr, 0 );
+  mpi_info_.insert( TotalSend  , std::string("TotalSend")  ,    timeStr );
+  mpi_info_.insert( TotalRecv  , std::string("TotalRecv")  ,    timeStr );
+  mpi_info_.insert( TotalTest  , std::string("TotalTest")  ,    timeStr );
+  mpi_info_.insert( TotalWait  , std::string("TotalWait")  ,    timeStr );
+  mpi_info_.insert( TotalReduce, std::string("TotalReduce"),    timeStr );
+  mpi_info_.insert( TotalTask  , std::string("TotalTask")  ,    timeStr );
 }
 
 //______________________________________________________________________
@@ -266,6 +267,8 @@ MPIScheduler::runTask( DetailedTask * dtask
     plain_old_dws[i] = m_dws[i].get_rep();
   }
 
+  DOUT(g_task_run, "Rank-" << d_myworld->myRank() << " Running task:   " << *dtask);
+  
   dtask->doit( d_myworld, m_dws, plain_old_dws );
 
   if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
@@ -373,7 +376,21 @@ MPIScheduler::postMPISends( DetailedTask * dtask
      }
 
      // if we send/recv to an output task, don't send/recv if not an output timestep
-     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
+
+     // ARS NOTE: Outputing and Checkpointing may be done out of snyc
+     // now. I.e. turned on just before it happens rather than turned
+     // on before the task graph execution.  As such, one should also
+     // be checking:
+     
+     // m_application->activeReductionVariable( "outputInterval" );
+     // m_application->activeReductionVariable( "checkpointInterval" );
+      
+     // However, if active the code below would be called regardless
+     // if an output or checkpoint time step or not. Not sure that is
+     // desired but not sure of the effect of not calling it and doing
+     // an out of sync output or checkpoint.
+     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output &&
+         !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
        DOUT(g_dbg, "Rank-" << my_rank << "   Ignoring non-output-timestep send for " << *req);
        continue;
      }
@@ -563,6 +580,19 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
+
+        // ARS NOTE: Outputing and Checkpointing may be done out of
+        // snyc now. I.e. turned on just before it happens rather than
+        // turned on before the task graph execution.  As such, one
+        // should also be checking:
+        
+        // m_application->activeReductionVariable( "outputInterval" );
+        // m_application->activeReductionVariable( "checkpointInterval" );
+        
+        // However, if active the code below would be called regardless
+        // if an output or checkpoint time step or not. Not sure that is
+        // desired but not sure of the effect of not calling it and doing
+        // an out of sync output or checkpoint.
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep()
             && !m_output->isCheckpointTimeStep()) {
           DOUT(g_dbg, "Rank-" << my_rank << "   Ignoring non-output-timestep receive for " << *req);
@@ -822,6 +852,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     if ( dtask->getTask()->getType() == Task::Reduction ) {
       if (!abort) {
         initiateReduction( dtask );
+
+        DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << " Completed task:   " << *dtask);
       }
     }
     else {

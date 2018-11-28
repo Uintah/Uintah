@@ -125,8 +125,8 @@ void MassFlowRate::register_massFlowRate( std::vector<ArchesFieldContainer::Vari
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( "m_dot_g"    , AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( "m_dot_p"    , AFC::COMPUTES, variable_registry, _task_name );
+  register_variable( "m_dot_g"    , AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "m_dot_p"    , AFC::COMPUTES, variable_registry, m_task_name );
 
   register_variable( "density"       , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
 

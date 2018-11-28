@@ -39,11 +39,10 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <sci_hash_map.h>
-
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 
@@ -70,10 +69,12 @@
 
 
 ****************************************/
+
+
 namespace {
 
-Uintah::MasterLock g_keyDB_mutex{};
-Uintah::MasterLock g_mvars_mutex{};
+Uintah::MasterLock g_keyDB_lock{};
+Uintah::MasterLock g_mvars_lock{};
 
 }
 
@@ -109,7 +110,7 @@ public:
 
 private:
 
-  using keyDBtype = hashmap<VarLabelMatl<DomainType>, int>;
+  using keyDBtype = std::unordered_map<VarLabelMatl<DomainType>, int>;
   keyDBtype m_keys;
 
   int m_key_count { 0 };
@@ -143,7 +144,6 @@ class DWDatabase {
             ,       bool         init
             ,       bool         replace
             );
-
 
     void putReduce( const VarLabel              * label
                   ,       int                     matlindex
@@ -252,13 +252,13 @@ class DWDatabase {
                          , const DomainType * dom
                          ) const;
 
-    KeyDatabase<DomainType>* m_keyDB {};
+    KeyDatabase<DomainType>* m_keyDB { nullptr };
 
     using varDBtype = std::vector<DataItem*>;
-    varDBtype m_vars;
+    varDBtype m_vars {};
 
     using scrubDBtype = std::vector<int>;
-    scrubDBtype m_scrubs;
+    scrubDBtype m_scrubs {};
 
     // eliminate copy, assignment and move
     DWDatabase( const DWDatabase & )            = delete;
@@ -295,7 +295,7 @@ template<class DomainType>
 void
 DWDatabase<DomainType>::cleanForeign()
 {
-  std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_mutex);
+  std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_lock);
 
   for (auto iter = m_vars.begin(); iter != m_vars.end(); ++iter) {
     if (*iter && (*iter)->m_var->isForeign()) {
@@ -351,11 +351,6 @@ DWDatabase<DomainType>::setScrubCount( const VarLabel   * label
     SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex, "DWDatabase::setScrubCount", __FILE__, __LINE__));
   }
   m_scrubs[idx] = count;
-
-  // TODO do we need this - APH 03/01/17
-//  if (!__sync_bool_compare_and_swap(&(m_scrubs[idx]), 0, count)) {
-//      SCI_THROW(InternalError("overwriting non-zero scrub counter", __FILE__, __LINE__));
-//  }
 }
 
 //______________________________________________________________________
@@ -434,7 +429,7 @@ KeyDatabase<DomainType>::lookup( const VarLabel   * label
                                , const DomainType * dom
                                )
 {
-  std::lock_guard<Uintah::MasterLock> lookup_lock(g_keyDB_mutex);
+  std::lock_guard<Uintah::MasterLock> lookup_lock(g_keyDB_lock);
 
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   typename keyDBtype::const_iterator const_iter = m_keys.find(v);
@@ -529,7 +524,7 @@ DWDatabase<DomainType>::exists( const VarLabel   * label
   int idx = m_keyDB->lookup(label, matlIndex, dom);
 
   {
-    std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_mutex);
+    std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_lock);
     if (idx == -1) {
       return false;
     }
@@ -557,7 +552,7 @@ DWDatabase<DomainType>::put( const VarLabel   * label
   ASSERT(matlIndex >= -1);
 
   {
-    std::lock_guard<Uintah::MasterLock> put_lock(g_keyDB_mutex);
+    std::lock_guard<Uintah::MasterLock> put_lock(g_keyDB_lock);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
@@ -598,13 +593,13 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
 {
   ASSERT(matlIndex >= -1);
 
-  {
-    std::lock_guard<Uintah::MasterLock> put_reduce_lock(g_keyDB_mutex);
+  { // scoping for std::lock_guard
+    std::lock_guard<Uintah::MasterLock> put_reduce_lock(g_keyDB_lock);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
     }
-  }
+  } // end scoping for std::lock_guard
 
   // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
@@ -644,7 +639,7 @@ DWDatabase<DomainType>::putForeign( const VarLabel   * label
   ASSERT(matlIndex >= -1);
 
   {
-    std::lock_guard<Uintah::MasterLock> put_foreign_lock(g_keyDB_mutex);
+    std::lock_guard<Uintah::MasterLock> put_foreign_lock(g_keyDB_lock);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
@@ -782,7 +777,7 @@ template<class DomainType>
 void
 DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatl<DomainType> > & v) const
 {
-  for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
+  for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); ++keyiter) {
     const VarLabelMatl<DomainType>& vlm = keyiter->first;
     if (m_vars[keyiter->second]) {
       v.push_back(vlm);
@@ -793,54 +788,37 @@ DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatl<DomainT
 } // namespace Uintah
 
 
+//______________________________________________________________________
 //
-// Hash function for VarLabelMatl
+// Custom hash function for VarLabelMatl
 //
-#ifdef HAVE_GNU_HASHMAP
+// Specialize std::hash structure and inject into the std namespace so that
+// VarLabelMatl<DomainType> can be used as a key in std::unordered_map
+//
+// NOTE: this is legit, and likely the easiest way to get this done due to templates (APH - 10/25/18).
+//
+// It is allowed to add template specializations for any standard library class template to the std namespace
+// only if the declaration depends on at least one program-defined type and the specialization satisfies all
+// requirements for the original template (https://en.cppreference.com/w/cpp/language/extending_std).
+//
+namespace std {
 
-  namespace __gnu_cxx
+using Uintah::VarLabelMatl;
+
+template<class DomainType>
+struct hash<VarLabelMatl<DomainType> > {
+  size_t operator()( const VarLabelMatl<DomainType>& v ) const
   {
-    using Uintah::DWDatabase;
-    using Uintah::VarLabelMatl;
-    template <class DomainType>
-    struct hash<VarLabelMatl<DomainType> > : public std::unary_function<VarLabelMatl<DomainType>, size_t>
-    {
-      size_t operator()(const VarLabelMatl<DomainType>& v) const
-      {
-        size_t h=0;
-        char *str =const_cast<char*> (v.label_->getName().data());
-        while (int c = *str++) h = h*7+c;
-        return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
-                 ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
-      }
-    };
+    size_t h = 0u;
+    char* str = const_cast<char*>(v.label_->getName().data());
+    while (int c = *str++) {
+      h = h * 7 + c;
+    }
+    return ((((size_t)v.label_) << (sizeof(size_t) / 2) ^ ((size_t)v.label_) >> (sizeof(size_t) / 2)) ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_);
   }
+};
 
-#elif HAVE_TR1_HASHMAP || HAVE_C11_HASHMAP 
+}  // end namespace std
 
-  namespace std {
-#if HAVE_TR1_HASHMAP 
-    namespace tr1 {
-#endif 
-      using Uintah::DWDatabase;
-      using Uintah::VarLabelMatl;
-      template <class DomainType>
-      struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t>
-      {
-        size_t operator()(const VarLabelMatl<DomainType>& v) const
-        {
-          size_t h=0;
-          char *str =const_cast<char*> (v.label_->getName().data());
-          while (int c = *str++) h = h*7+c;
-          return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
-                   ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
-        }
-      };
-#if HAVE_TR1_HASHMAP 
-    } // end namespace tr1
-#endif 
-  } // end namespace std
-
-#endif // HAVE_GNU_HASHMAP
 
 #endif // CCA_COMPONENTS_SCHEDULERS_DWDATABASE_H

@@ -21,6 +21,8 @@ namespace Uintah{
 
       if ( subset == "momentum_closure" ){
         return m_momentum_closure_tasks;
+      } else if ( subset == "wall_momentum_closure" ){
+        return m_wall_momentum_closure_tasks;
       } else if ( subset == "all_tasks" ){
         return _active_tasks;
       } else {
@@ -40,6 +42,7 @@ namespace Uintah{
   private:
 
     std::vector<std::string> m_momentum_closure_tasks;
+    std::vector<std::string> m_wall_momentum_closure_tasks;
 
   };
 }

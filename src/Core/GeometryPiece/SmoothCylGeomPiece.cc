@@ -102,7 +102,7 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
   if (angle > 0.0) d_angle = (M_PI/180.0)*angle;
   if (d_angle < 0.0 || d_angle > 2.0*M_PI)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Angle < 0.0 || > 360", 
-			   __FILE__, __LINE__ ));
+                           __FILE__, __LINE__ ));
 
   d_fileName = "none";
   ps->get("output_file", d_fileName);
@@ -398,8 +398,8 @@ SmoothCylGeomPiece::createCylPoints()
       double area;
    
       if (d_discretization == "constant_particle_volumes") {
-	numAngular = (int) ((d_angle - d_arcStart)*r/radInc);
-	numAngular = max(numAngular,1);
+        numAngular = (int) ((d_angle - d_arcStart)*r/radInc);
+        numAngular = max(numAngular,1);
         angularInc = (d_angle - d_arcStart)/(double) numAngular;
         area = 0.5*angularInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       } else {
@@ -421,40 +421,40 @@ SmoothCylGeomPiece::createCylPoints()
       }
 
       for (int jj = 0; jj < numAngular; ++jj) {
-	double phi = d_arcStart + (jj+0.5)*angularInc; 
-	double cosphi = cos(phi);
-	double sinphi = sin(phi);
+        double phi = d_arcStart + (jj+0.5)*angularInc; 
+        double cosphi = cos(phi);
+        double sinphi = sin(phi);
 
-	// Create points on xy plane
-	double x = r*cosphi;
-	double y = r*sinphi;
-	double z = 0;
-	Matrix3 size((d_angle - d_arcStart)*y/(numAngular*d_DX.x()),  thickness*x/(d_numRadial*r*d_DX.y()), 0.0,
-		     -(d_angle - d_arcStart)*x/(numAngular*d_DX.x()), thickness*y/(d_numRadial*r*d_DX.y()), 0.0,
-		     0.0                                            , 0.0                                   , length/(d_numAxial*d_DX.z()));
+        // Create points on xy plane
+        double x = r*cosphi;
+        double y = r*sinphi;
+        double z = 0;
+        Matrix3 size((d_angle - d_arcStart)*y/(numAngular*d_DX.x()),  thickness*x/(d_numRadial*r*d_DX.y()), 0.0,
+                     -(d_angle - d_arcStart)*x/(numAngular*d_DX.x()), thickness*y/(d_numRadial*r*d_DX.y()), 0.0,
+                     0.0                                            , 0.0                                   , length/(d_numAxial*d_DX.z()));
 
-	// Rotate points to correct orientation and
-	// Translate to correct position
-	Vector pp(x, y, z);
-	pp = R*pp + currCenter;
-	Point p(pp);
+        // Rotate points to correct orientation and
+        // Translate to correct position
+        Vector pp(x, y, z);
+        pp = R*pp + currCenter;
+        Point p(pp);
 
-	// Rotate size matrix
-	size = R*size*R.Transpose();
+        // Rotate size matrix
+        size = R*size*R.Transpose();
 
-	d_points.push_back(p);
-	d_volume.push_back(axisInc*area);
-	d_size.push_back(size);
+        d_points.push_back(p);
+        d_volume.push_back(axisInc*area);
+        d_size.push_back(size);
         // area vector contains three components, these are:
         // (area normal to r, area normal to circumference, area normal to axis)
-//	d_area.push_back(Vector(axisInc*r*angularInc,radInc*axisInc,area));
+//      d_area.push_back(Vector(axisInc*r*angularInc,radInc*axisInc,area));
 
         // area vector contains three components, these are:
         // (area normal to r, area normal to r, area normal to axis)
-	d_area.push_back(Vector(axisInc*r*angularInc,
+        d_area.push_back(Vector(axisInc*r*angularInc,
                                 axisInc*r*angularInc, area));
-	//cout << "Size["<<count<<"] = "<<d_size[count]<<endl;
-	count++;
+        //cout << "Size["<<count<<"] = "<<d_size[count]<<endl;
+        count++;
       }
     }
     currZ += axisInc;

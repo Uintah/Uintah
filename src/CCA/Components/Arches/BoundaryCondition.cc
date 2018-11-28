@@ -3943,20 +3943,6 @@ BoundaryCondition::velocityOutletPressureBC( const Patch* patch,
 }
 
 void
-BoundaryCondition::setHattedIntrusionVelocity( const Patch* p,
-                                               SFCXVariable<double>& u,
-                                               SFCYVariable<double>& v,
-                                               SFCZVariable<double>& w,
-                                               constCCVariable<double>& density,
-                                               bool& set_nonnormal_values )
-{
-  if ( _using_new_intrusion ) {
-    const Level* level = p->getLevel();
-    const int i = level->getID();
-    _intrusionBC[i]->setHattedVelocity( p, u, v, w, density, set_nonnormal_values );
-  }
-}
-void
 BoundaryCondition::sched_setupNewIntrusionCellType( SchedulerP& sched,
                                                     const LevelP& level,
                                                     const MaterialSet* matls,
@@ -4025,6 +4011,20 @@ BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
 
     }
   }
+}
+
+Vector BoundaryCondition::getMaxIntrusionVelocity( const Level* level ){
+
+  const int ilvl = level->getID();
+  if ( _using_new_intrusion ){
+    bool has_intrusion_inlets = _intrusionBC[ilvl]->has_intrusion_inlets();
+    if ( has_intrusion_inlets ){
+      return _intrusionBC[ilvl]->getMaxVelocity();
+    }
+  }
+
+  return Vector(0,0,0);
+
 }
 
 void
@@ -5459,4 +5459,42 @@ BoundaryCondition::create_radiation_temperature( const ProcessorGroup* pc,
     d_newBC->setExtraCellScalarValueBC<double>( pc, patch, radiation_temperature, "radiation_temperature" );
 
   }
+}
+
+void
+BoundaryCondition::addIntrusionMomRHS( const Patch* patch,
+                                       constSFCXVariable<double>& u,
+                                       constSFCYVariable<double>& v,
+                                       constSFCZVariable<double>& w,
+                                       SFCXVariable<double>& usrc,
+                                       SFCYVariable<double>& vsrc,
+                                       SFCZVariable<double>& wsrc,
+                                       constCCVariable<double>& density )
+{
+
+  const Level* level = patch->getLevel();
+  const int ilvl = level->getID();
+  if ( _using_new_intrusion ){
+    bool has_intrusion_inlets = _intrusionBC[ilvl]->has_intrusion_inlets();
+    if ( has_intrusion_inlets ){
+      _intrusionBC[ilvl]->addMomRHS( patch, u, v, w, usrc, vsrc, wsrc, density );
+    }
+  }
+
+}
+
+void
+BoundaryCondition::addIntrusionMassRHS( const Patch* patch,
+                                        CCVariable<double>& mass_src )
+{
+
+  const Level* level = patch->getLevel();
+  const int ilvl = level->getID();
+  if ( _using_new_intrusion ){
+    bool has_intrusion_inlets = _intrusionBC[ilvl]->has_intrusion_inlets();
+    if ( has_intrusion_inlets ){
+      _intrusionBC[ilvl]->addMassRHS( patch, mass_src );
+    }
+  }
+
 }

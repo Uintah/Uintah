@@ -43,7 +43,7 @@ operator<<(std::ostream &s, const Array3D<T> &A)
   for (int i=0; i<M; i++) {
     for (int j=0; j<N; j++) {
       for (int k=0; k<K; k++) {
-	s << A[i][j][k] << " ";
+        s << A[i][j][k] << " ";
       }
       s << "\n";
     }
@@ -65,7 +65,7 @@ operator>>(std::istream &s, Array3D<T> &A)
   for (int i=0; i<M; i++) {
     for (int j=0; j<N; j++) {
       for (int k=0; k<K; k++) {
-	s >>  B[i][j][k];
+        s >>  B[i][j][k];
       }
       A = B;
     }
@@ -89,9 +89,9 @@ operator+(const Array3D<T> &A, const Array3D<T> &B)
 
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	for (int k=0; k<p; k++) {
-	  C[i][j][k] = A[i][j][k] + B[i][j][k];
-	}
+        for (int k=0; k<p; k++) {
+          C[i][j][k] = A[i][j][k] + B[i][j][k];
+        }
       }
     }
     return C;
@@ -114,9 +114,9 @@ operator-( const Array3D<T> &A, const Array3D<T> &B )
 
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	for (int k=0; k<p; k++) {
-	  C[i][j][k] = A[i][j][k] - B[i][j][k];
-	}
+        for (int k=0; k<p; k++) {
+          C[i][j][k] = A[i][j][k] - B[i][j][k];
+        }
       }
     }
     return C;
@@ -139,9 +139,9 @@ operator*(const Array3D<T> &A, const Array3D<T> &B)
 
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	for (int k=0; k<p; k++) {
-	  C[i][j][k] = A[i][j][k] * B[i][j][k];
-	}
+        for (int k=0; k<p; k++) {
+          C[i][j][k] = A[i][j][k] * B[i][j][k];
+        }
       }
     }
     return C;
@@ -164,9 +164,9 @@ operator/( const Array3D<T> &A, const Array3D<T> &B )
 
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	for (int k=0; k<p; k++) {
-	  C[i][j][k] = A[i][j][k] / B[i][j][k];
-	}
+        for (int k=0; k<p; k++) {
+          C[i][j][k] = A[i][j][k] / B[i][j][k];
+        }
       }
     }
     return C;
@@ -184,9 +184,9 @@ operator+=( Array3D<T> &A, const Array3D<T> &B )
   if (B.dim1() == m &&  B.dim2() == n && B.dim3() == p ) {
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	for (int k=0; k<p; k++) {
-	  A[i][j][k] += B[i][j][k];
-	}
+        for (int k=0; k<p; k++) {
+          A[i][j][k] += B[i][j][k];
+        }
       }
     }
   }
@@ -205,9 +205,9 @@ operator-=( Array3D<T> &A, const Array3D<T> &B )
   if (B.dim1() == m &&  B.dim2() == n && B.dim3() == p ) {
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	for (int k=0; k<p; k++) {
-	  A[i][j][k] -= B[i][j][k];
-	}
+        for (int k=0; k<p; k++) {
+          A[i][j][k] -= B[i][j][k];
+        }
       }
     }
   }
@@ -225,9 +225,9 @@ operator*=( Array3D<T> &A, const Array3D<T> &B )
   if (B.dim1() == m &&  B.dim2() == n && B.dim3() == p ) {
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	for (int k=0; k<p; k++) {
-	  A[i][j][k] *= B[i][j][k];
-	}
+        for (int k=0; k<p; k++) {
+          A[i][j][k] *= B[i][j][k];
+        }
       }
     }
   }
@@ -245,9 +245,9 @@ operator/=( Array3D<T> &A, const Array3D<T> &B )
   if (B.dim1() == m &&  B.dim2() == n && B.dim3() == p ) {
     for (int i=0; i<m; i++) {
       for (int j=0; j<n; j++) {
-	for (int k=0; k<p; k++) {
-	  A[i][j][k] /= B[i][j][k];
-	}
+        for (int k=0; k<p; k++) {
+          A[i][j][k] /= B[i][j][k];
+        }
       }
     }
   }

@@ -42,8 +42,9 @@
 namespace Uintah{
 
   class DORadiationModel; 
-  class ArchesLabel; 
-
+  class ArchesLabel;
+  class ApplicationInterface;
+  
 class DORadiation: public SourceTermBase {
 public: 
 
@@ -66,6 +67,7 @@ public:
                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw, 
                       int timeSubStep );
+
   void sched_initialize( const LevelP& level, SchedulerP& sched );
   void initialize( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
@@ -73,8 +75,14 @@ public:
                    DataWarehouse* old_dw, 
                    DataWarehouse* new_dw );
 
-
-//-------- Functiosn relevant to sweeps ----//
+  void sched_restartInitialize( const LevelP& level, SchedulerP& sched );
+  void restartInitialize( const ProcessorGroup* pc, 
+                          const PatchSubset* patches, 
+                          const MaterialSubset* matls, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw );
+  
+//-------- Functions relevant to sweeps ----//
 void init_all_intensities( const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
                          const MaterialSubset* matls, 
@@ -102,12 +110,6 @@ void profileDynamicRadiation( const ProcessorGroup* pc,
                          const MaterialSubset* matls, 
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw );
-// print reduction variable
-void printChange( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw );
 
 // initialize and set boundary conditions for intensities
 void setIntensityBC( const ProcessorGroup* pc, 
@@ -124,6 +126,12 @@ void TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
                                  DataWarehouse* old_dw, 
                                  DataWarehouse* new_dw);
 
+void checkReductionVars( const ProcessorGroup * pg,
+                         const PatchSubset    * patches,
+                         const MaterialSubset * matls,
+                               DataWarehouse  * old_dw,
+                               DataWarehouse  * new_dw );
+  
 //---End of Functiosn relevant to sweeps ----//
   class Builder
     : public SourceTermBase::Builder { 
@@ -156,14 +164,15 @@ void TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
 
 
 private:
-      enum DORadType {enum_linearSolve, enum_sweepSpatiallyParallel};
+  enum DORadType {enum_linearSolve, enum_sweepSpatiallyParallel};
   int _nDir;
   int _nphase;
   int _nstage;
+  int _nsteps_calc_freq;  /// number of radiation solves to resolve the radiation time-scale
 
   bool _multiBox; 
-  bool _runRadProfiler{false};  /// turns on the radiation profiler, tool to identifying if radiation is being resolved
-  bool _doTimeScaleAnalysis{false};  // uses a time scale to help users know if they are solving radiation frequently enough, using several approximations
+  bool _dynamicSolveFrequency{false};  /// turns on the radiation profiler, tool to identifying if radiation is being resolved
+
   std::vector<std::vector<double> > _xyzPatch_boundary;/// all patch boundaries (approximate), needed for multi-box weeps, 
 
   std::vector< std::vector < std::vector < bool > > > _doesPatchExist;
@@ -228,16 +237,21 @@ private:
   const VarLabel* _radiationFluxBLabel;
   const VarLabel* _radiationVolqLabel;
   const PatchSet* _perproc_patches;
-  std::vector< std::vector < std::vector < Ghost::GhostType > > >   _gv;
+  std::vector< std::vector < std::vector < Ghost::GhostType > > >   _gv; 
 
-      std::vector<const VarLabel*>  _radIntSource;
-      std::vector<std::string> _radIntSource_names;
+  const std::string dynamicSolveCountPatch_name {"dynamicSolveCountPatch"};
+  const VarLabel* _dynamicSolveCountPatchLabel;
+  const VarLabel* _lastRadSolvePatchLabel;
+
+  std::vector<const VarLabel*>  _radIntSource;
+  std::vector<std::string> _radIntSource_names;
 
   std::vector< const VarLabel*> _IntensityLabels;
   std::vector< const VarLabel*> _emiss_plus_scat_source_label; 
 
   std::vector< std::vector< const VarLabel*> > _patchIntensityLabels; 
 
+  ApplicationInterface* m_arches{nullptr};
 }; // end DORadiation
 } // end namespace Uintah
 #endif

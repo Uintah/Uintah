@@ -50,9 +50,9 @@ namespace Uintah {
 Point Interpolate(const Point& p1, const Point& p2, double w)
 {
     return Point(
-	Interpolate(p1.x_, p2.x_, w),
-	Interpolate(p1.y_, p2.y_, w),
-	Interpolate(p1.z_, p2.z_, w));
+        Interpolate(p1.x_, p2.x_, w),
+        Interpolate(p1.y_, p2.y_, w),
+        Interpolate(p1.z_, p2.z_, w));
 }
 
 string Point::get_string() const
@@ -75,40 +75,40 @@ int Point::operator!=(const Point& p) const
 Point::Point(double x, double y, double z, double w)
 {
     if(w==0){
-	cerr << "degenerate point!" << endl;
-	x_=y_=z_=0;
+        cerr << "degenerate point!" << endl;
+        x_=y_=z_=0;
     } else {
-	x_=x/w;
-	y_=y/w;
-	z_=z/w;
+        x_=x/w;
+        y_=y/w;
+        z_=z/w;
     }
 }
 
 Point AffineCombination(const Point& p1, double w1,
-			const Point& p2, double w2)
+                        const Point& p2, double w2)
 {
     return Point(p1.x_*w1+p2.x_*w2,
-		 p1.y_*w1+p2.y_*w2,
-		 p1.z_*w1+p2.z_*w2);
+                 p1.y_*w1+p2.y_*w2,
+                 p1.z_*w1+p2.z_*w2);
 }
 
 Point AffineCombination(const Point& p1, double w1,
-			const Point& p2, double w2,
-			const Point& p3, double w3)
+                        const Point& p2, double w2,
+                        const Point& p3, double w3)
 {
     return Point(p1.x_*w1+p2.x_*w2+p3.x_*w3,
-		 p1.y_*w1+p2.y_*w2+p3.y_*w3,
-		 p1.z_*w1+p2.z_*w2+p3.z_*w3);
+                 p1.y_*w1+p2.y_*w2+p3.y_*w3,
+                 p1.z_*w1+p2.z_*w2+p3.z_*w3);
 }
 
 Point AffineCombination(const Point& p1, double w1,
-			const Point& p2, double w2,
-			const Point& p3, double w3,
-			const Point& p4, double w4)
+                        const Point& p2, double w2,
+                        const Point& p3, double w3,
+                        const Point& p4, double w4)
 {
     return Point(p1.x_*w1+p2.x_*w2+p3.x_*w3+p4.x_*w4,
-		 p1.y_*w1+p2.y_*w2+p3.y_*w3+p4.y_*w4,
-		 p1.z_*w1+p2.z_*w2+p3.z_*w3+p4.z_*w4);
+                 p1.y_*w1+p2.y_*w2+p3.y_*w3+p4.y_*w4,
+                 p1.z_*w1+p2.z_*w2+p3.z_*w3+p4.z_*w4);
 }
 
 ostream& operator<<( ostream& os, const Point& p )

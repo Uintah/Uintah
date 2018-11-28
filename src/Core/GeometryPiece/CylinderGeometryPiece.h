@@ -36,27 +36,27 @@
 namespace Uintah {
 
 /**************************************
-	
+        
 CLASS
    CylinderGeometryPiece
-	
+        
    Creates a generalized cylinder from the xml input file description.
-	
+        
 GENERAL INFORMATION
-	
+        
    CylinderGeometryPiece.h
-	
+        
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
-	
+        
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
+        
  
-	
+        
 KEYWORDS
    CylinderGeometryPiece BoundingBox inside
-	
+        
 DESCRIPTION
    Creates a generalized cylinder from the xml input file description.
    Requires three inputs: bottom point, top point and a radius.  
@@ -65,12 +65,12 @@ DESCRIPTION
    The input form looks like this:
        <cylinder>
          <bottom>[0.,0.,0.]</bottom>
-	 <top>[0.,0.,0.]</top>
-	 <radius>2.0</radius>
+         <top>[0.,0.,0.]</top>
+         <radius>2.0</radius>
        </cylinder>
-	
+        
 WARNING
-	
+        
 ****************************************/
 
   class CylinderGeometryPiece : public GeometryPiece {

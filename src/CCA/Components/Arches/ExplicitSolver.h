@@ -100,7 +100,7 @@ public:
              const ProcessorGroup* myworld,
              ArchesParticlesHelper* particle_helper,
              SolverInterface* hypreSolver,
-             const ApplicationCommon* arches ) :
+             ApplicationCommon* arches ) :
              _materialManager(materialManager),
              _MAlb(MAlb),
              _physConst(physConst),
@@ -130,8 +130,7 @@ public:
     const ProcessorGroup* _myworld;
     ArchesParticlesHelper* _particle_helper;
     SolverInterface* _hypreSolver;
-    const ApplicationCommon* _arches;
-
+    ApplicationCommon* _arches;
   };
 
   ExplicitSolver( MaterialManagerP& materialManager,
@@ -140,7 +139,7 @@ public:
                   const ProcessorGroup* myworld,
                   ArchesParticlesHelper* particle_helper,
                   SolverInterface* hypreSolver,
-                  const ApplicationCommon* arches );
+                  ApplicationCommon* arches );
 
   virtual ~ExplicitSolver();
 
@@ -168,6 +167,14 @@ public:
   void computeTimestep(const LevelP& level, SchedulerP& sched);
 
   void computeStableTimeStep( const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw );
+
+  void sched_computeTaskGraphIndex(const LevelP& level, SchedulerP& sched);
+
+  void computeTaskGraphIndex( const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset*,
                               DataWarehouse* old_dw,
@@ -406,17 +413,12 @@ public:
                                 SchedulerP& sched,
                                 const bool doing_restart );
 
-  int getTaskGraphIndex(const int time_step ) {
-    if (d_num_taskgraphs==1){
-      return 0;
-    }else{
-      return ((time_step % d_rad_calc_frequency == 0));
-    }
-  }
-
-  int taskGraphsRequested() {
-  return d_num_taskgraphs;
-  }
+  // An optional call for the application to check their reduction vars.
+  void checkReductionVars( const ProcessorGroup * pg,
+                           const PatchSubset    * patches,
+                           const MaterialSubset * matls,
+                                 DataWarehouse  * old_dw,
+                                 DataWarehouse  * new_dw );
 
   void registerModels( ProblemSpecP& db );
   void registerTransportEqns( ProblemSpecP& db );
@@ -521,7 +523,8 @@ public:
   const VarLabel* d_celltype_label;
   int d_archesLevelIndex;
   int d_rad_calc_frequency{1};
-  int d_num_taskgraphs{1};
+  bool d_perform_radiation{false};
+  bool d_dynamicSolveFrequency{false};
 
   std::map<int,WBCHelper*> m_bcHelper;
 
@@ -529,6 +532,5 @@ public:
 
 }; // End class ExplicitSolver
 } // End namespace Uintah
-
 
 #endif

@@ -476,6 +476,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                                                   all_matls);
                                                                   
     d_ice->d_exchModel->sched_PreExchangeTasks( sched, ice_patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
                                                                   all_matls);
 
     d_ice->d_exchModel->sched_AddExch_VelFC(  sched, ice_patches, ice_matls_sub,

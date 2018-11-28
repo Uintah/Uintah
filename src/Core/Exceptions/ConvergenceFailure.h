@@ -46,8 +46,8 @@ namespace Uintah {
   class ConvergenceFailure : public Uintah::Exception {
   public:
     ConvergenceFailure(const std::string& msg,
-		       int numiterations, double final_residual,
-		       double target_residual,
+                       int numiterations, double final_residual,
+                       double target_residual,
                        const char* file, int line);
     ConvergenceFailure(const ConvergenceFailure&);
     virtual ~ConvergenceFailure();

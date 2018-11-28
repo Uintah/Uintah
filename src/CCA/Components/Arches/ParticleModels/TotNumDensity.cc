@@ -31,7 +31,7 @@ TotNumDensity::problemSetup( ProblemSpecP& db ){
 void
 TotNumDensity::create_local_labels(){
 
-  register_new_variable<CCVariable<double> >( _task_name );
+  register_new_variable<CCVariable<double> >( m_task_name );
 
 }
 
@@ -41,7 +41,7 @@ TotNumDensity::register_initialize(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const bool pack_tasks ){
 
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
     const std::string weight_name  = ArchesCore::append_env( "w", ienv);
@@ -55,7 +55,7 @@ TotNumDensity::register_initialize(
 void
 TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
+  CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( m_task_name ));
   num_den.initialize(0.0);
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
@@ -80,7 +80,7 @@ TotNumDensity::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const int time_substep, const bool packed_tasks ){
 
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
     const std::string weight_name  = ArchesCore::append_env( "w", ienv);
@@ -94,7 +94,7 @@ TotNumDensity::register_timestep_eval(
 void
 TotNumDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
+  CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( m_task_name ));
   num_den.initialize(0.0);
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){

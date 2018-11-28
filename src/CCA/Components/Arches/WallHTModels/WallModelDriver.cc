@@ -50,7 +50,7 @@ _materialManager( materialManager )
 
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
 
-  _matl_index = _materialManager->getMaterial( "Arches",  0 )->getDWIndex();
+  m_matl_index = _materialManager->getMaterial( "Arches",  0 )->getDWIndex();
 
   _T_copy_label = VarLabel::create( "T_copy", CC_double );
   _True_T_Label = VarLabel::create( "true_wall_temperature", CC_double);
@@ -115,10 +115,8 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       src_db->getAttribute("type", type);
 
       if ( type == "do_radiation"  || type == "rmcrt_radiation" ){
-        src_db->getWithDefault("calc_frequency", _calc_freq,3);  //default matches the default of the DOradiation solve
         found_radiation_model = true;
       }
-
     }
 
   } else {
@@ -202,6 +200,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
 void
 WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const int time_subset )
 {
+  m_arches = sched->getApplication();
 
   Task* task = scinew Task( "WallModelDriver::doWallHT", this,
                            &WallModelDriver::doWallHT, time_subset );
@@ -295,7 +294,6 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   }
 
-  task->requires( Task::OldDW, _timeStepLabel);
   task->requires( Task::OldDW, _simulationTimeLabel);
   task->requires( Task::OldDW, _delTLabel, Ghost::None, 0);
   sched->addTask(task, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
@@ -311,11 +309,6 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
                            DataWarehouse* new_dw,
                            const int time_subset )
 {
-  // int timeStep = _materialManager->getCurrentTopLevelTimeStep();
-
-  timeStep_vartype timeStep;
-  old_dw->get( timeStep, _timeStepLabel );
-
   simTime_vartype simTime;
   old_dw->get( simTime, _simulationTimeLabel );
 
@@ -331,32 +324,36 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     vars.time = simTime;
     vars.delta_t = delT;
 
-    // Note: The local T_copy is necessary because boundary conditions are being applied
-    // in the table lookup to T based on the conditions for the independent variables. These
-    // BCs are being applied regardless of the type of wall temperature model.
+    // Note: The local T_copy is necessary because boundary conditions
+    // are being applied in the table lookup to T based on the
+    // conditions for the independent variables. These BCs are being
+    // applied regardless of the type of wall temperature model.
 
-    if( time_subset == 0 && timeStep % _calc_freq == 0 ){
+    // If the task graph index is one then radiation is being
+    // performed so also perform the wall calculation.
+    bool wall = m_arches->getTaskGraphIndex();
 
-      // actually compute the wall HT model
+    if( time_subset == 0 && wall ) {
 
-      old_dw->get( vars.T_old      , _T_label      , _matl_index , patch , Ghost::None , 0 );
-      old_dw->get( vars.cc_vel     , _cc_vel_label , _matl_index , patch , Ghost::None , 0 );
-      old_dw->get( vars.T_real_old , VarLabel::find("temperature"), _matl_index, patch, Ghost::None, 0 );
-      //old_dw->get( vars.T_real_old , _True_T_Label , _matl_index , patch , Ghost::None , 0 );
+      // Actually compute the wall HT model
+      old_dw->get( vars.T_old      , _T_label      , m_matl_index , patch , Ghost::None , 0 );
+      old_dw->get( vars.cc_vel     , _cc_vel_label , m_matl_index , patch , Ghost::None , 0 );
+      old_dw->get( vars.T_real_old , VarLabel::find("temperature"), m_matl_index, patch, Ghost::None, 0 );
+      //old_dw->get( vars.T_real_old , _True_T_Label , m_matl_index , patch , Ghost::None , 0 );
 
-      new_dw->getModifiable(  vars.T, _T_label, _matl_index   , patch );
-      new_dw->allocateAndPut( vars.T_copy     , _T_copy_label , _matl_index, patch );
-      new_dw->allocateAndPut( vars.T_real     , _True_T_Label , _matl_index, patch );
-      new_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::AroundCells, 1 );
+      new_dw->getModifiable(  vars.T, _T_label, m_matl_index   , patch );
+      new_dw->allocateAndPut( vars.T_copy     , _T_copy_label , m_matl_index, patch );
+      new_dw->allocateAndPut( vars.T_real     , _True_T_Label , m_matl_index, patch );
+      new_dw->get(   vars.celltype , _cellType_label , m_matl_index , patch , Ghost::AroundCells, 1 );
 
       vars.T_real.copyData(vars.T_real_old);
 
-        old_dw->get(   vars.incident_hf_e     , _HF_E_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-        old_dw->get(   vars.incident_hf_w     , _HF_W_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-        old_dw->get(   vars.incident_hf_n     , _HF_N_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-        old_dw->get(   vars.incident_hf_s     , _HF_S_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-        old_dw->get(   vars.incident_hf_t     , _HF_T_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-        old_dw->get(   vars.incident_hf_b     , _HF_B_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_e     , _HF_E_label     , m_matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_w     , _HF_W_label     , m_matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_n     , _HF_N_label     , m_matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_s     , _HF_S_label     , m_matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_t     , _HF_T_label     , m_matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_b     , _HF_B_label     , m_matl_index , patch, Ghost::AroundCells, 1 );
 
       if (do_coal_region){
         vars.num_extra_src = _num_extra_src;
@@ -366,27 +363,27 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
         vars.particle_flow_rate.resize(_Nenv);
         vars.particle_flow_rate_d.resize(_Nenv);
         for(int i=0; i<_num_extra_src; i++) {
-          old_dw->get( vars.extra_src[i] , _extra_src_varlabels[i], _matl_index, patch, Ghost::None, 0 ); // get all of the extra sources to add to the net flux balance.
+          old_dw->get( vars.extra_src[i] , _extra_src_varlabels[i], m_matl_index, patch, Ghost::None, 0 ); // get all of the extra sources to add to the net flux balance.
         }
         for(int i=0; i<_Nenv; i++) {
-          old_dw->get( vars.particle_flow_rate_d[i] , _particle_flow_rate_d_varlabels[i], _matl_index, patch, Ghost::None, 0 ); // particle flow rate to wall * size
-          old_dw->get( vars.particle_flow_rate[i] , _particle_flow_rate_varlabels[i], _matl_index, patch, Ghost::None, 0 ); // particle flow rate
+          old_dw->get( vars.particle_flow_rate_d[i] , _particle_flow_rate_d_varlabels[i], m_matl_index, patch, Ghost::None, 0 ); // particle flow rate to wall * size
+          old_dw->get( vars.particle_flow_rate[i] , _particle_flow_rate_varlabels[i], m_matl_index, patch, Ghost::None, 0 ); // particle flow rate
         }
-        old_dw->get( vars.ave_deposit_velocity , _ave_dep_vel_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
-        old_dw->get( vars.deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( vars.deposit_thickness_sb_s_old , _deposit_thickness_sb_s_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( vars.deposit_thickness_sb_l_old , _deposit_thickness_sb_l_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( vars.emissivity_old , _emissivity_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( vars.thermal_cond_en_old , _thermal_cond_en_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( vars.thermal_cond_sb_s_old , _thermal_cond_sb_s_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( vars.thermal_cond_sb_l_old , _thermal_cond_sb_l_label, _matl_index, patch, Ghost::None, 0 );
-        new_dw->allocateAndPut( vars.deposit_thickness, _deposit_thickness_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
-        new_dw->allocateAndPut( vars.deposit_thickness_sb_s, _deposit_thickness_sb_s_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
-        new_dw->allocateAndPut( vars.deposit_thickness_sb_l, _deposit_thickness_sb_l_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
-        new_dw->allocateAndPut( vars.emissivity, _emissivity_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
-        new_dw->allocateAndPut( vars.thermal_cond_en, _thermal_cond_en_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
-        new_dw->allocateAndPut( vars.thermal_cond_sb_s, _thermal_cond_sb_s_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
-        new_dw->allocateAndPut( vars.thermal_cond_sb_l, _thermal_cond_sb_l_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        old_dw->get( vars.ave_deposit_velocity , _ave_dep_vel_label, m_matl_index, patch, Ghost::None, 0 ); // from particle model
+        old_dw->get( vars.deposit_thickness_old , _deposit_thickness_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.deposit_thickness_sb_s_old , _deposit_thickness_sb_s_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.deposit_thickness_sb_l_old , _deposit_thickness_sb_l_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.emissivity_old , _emissivity_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.thermal_cond_en_old , _thermal_cond_en_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.thermal_cond_sb_s_old , _thermal_cond_sb_s_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.thermal_cond_sb_l_old , _thermal_cond_sb_l_label, m_matl_index, patch, Ghost::None, 0 );
+        new_dw->allocateAndPut( vars.deposit_thickness, _deposit_thickness_label , m_matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.deposit_thickness_sb_s, _deposit_thickness_sb_s_label , m_matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.deposit_thickness_sb_l, _deposit_thickness_sb_l_label , m_matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.emissivity, _emissivity_label , m_matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.thermal_cond_en, _thermal_cond_en_label , m_matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.thermal_cond_sb_s, _thermal_cond_sb_s_label , m_matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.thermal_cond_sb_l, _thermal_cond_sb_l_label , m_matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
         CellIterator c = patch->getExtraCellIterator();
         for (; !c.done(); c++ ){
           if ( vars.celltype[*c] > 7 && vars.celltype[*c] < 11 ){
@@ -422,7 +419,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       //here for saftey and simplicity. Maybe rethink this if efficiency becomes an issue.
       vars.T_copy.copyData( vars.T );
 
-    } else if ( time_subset == 0 && timeStep % _calc_freq != 0 ) {
+    } else if ( time_subset == 0 && !wall ) {
 
       // no ht solve this step:
       // 1) copy T_old (from OldDW) -> T   (to preserve BCs)
@@ -435,14 +432,14 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       constCCVariable<double> T_old;
       constCCVariable<int> cell_type;
 
-      old_dw->get( T_old             , _T_label        , _matl_index , patch    , Ghost::None , 0 );
+      old_dw->get( T_old             , _T_label        , m_matl_index , patch    , Ghost::None , 0 );
       //if ( !doing_restart )
-        //old_dw->get( T_real_old      , _True_T_Label   , _matl_index , patch    , Ghost::None , 0 );
-      old_dw->get( T_real_old , VarLabel::find("temperature"), _matl_index, patch, Ghost::None, 0 );
-      new_dw->get( cell_type         , _cellType_label , _matl_index , patch    , Ghost::AroundCells , 1 );
-      new_dw->getModifiable(  T      , _T_label        , _matl_index , patch );
-      new_dw->allocateAndPut( T_copy , _T_copy_label   , _matl_index , patch );
-      new_dw->allocateAndPut( T_real , _True_T_Label   , _matl_index , patch );
+        //old_dw->get( T_real_old      , _True_T_Label   , m_matl_index , patch    , Ghost::None , 0 );
+      old_dw->get( T_real_old , VarLabel::find("temperature"), m_matl_index, patch, Ghost::None, 0 );
+      new_dw->get( cell_type         , _cellType_label , m_matl_index , patch    , Ghost::AroundCells , 1 );
+      new_dw->getModifiable(  T      , _T_label        , m_matl_index , patch );
+      new_dw->allocateAndPut( T_copy , _T_copy_label   , m_matl_index , patch );
+      new_dw->allocateAndPut( T_real , _True_T_Label   , m_matl_index , patch );
 
       std::vector<WallModelDriver::HTModelBase*>::iterator iter;
 
@@ -484,20 +481,20 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
         constCCVariable<double> thermal_cond_en_old;
         constCCVariable<double> thermal_cond_sb_s_old;
         constCCVariable<double> thermal_cond_sb_l_old;
-        old_dw->get( deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( deposit_thickness_sb_s_old , _deposit_thickness_sb_s_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( deposit_thickness_sb_l_old , _deposit_thickness_sb_l_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( emissivity_old , _emissivity_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( thermal_cond_en_old , _thermal_cond_en_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( thermal_cond_sb_s_old , _thermal_cond_sb_s_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( thermal_cond_sb_l_old , _thermal_cond_sb_l_label, _matl_index, patch, Ghost::None, 0 );
-        new_dw->allocateAndPut( deposit_thickness, _deposit_thickness_label, _matl_index , patch );
-        new_dw->allocateAndPut( deposit_thickness_sb_s, _deposit_thickness_sb_s_label, _matl_index , patch );
-        new_dw->allocateAndPut( deposit_thickness_sb_l, _deposit_thickness_sb_l_label, _matl_index , patch );
-        new_dw->allocateAndPut( emissivity, _emissivity_label, _matl_index , patch );
-        new_dw->allocateAndPut( thermal_cond_en, _thermal_cond_en_label, _matl_index , patch );
-        new_dw->allocateAndPut( thermal_cond_sb_s, _thermal_cond_sb_s_label, _matl_index , patch );
-        new_dw->allocateAndPut( thermal_cond_sb_l, _thermal_cond_sb_l_label, _matl_index , patch );
+        old_dw->get( deposit_thickness_old , _deposit_thickness_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( deposit_thickness_sb_s_old , _deposit_thickness_sb_s_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( deposit_thickness_sb_l_old , _deposit_thickness_sb_l_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( emissivity_old , _emissivity_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( thermal_cond_en_old , _thermal_cond_en_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( thermal_cond_sb_s_old , _thermal_cond_sb_s_label, m_matl_index, patch, Ghost::None, 0 );
+        old_dw->get( thermal_cond_sb_l_old , _thermal_cond_sb_l_label, m_matl_index, patch, Ghost::None, 0 );
+        new_dw->allocateAndPut( deposit_thickness, _deposit_thickness_label, m_matl_index , patch );
+        new_dw->allocateAndPut( deposit_thickness_sb_s, _deposit_thickness_sb_s_label, m_matl_index , patch );
+        new_dw->allocateAndPut( deposit_thickness_sb_l, _deposit_thickness_sb_l_label, m_matl_index , patch );
+        new_dw->allocateAndPut( emissivity, _emissivity_label, m_matl_index , patch );
+        new_dw->allocateAndPut( thermal_cond_en, _thermal_cond_en_label, m_matl_index , patch );
+        new_dw->allocateAndPut( thermal_cond_sb_s, _thermal_cond_sb_s_label, m_matl_index , patch );
+        new_dw->allocateAndPut( thermal_cond_sb_l, _thermal_cond_sb_l_label, m_matl_index , patch );
         CellIterator c = patch->getExtraCellIterator();
         for (; !c.done(); c++ ){
           if ( cell_type[*c] > 7 && cell_type[*c] < 11 ){
@@ -531,9 +528,9 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       constCCVariable<double> T_old;
       constCCVariable<int> cell_type;
 
-      new_dw->getModifiable( T , _T_label        , _matl_index , patch );
-      new_dw->get( T_old       , _T_copy_label   , _matl_index , patch    , Ghost::None , 0 );
-      new_dw->get( cell_type   , _cellType_label , _matl_index , patch    , Ghost::AroundCells , 1 );
+      new_dw->getModifiable( T , _T_label        , m_matl_index , patch );
+      new_dw->get( T_old       , _T_copy_label   , m_matl_index , patch    , Ghost::None , 0 );
+      new_dw->get( cell_type   , _cellType_label , m_matl_index , patch    , Ghost::AroundCells , 1 );
 
       std::vector<WallModelDriver::HTModelBase*>::iterator iter;
 
@@ -581,9 +578,9 @@ WallModelDriver::copyWallTintoT( const ProcessorGroup* my_world,
     constCCVariable<int> cell_type;
     CCVariable<double> T;
 
-    new_dw->get( T_real, _True_T_Label, _matl_index, patch, Ghost::None, 0 );
-    new_dw->get( cell_type, _cellType_label, _matl_index, patch, Ghost::None, 0 );
-    new_dw->getModifiable( T, VarLabel::find("temperature"), _matl_index, patch );
+    new_dw->get( T_real, _True_T_Label, m_matl_index, patch, Ghost::None, 0 );
+    new_dw->get( cell_type, _cellType_label, m_matl_index, patch, Ghost::None, 0 );
+    new_dw->getModifiable( T, VarLabel::find("temperature"), m_matl_index, patch );
     CellIterator c = patch->getExtraCellIterator();
     for (; !c.done(); c++ ){
 
@@ -1405,6 +1402,7 @@ WallModelDriver::CoalRegionHT::newton_solve(double &TW_new, double &T_shell, dou
     f1    = - TW_new + T_shell + net_q * R_tot;
   }
 }
+
 void WallModelDriver::CoalRegionHT::urbain_viscosity(double &visc, double &T, std::vector<double> &x_ash)
 {  // Urbain model 1981
   //0      1       2        3       4        5       6      7
@@ -1433,6 +1431,4 @@ void WallModelDriver::CoalRegionHT::urbain_viscosity(double &visc, double &T, st
   const double B=B0+B1*N+B2*N*N+B3*N*N*N;
   const double A=std::exp(-(0.2693*B+11.6725));
   visc=0.1*A*T*std::exp((B*1000)/T);
-
-
 };

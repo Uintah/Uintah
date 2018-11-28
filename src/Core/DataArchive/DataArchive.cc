@@ -35,6 +35,7 @@
 #endif
 
 #include <Core/Containers/OffsetArray1.h>
+#include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
@@ -90,7 +91,7 @@ DataArchive::DataArchive( const string & filebase,
     d_types_initialized = true;
     // For static builds, sometimes the Uintah types (CCVariable, etc) do not get automatically
     // registered to the Uintah type system... this call forces that to happen.
-    proc0cout << "Loading Uintah var types into type system (static build).\n";
+    // proc0cout << "Loading Uintah var types into type system (static build).\n";
     instantiateVariableTypes();
   }
 #endif  
@@ -176,8 +177,8 @@ DataArchive::queryAndSetFileFormat( FILE * doc )
 
       // bulletproofing
       if( d_fileFormat == NOT_SPECIFIED ) {
-        proc0cout << "Warning: Reading in an UDA that is missing the <outputFormat> tag... "
-                  << "defaulting to type old 'UDA'.\n";
+        // proc0cout << "Warning: Reading in an UDA that is missing the <outputFormat> tag... "
+        //           << "defaulting to type old 'UDA'.\n";
         d_fileFormat = UDA;
       }
       return;
@@ -227,6 +228,36 @@ DataArchive::queryEndiannessAndBits(  FILE * doc, string & endianness, int & num
     }
   }
 }
+
+//______________________________________________________________________
+//
+void
+DataArchive::queryProcessors( unsigned int & nProcs )
+{
+  rewind( d_indexFile ); // Start looking from the top of the file.
+
+  bool found = ProblemSpec::findBlock( "<Uintah_DataArchive>", d_indexFile );
+
+  if( !found ) {
+    throw InternalError( "DataArchive::queryProcessors 'Uintah_DataArchive' node not found in index.xml", __FILE__, __LINE__ );
+  }
+  
+  while( true ) {
+    
+    string line = UintahXML::getLine( d_indexFile );
+    if( line == "" || line == "</Uintah_DataArchive>" ) {
+      return;
+    }
+    else {
+      vector<string> pieces = UintahXML::splitXMLtag( line );
+      if( pieces[0] == "<numberOfProcessors>" ) {
+        nProcs = atoi( pieces[1].c_str() );
+        return;
+      }
+    }
+  }
+}
+
 //______________________________________________________________________
 //
 void
@@ -1785,7 +1816,7 @@ DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
   }
   dw->setID( timeIndex );
   
-  proc0cout << "   DataArchive:postProcess_ReadUda: udaTimestep " << timesteps[timeIndex] << " timeIndex: " << timeIndex << " dw ID: " << dw->getID() << endl;
+  // proc0cout << "   DataArchive:postProcess_ReadUda: udaTimestep " << timesteps[timeIndex] << " timeIndex: " << timeIndex << " dw ID: " << dw->getID() << endl;
 
   TimeData& timedata = getTimeData( timeIndex );
   // Make sure to load all the data so we can iterate through it

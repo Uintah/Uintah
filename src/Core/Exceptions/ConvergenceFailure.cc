@@ -31,9 +31,9 @@
 using namespace Uintah;
 
 ConvergenceFailure::ConvergenceFailure(const std::string& message,
-				       int numiterations,
-				       double final_residual,
-				       double target_residual,
+                                       int numiterations,
+                                       double final_residual,
+                                       double target_residual,
                                        const char* file,
                                        int line)
 {

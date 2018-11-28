@@ -54,9 +54,9 @@ ColumnMatrix::ColumnMatrix(int rows) :
   Matrix(rows, 1)
 {
     if(nrows_)
-	data=scinew double[nrows_];
+        data=scinew double[nrows_];
     else
-	data=0;
+        data=0;
 }
 
 ColumnMatrix::ColumnMatrix(const ColumnMatrix& c) :
@@ -157,29 +157,29 @@ ColumnMatrix* ColumnMatrix::clone() {
 ColumnMatrix& ColumnMatrix::operator=(const ColumnMatrix& c)
 {
     if(nrows_ != c.nrows_){
-	if(data)delete[] data;
-	nrows_=c.nrows_;
-	data=scinew double[nrows_];
+        if(data)delete[] data;
+        nrows_=c.nrows_;
+        data=scinew double[nrows_];
     }
     for(int i=0;i<nrows_;i++)
-	data[i]=c.data[i];
+        data[i]=c.data[i];
     return *this;
 }
 
 ColumnMatrix::~ColumnMatrix()
 {
     if(data)
-	delete[] data;
+        delete[] data;
 }
 
 void ColumnMatrix::resize(int new_rows)
 {
     if(data)
-	delete[] data;
+        delete[] data;
     if(new_rows)
-	data=new double[new_rows];
+        data=new double[new_rows];
     else
-	data=0;
+        data=0;
     nrows_ = new_rows;
 }
 
@@ -222,7 +222,7 @@ void ColumnMatrix::print(std::ostream& str) const
 {
     for(int i=0; i<nrows_; i++)
     {
-	str << data[i] << endl;
+        str << data[i] << endl;
     }
 }
 
@@ -260,7 +260,7 @@ double ColumnMatrix::sumOfCol(int c) {
 }
 
 void ColumnMatrix::getRowNonzeros(int r, Array1<int>& idx, 
-				  Array1<double>& val) { 
+                                  Array1<double>& val) { 
   idx.resize(1);
   val.resize(1);
   idx[0]=0;
@@ -286,12 +286,12 @@ int ColumnMatrix::solve(vector<double>&) {
 }
 
 void ColumnMatrix::mult(const ColumnMatrix&, ColumnMatrix&,
-			int& , int& , int , int , int) const {
+                        int& , int& , int , int , int) const {
   ASSERTFAIL("Error - called mult on a columnmatrix.\n");
 }
 
 void ColumnMatrix::mult_transpose(const ColumnMatrix&, ColumnMatrix&,
-				  int&, int&, int, int, int) const {
+                                  int&, int&, int, int, int) const {
   ASSERTFAIL("Error - called mult_transpose on a columnmatrix.\n");
 }
 
@@ -304,7 +304,7 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
 }
 
 void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
-	  int& flops, int& memrefs)
+          int& flops, int& memrefs)
 {
     ASSERTEQ(result.nrows_, a.nrows_);
     ASSERTEQ(result.nrows_, b.nrows_);
@@ -314,7 +314,7 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
 }
 
 void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
-	  int& flops, int& memrefs, int beg, int end)
+          int& flops, int& memrefs, int beg, int end)
 {
     ASSERTEQ(result.nrows_, a.nrows_);
     ASSERTEQ(result.nrows_, b.nrows_);
@@ -333,7 +333,7 @@ void Sub(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
 }
 
 void Sub(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
-	  int& flops, int& memrefs)
+          int& flops, int& memrefs)
 {
     ASSERTEQ(result.nrows_, a.nrows_);
     ASSERTEQ(result.nrows_, b.nrows_);
@@ -343,7 +343,7 @@ void Sub(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
 }
 
 void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
-		const ColumnMatrix& b)
+                const ColumnMatrix& b)
 {
     ASSERTEQ(result.nrows_, a.nrows_);
     ASSERTEQ(result.nrows_, b.nrows_);
@@ -351,7 +351,7 @@ void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
 }
 
 void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
-		const ColumnMatrix& b, int& flops, int& memrefs)
+                const ColumnMatrix& b, int& flops, int& memrefs)
 {
     ASSERTEQ(result.nrows_, a.nrows_);
     ASSERTEQ(result.nrows_, b.nrows_);
@@ -361,8 +361,8 @@ void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
 }
 
 void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
-		const ColumnMatrix& b, int& flops, int& memrefs,
-		int beg, int end)
+                const ColumnMatrix& b, int& flops, int& memrefs,
+                int beg, int end)
 {
     ASSERTEQ(result.nrows_, a.nrows_);
     ASSERTEQ(result.nrows_, b.nrows_);
@@ -380,7 +380,7 @@ double Dot(const ColumnMatrix& a, const ColumnMatrix& b)
 }
 
 double Dot(const ColumnMatrix& a, const ColumnMatrix& b,
-	   int& flops, int& memrefs)
+           int& flops, int& memrefs)
 {
     ASSERTEQ(a.nrows_, b.nrows_);
     flops += a.nrows_ * 2;
@@ -389,7 +389,7 @@ double Dot(const ColumnMatrix& a, const ColumnMatrix& b,
 }
 
 double Dot(const ColumnMatrix& a, const ColumnMatrix& b,
-	   int& flops, int& memrefs, int beg, int end)
+           int& flops, int& memrefs, int beg, int end)
 {
     ASSERTEQ(a.nrows_, b.nrows_);
     ASSERTRANGE(end, 0, a.nrows_+1);
@@ -403,30 +403,30 @@ void Copy(ColumnMatrix& out, const ColumnMatrix& in)
 {
     ASSERTEQ(out.nrows_, in.nrows_);
     for(int i=0; i<out.nrows_; i++)
-	out.data[i] = in.data[i];
+        out.data[i] = in.data[i];
 }
 
 void Copy(ColumnMatrix& out, const ColumnMatrix& in, int&, int& refs)
 {
     ASSERTEQ(out.nrows_, in.nrows_);
     for(int i=0; i<out.nrows_; i++)
-	out.data[i]=in.data[i];
+        out.data[i]=in.data[i];
     refs+=sizeof(double)*out.nrows_;
 }
 
 void Copy(ColumnMatrix& out, const ColumnMatrix& in, int&, int& refs,
-	  int beg, int end)
+          int beg, int end)
 {
     ASSERTEQ(out.nrows_, in.nrows_);
     ASSERTRANGE(end, 0, out.nrows_+1);
     ASSERTRANGE(beg, 0, end);
     for(int i=beg;i<end;i++)
-	out.data[i]=in.data[i];
+        out.data[i]=in.data[i];
     refs+=sizeof(double)*(end-beg);
 }
 
 void AddScMult(ColumnMatrix& result, const ColumnMatrix& a,
-	       double s, const ColumnMatrix& b)
+               double s, const ColumnMatrix& b)
 {
     ASSERTEQ(result.nrows_, a.nrows_);
     ASSERTEQ(result.nrows_, b.nrows_);
@@ -441,20 +441,20 @@ void Add(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
 }
 
 void Add(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
-	 const ColumnMatrix& c)
+         const ColumnMatrix& c)
 {
     ASSERTEQ(result.nrows_, a.nrows_);
     ASSERTEQ(result.nrows_, b.nrows_);
     ASSERTEQ(result.nrows_, c.nrows_);
     for(int i=0;i<result.nrows_;i++)
-	result.data[i]=a.data[i]+b.data[i]+c.data[i];
+        result.data[i]=a.data[i]+b.data[i]+c.data[i];
 }
 
 void Mult(ColumnMatrix& result, const ColumnMatrix& a, double s)
 {
     ASSERTEQ(result.nrows_, a.nrows_);
     for(int i=0; i<result.nrows_; i++)
-	result.data[i] = a.data[i]*s;
+        result.data[i] = a.data[i]*s;
 }
 
 void ColumnMatrix::scalar_multiply(double s)

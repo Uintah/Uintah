@@ -26,7 +26,6 @@
 #define UINTAH_HOMEBREW_SoleVARIABLE_H
 
 #include <Core/Grid/Variables/SoleVariableBase.h>
-#include <Core/Grid/Variables/DataItem.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/TypeMismatchException.h>
@@ -113,7 +112,7 @@ WARNING
     }
 
      virtual void emitNormal(std::ostream& out, const IntVector& l, const IntVector& h,
-			     ProblemSpecP /*varnode*/, bool outputDoubleAsFloat)
+                             ProblemSpecP /*varnode*/, bool outputDoubleAsFloat)
      {
        ssize_t linesize = (ssize_t)(sizeof(T));
        
@@ -129,7 +128,7 @@ WARNING
        in.read((char*) &val, linesize);
        
        if (swapBytes)
-       	 Uintah::swapbytes(val);
+         Uintah::swapbytes(val);
        
        value = val;
      }

@@ -82,6 +82,7 @@ WARNING
          // input specification and builds the triangulated surface piece.
          TriGeometryPiece(ProblemSpecP &);
          //////////
+         TriGeometryPiece(std::string filename);
 
          TriGeometryPiece(const TriGeometryPiece&);
 

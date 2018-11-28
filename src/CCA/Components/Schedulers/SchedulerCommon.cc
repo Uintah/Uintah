@@ -68,6 +68,8 @@
 #include <string>
 #include <vector>
 
+#include <unistd.h>
+
 using namespace Uintah;
 
 namespace {
@@ -241,10 +243,22 @@ SchedulerCommon::makeTaskGraphDoc( const DetailedTasks * /* dt*/
                                  ,       int             rank
                                  )
 {
+  // This only happens if "-emit_taskgraphs" is passed to sus
   if (!m_emit_task_graph) {
     return;
   }
 
+  // ARS NOTE: Outputing and Checkpointing may be done out of snyc
+  // now. I.e. turned on just before it happens rather than turned on
+  // before the task graph execution.  As such, one should also be
+  // checking:
+  
+  // m_application->activeReductionVariable( "outputInterval" );
+  
+  // However, if active the code below would be called regardless if
+  // an output or checkpoint time step or not. That is probably not
+  // desired. However, given this code is for debuging it probably
+  // fine that it does not happen if doing an output of sync.
   if (!m_output->isOutputTimeStep()) {
     return;
   }
@@ -287,7 +301,9 @@ SchedulerCommon::emitNode( const DetailedTask * dtask
                          ,       double         execution_duration
                          )
 {  
-  if ( m_graph_nodes == nullptr ) {
+  // This only happens if "-emit_taskgraphs" is passed to sus
+  // See makeTaskGraphDoc
+  if (m_graph_nodes == nullptr) {
     return;
   }
 
@@ -308,23 +324,24 @@ SchedulerCommon::emitNode( const DetailedTask * dtask
 void
 SchedulerCommon::finalizeNodes( int process /* = 0 */ )
 {
-  if (!m_graph_doc) {
+  // This only happens if "-emit_taskgraphs" is passed to sus
+  // See makeTaskGraphDoc
+  if (m_graph_doc == nullptr) {
     return;
   }
 
-  if (m_output->isOutputTimeStep()) {
-    std::string timestep_dir(m_output->getLastTimeStepOutputLocation());
+  std::string timestep_dir(m_output->getLastTimeStepOutputLocation());
+  
+  std::ostringstream fname;
+  fname << "/taskgraph_" << std::setw(5) << std::setfill('0') << process << ".xml";
+  std::string file_name(timestep_dir + fname.str());
+  m_graph_doc->output(file_name.c_str());
 
-    std::ostringstream fname;
-    fname << "/taskgraph_" << std::setw(5) << std::setfill('0') << process << ".xml";
-    std::string file_name(timestep_dir + fname.str());
-    m_graph_doc->output(file_name.c_str());
-  }
-
-  // TODO: figure out why this was commented out - APH 08/06/16
-  //m_graph_doc->releaseDocument();
-  //m_graph_doc = nullptr;
-  //m_graph_nodes = nullptr;
+  // Releasing the document causes a hard crash. All calls
+  // to releaseDocument are commented out.  
+  // m_graph_doc->releaseDocument();
+  m_graph_doc = nullptr;
+  m_graph_nodes = nullptr;
 }
 
 //______________________________________________________________________
@@ -757,7 +774,7 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
           case TypeDescription::SFCXVariable :
           case TypeDescription::SFCYVariable :
           case TypeDescription::SFCZVariable :
-            v = dynamic_cast<GridVariableBase*>(dw->d_varDB.get(label, m, patch));
+            v = dynamic_cast<GridVariableBase*>(dw->m_var_DB.get(label, m, patch));
             break;
           default :
             throw InternalError("Cannot track var type of non-grid-type", __FILE__, __LINE__);
@@ -1919,7 +1936,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                 }
 
                 std::vector<Variable *> varlist;
-                oldDataWarehouse->d_varDB.getlist(label, matl, oldPatch, varlist);
+                oldDataWarehouse->m_var_DB.getlist(label, matl, oldPatch, varlist);
                 GridVariableBase* v = nullptr;
 
                 IntVector srclow = copyLowIndex;
@@ -1943,10 +1960,10 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                     GridVariableBase* newVariable = v->cloneType();
                     newVariable->rewindow(newLowIndex, newHighIndex);
                     newVariable->copyPatch(v, srclow, srchigh);
-                    newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, copyTimestep(), false);
+                    newDataWarehouse->m_var_DB.put(label, matl, newPatch, newVariable, copyTimestep(), false);
 
                   } else {
-                    GridVariableBase* newVariable = dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl, newPatch));
+                    GridVariableBase* newVariable = dynamic_cast<GridVariableBase*>(newDataWarehouse->m_var_DB.get(label, matl, newPatch));
                     // make sure it exists in the right region (it might be ghost data)
                     newVariable->rewindow(newLowIndex, newHighIndex);
 

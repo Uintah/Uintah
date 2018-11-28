@@ -25,12 +25,13 @@
 //----- DORadiationModel.cc --------------------------------------------------
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/ArchesStatsEnum.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 #include <Core/Exceptions/InternalError.h>
@@ -1802,13 +1803,22 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
     }
   }
 
-
+//#ifdef ADD_PERFORMANCE_STATS
+    // Add in the sweep stat.
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) DORadiationTime   ] += _timer().seconds();
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) DORadiationBands  ] += d_nbands;
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) DORadiationSweeps ] += d_totalOrds*d_nbands;
+    // For each stat recorded increment the count so to get a per patch value.
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) DORadiationTime );    
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) DORadiationBands );
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) DORadiationSweeps );
+//#endif
 
   proc0cout << "//---------------------------------------------------------------------//\n";
   proc0cout << "Total Radiation Solve Time (Approximate): " << _timer().seconds() << " seconds for " << d_totalOrds*d_nbands<< " sweeps (bands=" <<d_nbands << ")\n";
   proc0cout << "//---------------------------------------------------------------------//\n";
-  return ;
 
+  return ;
 }
 
 

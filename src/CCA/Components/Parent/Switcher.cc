@@ -870,8 +870,6 @@ Switcher::needRecompile( const GridP & grid )
 {
   switcher_dbg << "  Doing Switcher::needRecompile " << std::endl;
   
-  m_recompile  = false;
-
   d_restarting = true;
   d_doSwitching.resize(grid->numLevels());
   
@@ -880,7 +878,6 @@ Switcher::needRecompile( const GridP & grid )
   }
 
   if (d_switchState == switching) {
-
     d_switchState = idle;
     d_computedVars.clear();
     d_componentIndex++;
@@ -888,8 +885,6 @@ Switcher::needRecompile( const GridP & grid )
     d_app->setupForSwitching();
     m_materialManager->clearMaterials();
 
-    m_output->setSwitchState(true);
-    
     // Reseting the GeometryPieceFactory only (I believe) will ever
     // need to be done by the Switcher component...
     GeometryPieceFactory::resetFactory();
@@ -911,15 +906,16 @@ Switcher::needRecompile( const GridP & grid )
 
     proc0cout << "__________________________________\n\n";
     
-    m_recompile = true;
+    m_output->setSwitchState(true);
+    
+    return true;
   } 
-  else {
+  else
+  {
     m_output->setSwitchState(false);
+    
+    return false;
   }
-
-  m_recompile |= d_app->needRecompile(grid);
-
-  return m_recompile;
 }
 //______________________________________________________________________
 //

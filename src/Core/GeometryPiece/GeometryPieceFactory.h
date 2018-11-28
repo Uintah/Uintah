@@ -41,7 +41,7 @@ namespace Uintah {
     // this function has a switch for all known go_types
     // and calls the proper class' readParameters()
     static void create( const ProblemSpecP& ps,
-		                    std::vector<GeometryPieceP>& objs);
+                                    std::vector<GeometryPieceP>& objs);
 
     // Clears out the saved geometry piece information...  In theory, this should
     // only be called by (and necessary for) the Switcher component (and only if 

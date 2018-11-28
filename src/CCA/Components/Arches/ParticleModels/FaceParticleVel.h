@@ -25,16 +25,16 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index, std::string base_var_name ) :
-        _task_name(task_name), _matl_index(matl_index), _base_var_name(base_var_name){}
+        m_task_name(task_name), m_matl_index(matl_index), _base_var_name(base_var_name){}
       ~Builder(){}
 
       FaceParticleVel* build()
-      { return scinew FaceParticleVel<T>( _task_name, _matl_index, _base_var_name ); }
+      { return scinew FaceParticleVel<T>( m_task_name, m_matl_index, _base_var_name ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
       std::string _base_var_name;
 
     };
@@ -221,9 +221,9 @@ private:
       std::string up_face_i = ArchesCore::append_env(up_face,ienv);
       std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
       std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
-      register_variable( up_face_i, ArchesFieldContainer::COMPUTES, variable_registry , _task_name  );
-      register_variable( vp_face_i, ArchesFieldContainer::COMPUTES, variable_registry , _task_name  );
-      register_variable( wp_face_i, ArchesFieldContainer::COMPUTES, variable_registry , _task_name  );
+      register_variable( up_face_i, ArchesFieldContainer::COMPUTES, variable_registry , m_task_name  );
+      register_variable( vp_face_i, ArchesFieldContainer::COMPUTES, variable_registry , m_task_name  );
+      register_variable( wp_face_i, ArchesFieldContainer::COMPUTES, variable_registry , m_task_name  );
 
       std::string up_i = ArchesCore::append_env(up_root,ienv);
       std::string vp_i = ArchesCore::append_env(vp_root,ienv);

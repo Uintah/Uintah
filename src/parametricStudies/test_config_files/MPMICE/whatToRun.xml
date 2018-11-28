@@ -1,0 +1,66 @@
+<config>
+<postProcessCmd_path>parametricStudies/comparisonUtils</postProcessCmd_path>
+
+
+<test>
+  <name>Rayleigh</name>
+  <tst>rayleigh_dy.tst</tst>
+</test>
+
+<!--__________________________________-->
+
+<!--
+<test>
+  <name>Propagation</name>
+  <tst> Propagation_burning/Propagation_burning.tst</tst>
+</test>
+
+<test>
+  <name>BurnRates</name>
+  <tst> Compare_burn_rates/burn_rates.tst</tst>
+</test>
+
+<test>
+  <name>MEHE</name>
+  <tst>Compare_burn_rates/burn_rates.tst</tst>
+   <otherFilesToCopy>Compare_burn_rates/ExpData.dat</otherFilesToCopy>
+</test>
+
+<test>
+  <name>Temp</name>
+  <tst>Compare_burn_rates/Temp.tst</tst>
+   <otherFilesToCopy>Compare_burn_rates/ExpData.dat</otherFilesToCopy>
+</test>
+
+<test>
+  <name>ResolutionAt298</name>
+  <tst>Compare_burn_rates/Resolution.tst</tst>
+  <otherFilesToCopy>Compare_burn_rates/ExpData.dat</otherFilesToCopy>
+</test>
+
+<test>
+  <name>ResolutionAt423</name>
+  <tst>Compare_burn_rates/ResolutionAt423.tst</tst>
+  <otherFilesToCopy>Compare_burn_rates/Exp423.dat</otherFilesToCopy>
+</test>
+
+<test>
+  <name>ResolutionAt373</name>
+  <tst>Compare_burn_rates/ResolutionAt373.tst</tst>
+  <otherFilesToCopy>Compare_burn_rates/Exp373.dat</otherFilesToCopy>
+</test>
+
+<test>
+  <name>Particles_per_Cell</name>
+  <tst>Compare_burn_rates/Particles_per_Cell.tst</tst>
+</test>
+
+<test>
+  <name>VolumeFraction</name>
+  <tst>Compare_burn_rates/VolumeFraction.tst</tst>
+  <otherFilesToCopy>Compare_burn_rates/ExpData.dat</otherFilesToCopy>
+</test>
+
+-->
+
+</config>

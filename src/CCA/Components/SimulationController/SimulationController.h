@@ -39,7 +39,6 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 
-#include <sci_defs/papi_defs.h>
 #include <sci_defs/visit_defs.h>
 
 #ifdef HAVE_VISIT
@@ -119,8 +118,8 @@ public:
 
 private:
 
-  int              m_num_samples;  // Number of samples for the moving average
-  Timers::Simple   m_wall_timer;
+  int              m_num_samples{0};  // Number of samples for the moving average
+  Timers::Simple   m_wall_timer{};
 };
 
 
@@ -196,12 +195,13 @@ public:
   void setRecompileTaskGraph(bool val) { m_recompile_taskgraph = val; }
 
   void ScheduleReportStats( bool header );
-  void ReportStats(const ProcessorGroup*,
-                   const PatchSubset*,
-                   const MaterialSubset*,
-                         DataWarehouse*,
-                         DataWarehouse*,
-                         bool header);
+  void ReportStats( const ProcessorGroup *
+                  , const PatchSubset    *
+                  , const MaterialSubset *
+                  ,       DataWarehouse  *
+                  ,       DataWarehouse  *
+                  ,       bool header
+                  );
 
   ReductionInfoMapper< RuntimeStatsEnum, double > & getRuntimeStats()
   { return m_runtime_stats; };
@@ -220,18 +220,17 @@ protected:
   void ResetStats( void );
 
   void getMemoryStats( bool create = false );
-  void getPAPIStats  ( );
   
   ProblemSpecP           m_ups           {nullptr};
   ProblemSpecP           m_grid_ps       {nullptr};
   ProblemSpecP           m_restart_ps    {nullptr};
   GridP                  m_current_gridP {nullptr};
 
-  ApplicationInterface * m_application     {nullptr};
-  LoadBalancer         * m_loadBalancer    {nullptr};
-  Output               * m_output          {nullptr};
-  Regridder            * m_regridder       {nullptr};
-  SchedulerP             m_scheduler       {nullptr};
+  ApplicationInterface * m_application   {nullptr};
+  LoadBalancer         * m_loadBalancer  {nullptr};
+  Output               * m_output        {nullptr};
+  Regridder            * m_regridder     {nullptr};
+  SchedulerP             m_scheduler     {nullptr};
 
   // Only used when restarting: Data from checkpoint UDA.
   DataArchive          * m_restart_archive {nullptr};
@@ -263,35 +262,17 @@ protected:
   // Runtime stat mappers.
   ReductionInfoMapper< RuntimeStatsEnum, double > m_runtime_stats;
 
-  // PAPI Counters
-#ifdef USE_PAPI_COUNTERS
-  int         m_papi_event_set;            // PAPI event set
-  long long * m_papi_event_values;         // PAPI event set values
-
-  struct PapiEvent {
-    bool                   m_is_supported{false};
-    int                    m_event_value_idx{0};
-    std::string            m_name{""};
-    RuntimeStatsEnum       m_sim_stat_name{};
-
-    PapiEvent( const std::string      & name
-             , const RuntimeStatsEnum & sim_stat_name )
-      : m_name(name)
-      , m_sim_stat_name(sim_stat_name)
-    { }
-  };
-
-  std::map<int, PapiEvent>   m_papi_events;
-#endif
 
 public:
+
   void ScheduleCheckInSitu( bool header );
-  void CheckInSitu(const ProcessorGroup*,
-                   const PatchSubset*,
-                   const MaterialSubset*,
-                         DataWarehouse*,
-                         DataWarehouse*,
-                         bool first);
+  void CheckInSitu( const ProcessorGroup *
+                  , const PatchSubset    *
+                  , const MaterialSubset *
+                  ,       DataWarehouse  *
+                  ,       DataWarehouse  *
+                  ,       bool first
+                  );
 
 #ifdef HAVE_VISIT
   void setVisIt( unsigned int val ) { m_do_visit = val; }
@@ -302,7 +283,9 @@ protected:
   visit_simulation_data *m_visitSimData;
 #endif
 
+
 private:
+
   // For reporting stats Frequency > OnTimeStep
   unsigned int m_reportStatsFrequency {1};
   unsigned int m_reportStatsOnTimeStep {0};

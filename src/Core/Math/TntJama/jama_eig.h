@@ -45,7 +45,7 @@ namespace JAMA
 <P>
     If A is symmetric, then A = V*D*V' where the eigenvalue matrix D is
     diagonal and the eigenvector matrix V is orthogonal. That is,
-	the diagonal values of D are the eigenvalues, and
+        the diagonal values of D are the eigenvalues, and
     V*V' = I, where I is the identity matrix.  The columns of V 
     represent the eigenvectors in the sense that A*V = V*D.
     
@@ -84,8 +84,8 @@ namespace JAMA
     A = V*D*inverse(V) depends upon the condition number of V.
 
    <p>
-	(Adapted from JAMA, a Java Matrix Library, developed by jointly 
-	by the Mathworks and NIST; see  http://math.nist.gov/javanumerics/jama).
+        (Adapted from JAMA, a Java Matrix Library, developed by jointly 
+        by the Mathworks and NIST; see  http://math.nist.gov/javanumerics/jama).
 **/
 
 template <class Real>
@@ -995,10 +995,10 @@ public:
 
    
 /** 
-	Computes the block diagonal eigenvalue matrix.
+        Computes the block diagonal eigenvalue matrix.
     If the original matrix A is not symmetric, then the eigenvalue 
-	matrix D is block diagonal with the real eigenvalues in 1-by-1 
-	blocks and any complex eigenvalues,
+        matrix D is block diagonal with the real eigenvalues in 1-by-1 
+        blocks and any complex eigenvalues,
     a + i*b, in 2-by-2 blocks, [a, b; -b, a].  That is, if the complex
     eigenvalues look like
 <pre>
@@ -1023,9 +1023,9 @@ public:
     This keeps V a real matrix in both symmetric and non-symmetric
     cases, and A*V = V*D.
 
-	@param D: upon return, the matrix is filled with the block diagonal 
-	eigenvalue matrix.
-	
+        @param D: upon return, the matrix is filled with the block diagonal 
+        eigenvalue matrix.
+        
 */
    void getD (TNT::Array2D<Real> &D) {
       D = Array2D<Real>(n,n);

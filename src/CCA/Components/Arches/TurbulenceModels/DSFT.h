@@ -17,7 +17,7 @@ public:
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
@@ -27,7 +27,7 @@ public:
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -38,16 +38,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       DSFT* build()
-      { return scinew DSFT( _task_name, _matl_index ); }
+      { return scinew DSFT( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
     };
 
 private:

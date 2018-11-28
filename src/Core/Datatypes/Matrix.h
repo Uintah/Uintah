@@ -112,40 +112,40 @@ public:
 
   virtual Matrix* transpose() = 0;
   virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
-		    int& flops, int& memrefs,
-		    int beg=-1, int end=-1, int spVec=0) const=0;
+                    int& flops, int& memrefs,
+                    int beg=-1, int end=-1, int spVec=0) const=0;
   virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-			      int& flops, int& memrefs,
-			      int beg=-1, int end=-1, int spVec=0) const=0;
+                              int& flops, int& memrefs,
+                              int beg=-1, int end=-1, int spVec=0) const=0;
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2) = 0;
 
   void scalar_multiply(double s);
   DenseMatrix *direct_inverse();
   DenseMatrix *iterative_inverse();
   int cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
-	       double &err, int &niter,
-	       int& flops, int& memrefs, 
-	       double max_error=1.e-6, int toomany=0,
-	       int useLhsAsGuess=0) const;
+               double &err, int &niter,
+               int& flops, int& memrefs, 
+               double max_error=1.e-6, int toomany=0,
+               int useLhsAsGuess=0) const;
   int cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs) const;
   int cg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
-	       double &err, int &niter,
-	       int& flops, int& memrefs, 
-	       double max_error=1.e-6, int toomany=0, 
-	       int useLhsAsGuess=0) const;
+               double &err, int &niter,
+               int& flops, int& memrefs, 
+               double max_error=1.e-6, int toomany=0, 
+               int useLhsAsGuess=0) const;
   int cg_solve(const DenseMatrix& rhs, DenseMatrix& lhs) const;
 
   int bicg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
-		 double &err, int &niter,
-		 int& flops, int& memrefs, 
-		 double max_error=1.e-6, int toomany=0,
-		 int useLhsAsGuess=0) const;
+                 double &err, int &niter,
+                 int& flops, int& memrefs, 
+                 double max_error=1.e-6, int toomany=0,
+                 int useLhsAsGuess=0) const;
   int bicg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs) const;
   int bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
-		 double &err, int &niter,
-		 int& flops, int& memrefs, 
-		 double max_error=1.e-6, int toomany=0,
-		 int useLhsAsGuess=0) const;
+                 double &err, int &niter,
+                 int& flops, int& memrefs, 
+                 double max_error=1.e-6, int toomany=0,
+                 int useLhsAsGuess=0) const;
   int bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs) const;
 
   // Separate raw files.

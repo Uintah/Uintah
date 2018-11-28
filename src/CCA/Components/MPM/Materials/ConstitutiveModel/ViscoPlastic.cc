@@ -58,9 +58,10 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 
-#include <math.h>
-
 #include <iostream>
+
+#include <math.h>
+#include <unistd.h>
 
 
 using namespace std;

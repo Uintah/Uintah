@@ -130,6 +130,22 @@ std::vector<double> getCycleTimes(DataArchive *archive)
 
 
 /////////////////////////////////////////////////////////////////////
+// Get the time for each cycle.
+extern "C"
+unsigned int queryProcessors(DataArchive *archive)
+{
+  // DOUT(dbgOut, "queryProcessors" );
+
+  // query number of processors used from dataarchive
+  unsigned int nProcs;
+  
+  archive->queryProcessors( nProcs );
+
+  return nProcs;
+} 
+
+
+/////////////////////////////////////////////////////////////////////
 // Get all the information that may be needed for the current timestep,
 // including variable/material info, and level/patch info
 // This function uses the archive for file reading.

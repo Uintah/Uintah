@@ -156,7 +156,7 @@ namespace WasatchCore{
                                  const Expr::Tag yvel,
                                  const Expr::Tag zvel,
                                  Uintah::ProblemSpecP wasatchSpec )
-    : TransportEquation( gc, densityTag.name(), NODIR, false /* variable density */ ),
+    : TransportEquation( gc, densityTag.name(), NODIR /* variable density */ ),
       xVelTag_( xvel ),
       yVelTag_( yvel ),
       zVelTag_( zvel ),

@@ -137,9 +137,9 @@ public:
   /// receive data from.
   virtual void createNeighborhoods( const GridP& grid, const GridP& oldGrid,  const bool hasDistalReqs = false);
 
-  virtual const std::unordered_set<int>& getNeighborhoodProcessors() { return m_neighborhood_processors; }
+  virtual const std::unordered_set<int>& getNeighborhoodProcessors() { return m_local_neighbor_processes; }
 
-  virtual const std::unordered_set<int>& getDistalNeighborhoodProcessors() { return m_distal_neighborhood_processors; }
+  virtual const std::unordered_set<int>& getDistalNeighborhoodProcessors() { return m_distal_neighbor_processes; }
 
   /// Asks the load balancer if a patch in the patch subset is in the neighborhood.
   virtual bool inNeighborhood( const PatchSubset * pss, const bool hasDistalReqs = false );
@@ -246,16 +246,16 @@ protected:
   SFC <double> m_sfc;
   bool         m_do_space_curve{false};
 
-  MaterialManagerP          m_materialManager;            ///< to keep track of timesteps
-  Scheduler               * m_scheduler {nullptr};     ///< store the scheduler to not have to keep passing it in
-  std::unordered_set<const Patch*>    m_neighbors;               ///< the neighborhood.  See createNeighborhood
-  std::unordered_set<int>             m_neighborhood_processors; ///< a list of processors that are in this processors neighborhood
+  MaterialManagerP                    m_materialManager;      ///< to keep track of timesteps
+  Scheduler                         * m_scheduler {nullptr};  ///< store the scheduler to not have to keep passing it in
   
-  std::unordered_set<const Patch*>    m_distal_neighbors;               ///< the wide-area, or global neighborhood.  See createNeighborhood
-  std::unordered_set<int>             m_distal_neighborhood_processors; ///< a list of wider-area processors that are in this processors neighborhood
+  std::unordered_set<const Patch*>    m_local_neighbor_patches;     ///< the "local" neighborhood of patches.  See createNeighborhood
+  std::unordered_set<int>             m_local_neighbor_processes;   ///< a list of "local" processes that are in this processors neighborhood
+  std::unordered_set<const Patch*>    m_distal_neighbor_patches;    ///< the "distal" neighborhood of patches.  See createNeighborhood
+  std::unordered_set<int>             m_distal_neighbor_processes;  ///< a list of "distal" processes that are in this processors neighborhood
 
   //! output on every nth processor.  This variable needs to be shared 
-  //! with the DataArchiver as well, but we keep it here because the lb
+  //! with the DataArchiver as well, but we keep it here because the LB
   //! needs it to assign the processor resource.
   int m_output_Nth_proc{1};
 
@@ -287,7 +287,8 @@ private:
                                        , const IntVector                  & low
                                        , const IntVector                  & high
                                        , std::unordered_set<const Patch*> & neighbors
-                                       , std::unordered_set<int>          & processors);
+                                       , std::unordered_set<int>          & processors
+                                       );
 };
 
 } // namespace Uintah

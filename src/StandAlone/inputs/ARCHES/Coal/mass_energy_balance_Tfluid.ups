@@ -1995,6 +1995,7 @@
           </reaction>
         </SmithChar2016>
         <ksi>0.97266</ksi>
+        <Tar_fraction>0.279</Tar_fraction>
         <LinearSwelling>
           <Fsw>1.05</Fsw>
         </LinearSwelling>
@@ -2090,12 +2091,9 @@
             <tol>1e-10</tol>
           </Clipping>
           <src label="eta_source1">
-            <weight>0.721</weight>
-          </src>
-          <src label="eta_source2">
             <weight>1</weight>
           </src>
-          <src label="eta_source3">
+          <src label="eta_source2">
             <weight>1</weight>
           </src>
         </Eqn>
@@ -2114,8 +2112,8 @@
             <high>1.0</high>
             <tol>1e-10</tol>
           </Clipping>
-          <src label="eta_source1">
-            <weight>0.279</weight>
+          <src label="Tar_src">
+            <weight>1.0</weight>
           </src>
           <src label="BrownTar">
             <weight>1.0</weight>
@@ -2242,6 +2240,8 @@
           </src>
           <src label="eta_source1" type="coal_gas_devol">
             <devol_model_name>devol</devol_model_name>
+            <tar_creation_src_label>Tar_src</tar_creation_src_label>
+            <devol_src_label_for_nox>devol_nox_src</devol_src_label_for_nox>
             <devol_BirthDeath/>
           </src>
           <src label="momentum_eta_source1" type="coal_gas_devol_mom">
@@ -2659,13 +2659,10 @@
             <solveFrequency>1</solveFrequency>
           </Parameters>
           <src label="eta_source1">
-            <weight>0.721</weight>
+            <weight>1.0</weight>
           </src>
           <src label="eta_source2">
-            <weight>1</weight>
-          </src>
-          <src label="eta_source3">
-            <weight>1</weight>
+            <weight>1.0</weight>
           </src>
           <normalize_pressure>false</normalize_pressure>
           <do_only_last_projection>false</do_only_last_projection>

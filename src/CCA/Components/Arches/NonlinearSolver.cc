@@ -25,10 +25,11 @@
 //----- NonlinearSolver.cc ----------------------------------------------
 
 #include <CCA/Components/Arches/NonlinearSolver.h>
+
 using namespace Uintah;
 
 NonlinearSolver::NonlinearSolver( const ProcessorGroup* myworld,
-                                  const ApplicationCommon* arches )
+                                  ApplicationCommon* arches )
    : d_myworld(myworld), m_arches(arches)
 {}
 
@@ -49,5 +50,4 @@ NonlinearSolver::commonProblemSetup( ProblemSpecP db ){
   db->getWithDefault("initial_dt",d_initial_dt,1.0);
 
   m_arches_spec = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
-
 }

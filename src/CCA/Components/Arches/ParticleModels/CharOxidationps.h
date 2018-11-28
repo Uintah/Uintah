@@ -46,16 +46,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index , int Nenv ) : _task_name(task_name), _matl_index(matl_index), _Nenv(Nenv){}
+      Builder( std::string task_name, int matl_index , int Nenv ) : m_task_name(task_name), m_matl_index(matl_index), _Nenv(Nenv){}
       ~Builder(){}
 
       CharOxidationps* build()
-      { return scinew CharOxidationps<T>( _task_name, _matl_index, _Nenv ); }
+      { return scinew CharOxidationps<T>( m_task_name, m_matl_index, _Nenv ); }
 
       private:
 
-      std::string _task_name;
-      int         _matl_index;
+      std::string m_task_name;
+      int         m_matl_index;
       int _Nenv;
     };
 
@@ -206,19 +206,19 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
   std::string surfAreaF_root    = "surfaceAreaFraction";
 
   // Create a label for this model
-  m_modelLabel = _task_name;
+  m_modelLabel = m_task_name;
 
   // Create the gas phase source term associated with this model
-  m_gasLabel =  _task_name + "_gasSource";
+  m_gasLabel =  m_task_name + "_gasSource";
 
   // Create the particle temperature source term associated with this model
-  m_particletemp = _task_name +  "_particletempSource" ;
+  m_particletemp = m_task_name +  "_particletempSource" ;
 
   // Create the particle size source term associated with this model
-  m_particleSize =  _task_name + "_particleSizeSource" ;
+  m_particleSize =  m_task_name + "_particleSizeSource" ;
 
   // Create the char oxidation surface rate term associated with this model
-  m_surfacerate = _task_name + "_surfacerate";
+  m_surfacerate = m_task_name + "_surfacerate";
 
   // Create the char oxidation PO2 surf term associated with this model
   //std::string PO2surf_temp = modelName + "_PO2surf";

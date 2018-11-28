@@ -125,7 +125,6 @@ namespace WasatchCore{
                                    const std::string velName,
                                    const std::string momName,
                                    const Expr::Tag densTag,
-                                   const bool isConstDensity,
                                    const Expr::Tag bodyForceTag,
                                    const Expr::Tag srcTermTag,
                                    GraphCategories& gc,

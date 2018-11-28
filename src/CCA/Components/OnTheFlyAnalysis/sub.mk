@@ -38,8 +38,10 @@ SRCS += \
         $(SRCDIR)/AnalysisModuleFactory.cc \
         $(SRCDIR)/AnalysisModule.cc        \
         $(SRCDIR)/lineExtract.cc           \
+        $(SRCDIR)/meanTurbFluxes.cc        \
         $(SRCDIR)/MinMax.cc                \
         $(SRCDIR)/momentumAnalysis.cc      \
+        $(SRCDIR)/planeAverage.cc          \
         $(SRCDIR)/planeExtract.cc          \
         $(SRCDIR)/statistics.cc            \
         $(SRCDIR)/FileInfoVar.cc

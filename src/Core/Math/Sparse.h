@@ -50,9 +50,9 @@ class MatrixElement {
   ValueType asValue() const
     {
       if (I == C.end())
-	return ValueType(0);
+        return ValueType(0);
       else
-	return (*I).second;
+        return (*I).second;
     }
 
   operator ValueType () const
@@ -64,19 +64,19 @@ class MatrixElement {
   {
     if (x != ValueType(0) )
       {
-	if (I == C.end()) {
-	  assert(C.size() < C.max_size());
-	  I = (C.insert(typename ContainerType::value_type(
-			  IndexPair(row,column), x))
-	       ).first;
-	}
-	else
-	  (*I).second = x;
+        if (I == C.end()) {
+          assert(C.size() < C.max_size());
+          I = (C.insert(typename ContainerType::value_type(
+                          IndexPair(row,column), x))
+               ).first;
+        }
+        else
+          (*I).second = x;
       }
     else
       if (I != C.end()) {
-	C.erase(I);
-	I = C.end();
+        C.erase(I);
+        I = C.end();
       }
     return *this;
   }
@@ -129,7 +129,7 @@ template<class ValueType, class IndexType> class SparseMatrix {
     assert((size_type)x.size() == Columns());
     std::valarray<ValueType> b(ValueType(0),Columns());
     for (typename SparseMatrix<ValueType,IndexType>::iterator itr = begin(); 
-	 itr != end(); itr++) {
+         itr != end(); itr++) {
       b[Index1(itr)] += Value(itr)*x[Index2(itr)];
     }
     return b;
@@ -143,8 +143,8 @@ template<class ValueType, class IndexType> class SparseMatrix {
     
     ME operator[] (size_type c)
       {
-	assert(c >= 0 && c < maxColumns);
-	return ME(C, Row, c);
+        assert(c >= 0 && c < maxColumns);
+        return ME(C, Row, c);
       }
     
   private:
@@ -176,7 +176,7 @@ template<class ValueType, class IndexType> class SparseMatrix {
 };
 
  std::valarray<double> cgSolve(SparseMatrix<double,int>& A, std::valarray<double>& b,
-	  		          int conflag);
+                                  int conflag);
 
  double eigenvalue(SparseMatrix<double,int>& A, std::valarray<double>& eigenvector);
 

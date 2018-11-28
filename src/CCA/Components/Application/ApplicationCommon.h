@@ -31,6 +31,8 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/SolverInterface.h>
 
+#include <CCA/Components/Application/ApplicationReductionVariable.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -44,7 +46,7 @@
 
 namespace Uintah {
 
-  class DataWarehouse;  
+  class DataWarehouse;
   class Output;
   class Regridder;
 
@@ -67,7 +69,7 @@ GENERAL INFORMATION
   
    
 KEYWORDS
-   Simulation_Interface
+   Application Interface
 
 DESCRIPTION
    Long description...
@@ -75,89 +77,6 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-  class ApplicationReductionVariable
-  {
-  public:
-    ApplicationReductionVariable( std::string name,
-                                  const TypeDescription *varType,
-                                  bool varActive = false )
-    {
-      // Construct the label.
-      VarLabel* nonconstVar = VarLabel::create(name, varType);
-      nonconstVar->allowMultipleComputes();
-      label = nonconstVar;
-
-      active = varActive;      
-
-      setBenignValue();
-    };
-
-    virtual ~ApplicationReductionVariable()
-    {
-      VarLabel::destroy(label);
-    }
-    
-    const VarLabel *label{nullptr};
-
-    bool active{false};
-
-    // Because this class gets put into a map it can not be a
-    // template. As such, there are two storage variables. The user
-    // need to know which one to use. Which they should given the type
-    // description.
-    bool_or_vartype bool_var;
-    min_vartype min_var;
-
-    void setBenignValue()
-    {
-      bool_var.setBenignValue();
-      min_var.setBenignValue();
-    }
-    
-    void reduce( DataWarehouse * new_dw )
-    {
-      Patch* patch = nullptr;
-
-      bool_var.setBenignValue();
-      min_var.setBenignValue();
-
-      // Reduce only if active.
-      if (active) {
-
-        if( label->typeDescription() == bool_or_vartype::getTypeDescription() )
-        {
-          // If it does not exists put a benign value into the warehouse.
-          if (!new_dw->exists(label, -1, patch)) {
-            new_dw->put(bool_var, label);
-          }
-
-          // Only reduce if on more than one rank
-          if( Parallel::getMPISize() > 1 ) {
-            new_dw->reduceMPI(label, 0, 0, -1);
-          }
-
-          // Get the reduced value.
-          new_dw->get( bool_var, label );
-        }
-        else if( label->typeDescription() == min_vartype::getTypeDescription() )
-        {
-          // If it does not exists put a benign value into the warehouse.
-          if (!new_dw->exists(label, -1, patch)) {
-            new_dw->put(min_var, label);
-          }
-
-          // Only reduce if on more than one rank
-          if( Parallel::getMPISize() > 1 ) {
-            new_dw->reduceMPI(label, 0, 0, -1);
-          }
-
-          // Get the reduced value.
-          new_dw->get( min_var, label );
-        }
-      }      
-    }
-  };
-  
   class ApplicationCommon : public UintahParallelComponent,
                             public ApplicationInterface {
 
@@ -180,7 +99,7 @@ WARNING
     virtual Output    *getOutput()    { return m_output; }
 
     virtual void setReductionVariables( UintahParallelComponent *comp );
-    virtual void clearReductionVariables();
+    virtual void resetReductionVariables();
     
     // Top level problem set up called by sus.
     virtual void problemSetup( const ProblemSpecP &prob_spec );
@@ -214,11 +133,10 @@ WARNING
     // is restarted.
     virtual void restartInitialize() {}
 
-    // Ask the application which primary task graph it wishes to
-    // execute this time step, this will be an index into the
-    // scheduler's vector of task-graphs.
-    virtual int computeTaskGraphIndex();
-    virtual int computeTaskGraphIndex( const int timeStep ) { return 0; }
+    // Get the task graph the application wants to execute. Returns an
+    // index into the scheduler's list of task graphs.
+    virtual void setTaskGraphIndex( int index ) { m_taskGraphIndex = index; }
+    virtual int  getTaskGraphIndex() { return m_taskGraphIndex; }
 
     // Schedule the inital switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,
@@ -250,10 +168,17 @@ WARNING
 
     void reduceSystemVars( const ProcessorGroup *,
                            const PatchSubset    * patches,
-                           const MaterialSubset * /*matls*/,
-                                 DataWarehouse  * /*old_dw*/,
+                           const MaterialSubset * matls,
+                                 DataWarehouse  * old_dw,
                                  DataWarehouse  * new_dw );
-      
+
+    // An optional call for the application to check their reduction vars.
+    virtual void checkReductionVars( const ProcessorGroup * pg,
+                                     const PatchSubset    * patches,
+                                     const MaterialSubset * matls,
+                                           DataWarehouse  * old_dw,
+                                           DataWarehouse  * new_dw ) {};
+    
     // Schedule the initialization of system values such at the time step.
     virtual void scheduleInitializeSystemVars(const GridP      & grid,
                                               const PatchSet   * perProcPatchSet,
@@ -309,7 +234,7 @@ WARNING
     virtual void prepareForNextTimeStep();
 
     // Asks the application if it needs to be recompiled.
-    virtual bool needRecompile( const GridP & grid );
+    virtual bool needRecompile( const GridP & grid ) { return false; };
 
     // Labels for access value in the data warehouse.
     virtual const VarLabel* getTimeStepLabel() const { return m_timeStepLabel; }
@@ -345,9 +270,92 @@ WARNING
     virtual int  getLastRegridTimeStep() { return m_lastRegridTimestep; }
 
     // Some applications can set reduction variables
-    virtual void activateReductionVariable(std::string name, bool val) { m_appReductionVars[name]->active = val; }
-    virtual bool activeReductionVariable(std::string name) { return m_appReductionVars[name]->active; }
+    virtual unsigned int numReductionVariable() const
+    {
+      return m_appReductionVars.size();
+    }
 
+    virtual void addReductionVariable( std::string name,
+                                       const TypeDescription *varType,
+                                       bool varActive = false )
+    {
+      m_appReductionVars[name] = new ApplicationReductionVariable( name, varType, varActive );
+    }
+    
+    virtual void activateReductionVariable(std::string name, bool val) { m_appReductionVars[name]->setActive( val ); }
+    virtual bool activeReductionVariable(std::string name) {
+      if( m_appReductionVars.find(name) != m_appReductionVars.end() )
+          return m_appReductionVars[name]->getActive();
+      else
+        return false;
+    }
+
+    virtual bool isBenignReductionVariable( std::string name ) { return m_appReductionVars[name]->isBenignValue(); }
+    virtual void overrideReductionVariable( DataWarehouse * new_dw, std::string name,   bool val) { m_appReductionVars[name]->setValue( new_dw, val ); }
+    virtual void overrideReductionVariable( DataWarehouse * new_dw, std::string name, double val) { m_appReductionVars[name]->setValue( new_dw, val ); }
+    virtual void setReductionVariable( DataWarehouse * new_dw, std::string name,   bool val) { m_appReductionVars[name]->setValue( new_dw, val ); }
+    virtual void setReductionVariable( DataWarehouse * new_dw, std::string name, double val) { m_appReductionVars[name]->setValue( new_dw, val ); }
+    // Get application specific reduction values all cast to doubles.
+    virtual double getReductionVariable( std::string name ) const
+    {
+      if( m_appReductionVars.find(name) != m_appReductionVars.end() )
+        return m_appReductionVars.at(name)->getValue();
+      else
+        return 0;
+    }
+    
+    virtual double getReductionVariable( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->getValue();
+        else
+          --index;
+      }
+
+      return 0;
+    }
+    
+    virtual std::string getReductionVariableName( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->getName();
+        else
+          --index;
+      }
+
+      return "Unknown";
+    }
+    
+    virtual unsigned int getReductionVariableCount( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->getCount();
+        else
+          --index;
+      }
+
+      return 0;
+    }
+    
+    virtual bool overriddenReductionVariable( unsigned int index ) const
+    {
+      for ( const auto & var : m_appReductionVars )
+      {
+        if( index == 0 )
+          return var.second->overridden();
+        else
+          --index;
+      }
+
+      return false;
+    }
+    
     // Access methods for member classes.
     virtual MaterialManagerP getMaterialManagerP() const { return m_materialManager; }
   
@@ -390,14 +398,17 @@ WARNING
     virtual void   setSimTimeMax( double val ) { m_simTimeMax = val; }
     virtual double getSimTimeMax() const { return m_simTimeMax; }
 
+    virtual void   setSimTimeClampToOutput( bool val ) { m_simTimeClampToOutput = val; }
+    virtual bool   getSimTimeClampToOutput() const { return m_simTimeClampToOutput; }
+
     virtual void   setTimeStepsMax( int val ) { m_timeStepsMax = val; }
     virtual int    getTimeStepsMax() const { return m_timeStepsMax; }
 
     virtual void   setWallTimeMax( double val ) { m_wallTimeMax = val; }
     virtual double getWallTimeMax() const { return m_wallTimeMax; }
 
-    virtual void   setClampTimeToOutput( bool val ) { m_clampTimeToOutput = val; }
-    virtual bool   getClampTimeToOutput() const { return m_clampTimeToOutput; }
+    virtual void     outputIfInvalidNextDelT( ValidateFlag flag );
+    virtual void checkpointIfInvalidNextDelT( ValidateFlag flag );
 
   private:
     // The classes are private because only the top level application
@@ -406,13 +417,6 @@ WARNING
     // applications will not have valid values. They should ALWAYS get
     // the values via the data warehouse.
     
-    // get application specific reduction values
-    virtual bool_or_vartype getReductionVariable(std::string name, bool   &val ) { val = m_appReductionVars[name]->bool_var; return m_appReductionVars[name]->bool_var; }
-    virtual min_vartype     getReductionVariable(std::string name, double &val ) { val = m_appReductionVars[name]->min_var;  return m_appReductionVars[name]->min_var; }
-
-    // virtual void setReductionVariable(std::string name, bool   &val ) { m_appReductionVars[name]->bool_var = val; }
-    // virtual void setReductionVariable(std::string name, double &val ) { m_appReductionVars[name]->min_var  = val; }
-
     //////////
     virtual void   setDelT( double delT ) { m_delT = delT; }
     virtual double getDelT() const { return m_delT; }
@@ -420,21 +424,13 @@ WARNING
                                         const GridP & grid,
                                         const int totalFine );
 
-    virtual void         setNextDelT( double delT );
+    virtual void         setNextDelT( double delT, bool restart = false );
     virtual double       getNextDelT() const { return m_delTNext; }
-    virtual unsigned int validateNextDelT( double &delTNext, unsigned int level );
-
+    virtual ValidateFlag validateNextDelT( double &delTNext, unsigned int level );
+    
     //////////
     virtual   void setSimTime( double simTime );
     virtual double getSimTime() const { return m_simTime; };
-
-    virtual   void setSimTimeStart( double simTime )
-    {
-      m_simTimeStart = simTime;
-      setSimTime(simTime);
-    }
-    
-    virtual double getSimTimeStart() const { return m_simTimeStart; }
     
     // Returns the integer time step index of the simulation.  All
     // simulations start with a time step number of 0.  This value is
@@ -457,11 +453,21 @@ WARNING
     Regridder       * m_regridder    {nullptr};
     Output          * m_output       {nullptr};
 
-    bool m_recompile {false};
-
     // Use a map to store the reduction variables. 
     std::map< std::string, ApplicationReductionVariable* > m_appReductionVars;
     
+    enum VALIDATE_ENUM  // unsigned char
+    {
+      DELTA_T_MAX_INCREASE     = 0x01,
+      DELTA_T_MIN              = 0x02,
+      DELTA_T_MAX              = 0x04,
+      DELTA_T_INITIAL_MAX      = 0x08,
+
+      CLAMP_TIME_TO_OUTPUT     = 0x10,
+      CLAMP_TIME_TO_CHECKPOINT = 0x20,
+      CLAMP_TIME_TO_MAX        = 0x40
+    };
+
   private:
     bool m_AMR {false};
     bool m_lockstepAMR {false};
@@ -471,7 +477,9 @@ WARNING
     bool m_isRestartTimestep {false};
     
     bool m_isRegridTimeStep {false};
-    int  m_lastRegridTimestep { 0 }; // While it may not have been a "re"-grid, the original grid is created on TS 0.
+    // While it may not have been a "re"-grid, the original grid is
+    // created on time step 0.
+    int m_lastRegridTimestep { 0 };
 
     bool m_haveModifiedVars {false};
 
@@ -479,7 +487,9 @@ WARNING
     const VarLabel* m_simulationTimeLabel;
     const VarLabel* m_delTLabel;
   
-
+    // Some applications may use multiple task graphs.
+    int m_taskGraphIndex{0};
+    
     // The simulation runs to either the maximum number of time steps
     // (timeStepsMax) or the maximum simulation time (simTimeMax), which
     // ever comes first. If the "max_Timestep" is not specified in the .ups
@@ -492,38 +502,30 @@ WARNING
     double m_delTInitialRange{0};    // Simulation time range for the initial delta T
 
     double m_delTMin{0};             // Minimum delta T
-    double m_delTMax{1};             // Maximum delta T
+    double m_delTMax{0};             // Maximum delta T
     double m_delTMultiplier{1.0};    // Multiple for increasing delta T
     double m_delTMaxIncrease{0};     // Maximum delta T increase.
 
     double m_simTime{0.0};           // Current sim time
-    double m_simTimeStart{0.0};      // Starting sim time    
     double m_simTimeMax{0};          // Maximum simulation time
     bool   m_simTimeEndAtMax{false}; // End the simulation at exactly this sim time.
+    bool   m_simTimeClampToOutput{false}; // Clamp the simulation time to the next output or checkpoint
+
 
     int    m_timeStep{0};            // Current time step
     int    m_timeStepsMax{0};        // Maximum number of time steps to run.  
 
     double m_wallTimeMax{0};         // Maximum wall time.
   
-    bool m_clampTimeToOutput{false}; // Clamp the time to the next output or checkpoint
+    ValidateFlag     m_outputIfInvalidNextDelTFlag{0};
+    ValidateFlag m_checkpointIfInvalidNextDelTFlag{0};
 
-    enum VALIDATE
-    {
-      DELTA_T_INITIAL_MAX      = 0x0001,
-      DELTA_T_MAX_INCREASE     = 0x0002,
-      DELTA_T_MIN              = 0x0004,
-      DELTA_T_MAX              = 0x0008,
-      CLAMP_TIME_TO_OUTPUT     = 0x0010,
-      CLAMP_TIME_TO_CHECKPOINT = 0x0020,
-      CLAMP_TIME_TO_MAX        = 0x0040
-    };
-      
   protected:
+    
     MaterialManagerP m_materialManager{nullptr};
 
     ReductionInfoMapper< ApplicationStatsEnum,
-                         double > m_application_stats;    
+                         double > m_application_stats;
     
   private:
     ApplicationCommon(const ApplicationCommon&);

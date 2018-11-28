@@ -26,9 +26,9 @@
 #include <string>
 
 /**
- *  \file 	UintahIFStreamUtil.h
+ *  \file       UintahIFStreamUtil.h
  *  \author Tony Saad
- *  \date  	February, 2013
+ *  \date       February, 2013
  *
  *  \brief Provides tools to parse input files using ifstream.
  */

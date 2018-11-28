@@ -32,11 +32,11 @@ void AddPressGradient::create_local_labels(){
 //--------------------------------------------------------------------------------------------------
 void AddPressGradient::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_registry,
   const int time_substep, const bool pack_tasks ){
-  register_variable( m_xmom, AFC::MODIFIES, variable_registry, time_substep, _task_name );
-  register_variable( m_ymom, AFC::MODIFIES, variable_registry, time_substep, _task_name );
-  register_variable( m_zmom, AFC::MODIFIES, variable_registry, time_substep, _task_name );
-  register_variable( m_press, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, _task_name );
-  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, _task_name  );
+  register_variable( m_xmom, AFC::MODIFIES, variable_registry, time_substep, m_task_name );
+  register_variable( m_ymom, AFC::MODIFIES, variable_registry, time_substep, m_task_name );
+  register_variable( m_zmom, AFC::MODIFIES, variable_registry, time_substep, m_task_name );
+  register_variable( m_press, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name  );
 }
 
 void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
@@ -56,7 +56,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   // boundary conditions on the pressure fields are applied
   // post linear solve in the PressureBC.cc class.
 
-  GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1, 1)
+  GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0, 1)
   Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
 
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
@@ -66,7 +66,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   });
 
-  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1, 1)
+  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0, 1)
   Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
 
   Uintah::parallel_for( y_range, [&](int i, int j, int k){
@@ -76,7 +76,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   });
 
-  GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1, 1)
+  GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0, 1)
   Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
   Uintah::parallel_for( z_range, [&](int i, int j, int k){
 

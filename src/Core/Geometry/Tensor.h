@@ -96,8 +96,8 @@ public:
   // is meant to be used in conjunction with custom eigenvector/value
   // computation, such as that found in the package.
   void set_outside_eigens(const Vector &e1, const Vector &e2,
-			  const Vector &e3,
-			  double v1, double v2, double v3);
+                          const Vector &e3,
+                          double v1, double v2, double v3);
 
   //! support dynamic compilation
   static const std::string& get_h_file_path();

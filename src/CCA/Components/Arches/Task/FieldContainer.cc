@@ -9,7 +9,7 @@ ArchesFieldContainer::ArchesFieldContainer( const Patch* patch,
                                             DataWarehouse* new_dw )
   :
     _patch(patch),
-    _matl_index(matl_index),
+    m_matl_index(matl_index),
     _old_dw(old_dw),
     _new_dw(new_dw),
     _variable_reg(variable_reg)

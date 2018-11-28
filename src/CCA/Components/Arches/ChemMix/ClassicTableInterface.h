@@ -27,14 +27,9 @@
 #ifndef Uintah_Component_Arches_ClassicTableInterface_h
 #define Uintah_Component_Arches_ClassicTableInterface_h
 
-//#include <Core/Util/DebugStream.h>
-//#include <string>
-
 #include <sci_defs/kokkos_defs.h>
-
-
-
 #include <CCA/Components/Arches/ChemMixV2/ClassicTable.h>
+
 /**
  * @class  ClassicTableInterface
  * @author Jeremy Thornock
@@ -96,20 +91,12 @@ public:
                  const bool modify_ref_den );
 
 
-  struct DepVarCont {
-
-    CCVariable<double>* var;
-    int index;
-
-  };
-
   /** @brief returns the heat loss bounds from the table **/
   inline std::vector<double> get_hl_bounds(){
     std::vector<double> bounds;
     bounds.push_back(d_hl_lower_bound);
     bounds.push_back(d_hl_upper_bound);
     return bounds; };
-
 
   /*********interp derived classes*****************************************/
 
@@ -171,7 +158,7 @@ private:
   int d_nDepVars;             ///< number of dependent variables requested by arches
 
   std::vector<int>    d_allIndepVarNum;         ///< Vector storing the grid size for the Independent variables
- 
+
 
   std::string d_enthalpy_name;
 

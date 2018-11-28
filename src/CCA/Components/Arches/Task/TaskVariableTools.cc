@@ -2,12 +2,40 @@
 #include <CCA/Components/Arches/Task/TaskVariableTools.h>
 #include <Core/Util/DebugStream.h>
 
-static Uintah::DebugStream taskvar_dbgstream("ARCHES_TASK_VARS", false);
-#define DBG_ON  taskvar_dbgstream.active()
-#define DBG_STREAM  if( DBG_ON  ) taskvar_dbgstream
+namespace {
+
+  Uintah::Dout dbg_arches_task{"Arches_Task_Var_DBG", "Arches::TaskVariableTools",
+    "Information regarding the variable registration per task.", false };
+
+  std::string get_var_depend_string( Uintah::ArchesFieldContainer::VAR_DEPEND dep ){
+    if ( dep == Uintah::ArchesFieldContainer::COMPUTES ){
+      return "computes";
+    } else if ( dep == Uintah::ArchesFieldContainer::MODIFIES ){
+      return "modifies";
+    } else if ( dep == Uintah::ArchesFieldContainer::REQUIRES ){
+      return "requires";
+    } else if ( dep == Uintah::ArchesFieldContainer::COMPUTESCRATCHGHOST ){
+      return "compute_with_scratch_ghosts";
+    } else {
+      throw Uintah::InvalidValue("Error: VAR_DEPEND enum not recognized.", __FILE__, __LINE__ );
+    }
+  }
+
+  std::string get_which_dw_string( Uintah::ArchesFieldContainer::WHICH_DW dw ){
+    if ( dw == Uintah::ArchesFieldContainer::OLDDW ){
+      return "old DW";
+    } else if ( dw == Uintah::ArchesFieldContainer::NEWDW ){
+      return "new DW";
+    } else if ( dw == Uintah::ArchesFieldContainer::LATEST ){
+      return "latest DW";
+    } else {
+      throw Uintah::InvalidValue("Error: VAR_DEPEND enum not recognized.", __FILE__, __LINE__ );
+    }
+  }
+
+}
 
 namespace Uintah {
-
 
    void register_variable_work( std::string name,
                                 ArchesFieldContainer::VAR_DEPEND dep,
@@ -18,12 +46,13 @@ namespace Uintah {
                                 const std::string task_name )
   {
 
-    DBG_STREAM << " For task: " << task_name << " registering: " << std::endl;
-    DBG_STREAM << "             name: " << name << std::endl;
-    DBG_STREAM << "              dep: " << dep << std::endl;
-    DBG_STREAM << "           nGhost: " << nGhost << std::endl;
-    DBG_STREAM << "         which dw: " << dw << std::endl;
-    DBG_STREAM << "     time_substep: " << time_substep << std::endl;
+    DOUT( dbg_arches_task, "[TaskVariableTools]   FOR TASK: " << task_name <<
+                           "      \n registering: " << name <<
+                           "      \n     var dep: " << get_var_depend_string(dep) <<
+                           "      \n      nGhost: " << nGhost <<
+                           "      \n    which dw: " << get_which_dw_string(dw) <<
+                           "     \n time_substep: " << time_substep
+    );
 
     if ( dw == ArchesFieldContainer::LATEST ){
       if ( time_substep == 0 ){
@@ -31,15 +60,23 @@ namespace Uintah {
       } else {
         dw = ArchesFieldContainer::NEWDW;
       }
+      DOUT( dbg_arches_task, " latest DW is: " << get_which_dw_string(dw) );
     }
 
-    /// ERROR CHECKING ///
+    /// ERROR/CONFLICT CHECKING ///
     bool add_variable = true;
 
     for ( auto i = variable_registry.begin(); i != variable_registry.end(); i++ ){
 
       //check if this name is already in the list:
       if ( (*i).name == name ){
+
+        //Deal with cases of computescratchghost + requires in a packed task.
+        if ( (*i).depend == ArchesFieldContainer::COMPUTESCRATCHGHOST
+              && dep == ArchesFieldContainer::REQUIRES ){
+          //Don't add this variable because it is computed in this task upstream in a packed neighbor task
+          add_variable = false;
+        }
 
         //does it have the same dependency?
         if ( (*i).depend == dep ){
@@ -186,11 +223,11 @@ namespace Uintah {
 
       const Uintah::TypeDescription* type_desc = the_label->typeDescription();
 
-      if ( dep == ArchesFieldContainer::REQUIRES ) {
+      info.ghost_type = Ghost::None;
 
-        if ( nGhost == 0 ){
-          info.ghost_type = Ghost::None;
-        } else {
+      if ( dep == ArchesFieldContainer::REQUIRES || dep == ArchesFieldContainer::COMPUTESCRATCHGHOST ) {
+
+        if ( nGhost > 0 ){
           if ( type_desc == CCVariable<int>::getTypeDescription() ) {
               info.ghost_type = Ghost::AroundCells;
           } else if ( type_desc == CCVariable<double>::getTypeDescription() ) {
@@ -222,9 +259,7 @@ namespace Uintah {
                           const int time_substep,
                           std::string task_name,
                           const bool temporary_variable ){
-    if ( !temporary_variable ){
-      register_variable_work( name, dep, nGhost, dw, var_reg, time_substep, task_name );
-    }
+    register_variable_work( name, dep, nGhost, dw, var_reg, time_substep, task_name );
   }
 
   void register_variable( std::string name,
@@ -234,9 +269,7 @@ namespace Uintah {
                           std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
                           std::string task_name,
                           const bool temporary_variable ){
-    if ( !temporary_variable ){
-      register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
-    }
+    register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
   }
 
   void register_variable( std::string name,
@@ -246,9 +279,7 @@ namespace Uintah {
                           const bool temporary_variable ){
     ArchesFieldContainer::WHICH_DW dw = ArchesFieldContainer::NEWDW;
     int nGhost = 0;
-    if ( !temporary_variable ){
-      register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
-    }
+    register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
   }
 
   void register_variable( std::string name,
@@ -260,8 +291,6 @@ namespace Uintah {
 
     ArchesFieldContainer::WHICH_DW dw = ArchesFieldContainer::NEWDW;
     int nGhost = 0;
-    if ( !temporary_variable ){
-      register_variable_work( name, dep, nGhost, dw, var_reg, timesubstep, task_name );
-    }
+    register_variable_work( name, dep, nGhost, dw, var_reg, timesubstep, task_name );
   }
 } // namespace Uintah

@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <sci_defs/malloc_defs.h>
-
 #include <CCA/Components/SimulationController/SimulationController.h>
 
 #include <Core/DataArchive/DataArchive.h>
@@ -38,10 +36,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DOUT.hpp>
 
-#ifdef USE_PAPI_COUNTERS
-  #include <Core/Exceptions/PapiInitializationError.h>
-#endif
-
+#include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
@@ -49,8 +44,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/ApplicationInterface.h>
 
-#include <CCA/Components/Schedulers/MPIScheduler.h>
 
+#include <sci_defs/malloc_defs.h>
 #include <sci_defs/visit_defs.h>
 
 
@@ -65,21 +60,16 @@
 
 #include <pwd.h>
 
-#define SECONDS_PER_MINUTE        60.0
-#define SECONDS_PER_HOUR        3600.0
-#define SECONDS_PER_DAY        86400.0
-#define SECONDS_PER_WEEK      604800.0
-#define SECONDS_PER_YEAR    31536000.0
-
-
 namespace {
 
-Uintah::Dout g_sim_stats(         "SimulationStats",            "SimulationController", "sim general stats debug stream", true  );
-Uintah::Dout g_sim_stats_mem(     "SimulationStatsMem",         "SimulationController", "sim memory stats debug stream", true  );
-Uintah::Dout g_sim_stats_time(    "SimulationStatsTime",        "SimulationController", "sim time stats debug stream", false );
-Uintah::Dout g_sim_ctrl_dbg(      "SimulationController",       "SimulationController", "general debug stream", false );
-Uintah::Dout g_comp_timings(      "ComponentTimings",           "SimulationController", "aggregated component timing stats per timestep", false );
-Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", "SimulationController", "individual component timings", false );
+Uintah::Dout g_sim_stats(       "SimulationStats"           , "SimulationController", "Simulation general stats"    , true  );
+Uintah::Dout g_sim_stats_mem(   "SimulationStatsMem"        , "SimulationController", "Simulation memory stats"     , true  );
+
+Uintah::Dout g_comp_stats(      "ComponentStats"            , "SimulationController", "Aggregated component stats"  , false );
+Uintah::Dout g_comp_indv_stats( "ComponentIndividualStats"  , "SimulationController", "Individual component stats"  , false );
+
+Uintah::Dout g_app_stats(       "ApplicationStats"          , "SimulationController", "Aggregated application stats", false );
+Uintah::Dout g_app_indv_stats(  "ApplicationIndividualStats", "SimulationController", "Individual application stats", false );
 
 }
 
@@ -92,7 +82,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   , m_ups( prob_spec )
 {
   //initialize the overhead percentage
-  for( int i = 0; i < OVERHEAD_WINDOW; ++i ) {
+  for (int i = 0; i < OVERHEAD_WINDOW; ++i) {
     double x = (double) i / (double) (OVERHEAD_WINDOW/2);
     m_overhead_values[i]  = 0;
     m_overhead_weights[i] = 8.0 - x*x*x;
@@ -102,199 +92,66 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
 
   ProblemSpecP simController_ps = m_ups->findBlock( "SimulationController" );
 
-  if( simController_ps )
-  {
-    ProblemSpecP runtimeStats_ps = simController_ps->findBlock( "RuntimeStats" );
+  if (simController_ps) {
+    ProblemSpecP runtimeStats_ps = simController_ps->findBlock("RuntimeStats");
 
-    if( runtimeStats_ps )
-    {
+    if (runtimeStats_ps) {
       runtimeStats_ps->get("frequency", m_reportStatsFrequency);
       runtimeStats_ps->get("onTimeStep", m_reportStatsOnTimeStep);
 
-      if( m_reportStatsOnTimeStep >= m_reportStatsFrequency )
-      {
-        proc0cout << "Error: the frequency of reporting the run time stats "
-                  << m_reportStatsFrequency << " "
-                  << "is less than or equal to the time step ordinality "
-                  << m_reportStatsOnTimeStep << " "
+      if (m_reportStatsOnTimeStep >= m_reportStatsFrequency) {
+        proc0cout << "Error: the frequency of reporting the run time stats " << m_reportStatsFrequency  << " "
+                  << "is less than or equal to the time step ordinality "    << m_reportStatsOnTimeStep << " "
                   << ". Resetting the ordinality to ";
 
-        if( m_reportStatsFrequency > 1 )
+        if (m_reportStatsFrequency > 1) {
           m_reportStatsOnTimeStep = 1;
-        else
+        }
+        else {
           m_reportStatsOnTimeStep = 0;
-
+        }
         proc0cout << m_reportStatsOnTimeStep << std::endl;
       }
     }
   }
   
-#ifdef USE_PAPI_COUNTERS
-  /*
-   * Setup PAPI events to track.
-   *
-   * Here and in printSimulationStats() are the only places code needs
-   * to be added for additional events to track. Everything is
-   * parameterized and hopefully robust enough to handle unsupported
-   * events on different architectures. Only supported events will
-   * report stats in printSimulationStats().
-   *
-   * NOTE: All desired events may not be supported for a particular
-   *       architecture and bad things, happen, e.g. misaligned
-   *       event value array indices when an event can be queried
-   *       but not added to an event set, hence the PapiEvent
-   *       struct, map and logic in printSimulationStats().
-   *
-   *       On some platforms, errors about resource limitations may be
-   *       encountered, and is why we limit this instrumentation to
-   *       four events now (seems stable). At some point we will look
-   *       into the cost of multiplexing with PAPI, which will allow a
-   *       user to count more events than total physical counters by
-   *       time sharing the existing counters. This comes at some loss
-   *       in precision.
-   *
-   */
-
-  // PAPI_FP_OPS - floating point operations executed
-  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", TotalFlops)));
-
-  // PAPI_DP_OPS - floating point operations executed; optimized to count scaled double precision vector operations
-  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", TotalVFlops)));
-
-  // PAPI_L2_TCM - level 2 total cache misses
-  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", L2Misses)));
-
-  // PAPI_L3_TCM - level 3 total cache misses
-  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", L3Misses)));
-
-  // PAPI_TLB_TL - Total translation lookaside buffer misses
-  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_TLB_TL, PapiEvent("PAPI_TLB_TL", TLBMisses)));
-
-  m_papi_event_values = scinew long long[m_papi_events.size()];
-  m_papi_event_set    = PAPI_NULL;
-  int retval          = PAPI_NULL;
-
-  // initialize the PAPI library
-  retval = PAPI_library_init(PAPI_VER_CURRENT);
-  if (retval != PAPI_VER_CURRENT) {
-    proc0cout << "Error: Cannot initialize PAPI library!\n"
-              << "       Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n";
-    throw PapiInitializationError("PAPI library initialization error occurred. Check that your PAPI library can be initialized correctly.", __FILE__, __LINE__);
-  }
-
-  // initialize thread support in the PAPI library
-  retval = PAPI_thread_init(pthread_self);
-  if (retval != PAPI_OK) {
-    proc0cout << "Error: Cannot initialize PAPI thread support!\n"
-              << "       Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n";
-    if (Parallel::getNumThreads() > 1) {
-      throw PapiInitializationError("PAPI Pthread initialization error occurred. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
-    }
-  }
-
-  // query all PAPI events - find which are supported, flag those that are unsupported
-  for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
-    retval = PAPI_query_event(iter->first);
-    if (retval != PAPI_OK) {
-      proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.m_name << "!\n"
-                << "          Error code = " << retval << " (" << PAPI_strerror(retval)<< ")\n"
-                << "          No stats will be printed for " << iter->second.m_sim_stat_name << std::endl;
-    }
-    else {
-      iter->second.m_is_supported = true;
-    }
-  }
-
-  // create a new empty PAPI event set
-  retval = PAPI_create_eventset(&m_papi_event_set);
-  if (retval != PAPI_OK) {
-    proc0cout << "Error: Cannot create PAPI event set!\n"
-              << "       Error code = " << retval << " (" << PAPI_strerror(retval)<< ")\n";
-    throw PapiInitializationError("PAPI event set creation error. Unable to create hardware counter event set.", __FILE__, __LINE__);
-  }
-
-  // Iterate through supported PAPI events, flag those that cannot be added.
-  //   There are situations where an event may be queried but not added to an event set.
-  int index = 0;
-  for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
-    if (iter->second.m_is_supported) {
-      retval = PAPI_add_event(m_papi_event_set, iter->first);
-      if (retval != PAPI_OK) { // this means the event queried OK but could not be added
-        proc0cout << "WARNNING: Cannot add PAPI event: " << iter->second.m_name << "!\n"
-                  << "          Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n"
-                  << "          No stats will be printed for " << iter->second.m_sim_stat_name << std::endl;
-        iter->second.m_is_supported = false;
-      }
-      else {
-        iter->second.m_event_value_idx = index;
-        index++;
-      }
-    }
-  }
-
-  // Start counting PAPI events
-  retval = PAPI_start(m_papi_event_set);
-  if (retval != PAPI_OK) {
-    proc0cout << "   ERROR: Cannot start PAPI event set!\n"
-              << "          Error code = " << retval << " (" << PAPI_strerror(retval)
-              << ")" << std::endl;
-
-    // PAPI_ENOCMP means component index isn't set because no tracked
-    // events supported on this platform, otherwise something
-    // potentially unreasonable happened, either way we should not
-    // continue
-    std::string error_message = "PAPI event set start error.";
-    std::string specific_message = error_message + ((retval == PAPI_ENOCMP) ? "  None of the PAPI events tracked by Uintah are available on this platform. " : "")
-                                                 + "Please recompile without PAPI enabled.";
-    throw PapiInitializationError(specific_message, __FILE__, __LINE__);
-  }
-#endif
-
   std::string timeStr("seconds");
   std::string bytesStr("MBytes");
 
-  m_runtime_stats.insert( CompilationTime,           std::string("Compilation"),           timeStr, 0 );
-  m_runtime_stats.insert( RegriddingTime,            std::string("Regridding"),            timeStr, 0 );
-  m_runtime_stats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
-  m_runtime_stats.insert( RegriddingCopyDataTime,    std::string("RegriddingCopyData"),    timeStr, 0 );
-  m_runtime_stats.insert( LoadBalancerTime,          std::string("LoadBalancer"),          timeStr, 0 );
+  m_runtime_stats.insert( CompilationTime,           std::string("Compilation"),           timeStr );
+  m_runtime_stats.insert( RegriddingTime,            std::string("Regridding"),            timeStr );
+  m_runtime_stats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr );
+  m_runtime_stats.insert( RegriddingCopyDataTime,    std::string("RegriddingCopyData"),    timeStr );
+  m_runtime_stats.insert( LoadBalancerTime,          std::string("LoadBalancer"),          timeStr );
 
-  m_runtime_stats.insert( TaskExecTime,              std::string("TaskExec"),              timeStr, 0 );
-  m_runtime_stats.insert( TaskLocalCommTime,         std::string("TaskLocalComm"),         timeStr, 0 );
-  m_runtime_stats.insert( TaskWaitCommTime,          std::string("TaskWaitCommTime"),      timeStr, 0 );
-  m_runtime_stats.insert( TaskReduceCommTime,        std::string("TaskReduceCommTime"),    timeStr, 0 );
-  m_runtime_stats.insert( TaskWaitThreadTime,        std::string("TaskWaitThread"),        timeStr, 0 );
+  m_runtime_stats.insert( TaskExecTime,              std::string("TaskExec"),              timeStr );
+  m_runtime_stats.insert( TaskLocalCommTime,         std::string("TaskLocalComm"),         timeStr );
+  m_runtime_stats.insert( TaskWaitCommTime,          std::string("TaskWaitCommTime"),      timeStr );
+  m_runtime_stats.insert( TaskReduceCommTime,        std::string("TaskReduceCommTime"),    timeStr );
+  m_runtime_stats.insert( TaskWaitThreadTime,        std::string("TaskWaitThread"),        timeStr );
 
-  m_runtime_stats.insert( XMLIOTime,                 std::string("XMLIO"),                 timeStr, 0 );
-  m_runtime_stats.insert( OutputIOTime,              std::string("OutputIO"),              timeStr, 0 );
-  m_runtime_stats.insert( ReductionIOTime,           std::string("ReductionIO"),           timeStr, 0 );
-  m_runtime_stats.insert( CheckpointIOTime,          std::string("CheckpointIO"),          timeStr, 0 );
-  m_runtime_stats.insert( CheckpointReductionIOTime, std::string("CheckpointReductionIO"), timeStr, 0 );
-  m_runtime_stats.insert( TotalIOTime,               std::string("TotalIO"),               timeStr, 0 );
+  m_runtime_stats.insert( XMLIOTime,                 std::string("XMLIO"),                 timeStr );
+  m_runtime_stats.insert( OutputIOTime,              std::string("OutputIO"),              timeStr );
+  m_runtime_stats.insert( ReductionIOTime,           std::string("ReductionIO"),           timeStr );
+  m_runtime_stats.insert( CheckpointIOTime,          std::string("CheckpointIO"),          timeStr );
+  m_runtime_stats.insert( CheckpointReductionIOTime, std::string("CheckpointReductionIO"), timeStr );
+  m_runtime_stats.insert( TotalIOTime,               std::string("TotalIO"),               timeStr );
 
-  m_runtime_stats.insert( OutputIORate,              std::string("OutputIORate"),     "MBytes/sec", 0 );
-  m_runtime_stats.insert( ReductionIORate,           std::string("ReductionIORate"),  "MBytes/sec", 0 );
-  m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"), "MBytes/sec", 0 );
-  m_runtime_stats.insert( CheckpointReductionIORate, std::string("CheckpointReductionIORate"), "MBytes/sec", 0 );
+  m_runtime_stats.insert( OutputIORate,              std::string("OutputIORate"),     "MBytes/sec" );
+  m_runtime_stats.insert( ReductionIORate,           std::string("ReductionIORate"),  "MBytes/sec" );
+  m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"), "MBytes/sec" );
+  m_runtime_stats.insert( CheckpointReductionIORate, std::string("CheckpointReductionIORate"), "MBytes/sec" );
 
-  m_runtime_stats.insert( NumTasks,                  std::string("NumberOfTasks"), "tasks", 0 );
-  m_runtime_stats.insert( NumPatches,                std::string("NumberOfPatches"), "patches", 0 );
-  m_runtime_stats.insert( NumCells,                  std::string("NumberOfCells"), "cells", 0 );
-  m_runtime_stats.insert( NumParticles,              std::string("NumberOfParticles"), "paticles", 0 );
+  m_runtime_stats.insert( NumTasks,                  std::string("NumberOfTasks"),     "tasks" );
+  m_runtime_stats.insert( NumPatches,                std::string("NumberOfPatches"),   "patches" );
+  m_runtime_stats.insert( NumCells,                  std::string("NumberOfCells"),     "cells" );
+  m_runtime_stats.insert( NumParticles,              std::string("NumberOfParticles"), "paticles" );
   
-  m_runtime_stats.insert( SCIMemoryUsed,             std::string("SCIMemoryUsed"),         bytesStr, 0 );
-  m_runtime_stats.insert( SCIMemoryMaxUsed,          std::string("SCIMemoryMaxUsed"),      bytesStr, 0 );
-  m_runtime_stats.insert( SCIMemoryHighwater,        std::string("SCIMemoryHighwater"),    bytesStr, 0 );
-  m_runtime_stats.insert( MemoryUsed,                std::string("MemoryUsed"),            bytesStr, 0 );
-  m_runtime_stats.insert( MemoryResident,            std::string("MemoryResident"),        bytesStr, 0 );
-
-#ifdef USE_PAPI_COUNTERS
-  m_runtime_stats.insert( TotalFlops,  std::string("TotalFlops") , "FLOPS" , 0 );
-  m_runtime_stats.insert( TotalVFlops, std::string("TotalVFlops"), "FLOPS" , 0 );
-  m_runtime_stats.insert( L2Misses,    std::string("L2Misses")   , "misses", 0 );
-  m_runtime_stats.insert( L3Misses,    std::string("L3Misses")   , "misses", 0 );
-  m_runtime_stats.insert( TLBMisses,   std::string("TLBMisses")  , "misses", 0 );
-#endif
+  m_runtime_stats.insert( SCIMemoryUsed,             std::string("SCIMemoryUsed"),         bytesStr );
+  m_runtime_stats.insert( SCIMemoryMaxUsed,          std::string("SCIMemoryMaxUsed"),      bytesStr );
+  m_runtime_stats.insert( SCIMemoryHighwater,        std::string("SCIMemoryHighwater"),    bytesStr );
+  m_runtime_stats.insert( MemoryUsed,                std::string("MemoryUsed"),            bytesStr );
+  m_runtime_stats.insert( MemoryResident,            std::string("MemoryResident"),        bytesStr );
 
 #ifdef HAVE_VISIT
   m_visitSimData = scinew visit_simulation_data();
@@ -309,10 +166,6 @@ SimulationController::~SimulationController()
   if (m_restart_archive) {
     delete m_restart_archive;
   }
-
-#ifdef USE_PAPI_COUNTERS
-  delete m_papi_event_values;
-#endif
 
 #ifdef HAVE_VISIT
   delete m_visitSimData;
@@ -334,31 +187,31 @@ SimulationController::getComponents( void )
 {
   m_application = dynamic_cast<ApplicationInterface*>( getPort( "application" ) );
 
-  if( !m_application ) {
+  if (!m_application) {
     throw InternalError("dynamic_cast of 'm_app' failed!", __FILE__, __LINE__);
   }
 
   m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
 
-  if( !m_loadBalancer ) {
+  if (!m_loadBalancer) {
     throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
   }
 
   m_output = dynamic_cast<Output*>( getPort("output") );
 
-  if( !m_output ) {
+  if (!m_output) {
     throw InternalError("dynamic_cast of 'm_output' failed!", __FILE__, __LINE__);
   }
 
   m_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
 
-  if( m_application->isDynamicRegridding() && !m_regridder ) {
+  if (m_application->isDynamicRegridding() && !m_regridder) {
     throw InternalError("dynamic_cast of 'm_regridder' failed!", __FILE__, __LINE__);
   }
 
   m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
 
-  if( !m_scheduler ) {
+  if (!m_scheduler) {
     throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
   }
 }
@@ -445,15 +298,16 @@ SimulationController::restartArchiveSetup( void )
       m_restart_timestep = indices[indices.size() - 1]; // reset m_restart_timestep to what it really is
     }
     else {
-      for (int index = 0; index < (int)indices.size(); index++)
+      for (int index = 0; index < (int)indices.size(); index++) {
         if (indices[index] == m_restart_timestep) {
           m_restart_index = index;
           break;
         }
+      }
     }
       
-    if (m_restart_index == (int) indices.size()) {
-      // timestep not found
+    // timestep not found
+    if (m_restart_index == (int)indices.size()) {
       std::ostringstream message;
       message << "Restart time step " << m_restart_timestep << " not found";
       throw InternalError(message.str(), __FILE__, __LINE__);
@@ -461,8 +315,7 @@ SimulationController::restartArchiveSetup( void )
 
     // Do this call before calling DataArchive::restartInitialize,
     // because problemSetup() creates VarLabels the DataArchive needs.
-    m_restart_ps =
-      m_restart_archive->getTimestepDocForComponent( m_restart_index );
+    m_restart_ps = m_restart_archive->getTimestepDocForComponent( m_restart_index );
 
     proc0cout << "Restart directory: \t'" << restartFromDir.getName() << "'\n"
               << "Restart time step: \t" << m_restart_timestep << "\n";
@@ -477,8 +330,13 @@ SimulationController::outputSetup( void )
   // Set up the output - needs to be done before the application is setup.
   m_output->setRuntimeStats( &m_runtime_stats );
 
-  m_output->problemSetup( m_ups, m_restart_ps,
-                          m_application->getMaterialManagerP() );
+  m_output->problemSetup( m_ups, m_restart_ps, m_application->getMaterialManagerP() );
+
+#ifdef HAVE_VISIT
+  if( getVisIt() ) {
+    m_output->setScrubSavedVariables( false );
+  }
+#endif
 }
 
 //______________________________________________________________________
@@ -487,7 +345,7 @@ void
 SimulationController::gridSetup( void )
 {
   // Set up the grid.
-  if( m_restarting ) {
+  if (m_restarting) {
     // tsaad & bisaac: At this point, and during a restart, there not
     // legitimate load balancer. This means that the grid obtained
     // from the data archiver will global domain BCs on every MPI Rank
@@ -499,39 +357,34 @@ SimulationController::gridSetup( void )
     // conditions. Once that is done, a legitimate load balancer will
     // be created later on - after which we use said balancer and
     // assign BCs to the grid.  NOTE the "false" argument below.
-    m_current_gridP =
-      m_restart_archive->queryGrid( m_restart_index, m_ups, false );
+    m_current_gridP = m_restart_archive->queryGrid( m_restart_index, m_ups, false );
   }
   else /* if( !m_restarting ) */ {
     m_current_gridP = scinew Grid();
 
-    // The call to preGridProblemSetup() by the simulation interface
-    // allows for a call to grid->setExtraCells() to be made before
-    // the grid problemSetup() so that if there are no extra cells
-    // defined in the ups file, all levels will use the grid extra
-    // cell value.
+    // The call to preGridProblemSetup() by the simulation interface allows
+    // for a call to grid->setExtraCells() to be made before the grid
+    // problemSetup() so that if there are no extra cells defined in the
+    // ups file, all levels will use the grid extra cell value.
 
     // For instance, Wasatch does not allow users to specify extra
     // cells through the input file. Instead, Wasatch wants to specify
-    // it internally. This call gives the option to do just that
-    // though it does not follow normal paradigm of calling
-    // problemSetup immediately after a component or other object is
-    // created.
+    // it internally. This call gives the option to do just that though
+    // it does not follow normal paradigm of calling problemSetup
+    // immediately after a component or other object is created.
     m_application->preGridProblemSetup( m_ups, m_current_gridP );
 
-    // Now that the simulation interface has made its changes do the
-    // normal grid problemSetup()
+    // Now that the simulation interface has made its changes do the normal grid problemSetup()
     m_current_gridP->problemSetup( m_ups, d_myworld, m_application->isAMR() );
   }
 
-  if( m_current_gridP->numLevels() == 0 ) {
+  if (m_current_gridP->numLevels() == 0) {
     throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
   }
 
-  // Print out meta data
-  if ( d_myworld->myRank() == 0 ) {
+  // Print out metadata
+  if (d_myworld->myRank() == 0) {
     m_current_gridP->printStatistics();
-//    DOUT(true, "Restart grid\n" << *m_current_gridP.get_rep());
   }
 }
 
@@ -544,8 +397,8 @@ SimulationController::regridderSetup( void )
 
   // Do this step before fully setting up the application interface so that the
   // Switcher (being an application) can reset the state of the regridder.
-  if( m_regridder ) {
-    m_regridder->problemSetup( m_ups, m_current_gridP, m_application->getMaterialManagerP() );
+  if (m_regridder) {
+    m_regridder->problemSetup(m_ups, m_current_gridP, m_application->getMaterialManagerP());
   }
 }
 
@@ -616,15 +469,13 @@ SimulationController::timeStateSetup()
   // Restarting so initialize time state using the archive data.
   if( m_restarting ) {
 
-    DOUT(g_sim_ctrl_dbg, "Restarting... loading data");
-
-    double simTimeStart;
+    double simTime;
     
     m_restart_archive->restartInitialize( m_restart_index,
                                           m_current_gridP,
                                           m_scheduler->get_dw(1),
                                           m_loadBalancer,
-                                          &simTimeStart );
+                                          &simTime );
 
     // Set the time step to the restart time step which is immediately
     // written to the DW.
@@ -632,12 +483,12 @@ SimulationController::timeStateSetup()
 
     // Set the simulation time to the restart simulation time which is
     // immediately written to the DW.
-    m_application->setSimTimeStart( simTimeStart );
+    m_application->setSimTime( simTime );
 
     // Set the next delta T which is immediately written to the DW.
 
-    // Note the old delta t is really the next delta t
-    m_application->setNextDelT( m_restart_archive->getOldDelt( m_restart_index ) );
+    // Note the old delta t is the delta t used for that time step.
+    m_application->setNextDelT( m_restart_archive->getOldDelt( m_restart_index ), m_restarting );
 
     // Tell the scheduler the generation of the re-started simulation.
     // (Add +1 because the scheduler will be starting on the next
@@ -648,13 +499,18 @@ SimulationController::timeStateSetup()
     // leaked, but sometimes if is called, then everything segfaults.
     // delete m_restart_archive;
   }
-  else
-  {
-    // Set the time step to 0 which is immediately written to the DW.
-    m_application->setTimeStep( 0 );
+  else {
+    // Set the default time step to which is immediately written to the DW.
+    m_application->setTimeStep( m_application->getTimeStep() );
 
-    // Set the simulation time to 0 which is immediately written to the DW.
-    m_application->setSimTimeStart( 0 );
+    // Set the default simulation time which is immediately written to the DW.
+    m_application->setSimTime( m_application->getSimTime() );
+
+    // Note the above seems back asswards but the initial sim time
+    // must be set in the UPS file, the time step will always default
+    // to 0. However, it is read in the problem setup stage and the
+    // data warehouse is not yet available. So the above gets the
+    // values in the data warehouse.
   }
 }
 
@@ -672,16 +528,16 @@ SimulationController::finalSetup()
   // reduction output vars are copied to the new uda. Further, it must
   // be called after timeStateSetup() is call so that checkpoints are
   // copied to the new uda as well.
-  if( m_restarting ) {
+  if (m_restarting) {
     Dir dir( m_from_dir );
     m_output->restartSetup( dir, 0, m_restart_timestep,
-                            m_application->getSimTimeStart(),
+                            m_application->getSimTime(),
                             m_restart_from_scratch, m_restart_remove_old_dir );
   }
 
   // Miscellaneous initializations.
   ProblemSpecP amr_ps = m_ups->findBlock("AMR");
-  if( amr_ps ) {
+  if (amr_ps) {
     amr_ps->get( "doMultiTaskgraphing", m_do_multi_taskgraphing );
   }
 }
@@ -699,8 +555,7 @@ void SimulationController::ResetStats( void )
 void
 SimulationController::ScheduleReportStats( bool header )
 {
-  Task* task = scinew Task("SimulationController::ReportStats",
-                           this, &SimulationController::ReportStats, header);
+  Task* task = scinew Task("SimulationController::ReportStats", this, &SimulationController::ReportStats, header);
   
   task->setType(Task::OncePerProc);
 
@@ -712,8 +567,6 @@ SimulationController::ScheduleReportStats( bool header )
   m_scheduler->addTask(task,
                        m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                        m_application->getMaterialManagerP()->allMaterials() );
-
-  // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << header << std::endl;
 }
 
 void
@@ -726,101 +579,104 @@ SimulationController::ReportStats(const ProcessorGroup*,
 {
   bool reportStats;
 
-  // If the reporting frequency is greater than 1 check to see if
-  // output is needed.
-  if( m_reportStatsFrequency == 1 )
+  // If the reporting frequency is greater than 1 check to see if output is needed.
+  if (m_reportStatsFrequency == 1) {
     reportStats = true;
+  }
+
   // Note: this check is split up so to be assured that the call to
-  // isLastTimeStep is last and called only when needed. Unfortuantely,
+  // isLastTimeStep is last and called only when needed. Unfortunately,
   // the greater the frequency the more often it will be called.
-  else
-  {
-    if( header )
+  else {
+    if (header) {
       reportStats = true;
-    else if( m_application->getTimeStep()%m_reportStatsFrequency == m_reportStatsOnTimeStep )
+    }
+    else if (m_application->getTimeStep() % m_reportStatsFrequency == m_reportStatsOnTimeStep) {
       reportStats = true;
-    else
-    {
+    }
+    else {
       // Get the wall time if is needed, otherwise ignore it.
       double walltime;
-      
-      if( m_application->getWallTimeMax() > 0 )
+
+      if (m_application->getWallTimeMax() > 0) {
         walltime = m_wall_timers.GetWallTime();
-      else
+      }
+      else {
         walltime = 0;
-      
-      reportStats = m_application->isLastTimeStep( walltime );
+      }
+      reportStats = m_application->isLastTimeStep(walltime);
     }
   }
   
   // Get and reduce the performance runtime stats
   getMemoryStats();
-  getPAPIStats();
 
-  // Reductions are only need if these are true.
-  if( (m_regridder && m_regridder->useDynamicDilation()) ||
-      g_sim_stats_mem || g_comp_timings || g_indv_comp_timings ) {
-
-    m_runtime_stats.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
+#ifdef HAVE_VISIT
+  bool reduce = getVisIt();
+#else
+  bool reduce = false;
+#endif
   
-    m_application->reduceApplicationStats( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
+  // Reductions are only need if these are true.
+  if ((m_regridder && m_regridder->useDynamicDilation()) || g_sim_stats_mem || g_comp_stats || reduce) {
+
+    m_runtime_stats.reduce(m_regridder && m_regridder->useDynamicDilation(), d_myworld);
 
     // Reduce the MPI runtime stats.
-    MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( m_scheduler.get_rep() );
+    MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>(m_scheduler.get_rep());
 
-    if( mpiScheduler ) {
-      mpiScheduler->mpi_info_.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
+    if (mpiScheduler) {
+      mpiScheduler->mpi_info_.reduce(m_regridder && m_regridder->useDynamicDilation(), d_myworld);
     }
+  }
+
+  if (g_app_stats || reduce) {
+    m_application->reduceApplicationStats(m_regridder && m_regridder->useDynamicDilation(), d_myworld);
   }
   
   // Update the moving average and get the wall time for this time step.
-  Timers::nanoseconds timeStep = m_wall_timers.updateExpMovingAverage();
+  // Timers::nanoseconds timeStepTime =
+    m_wall_timers.updateExpMovingAverage();
 
   // Print the stats for this time step
-  if( d_myworld->myRank() == 0 && g_sim_stats ) {
+  if (d_myworld->myRank() == 0 && g_sim_stats) {
     std::ostringstream message;
 
-    if( header )
+    if( header ) {
       message << std::endl
               << "Simulation and run time stats are reported "
               << "at the end of each time step" << std::endl
               << "EMA == Wall time as an exponential moving average "
               << "using a window of the last " << m_wall_timers.getWindow()
               << " time steps" << std::endl;
+    }
 
     message << std::left
             << "Timestep "   << std::setw(8)  << m_application->getTimeStep()
             << "Time="       << std::setw(12) << m_application->getSimTime()
-    
-            // << "Current delT="       << std::setw(12) << m_application->getDelT()
             << "Next delT="  << std::setw(12) << m_application->getNextDelT()
-
-            << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
-            // << "All Time steps= " << std::setw(12) << m_wall_timers.TimeStep().seconds()
-            // << "Current Time Step= " << std::setw(12) << timeStep.seconds()
-            << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
-           // << "In-situ Time = " << std::setw(12) << walltimers.InSitu().seconds()
-      ;
+            << "Wall Time="  << std::setw(10) << m_wall_timers.GetWallTime()
+            << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds();
 
     // Report on the memory used.
-    if( g_sim_stats_mem ) {
-      // With the sum reduces, use double, since with memory it is possible that
-      // it will overflow
-      double        avg_memused      = m_runtime_stats.getRankAverage( SCIMemoryUsed );
-      unsigned long max_memused      = m_runtime_stats.getRankMaximum( SCIMemoryUsed );
-      int           max_memused_rank = m_runtime_stats.getRankForMaximum(    SCIMemoryUsed );
+    if (g_sim_stats_mem) {
+      // With the sum reduces, use double, since with memory it is possible that it will overflow
+      double        avg_memused      = m_runtime_stats.getRankAverage(    SCIMemoryUsed );
+      unsigned long max_memused      = m_runtime_stats.getRankMaximum(    SCIMemoryUsed );
+      int           max_memused_rank = m_runtime_stats.getRankForMaximum( SCIMemoryUsed );
       
-      double        avg_highwater      = m_runtime_stats.getRankAverage( SCIMemoryHighwater );
-      unsigned long max_highwater      = m_runtime_stats.getRankMaximum( SCIMemoryHighwater );
-      int           max_highwater_rank = m_runtime_stats.getRankForMaximum(    SCIMemoryHighwater );
+      double        avg_highwater      = m_runtime_stats.getRankAverage(    SCIMemoryHighwater );
+      unsigned long max_highwater      = m_runtime_stats.getRankMaximum(    SCIMemoryHighwater );
+      int           max_highwater_rank = m_runtime_stats.getRankForMaximum( SCIMemoryHighwater );
       
       if (avg_memused == max_memused && avg_highwater == max_highwater) {
         message << "Memory Use=" << std::setw(8)
                 << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
 
-        if(avg_highwater)
+        if (avg_highwater) {
           message << "    Highwater Memory Use=" << std::setw(8)
                   << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
+        }
       }
       else {
         message << "Memory Used=" << std::setw(10)
@@ -829,12 +685,13 @@ SimulationController::ReportStats(const ProcessorGroup*,
                 << ProcessInfo::toHumanUnits(max_memused)
                 << " (max on rank: " << std::setw(6) << max_memused_rank << ")";
 
-        if (avg_highwater)
+        if (avg_highwater) {
           message << "    Highwater Memory Used=" << std::setw(10)
                   << ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
                   << " (avg) " << std::setw(10)
                   << ProcessInfo::toHumanUnits(max_highwater)
                   << " (max on rank: " << std::setw(6) << max_highwater_rank << ")";
+        }
       }
     }
     else {
@@ -844,69 +701,12 @@ SimulationController::ReportStats(const ProcessorGroup*,
       message << "Memory Use=" << std::setw(8)
               << ProcessInfo::toHumanUnits((unsigned long) memused );
 
-      if(highwater)
+      if (highwater) {
         message << "    Highwater Memory Use=" << std::setw(8)
                 << ProcessInfo::toHumanUnits((unsigned long) highwater);
+      }
 
       message << " (on rank 0 only)";
-    }
-
-    DOUT(reportStats, message.str());
-    std::cout.flush();
-  }
-  
-  // Report on the simulation time used.
-  if( d_myworld->myRank() == 0 && g_sim_stats_time && m_num_samples )
-  {
-    // Ignore the first sample as that is for initialization.
-    std::ostringstream message;
-
-    double realSecondsNow = timeStep.seconds() / m_application->getDelT();
-    double realSecondsAvg = m_wall_timers.TimeStep().seconds() /
-      (m_application->getSimTime()-m_application->getSimTimeStart());
-    
-    message << "1 simulation second takes ";
-    
-    message << std::left << std::showpoint << std::setprecision(3) << std::setw(4);
-    
-    if (realSecondsNow < SECONDS_PER_MINUTE) {
-      message << realSecondsNow << " seconds (now), ";
-    }
-    else if (realSecondsNow < SECONDS_PER_HOUR) {
-      message << realSecondsNow / SECONDS_PER_MINUTE << " minutes (now), ";
-    }
-    else if (realSecondsNow < SECONDS_PER_DAY) {
-      message << realSecondsNow / SECONDS_PER_HOUR << " hours (now), ";
-    }
-    else if (realSecondsNow < SECONDS_PER_WEEK) {
-      message << realSecondsNow / SECONDS_PER_DAY << " days (now), ";
-    }
-    else if (realSecondsNow < SECONDS_PER_YEAR) {
-      message << realSecondsNow / SECONDS_PER_WEEK << " weeks (now), ";
-    }
-    else {
-      message << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
-    }
-
-    message << std::setw(4);
-
-    if (realSecondsAvg < SECONDS_PER_MINUTE) {
-      message << realSecondsAvg << " seconds (avg) ";
-    }
-    else if (realSecondsAvg < SECONDS_PER_HOUR) {
-      message << realSecondsAvg / SECONDS_PER_MINUTE << " minutes (avg) ";
-    }
-    else if (realSecondsAvg < SECONDS_PER_DAY) {
-      message << realSecondsAvg / SECONDS_PER_HOUR << " hours (avg) ";
-    }
-    else if (realSecondsAvg < SECONDS_PER_WEEK) {
-      message << realSecondsAvg / SECONDS_PER_DAY << " days (avg) ";
-    }
-    else if (realSecondsAvg < SECONDS_PER_YEAR) {
-      message << realSecondsAvg / SECONDS_PER_WEEK << " weeks (avg) ";
-    }
-    else {
-      message << realSecondsAvg / SECONDS_PER_YEAR << " years (avg) ";
     }
 
     DOUT(reportStats, message.str());
@@ -916,8 +716,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
   // Variable for calculating the percentage of time spent in overhead.
   double percent_overhead = 0;
   
-  if( (m_regridder && m_regridder->useDynamicDilation()) ||
-      g_comp_timings ) {
+  if ((m_regridder && m_regridder->useDynamicDilation()) || g_comp_stats) {
 
     // Sum up the average time for overhead related components.
     double overhead_time =
@@ -965,119 +764,182 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
     overheadAverage = overhead / weight;
 
-    if( m_regridder ) {
+    if (m_regridder) {
       m_regridder->setOverheadAverage(overheadAverage);
     }
   }
 
-  // Infrastructure per proc runtime performance stats
-  if (g_indv_comp_timings) {
-
-    if (m_runtime_stats.size()) {
-      std::ostringstream message;
-      message << "Per proc runtime performance stats" << std::endl;
-
-      for (unsigned int i = 0; i < m_runtime_stats.size(); ++i) {
-        if (m_runtime_stats[i] > 0) {
-          message << "  " << std::left
-                  << "rank: " << std::setw(5) << d_myworld->myRank() << " "
-                  << std::left << std::setw(19) << m_runtime_stats.getName(i) << " ["
-                  << m_runtime_stats.getUnits(i) << "]: " << m_runtime_stats[i] << "\n";
-        }
-      }
-
-      DOUT(reportStats, message.str());
-    }
-
-    // Application per proc runtime performance stats    
-    if (m_application->getApplicationStats().size()) {
-      std::ostringstream message;
-      message << "Application per proc performance stats" << std::endl;
-
-      for (unsigned int i = 0; i < m_application->getApplicationStats().size(); ++i) {
-        if (m_application->getApplicationStats()[i] > 0) {
-          message << "  " << std::left
-                  << "rank: " << std::setw(5) << d_myworld->myRank() << " "
-                  << std::left << std::setw(19) << m_application->getApplicationStats().getName(i) << " ["
-                  << m_application->getApplicationStats().getUnits(i) << "]: " << m_application->getApplicationStats()[i] << "\n";
-        }
-      }
-      
-      DOUT(reportStats, message.str());
-    }
-  } 
-
   // Average proc runtime performance stats
-  if( d_myworld->myRank() == 0 && g_comp_timings && m_num_samples)
-  {
+  if (d_myworld->myRank() == 0 && g_comp_stats && m_num_samples && m_runtime_stats.size()) {
     // Ignore the first sample as that is for initialization.
-    std::ostringstream message;
+    std::ostringstream header;
+    header << "Runtime performance summary stats at "
+           << "time step " << m_application->getTimeStep()
+           << " at time="  << m_application->getSimTime()
+           << std::endl
+           << "  " << std::left
+           << std::setw(24) << "Description"
+           << std::setw(18) << "Units"
+           << std::setw(18) << "Average"
+           << std::setw(18) << "Maximum"
+           << std::setw(12) << "Rank"
+           << std::setw(12) << "100*(1-ave/max) '% load imbalance'"
+           << std::endl;
 
-    if (m_runtime_stats.size()) {
-      message << "Runtime performance stats" << std::endl;
-      
-      message << "  " << std::left
-              << std::setw(21) << "Description"
-              << std::setw(15) << "Units"
-              << std::setw(15) << "Average"
-              << std::setw(15) << "Maximum"
-              << std::setw(13) << "Rank"
-              << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
-              << std::endl;
-        
-      for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
-        if( m_runtime_stats.getRankMaximum(i) != 0.0 )
-          message << "  " << std::left
-                  << std::setw(21) << m_runtime_stats.getName(i)
-                  << "[" << std::setw(10) << m_runtime_stats.getUnits(i) << "]"
-                  << " : " << std::setw(12) << m_runtime_stats.getRankAverage(i)
-                  << " : " << std::setw(12) << m_runtime_stats.getRankMaximum(i)
-                  << " : " << std::setw(10) << m_runtime_stats.getRankForMaximum(i)
-                  << " : " << std::setw(10)
-                  << (m_runtime_stats.getRankMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_runtime_stats.getRankAverage(i) / m_runtime_stats.getRankMaximum(i)))) : 0)
-                  << std::endl;
+    std::ostringstream message;
+    
+    for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
+      if (m_runtime_stats.getRankMaximum(i) != 0.0) {
+        if( message.str().size() ) {
+          message << std::endl;
+        }
+        message << "  " << std::left
+                << std::setw(24) << m_runtime_stats.getName(i)
+                << "[" << std::setw(15) << m_runtime_stats.getUnits(i) << "]"
+                << " : " << std::setw(15) << m_runtime_stats.getRankAverage(i)
+                << " : " << std::setw(15) << m_runtime_stats.getRankMaximum(i)
+                << " : " << std::setw(9) << m_runtime_stats.getRankForMaximum(i)
+                << " : " << std::setw(9)
+                << (m_runtime_stats.getRankMaximum(i) == 0.0 ?
+                    0 : (100.0 * (1.0 - (m_runtime_stats.getRankAverage(i) / m_runtime_stats.getRankMaximum(i)))));
       }
     }
     
     // Report the overhead percentage.
-    if( !std::isnan(overheadAverage) ) {
-      message << "  Percentage of time spent in overhead : " << overheadAverage * 100.0 << "\n";
-    }
-
-    message << std::endl;
-    
-    // Report the application stats.
-    if( m_application->getApplicationStats().size() ) {
-      message << "Application performance stats" << std::endl;
-      
-      message << "  " << std::left
-              << std::setw(21) << "Description"
-              << std::setw(15) << "Units"
-              << std::setw(15) << "Average"
-              << std::setw(15) << "Maximum"
-              << std::setw(13) << "Rank"
-              << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
-              << std::endl;
-
-      for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
-        if( m_application->getApplicationStats().getRankMaximum(i) != 0.0 )
-          message << "  " << std::left
-                  << std::setw(21) << m_application->getApplicationStats().getName(i)
-                  << "["   << std::setw(10) << m_application->getApplicationStats().getUnits(i) << "]"
-                  << " : " << std::setw(12) << m_application->getApplicationStats().getRankAverage(i)
-                  << " : " << std::setw(12) << m_application->getApplicationStats().getRankMaximum(i)
-                  << " : " << std::setw(10) << m_application->getApplicationStats().getRankForMaximum(i)
-                  << " : " << std::setw(10)
-                  << (m_application->getApplicationStats().getRankMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_application->getApplicationStats().getRankAverage(i) / m_application->getApplicationStats().getRankMaximum(i)))) : 0)
-                  << std::endl;
+    if (!std::isnan(overheadAverage)) {
+      if (message.str().size()) {
+        message << std::endl;
       }
-
-      message << std::endl;
+      message << "  Percentage of time spent in overhead : "
+              << overheadAverage * 100.0;
     }
 
-    DOUT(reportStats, message.str());
+    if( message.str().size() ) {
+      DOUT(reportStats, header.str() + message.str());
+    }
   }
   
+  // Infrastructure per proc runtime performance stats
+  if (g_comp_indv_stats && m_runtime_stats.size() && m_runtime_stats.size()) {
+    std::ostringstream header;    
+    header << "--" << std::left
+           << "Rank: " << std::setw(5) << d_myworld->myRank()
+           << "Runtime performance stats at "
+           << "time step " << m_application->getTimeStep()
+           << " at time="  << m_application->getSimTime()
+           << std::endl;
+
+    std::ostringstream message;
+    
+    for (unsigned int i = 0; i < m_runtime_stats.size(); ++i) {
+      if (m_runtime_stats[i] > 0) {
+        if (message.str().size()) {
+          message << std::endl;
+        }
+        message << "  " << std::left
+                << "Rank: " << std::setw(6) << d_myworld->myRank()
+                << std::left << std::setw(24) << m_runtime_stats.getName(i)
+                << "["   << std::setw(15) << m_runtime_stats.getUnits(i) << "]"
+                << " : " << std::setw(15) << m_runtime_stats.getRankValue(i)
+                << " ("  << std::setw( 4) << m_runtime_stats.getCount(i) << ")";
+      }
+    }
+    
+    if (message.str().size()) {
+      DOUT(reportStats, header.str() + message.str());
+    }
+  }
+  
+  // Report the average application stats.
+  if (d_myworld->myRank() == 0 && g_app_stats && m_application->getApplicationStats().size()) {
+    std::ostringstream header;
+    header << "Application performance summary stats for "
+           << "time step " << m_application->getTimeStep()
+           << " at time="  << m_application->getSimTime()
+           << std::endl
+           << "  " << std::left
+           << std::setw(24) << "Description"
+           << std::setw(18) << "Units";
+    if (m_application->getApplicationStats().calculateMinimum()) {
+      header << std::setw(18) << "Minimum"
+             << std::setw(12) << "Rank";
+    }
+    if (m_application->getApplicationStats().calculateAverage()) {
+      header << std::setw(18) << "Average";
+    }
+    if (m_application->getApplicationStats().calculateStdDev()) {
+      header << std::setw(18) << "Std. Dev.";
+    }
+    if (m_application->getApplicationStats().calculateMaximum()) {
+      header << std::setw(18) << "Maximum"
+              << std::setw(12) << "Rank";
+    }
+
+    header << std::endl;
+    
+    std::ostringstream message;
+
+    for (unsigned int i = 0; i < m_application->getApplicationStats().size(); ++i) {
+
+      if (message.str().size()) {
+        message << std::endl;
+      }
+
+      message << "  " << std::left << std::setw(24) << m_application->getApplicationStats().getName(i) << "[" << std::setw(15)
+              << m_application->getApplicationStats().getUnits(i) << "]";
+      if (m_application->getApplicationStats().calculateMinimum()) {
+        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMinimum(i) << " : " << std::setw(9)
+                << m_application->getApplicationStats().getRankForMinimum(i);
+      }
+      if (m_application->getApplicationStats().calculateAverage()) {
+        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankAverage(i);
+      }
+      if (m_application->getApplicationStats().calculateStdDev()) {
+        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankStdDev(i);
+      }
+      if (m_application->getApplicationStats().calculateMaximum()) {
+        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMaximum(i) << " : " << std::setw(9)
+                << m_application->getApplicationStats().getRankForMaximum(i);
+      }
+    }
+
+    if( message.str().size() ) {
+      DOUT(reportStats, header.str()+message.str());
+    }
+  }
+  
+  // Application per proc runtime performance stats
+  if (g_app_indv_stats && m_application->getApplicationStats().size())
+  {
+    std::ostringstream header;
+    header << "--" << std::left
+           << "Rank: " << std::setw(5) << d_myworld->myRank()
+           << "Application performance stats for "
+           << "time step " << m_application->getTimeStep()
+           << " at time="  << m_application->getSimTime()
+           << std::endl;
+        
+    std::ostringstream message;
+    
+    for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
+      if (m_application->getApplicationStats()[i] > 0) {
+        if (message.str().size()) {
+          message << std::endl;
+        }
+        message << "  " << std::left
+                << "Rank: " << std::setw(6) << d_myworld->myRank()
+                << std::left << std::setw(24) << m_application->getApplicationStats().getName(i)
+                << "["   << std::setw(15) << m_application->getApplicationStats().getUnits(i) << "]"
+                << " : " << std::setw(15) << m_application->getApplicationStats().getRankValue(i)
+                << " ("  << std::setw( 4) << m_application->getApplicationStats().getCount(i) << ")";
+      }
+    }
+
+    if (message.str().size()) {
+      DOUT(reportStats, header.str() + message.str());
+    }
+  }
+
   ++m_num_samples;
   
 } // end printSimulationStats()
@@ -1155,41 +1017,6 @@ SimulationController::getMemoryStats( bool create /* = false */ )
 
 //______________________________________________________________________
 //
-  
-void
-SimulationController::getPAPIStats( )
-{
-#ifdef USE_PAPI_COUNTERS
-  int retval = PAPI_read(m_papi_event_set, m_papi_event_values);
-
-  if (retval != PAPI_OK) {
-    proc0cout << "   Error: Cannot read PAPI event set!\n"
-              << "       Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n";
-    throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
-  }
-  else {
-    // query all PAPI events - find which are supported, flag those that are unsupported
-    for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
-      if (iter->second.m_is_supported) {
-        m_runtime_stats[ iter->second.m_sim_stat_name ] =
-                static_cast<double>(m_papi_event_values[m_papi_events.find(iter->first)->second.m_event_value_idx]);
-      }
-    }
-  }
-
-  // zero the values in the hardware counter event set array
-  retval = PAPI_reset(m_papi_event_set);
-  if (retval != PAPI_OK) {
-    proc0cout << "WARNNING: Cannot reset PAPI event set!\n"
-              << "          Error code = " << retval << " ("
-              << PAPI_strerror(retval) << ")\n";
-    throw PapiInitializationError( "PAPI reset error on hardware event set, unable to reset event set values.", __FILE__, __LINE__ );
-  }
-#endif
-}
-  
-//______________________________________________________________________
-//
 void
 SimulationController::ScheduleCheckInSitu( bool first )
 {
@@ -1209,8 +1036,6 @@ SimulationController::ScheduleCheckInSitu( bool first )
     m_scheduler->addTask(task,
                          m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                          m_application->getMaterialManagerP()->allMaterials() );
-
-    // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << first << std::endl;
   }
 #endif      
 }
@@ -1218,12 +1043,13 @@ SimulationController::ScheduleCheckInSitu( bool first )
 //______________________________________________________________________
 //
 void
-SimulationController::CheckInSitu(const ProcessorGroup*,
-                                  const PatchSubset*,
-                                  const MaterialSubset*,
-                                        DataWarehouse*,
-                                        DataWarehouse*,
-                                        bool first)
+SimulationController::CheckInSitu( const ProcessorGroup *
+                                 , const PatchSubset    *
+                                 , const MaterialSubset *
+                                 ,       DataWarehouse  *
+                                 ,       DataWarehouse  * new_dw 
+                                 ,       bool first
+                                 )
 {
 #ifdef HAVE_VISIT
   // If VisIt has been included into the build, check the lib sim
@@ -1246,24 +1072,26 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
     
     // Update all of the simulation grid and time dependent variables.
     visit_UpdateSimData( m_visitSimData, m_current_gridP,
-                         m_application->getSimTime(),
-                         m_application->getTimeStep(),
-                         m_application->getDelT(),
-                         m_application->getNextDelT(),
-                         first,
-                         m_application->isLastTimeStep(walltime) );
+                         first, m_application->isLastTimeStep(walltime) );
 
     // Check the state - if the return value is true the user issued
     // a termination.
     if( visit_CheckState( m_visitSimData ) ) {
-      // nothing to do ...
-    }
 
-    // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  "
-    //        << first << "  "
-    //        << m_application->getSimTime() << "  "
-    //        << m_application->getTimeStep() << "  "
-    //        << std::endl;
+      if( new_dw ) {
+        m_application->activateReductionVariable( endSimulation_name, true );
+        m_application->setReductionVariable( new_dw, endSimulation_name, true );
+      }
+      
+      // Set the max wall time to the current wall time which will
+      // cause the simulation to terminate because the next wall time
+      // check will be greater.
+      else
+        m_application->setWallTimeMax( m_wall_timers.GetWallTime() );
+
+      // Disconnect from VisIt.
+      visit_EndLibSim( m_visitSimData );
+    }
 
     // This function is no longer used as last is now used in the
     // UpdateSimData which in turn will flip the state.

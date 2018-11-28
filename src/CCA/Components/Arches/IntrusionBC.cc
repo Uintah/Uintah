@@ -45,12 +45,15 @@ using namespace Uintah;
 
 namespace {
 
-// These are for uniquely identifying the Uintah::CrowdMonitors<Tag>
-// used to protect multi-threaded access to global data structures
-struct intrustion_map_tag{};
-using  intrusion_map_monitor = Uintah::CrowdMonitor<intrustion_map_tag>;
+  // These are for uniquely identifying the Uintah::CrowdMonitors<Tag>
+  // used to protect multi-threaded access to global data structures
+  struct intrustion_map_tag{};
+  using  intrusion_map_monitor = Uintah::CrowdMonitor<intrustion_map_tag>;
 
-Uintah::MasterLock intrusion_print_mutex{};
+  Uintah::MasterLock intrusion_print_mutex{};
+
+  Uintah::Dout dbg_intrusion{"Arches_Intrusion_DBG", "Arches::IntrusionBC",
+    "Intrusion setup information.", false};
 
 }
 
@@ -461,6 +464,28 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
   }     // patch loop
 }
 
+//-----------------------------------------
+Vector IntrusionBC::getMaxVelocity(){
+
+  Vector max_vel(0,0,0);
+  double max_mag = 0.;
+  for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){
+
+    if ( iIntrusion->second.has_velocity_model ){
+      Vector vel = iIntrusion->second.velocity_inlet_generator->get_max_velocity();
+      double curr_mag = std::sqrt( vel.x()*vel.x() + vel.y()*vel.y() + vel.z()*vel.z() );
+
+      if ( curr_mag > max_mag ){
+        max_vel = vel;
+      }
+    }
+
+  }
+
+  return max_vel;
+
+}
+
 //_________________________________________
 void
 IntrusionBC::sched_computeProperties( SchedulerP& sched,
@@ -522,8 +547,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
           IntVector c = *i;
           iv.clear();
 
-          cout_intrusiondebug << "IntrusionBC::For Intrusion named: " << iIntrusion->second.name << std::endl;
-          cout_intrusiondebug << "IntrusionBC::At location = " << c << std::endl;
+          DOUT( dbg_intrusion, "[IntrusionBC]  For Intrusion named: " << iIntrusion->second.name );
+          DOUT( dbg_intrusion, "[IntrusionBC]  At location: " << c );
 
           for ( unsigned int niv = 0; niv < iv_var_names.size(); niv++ ){
 
@@ -534,7 +559,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
             iv.push_back(scalar_var);
 
-            cout_intrusiondebug << "IntrusionBC::For independent variable " << iv_var_names[niv] << ". Using value = " << scalar_var << std::endl;
+            DOUT( dbg_intrusion, "[IntrusionBC]  For independent variable " << iv_var_names[niv]
+              << ". Using value = " << scalar_var );
 
           }
 
@@ -546,7 +572,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
           if ( does_post_mix ){
 
-            cout_intrusiondebug << "IntrusionBC::Using inert stream mixing to look up properties" << std::endl;
+            DOUT( dbg_intrusion, "[IntrusionBC]  Using inert stream mixing to look up properties");
 
             typedef std::map<std::string, DMap > IMap;
             IMap inert_map = mixingTable->getInertMap();
@@ -563,7 +589,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
               inert_list.insert(std::make_pair(name,inert_value));
 
-              cout_intrusiondebug << "IntrusionBC::For inert variable " << name << ". Using value = " << inert_value << std::endl;
+              DOUT( dbg_intrusion, "[IntrusionBC]  For inert variable " << name
+                << ". Using value = " << inert_value );
 
             }
 
@@ -582,7 +609,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
                 double lookup_value = mixingTable->getTableValue(iv, lookup_name, inert_list);
 
-                cout_intrusiondebug << "IntrusionBC::Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value << std::endl;
+                DOUT( dbg_intrusion, "[IntrusionBC]  Setting scalar " << iter_lookup->first
+                  << " to a lookup value of: " << lookup_value );
 
                 tab_scalar.set_scalar_constant( c, lookup_value );
 
@@ -591,10 +619,10 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
           } else {
 
-            cout_intrusiondebug << "IntrusionBC::NOT using inert stream mixing to look up properties" << std::endl;
+            DOUT( dbg_intrusion, "[IntrusionBC]  NOT using inert stream mixing to look up properties" );
 
             density = mixingTable->getTableValue(iv, "density");
-            cout_intrusiondebug << "IntrusionBC::Got a value for density = " << density << std::endl;
+            DOUT( dbg_intrusion, "[IntrusionBC]  Got a value for density = " << density );
 
             //get values for all other scalars that depend on a table lookup:
             for (std::map<std::string, scalarInletBase*>::iterator iter_lookup = iIntrusion->second.scalar_map.begin();
@@ -609,9 +637,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
                 double lookup_value = mixingTable->getTableValue(iv, lookup_name);
 
-                cout_intrusiondebug << "IntrusionBC::Got a value for  " << lookup_name << " = " << lookup_value << std::endl;
-
-                cout_intrusiondebug << "IntrusionBC::Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value << std::endl;
+                DOUT( dbg_intrusion, "[IntrusionBC]  Got a value for  " << lookup_name << " = " << lookup_value );
+                DOUT( dbg_intrusion, "[IntrusionBC]  Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value );
 
                 tab_scalar.set_scalar_constant( c, lookup_value );
 
@@ -622,7 +649,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
           iIntrusion->second.density_map.insert(std::make_pair(c, density));
 
-          cout_intrusiondebug << "IntrusionBC::Got a value for density = " << density << std::endl;
+          DOUT( dbg_intrusion, "[IntrusionBC]  Got a value for density = " << density );
 
           //
           //Note: Using the last value of density to set the total intrusion density.
@@ -1129,14 +1156,17 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
 
 //_________________________________________
 void
-IntrusionBC::setHattedVelocity( const Patch*  patch,
-                                SFCXVariable<double>& u,
-                                SFCYVariable<double>& v,
-                                SFCZVariable<double>& w,
-                                constCCVariable<double>& density,
-                                bool& set_nonnormal_values )
+IntrusionBC::addMomRHS( const Patch*  patch,
+                        constSFCXVariable<double>& u,
+                        constSFCYVariable<double>& v,
+                        constSFCZVariable<double>& w,
+                        SFCXVariable<double>& usrc,
+                        SFCYVariable<double>& vsrc,
+                        SFCZVariable<double>& wsrc,
+                        constCCVariable<double>& rho )
 {
 
+  Vector Dx = patch->dCell();
   const int pID = patch->getID();
 
   if ( _intrusion_on ) {
@@ -1145,18 +1175,181 @@ IntrusionBC::setHattedVelocity( const Patch*  patch,
 
       if ( iIntrusion->second.type != SIMPLE_WALL ){
 
-        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(pID);
-        std::vector<int> directions = iIntrusion->second.directions;
+        Vector i_vel;
+        BCIterator::iterator  iBC_iter = (iIntrusion->second.interior_cell_iterator).find(pID);
 
-        iIntrusion->second.velocity_inlet_generator->set_velocity( patch, iBC_iter, directions,
-                                                                   u, v, w, set_nonnormal_values );
+        for ( std::vector<IntVector>::iterator icell = iBC_iter->second.begin();
+          icell != iBC_iter->second.end(); icell++){
+
+          IntVector c = *icell;
+
+          bool bc_found = false;
+
+          iIntrusion->second.velocity_inlet_generator->get_velocity( c, patch, bc_found, i_vel );
+          double i_rho = iIntrusion->second.density;
+
+          if ( bc_found ){
+
+            std::vector<int> directions = iIntrusion->second.directions;
+
+            if ( std::abs(directions[0] + directions[1]) > 0 ){
+
+              int v_indx = 0;
+              double area = 0;
+
+              area = Dx.y() * Dx.z();
+              v_indx = 0;
+
+              if ( directions[0] != 0 ){
+                IntVector cp = c;
+                usrc[cp] += area * ( (rho[cp] + i_rho )/2. * u[cp]
+                                   + i_rho * i_vel[v_indx] )/2.*(u[cp]+i_vel[v_indx])/2.;
+              }
+              if ( directions[1] != 0 ){
+                IntVector cp = c + IntVector(1,0,0);
+                // A bit clunky - needs to be rewritten from the perspective of the velocity cell
+                if ( !patch->containsCell(cp) ){
+                  throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
+                }
+                usrc[cp] += area * ( (rho[cp] + i_rho )/2. * u[cp]
+                                   + i_rho * i_vel[v_indx] )/2.*(u[cp]+i_vel[v_indx])/2.;
+              }
+
+            }
+
+            if ( std::abs(directions[2] + directions[3]) > 0 ){
+
+              int v_indx = 1;
+              double area = 0;
+
+              area = Dx.x() * Dx.z();
+
+              if ( directions[2] != 0 ){
+                IntVector cp = c;
+                vsrc[cp] += area * ( (rho[cp] + i_rho )/2. * v[cp]
+                                   + i_rho * i_vel[v_indx] )/2.*(v[cp]+i_vel[v_indx])/2.;
+              }
+              if ( directions[3] != 0 ){
+                IntVector cp = c + IntVector(0,1,0);
+                // A bit clunky - needs to be rewritten from the perspective of the velocity cell
+                if ( !patch->containsCell(cp) ){
+                  throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
+                }
+                vsrc[cp] += area * ( (rho[cp] + i_rho )/2. * v[cp]
+                                   + i_rho * i_vel[v_indx] )/2.*(v[cp]+i_vel[v_indx])/2.;
+              }
+
+            }
+            if ( std::abs(directions[4] + directions[5]) > 0 ){
+
+              int v_indx = 2;
+              double area = 0;
+
+              area = Dx.x() * Dx.y();
+
+              if ( directions[4] != 0 ){
+                IntVector cp = c;
+                wsrc[cp] += area * ( (rho[cp] + i_rho )/2. * w[cp]
+                                   + i_rho * i_vel[v_indx] )/2.*(w[cp]+i_vel[v_indx])/2.;
+              }
+              if ( directions[5] != 0 ){
+                IntVector cp = c + IntVector(0,0,1);
+                // A bit clunky - needs to be rewritten from the perspective of the velocity cell
+                if ( !patch->containsCell(cp) ){
+                  throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
+                }
+                wsrc[cp] += area * ( (rho[cp] + i_rho )/2. * w[cp]
+                                   + i_rho * i_vel[v_indx] )/2.*(w[cp]+i_vel[v_indx])/2.;
+              }
+
+            }
+          }
+        }
 
       }
-
     }
   }
+
 }
 
+//_________________________________________
+void
+IntrusionBC::addMassRHS( const Patch*  patch,
+                         CCVariable<double>& mass_src )
+{
+
+  Vector Dx = patch->dCell();
+  const int pID = patch->getID();
+
+  if ( _intrusion_on ) {
+
+    for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){
+
+      if ( iIntrusion->second.type != SIMPLE_WALL ){
+
+        Vector i_vel;
+        BCIterator::iterator  iBC_iter = (iIntrusion->second.interior_cell_iterator).find(pID);
+
+        for ( std::vector<IntVector>::iterator icell = iBC_iter->second.begin();
+          icell != iBC_iter->second.end(); icell++){
+
+          IntVector c = *icell;
+
+          bool bc_found = false;
+
+          iIntrusion->second.velocity_inlet_generator->get_velocity( c, patch, bc_found, i_vel );
+          double i_rho = iIntrusion->second.density;
+
+          if ( bc_found ){
+
+            std::vector<int> directions = iIntrusion->second.directions;
+
+            if ( std::abs(directions[0] + directions[1]) > 0 ){
+
+              double area = Dx.y() * Dx.z();
+
+              if ( directions[0] == 1 ){
+                mass_src[c] += area * i_rho * i_vel[0] * -1;
+              }
+              if ( directions[1] == 1 ){
+                mass_src[c] += area * i_rho * i_vel[0];
+              }
+
+            }
+            if ( std::abs(directions[2] + directions[3]) > 0 ){
+
+              double area = Dx.x() * Dx.z();
+
+              if ( directions[2] == 1 ){
+                mass_src[c] += area * i_rho * i_vel[1] * -1;
+              }
+              if ( directions[3] == 1 ){
+                mass_src[c] += area * i_rho * i_vel[1];
+              }
+
+            }
+            if ( std::abs(directions[4] + directions[5]) > 0 ){
+
+              double area = Dx.x() * Dx.y();
+
+              if ( directions[4] == 1 ){
+                mass_src[c] += area * i_rho * i_vel[2] * -1;
+              }
+              if ( directions[5] == 1 ){
+                mass_src[c] += area * i_rho * i_vel[2];
+              }
+
+            }
+
+          }
+
+        }
+
+      }
+    }
+  }
+
+}
 //------------------------------------------------------------------------------
 void
 IntrusionBC::getVelocityCondition( const Patch* patch, const IntVector ijk,

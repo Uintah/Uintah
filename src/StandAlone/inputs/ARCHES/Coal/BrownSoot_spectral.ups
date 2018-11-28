@@ -1665,6 +1665,7 @@
           <Es> 45.5e3 </Es>
           <n> 0.18 </n>
         </ShaddixChar>
+        <Tar_fraction>0.2</Tar_fraction>
       </ParticleProperties>
       <EulerianParticles>
         <ParticleVariables>
@@ -1757,13 +1758,10 @@
             <tol>1e-10</tol>
           </Clipping>
           <src label="eta_source1">
-            <weight>0.8</weight>
+            <weight>1.0</weight>
           </src>
           <src label="eta_source2">
-            <weight>1</weight>
-          </src>
-          <src label="eta_source3">
-            <weight>1</weight>
+            <weight>1.0</weight>
           </src>
         </Eqn>
         <Eqn label="Tar" type="CCscalar">
@@ -1781,8 +1779,8 @@
             <high>1.0</high>
             <tol>1e-10</tol>
           </Clipping>
-          <src label="eta_source1">
-            <weight>0.2</weight>
+          <src label="Tar_src">
+            <weight>1.0</weight>
           </src>
           <src label="BrownTar">
             <weight>1.0</weight>
@@ -1846,6 +1844,7 @@
           </src>
           <src label="eta_source1" type="coal_gas_devol">
             <devol_model_name>devol</devol_model_name>
+            <tar_creation_src_label>Tar_src</tar_creation_src_label>
           </src>
           <src label="eta_source2" type="coal_gas_oxi">
             <char_oxidation_model_name>char</char_oxidation_model_name>
@@ -2275,7 +2274,6 @@
           </Parameters>
           <src label="eta_source1"/>
           <src label="eta_source2"/>
-          <src label="eta_source3"/>
           <normalize_pressure>false</normalize_pressure>
           <do_only_last_projection>false</do_only_last_projection>
         </PressureSolver>

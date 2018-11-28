@@ -238,6 +238,13 @@ namespace Uintah {
 
   protected :
 
+    struct DepVarCont {
+
+      CCVariable<double>* var;
+      int index;
+
+    };
+
     std::string _temperature_label_name;
 
     IntVector d_ijk_den_ref;                      ///< Reference density location

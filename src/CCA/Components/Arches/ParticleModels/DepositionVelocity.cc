@@ -102,7 +102,7 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
 void
 DepositionVelocity::create_local_labels(){
 
-  register_new_variable<CCVariable<double> >( _task_name );
+  register_new_variable<CCVariable<double> >( m_task_name );
   register_new_variable<CCVariable<double> >( _ash_mass_src );
   for ( int n = 0; n < _Nenv; n++ ){
     const std::string d_vol_ave_num_s = ArchesCore::append_env("d_vol_ave_num",n);
@@ -121,7 +121,7 @@ DepositionVelocity::create_local_labels(){
 void
 DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _ash_mass_src, ArchesFieldContainer::COMPUTES, variable_registry );
   for ( int n = 0; n < _Nenv; n++ ){
     const std::string d_vol_ave_num_s = ArchesCore::append_env("d_vol_ave_num",n);
@@ -134,7 +134,7 @@ DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::Varia
 void
 DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& deposit_velocity = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
+  CCVariable<double>& deposit_velocity = tsk_info->get_uintah_field_add<CCVariable<double> >(m_task_name);
   CCVariable<double>& ash_mass_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_mass_src);
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -160,8 +160,8 @@ DepositionVelocity::register_timestep_eval(
   const int time_substep, const bool packed_tasks ){
 
   register_variable( _cellType_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( _task_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
   register_variable( _ash_mass_src, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int n = 0; n < _Nenv; n++ ){
@@ -229,11 +229,11 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
-  CCVariable<double>& deposit_velocity = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
+  CCVariable<double>& deposit_velocity = tsk_info->get_uintah_field_add<CCVariable<double> >(m_task_name);
   deposit_velocity.initialize(0.0);
   CCVariable<double>& ash_mass_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_mass_src);
   ash_mass_src.initialize(0.0);
-  constCCVariable<double>& deposit_velocity_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name));
+  constCCVariable<double>& deposit_velocity_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_task_name));
   constCCVariable<int>* vcelltype = tsk_info->get_const_uintah_field<constCCVariable<int> >(_cellType_name);
   constCCVariable<int>& celltype = *vcelltype;
 

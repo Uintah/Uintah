@@ -63,6 +63,7 @@ using namespace Uintah;
 //
 namespace Uintah {
   extern Dout g_task_dbg;
+  extern Dout g_task_run;
   extern Dout g_task_order;
   extern Dout g_exec_out;
 }
@@ -84,6 +85,8 @@ namespace Uintah {
   DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "detailed GPU statistics on H2D and D2H data movement", false );
   DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "UnifiedScheduler", "simulate multiple GPUs, when using only one", false );
   DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
+
+  Dout gpu_ids( "GPUIDs", "UnifiedScheduler", "detailed information to identify GPU(s) used when using multiple per node", false );
 }
 
 namespace {
@@ -254,7 +257,7 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
     // disable memory windowing on variables.  This will ensure that
     // each variable is allocated its own memory on each patch,
     // precluding memory blocks being defined across multiple patches.
-    Uintah::OnDemandDataWarehouse::d_combineMemory = false;
+    Uintah::OnDemandDataWarehouse::s_combine_memory = false;
 
     //get the true numDevices (in case we have the simulation turned on)
     int numDevices;
@@ -374,7 +377,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
         << m_num_threads + 1 << ").\n" << std::endl;
 
 #ifdef HAVE_CUDA
-    if (Uintah::Parallel::usingDevice()) {
+    if ( !gpu_ids && Uintah::Parallel::usingDevice() ) {
       cudaError_t retVal;
       int availableDevices;
       CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
@@ -390,6 +393,29 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
     }
 #endif
   }
+
+#ifdef HAVE_CUDA
+  if ( gpu_ids && Uintah::Parallel::usingDevice() ) {
+    cudaError_t retVal;
+    int availableDevices;
+    std::ostringstream message;
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
+    message << "   Rank-" << d_myworld->myRank()
+            << " using " << m_num_devices << "/" << availableDevices
+            << " available GPU(s)\n";
+
+    for ( int device_id = 0; device_id < availableDevices; device_id++ ) {
+      cudaDeviceProp device_prop;
+      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&device_prop, device_id));
+      message << "   Rank-" << d_myworld->myRank()
+              << " using GPU Device " << device_id
+              << ": \"" << device_prop.name << "\""
+              << " with compute capability " << device_prop.major << "." << device_prop.minor
+              << " on PCI " << device_prop.pciDomainID << ":" << device_prop.pciBusID << ":" << device_prop.pciDeviceID << "\n";
+    }
+    DOUT(true, message.str());
+  }
+#endif
 
   SchedulerCommon::problemSetup(prob_spec, materialManager);
 
@@ -459,6 +485,8 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
       plain_old_dws[i] = m_dws[i].get_rep();
     }
 
+    DOUT(g_task_run, myRankThread() << " Running task:   " << *dtask);
+  
     dtask->doit(d_myworld, m_dws, plain_old_dws, event);
 
     if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
@@ -1207,6 +1235,19 @@ UnifiedScheduler::runTasks( int thread_id )
           // (It would be nice if the task graph didn't have this OutputVariables task if
           // it wasn't going to output data, but that would require more task graph recompilations,
           // which can be even costlier overall.  So we do the check here.)
+
+          // ARS NOTE: Outputing and Checkpointing may be done out of
+          // snyc now. I.e. turned on just before it happens rather
+          // than turned on before the task graph execution.  As such,
+          // one should also be checking:
+
+          // m_application->activeReductionVariable( "outputInterval" );
+          // m_application->activeReductionVariable( "checkpointInterval" );
+
+          // However, if active the code below would be called regardless
+          // if an output or checkpoint time step or not. Not sure that is
+          // desired but not sure of the effect of not calling it and doing
+          // an out of sync output or checkpoint.
 
           if ((m_output->isOutputTimeStep() || m_output->isCheckpointTimeStep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
@@ -4326,7 +4367,22 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           }
           continue;
         }
+
         // if we send/recv to an output task, don't send/recv if not an output timestep
+
+        // ARS NOTE: Outputing and Checkpointing may be done out of
+        // snyc now. I.e. turned on just before it happens rather than
+        // turned on before the task graph execution.  As such, one
+        // should also be checking:
+        
+        // m_application->activeReductionVariable( "outputInterval" );
+        // m_application->activeReductionVariable( "checkpointInterval" );
+        
+        // However, if active the code below would be called regardless
+        // if an output or checkpoint time step or not. Not sure that is
+        // desired but not sure of the effect of not calling it and doing
+        // an out of sync output or checkpoint.
+        
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();

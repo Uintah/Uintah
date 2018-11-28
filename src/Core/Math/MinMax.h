@@ -94,7 +94,7 @@ inline double Min(double d1, double d2, double d3)
 inline double Mid(double a, double b, double c)
 {
   return ((a > b) ? ((a < c) ? a : ((b > c) ? b : c)) : \
-	            ((b < c) ? b : ((a > c) ? a : c)));
+                    ((b < c) ? b : ((a > c) ? a : c)));
 }
 
 inline double Max(double d1, double d2, double d3)
@@ -115,7 +115,7 @@ inline int Min(int d1, int d2, int d3)
 inline int Mid(int a, int b, int c)
 {
   return ((a > b) ? ((a < c) ? a : ((b > c) ? b : c)) : \
-	            ((b < c) ? b : ((a > c) ? a : c)));
+                    ((b < c) ? b : ((a > c) ? a : c)));
 }
 
 inline int Max(int d1, int d2, int d3)
@@ -127,8 +127,8 @@ inline int Max(int d1, int d2, int d3)
 
 // 3 unsigned integers
 inline unsigned int Min(unsigned int d1,
-				     unsigned int d2,
-				     unsigned int d3)
+                        unsigned int d2,
+                        unsigned int d3)
 {
     unsigned int m=d1<d2?d1:d2;
     m=m<d3?m:d3;
@@ -136,16 +136,16 @@ inline unsigned int Min(unsigned int d1,
 }
 
 inline unsigned int Mid(unsigned int a,
-				     unsigned int b,
-				     unsigned int c)
+                        unsigned int b,
+                        unsigned int c)
 {
   return ((a > b) ? ((a < c) ? a : ((b > c) ? b : c)) : \
-	            ((b < c) ? b : ((a > c) ? a : c)));
+                    ((b < c) ? b : ((a > c) ? a : c)));
 }
 
 inline unsigned int Max(unsigned int d1,
-				     unsigned int d2,
-				     unsigned int d3)
+                        unsigned int d2,
+                        unsigned int d3)
 {
     unsigned int m=d1>d2?d1:d2;
     m=m>d3?m:d3;
@@ -163,7 +163,7 @@ inline long  Min(long  d1, long  d2, long  d3)
 inline long Mid(long a, long b, long c)
 {
   return ((a > b) ? ((a < c) ? a : ((b > c) ? b : c)) : \
-	            ((b < c) ? b : ((a > c) ? a : c)));
+                    ((b < c) ? b : ((a > c) ? a : c)));
 }
 
 

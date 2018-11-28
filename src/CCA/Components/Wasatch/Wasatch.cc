@@ -147,7 +147,7 @@ namespace WasatchCore{
     // disable memory windowing on variables.  This will ensure that
     // each variable is allocated its own memory on each patch,
     // precluding memory blocks being defined across multiple patches.
-    Uintah::OnDemandDataWarehouse::d_combineMemory = false;
+    Uintah::OnDemandDataWarehouse::s_combine_memory = false;
 
     const bool log = false;
     graphCategories_[ INITIALIZATION     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
@@ -466,7 +466,8 @@ namespace WasatchCore{
         
         if( densityParams->findBlock("NameTag") ){
           densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-          if( Wasatch::flow_treatment() == WasatchCore::COMPRESSIBLE ) densityTag.reset_context(Expr::STATE_DYNAMIC);
+          if     ( Wasatch::flow_treatment() == WasatchCore::COMPRESSIBLE ) densityTag.reset_context(Expr::STATE_DYNAMIC);
+          else if( Wasatch::flow_treatment() == WasatchCore::LOWMACH      ) densityTag.reset_context(Expr::STATE_N      );
           isConstDensity = false;
         }
         else{
@@ -652,7 +653,12 @@ namespace WasatchCore{
          transEqnParams != nullptr;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
     {
-      adaptors_.push_back( parse_scalar_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_, *dualTimeMatrixInfo_ ) );
+      adaptors_.push_back( parse_scalar_equation( transEqnParams,
+                                                  turbParams,
+                                                  densityTag,
+                                                  graphCategories_,
+                                                  *dualTimeMatrixInfo_,
+                                                  persistentFields_ ) );
     }
 
     //
@@ -661,7 +667,14 @@ namespace WasatchCore{
     Uintah::ProblemSpecP specEqnParams = wasatchSpec_->findBlock("SpeciesTransportEquations");
     Uintah::ProblemSpecP momEqnParams = wasatchSpec_->findBlock("MomentumEquations");
     if( specEqnParams ){
-      EquationAdaptors specEqns = parse_species_equations( specEqnParams, wasatchSpec_, momEqnParams, turbParams, densityTag, graphCategories_, *dualTimeMatrixInfo_, dualTimeMatrixInfo_->doBlockImplicit );
+      EquationAdaptors specEqns = parse_species_equations( specEqnParams,
+                                                           wasatchSpec_,
+                                                           momEqnParams,
+                                                           turbParams,
+                                                           densityTag,
+                                                           graphCategories_,
+                                                           *dualTimeMatrixInfo_,
+                                                           dualTimeMatrixInfo_->doBlockImplicit );
       adaptors_.insert( adaptors_.end(), specEqns.begin(), specEqns.end() );
     }
 
@@ -700,12 +713,12 @@ namespace WasatchCore{
                                                                       turbParams,
                                                                       useAdaptiveDt,
                                                                       doParticles_,
-                                                                      isConstDensity,
                                                                       densityTag,
                                                                       graphCategories_,
                                                                       *m_solver,
                                                                       m_materialManager,
-                                                                      *dualTimeMatrixInfo_ );
+                                                                      *dualTimeMatrixInfo_,
+                                                                      persistentFields_ );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -742,8 +755,7 @@ namespace WasatchCore{
       try{
         //For the Multi-Environment mixing model, the entire Wasatch Block must be passed to find values for initial moments
         const EquationAdaptors adaptors =
-            parse_moment_transport_equations( momEqnParams, wasatchSpec_, isConstDensity,
-                                              graphCategories_ );
+            parse_moment_transport_equations( momEqnParams, wasatchSpec_, graphCategories_ );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -1901,6 +1913,19 @@ namespace WasatchCore{
                   getDelTLabel(),
                   Uintah::getLevel(patches) );
     }
+
+    // The component specifies task graph index for next
+    // timestep.
+    if (doRadiation_) {
+      // Setup the correct task graph for execution for the NEXT time
+      // step.  Also do radiation solve on time step 1.
+      int task_graph_index =
+        ((((timeStep+1) % radCalcFrequency_ == 0) || ((timeStep+1) == 1)) ?
+         Uintah::RMCRTCommon::TG_RMCRT :
+         Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+      
+      setTaskGraphIndex( task_graph_index );
+    }
   }
 
   //------------------------------------------------------------------
@@ -1960,24 +1985,6 @@ namespace WasatchCore{
    // do nothing for now
  }
 
- int
- Wasatch::computeTaskGraphIndex( const int timeStep )
- {
-   // The component specifies task graph index for next
-   // timestep. SimController passes this to scheduler for execution.
-   if (doRadiation_) {
-
-     // Setup the correct task graph for execution.
-     // Also do radiation solve on timestep 1.
-     int task_graph_index =
-       ((timeStep % radCalcFrequency_ == 0) ||
-        (timeStep == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
-
-     return task_graph_index;
-   }
-
-   return 0;
- }
 //------------------------------------------------------------------
 
 } // namespace WasatchCore

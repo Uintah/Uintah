@@ -42,11 +42,11 @@ namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
   /*!
-	
+        
   \class SmoothGeomPiece
-	
+        
   \brief Abstract base class for smooth geometry pieces
-	
+        
   \warning Does not allow for correct application of symmetry 
   boundary conditions.  Use symmetry at your own risk.
   The end caps are exactly the same diameter as the outer
@@ -60,13 +60,13 @@ namespace Uintah {
   /////////////////////////////////////////////////////////////////////////////
 
   class SmoothGeomPiece : public GeometryPiece {
-	 
+         
   public:
     //////////////////////////////////////////////////////////////////////
     /*! Constructor */
     //////////////////////////////////////////////////////////////////////
     SmoothGeomPiece();
-	 
+         
     //////////////////////////////////////////////////////////////////////
     /*! Destructor */
     //////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ namespace Uintah {
 
     /// Make a clone
     virtual GeometryPieceP clone() const = 0;
-	 
+         
     static const std::string TYPE_NAME;
     virtual std::string getType() const { return TYPE_NAME; }
 
@@ -82,7 +82,7 @@ namespace Uintah {
     /*! Determines whether a point is inside the geometry.              */
     //////////////////////////////////////////////////////////////////////
     virtual bool inside(const Point &p) const = 0;
-	 
+         
     //////////////////////////////////////////////////////////////////////
     /*! Returns the bounding box surrounding the particle domain.       */
     //////////////////////////////////////////////////////////////////////

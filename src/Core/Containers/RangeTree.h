@@ -170,20 +170,20 @@ public:
   // Query for Point's in the given range such that
   // low[i] <= p[i] <= high[i] for each dimension.
   inline void query(const TPoint& low, const TPoint& high,
-		    std::list<TPoint*>& found)
+                    std::list<TPoint*>& found)
   { query(root_, found, low, high, DIMENSIONS_ - 1); }
 
   // Query for Point's in the given range such that
   // distance(p, q[i]) <= radius (using L2, geometric definition of distance).
   inline void querySphere(const TPoint& p, TPointElem radius,
-			  std::list<TPoint*>& found)
+                          std::list<TPoint*>& found)
   { querySphereR2(p, radius*radius, found); }
 
   // given the radius squared instead of the radius itself
   inline void querySphereR2(const TPoint& p, TPointElem radiusSquared,
                             std::list<TPoint*>& found)
   { querySphere<true>(root_, found, p, radiusSquared, radiusSquared,
-		      DIMENSIONS_ - 1); }
+                      DIMENSIONS_ - 1); }
 
 
   // The non-strict version may include points outside the sphere in order
@@ -193,23 +193,23 @@ public:
   // leaf points that aren't checked (whereas a standarde range query does
   // check these).
   inline void querySphereNonStrict(const TPoint& p, TPointElem radius,
-				   std::list<TPoint*>& found)
+                                   std::list<TPoint*>& found)
   { querySphereNonStrictR2(p, radius*radius, found); }
 
   // given the radius squared instead of the radius itself
   inline void querySphereNonStrictR2(const TPoint& p,
-				     TPointElem radiusSquared,
-				     std::list<TPoint*>& found)
+                                     TPointElem radiusSquared,
+                                     std::list<TPoint*>& found)
   { querySphere<false>(root_, found, p, radiusSquared, radiusSquared,
-		       DIMENSIONS_ - 1); }
+                       DIMENSIONS_ - 1); }
   
   // Get the nearest point to a given point according to the usual
   // geometric L2 metric (sum of squares).
   // Note: If MAX is the maximum allowed value of type PointElem, then
   // maximumL1Distance should not be greater than MAX - p[d] for any d.
   TPoint* queryNearest(const TPoint& p, TPointElem maximumL1Distance
-		      /* point found must be less than maximumL1Distance
-			 away using the L1 metric (not a type) */);
+                      /* point found must be less than maximumL1Distance
+                         away using the L1 metric (not a type) */);
   
   // Get the nearest point to a given point according to the L1
   // metric (sum of coordinate differences without squaring).  This
@@ -218,8 +218,8 @@ public:
   // Note: If MAX is the maximum allowed value of type PointElem, then
   // maximumL1Distance should not be greater than MAX - p[d] for any d.
   TPoint* queryNearestL1(const TPoint& p, TPointElem maximumL1Distance
-			/* point found must be less than maximumL1Distance
-			   away using the L1 metric */);
+                        /* point found must be less than maximumL1Distance
+                           away using the L1 metric */);
 
   void topLevelDump(); // for debugging
 
@@ -238,11 +238,11 @@ public:
   { return numDiagDirections_; }
 
   static inline TPointElem getL1MetricLength(const TPoint* p, int* direction,
-					     int dimensions);
+                                             int dimensions);
 
   static inline
   TPointElem getDistanceSquared(const TPoint& p1, const TPoint& p2,
-				int dimensions);
+                                int dimensions);
   
   static inline TPointElem squared(TPointElem p)
   { return p * p; }  
@@ -263,7 +263,7 @@ private:
     //   this node is to deal with (prevents unnecessary duplication
     //   of the vectors.
     RangeTreeNode(int d, TPoint** dSorted, TPoint*** subDSorted,
-		  int low, int high, RangeTree* entireTree);
+                  int low, int high, RangeTree* entireTree);
 
     static void deleteStructure(RangeTreeNode* node, int d);
 
@@ -319,14 +319,14 @@ private:
     template <int BOUND_FROM_SIDE>
     inline int findFirstFromSide(TPointElem e)
     { return (BOUND_FROM_SIDE == RANGE_LEFT) ?
-	findFirstGreaterEq(e) : findLastLesserEq(e); }
+        findFirstGreaterEq(e) : findLastLesserEq(e); }
     
     int findFirstGreaterEq(TPointElem e);
     inline int findLastLesserEq(TPointElem e)
     {
       int firstGrEq = findFirstGreaterEq(e);
       return (((firstGrEq < size_) && (*points_[firstGrEq])[0] == e) ?
-	      firstGrEq : firstGrEq - 1);
+              firstGrEq : firstGrEq - 1);
     }
     
     // Use a lookup table to find the element in A(lc(v)) or A(rc(v))
@@ -350,26 +350,26 @@ private:
     void getRange(std::list<TPoint*>& found, int start, TPointElem high);
 
     void setExtremePoints(int** diagonalDirections,
-			  int numDiagDirections, int dimensions);
+                          int numDiagDirections, int dimensions);
 
     inline TPoint* getExtremePointBoundLeft(int i, int directionIndex,
-					    int numDiagDirections)
+                                            int numDiagDirections)
     { return getExtremePoint<RANGE_LEFT>(i,directionIndex,numDiagDirections); }
 
     inline TPoint* getExtremePointBoundRight(int i, int directionIndex,
-					     int numDiagDirections)
+                                             int numDiagDirections)
     { return getExtremePoint<RANGE_RIGHT>(i,directionIndex,numDiagDirections);}
     
     template <int BOUND_FROM_SIDE>
     inline TPoint* getExtremePoint(int i, int directionIndex,
-				  int numDiagDirections)
+                                  int numDiagDirections)
     {
       ASSERT((directionIndex < numDiagDirections/2) ==
-	     (BOUND_FROM_SIDE == RANGE_RIGHT));
+             (BOUND_FROM_SIDE == RANGE_RIGHT));
       if (i >= 0 && i < size_)
-	return extremePoints_[i][directionIndex];
+        return extremePoints_[i][directionIndex];
       else
-	return 0; // a valid answer
+        return 0; // a valid answer
     }
 
     inline TPoint* getPoint(int i)
@@ -421,7 +421,7 @@ public:
   // This is necessare because of the same g++ compiler bug
   template <int BOUND_FROM_SIDE>
   inline TPoint* getExtremePoint(BaseLevelSet* bls, int i, int directionIndex,
-				 int numDiagDirections)
+                                 int numDiagDirections)
   {
     return (BOUND_FROM_SIDE == RANGE_LEFT) ?
       bls->getExtremePointBoundLeft(i, directionIndex, numDiagDirections) :
@@ -437,11 +437,11 @@ public:
   // this set (depending on BOUND_FROM_SIDE).
   template <int SUB_SIDE, int BOUND_FROM_SIDE>
   static inline int getCascadedSubIndex(BaseLevelSet* parent, int i,
-					BaseLevelSet* sub);    
+                                        BaseLevelSet* sub);    
 
   template <int SIDE>
   static inline int getSubGreaterEq(BaseLevelSet* parent, int i,
-				    BaseLevelSet* sub /* for verification */)
+                                    BaseLevelSet* sub /* for verification */)
   {
     return (SIDE == RANGE_LEFT) ?
       parent->getLeftSubGreaterEq(i, sub) :
@@ -469,7 +469,7 @@ private:
       
       node_ = getChild<SIDE>(node_);
       while (!node_->isLeaf() &&
-	     !boundTester.isInBound((*node_->point_)[D_]))
+             !boundTester.isInBound((*node_->point_)[D_]))
       node_ = getChild<OTHER_SIDE>(node_);
       return !node_->isLeaf();
     }
@@ -509,7 +509,7 @@ private:
     // indices).
     template <class BoundTester>
     inline bool goNext(const BoundTester& boundTester,
-		       bool quitOnBadIndex = true) {
+                       bool quitOnBadIndex = true) {
       const int OTHER_SIDE = (SIDE + 1) % 2;
       ASSERT(!this->node_->isLeaf());
       BaseLevelSet* parentSub = this->node_->lowerLevel_.bls;
@@ -518,23 +518,23 @@ private:
       this->node_ = getChild<SIDE>(this->node_);
       sub = this->node_->lowerLevel_.bls;
       subIndex_ =
-	getCascadedSubIndex<SIDE, BOUND_FROM_SIDE>(parentSub, subIndex_, sub);
+        getCascadedSubIndex<SIDE, BOUND_FROM_SIDE>(parentSub, subIndex_, sub);
       if (((BOUND_FROM_SIDE == RANGE_RIGHT) || quitOnBadIndex) &&
       !isValidIndex(subIndex_, sub)) {
-	return false; // no more points in range at the base level
+        return false; // no more points in range at the base level
       }
   
       while (!this->node_->isLeaf() &&
-	     !boundTester.isInBound((*this->node_->point_)[this->D_])){
-	parentSub = sub;    
-	this->node_ = getChild<OTHER_SIDE>(this->node_);
-	sub = this->node_->lowerLevel_.bls;
-	subIndex_ = getCascadedSubIndex<OTHER_SIDE, BOUND_FROM_SIDE>
-	  (parentSub, subIndex_, sub);
-	if (((BOUND_FROM_SIDE == RANGE_RIGHT) || quitOnBadIndex) &&
-	    !isValidIndex(subIndex_, sub)) {
-	  return false;// no more points in range at the base level
-	}
+             !boundTester.isInBound((*this->node_->point_)[this->D_])){
+        parentSub = sub;    
+        this->node_ = getChild<OTHER_SIDE>(this->node_);
+        sub = this->node_->lowerLevel_.bls;
+        subIndex_ = getCascadedSubIndex<OTHER_SIDE, BOUND_FROM_SIDE>
+          (parentSub, subIndex_, sub);
+        if (((BOUND_FROM_SIDE == RANGE_RIGHT) || quitOnBadIndex) &&
+            !isValidIndex(subIndex_, sub)) {
+          return false;// no more points in range at the base level
+        }
       }
 
       return !this->node_->isLeaf();
@@ -547,9 +547,9 @@ private:
     inline bool isValidIndex(int subIndex, const BaseLevelSet* sub)
     {
       if (BOUND_FROM_SIDE == RANGE_LEFT)
-	return subIndex < sub->getSize();
+        return subIndex < sub->getSize();
       else
-	return subIndex >= 0;
+        return subIndex >= 0;
     }
 
     CascadeTraverser& operator=(const CascadeTraverser&);    
@@ -589,24 +589,24 @@ private:
   };
 
   void query(RangeTreeNode* root, std::list<TPoint*>& found,
-	     const TPoint& low, const TPoint& high, int d);
+             const TPoint& low, const TPoint& high, int d);
 
   RangeTreeNode* findSplit(RangeTreeNode* root, TPointElem low,
-			   TPointElem high, int d);
+                           TPointElem high, int d);
   RangeTreeNode* findSplitRadius2(RangeTreeNode* root, TPointElem p,
-				  TPointElem radius2, int d);
+                                  TPointElem radius2, int d);
   
   // template a version for the left side and a version for the right side
   template <int SIDE>
   void queryFromSplit(RangeTreeNode* vsplit, std::list<TPoint*>& found,
-		      const TPoint& low, const TPoint& high, int d);
+                      const TPoint& low, const TPoint& high, int d);
 
   // template a version for the left side and a version for the right side
   // for d == 1 case.
   template<int SIDE>
   void queryFromSplitD1(RangeTreeNode* vsplit, std::list<TPoint*>& found,
-			const TPoint& low, const TPoint& high,
-			int splitSubFirstGreaterEq);
+                        const TPoint& low, const TPoint& high,
+                        int splitSubFirstGreaterEq);
 
   // query for the point in the sub-tree nearest to p, asserting that
   // all points in the sub-tree will be at least minL1Distance away (because
@@ -614,43 +614,43 @@ private:
   // search when the search in this dimension has gone farther than
   // nearestKnownDistance - minL1Distance away from the point.
   void queryNearestL1(RangeTreeNode* root, const TPoint& p,
-		      const TPointElem& pL1Length, int d, int directionIndex,
-		      const TPointElem& minL1Distance,
-		      TPointElem& nearestKnownL1Distance, TPoint*& nearest);
+                      const TPointElem& pL1Length, int d, int directionIndex,
+                      const TPointElem& minL1Distance,
+                      TPointElem& nearestKnownL1Distance, TPoint*& nearest);
   
   // templated according to which direction (left or right) is closer to
   // the p from vsplit in dimension d.
   template <int NEAR_SIDE, bool D1, int BASE_BOUND_SIDE /* only used if
-							   D1 is true */>
+                                                           D1 is true */>
   void queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
-			       const TPointElem& pL1Length, int d,
-			       int directionIndex,
-			       const TPointElem& minL1Distance,
-			       TPointElem& nearestKnownL1Distance,
-			       TPoint*& nearest);
+                               const TPointElem& pL1Length, int d,
+                               int directionIndex,
+                               const TPointElem& minL1Distance,
+                               TPointElem& nearestKnownL1Distance,
+                               TPoint*& nearest);
   
   // Used by queryNearest methods to check if a candidate point is nearer
   // than the previously known nearest, if so then replace it.
   void setNearest(TPoint*& nearest, TPoint* candidate, int directionIndex,
-		  const TPointElem& pL1Length,
-		  TPointElem& nearestKnownL1Distance);
+                  const TPointElem& pL1Length,
+                  TPointElem& nearestKnownL1Distance);
 
   template <bool STRICTLY_INSIDE>
   void querySphere(RangeTreeNode* root, std::list<TPoint*>& found, const TPoint& p,
-		   TPointElem radiusSquared, TPointElem availableRadiusSquared,
-		   int d);
+                   TPointElem radiusSquared, TPointElem availableRadiusSquared,
+                   int d);
 
   // query on one side in a dimension
   template <int SIDE, bool STRICTLY_INSIDE>
   void querySphereFromSplit(RangeTreeNode* vsplit, std::list<TPoint*>& found,
-				const TPoint& p, TPointElem radiusSquared,
-				TPointElem availableRadiusSquared, int d);
+                                const TPoint& p, TPointElem radiusSquared,
+                                TPointElem availableRadiusSquared, int d);
   // d == 1 version
   template<int SIDE, bool STRICTLY_INSIDE>
   void querySphereFromSplitD1(RangeTreeNode* vsplit, std::list<TPoint*>& found,
-			      const TPoint& p, TPointElem radiusSquared,
-			      TPointElem availableRadiusSquared,
-			      int splitSubIndexP);
+                              const TPoint& p, TPointElem radiusSquared,
+                              TPointElem availableRadiusSquared,
+                              int splitSubIndexP);
   
   template <int NEAR_SIDE>
   static inline TPointElem distance(const TPointElem& p, const TPointElem& x)
@@ -658,7 +658,7 @@ private:
 
   template <bool SIDE>
   static inline TPointElem addInDirection(const TPointElem& p,
-					 const TPointElem& d)
+                                         const TPointElem& d)
   { return (SIDE == RANGE_LEFT) ? p - d : p + d; }
 
   
@@ -781,11 +781,11 @@ queryNearest(const TPoint& p, TPointElem maximumValue)
     // just do a linear search on the results (which hopefully, and in
     // most cases, will be a relatively small subset of points).
     for (typename std::list<TPoint*>::iterator it = candidates.begin();
-	 it != candidates.end(); it++) {
+         it != candidates.end(); it++) {
       distSquared = getDistanceSquared(p, **it, DIMENSIONS_);
       if (distSquared < nearestDistSquared) {
-	nearest = *it;
-	nearestDistSquared = distSquared;
+        nearest = *it;
+        nearestDistSquared = distSquared;
       }
     }
   }
@@ -807,12 +807,12 @@ queryNearestL1(const TPoint& p, TPointElem maximumValue)
     for (int directionIndex = 0; directionIndex < numDiagDirections_;
        directionIndex++) {
       TPointElem pL1Length =
-	getL1MetricLength(&p, diagonalDirections_[directionIndex],
-			  DIMENSIONS_);
+        getL1MetricLength(&p, diagonalDirections_[directionIndex],
+                          DIMENSIONS_);
       queryNearestL1(root_, p, pL1Length, DIMENSIONS_ - 1, directionIndex, 0,
-		     nearestKnownL1Distance, nearest);
+                     nearestKnownL1Distance, nearest);
       if (nearestKnownL1Distance == 0)
-	break; // can't get closer than zero
+        break; // can't get closer than zero
     }
   }
   return nearest;
@@ -849,7 +849,7 @@ bool testSorted(TPoint** sorted, int d, int low, int high)
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::RangeTreeNode::
 RangeTreeNode(int d, TPoint** dSorted, TPoint*** subDSorted, int low, int high,
-	      RangeTree* entireTree)
+              RangeTree* entireTree)
   : leftChild_(nullptr),
     rightChild_(nullptr),
     point_(nullptr)
@@ -867,11 +867,11 @@ RangeTreeNode(int d, TPoint** dSorted, TPoint*** subDSorted, int low, int high,
     for (i = 0; i < d-1; i++) {
       subSubDSorted[i] = scinew TPoint*[high - low];
       for (j = low; j < high; j++)
-	subSubDSorted[i][j-low] = subDSorted[i][j];
+        subSubDSorted[i][j-low] = subDSorted[i][j];
     }
     lowerLevel_.rtn =
       scinew RangeTreeNode(d-1, &subDSorted[d-1][low], subSubDSorted, 0,
-			   high-low, entireTree);
+                           high-low, entireTree);
     for (i = 0; i < d-1; i++)
       delete[] subSubDSorted[i];
     delete[] subSubDSorted;
@@ -880,8 +880,8 @@ RangeTreeNode(int d, TPoint** dSorted, TPoint*** subDSorted, int low, int high,
     lowerLevel_.bls = scinew BaseLevelSet(&subDSorted[0][low], high-low);
     if (ALLOW_NEAREST_NEIGHBOR_QUERY)
       lowerLevel_.bls->setExtremePoints(entireTree->getDiagonalDirections(),
-					entireTree->getNumDiagDirections(),
-					entireTree->getDimensions());
+                                        entireTree->getNumDiagDirections(),
+                                        entireTree->getDimensions());
   }
 
   // split points by the mid value of the (d-1)th dimension
@@ -901,35 +901,35 @@ RangeTreeNode(int d, TPoint** dSorted, TPoint*** subDSorted, int low, int high,
       int left_index, right_index;
       
       for (i = 0; i < d; i++) {
-	// split between the left sub-d sorted and the right
-	// sub-d sorted according to mid (both sides will be
-	// sorted because they were sorted befor splitting).
-	left_index = right_index = 0;
-	for (j = low; j < high; j++) {
-	  p = subDSorted[i][j];
-	  if (comparePoints(p, point_, d) < 0)
-	    tmpLeftSorted[left_index++] = p;
-	  else
-	    tmpRightSorted[right_index++] = p;
-	}
-	
-	ASSERT(left_index == mid_pos - low);
-	ASSERT(right_index == high - mid_pos);
-	
-	for (j = low; j < mid_pos; j++)
-	  subDSorted[i][j] = tmpLeftSorted[j - low];
-	for (j = mid_pos; j < high; j++)
-	  subDSorted[i][j] = tmpRightSorted[j - mid_pos];
-	
+        // split between the left sub-d sorted and the right
+        // sub-d sorted according to mid (both sides will be
+        // sorted because they were sorted befor splitting).
+        left_index = right_index = 0;
+        for (j = low; j < high; j++) {
+          p = subDSorted[i][j];
+          if (comparePoints(p, point_, d) < 0)
+            tmpLeftSorted[left_index++] = p;
+          else
+            tmpRightSorted[right_index++] = p;
+        }
+        
+        ASSERT(left_index == mid_pos - low);
+        ASSERT(right_index == high - mid_pos);
+        
+        for (j = low; j < mid_pos; j++)
+          subDSorted[i][j] = tmpLeftSorted[j - low];
+        for (j = mid_pos; j < high; j++)
+          subDSorted[i][j] = tmpRightSorted[j - mid_pos];
+        
       }
       delete[] tmpLeftSorted;
       delete[] tmpRightSorted;
     }
 
     leftChild_ = scinew RangeTreeNode(d, dSorted, subDSorted, low, mid_pos,
-				      entireTree);
+                                      entireTree);
     rightChild_ = scinew RangeTreeNode(d, dSorted, subDSorted, mid_pos,
-				       high, entireTree); 
+                                       high, entireTree); 
 
     if (d == 1) {
       lowerLevel_.bls->setLeftSubLinks(leftChild_->lowerLevel_.bls);
@@ -980,11 +980,11 @@ isPointInDirection(const TPoint& p, int* direction, int d)
   for (int i = 0; i <= d; i++) {
     if (direction[i] < 0) {
       if (p[i] < (*point_)[i])
-	return false;
+        return false;
     }
     else {
       if (p[i] > (*point_)[i])
-	return false;
+        return false;
     }
   }
   return true;
@@ -1037,7 +1037,7 @@ template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 void
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::BaseLevelSet::
 setExtremePoints(int** diagonalDirections, int numDiagDirections,
-		 int dimensions)
+                 int dimensions)
 {
   extremePoints_ = scinew TPoint**[size_];
   TPointElem L1length;
@@ -1058,16 +1058,16 @@ setExtremePoints(int** diagonalDirections, int numDiagDirections,
       ASSERT(diagonalDirections[dir][0] < 0);
       extremePoints_[0][dir] = points_[0];
       L1length = getL1MetricLength(points_[0], diagonalDirections[dir],
-				   dimensions);
+                                   dimensions);
       for (i = 1; i < size_; i++) {
-	L1length2 = getL1MetricLength(points_[i], diagonalDirections[dir],
-				      dimensions);
-	if (L1length2 < L1length) {
-	  L1length = L1length2;
-	  extremePoints_[i][dir] = points_[i];
-	}
-	else
-	  extremePoints_[i][dir] = extremePoints_[i-1][dir];
+        L1length2 = getL1MetricLength(points_[i], diagonalDirections[dir],
+                                      dimensions);
+        if (L1length2 < L1length) {
+          L1length = L1length2;
+          extremePoints_[i][dir] = points_[i];
+        }
+        else
+          extremePoints_[i][dir] = extremePoints_[i-1][dir];
       }
     }
     for (dir = numDiagDirections/2; dir < numDiagDirections; dir++) {
@@ -1079,16 +1079,16 @@ setExtremePoints(int** diagonalDirections, int numDiagDirections,
       ASSERT(diagonalDirections[dir][0] > 0);
       extremePoints_[size_-1][dir] = points_[size_-1];
       L1length = getL1MetricLength(points_[size_-1], diagonalDirections[dir],
-				   dimensions);
+                                   dimensions);
       for (i = size_-2; i >= 0; i--) {
-	L1length2 = getL1MetricLength(points_[i], diagonalDirections[dir],
-				      dimensions);
-	if (L1length2 < L1length) {
-	  L1length = L1length2;
-	  extremePoints_[i][dir] = points_[i];
-	}
-	else
-	  extremePoints_[i][dir] = extremePoints_[i+1][dir];
+        L1length2 = getL1MetricLength(points_[i], diagonalDirections[dir],
+                                      dimensions);
+        if (L1length2 < L1length) {
+          L1length = L1length2;
+          extremePoints_[i][dir] = points_[i];
+        }
+        else
+          extremePoints_[i][dir] = extremePoints_[i+1][dir];
       }
     }
   }  
@@ -1271,14 +1271,14 @@ query(RangeTreeNode* root, std::list<TPoint*>& found,
     // Do one log(n) search here, then use constant lookup tables
       // to find firstGreaterEq indices as it descends down the tree.
       int splitSubFirstGreaterEq =
-	vsplit->lowerLevel_.bls->findFirstGreaterEq(low[0]);
+        vsplit->lowerLevel_.bls->findFirstGreaterEq(low[0]);
       
       // traverse the left side
       queryFromSplitD1<RANGE_LEFT>(vsplit, found, low, high,
-				       splitSubFirstGreaterEq);
+                                       splitSubFirstGreaterEq);
       // traverse the right side
       queryFromSplitD1<RANGE_RIGHT>(vsplit, found, low, high,
-					splitSubFirstGreaterEq);
+                                        splitSubFirstGreaterEq);
     }
     else {
       // traverse the left side
@@ -1293,7 +1293,7 @@ template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template<int SIDE>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
 queryFromSplit(RangeTreeNode* vsplit, std::list<TPoint*>& found,
-	       const TPoint& low, const TPoint& high, int d)
+               const TPoint& low, const TPoint& high, int d)
 {
   const int OTHER_SIDE = (SIDE + 1) % 2;
   TPointElem minmax = ((SIDE == RANGE_LEFT) ? low[d] : high[d]);
@@ -1304,7 +1304,7 @@ queryFromSplit(RangeTreeNode* vsplit, std::list<TPoint*>& found,
   Traverser<SIDE> traverser(vsplit, d);
   while (traverser.goNext(boundTester)) {
     query(getChild<OTHER_SIDE>(traverser.getNode())->lowerLevel_.rtn,
-	  found, low, high, d-1);
+          found, low, high, d-1);
   }
 
   // check the leaf point
@@ -1317,15 +1317,15 @@ template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template<int SIDE>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
 queryFromSplitD1(RangeTreeNode* vsplit, std::list<TPoint*>& found,
-		 const TPoint& low, const TPoint& high,
-		 int splitSubFirstGreaterEq /* only used if d1 is true */)
+                 const TPoint& low, const TPoint& high,
+                 int splitSubFirstGreaterEq /* only used if d1 is true */)
 {
   // This level uses fractional cascading
   const int d = 1;
   const int OTHER_SIDE = (SIDE + 1) % 2;
   
   TPointElem minmax = ((SIDE == RANGE_LEFT) ?
-		      low[d] : high[d]);
+                      low[d] : high[d]);
   BasicBoundTester<SIDE> boundTester(minmax);
 
   // traverse the tree and do queries on the inner sub-trees that are
@@ -1357,14 +1357,14 @@ template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template <bool STRICTLY_INSIDE>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
 querySphere(RangeTreeNode* root, std::list<TPoint*>& found, const TPoint& p,
-	    TPointElem radiusSquared, TPointElem availableRadiusSquared, int d)
+            TPointElem radiusSquared, TPointElem availableRadiusSquared, int d)
 {
   if (root == nullptr)
     return;
   
   RangeTreeNode* vsplit = findSplitRadius2(root, p[d],
-					   availableRadiusSquared, d);
-	 
+                                           availableRadiusSquared, d);
+         
   if (vsplit->isLeaf()) {
    if (!STRICTLY_INSIDE ||
        getDistanceSquared(p, *vsplit->point_, DIMENSIONS_) <= radiusSquared)
@@ -1377,24 +1377,24 @@ querySphere(RangeTreeNode* root, std::list<TPoint*>& found, const TPoint& p,
       // Do one log(n) search here, then use constant lookup tables
       // to find firstGreaterEq indices as it descends down the tree.
       int splitSubIndexP =
-	vsplit->lowerLevel_.bls->findFirstGreaterEq(p[0]);
+        vsplit->lowerLevel_.bls->findFirstGreaterEq(p[0]);
       
       // traverse the left side
       querySphereFromSplitD1<RANGE_LEFT, STRICTLY_INSIDE>
-	(vsplit, found, p, radiusSquared, availableRadiusSquared,
-	 splitSubIndexP);
+        (vsplit, found, p, radiusSquared, availableRadiusSquared,
+         splitSubIndexP);
       // traverse the right side
       querySphereFromSplitD1<RANGE_RIGHT, STRICTLY_INSIDE>
-	(vsplit, found, p, radiusSquared, availableRadiusSquared,
-	 splitSubIndexP);
+        (vsplit, found, p, radiusSquared, availableRadiusSquared,
+         splitSubIndexP);
     }
     else {
       // traverse the left side
       querySphereFromSplit<RANGE_LEFT, STRICTLY_INSIDE>
-	(vsplit, found, p, radiusSquared, availableRadiusSquared, d);
+        (vsplit, found, p, radiusSquared, availableRadiusSquared, d);
       // traverse the right side
       querySphereFromSplit<RANGE_RIGHT, STRICTLY_INSIDE>
-	(vsplit, found, p, radiusSquared, availableRadiusSquared, d);
+        (vsplit, found, p, radiusSquared, availableRadiusSquared, d);
     }
   } 
 }
@@ -1403,8 +1403,8 @@ template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template<int SIDE, bool STRICTLY_INSIDE>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
 querySphereFromSplit(RangeTreeNode* vsplit, std::list<TPoint*>& found,
-		     const TPoint& p, TPointElem radiusSquared,
-		     TPointElem availableRadiusSquared, int d)
+                     const TPoint& p, TPointElem radiusSquared,
+                     TPointElem availableRadiusSquared, int d)
 {
   const int OTHER_SIDE = (SIDE + 1) % 2;
   RadialBoundTester<SIDE> boundTester(p[d], availableRadiusSquared);
@@ -1440,9 +1440,9 @@ template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template<int SIDE, bool STRICTLY_INSIDE>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
 querySphereFromSplitD1(RangeTreeNode* vsplit, std::list<TPoint*>& found,
-		       const TPoint& p, TPointElem radiusSquared,
-		       TPointElem availableRadiusSquared,
-		       int splitSubIndexP)
+                       const TPoint& p, TPointElem radiusSquared,
+                       TPointElem availableRadiusSquared,
+                       int splitSubIndexP)
 {
   // This level uses fractional cascading
   const int d = 1;
@@ -1457,8 +1457,8 @@ querySphereFromSplitD1(RangeTreeNode* vsplit, std::list<TPoint*>& found,
   TPointElem diff;
   TPointElem minDiff;
   while (traverser.goNext(boundTester, false /* don't quit on a bad index
-					        because it needs to check
-					        elements before it */)) {
+                                                because it needs to check
+                                                elements before it */)) {
     // base case, d == 1 querying d = 0
     RangeTreeNode* node = traverser.getNode();
     BaseLevelSet* sub = getChild<OTHER_SIDE>(node)->lowerLevel_.bls;
@@ -1477,18 +1477,18 @@ querySphereFromSplitD1(RangeTreeNode* vsplit, std::list<TPoint*>& found,
     prevDiff = diff;
     
     for (i = indexP; i < sub->getSize() &&
-	   squared((*sub->getPoint(i))[0] - p[0]) <= curAvailRadius2; i++) {
+           squared((*sub->getPoint(i))[0] - p[0]) <= curAvailRadius2; i++) {
       if (!STRICTLY_INSIDE ||
-	  (getDistanceSquared(p, *sub->getPoint(i), DIMENSIONS_) <=
-	   radiusSquared))
-	found.push_back(sub->getPoint(i));
+          (getDistanceSquared(p, *sub->getPoint(i), DIMENSIONS_) <=
+           radiusSquared))
+        found.push_back(sub->getPoint(i));
     }
     for (i = indexP-1; i >= 0 &&
-	   squared(p[0] - (*sub->getPoint(i))[0]) <= curAvailRadius2; i--) {
+           squared(p[0] - (*sub->getPoint(i))[0]) <= curAvailRadius2; i--) {
       if (!STRICTLY_INSIDE ||
-	  (getDistanceSquared(p, *sub->getPoint(i), DIMENSIONS_) <=
-	   radiusSquared))
-	found.push_back(sub->getPoint(i));
+          (getDistanceSquared(p, *sub->getPoint(i), DIMENSIONS_) <=
+           radiusSquared))
+        found.push_back(sub->getPoint(i));
     }
   }
 
@@ -1506,9 +1506,9 @@ querySphereFromSplitD1(RangeTreeNode* vsplit, std::list<TPoint*>& found,
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
 queryNearestL1(RangeTreeNode* root, const TPoint& p,
-	       const TPointElem& pL1Length, int d, int directionIndex,
-	       const TPointElem& minL1Distance,
-	       TPointElem& nearestKnownL1Distance, TPoint*& nearest)
+               const TPointElem& pL1Length, int d, int directionIndex,
+               const TPointElem& minL1Distance,
+               TPointElem& nearestKnownL1Distance, TPoint*& nearest)
 {
   if (root == nullptr)
     return;
@@ -1518,52 +1518,52 @@ queryNearestL1(RangeTreeNode* root, const TPoint& p,
 
   if (posDirection)
     vsplit = findSplit(root, p[d],
-		       p[d] + (nearestKnownL1Distance - minL1Distance), d);
+                       p[d] + (nearestKnownL1Distance - minL1Distance), d);
   else
     vsplit = findSplit(root, p[d] - (nearestKnownL1Distance - minL1Distance),
-		       p[d], d);   
+                       p[d], d);   
 
   if (vsplit->isLeaf()) {
     if (vsplit->isPointInDirection(p, diagonalDirections_[directionIndex], d)){
-	setNearest(nearest, vsplit->point_, directionIndex, pL1Length,
-		   nearestKnownL1Distance);
+        setNearest(nearest, vsplit->point_, directionIndex, pL1Length,
+                   nearestKnownL1Distance);
     }
-	
+        
     return;
   }
   else {
     // chose the correct templated method to call
     if (posDirection) {
       if (d > 1)
-	queryNearestL1FromSplit<RANGE_LEFT, false, 0>
-	  (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
-	   nearestKnownL1Distance, nearest);
+        queryNearestL1FromSplit<RANGE_LEFT, false, 0>
+          (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
+           nearestKnownL1Distance, nearest);
       else if (diagonalDirections_[directionIndex][0] > 0)
-	// base dimension is bound from the left
-	queryNearestL1FromSplit<RANGE_LEFT, true, RANGE_LEFT>
-	  (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
-	   nearestKnownL1Distance, nearest);
+        // base dimension is bound from the left
+        queryNearestL1FromSplit<RANGE_LEFT, true, RANGE_LEFT>
+          (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
+           nearestKnownL1Distance, nearest);
       else
-	// base dimension is bound from the right
-	queryNearestL1FromSplit<RANGE_LEFT, true, RANGE_RIGHT>
-	  (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
-	   nearestKnownL1Distance, nearest);
+        // base dimension is bound from the right
+        queryNearestL1FromSplit<RANGE_LEFT, true, RANGE_RIGHT>
+          (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
+           nearestKnownL1Distance, nearest);
     }
     else {
       if (d > 1)
-	queryNearestL1FromSplit<RANGE_RIGHT, false, 0>
-	  (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
-	   nearestKnownL1Distance, nearest);
+        queryNearestL1FromSplit<RANGE_RIGHT, false, 0>
+          (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
+           nearestKnownL1Distance, nearest);
       else if (diagonalDirections_[directionIndex][0] > 0)
-	// base dimension is bound from the left
-	queryNearestL1FromSplit<RANGE_RIGHT, true, RANGE_LEFT>
-	  (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
-	   nearestKnownL1Distance, nearest);
+        // base dimension is bound from the left
+        queryNearestL1FromSplit<RANGE_RIGHT, true, RANGE_LEFT>
+          (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
+           nearestKnownL1Distance, nearest);
       else
-	// base dimension is bound from the right
-	queryNearestL1FromSplit<RANGE_RIGHT, true, RANGE_RIGHT>
-	  (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
-	   nearestKnownL1Distance, nearest);
+        // base dimension is bound from the right
+        queryNearestL1FromSplit<RANGE_RIGHT, true, RANGE_RIGHT>
+          (vsplit, p, pL1Length, d, directionIndex, minL1Distance,
+           nearestKnownL1Distance, nearest);
     }
   }
 }
@@ -1571,12 +1571,12 @@ queryNearestL1(RangeTreeNode* root, const TPoint& p,
 // This is six different cases in one code that is templated for efficiency.
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template<int NEAR_SIDE, bool D1, int BASE_BOUND_SIDE /* only used if
-							D1 is true */>
+                                                        D1 is true */>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
 queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
-			const TPointElem& pL1Length, int d, int directionIndex,
-			const TPointElem& minL1Distance,
-			TPointElem& nearestKnownL1Distance, TPoint*& nearest)
+                        const TPointElem& pL1Length, int d, int directionIndex,
+                        const TPointElem& minL1Distance,
+                        TPointElem& nearestKnownL1Distance, TPoint*& nearest)
 {
   const int FAR_SIDE = (NEAR_SIDE + 1) % 2;
   std::list<RangeTreeNode*> edgeNodes;
@@ -1593,17 +1593,17 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
   if (D1) {
    
     splitSubIndex = (BASE_BOUND_SIDE == RANGE_LEFT) ?
-	vsplit->lowerLevel_.bls->findFirstGreaterEq(p[0]) :
+        vsplit->lowerLevel_.bls->findFirstGreaterEq(p[0]) :
       vsplit->lowerLevel_.bls->findLastLesserEq(p[0]);
     /*vsplit->lowerLevel_.bls->
       findFirstFromSide<BASE_BOUND_SIDE>(p[0]);*/
 
     if ((splitSubIndex < 0) ||
-	(splitSubIndex >= vsplit->lowerLevel_.bls->getSize()))
+        (splitSubIndex >= vsplit->lowerLevel_.bls->getSize()))
       return; // no points in this sub tree are on the searching side of p[0]
     
     CascadeTraverser<NEAR_SIDE, BASE_BOUND_SIDE> traverser(vsplit,
-							   splitSubIndex);
+                                                           splitSubIndex);
     do {
       // push in front to automatically iterate in reverse order 
       edgeNodes.push_front(traverser.getNode());
@@ -1625,7 +1625,7 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
   if (leafNode != 0 &&
       leafNode->isPointInDirection(p, diagonalDirections_[directionIndex], d)){
     setNearest(nearest, leafNode->point_, directionIndex, pL1Length,
-	       nearestKnownL1Distance);
+               nearestKnownL1Distance);
   }
   
   iter = edgeNodes.begin();
@@ -1655,39 +1655,39 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
       // to less the current edge node -- so go to the previous edge node.
       vsplit = prev;
       if (vsplit->isLeaf())
-	return; // leaf should have been checked already
+        return; // leaf should have been checked already
 
       if (D1) {
-	// reset the splitSubIndex
-	splitSubIndex = (BASE_BOUND_SIDE == RANGE_LEFT) ?
-	  vsplit->lowerLevel_.bls->findFirstGreaterEq(p[0]) :
-	  vsplit->lowerLevel_.bls->findLastLesserEq(p[0]);
-	/*vsplit->lowerLevel_.bls->
-	  findFirstFromSide<BASE_BOUND_SIDE>(p[0]);*/
-	if ((splitSubIndex < 0) ||
-	    (splitSubIndex >= vsplit->lowerLevel_.bls->getSize())) {
-	  // no points in this sub tree are on the searching side of p[0]
-	  return; 
-	}
+        // reset the splitSubIndex
+        splitSubIndex = (BASE_BOUND_SIDE == RANGE_LEFT) ?
+          vsplit->lowerLevel_.bls->findFirstGreaterEq(p[0]) :
+          vsplit->lowerLevel_.bls->findLastLesserEq(p[0]);
+        /*vsplit->lowerLevel_.bls->
+          findFirstFromSide<BASE_BOUND_SIDE>(p[0]);*/
+        if ((splitSubIndex < 0) ||
+            (splitSubIndex >= vsplit->lowerLevel_.bls->getSize())) {
+          // no points in this sub tree are on the searching side of p[0]
+          return; 
+        }
       }
       break;
     }
     if (!D1)
       queryNearestL1(getChild<FAR_SIDE>(prev)->lowerLevel_.rtn, p, pL1Length,
-		     d-1, directionIndex, prevMinL1Distance,
-		     nearestKnownL1Distance, nearest);
+                     d-1, directionIndex, prevMinL1Distance,
+                     nearestKnownL1Distance, nearest);
     else if (D1) {
       // base case - find best candidate and test it
       BaseLevelSet* sub = getChild<FAR_SIDE>(prev)->lowerLevel_.bls;
 
       int cascadedIndex = getCascadedSubIndex<FAR_SIDE, BASE_BOUND_SIDE>
-	(prev->lowerLevel_.bls, *cascadedIndexIter, sub);
+        (prev->lowerLevel_.bls, *cascadedIndexIter, sub);
       // constant time lookup
       TPoint* candidate =
-	getExtremePoint<BASE_BOUND_SIDE>(sub, cascadedIndex, directionIndex,
-					 numDiagDirections_);
+        getExtremePoint<BASE_BOUND_SIDE>(sub, cascadedIndex, directionIndex,
+                                         numDiagDirections_);
       setNearest(nearest, candidate, directionIndex, pL1Length,
-		 nearestKnownL1Distance);
+                 nearestKnownL1Distance);
       cascadedIndexIter++;
     }
     
@@ -1700,37 +1700,37 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
     Traverser<FAR_SIDE> traverser(vsplit, d);
     
     while (traverser.goNext
-	   (BasicBoundTester<FAR_SIDE>
-	    (addInDirection<FAR_SIDE>(offsetP, nearestKnownL1Distance)))) {
+           (BasicBoundTester<FAR_SIDE>
+            (addInDirection<FAR_SIDE>(offsetP, nearestKnownL1Distance)))) {
       // add to the minL1Distance for the next level
       RangeTreeNode* node = traverser.getNode();
       currentMinL1Distance =
-	distance<NEAR_SIDE>(offsetP, (*node->point_)[d]);
+        distance<NEAR_SIDE>(offsetP, (*node->point_)[d]);
       queryNearestL1(getChild<NEAR_SIDE>(node)->lowerLevel_.rtn,
-		     p, pL1Length,d-1, directionIndex, currentMinL1Distance,
-		     nearestKnownL1Distance, nearest);
+                     p, pL1Length,d-1, directionIndex, currentMinL1Distance,
+                     nearestKnownL1Distance, nearest);
     }
     leafNode = traverser.getNode();
   }
   else {
     // base case, d == 1 querying down to d == 0
     CascadeTraverser<FAR_SIDE, BASE_BOUND_SIDE> traverser(vsplit,
-							  splitSubIndex);
+                                                          splitSubIndex);
     
     while (traverser.goNext
-	   (BasicBoundTester<FAR_SIDE>
-	    (addInDirection<FAR_SIDE>(offsetP, nearestKnownL1Distance)))) {
+           (BasicBoundTester<FAR_SIDE>
+            (addInDirection<FAR_SIDE>(offsetP, nearestKnownL1Distance)))) {
       RangeTreeNode* node = traverser.getNode();
       BaseLevelSet* sub = getChild<NEAR_SIDE>(node)->lowerLevel_.bls;
       // fractional cascading - constant time lookup
       int index = traverser.getCurrentCascadedIndex();
       index = getCascadedSubIndex<NEAR_SIDE, BASE_BOUND_SIDE>
-	(node->lowerLevel_.bls, index, sub);
+        (node->lowerLevel_.bls, index, sub);
       TPoint* candidate =
-	getExtremePoint<BASE_BOUND_SIDE>(sub, index, directionIndex,
-					 numDiagDirections_);
+        getExtremePoint<BASE_BOUND_SIDE>(sub, index, directionIndex,
+                                         numDiagDirections_);
       setNearest(nearest, candidate, directionIndex, pL1Length,
-		 nearestKnownL1Distance);
+                 nearestKnownL1Distance);
     }
     if (traverser.getNode()->isLeaf())
       leafNode = traverser.getNode();
@@ -1742,7 +1742,7 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
   if (leafNode != 0 &&
       leafNode->isPointInDirection(p, diagonalDirections_[directionIndex], d)){
     setNearest(nearest, leafNode->point_, directionIndex, pL1Length,
-	       nearestKnownL1Distance);
+               nearestKnownL1Distance);
   }
 }
 
@@ -1750,14 +1750,14 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
 setNearest(TPoint*& nearest, TPoint* candidate, int directionIndex,
-	   const TPointElem& pL1Length, TPointElem& nearestKnownL1Distance)
+           const TPointElem& pL1Length, TPointElem& nearestKnownL1Distance)
 {
   if (candidate == 0)
     return;
 
   int* direction = diagonalDirections_[directionIndex];
   TPointElem candidateDistance = getL1MetricLength(candidate, direction,
-						  DIMENSIONS_) - pL1Length;
+                                                  DIMENSIONS_) - pL1Length;
 
   if (candidateDistance < nearestKnownL1Distance) {
     ASSERT(candidateDistance >= 0);

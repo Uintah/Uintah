@@ -64,6 +64,15 @@ class CoalGasDevol: public SourceTermBase {
 private:
   std::string m_rcmass_root;
   std::string _devol_model_name; 
+  const VarLabel* m_tar_src_label;
+  std::string m_tar_src_name;        ///< string name for tar src 
+  const VarLabel* m_devol_for_nox_src_label;
+  std::string m_devol_for_nox_src_name;        ///< string name for devol src used for nox 
+  const VarLabel* m_devol_bd_src_label;
+  std::string m_devol_bd_src_name;        ///< string name for bd src used in the nox model
+  double m_tarFrac;
+  double m_lightFrac;
+  double m_v_hiT;
   bool m_dest_flag;// flag indicating whether or not deposition mass will be added to the gas phase. 
 
 }; // end CoalGasDevol

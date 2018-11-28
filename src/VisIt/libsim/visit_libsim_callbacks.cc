@@ -293,38 +293,48 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     // visit_SimGetMetaData(cbdata);
     // visit_SimGetDomainList(nullptr, cbdata);
   }
-  else if(strcmp(cmd, "Save") == 0)
+  else if(strncmp(cmd, "Output", 6) == 0)
   {
     // Do not call unless the simulation is stopped or finished as it
     // will interfer with the task graph.
     if(sim->simMode == VISIT_SIMMODE_STOPPED ||
        sim->simMode == VISIT_SIMMODE_FINISHED)
     {
-      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Save", 0);
+      // Disable the button so to prevent outputing the same time step
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", cmd, 0);
 
+      // Do not allow out of order output files.
+      if( strlen(cmd) == 6 )
+        VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Output Previous", 0);
+        
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->outputTimeStep( sim->gridP, schedulerP );
+      output->outputTimeStep( sim->gridP, schedulerP, strlen(cmd) > 6 );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
                         "Can not save a timestep unless the simulation has "
                         "run for at least one time step and is stopped.", 0);
   }
-  else if(strcmp(cmd, "Checkpoint") == 0)
+  else if(strncmp(cmd, "Checkpoint", 10) == 0)
   {
     // Do not call unless the simulation is stopped or finished as it
     // will interfer with the task graph.
     if(sim->simMode == VISIT_SIMMODE_STOPPED ||
        sim->simMode == VISIT_SIMMODE_FINISHED)
     {
-      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Checkpoint", 0);
+      // Disable the button so to prevent checkpointing the same time step
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", cmd, 0);
 
+      // Do not allow out of order checkpoint files.
+      if( strlen(cmd) == 10 )
+        VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Checkpoint Previous", 0);
+        
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->checkpointTimeStep( sim->gridP, schedulerP );
+      output->checkpointTimeStep( sim->gridP, schedulerP, strlen(cmd) > 10 );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
@@ -340,14 +350,11 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     else
       sim->runMode = VISIT_SIMMODE_RUNNING;
   }
-  else if(strcmp(cmd, "Terminate") == 0)
+  else if(strcmp(cmd, "Terminate") == 0 ||
+	  strcmp(cmd, "Abort") == 0)
   {
     sim->runMode = VISIT_SIMMODE_RUNNING;
     sim->simMode = VISIT_SIMMODE_TERMINATED;
-
-    // Set the max time steps to the current time step so that the
-    // simulation controller will exit gracefully.
-    appInterface->setTimeStepsMax( sim->cycle );
 
     if(sim->isProc0)
     {
@@ -359,35 +366,15 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       DOUT( visitdbg, msg.str().c_str() );
 
       VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
+      VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
     }
 
-    // A hack because m_max_time_steps is checked only if it is
-    // greater than zero. So just abort as a nothing will have been
-    // computed.
-    if( sim->cycle == 0 )
+    if(strcmp(cmd, "Abort") == 0)
     {
       VisItDisconnect();
-      
+
       exit( 0 );
     }
-  }
-  else if(strcmp(cmd, "Abort") == 0)
-  {
-    if(sim->isProc0)
-    {
-      std::stringstream msg;      
-      msg << "Visit libsim - Aborting the simulation";
-      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-      VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
-
-      DOUT( visitdbg, msg.str().c_str() );
-
-      VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
-    }
-
-    VisItDisconnect();
-
-    exit( 0 );
   }
   else if(strcmp(cmd, "ActivateCustomUI") == 0 )
   {
@@ -568,7 +555,7 @@ void visit_SimTimeMaxCallback(char *val, void *cbdata)
   float oldValue = appInterface->getSimTimeMax();
   float newValue = atof(val);
 
-  if( newValue <= sim->time )
+  if( newValue <= appInterface->getSimTime() )
   {
     std::stringstream msg;
     msg << "Visit libsim - the value (" << newValue << ") for "
@@ -626,7 +613,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = appInterface->getDelTMin();
       double maxValue = appInterface->getDelTMax();
-      oldValue = sim->delt_next;
+      oldValue = appInterface->getNextDelT();
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -639,8 +626,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
         return;
       }
 
-      dw->override(delt_vartype(newValue), appInterface->getDelTLabel());
-      visit_VarModifiedMessage( sim, "DeltaTNext", oldValue, newValue );
+      appInterface->setNextDelT( newValue );
     }
     break;
   case 2:  // DeltaTFactor
@@ -1017,7 +1003,7 @@ void visit_ClampTimeToOutputCallback(int val, void *cbdata)
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
-  appInterface->setClampTimeToOutput( val );
+  appInterface->setSimTimeClampToOutput( val );
 }
 
 

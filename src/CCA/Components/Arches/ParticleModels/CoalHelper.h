@@ -33,6 +33,7 @@ namespace Uintah{
         double h_ch0;
         double h_a0;
         double ksi;
+        double Tar_fraction;
         double T_hemisphere;        ///< Ash hemispherical temperature
         double T_fluid;             ///< Ash fluid temperature
         double T_soft;              ///< Ash softening temperature
@@ -84,6 +85,7 @@ namespace Uintah{
             db_coal_props->require("char_enthalpy", _coal_db.h_ch0);
             db_coal_props->require("ash_enthalpy", _coal_db.h_a0);
             db_coal_props->getWithDefault( "ksi",_coal_db.ksi,1.0); // Fraction of the heat released by char oxidation that goes to the particle
+            db_coal_props->getWithDefault( "Tar_fraction",_coal_db.Tar_fraction,0.0); // Fraction of devol rate products that go to tar vs light off gases
 
             if ( db_coal_props->findBlock("ultimate_analysis")){
 

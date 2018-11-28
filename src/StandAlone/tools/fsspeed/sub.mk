@@ -48,7 +48,7 @@ LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)          \
           $(BOOST_LIBRARY)                             \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)     \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)      \
-          $(PAPI_LIBRARY) $(M_LIBRARY) $(PIDX_LIBRARY)
+          $(M_LIBRARY) $(PIDX_LIBRARY)
 
 
 include $(SCIRUN_SCRIPTS)/program.mk

@@ -24,6 +24,7 @@
 
 //----- Ray.cc ----------------------------------------------
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <CCA/Components/Arches/ArchesStatsEnum.h>
 
 #include <CCA/Ports/ApplicationInterface.h>
 
@@ -406,6 +407,9 @@ Ray::sched_rayTrace( const LevelP& level,
                      Task::WhichDW celltype_dw,
                      bool modifies_divQ )
 {
+  // Get the application so to record stats.
+  m_application = sched->getApplication();
+  
   string taskname = "Ray::rayTrace";
   Task *tsk = nullptr;
   
@@ -747,61 +751,72 @@ Ray::rayTrace( const ProcessorGroup* pg,
     //______________________________________________________________________
     //         S O L V E   D I V Q
     //______________________________________________________________________
-  if( d_solveDivQ){
+    if( d_solveDivQ){
 
     //__________________________________
     //
-    vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nDivQRays : 0);  // only needed for LHC scheme
+      vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nDivQRays : 0);  // only needed for LHC scheme
 
-    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      IntVector origin = *iter;
-      
-      // don't compute in intrusions and walls
-      if( celltype[origin] != d_flowCell ){
-        continue;
-      }
-
-      if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
-        randVector(rand_i, mTwister, origin);
-      }
-      double sumI = 0;
-      Point CC_pos = level->getCellPosition(origin);
-
-      // ray loop
-      for (int iRay=0; iRay < d_nDivQRays; iRay++){
-
-        Vector direction_vector;
-        if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){        // Latin-Hyper-Cube sampling
-          direction_vector =findRayDirectionHyperCube(mTwister, origin, iRay, rand_i[iRay],iRay );
-        }else{                                              // Naive Monte-Carlo sampling
-          direction_vector =findRayDirection(mTwister, origin, iRay );
+      for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        IntVector origin = *iter;
+        
+        // don't compute in intrusions and walls
+        if( celltype[origin] != d_flowCell ){
+          continue;
         }
-
-        Vector rayOrigin;
-        ray_Origin( mTwister, CC_pos, Dx, d_CCRays, rayOrigin);
-
-        updateSumI< T >( level, direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
-
-      }  // Ray loop
-
-      //__________________________________
-      //  Compute divQ
-      divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
-
-      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-      radiationVolq[origin] = 4.0 * M_PI * (sumI/d_nDivQRays) ;
-/*`==========TESTING==========*/
+        
+        if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
+          randVector(rand_i, mTwister, origin);
+        }
+        double sumI = 0;
+        Point CC_pos = level->getCellPosition(origin);
+        
+        // ray loop
+        for (int iRay=0; iRay < d_nDivQRays; iRay++){
+          
+          Vector direction_vector;
+          if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){        // Latin-Hyper-Cube sampling
+            direction_vector =findRayDirectionHyperCube(mTwister, origin, iRay, rand_i[iRay],iRay );
+          }else{                                              // Naive Monte-Carlo sampling
+            direction_vector =findRayDirection(mTwister, origin, iRay );
+          }
+          
+          Vector rayOrigin;
+          ray_Origin( mTwister, CC_pos, Dx, d_CCRays, rayOrigin);
+          
+          updateSumI< T >( level, direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+          
+        }  // Ray loop
+        
+        //__________________________________
+        //  Compute divQ
+        divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
+        
+        // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+        radiationVolq[origin] = 4.0 * M_PI * (sumI/d_nDivQRays) ;
+        /*`==========TESTING==========*/
 #if DEBUG == 1
-    if( isDbgCell(origin) ) {
+        if( isDbgCell(origin) ) {
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
-                    origin.x(), origin.y(), origin.z(), sumI,divQ[origin], radiationVolq[origin],abskg[origin], sigmaT4OverPi[origin]);
-    }
+                  origin.x(), origin.y(), origin.z(), sumI,divQ[origin], radiationVolq[origin],abskg[origin], sigmaT4OverPi[origin]);
+        }
 #endif
 /*===========TESTING==========`*/
-    }  // end cell iterator
-  }  // end of if(_solveDivQ)
-
+      }  // end cell iterator
+    }  // end of if(_solveDivQ)
+    
     timer.stop();
+    
+#ifdef ADD_PERFORMANCE_STATS
+    // Add in the patch stat, recording for each patch.
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime ] += timer().milliseconds();
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += size;
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += size / timer().seconds();
+    // For each stat recorded increment the count so to get a per patch value.
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );    
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize );
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency );
+#endif
     
     if (patch->getGridIndex() == 0) {
       cout << endl
@@ -833,7 +848,9 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
                                Task::WhichDW celltype_dw,
                                bool modifies_divQ )
 {
-
+  // Get the application so to record stats.
+  m_application = sched->getApplication();
+  
   int maxLevels = level->getGrid()->numLevels() - 1;
   int L_indx = level->getIndex();
 
@@ -1263,6 +1280,17 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     //
     timer.stop();
     
+#ifdef ADD_PERFORMANCE_STATS
+    // Add in the patch stat, recording for each patch.
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime ] += timer().milliseconds();
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += size;
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += size / timer().seconds();
+    // For each stat recorded increment the count so to get a per patch value.
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );    
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize );
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency );
+#endif
+
     if (finePatch->getGridIndex() == levelPatchID) {
       cout << endl
            << " RMCRT REPORT: Patch " << levelPatchID << endl
@@ -1630,10 +1658,10 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
+  m_application = sched->getApplication();
+  
   // Running with VisIt so add in the variables that the user can
   // modify.
-  ApplicationInterface* m_application = sched->getApplication();
-  
   if( m_application && m_application->getVisIt() && !initialized ) {
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name

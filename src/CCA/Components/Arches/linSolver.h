@@ -1,18 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #ifndef Uintah_Components_Arches_linSolver_h
 #define Uintah_Components_Arches_linSolver_h
 
@@ -49,13 +34,20 @@ public:
 
   //______________________________________________________________________/
   // Construct an instance of the Pressure solver.
-  linSolver(const MPMArchesLabel* mal,   PressureSolver* ps,  BoundaryCondition* bc , PhysicalConstants* pc,const int indx,const ArchesLabel* lab ) : 
+  linSolver(const MPMArchesLabel* mal,   PressureSolver* ps,  BoundaryCondition* bc , PhysicalConstants* pc,const int indx,const VarLabel*  VolFrac,
+                                                                                                                           const VarLabel*  CellType,
+                                                                                                                           const VarLabel*  A_m,
+                                                                                                                           const MaterialSet* f_matls
+                                                                                                                                                      ) : 
 d_MAlab(mal),
 d_pressureSolver(ps),
 d_boundaryCondition(bc),
 d_physicalConsts(pc),
 d_indx(indx),
-d_lab(lab)
+d_mmgasVolFracLabel(VolFrac),
+d_cellTypeLabel(CellType),
+d_presCoefPBLMLabel(A_m),
+d_matls(f_matls) 
 {
 }
 
@@ -267,8 +259,10 @@ cg_task4( const ProcessorGroup* pg,
   PhysicalConstants*  d_physicalConsts;
 
   int d_indx;             // Arches matl index.
-  const ArchesLabel* d_lab;
-
+  const VarLabel* d_mmgasVolFracLabel;
+  const VarLabel* d_cellTypeLabel;
+  const VarLabel* d_presCoefPBLMLabel;
+  const MaterialSet* d_matls;
 
 
 

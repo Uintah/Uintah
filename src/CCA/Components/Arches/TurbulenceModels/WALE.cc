@@ -130,7 +130,7 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_density_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_volFraction_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
-  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
   if (m_create_labels_IsI_t_viscosity) {
     register_variable( m_t_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, AFC::COMPUTES ,  variable_registry, time_substep );

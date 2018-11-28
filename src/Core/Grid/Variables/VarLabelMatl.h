@@ -83,10 +83,10 @@ template<class DomainType0, class DomainType1 = void> struct VarLabelMatl
   {
     if (label_->equals(other.label_)) {
       if (matlIndex_ == other.matlIndex_)
-	if ( domain0_ == other.domain0_)
-	  return domain1_ < other.domain1_;
-	else
-	  return domain0_ < other.domain0_;
+        if ( domain0_ == other.domain0_)
+          return domain1_ < other.domain1_;
+        else
+          return domain0_ < other.domain0_;
       else
         return matlIndex_ < other.matlIndex_;
     }

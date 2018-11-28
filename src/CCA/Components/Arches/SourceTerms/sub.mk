@@ -35,7 +35,7 @@ SRCS += \
          $(SRCDIR)/CoalGasOxiMom.cc            \
          $(SRCDIR)/HTConvection.cc             \
          $(SRCDIR)/ZZNoxSolid.cc               \
-         $(SRCDIR)/psNox.cc               \
+         $(SRCDIR)/psNox.cc                    \
          $(SRCDIR)/DORadiation.cc              \
          $(SRCDIR)/MomentumDragSrc.cc          \
          $(SRCDIR)/RMCRT.cc                    \
@@ -43,6 +43,8 @@ SRCS += \
          $(SRCDIR)/UnweightedSrcTerm.cc        \
          $(SRCDIR)/BowmanNOx.cc                \
          $(SRCDIR)/BrownSoot.cc                \
+         $(SRCDIR)/MoMICSoot.cc                \
+				 $(SRCDIR)/MonoSoot.cc								 \
          $(SRCDIR)/ConstSrcTerm.cc             \
          $(SRCDIR)/DissipationSource.cc        \
          $(SRCDIR)/Inject.cc                   \

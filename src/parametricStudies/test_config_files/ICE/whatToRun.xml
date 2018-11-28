@@ -1,0 +1,114 @@
+<config>
+<postProcessCmd_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone/tools/compare_mms:/home/harman/working_on/parametricStudies/comparisonUtils</postProcessCmd_path>
+
+<symbolicLinks>
+/usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs
+</symbolicLinks>
+
+<!--
+<test>
+  <name>Couette-Poiseuille</name>
+  <tst>Couette-Poiseuille_dx.tst</tst>
+</test>
+-->
+
+<!--__________________________________-->
+
+<test>
+  <name>advect_X_FO</name>
+  <tst>advectScalar1D_dx.tst</tst>
+</test>
+
+<test>
+  <name>advect_Y_FO</name>
+  <tst>advectScalar1D_dy.tst</tst>
+</test>
+
+<test>
+  <name>advect_Z_FO</name>
+  <tst>advectScalar1D_dz.tst</tst>
+</test>
+
+<!--__________________________________-->
+<!--
+<test>
+  <name>Rayleigh_dx</name>
+  <tst>rayleigh_dx.tst</tst>
+</test>
+
+<test>
+  <name>Rayleigh_dy</name>
+  <tst>rayleigh_dy.tst</tst>
+</test>
+
+<test>
+  <name>Rayleigh_dz</name>
+  <tst>rayleigh_dz.tst</tst>
+</test>
+-->
+
+<!--__________________________________-->
+
+<!--
+<test>
+  <name>CavityFlow_dx</name>
+  <tst>cavityFlow_dx.tst</tst>
+</test>
+
+<test>
+  <name>CavityFlow_dy</name>
+  <tst>cavityFlow_dy.tst</tst>
+</test>
+
+<test>
+  <name>CavityFlow_dz</name>
+  <tst>cavityFlow_dz.tst</tst>
+</test>
+
+<test>
+  <name>CavityFlow_Res</name>
+  <tst>cavityFlow_res.tst</tst>
+</test>
+-->
+
+<!--__________________________________-->
+<!--
+<test>  
+  <name>Lodi_pulse</name>
+  <tst>Lodi.tst</tst>
+</test>
+-->
+
+<!--__________________________________-->
+<!--
+<test>
+  <name>Test1</name>
+  <tst>riemann_dx.tst</tst>
+  <otherFilesToCopy>test1.in</otherFilesToCopy>
+</test>
+
+<test>
+  <name>Test2</name>
+  <tst>test2_dx.tst</tst>
+  <otherFilesToCopy>test2.in</otherFilesToCopy>
+</test>
+
+<test>
+  <name>Test3</name>
+  <tst>test3_dx.tst</tst>
+  <otherFilesToCopy>test3.in</otherFilesToCopy>
+</test>
+
+<test>
+  <name>Test4</name>
+  <tst>test4_dx.tst</tst>
+  <otherFilesToCopy>test4.in</otherFilesToCopy>
+</test>
+
+<test>
+  <name>MMS</name>
+  <tst>mms_dx.tst</tst>
+</test>
+
+-->
+</config>

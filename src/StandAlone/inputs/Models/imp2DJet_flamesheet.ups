@@ -15,13 +15,13 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            2          </maxTime>
+       <maxTime>            5          </maxTime>
        <initTime>           0.0        </initTime>
        <delt_min>           0.0        </delt_min>
        <delt_max>           1.e-2      </delt_max>
        <delt_init>          1.0e-7     </delt_init>
        <max_delt_increase>  0.5        </max_delt_increase>       
-       <max_initial_delt>   1.e-4      </max_initial_delt>
+       <delt_init>          1.e-4      </delt_init>
        <timestep_multiplier> 1        </timestep_multiplier>
    </Time>
    
@@ -128,7 +128,7 @@
               <lower>        [0,0,0]        </lower>
               <upper>        [1.0,2.0,0.04] </upper>
               <extraCells>   [1,1,1]        </extraCells>
-              <patches>      [1,1,1]        </patches>
+              <patches>      [2,4,1]        </patches>
               <resolution>   [50,100,1]     </resolution>
            </Box>
        </Level>
@@ -158,7 +158,7 @@
     <CFD>
        <cfl>0.1</cfl>
        <ICE>
-        <advection type = "FirstOrder" />
+        <advection type = "SecondOrder" />
          <TimeStepControl>
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.00         </knob_for_speedSound>

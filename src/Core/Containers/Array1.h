@@ -246,7 +246,7 @@ Array1<T>::Array1(int size, int gs, int asize)
       nalloc=0;
     }
   }
-}	
+}       
 
 template<class T>
 Array1<T>::~Array1()
@@ -266,7 +266,7 @@ void Array1<T>::grow(int count, int grow_size)
     T* newobjs=new T[newalloc];
     if(objs){
       for(int i=0;i<_size;i++){
-	newobjs[i]=objs[i];
+        newobjs[i]=objs[i];
       }
       delete[] objs;
     }
@@ -284,7 +284,7 @@ void Array1<T>::reserve(int n)
     T* newobjs=new T[n];
     if(objs){
       for(int i=0;i<_size;i++){
-	newobjs[i]=objs[i];
+        newobjs[i]=objs[i];
       }
       delete[] objs;
     }
@@ -337,10 +337,10 @@ void Array1<T>::setsize(int newsize)
     T* newobjs=new T[newsize];     // make it exact!
     if (objs) {
       for(int i=0;i<_size;i++){
-	newobjs[i]=objs[i];
+        newobjs[i]=objs[i];
       }
       delete[] objs;
-    }		
+    }           
     objs = newobjs;
     nalloc = newsize;
       
@@ -364,7 +364,7 @@ void Array1<T>::trim(int newsize)
     }
     // Delete the old bit of memory
     delete[] objs;
-  }		
+  }             
   objs = newobjs;
   nalloc = newsize;
 }

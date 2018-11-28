@@ -180,7 +180,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params,
 
   db->getWithDefault("filter_divergence_constraint",d_filter_divergence_constraint,false);
 
-  d_source = scinew Source(d_physicalConsts);
+  d_source = scinew Source(d_physicalConsts, d_boundaryCondition);
 
   // New Source terms (ala the new transport eqn):
   if (db->findBlock("src")){
@@ -358,7 +358,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
   simTime_vartype simTime;
   old_dw->get(simTime, d_lab->d_simulationTimeLabel );
-  
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -417,13 +417,6 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
       d_rhsSolver->calculateVelocity(patch, delta_t, cellinfo, &velocityVars,
                                      constVelocityVars.density, constVelocityVars.pressure, volFraction);
     }
-
-    //intrusions:
-    bool set_nonnormal_values = false; // Because this is post projection. Non-normal bc_values
-                                       // must be subject to the projection.
-    d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat, velocityVars.vVelRhoHat,
-                                                     velocityVars.wVelRhoHat, constVelocityVars.density,
-                                                     set_nonnormal_values );
 
     // boundary condition
     Patch::FaceType mface = Patch::xminus;
@@ -501,7 +494,7 @@ void MomentumSolver::solveVelHat(const LevelP& level,
   // Running with VisIt so add in the variables that the user can
   // modify.
   ApplicationInterface* m_application = sched->getApplication();
-  
+
   if( m_application && m_application->getVisIt() && !initialized ) {
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name
@@ -845,7 +838,9 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     d_discretize->calculateVelocityCoeff( patch,
                                           delta_t, d_central,
                                           cellinfo, &velocityVars,
-                                          &constVelocityVars, &volFraction, &conv_scheme_x, &conv_scheme_y, &conv_scheme_z, d_conv_scheme,
+                                          &constVelocityVars, &volFraction,
+                                          &conv_scheme_x, &conv_scheme_y,
+                                          &conv_scheme_z, d_conv_scheme,
                                           d_re_limit );
 
     //  //__________________________________
@@ -1137,6 +1132,15 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     //  d_source->modifyVelMassSource(patch, volFraction,
     //                                &velocityVars, &constVelocityVars);
 
+    d_boundaryCondition->addIntrusionMomRHS( patch,
+                                             constVelocityVars.uVelocity,
+                                             constVelocityVars.vVelocity,
+                                             constVelocityVars.wVelocity,
+                                             velocityVars.uVelNonlinearSrc,
+                                             velocityVars.vVelNonlinearSrc,
+                                             velocityVars.wVelNonlinearSrc,
+                                             constVelocityVars.density );
+
     d_discretize->calculateVelDiagonal(patch,&velocityVars);
 
     if (d_MAlab) {
@@ -1148,17 +1152,9 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                        cellinfo, &velocityVars, &constVelocityVars, volFraction);
     }
 
-    bool set_nonnormal_values = true;
-    d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat,
-                                                     velocityVars.vVelRhoHat, velocityVars.wVelRhoHat,
-                                                     constVelocityVars.new_density,
-                                                     set_nonnormal_values );
-
-
-
     double time_shift =
       delta_t * timelabels->time_position_multiplier_before_average;
-    
+
     d_boundaryCondition->velRhoHatInletBC(patch,
                                           &velocityVars, &constVelocityVars,
                                           indx,
@@ -1318,10 +1314,6 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
                                                         indx,
                                                         new_uvel, new_vvel, new_wvel,
                                                         old_uvel, old_vvel, old_wvel );
-
-    bool set_nonnormal_values = true;
-    d_boundaryCondition->setHattedIntrusionVelocity( patch, new_uvel, new_vvel, new_wvel,
-                                                     new_density, set_nonnormal_values );
 
   }  // patches
 }

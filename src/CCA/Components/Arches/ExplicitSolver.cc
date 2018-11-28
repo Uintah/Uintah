@@ -111,6 +111,7 @@
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/ArchesStatsEnum.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/MomentumSolver.h>
@@ -135,7 +136,10 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <CCA/Components/Arches/Filter.h>
+
+#include <sci_defs/visit_defs.h>
 
 #include <cmath>
 
@@ -154,7 +158,7 @@ ExplicitSolver(MaterialManagerP& materialManager,
                const ProcessorGroup* myworld,
                ArchesParticlesHelper* particle_helper,
                SolverInterface* hypreSolver,
-               const ApplicationCommon* arches ):
+               ApplicationCommon* arches ):
                NonlinearSolver(myworld, arches),
                d_materialManager(materialManager),
                d_MAlab(MAlb),
@@ -194,7 +198,6 @@ ExplicitSolver(MaterialManagerP& materialManager,
   d_cqmomSource = 0;
   d_cqmomSolver = 0;
   d_cqmomConvect = 0;
-
 }
 
 // ****************************************************************************
@@ -260,15 +263,32 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
         std::string src_type = "";
         rad_src_ps->getAttribute("type", src_type);
         if (src_type == "do_radiation" || src_type == "rmcrt_radiation" ){
+
+          // Tell the infrastructure that two tasksgraphs will be used.
+          d_perform_radiation = true;
+          m_arches->getScheduler()->setNumTaskGraphs( 2 );
+          
           rad_src_ps->require("calc_frequency", d_rad_calc_frequency);
-          d_num_taskgraphs=2;
-          break;
+
+          // Check to see if the dynamic frequency radiation solve
+          // should be used.
+          if(1 < d_rad_calc_frequency &&
+             rad_src_ps->findBlock("use_dynamic_frequency") != nullptr) {
+            d_dynamicSolveFrequency = true;
+          }
+          
+          if (src_type == "do_radiation" ) {
+            m_arches->getApplicationStats().insert( (ApplicationCommon::ApplicationStatsEnum) DORadiationTime,   std::string("DO_Radiation_Time"),   "seconds" );
+            m_arches->getApplicationStats().insert( (ApplicationCommon::ApplicationStatsEnum) DORadiationSweeps, std::string("DO_Radiation_Sweeps"), "sweeps"  );
+            m_arches->getApplicationStats().insert( (ApplicationCommon::ApplicationStatsEnum) DORadiationBands,  std::string("DO_Radiation_Bands"),  "bands"   );
+          }
+
+  break;
         }
         rad_src_ps = rad_src_ps->findNextBlock("src");
       }
     }
   }
-
 
   ProblemSpecP db_es = params->findBlock("ExplicitSolver");
   ProblemSpecP db = params;
@@ -880,6 +900,24 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     d_solvability = true;
   }
 
+#ifdef HAVE_VISIT
+
+#define IGNORE_LEVEL -2
+    
+    static bool initialized = false;
+
+    if( m_arches->getVisIt() && !initialized ) {
+      ApplicationInterface::analysisVar aVar;
+      aVar.component = "Arches/ExplicitSolver";
+      aVar.name  = d_lab->d_totalKineticEnergyLabel->getName();
+      aVar.matl  = -1; // Ignore the material
+      aVar.level = IGNORE_LEVEL;
+      aVar.labels.push_back( d_lab->d_totalKineticEnergyLabel );
+      m_arches->getAnalysisVars().push_back(aVar);
+
+      initialized = true;
+    }
+#endif
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -916,7 +954,6 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
 
   tsk->computes(d_lab->d_delTLabel,level.get_rep());
 
-#ifdef OUTPUT_WITH_BAD_DELTA_T
   // This method is called at both initialization and
   // otherwise. At initialization the old DW, i.e. DW(0) will not
   // exist so require the value from the new DW.  Otherwise for a
@@ -928,6 +965,7 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
     tsk->requires( Task::NewDW, VarLabel::find(timeStep_name) );
   }
 
+#ifdef OUTPUT_WITH_BAD_DELTA_T
   // For when delta T goes below a value output and checkpoint
   tsk->computes( VarLabel::find(    outputTimeStep_name) );
   tsk->computes( VarLabel::find(checkpointTimeStep_name) );
@@ -936,6 +974,12 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 
+  // When restarting with radiation compute the next task graph index
+  // using a fixed time stepping. Not used when doing dynamic time
+  // stepping.
+  if( d_perform_radiation && !d_dynamicSolveFrequency ) {
+    sched_computeTaskGraphIndex( level, sched );
+  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -946,12 +990,24 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
+  // This method is called at both initialization and otherwise. At
+  // initialization the old DW will not exist so get the value from
+  // the new DW.  Otherwise for a normal time step get the time step
+  // from the old DW.
+  timeStep_vartype timeStep(0);
+
+  if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
+    old_dw->get(timeStep, VarLabel::find(timeStep_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
+    new_dw->get(timeStep, VarLabel::find(timeStep_name) );
+
   const Level* level = getLevel(patches);
   // You have to compute it on every level but
   // only computethe real delT on the archesLevel
   if( level->getIndex() == d_archesLevelIndex ) {
 
     for (int p = 0; p < patches->size(); p++) {
+
       const Patch* patch = patches->get(p);
       int archIndex = 0; // only one arches material
       int indx = d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
@@ -1056,7 +1112,7 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
 
             tmp_time=1.0;
             if (flag != false) {
-              tmp_time=Abs(uvel)/(DX.x())+
+              tmp_time= Abs(uvel)/(DX.x())+
                         Abs(vvel)/(DX.y())+
                         Abs(wvel)/(DX.z())+
                         (visc[currCell]/den[currCell])*
@@ -1067,11 +1123,20 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
             }
 
             delta_t2=Min(1.0/tmp_time, delta_t2);
+
           }
         }
       }
 
+      //Check intrusion velocities:
+      Vector max_intrusion_vel = d_boundaryCondition->getMaxIntrusionVelocity(level);
+      double tmp_time= Abs(max_intrusion_vel.x())/(DX.x())+
+                       Abs(max_intrusion_vel.y())/(DX.y())+
+                       Abs(max_intrusion_vel.z())/(DX.z())+small_num;
+      delta_t2=Min(1.0/tmp_time, delta_t2);
+
       if (d_underflow) {
+
         indexLow = patch->getFortranCellLowIndex();
         indexHigh = patch->getFortranCellHighIndex();
 
@@ -1106,22 +1171,10 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
         }
       }
 
-
       delta_t = delta_t2;
       new_dw->put(delt_vartype(delta_t), d_lab->d_delTLabel, level);
 
 #ifdef OUTPUT_WITH_BAD_DELTA_T
-      // This method is called at both initialization and otherwise. At
-      // initialization the old DW will not exist so get the value from
-      // the new DW.  Otherwise for a normal time step get the time step
-      // from the old DW.
-      timeStep_vartype timeStep(0);
-
-      if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
-        old_dw->get(timeStep, VarLabel::find(timeStep_name) );
-      else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
-        new_dw->get(timeStep, VarLabel::find(timeStep_name) );
-      
       // If after the first 10 time steps delta T goes below this
       // value immediately output and checkpoint. Then end the simulation.
       if( 10 < timeStep && delta_t <= 0.01 )
@@ -1130,15 +1183,72 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
         new_dw->put( bool_or_vartype(true), VarLabel::find(checkpointTimeStep_name) );
         new_dw->put( bool_or_vartype(true), VarLabel::find(     endSimulation_name) );
       }
-#endif      
+#endif
     }
   } else { // if not on the arches level
 
-    new_dw->put(delt_vartype(9e99), d_lab->d_delTLabel,level);
+    new_dw->put(delt_vartype(9e99), d_lab->d_delTLabel, level);
 
   }
 }
 
+//--------------------------------------------------------------------------------------------------
+void
+ExplicitSolver::sched_computeTaskGraphIndex(const LevelP& level, SchedulerP& sched)
+{
+  // This is done ONLY for the finest level as to put a fake
+  // dependency on the new delta T.
+  if ( !level->hasFinerLevel() ) {
+    Task* task = scinew Task( "ExplicitSolver::computeTaskGraphIndex",this,
+                              &ExplicitSolver::computeTaskGraphIndex);
+    
+    task->setType(Task::OncePerProc);
+    
+    // This method is called at both initialization and otherwise. At
+    // initialization the old DW, i.e. DW(0) will not exist so require
+    // the value from the new DW.  Otherwise for a normal time step
+    // require the time step from the old DW.
+    if(sched->get_dw(0) ) {
+      task->requires( Task::OldDW, VarLabel::find(timeStep_name) );
+    }
+    else if(sched->get_dw(1) ) {
+      task->requires( Task::NewDW, VarLabel::find(timeStep_name) );
+    }
+    
+    task->requires(Task::NewDW, d_lab->d_delTLabel, level.get_rep());
+    
+    const PatchSet* perProcPatchSet = sched->getLoadBalancer()->getPerProcessorPatchSet( level->getGrid() );
+    
+    sched->addTask(task, perProcPatchSet, d_materialManager->allMaterials());
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+ExplicitSolver::computeTaskGraphIndex(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset*,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
+{
+  // This method is called at both initialization and otherwise. At
+  // initialization the old DW will not exist so get the value from
+  // the new DW.  Otherwise for a normal time step get the time step
+  // from the old DW.
+  timeStep_vartype timeStep(0);
+
+  if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
+    old_dw->get(timeStep, VarLabel::find(timeStep_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
+    new_dw->get(timeStep, VarLabel::find(timeStep_name) );
+
+  // Calculate the task graph index to be used on the NEXT time step.
+  m_arches->setTaskGraphIndex(((timeStep+1) % d_rad_calc_frequency == 0) ?
+                              1 :  // RMCRTCommon::TG_RMCRT :
+                              0 ); // RMCRTCommon::TG_CARRY_FORWARD);
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 ExplicitSolver::sched_initialize( const LevelP& level,
                                   SchedulerP & sched,
@@ -1177,9 +1287,9 @@ ExplicitSolver::sched_initialize( const LevelP& level,
     const bool dont_pack_tasks = false;
     TaskFactoryBase::TaskMap all_tasks;
 
-//utility factory
-// _task_factory_map["utility_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
-_task_factory_map["utility_factory"]->schedule_task_group( "base_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+    //utility factory
+    // _task_factory_map["utility_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+    _task_factory_map["utility_factory"]->schedule_task_group( "base_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
     //transport factory
     //  initialize
@@ -1335,7 +1445,6 @@ _task_factory_map["utility_factory"]->schedule_task_group( "base_tasks", TaskInt
     // Utility Factory : Balance Terms computation
     _task_factory_map["utility_factory"]->schedule_task_group( "mass_flow_rate", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
   }
-
 }
 
 void
@@ -1399,7 +1508,6 @@ sched->addTask(tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( 
 void
 ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 {
-
   bool doingRestart = true;
 
   const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
@@ -1469,6 +1577,12 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
 
   }
 
+  // When running with radiation compute the next task graph index
+  // using a fixed time stepping. Not used when doing dynamic time
+  // stepping.
+  if( d_perform_radiation && !d_dynamicSolveFrequency ) {
+    sched_computeTaskGraphIndex( level, sched );
+  }
 }
 
 void
@@ -1989,10 +2103,10 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
     // STAGE 0
     //these equations use a density guess
 
-    sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
+    sched_saveTempCopies( sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
-    sched_getDensityGuess(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level]);
+    sched_getDensityGuess( sched, patches, matls,
+                           d_timeIntegratorLabels[curr_level] );
 
     //------------------ New Task Interface (start) ------------------------------------------------
     // i_property_models->second->schedule_task_group("density_predictor", TaskInterface::TIMESTEP_EVAL,
@@ -2050,7 +2164,6 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
     i_property_models->second->schedule_task_group("pre_table_post_iv_update", TaskInterface::TIMESTEP_EVAL,
       dont_pack_tasks, level, sched, matls, curr_level );
     //------------------ New Task Interface (end) ------------------------------------------------
-
 
     //1st TABLE LOOKUP
     bool initialize_it  = false;
@@ -3088,9 +3201,9 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
-
-
+  tsk->requires(Task::NewDW, d_lab->d_volFractionLabel,   gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+
 
   //__________________________________
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
@@ -3147,12 +3260,14 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    Vector Dx = patch->dCell();
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_materialManager->
                      getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> densityGuess;
     constCCVariable<double> density;
+    constCCVariable<double> volFraction;
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
@@ -3161,6 +3276,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
+
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values){
@@ -3181,6 +3297,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;
 
     new_dw->get(density,   d_lab->d_densityCPLabel,     indx,patch, gac, 1);
+    new_dw->get(volFraction  ,   d_lab->d_volFractionLabel, indx,patch, gac, 1);
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx,patch, gaf, 1);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx,patch, gaf, 1);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx,patch, gaf, 1);
@@ -3215,36 +3332,42 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 
-          IntVector currCell   = *iter;
-          IntVector xplusCell  = *iter + IntVector(1,0,0);
-          IntVector xminusCell = *iter + IntVector(-1,0,0);
-          IntVector yplusCell  = *iter + IntVector(0,1,0);
-          IntVector yminusCell = *iter + IntVector(0,-1,0);
-          IntVector zplusCell  = *iter + IntVector(0,0,1);
-          IntVector zminusCell = *iter + IntVector(0,0,-1);
+          IntVector c   = *iter;
+          IntVector cxp  = *iter + IntVector(1,0,0);
+          IntVector cxm = *iter + IntVector(-1,0,0);
+          IntVector cyp  = *iter + IntVector(0,1,0);
+          IntVector cym = *iter + IntVector(0,-1,0);
+          IntVector czp  = *iter + IntVector(0,0,1);
+          IntVector czm = *iter + IntVector(0,0,-1);
 
-          densityGuess[currCell] -= delta_t * 0.5* (
-          ((density[currCell]+density[xplusCell])*uVelocity[xplusCell] -
-           (density[currCell]+density[xminusCell])*uVelocity[currCell]) /
-          cellinfo->sew[currCell.x()] +
-          ((density[currCell]+density[yplusCell])*vVelocity[yplusCell] -
-           (density[currCell]+density[yminusCell])*vVelocity[currCell]) /
-          cellinfo->sns[currCell.y()] +
-          ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
-           (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
-          cellinfo->stb[currCell.z()]);
+          double epsE = volFraction[c]*volFraction[cxp] < 1. ? 0 : 1;
+          double epsW = volFraction[c]*volFraction[cxm] < 1. ? 0 : 1;
+          double epsN = volFraction[c]*volFraction[cyp] < 1. ? 0 : 1;
+          double epsS = volFraction[c]*volFraction[cym] < 1. ? 0 : 1;
+          double epsT = volFraction[c]*volFraction[czp] < 1. ? 0 : 1;
+          double epsB = volFraction[c]*volFraction[czm] < 1. ? 0 : 1;
 
-          for ( std::vector<constCCVariable<double> >::iterator viter = src_values.begin(); viter != src_values.end(); viter++ ){
+          densityGuess[c] -= delta_t * 0.5* (
+          ((density[c]+density[cxp])*uVelocity[cxp]*epsE -
+           (density[c]+density[cxm])*uVelocity[c]*epsW) / cellinfo->sew[c.x()] +
+          ((density[c]+density[cyp])*vVelocity[cyp]*epsN -
+           (density[c]+density[cym])*vVelocity[c]*epsS) / cellinfo->sns[c.y()] +
+          ((density[c]+density[czp])*wVelocity[czp]*epsT -
+           (density[c]+density[czm])*wVelocity[c]*epsB) / cellinfo->stb[c.z()]);
 
-            densityGuess[currCell] += delta_t*((*viter)[currCell]);
+          for ( std::vector<constCCVariable<double> >::iterator viter = src_values.begin();
+            viter != src_values.end(); viter++ ){
+
+            densityGuess[c] += delta_t*((*viter)[c]);
 
           }
 
-          if (densityGuess[currCell] < 0.0 && d_noisyDensityGuess) {
-            proc0cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
+          if (densityGuess[c] < 0.0 && d_noisyDensityGuess) {
+            proc0cout << "Negative density guess occured at " << c
+              << " with a value of " << densityGuess[c] << endl;
             negativeDensityGuess = 1.0;
           }
-          else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess)) {
+          else if (densityGuess[c] < 0.0 && !(d_noisyDensityGuess)) {
             negativeDensityGuess = 1.0;
           }
         }
@@ -3253,34 +3376,65 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 
-          IntVector currCell   = *iter;
-          IntVector xplusCell  = *iter + IntVector(1,0,0);
-          IntVector xminusCell = *iter + IntVector(-1,0,0);
-          IntVector yplusCell  = *iter + IntVector(0,1,0);
-          IntVector yminusCell = *iter + IntVector(0,-1,0);
-          IntVector zplusCell  = *iter + IntVector(0,0,1);
-          IntVector zminusCell = *iter + IntVector(0,0,-1);
+          IntVector c   = *iter;
+          IntVector cxp  = *iter + IntVector(1,0,0);
+          IntVector cxm = *iter + IntVector(-1,0,0);
+          IntVector cyp  = *iter + IntVector(0,1,0);
+          IntVector cym = *iter + IntVector(0,-1,0);
+          IntVector czp  = *iter + IntVector(0,0,1);
+          IntVector czm = *iter + IntVector(0,0,-1);
 
-          densityGuess[currCell] -= delta_t * 0.5* (
-          ((density[currCell]+density[xplusCell])*uVelocity[xplusCell] -
-           (density[currCell]+density[xminusCell])*uVelocity[currCell]) /
-          cellinfo->sew[currCell.x()] +
-          ((density[currCell]+density[yplusCell])*vVelocity[yplusCell] -
-           (density[currCell]+density[yminusCell])*vVelocity[currCell]) /
-          cellinfo->sns[currCell.y()] +
-          ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
-           (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
-          cellinfo->stb[currCell.z()]);
+          double epsE = volFraction[c]*volFraction[cxp] < 1. ? 0 : 1;
+          double epsW = volFraction[c]*volFraction[cxm] < 1. ? 0 : 1;
+          double epsN = volFraction[c]*volFraction[cyp] < 1. ? 0 : 1;
+          double epsS = volFraction[c]*volFraction[cym] < 1. ? 0 : 1;
+          double epsT = volFraction[c]*volFraction[czp] < 1. ? 0 : 1;
+          double epsB = volFraction[c]*volFraction[czm] < 1. ? 0 : 1;
 
-          if (densityGuess[currCell] < 0.0 && d_noisyDensityGuess) {
-            cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
+          densityGuess[c] -= delta_t * 0.5* (
+          ((density[c]+density[cxp])*uVelocity[cxp]*epsE -
+           (density[c]+density[cxm])*uVelocity[c]*epsW) / cellinfo->sew[c.x()] +
+          ((density[c]+density[cyp])*vVelocity[cyp]*epsN -
+           (density[c]+density[cym])*vVelocity[c]*epsS) / cellinfo->sns[c.y()] +
+          ((density[c]+density[czp])*wVelocity[czp]*epsT -
+           (density[c]+density[czm])*wVelocity[c]*epsB) / cellinfo->stb[c.z()]);
+
+          if (densityGuess[c] < 0.0 && d_noisyDensityGuess) {
+            cout << "Negative density guess occured at " << c
+              << " with a value of " << densityGuess[c] << endl;
+            negativeDensityGuess = 1.0;
+          } else if (densityGuess[c] < 0.0 && !(d_noisyDensityGuess) && cellType[c] == -1 ) {
             negativeDensityGuess = 1.0;
           }
-          else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess) && cellType[currCell] == -1 ) {
-            negativeDensityGuess = 1.0;
-          }
+
         }
       }
+
+      // For intrusion inlets:
+      if ( d_boundaryCondition->is_using_new_intrusion() ){
+        
+        CCVariable<double> mass_src;
+        new_dw->allocateTemporary(mass_src, patch);
+        mass_src.initialize(0.0);
+        d_boundaryCondition->addIntrusionMassRHS(patch, mass_src);
+        double vol = Dx.x() * Dx.y() * Dx.z();
+
+        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+
+          IntVector c = *iter;
+          densityGuess[c] += delta_t / vol * mass_src[c] * volFraction[c];
+
+          if (densityGuess[c] < 0.0 && d_noisyDensityGuess) {
+            cout << "Negative density guess occured at " << c
+              << " with a value of " << densityGuess[c] << endl;
+            negativeDensityGuess = 1.0;
+          } else if (densityGuess[c] < 0.0 && !(d_noisyDensityGuess) && cellType[c] == -1 ) {
+            negativeDensityGuess = 1.0;
+          }
+
+        }
+      }
+      //-------------------
 
       std::vector<BoundaryCondition::BC_TYPE> bc_types;
       bc_types.push_back( BoundaryCondition::OUTLET );
@@ -4627,6 +4781,21 @@ ExplicitSolver::setupBoundaryConditions( const LevelP& level,
     d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 1, true );
 
     d_turbModel->sched_computeFilterVol( sched, level, matls );
-
   }
+}
+
+// An optional call for the application to check their reduction vars.
+void
+ExplicitSolver::checkReductionVars( const ProcessorGroup * pg,
+                                    const PatchSubset    * patches,
+                                    const MaterialSubset * matls,
+                                          DataWarehouse  * old_dw,
+                                          DataWarehouse  * new_dw )
+{
+    //SourceTermFactory& srcFactory = SourceTermFactory::self();
+    //SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
+    //for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
+      //SourceTermBase* src = isrc->second;
+      //src->checkReductionVars( pg, patches, matls, old_dw, new_dw );
+    //}
 }

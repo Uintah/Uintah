@@ -35,14 +35,15 @@ namespace Uintah {
 
   ostream& operator<<(ostream& out, const Uintah::PatchSet& ps)
   {
-    if(&ps == 0)
+    if( &ps == 0 )
       out << "(null PatchSet)";
     else {
       out << "Patches: {";
       for(int i=0;i<ps.size();i++){
         const PatchSubset* pss = ps.getSubset(i);
-        if(i != 0)
+        if(i != 0) {
           out << ", ";
+        }
         out << *pss;
       }
       out << "}";
@@ -58,27 +59,11 @@ namespace Uintah {
     else {
       out << "{";
       for(int j=0;j<pss.size();j++){
-        if(j != 0)
+        if(j != 0) {
           out << ",";
+        }
         const Patch* patch = pss.get(j);
         out << patch->getID();
-      }
-      out << "}";
-    }
-    return out;
-  }
-
-  ostream& operator<<(ostream& out, const Uintah::MaterialSubset& mss)
-  {
-    if( &mss == 0 ) {
-      out << "(null MaterialSubset)";
-    }
-    else {
-      out << "{";
-      for(int j=0;j<mss.size();j++){
-        if(j != 0)
-          out << ",";
-        out << mss.get(j);
       }
       out << "}";
     }
@@ -98,6 +83,24 @@ namespace Uintah {
           out << ", ";
         }
         out << *mss;
+      }
+      out << "}";
+    }
+    return out;
+  }
+
+  ostream& operator<<(ostream& out, const Uintah::MaterialSubset& mss)
+  {
+    if( &mss == 0 ) {
+      out << "(null MaterialSubset)";
+    }
+    else {
+      out << "{";
+      for(int j=0;j<mss.size();j++){
+        if(j != 0) {
+          out << ",";
+        }
+        out << mss.get(j);
       }
       out << "}";
     }

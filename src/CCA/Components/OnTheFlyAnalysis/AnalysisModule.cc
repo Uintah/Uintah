@@ -35,6 +35,10 @@ using namespace Uintah;
 
 // NOTE: UintahParallelComponent is noramlly called with the ProcessorGroup
 
+int m_numTaskgraphs = 0;
+
+//______________________________________________________________________
+//
 AnalysisModule::AnalysisModule( const ProcessorGroup* myworld,
                                 const MaterialManagerP materialManager,
                                 const ProblemSpecP& module_spec ) :
@@ -56,15 +60,20 @@ AnalysisModule::AnalysisModule( const ProcessorGroup* myworld,
     VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
   nonconstDelT->allowMultipleComputes();
   m_delTLabel = nonconstDelT;
+  
+  
 }
-
+//______________________________________________________________________
+//
 AnalysisModule::~AnalysisModule()
 {
   VarLabel::destroy(m_timeStepLabel);
   VarLabel::destroy(m_simulationTimeLabel);
   VarLabel::destroy(m_delTLabel);
 }
-    
+
+//______________________________________________________________________
+//    
 void AnalysisModule::setComponents( ApplicationInterface *comp )
 {
   ApplicationInterface * parent = dynamic_cast<ApplicationInterface*>( comp );
@@ -75,7 +84,8 @@ void AnalysisModule::setComponents( ApplicationInterface *comp )
 
   getComponents();
 }
-
+//______________________________________________________________________
+//
 void AnalysisModule::getComponents()
 {
   m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
@@ -96,7 +106,8 @@ void AnalysisModule::getComponents()
     throw InternalError("dynamic_cast of 'm_output' failed!", __FILE__, __LINE__);
   }
 }
-
+//______________________________________________________________________
+//
 void AnalysisModule::releaseComponents()
 {
   releasePort( "application" );
@@ -107,4 +118,3 @@ void AnalysisModule::releaseComponents()
   m_scheduler    = nullptr;
   m_output       = nullptr;
 }
-

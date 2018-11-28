@@ -102,14 +102,14 @@ public:
   friend inline Point Max(const Point&, const Point&);
   friend Point Interpolate(const Point&, const Point&, double);
   friend Point AffineCombination(const Point&, double,
-					      const Point&, double,
-					      const Point&, double,
-					      const Point&, double);
+                                              const Point&, double,
+                                              const Point&, double,
+                                              const Point&, double);
   friend Point AffineCombination(const Point&, double,
-					      const Point&, double,
-					      const Point&, double);
+                                              const Point&, double,
+                                              const Point&, double);
   friend Point AffineCombination(const Point&, double,
-					      const Point&, double);
+                                              const Point&, double);
 
 
 
@@ -246,11 +246,11 @@ inline Point Point::operator/(const double d) const
 }
 
 inline double& Point::operator()(int idx) {
-	return (&x_)[idx];
+        return (&x_)[idx];
 }
 
 inline double Point::operator()(int idx) const {
-	return (&x_)[idx];
+        return (&x_)[idx];
 }
 
 inline void Point::addscaled(const Point& p, const double scale) {

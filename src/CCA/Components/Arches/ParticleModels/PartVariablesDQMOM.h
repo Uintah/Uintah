@@ -5,7 +5,7 @@
 
 namespace Uintah{
 
-  class PartVariablesDQMOM : public TaskInterface { 
+  class PartVariablesDQMOM : public TaskInterface {
 
 public:
 
@@ -32,22 +32,24 @@ public:
 
     void create_local_labels();
 
+    void computeSurfaceAreaFraction( const Patch* patch, ArchesTaskInfoManager* tsk_info ); 
+
 
     //Build instructions for this (PartVariablesDQMOM) class.
     class Builder : public TaskInterface::TaskBuilder {
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       PartVariablesDQMOM* build()
-      { return scinew PartVariablesDQMOM( _task_name, _matl_index ); }
+      { return scinew PartVariablesDQMOM( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
     };
 
@@ -56,6 +58,7 @@ private:
     int m_Nenv;
     std::string m_length_root;
     std::string m_number_density_name;
+    std::string m_area_sum_name{"DQMOMAreaSum"};
     std::string m_surfAreaF_root;
 
 
