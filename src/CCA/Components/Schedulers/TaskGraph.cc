@@ -485,7 +485,19 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       // OncePerProc tasks - only create OncePerProc tasks and output tasks once on each processor.
       if (task->getType() == Task::OncePerProc || task->getType() == Task::Hypre) {
         // only schedule this task on processors in the neighborhood
-        const std::unordered_set<int> neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
+
+        // NOTE THE MAP::AT METHOD NEEDS TO BE SAFEGUARDED. Is it
+        // reasonable to set neighborhood_procs = local_procs when it
+        // fails??
+        std::unordered_set<int> neighborhood_procs;
+        if( task->m_max_ghost_cells.find(levelID) != task->m_max_ghost_cells.end() ) {
+          neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
+        } else {
+          DOUTALL( true, "*********** Bad level ID " << levelID );
+
+          neighborhood_procs = local_procs;
+        }
+
         for (auto p = neighborhood_procs.begin(); p != neighborhood_procs.end(); ++p) {
           const PatchSubset* pss = ps->getSubset(*p);
           for (int m = 0; m < ms->size(); m++) {
@@ -526,10 +538,24 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
 
           // Still make sure we have an entry for this task on this level.
           // Some tasks can go into the task graph without any requires, modifies, or computes.
-          bool search_distal_requires = false;
+          bool search_distal_requires;
+
           for (auto kv : task->m_max_ghost_cells) {
             int levelIDTemp = kv.first;
-            search_distal_requires = (task->m_max_ghost_cells.at(levelIDTemp) >= MAX_HALO_DEPTH);
+
+            // NOTE THE MAP::AT METHOD NEEDS TO BE SAFEGUARDED. Is it
+            // reasonable to set search_distal_requires = false when
+            // it fails??
+
+	    // This looping should never fail as it is a loop through
+	    // the map.
+            if(task->m_max_ghost_cells.find(levelIDTemp) != task->m_max_ghost_cells.end()) {
+              search_distal_requires = (task->m_max_ghost_cells.at(levelIDTemp) >= MAX_HALO_DEPTH);
+            } else {
+              search_distal_requires = false;
+
+              DOUTALL( true, "*********** Bad level ID " << levelIDTemp );
+            }
 
             DOUT(g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " for: " << task->getName() << " on level: " << levelIDTemp
                                                   << " with task max ghost cells: "<< task->m_max_ghost_cells.at(levelIDTemp) << " Seeing if patch subset: "
@@ -977,7 +1003,25 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
           // if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor
           DOUT(g_proc_neighborhood_dbg, "    In detailed task: " << dtask->getName() << " checking if " << *req << " is in neighborhood on level: " << trueLevel);
 
-          const bool search_distal_reqs = (dtask->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
+          // NOTE THE MAP::AT METHOD NEEDS TO BE SAFEGUARDED. Is it
+          // reasonable to set search_distal_requires = false when it
+          // fails??
+
+          // The map::at will fail after an AMR regridding when using
+          // more than 24 ranks (it works with 23 ranks). The question
+          // is why is the variable 'trueLevel' not valid????
+
+          bool search_distal_reqs;
+          if( (dtask->getTask()->m_max_ghost_cells.find(trueLevel) != dtask->getTask()->m_max_ghost_cells.end()) ) {
+            search_distal_reqs = (dtask->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
+          } else {
+            search_distal_reqs = false;
+
+            DOUTALL( true, "*********** Bad true level " << trueLevel 
+		     << " levelID " << levelID
+		     << " levelOffset " << levelOffset );
+          }
+
           if (!m_load_balancer->inNeighborhood(neighbor->getRealPatch(), search_distal_reqs)) {
             DOUT(g_proc_neighborhood_dbg, "    No");
             continue;
@@ -1017,7 +1061,25 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
             const Patch* fromNeighbor = fromNeighbors[j];
 
             // only add the requirements if fromNeighbor is in my neighborhood
-            const bool search_distal_requires = (dtask->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
+
+            // NOTE THE MAP::AT METHOD NEEDS TO BE SAFEGUARDED. Is it
+            // reasonable to set search_distal_requires = false when it
+            // fails??
+            
+            // The map::at will fail after an AMR regridding when using
+            // more than 24 ranks (it works with 23 ranks). The question
+            // is why is the variable 'trueLevel' not valid????     
+            bool search_distal_requires;
+            if( (dtask->getTask()->m_max_ghost_cells.find(trueLevel) != dtask->getTask()->m_max_ghost_cells.end()) ) {
+              search_distal_requires = (dtask->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
+            } else {
+              search_distal_requires = false;
+
+	      DOUTALL( true, "*********** Bad true level " << trueLevel 
+		       << " levelID " << levelID
+		       << " levelOffset " << levelOffset );
+            }
+
             if (!m_load_balancer->inNeighborhood(fromNeighbor, search_distal_requires)) {
               continue;
             }
