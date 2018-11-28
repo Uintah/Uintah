@@ -84,6 +84,11 @@ ifeq ($(BUILD_ARCHES),yes)
   ARCHES_SUB_LIBS = $(ARCHES_DIR)/fortran 
 endif
 
+# Electrochem
+ifeq ($(BUILD_ELECTROCHEM),yes)
+  ELECTROCHEM_LIB = $(COMPONENTS)/ElectroChem
+endif
+
 # Examples
 ifeq ($(BUILD_EXAMPLES),yes)
   EXAMPLES_LIB = $(COMPONENTS)/Examples
@@ -207,7 +212,8 @@ ALL_PSE_LIBS =                              \
                                             \
         $(ARCHES_LIBS)                      \
         $(ARCHES_SUB_LIBS)                  \
-	$(EXAMPLES_LIB)                     \
+	    $(ELECTROCHEM_LIB)                  \
+	    $(EXAMPLES_LIB)                     \
         $(FVM_LIB)                          \
         $(HEAT_LIB)                         \
         $(ICE_LIB)                          \
@@ -219,7 +225,7 @@ ALL_PSE_LIBS =                              \
         $(MPMICE_LIB)                       \
         $(MPMICE_SUB_LIBS)                  \
         $(PHASEFIELD_LIB)                   \
-	$(WASATCH_LIB)
+	    $(WASATCH_LIB)
 
 
 # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
@@ -238,6 +244,7 @@ ALL_STATIC_PSE_LIBS =                   \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
+    $(ELECTROCHEM_LIB)                  \
     $(MPMARCHES_LIB)                    \
     $(FVM_LIB)                          \
     $(MPM_LIB)                          \

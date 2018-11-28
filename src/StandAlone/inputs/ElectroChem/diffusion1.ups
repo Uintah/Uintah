@@ -1,0 +1,56 @@
+<Uintah_specification>
+    <Meta>
+        <title>Diffusion1</title>
+    </Meta>
+    <SimulationComponent type="fdheat" />
+
+    <ElectroChem>
+    </ElectroChem>
+
+    <Time>
+        <maxTime>100.</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>0.01</delt_min>
+        <delt_max>1.</delt_max>
+        <timestep_multiplier>1.</timestep_multiplier>
+    </Time>
+
+    <Grid>
+        <Level>
+            <Box label="1">
+                <lower>[  0.,  0., 0.]</lower>
+                <upper>[ 20., 20., 1.]</upper>
+                <patches>[2,2,1]</patches>
+            </Box>
+            <spacing>[1.,1.,1.]</spacing>
+        </Level>
+        <BoundaryConditions>
+            <Face side="x-">
+                <BCType id="0" label="u" var="Neumann">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+            <Face side="x+">
+                <BCType id="0" label="u" var="Dirichlet">
+                    <value>-1.</value>
+                </BCType>
+            </Face>
+            <Face side="y-">
+                <BCType id="0" label="u" var="Neumann">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+            <Face side="y+">
+                <BCType id="0" label="u" var="Dirichlet">
+                    <value>-1.</value>
+                </BCType>
+            </Face>
+        </BoundaryConditions>
+    </Grid>
+
+    <DataArchiver>
+        <filebase>diffusion1.uda</filebase>
+        <outputTimestepInterval>1</outputTimestepInterval>
+        <save label="u" />
+    </DataArchiver>
+</Uintah_specification>

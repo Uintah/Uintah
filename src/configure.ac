@@ -735,6 +735,13 @@ SCI_ARG_ENABLE(arches,
   [BUILD_ARCHES="no"
    DEF_ARCHES=["#define NO_ARCHES"]])
 
+SCI_ARG_ENABLE(electrochem,
+  AC_HELP_STRING(--enable-electrochem,
+                 Turn on the ElectroChem component.),
+  [BUILD_ELECTROCHEM="yes"],
+  [BUILD_ELECTROCHEM="no"
+   DEF_EXAMPLES=["#define NO_ELECTROCHEM"]])
+
 SCI_ARG_ENABLE(examples,
   AC_HELP_STRING(--enable-examples,
                  Turn on the Examples component - and Radiation Model.),
@@ -789,6 +796,7 @@ SCI_ARG_ENABLE(all_components,
                  Turn on the all components.),
   [enable_all_components="yes"
    BUILD_ARCHES="yes"
+   BUILD_ELECTROCHEM="yes"
    BUILD_EXAMPLES="yes"
    BUILD_FVM="yes"
    BUILD_HEAT="yes"
@@ -796,6 +804,7 @@ SCI_ARG_ENABLE(all_components,
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
+   DEF_ELECTROCHEM=
    DEF_EXAMPLES=
    DEF_FVM=
    DEF_HEAT=
@@ -820,14 +829,15 @@ if test "$enable_all_components" = "yes" -o  \
 fi
 
 # Check for enabling a specific component (one or more)
-if test \( "$enable_arches"     = "yes" -o  \
-           "$enable_examples"   = "yes" -o  \
-           "$enable_fvm"        = "yes" -o  \
-           "$enable_heat"       = "yes" -o  \
-           "$enable_ice"        = "yes" -o  \
-           "$enable_mpm"        = "yes" -o  \
-           "$enable_phasefield" = "yes" -o  \
-           "$enable_wasatch"    = "yes" \); then
+if test \( "$enable_arches"      = "yes" -o  \
+           "$enable_electrochem" = "yes" -o  \
+           "$enable_examples"    = "yes" -o  \
+           "$enable_fvm"         = "yes" -o  \
+           "$enable_heat"        = "yes" -o  \
+           "$enable_ice"         = "yes" -o  \
+           "$enable_mpm"         = "yes" -o  \
+           "$enable_phasefield"  = "yes" -o  \
+           "$enable_wasatch"     = "yes" \); then
   enabling_components=yes
   # Warn if enable all was also specified.
   if test "$enable_all_components" = "yes"; then
@@ -1390,6 +1400,7 @@ fi
 
 
 AC_SUBST(BUILD_ARCHES)
+AC_SUBST(BUILD_ELECTROCHEM)
 AC_SUBST(BUILD_EXAMPLES)
 AC_SUBST(BUILD_FVM)
 AC_SUBST(BUILD_HEAT)
@@ -1400,6 +1411,7 @@ AC_SUBST(BUILD_PHASEFIELD)
 AC_SUBST(BUILD_WASATCH)
 
 AC_SUBST(DEF_ARCHES)
+AC_SUBST(DEF_ELECTROCHEM)
 AC_SUBST(DEF_EXAMPLES)
 AC_SUBST(DEF_FVM)
 AC_SUBST(DEF_HEAT)
