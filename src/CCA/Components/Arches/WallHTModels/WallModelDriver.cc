@@ -56,7 +56,6 @@ _materialManager( materialManager )
   _True_T_Label = VarLabel::create( "true_wall_temperature", CC_double);
 
   // Time Step
-  _timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
 
   _simulationTimeLabel = VarLabel::find(simTime_name); 
 
@@ -78,7 +77,6 @@ WallModelDriver::~WallModelDriver()
 
   }
 
-  VarLabel::destroy(_timeStepLabel);
   VarLabel::destroy(_delTLabel);
 
   VarLabel::destroy( _T_copy_label );
@@ -200,6 +198,9 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
 void
 WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const int time_subset )
 {
+  int Rad_TG=1; // solve radiation in this taskgraph 
+  int no_Rad_TG=0; // don't solve radiation in this taskgraph
+
   m_arches = sched->getApplication();
 
   Task* task = scinew Task( "WallModelDriver::doWallHT", this,
@@ -237,6 +238,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   }
 
   task->modifies(_T_label);
+
 
   if ( time_subset == 0 ) {
 
@@ -277,7 +279,6 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
     task->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
 
-
       task->requires( Task::OldDW, _HF_E_label, Ghost::AroundCells, 1 );
       task->requires( Task::OldDW, _HF_W_label, Ghost::AroundCells, 1 );
       task->requires( Task::OldDW, _HF_N_label, Ghost::AroundCells, 1 );
@@ -288,7 +289,6 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   } else {
 
 
-    task->requires( Task::NewDW, _True_T_Label, Ghost::None, 0 );
     task->requires( Task::NewDW, _T_copy_label, Ghost::None, 0 );
     task->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
 
@@ -296,7 +296,53 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   task->requires( Task::OldDW, _simulationTimeLabel);
   task->requires( Task::OldDW, _delTLabel, Ghost::None, 0);
-  sched->addTask(task, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
+  sched->addTask(task, level->eachPatch(), _materialManager->allMaterials( "Arches" ), Rad_TG);
+
+
+
+  /// schedule CARRY FORWARD TASK
+  Task* task2 = scinew Task( "WallModelDriver::noRadUpdate", this,
+                           &WallModelDriver::noRadUpdate, time_subset );
+
+  if ( time_subset == 0 ){
+
+   task2->requires( Task::OldDW , _T_label        , Ghost::None , 0 );
+   task2->requires( Task::OldDW, VarLabel::find("temperature"), Ghost::None, 0 );
+   task2->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
+   task2->modifies(_T_label);
+   task2->computes( _T_copy_label );
+   task2->computes( _True_T_Label );
+
+    //Use the restart information from the gas temperature label since the
+    //True wall temperature may not exisit.
+    //This is a band-aid for cases that were run previously without the
+    //true wall temperature variable.
+
+  if (do_coal_region){
+    task2->computes( _deposit_thickness_label );
+    task2->computes( _deposit_thickness_sb_s_label );
+    task2->computes( _deposit_thickness_sb_l_label );
+    task2->computes( _emissivity_label );
+    task2->computes( _thermal_cond_en_label );
+    task2->computes( _thermal_cond_sb_s_label );
+    task2->computes( _thermal_cond_sb_l_label );
+    task2->requires( Task::OldDW, _deposit_thickness_label, Ghost::None, 0 );
+    task2->requires( Task::OldDW, _deposit_thickness_sb_s_label, Ghost::None, 0 );
+    task2->requires( Task::OldDW, _deposit_thickness_sb_l_label, Ghost::None, 0 );
+    task2->requires( Task::OldDW, _emissivity_label, Ghost::None, 0 );
+    task2->requires( Task::OldDW, _thermal_cond_en_label, Ghost::None, 0 );
+    task2->requires( Task::OldDW, _thermal_cond_sb_s_label, Ghost::None, 0 );
+    task2->requires( Task::OldDW, _thermal_cond_sb_l_label, Ghost::None, 0 );
+  }
+  }else{
+
+    task2->requires( Task::NewDW, _T_copy_label, Ghost::None, 0 );
+    task2->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
+    task2->modifies(_T_label);
+
+  }
+  sched->addTask(task2, level->eachPatch(), _materialManager->allMaterials( "Arches" ), no_Rad_TG);
+
 
 }
 
@@ -329,11 +375,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     // conditions for the independent variables. These BCs are being
     // applied regardless of the type of wall temperature model.
 
-    // If the task graph index is one then radiation is being
-    // performed so also perform the wall calculation.
-    bool wall = m_arches->getTaskGraphIndex();
-
-    if( time_subset == 0 && wall ) {
+    if( time_subset == 0 ) {
 
       // Actually compute the wall HT model
       old_dw->get( vars.T_old      , _T_label      , m_matl_index , patch , Ghost::None , 0 );
@@ -419,22 +461,56 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       //here for saftey and simplicity. Maybe rethink this if efficiency becomes an issue.
       vars.T_copy.copyData( vars.T );
 
-    } else if ( time_subset == 0 && !wall ) {
+    } else {
 
+      // no ht solve for RK steps > 0:
+      // 1) T_copy (NewDW) should have the BC's from previous solution
+      // 2) copy BC information from T_copy (NewDW) -> T to preserve BCs
+
+      CCVariable<double> T;
+      constCCVariable<double> T_old;
+      constCCVariable<int> cell_type;
+
+      new_dw->getModifiable( T , _T_label        , m_matl_index , patch );
+      new_dw->get( T_old       , _T_copy_label   , m_matl_index , patch    , Ghost::None , 0 );
+      new_dw->get( cell_type   , _cellType_label , m_matl_index , patch    , Ghost::AroundCells , 1 );
+
+      std::vector<WallModelDriver::HTModelBase*>::iterator iter;
+
+      for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
+
+        (*iter)->copySolution( patch, T, T_old, cell_type );
+
+      }
+    }
+  }
+}
+
+
+
+void
+WallModelDriver::noRadUpdate( const ProcessorGroup* my_world,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw, int time_substep )
+{
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+
+    if( time_substep == 0 ) {
       // no ht solve this step:
       // 1) copy T_old (from OldDW) -> T   (to preserve BCs)
       // 2) copy T -> T_copy  (for future RK steps)
 
+      constCCVariable<double> T_old;
+      constCCVariable<double> T_real_old;
+      constCCVariable<int> cell_type;
       CCVariable<double> T;
       CCVariable<double> T_copy;
       CCVariable<double> T_real;
-      constCCVariable<double> T_real_old;
-      constCCVariable<double> T_old;
-      constCCVariable<int> cell_type;
 
       old_dw->get( T_old             , _T_label        , m_matl_index , patch    , Ghost::None , 0 );
-      //if ( !doing_restart )
-        //old_dw->get( T_real_old      , _True_T_Label   , m_matl_index , patch    , Ghost::None , 0 );
       old_dw->get( T_real_old , VarLabel::find("temperature"), m_matl_index, patch, Ghost::None, 0 );
       new_dw->get( cell_type         , _cellType_label , m_matl_index , patch    , Ghost::AroundCells , 1 );
       new_dw->getModifiable(  T      , _T_label        , m_matl_index , patch );
@@ -516,8 +592,6 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
           }
         }
       }
-
-
     } else {
 
       // no ht solve for RK steps > 0:
@@ -539,9 +613,21 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
         (*iter)->copySolution( patch, T, T_old, cell_type );
 
       }
-    }
-  }
+    } // end RK step logic
+  } // end patch loop
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 //_________________________________________
 void

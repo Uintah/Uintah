@@ -51,6 +51,7 @@ namespace Uintah{
       /** @brief Copy the real T wall (only for wall cells) into the temperature field AFTER table lookup. **/
       void sched_copyWallTintoT( const LevelP& level, SchedulerP& sched );
 
+
       struct HTVariables {
 
         double time;
@@ -110,7 +111,6 @@ namespace Uintah{
       MaterialManagerP& _materialManager;
       int m_matl_index;                   ///< Material index
 
-      const VarLabel* _timeStepLabel;
       const VarLabel* _simulationTimeLabel;
       const VarLabel* _delTLabel;
 
@@ -156,6 +156,14 @@ namespace Uintah{
           const MaterialSubset* matls,
           DataWarehouse* old_dw,
           DataWarehouse* new_dw );
+
+      void noRadUpdate( const ProcessorGroup* my_world,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw, 
+                        int time_substep );
+
 
       //void doWallHT_alltoall( const ProcessorGroup* my_world,
       //                        const PatchSubset* patches,
