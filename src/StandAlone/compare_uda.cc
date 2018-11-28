@@ -899,6 +899,38 @@ compareParticles( DataArchive  * da1,
   ASSERT( iter1 == pset1->end() && iter2 == pset2->end() );
 }
 
+//__________________________________
+
+template <class T>
+void
+comparePerPatch( DataArchive  * da1,
+                 DataArchive  * da2,
+                 const string & var_name,
+                 int            matl,
+                 const Patch  * patch1,
+                 const Patch  * patch2,
+                 double         time,
+                 int            timestep,
+                 double         abs_tolerance,
+                 double         rel_tolerance )
+{
+  PerPatch<T> var1;
+  PerPatch<T> var2;
+  da1->query( var1, var_name, matl, patch1, timestep );
+  da2->query( var2, var_name, matl, patch2, timestep );
+
+  if (!compare( var1, var2, abs_tolerance, rel_tolerance)) {
+      cerr << "\nValues differ too much.\n";
+      displayProblemLocation( cerr, var_name, matl, patch1, time );
+      cerr << d_filebase1 << ":\n";
+      print( cerr, var1 );
+      cerr << endl << d_filebase2 << ":\n";
+      print( cerr, var2 );
+      cerr << endl;
+      tolerance_failure();
+  }
+}
+
 /*
   template <class Field, class Iterator>
   void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
@@ -991,8 +1023,10 @@ FieldComparator::makeFieldComparator( const Uintah::TypeDescription * td,
                                       const Patch                   * patch )
 {
   switch( td->getType() ){
+
   case Uintah::TypeDescription::ParticleVariable:
-    // Particles handled differently (and previously)
+  case Uintah::TypeDescription::PerPatch:
+    // Particles and PerPatch handled differently (and previously)
     break;
   case Uintah::TypeDescription::NCVariable: {
     NodeIterator iter = patch->getNodeIterator();
@@ -1068,10 +1102,6 @@ FieldComparator::makeFieldComparator( const Uintah::TypeDescription * td,
       cerr << "FieldComparator::makeFieldComparator: SFCZ Variable of unsupported type: " << subtype->getName() << '\n';
       Parallel::exitAll( -1 );
     }
-  }
-
-  case Uintah::TypeDescription::PerPatch: {
-    return nullptr;
   }
 
   default:
@@ -1499,21 +1529,26 @@ main( int argc, char** argv )
         abort_uncomparable(warn);
       }
 
-
       // do some consistency checking first
       bool hasParticleIDs  = false;
       bool hasParticleData = false;
+      bool hasPerPatchData = false;
 
-#if 0 
+#if 1
       // Bullet proofing checks for each variable:
       for( int v = 0; v < (int)vars.size();v++ ){
         std::string var = vars[v];
 
-        if (var == "p.particleID"){
-          hasParticleIDs = true;
-        }
-        if (types[v]->getType() == Uintah::TypeDescription::ParticleVariable){
-          hasParticleData = true;
+	// FOR NOW KEEP THE PARTICLE CHECK DISABLED
+        // if (var == "p.particleID"){
+        //   hasParticleIDs = true;
+        // }
+        // if (types[v]->getType() == Uintah::TypeDescription::ParticleVariable){
+        //   hasParticleData = true;
+        // }
+
+        if (types[v]->getType() == Uintah::TypeDescription::PerPatch){
+          hasPerPatchData = true;
         }
 
         for( int l1 = minLevel[0], l2 = minLevel[1]; (l1 < maxLevels[0] &&  l2 < maxLevels[1]); l1++, l2++) {
@@ -1545,8 +1580,8 @@ main( int argc, char** argv )
           }
           if( existsDA1 != existsDA2 ) {
             ostringstream warn;
-            warn << "    The variable ("<< var << ") was not found on timestep (" << index[tstep]
-                 <<  "), Level-" << level->getIndex() << ", in both udas (" << existsDA1 << ", " << existsDA2 << ").\n";
+            warn << "    The variable ("<< var << ") was not found on timestep (" << ts_index[tstep]
+                 <<  "), Level-" << level->getIndex() << ", in both udas (" << existsDA1 << ", " << existsDA2 << ").\n"
                  << "    If this occurs on timestep 0 then ("<< var<< ") was not computed in the initialization task.\n";
             abort_uncomparable(warn);
           }
@@ -1600,28 +1635,34 @@ main( int argc, char** argv )
 #endif
 
       //______________________________________________________________________
-      // COMPARE PARTICLE VARIABLES
-      if (hasParticleData && !hasParticleIDs) {
+      // Compare Particle and PerPatch Variables
+      if (hasPerPatchData || (hasParticleData && !hasParticleIDs)) {
 
         // Compare particle variables without p.particleID -- patches
         // must be consistent.
-        cerr << "Particle data exists without p.particleID output.\n";
-        cerr << "There must be patch consistency in order to do this comparison.\n";
-        cerr << "In order to make a comparison between udas with different\n"
-             << "number or distribution of patches, you must either output\n"
-             << "p.particleID or don't output any particle variables at all.\n";
-        cerr << endl;
-
+	if(hasParticleData && !hasParticleIDs) {
+	  cerr << "Particle data exists without p.particleID output.\n";
+	  cerr << "There must be patch consistency in order to do this comparison.\n";
+	  cerr << "In order to make a comparison between udas with different\n"
+	       << "number or distribution of patches, you must either output\n"
+	       << "p.particleID or don't output any particle variables at all.\n";
+	  cerr << endl;
+	}
+	
         for(int v=0;v<(int)vars.size();v++){
           std::string var = vars[v];
 
           const Uintah::TypeDescription* td = types[v];
           const Uintah::TypeDescription* subtype = td->getSubType();
 
+	  if (td->getType() != Uintah::TypeDescription::ParticleVariable &&
+	      td->getType() != Uintah::TypeDescription::PerPatch)
+	    continue;
+	  
           cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
 
           if (td->getName() == string("-- unknown type --")) {
-            cerr << "\t\tParticleVariable of unknown type";
+            cerr << "\t\tParticleVariable or PerPatch of unknown type";
 
             if (d_strict_types) {
               cerr << ".\nQuitting.\n";
@@ -1660,7 +1701,7 @@ main( int argc, char** argv )
                 abort_uncomparable(warn);
               }
 
-              cerr << "\t\tPatch: " << patch->getID() << "\n";
+              // cerr << "\t\tPatch: " << patch->getID() << "\n";
 
               if (!compare(patch->getExtraBox().lower(), patch2->getExtraBox().lower(), abs_tolerance, rel_tolerance) ||
                   !compare(patch->getExtraBox().upper(), patch2->getExtraBox().upper(), abs_tolerance, rel_tolerance)) {
@@ -1689,7 +1730,7 @@ main( int argc, char** argv )
                   matlIter != matls.end(); matlIter++){
                 int matl = *matlIter;
 
-                cerr << "\t\t\tMaterial: " << matl << "\n";
+                // cerr << "\t\t\tMaterial: " << matl << "\n";
 
                 if (td->getType() == Uintah::TypeDescription::ParticleVariable) {
                   switch(subtype->getType()){
@@ -1723,6 +1764,42 @@ main( int argc, char** argv )
                     break;
                   default:
                     cerr << "main: ParticleVariable of unsupported type: " << subtype->getName() << '\n';
+                    Parallel::exitAll(-1);
+                  }
+                }
+                else if (td->getType() == Uintah::TypeDescription::PerPatch) {
+
+                  switch(subtype->getType()){
+                  case Uintah::TypeDescription::double_type:
+                    comparePerPatch<double>(da1, da2, var, matl, patch, patch2,
+                                             time1, tstep, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::float_type:
+                    comparePerPatch<float>(da1, da2, var, matl, patch, patch2,
+                                            time1, tstep, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::int_type:
+                    comparePerPatch<int>(da1, da2, var, matl, patch, patch2,
+                                          time1, tstep, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::Point:
+                    comparePerPatch<Point>(da1, da2, var, matl, patch, patch2,
+                                            time1, tstep, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::Vector:
+                    comparePerPatch<Vector>(da1, da2, var, matl, patch, patch2,
+                                             time1, tstep, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::IntVector:
+                    comparePerPatch<IntVector>(da1, da2, var, matl, patch, patch2,
+                                             time1, tstep, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::Matrix3:
+                    comparePerPatch<Matrix3>(da1, da2, var, matl, patch, patch2,
+                                              time1, tstep, abs_tolerance, rel_tolerance);
+                    break;
+                  default:
+                    cerr << "main: PerPatch of unsupported type: " << subtype->getName() << '\n';
                     Parallel::exitAll(-1);
                   }
                 }
@@ -1776,12 +1853,13 @@ main( int argc, char** argv )
         const Uintah::TypeDescription* td = types[v];
         const Uintah::TypeDescription* subtype = td->getSubType();
 
-        if (td->getType() == Uintah::TypeDescription::ParticleVariable)
+        if (td->getType() == Uintah::TypeDescription::ParticleVariable ||
+	    td->getType() == Uintah::TypeDescription::PerPatch)
           continue;
         cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
 
         if (td->getName() == string("-- unknown type --")) {
-          cerr << "\t\tParticleVariable of unknown type";
+          cerr << "\t\tParticleVariable or PerPatch of unknown type";
           if (d_strict_types) {
             cerr << ".\nQuitting.\n";
             Parallel::exitAll(-1);
