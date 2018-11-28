@@ -100,7 +100,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
       //Generate a psi function for each scalar and fe updates:
       std::string update_task_name = "scalar_fe_update_"+group_name;
       std::string diffusion_task_name = "diffusion_"+group_name;
-      // 
+      //
       std::string rk_time_ave_task_name = "rk_time_avg_"+group_name;
       std::string scalar_up_task_name = "scalar_update_"+group_name;
 
@@ -115,12 +115,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         register_task( diffusion_task_name, diff_tsk );
 
         //split KFEUpate in two task for scalar
-        // rk time average 
+        // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<CCVariable<double> >::Builder( rk_time_ave_task_name, 0 );
         register_task( rk_time_ave_task_name, rk_ta_tsk );
 
-        // scalar updated 
+        // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
         scinew SUpdate<CCVariable<double> >::Builder( scalar_up_task_name, 0 );
         register_task( scalar_up_task_name, sup_tsk );
@@ -137,12 +137,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         register_task( diffusion_task_name, diff_tsk );
 
         //split KFEUpate in two task for scalar
-        // rk time average 
+        // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCXVariable<double> >::Builder( rk_time_ave_task_name, 0 );
         register_task( rk_time_ave_task_name, rk_ta_tsk );
 
-        // scalar updated 
+        // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
         scinew SUpdate<SFCXVariable<double> >::Builder( scalar_up_task_name, 0 );
         register_task( scalar_up_task_name, sup_tsk );
@@ -159,12 +159,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         register_task( diffusion_task_name, diff_tsk );
 
         //split KFEUpate in two task for scalar
-        // rk time average 
+        // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCYVariable<double> >::Builder( rk_time_ave_task_name, 0 );
         register_task( rk_time_ave_task_name, rk_ta_tsk );
 
-        // scalar updated 
+        // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
         scinew SUpdate<SFCYVariable<double> >::Builder( scalar_up_task_name, 0 );
         register_task( scalar_up_task_name, sup_tsk );
@@ -180,12 +180,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         register_task( diffusion_task_name, diff_tsk );
 
         //split KFEUpate in two task for scalar
-        // rk time average 
+        // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCZVariable<double> >::Builder( rk_time_ave_task_name, 0 );
         register_task( rk_time_ave_task_name, rk_ta_tsk );
 
-        // scalar updated 
+        // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
         scinew SUpdate<SFCZVariable<double> >::Builder( scalar_up_task_name, 0 );
         register_task( scalar_up_task_name, sup_tsk );
@@ -516,7 +516,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
   }
 
   unsigned int nQn = ArchesCore::get_num_env( db_dqmom, ArchesCore::DQMOM_METHOD );
-  std::vector<std::string> gruops_dqmom_names;
+  std::vector<std::string> group_dqmom_names;
 
   for ( int i = 0; i < int(nQn); i++ ){
 
@@ -524,7 +524,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     dqmom_eqn_grp_env << m_dqmom_grp_name << "_" << i;
     std::string grp_name = dqmom_eqn_grp_env.str() + "_w";
 
-    gruops_dqmom_names.push_back(grp_name);
+    group_dqmom_names.push_back(grp_name);
   //Create weights
     ProblemSpecP db_eqn_group = db_transport->appendChild("eqn_group");
     db_eqn_group->setAttribute("label", grp_name);
@@ -641,6 +641,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       eqn_db->appendChild("scaling")->setAttribute("value", scaling_constants[i]);
 
     }
+    
     for ( ProblemSpecP db_env = db_init->findBlock("env_constant"); db_env != nullptr;
             db_env = db_env->findNextBlock("env_constant") ){
 
@@ -660,7 +661,6 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
         }
       }
     }
-
 
     // RHSs
     std::string group_name = grp_name ;
@@ -697,7 +697,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       //std::stringstream dqmom_eqn_grp_env;
       //dqmom_eqn_grp_env << m_dqmom_grp_name << "_" << i;
       grp_name = dqmom_eqn_grp_env.str() + "_" + ic_label;
-      gruops_dqmom_names.push_back(grp_name);
+      group_dqmom_names.push_back(grp_name);
 
       ProblemSpecP db_eqn_group_ic = db_transport->appendChild("eqn_group");
       db_eqn_group_ic->setAttribute("label", grp_name);
@@ -813,7 +813,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       }
 
       // RHSs
-      group_name = grp_name ;
+      group_name = grp_name;
       //std::string group_name = dqmom_eqn_grp_env.str();
       TaskInterface* tsk = retrieve_task(group_name);
       print_task_setup_info( group_name, "DQMOM rhs construction.");
@@ -822,9 +822,9 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
 
       // Diffusion
       if ( do_diffusion ){
-	TaskInterface* diff_tsk = retrieve_task("dqmom_diffusion_"+group_name);
-	diff_tsk->problemSetup( db_eqn_group_ic );
-	diff_tsk->create_local_labels();
+        TaskInterface* diff_tsk = retrieve_task("dqmom_diffusion_"+group_name);
+        diff_tsk->problemSetup( db_eqn_group_ic );
+        diff_tsk->create_local_labels();
       }
 
       // FE update
@@ -843,12 +843,13 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
   }
   // Print to a temp file if user requests
   if ( print_ups_with_dqmom ){
+    std::cout << " HELLO DOLLY " << std::endl;
     db_transport->output(output_xml_name.c_str());
   }
 
   //Going to remove the input that I just created so that restarts work.
   //Otherwise, the input isn't parsed properly for restart.
-  for ( auto i = gruops_dqmom_names.begin(); i != gruops_dqmom_names.end(); i++ ){
+  for ( auto i = group_dqmom_names.begin(); i != group_dqmom_names.end(); i++ ){
     ProblemSpecP db_grp = db_transport->findBlockWithAttributeValue("eqn_group","label",*i);
     if (db_grp != nullptr) {
       db_transport->removeChild(db_grp);

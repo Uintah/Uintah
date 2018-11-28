@@ -508,15 +508,15 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
         tsk->create_local_labels();
       }
     }
-
-    if (db->findBlock("DQMOM") ) {
-      //See comment above about this task.
-      std::string task_name = "dqmom_no_inversion";
-      print_task_setup_info( task_name, "DQMOM: No Inversion");
-      TaskInterface* tsk = retrieve_task(task_name);
-      tsk->problemSetup(db);
-      tsk->create_local_labels();
-    }
-
   }
+
+  if (db->findBlock("DQMOM") ) {
+    //See comment above about this task.
+    std::string task_name = "dqmom_no_inversion";
+    print_task_setup_info( task_name, "DQMOM: No Inversion");
+    TaskInterface* tsk = retrieve_task(task_name);
+    tsk->problemSetup(db);
+    tsk->create_local_labels();
+  }
+  
 }
