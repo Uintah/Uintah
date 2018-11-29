@@ -84,7 +84,7 @@ ifeq ($(BUILD_ARCHES),yes)
   ARCHES_SUB_LIBS = $(ARCHES_DIR)/fortran 
 endif
 
-# Electrochem
+# ElectroChem
 ifeq ($(BUILD_ELECTROCHEM),yes)
   ELECTROCHEM_LIB = $(COMPONENTS)/ElectroChem
 endif
@@ -212,8 +212,8 @@ ALL_PSE_LIBS =                              \
                                             \
         $(ARCHES_LIBS)                      \
         $(ARCHES_SUB_LIBS)                  \
-	    $(ELECTROCHEM_LIB)                  \
-	    $(EXAMPLES_LIB)                     \
+        $(ELECTROCHEM_LIB)                  \
+        $(EXAMPLES_LIB)                     \
         $(FVM_LIB)                          \
         $(HEAT_LIB)                         \
         $(ICE_LIB)                          \

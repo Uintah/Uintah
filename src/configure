@@ -6059,7 +6059,7 @@ if test "${enable_electrochem+set}" = set; then :
   enableval=$enable_electrochem; BUILD_ELECTROCHEM="yes"
 else
   BUILD_ELECTROCHEM="no"
-   DEF_EXAMPLES="#define NO_ELECTROCHEM"
+   DEF_ELECTROCHEM="#define NO_ELECTROCHEM"
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-electrochem --disable-electrochem"

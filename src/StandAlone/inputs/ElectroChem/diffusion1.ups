@@ -1,19 +1,39 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
 <Uintah_specification>
-    <Meta>
-        <title>Diffusion1</title>
-    </Meta>
-    <SimulationComponent type="fdheat" />
+  <Meta>
+    <title>Diffusion1</title>
+  </Meta>
+  <SimulationComponent type="ec_diffusion" />
 
+  <ElectroChem>
+    <delt>       0.1 </delt>
+    <diff_coeff> 1.0 </diff_coeff>
+  </ElectroChem>
+
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.01</delt_min>
+    <delt_max>1.</delt_max>
+    <timestep_multiplier>1.</timestep_multiplier>
+  </Time>
+
+  <MaterialProperties>
     <ElectroChem>
+      <material>
+        <geom_object>
+          <box label="wholeDomain">
+            <min>       [ 0.0, 0.0, 0.0 ]       </min>
+            <max>       [ 0.5, 1.0, 1.0 ]       </max>
+          </box>
+          <res>          [2,2,2] </res>
+          <concentration> 1.0 </concentration>
+        </geom_object>
+      </material>
     </ElectroChem>
-
-    <Time>
-        <maxTime>100.</maxTime>
-        <initTime>0.0</initTime>
-        <delt_min>0.01</delt_min>
-        <delt_max>1.</delt_max>
-        <timestep_multiplier>1.</timestep_multiplier>
-    </Time>
+  </MaterialProperties>           
 
     <Grid>
         <Level>
@@ -51,6 +71,6 @@
     <DataArchiver>
         <filebase>diffusion1.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
-        <save label="u" />
+        <save label="cc.Concentration" />
     </DataArchiver>
 </Uintah_specification>

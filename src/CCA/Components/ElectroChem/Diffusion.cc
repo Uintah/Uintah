@@ -22,20 +22,40 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ElectroChem/Diffusion.hpp>
+#include <CCA/Components/ElectroChem/Diffusion.h>
+
+#include <iostream>
 
 using namespace Uintah;
 
 Diffusion::Diffusion(const ProcessorGroup* myworld,
-                     const MaterialManagerP materialManager){
+                     const MaterialManagerP materialManager)
+    : ApplicationCommon(myworld, materialManager) {
+
+  d_delt       = 0.0;
+  d_diff_coeff = 0.0;
 }
     
 Diffusion::~Diffusion(){
 }
 
-void Diffusion::problemSetup(const ProblemSpecP&     ps,
-                             const ProblemSpecP&     restart_ps,
-                                   GridP&            grid){
+void Diffusion::problemSetup(const ProblemSpecP& ps,
+                             const ProblemSpecP& restart_ps,
+                                   GridP&        grid){
+  std::cout << "!!!!!!!!!! In  problemSetup" << std::endl;
+  ProblemSpecP root_ps = 0;
+  if (restart_ps){
+    root_ps = restart_ps;
+  } else{
+    root_ps = ps;
+  }
+
+  ProblemSpecP ec_ps = root_ps->findBlock("ElectroChem");
+
+  ec_ps->require("delt",       d_delt);
+  ec_ps->require("diff_coeff", d_diff_coeff);
+
+  std::cout << "!!!!!!!!!! Out problemSetup" << std::endl;
 }
 
 void Diffusion::scheduleInitialize(const LevelP&     level,

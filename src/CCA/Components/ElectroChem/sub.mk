@@ -31,7 +31,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/ElectroChem
 
-SRCS   += $(SRCDIR)/Diffusion.cc \
+SRCS   += $(SRCDIR)/Diffusion.cc 
 
 #include $(SCIRUN_SCRIPTS)/recurse.mk          
 

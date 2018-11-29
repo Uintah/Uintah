@@ -41,6 +41,11 @@ ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
 endif
 
+# ELECTROCHEM
+ifeq ($(BUILD_ELECTROCHEM),yes)
+  ELECTROCHEM :=$(SRCDIR)/ElectroChem
+endif
+
 # EXAMPLES
 ifeq ($(BUILD_EXAMPLES),yes)
   EXAMPLES :=$(SRCDIR)/Examples
@@ -93,6 +98,7 @@ endif
 
 SUBDIRS := \
         $(ARCHES)                      \
+        $(ELECTROCHEM)                 \
         $(EXAMPLES)                    \
         $(FVM)                         \
         $(HEAT)                        \

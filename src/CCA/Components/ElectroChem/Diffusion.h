@@ -22,10 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CCA_COMPONENTS_ELECTROCHEM_DIFFUSION_HPP
-#define CCA_COMPONENTS_ELECTROCHEM_DIFFUSION_HPP
+#ifndef CCA_COMPONENTS_ELECTROCHEM_DIFFUSION_H
+#define CCA_COMPONENTS_ELECTROCHEM_DIFFUSION_H
 
 #include <CCA/Components/Application/ApplicationCommon.h>
+#include <CCA/Components/ElectroChem/ECLabel.h>
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -34,30 +35,10 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
-
   class Diffusion : public ApplicationCommon {
-    virtual void initialize(const ProcessorGroup* pg,
-                            const PatchSubset*    patches,
-                            const MaterialSubset* matls,
-                                  DataWarehouse*  old_dw,
-                                  DataWarehouse*  new_dw);
-
-    virtual void computeStableTimeStep(const ProcessorGroup* pg,
-                                       const PatchSubset*    patches,
-                                       const MaterialSubset* matls,
-                                             DataWarehouse*  old_dw,
-                                             DataWarehouse*  new_dw);
-
-    virtual void timeAdvance(const ProcessorGroup* pg,
-                             const PatchSubset*    patches,
-                             const MaterialSubset* matls,
-                                   DataWarehouse*  old_dw,
-                                   DataWarehouse*  new_dw);
-
-
-
-    Diffusion(const Diffusion&);
-    Diffusion& operator=(const Diffusion&);
+    ECLabel d_eclabel;
+    double  d_delt;
+    double  d_diff_coeff;
 
     public:
       Diffusion(const ProcessorGroup* myworld,
@@ -80,9 +61,32 @@ namespace Uintah {
 
       virtual void scheduleTimeAdvance(const LevelP&     level,
                                              SchedulerP& sched);
-    protected:
+
+    private:
+      virtual void initialize(const ProcessorGroup* pg,
+                              const PatchSubset*    patches,
+                              const MaterialSubset* matls,
+                                    DataWarehouse*  old_dw,
+                                    DataWarehouse*  new_dw);
+  
+      virtual void computeStableTimeStep(const ProcessorGroup* pg,
+                                         const PatchSubset*    patches,
+                                         const MaterialSubset* matls,
+                                               DataWarehouse*  old_dw,
+                                               DataWarehouse*  new_dw);
+  
+      virtual void timeAdvance(const ProcessorGroup* pg,
+                               const PatchSubset*    patches,
+                               const MaterialSubset* matls,
+                                     DataWarehouse*  old_dw,
+                                     DataWarehouse*  new_dw);
+  
+  
+  
+      Diffusion(const Diffusion&);
+      Diffusion& operator=(const Diffusion&);
   }; // End class Diffusion
 
 } // End namespace Uintah
 
-#endif // CCA_COMPONENTS_ELECTROCHEM_DIFFUSION_HPP
+#endif // CCA_COMPONENTS_ELECTROCHEM_DIFFUSION_H

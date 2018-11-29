@@ -740,7 +740,7 @@ SCI_ARG_ENABLE(electrochem,
                  Turn on the ElectroChem component.),
   [BUILD_ELECTROCHEM="yes"],
   [BUILD_ELECTROCHEM="no"
-   DEF_EXAMPLES=["#define NO_ELECTROCHEM"]])
+   DEF_ELECTROCHEM=["#define NO_ELECTROCHEM"]])
 
 SCI_ARG_ENABLE(examples,
   AC_HELP_STRING(--enable-examples,

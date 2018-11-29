@@ -60,6 +60,10 @@
 #include <CCA/Components/Examples/Wave.h>
 #endif
 
+#ifndef NO_ELECTROCHEM
+#include <CCA/Components/ElectroChem/Diffusion.h>
+#endif
+
 #ifndef NO_FVM
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
 #include <CCA/Components/FVM/GaussSolve.h>
@@ -172,6 +176,11 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
 #endif
 
   //----------------------------
+#ifndef NO_ELECTROCHEM
+  if (sim_comp == "ec_diffusion") {
+    return scinew Diffusion(myworld, materialManager);
+  }
+#endif
 
 #ifndef NO_FVM
   if (sim_comp == "electrostatic_solver") {

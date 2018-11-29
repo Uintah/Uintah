@@ -49,6 +49,7 @@ PSELIBS := \
         Core/ProblemSpec                   \
         Core/Util                          \
         $(ARCHES)                          \
+        $(ELECTROCHEM)                     \
         $(EXAMPLES)                        \
         $(FVM)                             \
         $(HEAT)                            \

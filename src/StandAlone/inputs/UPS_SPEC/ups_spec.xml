@@ -378,6 +378,7 @@
                                                 mpnp,
                                                 esmpm,
                                                 esmpm2,
+                                                ec_diffusion,
                                                 unifiedschedulertest, poisson1,
                                                 poisson2, poisson3, poisson4, benchmark,
                                                 rigidmpmice,reduce_uda, rmpmice,smpm,
@@ -921,6 +922,7 @@
     <include href="ice_spec.xml"        section="AMR/ICE" />
     <include href="mpm_spec.xml"        section="AMR/MPM" />
     <include href="fvm_spec.xml"        section="AMR/FVM" />
+    <include href="e_chem_spec.xml"     section="AMR/ElectroChem" />
 
     <Regridder                          spec="OPTIONAL NO_DATA"
                                           attribute1="type REQUIRED STRING 'Tiled, SingleLevel'" >
@@ -1076,15 +1078,17 @@
     <stairstep                         spec="REQUIRED BOOLEAN" />              
   </Multimaterial>
 
-  <include href="mpm_spec.xml" section="Uintah_specification/MPM"   />
-  <include href="fvm_spec.xml" section="Uintah_specification/FVM"   />
-  <include href="fvm_spec.xml" section="Uintah_specification/ESMPM" />
+  <include href="mpm_spec.xml"    section="Uintah_specification/MPM"   />
+  <include href="fvm_spec.xml"    section="Uintah_specification/FVM"   />
+  <include href="fvm_spec.xml"    section="Uintah_specification/ESMPM" />
+  <include href="e_chem_spec.xml" section="Uintah_specification/ElectroChem" />
 
   <MaterialProperties                    spec="MULTIPLE NO_DATA"
                                            attribute1="add OPTIONAL BOOLEAN" >
-    <include href="mpm_spec.xml" section="MaterialProperties/MPM" />
-    <include href="ice_spec.xml" section="MaterialProperties/ICE" />
-    <include href="fvm_spec.xml" section="MaterialProperties/FVM" />
+    <include href="mpm_spec.xml"    section="MaterialProperties/MPM" />
+    <include href="ice_spec.xml"    section="MaterialProperties/ICE" />
+    <include href="fvm_spec.xml"    section="MaterialProperties/FVM" />
+    <include href="e_chem_spec.xml" section="MaterialProperties/ElectroChem" />
 
   </MaterialProperties>
   
