@@ -68,7 +68,6 @@ MPI_Comm planeAverage::d_my_MPI_COMM_WORLD;
 /*
      This module computes the spatial average of a variable over a plane
 TO DO:
-    - allow user to control the number of planes
     - add delT to now.
 
 Optimization:
@@ -93,10 +92,11 @@ planeAverage::planeAverage( const ProcessorGroup    * myworld,
   d_parse_ups_variables     = parse_ups_vars;
   d_writeOutput             = writeOutput;
   
-  d_lb->lastCompTimeLabel   =  VarLabel::create("lastCompTime_planeAvg",
-                                              max_vartype::getTypeDescription() );
-  d_lb->fileVarsStructLabel = VarLabel::create("FileInfo_planeAvg",
-                                               PerPatch<FileInfoP>::getTypeDescription() );
+  d_lb->lastCompTimeName    = "lastCompTime_planeAvg" + to_string(ID);
+  d_lb->lastCompTimeLabel   =  VarLabel::create( d_lb->lastCompTimeName, max_vartype::getTypeDescription() );
+  
+  d_lb->fileVarsStructName   = "FileInfo_planeAvg" + to_string(ID);
+  d_lb->fileVarsStructLabel = VarLabel::create( d_lb->fileVarsStructName, PerPatch<FileInfoP>::getTypeDescription() );
 
   d_allLevels_planarVars.resize( d_MAXLEVELS );
 
@@ -262,7 +262,6 @@ void planeAverage::problemSetup(const ProblemSpecP&,
 
       // only CC, SFCX, SFCY, SFCZ variables
       if(baseType != TypeDescription::CCVariable &&
-         baseType != TypeDescription::NCVariable &&
          baseType != TypeDescription::SFCXVariable &&
          baseType != TypeDescription::SFCYVariable &&
          baseType != TypeDescription::SFCZVariable ){
@@ -270,12 +269,6 @@ void planeAverage::problemSetup(const ProblemSpecP&,
       }
       // CC Variables, only Doubles and Vectors
       if(baseType != TypeDescription::CCVariable &&
-         subType  != TypeDescription::double_type &&
-         subType  != TypeDescription::Vector  ){
-        throwException = true;
-      }
-      // NC Variables, only Doubles and Vectors
-      if(baseType != TypeDescription::NCVariable &&
          subType  != TypeDescription::double_type &&
          subType  != TypeDescription::Vector  ){
         throwException = true;
@@ -333,6 +326,16 @@ void planeAverage::scheduleInitialize(SchedulerP   & sched,
 {
   printSchedule(level,dbg_OTF_PA, d_className + "::scheduleInitialize");
 
+  // Tell the scheduler to not copy this variable to a new AMR grid and
+  // do not checkpoint it.
+  sched->overrideVariableBehavior(d_lb->fileVarsStructName, false, false, false, true, true);
+ 
+  // no checkpointing
+  sched->overrideVariableBehavior(d_lb->lastCompTimeName, false, false, false, false, true);
+  
+
+  //__________________________________
+  //
   Task* t = scinew Task("planeAverage::initialize",
                   this, &planeAverage::initialize);
 
@@ -497,11 +500,10 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
   // schedule tasks that calculate the planarAve
   sched_computePlanarAve( sched, level );
 
-  //__________________________________
-  // Tell the scheduler to not copy this variable to a new AMR grid and
-  // do not checkpoint it.
-  sched->overrideVariableBehavior("FileInfo_planeAvg", false, false, false, true, true);
- 
+
+   
+   
+   
   sched_writeToFiles(     sched, level, "planeAverage" );
   
   sched_resetProgressVar( sched, level );

@@ -23,28 +23,13 @@
  */
 
 
-#ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_meanTurbFluxes_h
-#define Packages_Uintah_CCA_Components_ontheflyAnalysis_meanTurbFluxes_h
+#ifndef CCA_Components_ontheflyAnalysis_meanTurbFluxes_h
+#define CCA_Components_ontheflyAnalysis_meanTurbFluxes_h
+
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeAverage.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/Output.h>
-#include <Core/Grid/MaterialManager.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/GridIterator.h>
-#include <Core/Grid/GridP.h>
-#include <Core/Grid/LevelP.h>
-
-#include <vector>
-#include <memory>
 
 namespace Uintah {
-
 
 /*______________________________________________________________________
 
@@ -53,10 +38,10 @@ GENERAL INFORMATION
    meanTurbFluxes.h
 
    This module computes the mean turbulent fluxes on each plane in the domain
-   u'u'_bar, v'v'_bar, w'w'_bar u'v'_bar, v'w'_bar u'w'_bar
+   {u'u'}^bar, {v'v'}^bar, {w'w'}^bar {u'v'}^bar, {v'w'}^bar {u'w'}^bar
 
    foreach Q ( T, P, scalar )
-     ( u'Q'_bar(y), v'Q'_bar(y), w'Q'_bar(y) )
+     ( {u'Q'}^bar(y), {v'Q'}^bar(y), {w'Q'}^bar(y) )
    end
 
    Todd Harman
@@ -108,20 +93,20 @@ ______________________________________________________________________*/
     //  All variables except velocity
     struct Qvar{
 
-      int matl;
-      int level;
-      VarLabel * label;                   // Q
-      VarLabel * primeLabel;              // Q'
-      VarLabel * turbFluxLabel;           // u'Q', v'Q', w'Q'
-
-      MaterialSubset * matSubSet;
-      TypeDescription::Type baseType;
-      TypeDescription::Type subType;
-
-      void print(){
-        const std::string name = label->getName();
-        std::cout << name << " matl: " << matl <<"\n";
+      Qvar(){};
+      
+      Qvar( int m ) :matl(m)
+      {
+        matSubSet = scinew MaterialSubset();
+        matSubSet->add( matl );
+        matSubSet->addReference();
       };
+
+      int matl;
+      VarLabel * label          {nullptr};    // Q
+      VarLabel * primeLabel     {nullptr};    // Q'
+      VarLabel * turbFluxLabel  {nullptr};    // u'Q', v'Q', w'Q'
+      MaterialSubset * matSubSet {nullptr};
 
       ~Qvar()
       {
@@ -137,8 +122,8 @@ ______________________________________________________________________*/
     //__________________________________
     //  Velocity
     struct velocityVar: public Qvar{
-      VarLabel * normalTurbStrssLabel;        //u'u', v'v', w'w'
-      VarLabel * shearTurbStrssLabel;         //u'v', v'w', w'u'
+      VarLabel * normalTurbStrssLabel {nullptr};  // u'u', v'v', w'w'
+      VarLabel * shearTurbStrssLabel  {nullptr};  // u'v', v'w', w'u'
 
       ~velocityVar()
       {
@@ -177,25 +162,14 @@ ______________________________________________________________________*/
 
     //______________________________________________________________________
     //          VARIABLES 
-    class meanTurbFluxesLabel {
-    public:
-      VarLabel* lastCompTimeLabel;
-    };
-
-    meanTurbFluxesLabel* d_lb;
 
     //__________________________________
-    // global constants always begin with "d_"
+    // global constants begin with "d_"
     std::vector< std::shared_ptr< Qvar > >  d_Qvars;
     std::shared_ptr< velocityVar >          d_velVar;
 
-    double d_writeFreq;
-    double d_startTime;
-    double d_stopTime;
-
-    MaterialSet*     d_matl_set;
-    const int d_MAXLEVELS {5};               // HARDCODED
-
+    MaterialSet*  d_matl_set;
+    
     private:
       planeAverage * d_planeAve_1;
       planeAverage * d_planeAve_2;

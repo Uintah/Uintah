@@ -251,6 +251,7 @@ ______________________________________________________________________*/
         void reserve()
         {
           CC_pos.resize(nPlanes, Point(-DBL_MAX,-DBL_MAX,-DBL_MAX) );
+          ave.resize(   nPlanes, 0.);
           sum.resize(   nPlanes, 0.);
           weight.resize(nPlanes, 0.);
           nCells.resize(nPlanes, 0 );
@@ -283,6 +284,7 @@ ______________________________________________________________________*/
         {
           for(unsigned i=0; i<sum.size(); i++ ){
             CC_pos[i] = Point( -DBL_MAX,-DBL_MAX,-DBL_MAX );
+            ave[i]    = 0.0;
             sum[i]    = 0.0;
             weight[i] = 0.0;
             nCells[i] = 0;
@@ -373,6 +375,7 @@ ______________________________________________________________________*/
         {
           Vector zero(0.);
           CC_pos.resize( nPlanes, Point(-DBL_MAX,-DBL_MAX,-DBL_MAX) );
+          ave.resize(    nPlanes, Vector(0,0,0) );
           sum.resize(    nPlanes, Vector(0,0,0) );
           weight.resize( nPlanes, 0 );
           nCells.resize( nPlanes, 0 );
@@ -404,6 +407,7 @@ ______________________________________________________________________*/
         {
           for(unsigned i=0; i<sum.size(); i++ ){
             CC_pos[i] = Point( -DBL_MAX,-DBL_MAX,-DBL_MAX );
+            ave[i]    = Vector(0,0,0);
             sum[i]    = Vector(0,0,0);
             weight[i] = 0;
             nCells[i] = 0;
@@ -473,7 +477,7 @@ ______________________________________________________________________*/
     std::vector<  std::vector< std::shared_ptr< planarVarBase > > > d_allLevels_planarVars;
 
     //______________________________________________________________________
-    //
+    //          public TASKS AND METHODS
   public:
     void sched_computePlanarAve( SchedulerP   & sched,
                                  const LevelP & level );
@@ -523,6 +527,13 @@ ______________________________________________________________________*/
     {
       d_allLevels_planarVars.at(L_indx) = pv;
     }
+    
+    //__________________________________
+    //     PUBLIC:  VARIABLES
+    MaterialSet*  d_matl_set;
+    
+    
+    
   //______________________________________________________________________
   //
   private:
@@ -612,9 +623,11 @@ ______________________________________________________________________*/
     // general labels
     class planeAverageLabel {
     public:
-      VarLabel* lastCompTimeLabel;
-      VarLabel* fileVarsStructLabel;
-      VarLabel* weightLabel = {nullptr};
+      std::string lastCompTimeName;
+      std::string fileVarsStructName;
+      VarLabel* lastCompTimeLabel   {nullptr};
+      VarLabel* fileVarsStructLabel {nullptr};
+      VarLabel* weightLabel         {nullptr};
     };
 
     planeAverageLabel* d_lb;
@@ -630,7 +643,7 @@ ______________________________________________________________________*/
     bool   d_writeOutput;
 
     const Material*  d_matl;
-    MaterialSet*     d_matl_set;
+    
     std::set<std::string> d_isDirCreated;
     MaterialSubset*  d_zero_matl;
 
