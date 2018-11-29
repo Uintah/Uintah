@@ -85,6 +85,7 @@ DORadiation::~DORadiation()
   if(_dynamicSolveFrequency){
     VarLabel::destroy(_dynamicSolveCountPatchLabel);
     VarLabel::destroy(_lastRadSolvePatchLabel); 
+    VarLabel::destroy(VarLabel::find("min_time") );
   }
 
   delete _DO_model;
