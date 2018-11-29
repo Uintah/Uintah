@@ -457,26 +457,10 @@ void planeAverage::initialize(const ProcessorGroup  *,
 void planeAverage::scheduleRestartInitialize(SchedulerP   & sched,
                                              const LevelP & level)
 {
-  printSchedule(level,dbg_OTF_PA, d_className + "::scheduleRestartInitialize");
-
-  Task* t = scinew Task("planeAverage::initialize",
-                  this, &planeAverage::initialize);
-
-
-  t->setType( Task::OncePerProc );
-  t->computes(d_lb->lastCompTimeLabel );
-  t->computes(d_lb->fileVarsStructLabel, d_zero_matl);
-
-  const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
-
-  sched->addTask(t, perProcPatches,  d_matl_set);
+  scheduleInitialize( sched, level);
 }
 
-//______________________________________________________________________
-void
-planeAverage::restartInitialize()
-{
-}
+
 //______________________________________________________________________
 void planeAverage::sched_computePlanarAve(SchedulerP   & sched,
                                           const LevelP & level)
