@@ -83,6 +83,20 @@ meanTurbFluxes::~meanTurbFluxes()
   delete d_planeAve_2;
 }
 
+
+//______________________________________________________________________
+//  "That C++11 doesn'tt include make_unique is partly an oversight, and it will
+//   almost certainly be added in the future. In the meantime, use the one provided below."
+//     - Herb Sutter, chair of the C++ standardization committee
+//
+//   Once C++14 is adpoted delete this
+template<typename T, typename ...Args>
+std::unique_ptr<T> meanTurbFluxes::make_unique( Args&& ...args )
+{
+    return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
+}
+
+
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void meanTurbFluxes::problemSetup(const ProblemSpecP &,

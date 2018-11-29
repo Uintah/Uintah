@@ -88,6 +88,12 @@ ______________________________________________________________________*/
 
 
   private:
+  
+    // remove this once C++14 is adopted
+    template<typename T, typename ...Args>
+    std::unique_ptr<T> make_unique( Args&& ...args );
+  
+  
     //______________________________________________________________________
     //          STRUCTS
     //  All variables except velocity
