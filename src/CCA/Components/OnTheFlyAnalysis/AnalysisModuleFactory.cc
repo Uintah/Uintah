@@ -38,7 +38,6 @@
 #endif
 
 #if !defined( NO_ICE )
-  #include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
   #include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
 #endif
 
@@ -121,9 +120,6 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
 #endif
 
 #if !defined( NO_ICE )
-      else if ( module == "containerExtract" ) {
-        modules.push_back( scinew containerExtract(    myworld, materialManager, module_ps ) );
-      }
       else if ( module == "vorticity" ) {
         modules.push_back( scinew vorticity(           myworld, materialManager, module_ps ) );
       }
