@@ -106,11 +106,13 @@ namespace Uintah{
       int _num_extra_src;
       double _k_ash_uncertain;
       int _Nenv;
+      int _calc_freq;
       bool do_coal_region;
       std::string _T_label_name;         ///< Temperature label name
       MaterialManagerP& _materialManager;
       int m_matl_index;                   ///< Material index
 
+      const VarLabel* _lastRadSolveLabel;
       const VarLabel* _simulationTimeLabel;
       const VarLabel* _delTLabel;
 

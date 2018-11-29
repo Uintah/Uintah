@@ -33,6 +33,7 @@
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <Core/Grid/Box.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
+#include <Core/Grid/Variables/PerPatch.h>
 
 #include <Core/Parallel/Parallel.h>
 #include <iostream>
@@ -113,6 +114,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       src_db->getAttribute("type", type);
 
       if ( type == "do_radiation"  || type == "rmcrt_radiation" ){
+        src_db->getWithDefault("calc_frequency", _calc_freq,3);  //default matches the default of the DOradiation solve
         found_radiation_model = true;
       }
     }
@@ -286,6 +288,11 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
       task->requires( Task::OldDW, _HF_T_label, Ghost::AroundCells, 1 );
       task->requires( Task::OldDW, _HF_B_label, Ghost::AroundCells, 1 );
 
+       _lastRadSolveLabel=VarLabel::find( "last_radiation_solve_timestep_index");
+       if (_lastRadSolveLabel!=nullptr){ // Dynamic radiation solve.  Normalize relaxation factor so wall averaging rate isn't affected (as much)
+         task->requires( Task::OldDW, _lastRadSolveLabel, Ghost::None,0);
+         task->requires(Task::OldDW, VarLabel::find(timeStep_name),Ghost::None,0 ); 
+       }
   } else {
 
 
@@ -296,6 +303,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   task->requires( Task::OldDW, _simulationTimeLabel);
   task->requires( Task::OldDW, _delTLabel, Ghost::None, 0);
+
   sched->addTask(task, level->eachPatch(), _materialManager->allMaterials( "Arches" ), Rad_TG);
 
 
@@ -366,6 +374,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
     const Patch* patch = patches->get(p);
     HTVariables vars;
+
     vars.relax = _relax;
     vars.time = simTime;
     vars.delta_t = delT;
@@ -376,7 +385,13 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     // applied regardless of the type of wall temperature model.
 
     if( time_subset == 0 ) {
-
+      if (_lastRadSolveLabel!=nullptr){
+        PerPatch< int > lastSolve= 0;
+        old_dw->get( lastSolve, _lastRadSolveLabel, m_matl_index,patch); 
+        timeStep_vartype timeStep(0);
+        old_dw->get(timeStep, VarLabel::find(timeStep_name) ); // For this to be totally correct, should have corresponding requires.
+        vars.relax*= ( (double) ( timeStep - lastSolve) / (double) _calc_freq );
+      }
       // Actually compute the wall HT model
       old_dw->get( vars.T_old      , _T_label      , m_matl_index , patch , Ghost::None , 0 );
       old_dw->get( vars.cc_vel     , _cc_vel_label , m_matl_index , patch , Ghost::None , 0 );
