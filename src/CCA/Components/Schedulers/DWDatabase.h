@@ -394,7 +394,7 @@ DWDatabase<DomainType>::initializeScrubs(       int                        dwid
     if (m_vars[keyiter->second]) {
       VarLabelMatl<DomainType> vlm = keyiter->first;
       // See if it is in the scrubcounts map.
-      ScrubItem key(vlm.label_, vlm.matlIndex_, vlm.domain_, dwid);
+      ScrubItem key(vlm.m_label, vlm.m_matl_index, vlm.m_domain, dwid);
       ScrubItem* result = scrubcounts->lookup(&key);
       if (!result && !add) {
         delete m_vars[keyiter->second];
@@ -733,12 +733,12 @@ DWDatabase<DomainType>::print( std::ostream & out, int rank ) const
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
     if (m_vars[keyiter->second]) {
       const VarLabelMatl<DomainType>& vlm = keyiter->first;
-      const DomainType* dom = vlm.domain_;
+      const DomainType* dom = vlm.m_domain;
       if (dom) {
-        out << rank << " Name: " << vlm.label_->getName() << "  domain: " << *dom << "  matl:" << vlm.matlIndex_ << '\n';
+        out << rank << " Name: " << vlm.m_label->getName() << "  domain: " << *dom << "  matl:" << vlm.m_matl_index << '\n';
       }
       else {
-        out << rank << " Name: " << vlm.label_->getName() << "  domain: N/A  matl: " << vlm.matlIndex_ << '\n';
+        out << rank << " Name: " << vlm.m_label->getName() << "  domain: N/A  matl: " << vlm.m_matl_index << '\n';
       }
     }
   }
@@ -758,15 +758,15 @@ DWDatabase<DomainType>::logMemoryUse(       std::ostream  & out
     if (m_vars[keyiter->second]) {
       Variable* var = m_vars[keyiter->second]->m_var;
       VarLabelMatl<DomainType> vlm = keyiter->first;
-      const VarLabel* label = vlm.label_;
+      const VarLabel* label = vlm.m_label;
       std::string elems;
       unsigned long totsize;
       void* ptr;
       var->getSizeInfo(elems, totsize, ptr);
       const TypeDescription* td = label->typeDescription();
 
-      logMemory(out, total, tag, label->getName(), (td ? td->getName() : "-"), vlm.domain_,
-                vlm.matlIndex_, elems, totsize, ptr, dwid);
+      logMemory(out, total, tag, label->getName(), (td ? td->getName() : "-"), vlm.m_domain,
+                vlm.m_matl_index, elems, totsize, ptr, dwid);
     }
   }
 }
@@ -810,11 +810,11 @@ struct hash<VarLabelMatl<DomainType> > {
   size_t operator()( const VarLabelMatl<DomainType>& v ) const
   {
     size_t h = 0u;
-    char* str = const_cast<char*>(v.label_->getName().data());
+    char* str = const_cast<char*>(v.m_label->getName().data());
     while (int c = *str++) {
       h = h * 7 + c;
     }
-    return ((((size_t)v.label_) << (sizeof(size_t) / 2) ^ ((size_t)v.label_) >> (sizeof(size_t) / 2)) ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_);
+    return ((((size_t)v.m_label) << (sizeof(size_t) / 2) ^ ((size_t)v.m_label) >> (sizeof(size_t) / 2)) ^ (size_t)v.m_domain ^ (size_t)v.m_matl_index);
   }
 };
 

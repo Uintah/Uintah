@@ -52,12 +52,14 @@ using namespace Uintah;
 
 
 namespace {
+
   Dout g_tg_phase_dbg(          "TaskGraphPhases"       , "TaskGraph", "task phase assigned to each task by the task graph"  , false);
   Dout g_proc_neighborhood_dbg( "ProcNeighborhood"      , "TaskGraph", "info on local or distal patch neighborhoods"         , false);
   Dout g_find_computes_dbg(     "FindComputes"          , "TaskGraph", "info on computing task for particular requires"      , false);
   Dout g_add_task_dbg(          "TaskGraphAddTask"      , "TaskGraph", "report task name, computes and requires: every task" , false);
   Dout g_detailed_task_dbg(     "TaskGraphDetailedTasks", "TaskGraph", "high-level info on creation of DetailedTasks"        , false);
   Dout g_detailed_deps_dbg(     "TaskGraphDetailedDeps" , "TaskGraph", "detailed dep info for each DetailedTask"             , false);
+
 }
 
 //______________________________________________________________________

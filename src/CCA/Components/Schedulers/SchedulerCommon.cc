@@ -1783,10 +1783,9 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
   for (unsigned int i = 0; i < levelVariableInfo.size(); i++) {
     VarLabelMatl<Level> currentReductionVar = levelVariableInfo[i];
 
-    if (currentReductionVar.label_->typeDescription()->isReductionVariable()) {
+    if (currentReductionVar.m_label->typeDescription()->isReductionVariable()) {
 
-      // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
-      const Level* oldLevel = currentReductionVar.domain_;
+      const Level* oldLevel = currentReductionVar.m_domain;
       const Level* newLevel = nullptr;
       if (oldLevel && oldLevel->getIndex() < grid->numLevels()) {
 
@@ -1799,10 +1798,10 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 
       //  Either both levels need to be null or both need to exist (null levels mean global data)
       if (!oldLevel || newLevel) {
-        ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentReductionVar.label_->typeDescription()->createInstance());
+        ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentReductionVar.m_label->typeDescription()->createInstance());
 
-        oldDataWarehouse->get(*v, currentReductionVar.label_, currentReductionVar.domain_, currentReductionVar.matlIndex_);
-        newDataWarehouse->put(*v, currentReductionVar.label_, newLevel, currentReductionVar.matlIndex_);
+        oldDataWarehouse->get(*v, currentReductionVar.m_label, currentReductionVar.m_domain, currentReductionVar.m_matl_index);
+        newDataWarehouse->put(*v, currentReductionVar.m_label, newLevel, currentReductionVar.m_matl_index);
         delete v;  // copied on the put command
       }
     }
@@ -1812,7 +1811,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
   //  copy Sole Variables to the new_dw
   for (unsigned int i = 0; i < levelVariableInfo.size(); i++) {
     VarLabelMatl<Level> Var = levelVariableInfo[i];
-    const VarLabel* label = Var.label_;
+    const VarLabel* label = Var.m_label;
 
     if ( label->typeDescription()->getType() == TypeDescription::SoleVariable ){
       SoleVariableBase* var = dynamic_cast<SoleVariableBase*>( label->typeDescription()->createInstance() );
@@ -2161,8 +2160,9 @@ void
 SchedulerCommon::clearTaskMonitoring()
 {
   // Loop through the global (0) and local (1) tasks
-  for (unsigned int i = 0; i < 2; ++i)
+  for (unsigned int i = 0; i < 2; ++i) {
     m_monitoring_values[i].clear();
+  }
 }
 
 //______________________________________________________________________
@@ -2172,13 +2172,13 @@ SchedulerCommon::clearTaskMonitoring()
 void
 SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
 {
-  if( !m_monitoring )
+  if( !m_monitoring ) {
     return;
+  }
 
   // Create and schedule a task that will record each of the
   // tasking monitoring attributes.
-  Task* t = scinew Task("SchedulerCommon::recordTaskMonitoring",
-                        this, &SchedulerCommon::recordTaskMonitoring);
+  Task* t = scinew Task("SchedulerCommon::recordTaskMonitoring", this, &SchedulerCommon::recordTaskMonitoring);
 
   // Ghost::GhostType gn = Ghost::None;
 
@@ -2188,9 +2188,8 @@ SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
     {
       t->computes( it.second, m_dummy_matl, Task::OutOfDomain );
       
-      overrideVariableBehavior(it.second->getName(),
-                               false, false, true, true, true);
       // treatAsOld copyData noScrub notCopyData noCheckpoint
+      overrideVariableBehavior(it.second->getName(), false, false, true, true, true);
     }
   }
 
@@ -2204,8 +2203,9 @@ SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
 void
 SchedulerCommon::scheduleTaskMonitoring( const PatchSet* patches )
 {
-  if( !m_monitoring )
+  if( !m_monitoring ) {
     return;
+  }
 
   // Create and schedule a task that will record each of the
   // tasking monitoring attributes.
@@ -2220,8 +2220,7 @@ SchedulerCommon::scheduleTaskMonitoring( const PatchSet* patches )
     {
       t->computes( it.second, m_dummy_matl, Task::OutOfDomain );
 
-      overrideVariableBehavior(it.second->getName(),
-                               false, false, true, true, true);
+      overrideVariableBehavior(it.second->getName(), false, false, true, true, true);
       // treatAsOld copyData noScrub notCopyData noCheckpoint
     }
   }
@@ -2232,7 +2231,7 @@ SchedulerCommon::scheduleTaskMonitoring( const PatchSet* patches )
 //______________________________________________________________________
 // Record the global task monitoring attribute values into the data
 // warehouse.
-void SchedulerCommon::recordTaskMonitoring( const ProcessorGroup *
+void SchedulerCommon::recordTaskMonitoring( const ProcessorGroup * /*   */
                                           , const PatchSubset    * patches
                                           , const MaterialSubset * /*matls*/
                                           ,       DataWarehouse  * old_dw
@@ -2307,8 +2306,7 @@ SchedulerCommon::sumTaskMonitoringValues( DetailedTask * dtask )
           bool loadBalancerCost = false;
           double value;
 
-          // Currently the monitoring is limited to the LoadBalancer
-          // cost, task exec time, and task wait time.
+          // Currently the monitoring is limited to the LoadBalancer cost, task exec time, and task wait time.
           if (it.first.find("LoadBalancerCost") != std::string::npos) {
             // The same code is in runTask of the specific scheduler
             // (MPIScheduler and UnifiedScheduler) to use the task
