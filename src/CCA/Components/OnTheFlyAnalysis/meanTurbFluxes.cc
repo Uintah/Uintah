@@ -40,6 +40,8 @@
 #include <Core/Util/DOUT.hpp>
 #include <iostream>
 
+#define ALL_LEVELS 99
+
 using namespace Uintah;
 using namespace std;
 //__________________________________
