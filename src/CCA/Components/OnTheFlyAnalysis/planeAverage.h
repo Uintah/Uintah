@@ -95,6 +95,9 @@ ______________________________________________________________________*/
 
     virtual void scheduleDoAnalysis_preReloc(SchedulerP   & sched,
                                              const LevelP & level) {};
+                                             
+    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
+                                              const LevelP& level );
 
     enum weightingType { NCELLS, MASS, NONE };
 
@@ -532,6 +535,8 @@ ______________________________________________________________________*/
     //     PUBLIC:  VARIABLES
     MaterialSet*  d_matl_set;
     
+    enum GRAPH_INDX { TG_SKIP =0, TG_COMPUTE =1, NUM_GRAPHS = 2 };
+    
     
     
   //______________________________________________________________________
@@ -612,13 +617,13 @@ ______________________________________________________________________*/
                          const std::string & rootPath,
                          std::string       & path );
 
-
-
     bool isItTime( DataWarehouse * old_dw);
 
-    bool isRightLevel( const int myLevel,
-                       const int L_indx,
-                       const LevelP& level);
+    void  computeTaskGraphIndex(const ProcessorGroup * ,
+                                const PatchSubset    * patches,
+                                const MaterialSubset *,
+                                DataWarehouse        * old_dw,
+                                DataWarehouse        *);
 
     // general labels
     class planeAverageLabel {
@@ -655,7 +660,6 @@ ______________________________________________________________________*/
 
     enum orientation { XY, XZ, YZ };        // plane orientation
     orientation d_planeOrientation;
-
   };
 }
 

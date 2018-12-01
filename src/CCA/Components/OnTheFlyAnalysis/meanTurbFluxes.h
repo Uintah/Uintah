@@ -78,7 +78,7 @@ ______________________________________________________________________*/
     virtual void scheduleRestartInitialize(SchedulerP   & sched,
                                            const LevelP & level);
 
-    virtual void restartInitialize();
+    virtual void restartInitialize(){};
 
     virtual void scheduleDoAnalysis(SchedulerP   & sched,
                                     const LevelP & level);
@@ -86,21 +86,23 @@ ______________________________________________________________________*/
     virtual void scheduleDoAnalysis_preReloc(SchedulerP   & sched,
                                              const LevelP & level) {};
 
+    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
+                                              const LevelP& level);
 
   private:
-  
+
     // remove this once C++14 is adopted
     template<typename T, typename ...Args>
     std::unique_ptr<T> make_unique( Args&& ...args );
-  
-  
+
+
     //______________________________________________________________________
     //          STRUCTS
     //  All variables except velocity
     struct Qvar{
 
       Qvar(){};
-      
+
       Qvar( int m ) :matl(m)
       {
         matSubSet = scinew MaterialSubset();
@@ -167,7 +169,7 @@ ______________________________________________________________________*/
                          DataWarehouse        * new_dw);
 
     //______________________________________________________________________
-    //          VARIABLES 
+    //          VARIABLES
 
     //__________________________________
     // global constants begin with "d_"
@@ -175,7 +177,7 @@ ______________________________________________________________________*/
     std::shared_ptr< velocityVar >          d_velVar;
 
     MaterialSet*  d_matl_set;
-    
+
     private:
       planeAverage * d_planeAve_1;
       planeAverage * d_planeAve_2;

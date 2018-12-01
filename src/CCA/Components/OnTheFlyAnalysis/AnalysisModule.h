@@ -82,7 +82,9 @@ namespace Uintah {
     
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                              const LevelP& level) = 0;
-
+                                             
+    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
+                                              const LevelP& level) = 0;
   protected:
     ApplicationInterface*  m_application {nullptr};
     Output*                m_output      {nullptr};

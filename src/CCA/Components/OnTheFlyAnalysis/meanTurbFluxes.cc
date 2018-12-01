@@ -40,8 +40,6 @@
 #include <Core/Util/DOUT.hpp>
 #include <iostream>
 
-#define ALL_LEVELS 99
-
 using namespace Uintah;
 using namespace std;
 //__________________________________
@@ -51,8 +49,7 @@ Dout dbg_OTF_MTF("meanTurbFluxes", "OnTheFlyAnalysis", "meanTurbFluxes debug str
 
 //______________________________________________________________________
 /*
-  ToDo:  
-    - temporal scheduling
+  ToDo:
     - verification task
 ______________________________________________________________________*/
 
@@ -85,7 +82,7 @@ meanTurbFluxes::~meanTurbFluxes()
 
 
 //______________________________________________________________________
-//  "That C++11 doesn'tt include make_unique is partly an oversight, and it will
+//  "That C++11 doesn't include make_unique is partly an oversight, and it will
 //   almost certainly be added in the future. In the meantime, use the one provided below."
 //     - Herb Sutter, chair of the C++ standardization committee
 //
@@ -183,7 +180,6 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
   planarVars.push_back( move(pv2) );
 
 
-
   //__________________________________
   //  All the scalar variables to be analyzed
   for( ProblemSpecP var_spec = vars_ps->findBlock( "analyze" ); var_spec != nullptr; var_spec = var_spec->findNextBlock( "analyze" ) ) {
@@ -268,6 +264,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
 }
 
 //______________________________________________________________________
+//
 void meanTurbFluxes::scheduleInitialize(SchedulerP   & sched,
                                         const LevelP & level)
 {
@@ -279,6 +276,7 @@ void meanTurbFluxes::scheduleInitialize(SchedulerP   & sched,
 
 
 //______________________________________________________________________
+//
 void meanTurbFluxes::scheduleRestartInitialize(SchedulerP   & sched,
                                                const LevelP & level)
 {
@@ -289,12 +287,9 @@ void meanTurbFluxes::scheduleRestartInitialize(SchedulerP   & sched,
   d_planeAve_2->scheduleRestartInitialize( sched, level);
 }
 
+
 //______________________________________________________________________
-void
-meanTurbFluxes::restartInitialize()
-{
-}
-//______________________________________________________________________
+//
 void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
                                         const LevelP & level)
 {
@@ -382,7 +377,7 @@ void meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
     t->requires( Task::NewDW, Q->label, Q->matSubSet, Ghost::None, 0 );
     t->computes ( Q->primeLabel );
   }
-  sched->addTask( t, level->eachPatch() , d_matl_set );
+  sched->addTask( t, level->eachPatch() , d_matl_set, planeAverage::TG_COMPUTE );
 }
 
 //______________________________________________________________________
@@ -408,10 +403,10 @@ void meanTurbFluxes::calc_TurbFluctuations(const ProcessorGroup  * ,
   }
 }
 //______________________________________________________________________
-//  This is computed every timestep, not necessary
+//
 template <class T>
-void meanTurbFluxes::calc_Q_prime( DataWarehouse         * new_dw,
-                                   const Patch           * patch,
+void meanTurbFluxes::calc_Q_prime( DataWarehouse * new_dw,
+                                   const Patch   * patch,
                                    shared_ptr<Qvar> Q)
 {
   const int matl = Q->matl;
@@ -492,7 +487,7 @@ void meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
   t->computes ( d_velVar->normalTurbStrssLabel );
   t->computes ( d_velVar->shearTurbStrssLabel );
 
-  sched->addTask( t, level->eachPatch() , d_matl_set );
+  sched->addTask( t, level->eachPatch() , d_matl_set, planeAverage::TG_COMPUTE );
 }
 
 
@@ -570,4 +565,12 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
       }
     }
   }
+}
+
+//______________________________________________________________________
+//
+void meanTurbFluxes::sched_computeTaskGraphIndex( SchedulerP& sched,
+                                                  const LevelP& level)
+{
+  d_planeAve_1->sched_computeTaskGraphIndex( sched, level );
 }

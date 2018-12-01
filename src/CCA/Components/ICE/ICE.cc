@@ -87,6 +87,8 @@ extern Uintah::MasterLock cerrLock;
 
 #define SET_CFI_BC 0
 
+//#define HACK 1
+
 using namespace std;
 using namespace Uintah;
 using namespace ExchangeModels;
@@ -179,14 +181,12 @@ ICE::~ICE()
     delete d_WallShearStressModel;
   }
 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->releaseComponents();
-      delete am;
-    }
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->releaseComponents();
+    delete am;
   }
+
   
   if (d_press_matl && d_press_matl->removeReference()){
     delete d_press_matl;
@@ -543,15 +543,12 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
                                                       m_materialManager,
                                                       prob_spec);
 
-    if( d_analysisModules.size() != 0 ) {
-
-      vector<AnalysisModule*>::iterator iter;
-      for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
-        AnalysisModule* am = *iter;
-        std::vector<std::vector<const VarLabel* > > dummy;
-        am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
-        am->problemSetup(prob_spec, restart_prob_spec, grid, dummy, dummy);
-      }
+    for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
+      AnalysisModule* am = *iter;
+      std::vector<std::vector<const VarLabel* > > dummy;
+      
+      am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
+      am->problemSetup(prob_spec, restart_prob_spec, grid, dummy, dummy);
     }
   }  // mpm
   
@@ -696,8 +693,7 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
   //  output data analysis modules
   if(!d_with_mpm && d_analysisModules.size() != 0){
 
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
 
       am->outputProblemSpec( root );
@@ -761,12 +757,9 @@ void ICE::scheduleInitialize(const LevelP & level,
   
   //__________________________________
   // dataAnalysis 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleInitialize( sched, level );
-    }
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->scheduleInitialize( sched, level );
   }
  
   //__________________________________
@@ -803,12 +796,9 @@ void ICE::scheduleRestartInitialize(const LevelP& level,
   
   //__________________________________
   // dataAnalysis 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleRestartInitialize( sched, level);
-    }
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->scheduleRestartInitialize( sched, level);
   }
   
 }
@@ -822,12 +812,9 @@ void ICE::restartInitialize()
   cout_doing << d_myworld->myRank() << " Doing restartInitialize "<< "\t\t\t ICE" << endl;
 
   //__________________________________
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->restartInitialize();
-    }
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->restartInitialize();
   }
   
   //__________________________________
@@ -1026,6 +1013,9 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
                                                           all_matls,
                                                           "afterAdvection");
+#ifdef HACK                                                          
+  scheduleComputeTaskGraphIndex(          sched, level );
+#endif
 }
 /* _____________________________________________________________________
  Function~  ICE::scheduleFinalizeTimestep--
@@ -1064,14 +1054,11 @@ ICE::scheduleAnalysis( const LevelP& level, SchedulerP& sched)
 
   //__________________________________
   //  on the fly analysis
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleDoAnalysis( sched, level);
-    }
-  }                                                          
-                                                          
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->scheduleDoAnalysis( sched, level);
+  }
+                                 
   scheduleTestConservation( sched, patches, ice_matls_sub, all_matls);
                                                           
   cout_doing << "---------------------------------------------------------"<<endl;
@@ -2027,6 +2014,19 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
       if( fb_model )
         fb_model->scheduleTestConservation(sched,patches);
     }
+  }
+}
+
+/* _____________________________________________________________________
+ Function~  ICE::scheduleComputeTaskGraphIndex--
+_____________________________________________________________________*/
+void ICE::scheduleComputeTaskGraphIndex(SchedulerP& sched,
+                                        const LevelP& level )
+{
+  vector<AnalysisModule*>::iterator iter;
+  for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->sched_computeTaskGraphIndex( sched, level );
   }
 }
 
@@ -4704,7 +4704,12 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
   const Level* level = getLevel(patches);
   
   // the advection calculations care about the position of the old dw subcycle
+
+#ifdef HACK
+  double AMR_subCycleProgressVar = 0;
+#else
   double AMR_subCycleProgressVar = getSubCycleProgress(old_dw);
+#endif
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
