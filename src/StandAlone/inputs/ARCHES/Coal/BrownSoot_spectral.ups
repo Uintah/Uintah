@@ -1644,6 +1644,9 @@
           <ASH>0.0786348668</ASH>
           <H2O>0.0578784552</H2O>
         </ultimate_analysis>
+
+        <daf_volatiles_fraction>.453</daf_volatiles_fraction>
+
         <raw_coal_enthalpy>-1064549.81069</raw_coal_enthalpy>
         <!-- raw coal enthalpy (at 298.15 K) [J/kg] -->
         <char_enthalpy>0.0</char_enthalpy>

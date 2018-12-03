@@ -576,6 +576,8 @@
                                           need_applies_to="type coal"/><!-- Enthalpy of formation for ash at 298.15 K -->
           <ash_enthalpy                   spec="REQUIRED DOUBLE"
                                           need_applies_to="type coal"/><!-- Enthalpy of formation for ash at 298.15 K -->
+          <daf_volatiles_fraction         spec="REQUIRED DOUBLE"
+                                          need_applies_to="type coal"/><!-- fraction of coal that is considered volatiles (on a dry and ash free basis) -->
 
           <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES"
                                                need_applies_to="type coal"/>
