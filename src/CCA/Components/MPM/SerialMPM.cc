@@ -1651,10 +1651,11 @@ SerialMPM::scheduleComputeParticleScaleFactor(       SchedulerP  & sched,
 
   printSchedule( patches, cout_doing, "MPM::scheduleComputeParticleScaleFactor" );
 
-  Task * t = scinew Task( "MPM::computeParticleScaleFactor",this, &SerialMPM::computeParticleScaleFactor );
+  Task * t = scinew Task( "MPM::computeParticleScaleFactor",this, 
+                          &SerialMPM::computeParticleScaleFactor);
 
-  t->requires( Task::NewDW, lb->pSizeLabel_preReloc,                Ghost::None );
-  t->requires( Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  Ghost::None );
+  t->requires( Task::NewDW, lb->pSizeLabel_preReloc,              Ghost::None );
+  t->requires( Task::NewDW, lb->pDeformationMeasureLabel_preReloc,Ghost::None );
   t->computes( lb->pScaleFactorLabel_preReloc );
 
   sched->addTask( t, patches, matls );
@@ -3912,7 +3913,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                     psize[idx], pFOld[idx]);
           Vector vel(0.0,0.0,0.0);
           Vector acc(0.0,0.0,0.0);
-          double fricTempRate = 0.0;
+          Vector pSN(0.0,0.0,0.0);
           double tempRate = 0.0;
           double burnFraction = 0.0;
 
@@ -3921,10 +3922,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             IntVector node = ni[k];
             vel      += gvelocity_star[node]  * S[k];
             acc      += gacceleration[node]   * S[k];
+            pSN      += gSurfNorm[node]       * S[k];
 
-            fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
-            tempRate += (gTemperatureRate[node] + dTdt[node] +
-                         fricTempRate)   * S[k];
+            tempRate += (gTemperatureRate[node] + dTdt[node])   * S[k];
             burnFraction += massBurnFrac[node]     * S[k];
           }
 
@@ -3937,14 +3937,72 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
           if (flags->d_doingDissolution){
             if(pSurf[idx]>=0.99){
+              // Normalize particle surface normal
+              double pSNL=pSN.length();
+              if(pSNL > 0.0){
+                 pSN = pSN/pSNL;
+              }
+              int maxDir = 0; double maxComp=fabs(pSN.x());
+              for(int i = 1; i<3; i++){
+                if(fabs(pSN[i])>maxComp){
+                  maxComp=fabs(pSN[i]);
+                  maxDir=i;
+                }
+              }
+              int maxDirP1 = (maxDir+1)%3;
+              int maxDirP2 = (maxDir+2)%3;
               pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
-            }else{
-              pmassNew[idx]    = pmass[idx];
+              double deltaMassFrac = (pmass[idx]-pmassNew[idx])/pmass[idx];
+              Vector L[3];
+              double Ll[3];
+              double dL[3];
+              double pSNdotL[3];
+              for(int i=0;i<3;i++){
+                L[i]=Vector(psize[idx](0,i),psize[idx](1,i),psize[idx](2,i));
+                Ll[i] = L[i].length();
+
+                L[i]/=Ll[i];
+                pSNdotL[i] = fabs(Dot(pSN,L[i]));
+              }
+
+              double dL1overdL0 = pSNdotL[maxDirP1]/pSNdotL[maxDir];
+              double dL2overdL0 = pSNdotL[maxDirP2]/pSNdotL[maxDir];
+
+              dL[maxDir] = deltaMassFrac*(Ll[0]*Ll[1]*Ll[2])/
+                                         (Ll[maxDirP1]*Ll[maxDirP2] 
+                                   + dL1overdL0*Ll[maxDir]*Ll[maxDirP2] 
+                                   + dL2overdL0*Ll[maxDir]*Ll[maxDirP1]);
+
+              dL[maxDirP1] = dL1overdL0*dL[maxDir];
+              dL[maxDirP2] = dL2overdL0*dL[maxDir];
+              L[maxDir]       *= (Ll[maxDir]       - dL[maxDir]);
+              L[maxDirP1] *= (Ll[maxDirP1] - dL[maxDirP1]);
+              L[maxDirP2] *= (Ll[maxDirP2] - dL[maxDirP2]);
+
+              psizeNew[idx] = Matrix3(L[0].x(), L[1].x(), L[2].x(),
+                                      L[0].y(), L[1].y(), L[2].y(),
+                                      L[0].z(), L[1].z(), L[2].z());
+
+//            This, and below, are my attempts to make the dissolving particles
+//            retreat, but it doesn't look great.
+//            Matrix3 sizeRed=Matrix3(1.-deltaMassFrac,0.,0.,0.,1.,0.,0.,0.,1.);
+//            psizeNew[idx] = sizeRed*psize[idx];
+//            Matrix3 pszNew = sizeRed*psize[idx];
+//            double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
+//            pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
+//            Vector deltaPos = 0.25*Vector(dL1*dx*pSN.x(),
+//                                          dL2*dy*pSN.y(),
+//                                          dL3*dz*pSN.z());
+//            cout << "deltaPos = " << deltaPos << endl;
+//            pxnew[idx] = pxnew[idx] - deltaPos;
+            } else {
+              pmassNew[idx] = pmass[idx];
+              psizeNew[idx] = psize[idx];
             }
           } else {
             pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
+            psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
           }
-          psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
 
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
           ke += .5*pmass[idx]*pvelnew[idx].length2()*useInKECalc[m];
