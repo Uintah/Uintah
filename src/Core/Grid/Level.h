@@ -280,9 +280,9 @@ private:
   Level( Level && )                 = delete;
   Level& operator=( Level && )      = delete;
       
-  Grid    * m_grid;
-  Point     m_anchor;
-  Vector    m_dcell;
+  Grid    * m_grid{nullptr};
+  Point     m_anchor{};
+  Vector    m_dcell{};
 
   // The spatial range of the level.
   BBox      m_spatial_range{ Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN) };
@@ -292,7 +292,7 @@ private:
   void      setIsNonCubicLevel();
   
   bool      m_finalized{false};
-  int       m_index;                                      // number of the level
+  int       m_index{};                                      // number of the level
   IntVector m_patch_distribution{-1,-1,-1};
   IntVector m_periodic_boundaries{0, 0, 0};
 
@@ -303,11 +303,11 @@ private:
   IntVector m_extra_cells{IntVector(0,0,0)};
   IntVector m_numcells_patch_max{IntVector(0,0,0)};
 
-  std::vector<Patch*> m_real_patches;                    // only real patches
-  std::vector<Patch*> m_virtual_and_real_patches;        // real and virtual
+  std::vector<Patch*> m_real_patches{};                    // only real patches
+  std::vector<Patch*> m_virtual_and_real_patches{};        // real and virtual
 
-  int       m_id;
-  IntVector m_refinement_ratio;
+  int       m_id{};
+  IntVector m_refinement_ratio{};
 
   class IntVectorCompare {
   public:
@@ -324,7 +324,7 @@ private:
   PatchBVH * m_bvh{nullptr};
 
   // overlapping patches   
-  std::map< std::pair<int, int>, overlap > m_overLapPatches;
+  std::map< std::pair<int, int>, overlap > m_overLapPatches{};
   void setOverlappingPatches();
 };
 

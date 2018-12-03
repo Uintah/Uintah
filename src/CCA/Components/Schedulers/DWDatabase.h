@@ -321,6 +321,7 @@ DWDatabase<DomainType>::decrementScrubCount( const VarLabel   * label
   //   If scrubCount then is equal to 0, the var is scrubbed.
 
   ASSERT(matlIndex >= -1);
+
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
     return 0;
@@ -363,16 +364,8 @@ DWDatabase<DomainType>::scrub( const VarLabel   * label
                              )
 {
   ASSERT(matlIndex >= -1);
+
   int idx = m_keyDB->lookup(label, matlIndex, dom);
-
-#if 0
-  if (m_vars[idx] == nullptr) {  // scrub not found
-    std::ostringstream msgstr;
-    msgstr << label->getName() << ", matl " << matlIndex << ", patch/level " << dom->getID() << " not found for scrubbing.";
-    SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
-  }
-#endif
-
   if (idx != -1 && m_vars[idx]) {
     delete m_vars[idx];
     m_vars[idx] = nullptr;
@@ -411,11 +404,11 @@ DWDatabase<DomainType>::initializeScrubs(       int                        dwid
             }
           }
         }
-        keyiter++;
+        ++keyiter;
       }
     }
     else {
-      keyiter++;
+      ++keyiter;
     }
   }
 }
@@ -447,8 +440,7 @@ template<class DomainType>
 void
 KeyDatabase<DomainType>::merge( const KeyDatabase<DomainType> & newDB )
 {
-  for (typename keyDBtype::const_iterator const_keyiter = newDB.m_keys.begin(); const_keyiter != newDB.m_keys.end();
-      const_keyiter++) {
+  for (typename keyDBtype::const_iterator const_keyiter = newDB.m_keys.cbegin(); const_keyiter != newDB.m_keys.cend(); ++const_keyiter) {
     typename keyDBtype::const_iterator const_db_iter = m_keys.find(const_keyiter->first);
     if (const_db_iter == m_keys.end()) {
       m_keys.insert(std::pair<VarLabelMatl<DomainType>, int>(const_keyiter->first, m_key_count++));
@@ -488,7 +480,7 @@ template<class DomainType>
 void
 KeyDatabase<DomainType>::print( std::ostream & out, int rank ) const
 {
-  for (auto keyiter = m_keys.begin(); keyiter != m_keys.end(); keyiter++) {
+  for (auto keyiter = m_keys.begin(); keyiter != m_keys.end(); ++keyiter) {
     const VarLabelMatl<DomainType>& vlm = keyiter->first;
     const DomainType* dom = vlm.domain_;
     if (dom) {

@@ -263,11 +263,10 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
     int levelID = 0;
     const PatchSet* ps = task->getPatchSet();
     // Reduction tasks don't have patches, filter them out.
-    if (ps && ps->size()) {
+    if ( (ps != nullptr) && (ps->size() > 0) ) {
       const PatchSubset* pss = ps->getSubset(0);
       if (pss && pss->size()) {
-        const Level * level = pss->get(0)->getLevel();
-        levelID = level->getID();
+        levelID = pss->get(0)->getLevel()->getID();
       }
     }
 
@@ -283,7 +282,7 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       // If a task's patches are on the coarse level and the offset is 1, then the offset is positive.
       // If a task's patches are on the fine level and the offset is 1, then the offset is negative.
 
-      int levelOffset = req->m_level_offset;
+      const int levelOffset = req->m_level_offset;
       int trueLevel = levelID;
       if (req->m_patches_dom == Task::CoarseLevel) {
         trueLevel -= levelOffset;
@@ -347,7 +346,7 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
 
   if (g_proc_neighborhood_dbg) {
     for (auto kv : max_ghost_for_varlabelmap) {
-      DOUT(g_proc_neighborhood_dbg, "For varlabel " << kv.first.key << " on level: " << kv.first.level << " the max ghost cell is: " << kv.second);
+      DOUT(g_proc_neighborhood_dbg, "For varlabel " << kv.first.m_key << " on level: " << kv.first.m_level << " the max ghost cell is: " << kv.second);
     }
   }
   
@@ -488,9 +487,8 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       if (task->getType() == Task::OncePerProc || task->getType() == Task::Hypre) {
         // only schedule this task on processors in the neighborhood
 
-        // NOTE THE MAP::AT METHOD NEEDS TO BE SAFEGUARDED. Is it
-        // reasonable to set neighborhood_procs = local_procs when it
-        // fails??
+        // NOTE THE MAP::AT METHOD NEEDS TO BE SAFEGUARDED.
+        // Is it reasonable to set neighborhood_procs = local_procs when it fails??
         std::unordered_set<int> neighborhood_procs;
         if( task->m_max_ghost_cells.find(levelID) != task->m_max_ghost_cells.end() ) {
           neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
@@ -549,8 +547,7 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
             // reasonable to set search_distal_requires = false when
             // it fails??
 
-	    // This looping should never fail as it is a loop through
-	    // the map.
+            // This looping should never fail as it is a loop through the map.
             if(task->m_max_ghost_cells.find(levelIDTemp) != task->m_max_ghost_cells.end()) {
               search_distal_requires = (task->m_max_ghost_cells.at(levelIDTemp) >= MAX_HALO_DEPTH);
             } else {

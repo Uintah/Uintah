@@ -133,14 +133,14 @@ class CompTable {
     }
 
     Data             * m_next{nullptr};
-    DetailedTask     * m_dtask;
-    Task::Dependency * m_comp;
-    const Patch      * m_patch;
-    int                m_matl;
-    unsigned int       m_hash;
+    DetailedTask     * m_dtask{nullptr};
+    Task::Dependency * m_comp{nullptr};
+    const Patch      * m_patch{nullptr};
+    int                m_matl{};
+    unsigned int       m_hash{};
   };
 
-  FastHashTable<Data> m_data;
+  FastHashTable<Data> m_data{};
 
   void insert( Data * data );
 
@@ -236,11 +236,10 @@ class TaskGraph {
     void createDetailedDependencies();
 
     /// Connects the tasks, but does not sort them.
-    /// Used for the UnifiedScheduler, this routine has the side effect
-    /// (just like the topological sort) of adding the reduction tasks.
-    /// However, this routine leaves the tasks in the order they were
-    /// added, so that reduction tasks are hit in the correct order
-    /// by each MPI process.
+    /// This routine has the side effect (just like the topological sort)
+    /// of adding the reduction tasks. However, this routine leaves the
+    /// tasks in the order they were added, so that reduction tasks are
+    /// hit in the correct order by each MPI process.
     void nullSort( std::vector<Task*> & tasks );
 
     int getNumTasks() const;
@@ -318,10 +317,35 @@ class TaskGraph {
                             ,       int                iteration
                             );
 
-    SchedulerCommon      * m_scheduler;
-    LoadBalancer         * m_load_balancer;
-    const ProcessorGroup * m_proc_group;
-    Scheduler::tgType      m_type;
+    struct LabelLevel {
+      LabelLevel( const std::string & key
+                , const int           level
+                )
+      : m_key(key)
+      , m_level(level)
+      {}
+
+      std::string m_key{};
+      int         m_level{};
+
+      bool operator<( const LabelLevel& rhs ) const
+      {
+        if (this->m_level < rhs.m_level) {
+          return true;
+        }
+        else if ((this->m_level == rhs.m_level) && (this->m_key < rhs.m_key)) {
+          return true;
+        }
+        return false;
+      }
+    };
+
+    std::map<LabelLevel, int> max_ghost_for_varlabelmap{};
+
+    SchedulerCommon      * m_scheduler{nullptr};
+    LoadBalancer         * m_load_balancer{nullptr};
+    const ProcessorGroup * m_proc_group{nullptr};
+    Scheduler::tgType      m_type{};
     DetailedTasks        * m_detailed_tasks{nullptr};
 
     // how many times this taskgraph has executed this timestep
@@ -332,23 +356,8 @@ class TaskGraph {
 
     int m_index{-1};
 
-    std::vector<std::shared_ptr<Task> > m_tasks;
+    std::vector<std::shared_ptr<Task> > m_tasks{};
 
-    struct LabelLevel {
-      LabelLevel(const std::string& key, const int level) : key(key), level(level) {}
-      std::string key;
-      int level;
-      bool operator<(const LabelLevel& rhs) const {
-        if (this->level < rhs.level) {
-          return true;
-        } else if ((this->level == rhs.level) && (this->key < rhs.key)) {
-          return true;
-        }
-        return false;
-      }
-    };
-
-    std::map<LabelLevel, int> max_ghost_for_varlabelmap;
 
 }; // class TaskGraph
 

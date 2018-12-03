@@ -1339,11 +1339,10 @@ SchedulerCommon::doEmitTaskGraphDocs()
 
 //______________________________________________________________________
 //
-
 void
 SchedulerCommon::compile()
 {
-  GridP grid = const_cast<Grid*>(getLastDW()->getGrid());
+  GridP grid    = const_cast<Grid*>(getLastDW()->getGrid());
   GridP oldGrid = nullptr;
 
   if (m_dws[0]) {
@@ -1354,7 +1353,7 @@ SchedulerCommon::compile()
 
     DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " SchedulerCommon starting compile");
 
-    auto num_task_graphs = m_task_graphs.size();
+    const auto num_task_graphs = m_task_graphs.size();
     for (auto i = 0u; i < num_task_graphs; i++) {
       if (num_task_graphs > 1) {
         DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << "  Compiling task graph: " << i+1 << " of " << m_task_graphs.size() << " with " << m_num_tasks << " tasks.");
@@ -1363,16 +1362,11 @@ SchedulerCommon::compile()
       Timers::Simple tg_compile_timer;
       tg_compile_timer.start();
 
-      // do we have tasks with halo requirements > MAX_HALO_DEPTH? Determined in SchedulerCommon::addTask
+      // check if there are tasks with halo requirements > MAX_HALO_DEPTH? Determined in SchedulerCommon::addTask
       const bool has_distal_reqs = ( (m_task_graphs[i]->getIndex() > 0) && (m_max_distal_ghost_cells != 0) );
 
-
-      //--------------------------------------------------------------------------------------------
-      // NOTE: this single call is where all the TG compilation complexity arises
-      //--------------------------------------------------------------------------------------------
+      // NOTE: this single call is where all the TG compilation complexity arises (dependency analysis for auto MPI mesgs)
       m_task_graphs[i]->createDetailedTasks( useInternalDeps(), grid, oldGrid, has_distal_reqs );
-      //--------------------------------------------------------------------------------------------
-
 
       double compile_time = tg_compile_timer().seconds();
 
@@ -1380,55 +1374,30 @@ SchedulerCommon::compile()
                                          << (m_is_init_timestep ? "INIT" : std::to_string(m_task_graphs[i]->getIndex())) << ": " << compile_time << " (sec)");
     }
 
-    // polymorphically check scheduler at runtime, that all ranks are executing the same size TG (excluding spatial tasks)
+    // check scheduler at runtime, that all ranks are executing the same size TG (excluding spatial tasks)
     verifyChecksum();
 
     DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " SchedulerCommon finished compile");
-
-  } else {
-    // NOTE: this was added with scheduleRestartInititalize() support (for empty TGs)
-    //  Even when numTasks_ <= 0, the code below executed and did nothing worthwhile... seemingly
-    //  Shouldn't need to do this work without tasks though -APH 03/12/15
-    return; // no tasks and nothing to do
+  }
+  else {
+    return; // no tasks, so nothing to do
   }
 
   m_locallyComputedPatchVarMap->reset();
-  
-  // TODO: which of the two cases should we be using and why do both exist - APH 02/23/18
-  //       looks like this sets up superbox and superpatch sets (m_locallyComputedPatchVarMap)
-#if 1
-  for (int i = 0; i < grid->numLevels(); i++) {
-    const PatchSubset* patches = m_loadBalancer->getPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myRank());
 
+  const int num_levels = grid->numLevels();
+  for (int i = 0; i < num_levels; ++i) {
+    const PatchSubset* patches = m_loadBalancer->getPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myRank());
     if (patches->size() > 0) {
       m_locallyComputedPatchVarMap->addComputedPatchSet(patches);
     }
   }
 
-#else
-  for (auto i = 0u; i < m_task_graphs.size(); i++) {
-    DetailedTasks* dts = m_task_graphs[i]->getDetailedTasks();
-
-    if (dts != nullptr) {
-      // figure out the locally computed patches for each variable.
-      for (auto i = 0; i < dts->numLocalTasks(); i++) {
-        const DetailedTask* dtask = dts->localTask(i);
-
-        for(const Task::Dependency* comp = dtask->getTask()->getComputes(); comp != nullptr; comp = comp->m_next) {
-
-          if (comp->m_var->typeDescription()->getType() != TypeDescription::ReductionVariable) {
-            constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dtask->getPatches());
-            m_locallyComputedPatchVarMap->addComputedPatchSet(patches.get_rep());
-          }
-        }
-      }
-    }
-  }
-#endif
-
-  for (auto dw = 0u; dw < m_dws.size(); dw++) {
+  const auto num_dws = m_dws.size();
+  for (auto dw = 0u; dw < num_dws; ++dw) {
     if (m_dws[dw].get_rep()) {
-      for (auto i = 0u; i < m_task_graphs.size(); i++) {
+      const auto num_task_graphs = m_task_graphs.size();
+      for (auto i = 0u; i < num_task_graphs; ++i) {
         DetailedTasks* dts = m_task_graphs[i]->getDetailedTasks();
         dts->copyoutDWKeyDatabase(m_dws[dw]);
       }
@@ -1436,6 +1405,7 @@ SchedulerCommon::compile()
     }
   }
 
+  // create SuperPatch groups - only necessary if OnDemandDataWarehouse::s_combine_memory == true, by default it is false
   m_locallyComputedPatchVarMap->makeGroups();
 }
 
