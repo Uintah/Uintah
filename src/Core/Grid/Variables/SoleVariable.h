@@ -29,14 +29,11 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/TypeMismatchException.h>
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
 
 #include <iosfwd>
-#include <iostream>
 #include <cstring>
-
 
 namespace Uintah {
 
@@ -68,42 +65,61 @@ WARNING
   
 ****************************************/
 
+  // Uses C++11's shared_ptr to handle memory management.
   template<class T> class SoleVariable : public SoleVariableBase {
   public:
-    inline SoleVariable() {}
-    inline SoleVariable(T value) : value(value) {}
-    inline SoleVariable(const SoleVariable<T>& copy) :
-      value(copy.value) {}
-    virtual ~SoleVariable();
+    inline SoleVariable() : value(std::make_shared<T>()) {}
+    inline SoleVariable(T value) : value(std::make_shared<T>(value)) {}
+    inline SoleVariable(const SoleVariable<T>& copy) : value(copy.value) {}
+
+    virtual void copyPointer(Variable&);
+    
+    virtual ~SoleVariable() {};
       
+    const TypeDescription* virtualGetTypeDescription() const { return getTypeDescription(); }
+
     static const TypeDescription* getTypeDescription();
       
     inline operator T () const {
-      return value;
+      return *value;
     }
+
     inline T& get() {
-      return value;
+      return *value;
     }
+
     inline const T& get() const {
-      return value;
+      return *value;
     }
 
-    void setData(const T&);
+    void setData(const T& val) {
+      value = std::make_shared<T>(val);
+    };
 
-    virtual SoleVariableBase* clone() const;
-    virtual void copyPointer(Variable&);
+    virtual SoleVariableBase* clone() const {
+      return scinew SoleVariable<T>(*this);
+    };
 
-    virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
-                             void*& ptr) const {
-      elems="1";
-      totsize = sizeof(T);
-      ptr=(void*)&value;
+    SoleVariable<T>& operator=(const SoleVariable<T>& copy) {
+      value = copy.value;
+      return *this;
+    };
+
+    virtual void getSizeInfo(std::string& elems, unsigned long& totsize, void*& ptr) const {
+      elems = "1";
+      totsize = getDataSize();
+      ptr = getBasePointer();
     }
 
     virtual size_t getDataSize() const {
       return sizeof(T);
     }
 
+    virtual void* getBasePointer() const {
+      return value.get();
+      //return (void*)&value;
+    }
+     
     virtual bool copyOut(void* dst) const {
       void* src = (void*)(&value);
       size_t numBytes = getDataSize();
@@ -111,88 +127,89 @@ WARNING
       return (retVal == dst) ? true : false;
     }
 
-     virtual void emitNormal(std::ostream& out, const IntVector& l, const IntVector& h,
-                             ProblemSpecP /*varnode*/, bool outputDoubleAsFloat)
-     {
-       ssize_t linesize = (ssize_t)(sizeof(T));
+    virtual void emitNormal(std::ostream& out, const IntVector& l, const IntVector& h,
+                            ProblemSpecP /*varnode*/, bool outputDoubleAsFloat) {
+      ssize_t linesize = (ssize_t)(sizeof(T));
+      
+      out.write((char*) (value.get()), linesize);
+    }
+    
+    virtual void readNormal(std::istream& in, bool swapBytes) {
+      ssize_t linesize = (ssize_t)(sizeof(T));
        
-       out.write((char*) &value, linesize);
-     }
+      T val;
+       
+      in.read((char*) &val, linesize);
+       
+      if (swapBytes)
+        Uintah::swapbytes(val);
+       
+      value = std::make_shared<T>(val);
+    }
 
-     virtual void readNormal(std::istream& in, bool swapBytes)
-     {
-       ssize_t linesize = (ssize_t)(sizeof(T));
-       
-       T val;
-       
-       in.read((char*) &val, linesize);
-       
-       if (swapBytes)
-         Uintah::swapbytes(val);
-       
-       value = val;
-     }
+    void print(std::ostream& out) const {
+      out << *(value.get());
+    }
 
-     void print(std::ostream& out) const {
-       out << "Sole variable ";
-       out.width(10);
-       out << value << " " << std::endl;
-     }
+    // Static variable whose entire purpose is to cause the
+    // (instantiated) type of this class to be registered with the
+    // Core/Disclosure/TypeDescription class when this class' object
+    // code is originally loaded from the shared library.  The
+    // 'registerMe' variable is not used for anything else in the
+    // program.
+    static TypeDescription::Register registerMe;
 
   private:
-    SoleVariable<T>& operator=(const SoleVariable<T>&copy);
-    static Variable* maker();
-    T value;
-  };
-
-  template<class T>  const TypeDescription* 
-    SoleVariable<T>::getTypeDescription()
-  {
     static TypeDescription* td;
+    static Variable* maker() {
+      return scinew SoleVariable<T>();
+    };
+
+    std::shared_ptr<T> value;
+  };  // end class SoleVariable
+
+  
+  template<class T>
+  TypeDescription* SoleVariable<T>::td = nullptr;
+   
+  // The following line is the initialization (creation) of the
+  // 'registerMe' static variable (for each version of CCVariable
+  // (double, int, etc)).  Note, the 'registerMe' variable is created
+  // when the object code is initially loaded (usually during intial
+  // program load by the operating system).
+  template<class T>
+  TypeDescription::Register
+  SoleVariable<T>::registerMe( getTypeDescription() );
+  
+  template<class T>
+  const TypeDescription*
+  SoleVariable<T>::getTypeDescription()
+  {
     if(!td){
+
+      // this is a hack to get a non-null SoleVariable var for some
+      // functions the SoleVariables are used in (i.e., task->computes).
+      // Since they're not fully-qualified variables, maker would fail
+      // anyway.  And since most instances use Handle, it would be
+      // difficult.
+      int* tmp = nullptr;
       td = scinew TypeDescription(TypeDescription::SoleVariable,
                                   "SoleVariable", &maker,
-                                  fun_getTypeDescription((int*)0));
+                                  fun_getTypeDescription(tmp));
     }
     return td;
   }
 
-  template<class T> Variable*  SoleVariable<T>::maker()
-  {
-    return scinew SoleVariable<T>();
-  }
-   
-  template<class T> SoleVariable<T>::~SoleVariable()
-  {
-  }
-
-  template<class T> SoleVariableBase*  SoleVariable<T>::clone() const
-  {
-    return scinew SoleVariable<T>(*this);
-  }
-
   template<class T> void 
-    SoleVariable<T>::copyPointer(Variable& copy)
+  SoleVariable<T>::copyPointer(Variable& copy)
   {
     SoleVariable<T>* c = dynamic_cast<SoleVariable<T>* >(&copy);
-    if(!c)
+    if(!c) {
       SCI_THROW(TypeMismatchException("Type mismatch in sole variable", __FILE__, __LINE__));
+    }
     *this = *c;
   }
-   
-  template<class T> SoleVariable<T>&
-  SoleVariable<T>::operator=(const SoleVariable<T>& copy)
-  {
-    value = copy.value;
-    return *this;
-  }
 
-  template<class T>
-    void
-    SoleVariable<T>::setData(const T& val)
-    {
-      value = val;
-    }  
 } // End namespace Uintah
 
 #endif

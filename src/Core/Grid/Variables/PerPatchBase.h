@@ -22,13 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-
 #ifndef UINTAH_HOMEBREW_PerPatchBase_H
 #define UINTAH_HOMEBREW_PerPatchBase_H
 
-#include <string>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/Variable.h>
+
+#include <string>
 
 namespace Uintah {
 
@@ -64,38 +64,38 @@ WARNING
 ****************************************/
 
 // inherits from Variable solely for the purpose of stuffing it in the DW
-class PerPatchBase : public Variable {
-public:
+  class PerPatchBase : public Variable {
+  public:
       
-  virtual ~PerPatchBase();
+    virtual ~PerPatchBase();
       
-  virtual const TypeDescription* virtualGetTypeDescription() const;
-  virtual void copyPointer(Variable&) = 0;
-  virtual PerPatchBase* clone() const = 0;
-  virtual RefCounted* getRefCounted();
-  virtual void getSizeInfo( std::string    & elems,
-                            unsigned long  & totsize,
-                            void          *& ptr) const = 0;
+    virtual const TypeDescription* virtualGetTypeDescription() const = 0;
+    virtual void copyPointer(Variable&) = 0;
+    virtual PerPatchBase* clone() const = 0;
+    virtual RefCounted* getRefCounted();
+    virtual void getSizeInfo( std::string    & elems,
+                              unsigned long  & totsize,
+                              void          *& ptr) const = 0;
 
-  virtual size_t getDataSize() const = 0;
-  virtual bool   copyOut(void* dst) const = 0;
-  virtual void*  getBasePointer() const = 0;
+    virtual size_t getDataSize() const = 0;
+    virtual bool   copyOut(void* dst) const = 0;
+    virtual void*  getBasePointer() const = 0;
 
-  // Only affects grid variables
-  void offsetGrid(const IntVector& /*offset*/);
- 
-  virtual void emitNormal( std::ostream& out, const IntVector& l,
-                           const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat );
-  virtual void readNormal(std::istream& in, bool swapbytes);      
-  virtual void allocate(const Patch* patch, const IntVector& boundary);
+    virtual void emitNormal( std::ostream& out, const IntVector& l,
+                             const IntVector& h, ProblemSpecP varnode, 
+                             bool outputDoubleAsFloat ) = 0;;
+    virtual void readNormal(std::istream& in, bool swapbytes) = 0;      
+    virtual void allocate(const Patch* patch, const IntVector& boundary);
 
-protected:
-  PerPatchBase(const PerPatchBase&);
-  PerPatchBase();
+    virtual void print(std::ostream&) const = 0;
+
+  protected:
+    PerPatchBase(const PerPatchBase&);
+    PerPatchBase();
   
-private:
-  PerPatchBase& operator=(const PerPatchBase&);
-};
+  private:
+    PerPatchBase& operator=(const PerPatchBase&);
+  };
 
 } // End namespace Uintah
 

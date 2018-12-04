@@ -1,6 +1,3 @@
-#ifndef UINTAH_HOMEBREW_SOLEVARIABLEBASE_H
-#define UINTAH_HOMEBREW_SOLEVARIABLEBASE_H
-
 /*
  * The MIT License
  *
@@ -25,12 +22,18 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Grid/Variables/Variable.h>
-#include <Core/Parallel/UintahMPI.h>
+#ifndef UINTAH_HOMEBREW_SOLEVARIABLEBASE_H
+#define UINTAH_HOMEBREW_SOLEVARIABLEBASE_H
 
-#include <iosfwd>
+#include <Core/Grid/Variables/Variable.h>
+
+
+#include <string>
 
 namespace Uintah {
+
+  class Patch;
+  class RefCounted;
 
 /**************************************
 
@@ -60,33 +63,40 @@ WARNING
   
 ****************************************/
 
-   class SoleVariableBase : public Variable {
-
-   public:
+// inherits from Variable solely for the purpose of stuffing it in the DW
+  class SoleVariableBase : public Variable {
+  public:
       
-      virtual ~SoleVariableBase();
+    virtual ~SoleVariableBase();
 
-      virtual void copyPointer(Variable&) = 0;
-      virtual SoleVariableBase* clone() const = 0; 
-      virtual const TypeDescription* virtualGetTypeDescription() const;
-      virtual RefCounted* getRefCounted();
-      virtual void getSizeInfo(std::string& elems,unsigned long& totsize,
-                               void*& ptr) const = 0;
-      virtual size_t getDataSize() const = 0;
-      virtual bool copyOut(void* dst) const = 0;
-      virtual void emitNormal(std::ostream& out, const IntVector& l,
-                              const IntVector& h, ProblemSpecP varnode, 
-                              bool outputDoubleAsFloat );
-      virtual void readNormal(std::istream& in, bool swapbytes);      
-      virtual void allocate(const Patch* patch, const IntVector& boundary);
+    virtual const TypeDescription* virtualGetTypeDescription() const = 0;
+    virtual void copyPointer(Variable&) = 0;
+    virtual SoleVariableBase* clone() const = 0; 
+    virtual RefCounted* getRefCounted();
+    virtual void getSizeInfo( std::string    & elems,
+                              unsigned long  & totsize,
+                              void          *& ptr) const = 0;
 
-   protected:
-      SoleVariableBase(const SoleVariableBase&);
-      SoleVariableBase();
+    virtual size_t getDataSize() const = 0;
+    virtual bool   copyOut(void* dst) const = 0;
+    virtual void*  getBasePointer() const = 0;
+
+    virtual void emitNormal( std::ostream& out, const IntVector& l,
+                             const IntVector& h, ProblemSpecP varnode, 
+                             bool outputDoubleAsFloat ) = 0;;
+    virtual void readNormal(std::istream& in, bool swapbytes) = 0;      
+    virtual void allocate(const Patch* patch, const IntVector& boundary);
+
+    virtual void print(std::ostream&) const = 0;
+
+  protected:
+    SoleVariableBase(const SoleVariableBase&);
+    SoleVariableBase();
       
-   private:
-      SoleVariableBase& operator=(const SoleVariableBase&);
-   };
+  private:
+    SoleVariableBase& operator=(const SoleVariableBase&);
+  };
+
 } // End namespace Uintah
 
 #endif // UINTAH_HOMEBREW_SOLEVARIABLEBASE_H
