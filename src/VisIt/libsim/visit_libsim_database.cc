@@ -223,10 +223,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     //     << box_max[0] << "," << box_max[1] << ","
     //     << box_max[2] << "]" << std::endl;
 
-    // int logical[3];
-
-    // for (int i=0; i<3; ++i)
-    //   logical[i] = high[i] - low[i];
+    int logical[3];
+    for (int i=0; i<3; ++i)
+      logical[i] = high[i] - low[i];
 
     // debug5 << "logical: " << logical[0] << ", " << logical[1] << ", "
     //     << logical[2] << std::endl;
@@ -344,13 +343,6 @@ visit_handle visit_SimGetMetaData(void *cbdata)
             VisIt_MeshMetaData_setNumGroups(mmd, numLevels);
             VisIt_MeshMetaData_setGroupTitle(mmd, "levels");
             VisIt_MeshMetaData_setGroupPieceName(mmd, "level");
-
-            // VisIt_MeshMetaData_setNumDomains(mmd, sim->myworld->nRanks());
-            // VisIt_MeshMetaData_setDomainTitle(mmd, "ranks");
-            // VisIt_MeshMetaData_setDomainPieceName(mmd, "rank");
-            // VisIt_MeshMetaData_setNumGroups(mmd, sim->myworld->nNodes());
-            // VisIt_MeshMetaData_setGroupTitle(mmd, "nodes");
-            // VisIt_MeshMetaData_setGroupPieceName(mmd, "node");
             
             for (int p=0; p<totalPatches; ++p)
             {
@@ -388,17 +380,63 @@ visit_handle visit_SimGetMetaData(void *cbdata)
             VisIt_MeshMetaData_setSpatialExtents(mmd, extents);
 
             // ARS - FIXME
-            // VisIt_MeshMetaData_setHasLogicalBounds(mmd, 1);
-            // VisIt_MeshMetaData_logicalBounds(mmd, logical[0]);
+            VisIt_MeshMetaData_setHasLogicalBounds(mmd, 1);
+            VisIt_MeshMetaData_setLogicalBounds(mmd, logical);
 
             VisIt_SimulationMetaData_addMesh(md, mmd);
+
+            meshes_added.insert(mesh_for_this_var);
 
             // std::cerr << "Calculating SimGetMetaData for "
             //        << mesh_for_this_var.c_str() << " mesh (" << mmd << ")." 
             //        << std::endl;          
-          }
 
-          meshes_added.insert(mesh_for_this_var);
+            // Add a SIL for subsettng via the nodes and ranks.
+            visit_handle smd = VISIT_INVALID_HANDLE;
+
+            if(VisIt_VariableMetaData_alloc(&smd) == VISIT_OKAY)
+            {
+              const unsigned int nRanks = sim->myworld->nRanks();
+              const unsigned int nNodes = sim->myworld->nNodes();
+
+              int rank_enum_id[nRanks];
+              int node_enum_id[nNodes];
+              
+              std::string enum_name = std::string("Nodes_Ranks/") + mesh_for_this_var;
+              VisIt_VariableMetaData_setName(smd, enum_name.c_str());
+              VisIt_VariableMetaData_setMeshName(smd, mesh_for_this_var.c_str());
+              VisIt_VariableMetaData_setCentering(smd, VISIT_VARCENTERING_ZONE);
+              VisIt_VariableMetaData_setType(smd, VISIT_VARTYPE_SCALAR);
+              VisIt_VariableMetaData_setNumComponents(smd, 1);
+
+              VisIt_VariableMetaData_setEnumerationType(smd, VISIT_ENUMTYPE_BY_VALUE);
+              VisIt_VariableMetaData_setHideFromGUI(smd, true);
+
+              for( unsigned int r=0; r<nRanks; ++r ) {
+                char msg[12];
+                sprintf( msg, "Rank_%04d", r );
+                rank_enum_id[r] = r;
+                VisIt_VariableMetaData_addEnumNameValue( smd, msg, r );
+              }
+
+              if( nNodes > 1 ) {
+                for( unsigned int n=0; n<nNodes; ++n ) {
+                  char msg[12];
+                  sprintf( msg, "Node_%04d", n );
+                  node_enum_id[n] = nRanks + n;
+                  VisIt_VariableMetaData_addEnumNameValue( smd, msg, nRanks+n );
+                }
+          
+                for( unsigned int r=0; r<nRanks; ++r ) {
+                  unsigned int n = sim->myworld->getNodeFromRank( r );
+                    
+                  VisIt_VariableMetaData_addEnumGraphEdge(smd, node_enum_id[n], rank_enum_id[r] );
+                }
+              }
+              
+              VisIt_SimulationMetaData_addVariable(md, smd);
+            }
+          }
         }
 
         std::string mesh_name[2] = {mesh_for_this_var,
@@ -2232,7 +2270,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       isMachineMeshVar = (hostName == sim->hostName);
     }
   }
-  else if( strncmp(varname, "Patch/Id", 8) == 0 ||
+  else if( strncmp(varname, "Nodes_Ranks/", 12) == 0 ||
+           strncmp(varname, "Patch/Id", 8) == 0 ||
            strncmp(varname, "Patch/ProcRank", 14) == 0 ||
            strncmp(varname, "Patch/ProcNode", 14) == 0 )
   {
@@ -2545,6 +2584,19 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         // Bounds are vectors
         gd->components = 3;
       }
+      else if (strncmp(varname, "Nodes_Ranks/", 12) == 0 )
+      {
+        if (strcmp(varname, "Nodes_Ranks/CC_Mesh") == 0 ||
+            strcmp(varname, "Nodes_Ranks/NC_Mesh") == 0)
+          gd->num = ((phigh[0] - plow[0]) *
+                     (phigh[1] - plow[1]) *
+                     (phigh[2] - plow[2]));
+        // Using the patch mesh
+        else //if (strncmp(varname, "Nodes_Ranks/Patch", 17) == 0 ||
+          gd->num = 1;
+        
+        gd->components = 1;
+      }
       // This section should never be reached.
       else
       {
@@ -2671,7 +2723,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         }
       }
       // Patch processor rank
-      else if( strncmp(varname, "Patch/ProcRank", 14) == 0 )
+      else if( strncmp(varname, "Nodes_Ranks/", 12) == 0 ||
+               strncmp(varname, "Patch/ProcRank", 14) == 0 )
       {
         double val = sim->myworld->myRank();
 
