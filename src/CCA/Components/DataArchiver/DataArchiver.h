@@ -118,7 +118,7 @@ class LoadBalancer;
                                const bool     removeOldDir );
 
     //! Call this after problemSetup it will copy the data and
-    //! checkpoint files ignore dumping reduction variables.
+    //! checkpoint files ignore dumping reduction/sole variables.
     virtual void postProcessUdaSetup( Dir& fromDir );
 
     //! Copy a section between udas .
@@ -182,13 +182,13 @@ class LoadBalancer;
                           DataWarehouse  * new_dw, 
                           int              type );
 
-    //! Task that handles outputting non-checkpoint reduction variables.
-    //! Scheduled in finalizeTimeStep.
-    void outputReductionVars( const ProcessorGroup *,
-                              const PatchSubset    * patch,
-                              const MaterialSubset * matls,
-                              DataWarehouse  * old_dw,
-                              DataWarehouse  * new_dw );
+    //! Task that handles outputting non-checkpoint global
+    //! reduction/sole variables.  Scheduled in finalizeTimeStep.
+    void outputGlobalVars( const ProcessorGroup *,
+                           const PatchSubset    * patch,
+                           const MaterialSubset * matls,
+                                 DataWarehouse  * old_dw,
+                                 DataWarehouse  * new_dw );
 
     //! Get the time the next output will occur
     virtual double getNextOutputTime() const { return m_nextOutputTime; }
@@ -397,7 +397,7 @@ class LoadBalancer;
                         const bool   removeOld,
                         const bool   areCheckpoints = false );
 
-    //! helper for restartSetup - copies the reduction dat files to 
+    //! helper for restartSetup - copies the global dat files to 
     //! new uda dir (from startTimeStep to maxTimeStep)
     void copyDatFiles( const Dir & fromDir,
                        const Dir & toDir,
@@ -405,7 +405,7 @@ class LoadBalancer;
                        const int   maxTimeStep,
                        const bool  removeOld );
 
-    //! add saved global (reduction) variables to index.xml
+    //! add saved global (reduction/sole) variables to index.xml
     void indexAddGlobals();
 
     // setupLocalFileSystems() and setupSharedFileSystem() are used to
@@ -480,11 +480,11 @@ class LoadBalancer;
     //! m_saveLabelNames is a temporary list containing VarLabel
     //! names to be saved and the materials to save them for.  The
     //! information will be basically transferred to m_saveLabels or
-    //! m_saveReductionLabels after mapping VarLabel names to their
+    //! m_saveGlobalLabels after mapping VarLabel names to their
     //! actual VarLabel*'s.
     std::list< SaveNameItem > m_saveLabelNames;
     std::vector< SaveItem >   m_saveLabels;
-    std::vector< SaveItem >   m_saveReductionLabels;
+    std::vector< SaveItem >   m_saveGlobalLabels;
 
     // for efficiency of SaveItem's
     ConsecutiveRangeSet m_prevMatls;
@@ -493,7 +493,7 @@ class LoadBalancer;
     //! m_checkpointLabelNames is a temporary list containing
     //! the names of labels to save when checkpointing
     std::vector< SaveItem > m_checkpointLabels;
-    std::vector< SaveItem > m_checkpointReductionLabels;
+    std::vector< SaveItem > m_checkpointGlobalLabels;
 
     // Only one of these should be non-zero.
     double m_checkpointInterval {0};        // In seconds.
@@ -636,7 +636,7 @@ class LoadBalancer;
     //! double-check to make sure that DA::output is only called once per level per processor per type
     std::vector<bool> m_outputCalled;
     std::vector<bool> m_checkpointCalled;
-    bool m_checkpointReductionCalled {false};
+    bool m_checkpointGlobalCalled {false};
 #endif
     Uintah::MasterLock m_outputLock;
 
