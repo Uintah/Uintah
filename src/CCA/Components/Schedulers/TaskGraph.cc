@@ -1401,9 +1401,8 @@ TaskGraph::makeVarLabelMaterialMap( Scheduler::VarLabelMaterialMap * result )
           matls.push_back(msubset->get(mm));
         }
       }
-      // ARS - Treat sole vars the same as reduction vars??
-      else if (vartype == TypeDescription::ReductionVariable /* ||
-               vartype == TypeDescription::SoleVariable */) {
+      else if (vartype == TypeDescription::ReductionVariable ||
+               vartype == TypeDescription::SoleVariable ) {
         // Default to material -1 (global)
         matls.push_back(-1);
       }
