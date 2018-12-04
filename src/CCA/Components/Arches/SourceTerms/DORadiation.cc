@@ -109,10 +109,10 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 
     _dynamicSolveCountPatchLabel =
       VarLabel::create( dynamicSolveCountPatch_name,
-                        PerPatch< double >::getTypeDescription() );  
+                        SoleVariable< double >::getTypeDescription() );  
     _lastRadSolvePatchLabel =
       VarLabel::create( "last_radiation_solve_timestep_index",
-                        PerPatch< int >::getTypeDescription() );  
+                        SoleVariable< int >::getTypeDescription() );  
   } 
 
   db->getWithDefault( "checkForMissingIntensities", _checkForMissingIntensities  , false );
@@ -758,16 +758,16 @@ DORadiation::initialize( const ProcessorGroup* pc,
       temp_var.initialize(0.0);
     }
 
-    if(_dynamicSolveFrequency) {
-      // Add the per patch dynamicSolveCount so there is something to
-      // transfer initially.
-      double firstRadSolveAtTime=.1; // unless otherwise dictated by the solve frequency
-      PerPatch< double > ppVar =firstRadSolveAtTime;
-      new_dw->put( ppVar, _dynamicSolveCountPatchLabel, 0, patch );
-      PerPatch< int > ppLastRadTimeStep = 0;
-      new_dw->put( ppLastRadTimeStep, _lastRadSolvePatchLabel , 0, patch );
-    }
   }    
+  if(_dynamicSolveFrequency) {
+    // Add the per patch dynamicSolveCount so there is something to
+    // transfer initially.
+    double firstRadSolveAtTime=.1; // unless otherwise dictated by the solve frequency
+    SoleVariable< double > ppVar =firstRadSolveAtTime;
+    new_dw->put( ppVar, _dynamicSolveCountPatchLabel);
+    SoleVariable< int > ppLastRadTimeStep = 0;
+    new_dw->put( ppLastRadTimeStep, _lastRadSolvePatchLabel);
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -819,16 +819,12 @@ DORadiation::restartInitialize( const ProcessorGroup* pc,
     timeStep_vartype timeStep(0);
     new_dw->get(timeStep, VarLabel::find(timeStep_name) ); // For this to be totally correct, should have corresponding requires.
 
-    // NEED SOLEVARIABLE SUPPORT SO THIS LOOP CAN BE REDUCED to 2 LINES
-      PerPatch< double > ppTargetTimeStep;
-      PerPatch< int > lastRadSolveIndex ;
-    for (int p=0; p < patches->size(); p++) {
-      const Patch* patch = patches->get(p);
+    SoleVariable< double > ppTargetTimeStep;
+    SoleVariable< int > lastRadSolveIndex;
 
-      new_dw->get( ppTargetTimeStep, _dynamicSolveCountPatchLabel, 0, patch );
+    new_dw->get( ppTargetTimeStep, _dynamicSolveCountPatchLabel );
 
-      new_dw->get( lastRadSolveIndex, _lastRadSolvePatchLabel, 0, patch );
-    }
+    new_dw->get( lastRadSolveIndex, _lastRadSolvePatchLabel );
 
     m_arches->setTaskGraphIndex(needRadSolveNextTimeStep(timeStep - lastRadSolveIndex +1,_radiation_calc_freq,simTime,ppTargetTimeStep));
 }
@@ -1373,18 +1369,14 @@ DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
     delt_vartype delT;
     old_dw->get(delT,_labels->d_delTLabel);
 
-    // NEED SOLEVARIABLE SUPPORT SO THIS LOOP CAN BE REDUCED to 2 LINES
-      PerPatch< double > ppTargetTimeStep;
-      PerPatch< int > lastRadSolveIndex ;
-    for (int p=0; p < patches->size(); p++) {
-      const Patch* patch = patches->get(p);
+    SoleVariable< double > ppTargetTimeStep;
+    SoleVariable< int > lastRadSolveIndex;
 
-      old_dw->get( ppTargetTimeStep, _dynamicSolveCountPatchLabel, 0, patch );
-      new_dw->put( ppTargetTimeStep, _dynamicSolveCountPatchLabel, 0, patch );
+    old_dw->get( ppTargetTimeStep, _dynamicSolveCountPatchLabel  );
+    new_dw->put( ppTargetTimeStep, _dynamicSolveCountPatchLabel  );
 
-      old_dw->get( lastRadSolveIndex, _lastRadSolvePatchLabel, 0, patch );
-      new_dw->put( lastRadSolveIndex, _lastRadSolvePatchLabel, 0, patch );
-    }
+    old_dw->get( lastRadSolveIndex, _lastRadSolvePatchLabel );
+    new_dw->put( lastRadSolveIndex, _lastRadSolvePatchLabel );
 
     m_arches->setTaskGraphIndex(needRadSolveNextTimeStep(timeStep - lastRadSolveIndex +1,_radiation_calc_freq,delT+simTime,ppTargetTimeStep));
   }
@@ -1412,16 +1404,11 @@ DORadiation::checkReductionVars( const ProcessorGroup * pg,
     delt_vartype delT;
     old_dw->get(delT,_labels->d_delTLabel);
 
-    // NEED SOLEVARIABLE SUPPORT SO THIS LOOP CAN BE REDUCED to 2 LINES
-      PerPatch< double > ppVar=(double) target_rad_solve_time;
-      PerPatch< int > ppCurrentTimeStep = (int) timeStep;
-    for (int p=0; p < patches->size(); p++) {
-      const Patch* patch = patches->get(p);
+    SoleVariable< double > ppVar=(double) target_rad_solve_time;
+    SoleVariable< int > ppCurrentTimeStep = (int) timeStep;
 
-      new_dw->put( ppVar, _dynamicSolveCountPatchLabel, 0, patch );
-
-      new_dw->put( ppCurrentTimeStep, _lastRadSolvePatchLabel, 0, patch );
-    }
+    new_dw->put( ppVar, _dynamicSolveCountPatchLabel );
+    new_dw->put( ppCurrentTimeStep, _lastRadSolvePatchLabel );
 
     m_arches->setTaskGraphIndex(needRadSolveNextTimeStep(timeStep - ppCurrentTimeStep +1,_radiation_calc_freq,delT+simTime,target_rad_solve_time));
 }

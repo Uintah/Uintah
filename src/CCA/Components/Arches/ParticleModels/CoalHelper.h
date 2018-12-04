@@ -4,6 +4,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <vector>
+#include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 
 namespace Uintah{
 
@@ -150,12 +151,19 @@ namespace Uintah{
               // ESTIMATEE TAR FRACTION - based on:
               // Alexander Josephson et al. 2018-2019 Reduction of a Detailed Soot
               // Model for Simulation of Pyrolyzing Solid Fuel Combustion
-              
+              double gasPressure=101325.; //default
+              ChemHelper& helper = ChemHelper::self();
+              ChemHelper::TableConstantsMapType the_table_constants = helper.get_table_constants();
+              std::cout << the_table_constants->size() << " \n";
+              auto press_iter = the_table_constants->find("Pressure");
+              if ( press_iter != the_table_constants->end() ){
+                gasPressure=press_iter->second;
+              }
               const double Oc =_coal_db.coal.O/_coal_db.coal.C*12.011/16.; // Oxygen to Carbon molar ratio
               const double Hc =_coal_db.coal.H/_coal_db.coal.C*12.011/1.008; // Hydrogen to carbon molar ratio 
               double Vol;
               db_coal_props->require("daf_volatiles_fraction",Vol); 
-              const double Pres = 0; // log10( pressure in atmospheres) assume atmospheric
+              const double Pres = log10(gasPressure/101325.); // log10( pressure in atmospheres) assume atmospheric
               const double ytar = (-124.2+35.7*Pres+93.5*Oc-223.9*Oc*Oc+284.8*Hc-107.3*Hc*Hc+
                               5.48*Vol+0.014*Vol*Vol-58.2*Pres*Hc-0.521*Pres*Vol-5.32*Hc*Vol)/
                              (-303.8+52.4*Pres+1.55E3*Oc-2.46E3*Oc*Oc+656.9*Hc-266.3*Hc*Hc+15.9*Vol+
@@ -170,6 +178,7 @@ namespace Uintah{
             } else {
               throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__);
             }
+            //  ------------------- end Tar fraction estimation -------------------//
 
             //Ash temperatures:
             db_coal_props->getWithDefault("ash_hemispherical_temperature", _coal_db.T_hemisphere, -999);
