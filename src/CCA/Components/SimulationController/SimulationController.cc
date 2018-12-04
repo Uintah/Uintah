@@ -132,15 +132,15 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
 
   m_runtime_stats.insert( XMLIOTime,                 std::string("XMLIO"),                 timeStr );
   m_runtime_stats.insert( OutputIOTime,              std::string("OutputIO"),              timeStr );
-  m_runtime_stats.insert( ReductionIOTime,           std::string("ReductionIO"),           timeStr );
+  m_runtime_stats.insert( OutputGlobalIOTime,        std::string("OutputGlobalIO"),        timeStr );
   m_runtime_stats.insert( CheckpointIOTime,          std::string("CheckpointIO"),          timeStr );
-  m_runtime_stats.insert( CheckpointReductionIOTime, std::string("CheckpointReductionIO"), timeStr );
+  m_runtime_stats.insert( CheckpointGlobalIOTime,    std::string("CheckpointGlobalIO"),    timeStr );
   m_runtime_stats.insert( TotalIOTime,               std::string("TotalIO"),               timeStr );
 
-  m_runtime_stats.insert( OutputIORate,              std::string("OutputIORate"),     "MBytes/sec" );
-  m_runtime_stats.insert( ReductionIORate,           std::string("ReductionIORate"),  "MBytes/sec" );
-  m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"), "MBytes/sec" );
-  m_runtime_stats.insert( CheckpointReductionIORate, std::string("CheckpointReductionIORate"), "MBytes/sec" );
+  m_runtime_stats.insert( OutputIORate,              std::string("OutputIORate"),           "MBytes/sec" );
+  m_runtime_stats.insert( OutputGlobalIORate,        std::string("OutputGlobalIORate"),     "MBytes/sec" );
+  m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"),       "MBytes/sec" );
+  m_runtime_stats.insert( CheckpointGlobalIORate,    std::string("CheckpointGlobalIORate"), "MBytes/sec" );
 
   m_runtime_stats.insert( NumTasks,                  std::string("NumberOfTasks"),     "tasks" );
   m_runtime_stats.insert( NumPatches,                std::string("NumberOfPatches"),   "patches" );

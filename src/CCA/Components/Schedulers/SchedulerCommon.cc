@@ -1496,7 +1496,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 
         if (copyThisVar) {
         
-          // we will take care of reduction & sole variables in a different section
+          // Take care of reduction/sole variables in a different section
           TypeDescription::Type depType = dep->m_var->typeDescription()->getType();
           if ( depType == TypeDescription::ReductionVariable ||
                depType == TypeDescription::SoleVariable) {
@@ -1752,17 +1752,19 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 #endif
 
   //__________________________________
-  // copy reduction variables to the new_dw
+  // copy reduction and sole variables to the new_dw
   std::vector<VarLabelMatl<Level> > levelVariableInfo;
   oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);
 
   newDataWarehouse->unfinalize();
   for (unsigned int i = 0; i < levelVariableInfo.size(); i++) {
-    VarLabelMatl<Level> currentReductionVar = levelVariableInfo[i];
+    VarLabelMatl<Level> currentGlobalVar = levelVariableInfo[i];
 
-    if (currentReductionVar.m_label->typeDescription()->isReductionVariable()) {
+    if (currentGlobalVar.m_label->typeDescription()->getType() == TypeDescription::ReductionVariable ||
+        currentGlobalVar.m_label->typeDescription()->getType() == TypeDescription::SoleVariable) {
 
-      const Level* oldLevel = currentReductionVar.m_domain;
+      // cout << "Global var:  Label(" << setw(15) << currentGlobalVar.m_label->getName() << "): Patch(" << reinterpret_cast<int>(currentGlobalVar.level_) << "): Material(" << currentGlobalVar.matlIndex_ << ")" << endl; 
+      const Level* oldLevel = currentGlobalVar.m_domain;
       const Level* newLevel = nullptr;
       if (oldLevel && oldLevel->getIndex() < grid->numLevels()) {
 
@@ -1775,11 +1777,22 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 
       //  Either both levels need to be null or both need to exist (null levels mean global data)
       if (!oldLevel || newLevel) {
-        ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentReductionVar.m_label->typeDescription()->createInstance());
+        if (currentGlobalVar.m_label->typeDescription()->getType() == TypeDescription::ReductionVariable ) {
 
-        oldDataWarehouse->get(*v, currentReductionVar.m_label, currentReductionVar.m_domain, currentReductionVar.m_matl_index);
-        newDataWarehouse->put(*v, currentReductionVar.m_label, newLevel, currentReductionVar.m_matl_index);
-        delete v;  // copied on the put command
+          ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentGlobalVar.m_label->typeDescription()->createInstance());
+          
+          oldDataWarehouse->get(*v, currentGlobalVar.m_label, currentGlobalVar.m_domain, currentGlobalVar.m_matl_index);
+          newDataWarehouse->put(*v, currentGlobalVar.m_label, newLevel, currentGlobalVar.m_matl_index);
+          delete v;  // copied on the put command
+        }
+        else if (currentGlobalVar.m_label->typeDescription()->getType() == TypeDescription::SoleVariable ) {
+
+          SoleVariableBase* v = dynamic_cast<SoleVariableBase*>(currentGlobalVar.m_label->typeDescription()->createInstance());
+          
+          oldDataWarehouse->get(*v, currentGlobalVar.m_label, currentGlobalVar.m_domain, currentGlobalVar.m_matl_index);
+          newDataWarehouse->put(*v, currentGlobalVar.m_label, newLevel, currentGlobalVar.m_matl_index);
+          delete v;  // copied on the put command
+        }
       }
     }
   }
@@ -1828,6 +1841,30 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
   OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(old_dw);
   OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
 
+  //__________________________________
+  //  copy Sole Variables to the new_dw
+#if 1  
+  // ARS NOTE: This method is called for all patches. Sole var are on
+  // a per rank basis. So when there are multiple patches on a rank
+  // the get/put is duplicated. Really need a per rank method for this
+  // copying.
+  std::vector<VarLabelMatl<Level> > levelVariableInfo;
+  oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);
+
+  for (unsigned int i = 0; i < levelVariableInfo.size(); i++) {
+    VarLabelMatl<Level> Var = levelVariableInfo[i];
+    const VarLabel* label = Var.m_label;
+
+    if ( label->typeDescription()->getType() == TypeDescription::SoleVariable ){
+      SoleVariableBase* var = dynamic_cast<SoleVariableBase*>( label->typeDescription()->createInstance() );
+
+      oldDataWarehouse->get( *var, label );
+      newDataWarehouse->put( *var, label );
+      delete var;
+    }
+  }
+ #endif
+ 
   // For each patch in the patch subset which contains patches in the new grid
   for (int p = 0; p < patches->size(); p++) {
     const Patch* newPatch = patches->get(p);
@@ -1866,12 +1903,16 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
           continue;
         }
 
-        //__________________________________
-        //  Grid Variables
-        if (label->typeDescription()->getType() != TypeDescription::ParticleVariable) {
+	switch (label->typeDescription()->getType()) {
+	case TypeDescription::PerPatch :
+	case TypeDescription::NCVariable :
+	case TypeDescription::CCVariable :
+	case TypeDescription::SFCXVariable :
+	case TypeDescription::SFCYVariable :
+	case TypeDescription::SFCZVariable : {
           Patch::selectType oldPatches;
           oldLevel->selectPatches(newLowIndex, newHighIndex, oldPatches);
-
+	  
           for (unsigned int oldIdx = 0; oldIdx < oldPatches.size(); oldIdx++) {
             const Patch* oldPatch = oldPatches[oldIdx];
 
@@ -1899,17 +1940,44 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
               continue;
             }
 
-            switch (label->typeDescription()->getType()) {
-              case TypeDescription::NCVariable :
-              case TypeDescription::CCVariable :
-              case TypeDescription::SFCXVariable :
-              case TypeDescription::SFCYVariable :
-              case TypeDescription::SFCZVariable : {
-                // bulletproofing
-                if (!oldDataWarehouse->exists(label, matl, oldPatch)) {
-                  SCI_THROW(
-                      UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl, "in copyDataTo GridVariableBase", __FILE__, __LINE__));
+	    // bulletproofing
+	    if (!oldDataWarehouse->exists(label, matl, oldPatch)) {
+	      SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl, "in copyDataTo GridVariableBase", __FILE__, __LINE__));
+	    }
+	    
+	    if( label->typeDescription()->getType() == TypeDescription::PerPatch ) {
+                // DOUTALL( true, "copyDataToNewGrid PerPatch vars begin" );
+                std::vector<Variable *> varlist;
+                oldDataWarehouse->m_var_DB.getlist(label, matl, oldPatch, varlist);
+                PerPatchBase* v = nullptr;
+
+                for (unsigned int i = 0; i < varlist.size(); ++i) {
+                  v = dynamic_cast<PerPatchBase*>(varlist[i]);
+
+                  ASSERT(v->getBasePointer() != nullptr);
+
+                  if (!newDataWarehouse->exists(label, matl, newPatch)) {
+
+                    PerPatchBase* newVariable = v->clone();
+                    newDataWarehouse->m_var_DB.put(label, matl, newPatch, newVariable, copyTimestep(), false);
+
+                  } else {
+                    PerPatchBase* newVariable = dynamic_cast<PerPatchBase*>(newDataWarehouse->m_var_DB.get(label, matl, newPatch));
+
+                    if (oldPatch->isVirtual()) {
+                      // it can happen where the old patch was virtual and this is not
+                      PerPatchBase* tmpVar = newVariable->clone();
+                      tmpVar->copyPointer(*v);
+                      newVariable = tmpVar;
+                      delete tmpVar;
+                    } else {
+                      newVariable = v;
+                    }
+                  }
+                  // DOUTALL( true, "copyDataToNewGrid PerPatch vars end " << label->getName() );
                 }
+                // DOUTALL( true, "copyDataToNewGrid PerPatch vars end" );
+	      } else {
 
                 std::vector<Variable *> varlist;
                 oldDataWarehouse->m_var_DB.getlist(label, matl, oldPatch, varlist);
@@ -1953,22 +2021,17 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                     } else {
                       newVariable->copyPatch(v, srclow, srchigh);
 
-                    }
-                  }
-                }
-              }
-                break;
-              case TypeDescription::PerPatch : {
-              }
-                break;
-              default :
-                SCI_THROW(InternalError("Unknown variable type in copyData: "+label->getName(), __FILE__, __LINE__));
-            }  // end switch
-          }  // end oldPatches
-        } else {
-          //__________________________________
-          //  Particle Variables
-          ParticleSubset* oldsub = oldsubsets[matl];
+		    }
+		  }
+		}
+	    }
+	  }  // end oldPatches
+	}
+	  break;
+	  //__________________________________
+	  //  Particle Variables
+	case TypeDescription::ParticleVariable: {
+	  ParticleSubset* oldsub = oldsubsets[matl];
           if (!oldsub) {
             // collect the particles from the range encompassing this patch.  Use interior cells since
             // extracells aren't collected across processors in the data copy, and they don't matter
@@ -2011,6 +2074,12 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
           newDataWarehouse->put(*newv, label, true);
           delete newv;  // the container is copied
         }
+	  break;
+	  
+	default : {
+	  SCI_THROW(InternalError("Unknown variable type in copyData: "+label->getName(), __FILE__, __LINE__));
+	}
+	}  // end switch
       }  // end matls
     }  // end label_matls
 
