@@ -829,6 +829,9 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch
       buffer.addSendlist( var->getRefCounted() );
       break;
     }
+    case TypeDescription::PerPatch :
+    case TypeDescription::ReductionVariable :
+    case TypeDescription::SoleVariable :
     default : {
       SCI_THROW( InternalError("sendMPI not implemented for " + label->getFullName(matlIndex, patch), __FILE__, __LINE__) );
     }
@@ -943,6 +946,9 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch
       var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
       break;
     }
+    case TypeDescription::PerPatch :
+    case TypeDescription::ReductionVariable :
+    case TypeDescription::SoleVariable :
     default : {
       SCI_THROW( InternalError("recvMPI not implemented for "+label->getFullName(matlIndex, patch), __FILE__, __LINE__) );
     }
@@ -1087,9 +1093,9 @@ OnDemandDataWarehouse::override( const ReductionVariableBase & var
 {
   checkPutAccess( label, matlIndex, nullptr, true );
 
-  // Put it in the database, replace whatever may already be there
   printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
   
+  // Put it in the database, replace whatever may already be there
   m_level_DB.put( label, matlIndex, level, var.clone(), true, true );
 }
 
@@ -1124,10 +1130,10 @@ OnDemandDataWarehouse::put( const SoleVariableBase & var
   // it actually may be replaced, but it doesn't need to explicitly modify with multiple SoleVars in the task graph
   checkPutAccess(label, matlIndex, nullptr, false);
 
+  printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
+  
   // Put it in the database
   if (!m_level_DB.exists(label, matlIndex, level)) {
-    printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
-  
     m_level_DB.put(label, matlIndex, level, var.clone(), d_scheduler->copyTimestep(), false);
   }
 }
@@ -2592,20 +2598,28 @@ OnDemandDataWarehouse::emit(       OutputContext & oc
         break;
       }
 
-      case TypeDescription::ParticleVariable : {
-        var = m_var_DB.get(label, matlIndex, patch);
-        break;
-      }
+      case TypeDescription::ParticleVariable :
+      case TypeDescription::PerPatch :
       default : {
-        var = m_var_DB.get(label, matlIndex, patch);
+        if (m_var_DB.exists(label, matlIndex, patch)) {
+          var = m_var_DB.get(label, matlIndex, patch);
+        }
       }
     }
   }
-  else {
-    l = h = IntVector(-1, -1, -1);
-    const Level* level = patch ? patch->getLevel() : nullptr;
-    if (m_level_DB.exists(label, matlIndex, level)) {
-      var = m_level_DB.get(label, matlIndex, level);
+  else { // reduction and sole variables
+    switch (label->typeDescription()->getType()) {
+      case TypeDescription::ReductionVariable :
+      case TypeDescription::SoleVariable : {
+        l = h = IntVector(-1, -1, -1);
+        const Level* level = patch ? patch->getLevel() : nullptr;
+        if (m_level_DB.exists(label, matlIndex, level)) {
+          var = m_level_DB.get(label, matlIndex, level);
+        }
+        break;
+      }
+      default : {
+      }
     }
   }
 
@@ -2667,18 +2681,26 @@ OnDemandDataWarehouse::emitPIDX(       PIDXOutputContext & pc
       }
       break;
     case TypeDescription::ParticleVariable :
-      m_var = m_var_DB.get( label, matlIndex, patch );
-      break;
+    case TypeDescription::PerPatch :
     default :
-      m_var = m_var_DB.get( label, matlIndex, patch );
+      if (m_var_DB.exists(label, matlIndex, patch)) {
+        m_var = m_var_DB.get( label, matlIndex, patch );
+      }
     }
   }
-  else {    // reduction variables
-    l = h = IntVector( -1, -1, -1 );
-
-    const Level* level = patch ? patch->getLevel() : nullptr;
-    if( m_level_DB.exists( label, matlIndex, level ) ){
-      m_var = m_level_DB.get( label, matlIndex, level );
+  else { // reduction and sole variables
+    switch (label->typeDescription()->getType()) {
+      case TypeDescription::ReductionVariable :
+      case TypeDescription::SoleVariable : {
+        l = h = IntVector(-1, -1, -1);
+        const Level* level = patch ? patch->getLevel() : nullptr;
+        if (m_level_DB.exists(label, matlIndex, level)) {
+          var = m_level_DB.get(label, matlIndex, level);
+        }
+        break;
+      }
+      default : {
+      }
     }
   }
 
@@ -2707,7 +2729,7 @@ OnDemandDataWarehouse::print(       std::ostream & intout
     var->print( intout );
   }
   catch( UnknownVariable& ) {
-    SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on emit reduction", __FILE__, __LINE__) );
+    SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on print ", __FILE__, __LINE__) );
   }
 }
 
@@ -2784,10 +2806,7 @@ OnDemandDataWarehouse::decrementScrubCount( const VarLabel * var
     case TypeDescription::SFCXVariable :
     case TypeDescription::SFCYVariable :
     case TypeDescription::SFCZVariable :
-    case TypeDescription::PerPatch : {
-      count = m_var_DB.decrementScrubCount(var, matlIndex, patch);
-      break;
-    }
+    case TypeDescription::PerPatch :
     case TypeDescription::ParticleVariable : {
       count = m_var_DB.decrementScrubCount(var, matlIndex, patch);
       break;
@@ -2796,6 +2815,7 @@ OnDemandDataWarehouse::decrementScrubCount( const VarLabel * var
       SCI_THROW(InternalError("decrementScrubCount called for sole variable: " + var->getName(), __FILE__, __LINE__));
     }
     case TypeDescription::ReductionVariable : {
+      // Reductions are not scrubbed
       SCI_THROW(InternalError("decrementScrubCount called for reduction variable: " + var->getName(), __FILE__, __LINE__));
     }
     default : {
@@ -2982,7 +3002,7 @@ void OnDemandDataWarehouse::getValidNeighbors( const VarLabel                   
       
       if (m_var_DB.exists( label, matlIndex, neighbor )) {
         std::vector<Variable*> varlist;
-        //Go through the main var plus any foreign vars for this label/material/patch
+        // Go through the main var plus any foreign vars for this label/material/patch
         m_var_DB.getlist( label, matlIndex, neighbor, varlist );
 
         GridVariableBase* v = nullptr;
@@ -2993,7 +3013,7 @@ void OnDemandDataWarehouse::getValidNeighbors( const VarLabel                   
             break;
           }
           v = dynamic_cast<GridVariableBase*>( *iter );
-          //verify that the variable is valid and matches the dependencies requirements
+          // Verify that the variable is valid and matches the dependencies requirements
           if ((v != nullptr) && (v->isValid())) {
             if (neighbor->isVirtual()) {
               if (Min(v->getLow(), low - neighbor->getVirtualOffset()) == v->getLow() &&
