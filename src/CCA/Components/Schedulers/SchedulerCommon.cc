@@ -863,6 +863,13 @@ SchedulerCommon::addTask(       Task        * task
                                       << ",    # matls: "    << (matls ? matls->size() : 0)
                                       << ", task-graph: "    << ((tg_num < 0) ? (m_is_init_timestep ? "init-tg" : "all") : std::to_string(tg_num)));
 
+  // bulletproofing
+  if (tg_num >= m_num_task_graphs){
+    std::ostringstream msg;
+    msg << task->getName() <<"::addTask(),  taskgraph index ("<< tg_num << ") >= num_taskgraphs ("<< m_num_task_graphs << ")";
+    throw InternalError(msg.str(), __FILE__, __LINE__);
+  }
+
   // use std::shared_ptr as task pointers may be added to all task graphs - automagic cleanup
   std::shared_ptr<Task> task_sp(task);
 
