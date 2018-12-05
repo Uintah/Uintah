@@ -4344,6 +4344,7 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
     level->getInteriorSpatialRange(domain);
     Point dom_min = domain.min();
     Point dom_max = domain.max();
+    IntVector periodic = level->getPeriodicBoundaries();
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -4419,31 +4420,36 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
         warn.invoke();
         double epsilon = 1.e-15;
         Point txn = tx_new[idx];
-        if(tx_new[idx].x()<dom_min.x()){
+        if(periodic.x()==0){
+         if(tx_new[idx].x()<dom_min.x()){
           tx_new[idx] = Point(dom_min.x()+epsilon, txn.y(), txn.z());
           txn = tx_new[idx];
-        }
-        if(tx_new[idx].x()>dom_max.x()){
+         }
+         if(tx_new[idx].x()>dom_max.x()){
           tx_new[idx] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
           txn = tx_new[idx];
+         }
         }
-        if(tx_new[idx].y()<dom_min.y()){
+        if(periodic.y()==0){
+         if(tx_new[idx].y()<dom_min.y()){
           tx_new[idx] = Point(txn.x(),dom_min.y()+epsilon, txn.z());
           txn = tx_new[idx];
-        }
-        if(tx_new[idx].y()>dom_max.y()){
+         }
+         if(tx_new[idx].y()>dom_max.y()){
           tx_new[idx] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
           txn = tx_new[idx];
+         }
         }
-        if(tx_new[idx].z()<dom_min.z()){
+        if(periodic.z()==0){
+         if(tx_new[idx].z()<dom_min.z()){
           tx_new[idx] = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
-        }
-        if(tx_new[idx].z()>dom_max.z()){
+         }
+         if(tx_new[idx].z()>dom_max.z()){
           tx_new[idx] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
+         }
         }
       }
     }
-
     delete interpolator;
   }
 }
@@ -5992,9 +5998,9 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
                                           DataWarehouse  * old_dw,
                                           DataWarehouse  * new_dw)
 {
-  timeStep_vartype timeStep;
-  old_dw->get(timeStep, lb->timeStepLabel);
-  int timestep = timeStep;
+//  timeStep_vartype timeStep;
+//  old_dw->get(timeStep, lb->timeStepLabel);
+//  int timestep = timeStep;
 
   // Should we make this an input file parameter?
 //  int interval=INT_MAX;
