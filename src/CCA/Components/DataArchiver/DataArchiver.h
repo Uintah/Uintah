@@ -527,6 +527,8 @@ class LoadBalancer;
     bool m_outputPreviousTimeStep     {false};
     bool m_checkpointPreviousTimeStep {false};
     
+    MaterialSubset *m_tmpMatSubset {nullptr};
+
     //-----------------------------------------------------------
     // RNJ - 
     //
