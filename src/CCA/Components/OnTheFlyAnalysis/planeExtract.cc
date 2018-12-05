@@ -27,6 +27,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/MaterialManager.h>
 
@@ -46,11 +47,9 @@
 
 using namespace Uintah;
 using namespace std;
-//__________________________________
-//  To turn on the output
-//  setenv SCI_DEBUG "PLANEEXTRACT_DBG_COUT:+" 
-static DebugStream cout_doing("PLANEEXTRACT_DOING_COUT", false);
-static DebugStream cout_dbg("PLANEEXTRACT_DBG_COUT", false);
+
+
+Dout dbg_OTF_PE("planeExtract", "OnTheFlyAnalysis", "planeExtract debug stream", false);
 //______________________________________________________________________
 planeExtract::planeExtract(const ProcessorGroup* myworld,
                            const MaterialManagerP materialManager,
@@ -59,13 +58,18 @@ planeExtract::planeExtract(const ProcessorGroup* myworld,
 {
   d_matl_set = 0;
   d_zero_matl = 0;
-  ps_lb = scinew planeExtractLabel();
+  d_lb = scinew planeExtractLabel();
+  AnalysisModule::m_NUM_GRAPHS += 1;
+  d_TG_COMPUTE = AnalysisModule::m_NUM_GRAPHS;
+  
+  cout << " planeExtract: m_NUM_GRAPHS: " << AnalysisModule::m_NUM_GRAPHS << " d_TG_COMPUTE: "<<  d_TG_COMPUTE << endl;
 }
 
 //__________________________________
 planeExtract::~planeExtract()
 {
-  cout_doing << " Doing: destorying planeExtract " << endl;
+  DOUT(dbg_OTF_PE, " Doing: destructor planeExtract " );
+ 
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
@@ -73,9 +77,9 @@ planeExtract::~planeExtract()
     delete d_zero_matl;
   } 
   
-  VarLabel::destroy(ps_lb->lastWriteTimeLabel);
-  VarLabel::destroy(ps_lb->fileVarsStructLabel);
-  delete ps_lb;
+  VarLabel::destroy(d_lb->lastWriteTimeLabel);
+  VarLabel::destroy(d_lb->fileVarsStructLabel);
+  delete d_lb;
   
   // delete each plane
   vector<plane*>::iterator iter;
@@ -92,13 +96,17 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
                                 std::vector<std::vector<const VarLabel* > > &PState,
                                 std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  cout_doing << "Doing problemSetup \t\t\t\tplaneExtract" << endl;
+  DOUT(dbg_OTF_PE , "Doing problemSetup \t\t\t\tplaneExtract" );
   
   int numMatls  = m_materialManager->getNumMatls();
                                
-  ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_planeE",
+  d_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_planeE",
                                             max_vartype::getTypeDescription());
 
+  // TG-0 = ignore 
+  // TG-1 = compute plane averages
+  m_scheduler->setNumTaskGraphs( NUM_GRAPHS );
+  
   //__________________________________
   //  Read in timing information
   m_module_spec->require("samplingFrequency", d_writeFreq);
@@ -336,11 +344,12 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
 void planeExtract::scheduleInitialize(SchedulerP& sched,
                                       const LevelP& level)
 {
-  cout_doing << "planeExtract::scheduleInitialize " << endl;
+  printSchedule(level,dbg_OTF_PE, "planeExtract::scheduleInitialize " );
+  
   Task* t = scinew Task("planeExtract::initialize", 
                   this, &planeExtract::initialize);
   
-  t->computes(ps_lb->lastWriteTimeLabel);
+  t->computes(d_lb->lastWriteTimeLabel);
  
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -351,12 +360,12 @@ void planeExtract::initialize(const ProcessorGroup*,
                               DataWarehouse*,
                               DataWarehouse* new_dw)
 {
-  cout_doing << "Doing Initialize \t\t\t\t\tplaneExtract" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    printTask( patch, dbg_OTF_PE,"Doing  planeExtract::initialize" );
      
     double tminus = -1.0/d_writeFreq;
-    new_dw->put(max_vartype(tminus), ps_lb->lastWriteTimeLabel);
+    new_dw->put(max_vartype(tminus), d_lb->lastWriteTimeLabel);
 
     
     if(patch->getGridIndex() == 0){   // only need to do this once
@@ -377,22 +386,20 @@ void planeExtract::initialize(const ProcessorGroup*,
 void planeExtract::restartInitialize()
 {
 // need to do something here
-//  new_dw->put(max_vartype(0.0), ps_lb->lastWriteTimeLabel);
+//  new_dw->put(max_vartype(0.0), d_lb->lastWriteTimeLabel);
 }
 
 //______________________________________________________________________
 void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
                                       const LevelP& level)
-{
-  cout_doing << "planeExtract::scheduleDoAnalysis " << endl;
+{ 
+  printSchedule(level,dbg_OTF_PE, "planeExtract::scheduleDoAnalysis");
+  
   Task* t = scinew Task("planeExtract::doAnalysis", 
                    this,&planeExtract::doAnalysis);
                         
-  t->requires(Task::OldDW, m_timeStepLabel);
-  t->requires(Task::OldDW, m_simulationTimeLabel);
-
-  t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
-  Ghost::GhostType gac = Ghost::AroundCells;
+  t->requires( Task::OldDW, m_timeStepLabel);
+  t->requires( Task::OldDW, m_simulationTimeLabel );
   
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
@@ -401,21 +408,19 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
       throw InternalError("planeExtract: scheduleDoAnalysis label not found: " 
                           + name , __FILE__, __LINE__);
     }
-    
+
     MaterialSubset* matSubSet = scinew MaterialSubset();
     matSubSet->add(d_varMatl[i]);
     matSubSet->addReference();
     
-    t->requires(Task::NewDW,d_varLabels[i], matSubSet, gac, 1);
+    t->requires(Task::NewDW,d_varLabels[i], matSubSet, Ghost::None, 0);
     
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
     }
   }
   
-  t->computes(ps_lb->lastWriteTimeLabel);
-  
-  sched->addTask(t, level->eachPatch(), d_matl_set);
+  sched->addTask(t, level->eachPatch(), d_matl_set, TG_COMPUTE );
 
 }
 
@@ -428,26 +433,12 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
 {   
   const Level* level = getLevel(patches);
   
-  // the user may want to restart from an uda that wasn't using the DA module
-  // This logic allows that.
-  max_vartype writeTime;
-  double lastWriteTime = 0;
-  if( old_dw->exists( ps_lb->lastWriteTimeLabel ) ){
-    old_dw->get(writeTime, ps_lb->lastWriteTimeLabel);
-    lastWriteTime = writeTime;
-  }
-
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
   
-  if(now < d_startTime || now > d_stopTime){
-    new_dw->put(max_vartype(lastWriteTime), ps_lb->lastWriteTimeLabel);
-    return;
-  }
-  
-  double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
-  
+  //__________________________________
+  //
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
@@ -457,13 +448,10 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
     
     //__________________________________
     // write data if this processor owns this patch
-    // and if it's time to write
-    if( proc == pg->myRank() && now >= nextWriteTime){
+    if( proc == pg->myRank() ){
     
-     cout_doing << pg->myRank() << " " 
-                << "Doing doAnalysis (planeExtract)\t\t\t\tL-"
-                << level->getIndex()
-                << " patch " << patch->getGridIndex()<< endl;
+     printTask( patch, dbg_OTF_PE,"Doing planeExtract::doAnalysis" );
+     
       //__________________________________
       // loop over each plane 
       for (unsigned int p =0 ; p < d_planes.size(); p++) {
@@ -677,15 +665,65 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
             }
 
             fclose(fp);
-          }  //loop over variables 
+          }  // loop over variables 
         }  // doWrite    
-      }  // loop over planes 
-      lastWriteTime = now;     
+      }  // loop over planes    
     }  // time to write data
-    
-    new_dw->put(max_vartype(lastWriteTime), ps_lb->lastWriteTimeLabel); 
   }  // patches
 }
+
+
+//______________________________________________________________________
+//
+void planeExtract::sched_computeTaskGraphIndex( SchedulerP& sched,
+                                                const LevelP& level)
+{
+  printSchedule(level,dbg_OTF_PE, "planeExtract::sched_computeTaskGraphIndex");
+
+  Task* t = scinew Task( "planeExtract::computeTaskGraphIndex",
+                     this,&planeExtract::computeTaskGraphIndex );
+
+  t->setType( Task::OncePerProc );
+  t->requires( Task::OldDW, m_simulationTimeLabel );
+  t->requires( Task::OldDW, d_lb->lastWriteTimeLabel );
+
+  t->computes(d_lb->lastWriteTimeLabel);
+  // only compute task on 1 patch in this proc
+  const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
+
+  sched->addTask( t, perProcPatches, d_matl_set );
+}
+//______________________________________________________________________
+
+void planeExtract::computeTaskGraphIndex(const ProcessorGroup * ,
+                                         const PatchSubset    * patches,
+                                         const MaterialSubset *,
+                                         DataWarehouse        * old_dw,
+                                         DataWarehouse        * new_dw)
+{
+  printTask( patches, dbg_OTF_PE,"Doing planeExtract::computeTaskGraphIndex" );
+  
+  max_vartype writeTime;
+  simTime_vartype simTimeVar;
+
+  old_dw->get( writeTime,  d_lb->lastWriteTimeLabel );
+  old_dw->get( simTimeVar, m_simulationTimeLabel );
+
+  double lastWriteTime = writeTime;
+  double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
+  double now = simTimeVar;
+  
+  if(now < d_startTime || now > d_stopTime || now < nextWriteTime ){
+    m_application->setTaskGraphIndex ( TG_SKIP );
+    new_dw->put( max_vartype(lastWriteTime), d_lb->lastWriteTimeLabel );
+  }
+  else{
+    m_application->setTaskGraphIndex ( TG_COMPUTE );
+    new_dw->put( max_vartype(nextWriteTime), d_lb->lastWriteTimeLabel );
+  }
+}
+
+
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
 void planeExtract::createFile(const string& filename,
@@ -740,7 +778,7 @@ void planeExtract::createFile(const string& filename,
   fprintf(fp,"\n");
   fflush(fp);
   
-  cout_doing << Parallel::getMPIRank() << " planeExtract:Created file " << filename << endl;
+  cout << Parallel::getMPIRank() << " OnTheFlyAnalysis planeExtract results are located in " << filename << endl;
 }
 //______________________________________________________________________
 // create the directory structure   planeName/LevelIndex
@@ -928,7 +966,7 @@ planeExtract::getIterator( const Uintah::TypeDescription* td,
 
   IntVector stop_idx = end_idx + IntVector(x,y,z);
   
-  cout_doing << " offset " << IntVector(x,y,z) <<  " " << CellIterator(start_idx,stop_idx) << endl;
+  //DOUT( dbg_OTF_PE,  " offset " << IntVector(x,y,z) <<  " " << CellIterator(start_idx,stop_idx) );
   return CellIterator(start_idx,stop_idx);
 }
 

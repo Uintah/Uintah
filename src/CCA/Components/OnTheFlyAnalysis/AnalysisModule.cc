@@ -35,7 +35,7 @@ using namespace Uintah;
 
 // NOTE: UintahParallelComponent is noramlly called with the ProcessorGroup
 
-int m_numTaskgraphs = 0;
+int AnalysisModule::m_NUM_GRAPHS = 1;
 
 //______________________________________________________________________
 //

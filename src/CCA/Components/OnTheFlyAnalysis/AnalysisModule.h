@@ -97,6 +97,8 @@ namespace Uintah {
     const VarLabel* m_timeStepLabel       {nullptr};
     const VarLabel* m_simulationTimeLabel {nullptr};
     const VarLabel* m_delTLabel           {nullptr};
+    
+    static int m_NUM_GRAPHS;
   };
 }
 

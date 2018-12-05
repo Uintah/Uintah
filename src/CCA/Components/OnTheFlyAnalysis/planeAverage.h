@@ -534,7 +534,7 @@ ______________________________________________________________________*/
     //__________________________________
     //     PUBLIC:  VARIABLES
     MaterialSet*  d_matl_set;
-    
+    int d_TG_PLANEAVE;
     enum GRAPH_INDX { TG_SKIP =0, TG_COMPUTE =1, NUM_GRAPHS = 2 };
     
     

@@ -104,6 +104,11 @@ planeAverage::planeAverage( const ProcessorGroup    * myworld,
   for (auto i =0;i<N_TASKS; i++){
     d_progressVar[i].resize( d_MAXLEVELS, false );
   }
+  
+  AnalysisModule::m_NUM_GRAPHS += 1;
+  d_TG_PLANEAVE = AnalysisModule::m_NUM_GRAPHS;
+  
+  cout << " planeAverage: m_NUM_GRAPHS: " << AnalysisModule::m_NUM_GRAPHS << " d_TG_PLANEAVE " << d_TG_PLANEAVE << endl;
 }
 
 //__________________________________
@@ -996,19 +1001,9 @@ void planeAverage::writeToFiles(const ProcessorGroup* pg,
   const LevelP level = getLevelP( patches );
   int L_indx = level->getIndex();
 
-  max_vartype writeTime;
   simTime_vartype simTimeVar;
-  old_dw->get( writeTime,  d_lb->lastCompTimeLabel );
   old_dw->get( simTimeVar, m_simulationTimeLabel );
-
-  double lastWriteTime = writeTime;
-  double now           = simTimeVar;
-
-  if(now < d_startTime || now > d_stopTime){
-    return;
-  }
-
-  double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
+  double now = simTimeVar;
 
   //__________________________________
   //
@@ -1038,7 +1033,7 @@ void planeAverage::writeToFiles(const ProcessorGroup* pg,
     // write data if this processor owns this patch
     // and if it's time to write.  With AMR data the proc
     // may not own the patch
-    if( proc == pg->myRank() && now >= nextWriteTime){
+    if( proc == pg->myRank() ){
 
       printTask( patch, dbg_OTF_PA,"Doing " + d_className + "::writeToFiles" );
 
