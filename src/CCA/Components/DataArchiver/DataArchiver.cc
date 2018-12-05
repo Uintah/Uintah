@@ -126,11 +126,19 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   m_writeMeta = false;
 
   m_sync_io_label = VarLabel::create( "sync_io_vl", CCVariable<float>::getTypeDescription() );
+
+  m_tmpMatSubset = scinew MaterialSubset();
+  m_tmpMatSubset->add(-1);
+  m_tmpMatSubset->addReference();
 }
 
 DataArchiver::~DataArchiver()
 {
   VarLabel::destroy( m_sync_io_label );
+
+  if(m_tmpMatSubset && m_tmpMatSubset->removeReference()) {
+    delete m_tmpMatSubset;
+  } 
 }
 
 //______________________________________________________________________
@@ -1125,12 +1133,12 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
   const double delT = m_application->getDelT();
 
   //__________________________________
-  //  Global (Reduction/Sole) Variables
+  //  Schedule outputing
   if( (delT != 0.0 || m_outputInitTimeStep) &&
       (m_outputInterval > 0.0 || 
        m_outputTimeStepInterval > 0) ) {
     
-    // Output global vars to a data file.
+    // Schedule the writing of the global vars to a data file.
     Task* task = scinew Task( "DataArchiver::outputGlobalVars",
                               this, &DataArchiver::outputGlobalVars );
 
@@ -3830,10 +3838,6 @@ DataArchiver::initCheckpoints( const SchedulerP & sched )
     dbg << "  initCheckpoints()\n";
   }
 
-  MaterialSubset *tmpMatSubset = scinew MaterialSubset();
-  tmpMatSubset->add(-1);
-  tmpMatSubset->addReference();
-  
   typedef vector<const Task::Dependency*> dep_vector;
   const dep_vector& initreqs = sched->getInitialRequires();
   
@@ -3894,7 +3898,7 @@ DataArchiver::initCheckpoints( const SchedulerP & sched )
     }
     // Special case (hack) so sole variables have a material index of -1.
     else if( dep->m_var->typeDescription()->getType() == TypeDescription::SoleVariable ) {
-      matSubset = tmpMatSubset;
+      matSubset = m_tmpMatSubset;
     }
     else {
       matSubset = dep->m_task->getMaterialSet()->getUnion();
