@@ -696,6 +696,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleFindSurfaceParticles(           sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
+//  scheduleFindGrainCollisions(            sched, patches, matls);
   if(flags->d_computeNormals){
     scheduleComputeNormals(               sched, patches, matls);
   }
@@ -2204,8 +2205,6 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
   // Put something here to satisfy the need for a reduction operation in
   // the case that there are multiple levels present
   const Level* level = getLevel(patches);
-  // JBH -- Convert this to a global variable that goes into all of the default
-  //        timesteps -- FIXME TODO
   new_dw->put(delt_vartype(1.0e10), lb->delTLabel, level);
 }
 
@@ -2426,6 +2425,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gTemperatureNoBC[c] = gTemperature[c];
         gSp_vol[c]        /= gmass[c];
       }
+
       if(m==flags->d_containerMaterial){
         Vector dxCell = patch->dCell();
         double contRad=flags->d_containerRadius;
@@ -5956,4 +5956,126 @@ bool SerialMPM::isPointInExistingParticle(Matrix3 dsize,Point p, Point px)
   }
 
   return inExisting;
+}
+
+//
+void SerialMPM::scheduleFindGrainCollisions(SchedulerP   & sched,
+                                           const PatchSet * patches,
+                                           const MaterialSet * matls )
+{
+  printSchedule(patches,cout_doing,"SerialMPM::scheduleFindGrainCollisions");
+  
+  Task* t = scinew Task("MPM::findGrainCollisions", this, 
+                        &SerialMPM::findGrainCollisions);
+
+  Ghost::GhostType gp;
+  int ngc_p;
+  getParticleGhostLayer(gp, ngc_p);
+  Ghost::GhostType gnone = Ghost::None;
+
+  t->requires(Task::OldDW, lb->timeStepLabel);
+  t->requires(Task::OldDW, lb->pXLabel,                  gnone);
+  t->requires(Task::OldDW, lb->pSurfLabel,               gnone);
+  t->requires(Task::OldDW, lb->pColorLabel,              gnone);
+  t->requires(Task::OldDW, lb->pSizeLabel,               gnone);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gnone);
+
+  t->requires(Task::NewDW, lb->gColorLabel,              gnone);
+
+  sched->addTask(t, patches, matls);
+}
+
+
+void SerialMPM::findGrainCollisions(const ProcessorGroup *,
+                                    const PatchSubset    * patches,
+                                    const MaterialSubset * ,
+                                          DataWarehouse  * old_dw,
+                                          DataWarehouse  * new_dw)
+{
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, lb->timeStepLabel);
+  int timestep = timeStep;
+
+  // Should we make this an input file parameter?
+//  int interval=INT_MAX;
+
+//  int doit=timestep%interval;
+
+//  if(doit == 0){
+   for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    printTask(patches,patch,cout_doing,
+              "Doing SerialMPM::findGrainCollisions");
+
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    string interp_type = flags->d_interpolator_type;
+
+    Ghost::GhostType gnone = Ghost::None;
+
+    for(unsigned int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      int dwi = mpm_matl->getDWIndex();
+
+      // Create arrays for the particle data
+      constParticleVariable<Point>   px;
+      constParticleVariable<double>  pColor;
+      constParticleVariable<Matrix3> psize, pFOld;
+      constNCVariable<double>        gColor;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      old_dw->get(px,           lb->pXLabel,                         pset);
+      old_dw->get(pColor,       lb->pColorLabel,                     pset);
+      old_dw->get(psize,        lb->pSizeLabel,                      pset);
+      old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
+
+      new_dw->get(gColor,       lb->gColorLabel,      dwi, patch, gnone, 0);
+
+      set<double> collideColors;
+
+      for (ParticleSubset::iterator iter = pset->begin();
+           iter != pset->end();
+           iter++){
+        particleIndex idx = *iter;
+        int NN =
+           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+
+        // Add each particles contribution to the local mass & velocity
+        // Must use the node indices
+        IntVector node;
+        // Iterate through the nodes that receive data from the current particle
+        bool collides = false;
+        for(int k = 0; k < NN; k++) {
+          node = ni[k];
+          if(patch->containsNode(node) && S[k]>0.0) {
+            if(fabs(pColor[idx]-gColor[node])>1.e-8){
+              collides = true;
+            }
+          }
+          if(collides){
+             collideColors.insert(pColor[idx]);
+          }
+        }
+      } // End of particle loop
+
+      int iCol=0;
+      for (set<double>::iterator it1 = collideColors.begin(); 
+                        it1!= collideColors.end();  it1++){
+        if(iCol%2 == 1){
+          collideColors.erase(*it1);
+        }
+        iCol++;
+      }
+
+      for (set<double>::iterator it1 = collideColors.begin(); 
+                        it1!= collideColors.end();  it1++){
+        cout << "Color " << *it1 << " collides " << endl;
+      }
+    }
+   }
+//  }
 }

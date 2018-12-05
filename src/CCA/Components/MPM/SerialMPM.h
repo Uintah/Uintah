@@ -255,6 +255,12 @@ protected:
                                           DataWarehouse   * old_dw,
                                           DataWarehouse   * new_dw );
 
+  virtual void findGrainCollisions(const ProcessorGroup  *,
+                                   const PatchSubset     * patches,
+                                   const MaterialSubset  * ,
+                                         DataWarehouse   * old_dw,
+                                         DataWarehouse   * new_dw );
+
   virtual void computeSSPlusVp(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
@@ -456,6 +462,10 @@ protected:
   virtual void scheduleFindSurfaceParticles(SchedulerP        & sched,
                                             const PatchSet    * patches,
                                             const MaterialSet * matls );
+
+  virtual void scheduleFindGrainCollisions(SchedulerP        & sched,
+                                           const PatchSet    * patches,
+                                           const MaterialSet * matls );
 
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
