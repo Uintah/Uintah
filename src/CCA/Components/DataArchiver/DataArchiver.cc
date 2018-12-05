@@ -1126,10 +1126,11 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
 
   //__________________________________
   //  Global (Reduction/Sole) Variables
-  // Schedule task to dump out global (reduction/sole) variables at every timestep  
-  if( (m_outputInterval  > 0.0 || m_outputTimeStepInterval  > 0) &&
-      (delT != 0.0 || m_outputInitTimeStep)) {
+  if( (delT != 0.0 || m_outputInitTimeStep) &&
+      (m_outputInterval > 0.0 || 
+       m_outputTimeStepInterval > 0) ) {
     
+    // Output global vars to a data file.
     Task* task = scinew Task( "DataArchiver::outputGlobalVars",
                               this, &DataArchiver::outputGlobalVars );
 
@@ -1147,9 +1148,8 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
       dbg << "  scheduled output tasks (reduction/sole variables)\n";
     }
 
-    if ( delT != 0.0 || m_outputInitTimeStep ) {
-      scheduleOutputTimeStep( m_saveLabels, grid, sched, false );
-    }
+    // Output requested vars to an output file.
+    scheduleOutputTimeStep( m_saveLabels, grid, sched, false );
   }
   
   //__________________________________
@@ -1159,7 +1159,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
         m_checkpointTimeStepInterval > 0 ||
         m_checkpointWallTimeInterval > 0 ) ) {
     
-    // Output checkpoint timestep
+    // Output global vars to a checkpoint file.
     Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointGlobal)",
                               this, &DataArchiver::outputVariables, CHECKPOINT_GLOBAL );
 
@@ -1176,6 +1176,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
       dbg << "  scheduled output tasks (checkpoint variables)\n";
     }
     
+    // Output required vars to a checkpoint file.
     scheduleOutputTimeStep( m_checkpointLabels, grid, sched, true );
   }
   
@@ -2678,8 +2679,8 @@ DataArchiver::indexAddGlobals()
 //
 void
 DataArchiver::outputGlobalVars( const ProcessorGroup *,
-				const PatchSubset    * /* pss */,
-				const MaterialSubset * /* matls */,
+                                const PatchSubset    * /* pss */,
+                                const MaterialSubset * /* matls */,
                                       DataWarehouse  * old_dw,
                                       DataWarehouse  * new_dw )
 {
@@ -2752,9 +2753,9 @@ void
 DataArchiver::outputVariables( const ProcessorGroup * pg,
                                const PatchSubset    * patches,
                                const MaterialSubset * /*matls*/,
-                               DataWarehouse        * old_dw,
-                               DataWarehouse        * new_dw,
-                               int                    type )
+                                     DataWarehouse  * old_dw,
+                                     DataWarehouse  * new_dw,
+                                     int              type )
 {
   // IMPORTANT - this function should only be called once per
   //   processor per level per type (files will be opened and closed,
@@ -3833,145 +3834,145 @@ DataArchiver::initCheckpoints( const SchedulerP & sched )
   tmpMatSubset->add(-1);
   tmpMatSubset->addReference();
   
-   typedef vector<const Task::Dependency*> dep_vector;
-   const dep_vector& initreqs = sched->getInitialRequires();
-   
-   // special variables to not checkpoint
-   const set<string>& notCheckPointVars = sched->getNotCheckPointVars();
-   
-   SaveItem saveItem;
-   m_checkpointGlobalLabels.clear();
-   m_checkpointLabels.clear();
-
-   // label -> level -> matls
-   // we can't store them in two different maps, since we need to know 
-   // which levels depend on which materials
-   typedef map<string, map<int, ConsecutiveRangeSet> > label_type;
-   label_type label_map;
-
-   dep_vector::const_iterator iter;
-   for (iter = initreqs.begin(); iter != initreqs.end(); ++iter) {
-     const Task::Dependency* dep = *iter;
-
-     // define the patchset
-     const PatchSubset* patchSubset = (dep->m_patches != 0)? dep->m_patches : dep->m_task->getPatchSet()->getUnion();
+  typedef vector<const Task::Dependency*> dep_vector;
+  const dep_vector& initreqs = sched->getInitialRequires();
+  
+  // special variables to not checkpoint
+  const set<string>& notCheckPointVars = sched->getNotCheckPointVars();
+  
+  SaveItem saveItem;
+  m_checkpointGlobalLabels.clear();
+  m_checkpointLabels.clear();
+  
+  // label -> level -> matls
+  // we can't store them in two different maps, since we need to know 
+  // which levels depend on which materials
+  typedef map<string, map<int, ConsecutiveRangeSet> > label_type;
+  label_type label_map;
+  
+  dep_vector::const_iterator iter;
+  for (iter = initreqs.begin(); iter != initreqs.end(); ++iter) {
+    const Task::Dependency* dep = *iter;
      
-     // adjust the patchSubset if the dependency requires coarse or fine level patches
-     constHandle<PatchSubset> patches;     
-     if ( dep->m_patches_dom == Task::CoarseLevel || dep->m_patches_dom == Task::FineLevel ){
-       patches = dep->getPatchesUnderDomain( patchSubset );
-       patchSubset = patches.get_rep();
-     }
-   
-     // Define the Levels
-     ConsecutiveRangeSet levels;
-     for( int i = 0; i < patchSubset->size(); i++ ) {
-       const Patch* patch = patchSubset->get( i );
-       levels.addInOrder( patch->getLevel()->getIndex() );
-     }
-
-     //  MaterialSubset:
-     // const MaterialSubset* matSubset = (dep->m_matls != 0) ? dep->m_matls : dep->m_task->getMaterialSet()->getUnion();
-
-
-     // **********************************************************************
-     // NOTE: Sole vars are not quite get handled as expected. Unlike
-     // reduction variables they do NOT have a material dependency
-     // (dep->m_matls) which would return a material of -1. As such,
-     // carve off a special material index that is also -1. So to
-     // match what is in the data warehouse.
-
-     // When putting a sole variable into the data warehouse it wants
-     // a material index of -1. Which is similar to a reduction
-     // variable. The bottomline is that sole variable should be
-     // handled like reduction variables through out are not.
-     // **********************************************************************
-     const MaterialSubset* matSubset;
-
-     if( dep->m_matls ) {
-       matSubset = dep->m_matls;
-     }
-     // Special case (hack) so sole variables have a material index of -1.
-     else if( dep->m_var->typeDescription()->getType() == TypeDescription::SoleVariable ) {
-       matSubset = tmpMatSubset;
-     }
-     else {
-       matSubset = dep->m_task->getMaterialSet()->getUnion();
-     }
-     
-     // The matSubset is assumed to be in ascending order or addInOrder will throw an exception.
-     ConsecutiveRangeSet matls;
-     matls.addInOrder( matSubset->getVector().begin(), matSubset->getVector().end() );
-
-     // if(dep->m_var->getName() == "delT" ||
-     //    dep->m_var->getName() == "dynamicSolveCountPatch" )
-     //   std::cerr << __FUNCTION__ << "  " << __LINE__ << "  "
-     //             << dep->m_var->getName() << "  "
-     //             << dep->m_matls << "  "
-     //             << matls.expandedString()
-     //             << std::endl;
-     
-     for( ConsecutiveRangeSet::iterator crs_iter = levels.begin(); crs_iter != levels.end(); ++crs_iter ) {
-       ConsecutiveRangeSet& unionedVarMatls = label_map[ dep->m_var->getName() ][ *crs_iter ];
-       unionedVarMatls = unionedVarMatls.unioned(matls);
-     }
-   }
+    // define the patchset
+    const PatchSubset* patchSubset = (dep->m_patches != 0)? dep->m_patches : dep->m_task->getPatchSet()->getUnion();
+    
+    // adjust the patchSubset if the dependency requires coarse or fine level patches
+    constHandle<PatchSubset> patches;     
+    if ( dep->m_patches_dom == Task::CoarseLevel || dep->m_patches_dom == Task::FineLevel ){
+      patches = dep->getPatchesUnderDomain( patchSubset );
+      patchSubset = patches.get_rep();
+    }
+    
+    // Define the Levels
+    ConsecutiveRangeSet levels;
+    for( int i = 0; i < patchSubset->size(); i++ ) {
+      const Patch* patch = patchSubset->get( i );
+      levels.addInOrder( patch->getLevel()->getIndex() );
+    }
+    
+    //  MaterialSubset:
+    // const MaterialSubset* matSubset = (dep->m_matls != 0) ? dep->m_matls : dep->m_task->getMaterialSet()->getUnion();
+    
+    
+    // **********************************************************************
+    // NOTE: Sole vars are not quite get handled as expected. Unlike
+    // reduction variables they do NOT have a material dependency
+    // (dep->m_matls) which would return a material of -1. As such,
+    // carve off a special material index that is also -1. So to
+    // match what is in the data warehouse.
+    
+    // When putting a sole variable into the data warehouse it wants
+    // a material index of -1. Which is similar to a reduction
+    // variable. The bottomline is that sole variable should be
+    // handled like reduction variables through out are not.
+    // **********************************************************************
+    const MaterialSubset* matSubset;
+    
+    if( dep->m_matls ) {
+      matSubset = dep->m_matls;
+    }
+    // Special case (hack) so sole variables have a material index of -1.
+    else if( dep->m_var->typeDescription()->getType() == TypeDescription::SoleVariable ) {
+      matSubset = tmpMatSubset;
+    }
+    else {
+      matSubset = dep->m_task->getMaterialSet()->getUnion();
+    }
+    
+    // The matSubset is assumed to be in ascending order or addInOrder will throw an exception.
+    ConsecutiveRangeSet matls;
+    matls.addInOrder( matSubset->getVector().begin(), matSubset->getVector().end() );
+    
+    // if(dep->m_var->getName() == "delT" ||
+    //    dep->m_var->getName() == "dynamicSolveCountPatch" )
+    //   std::cerr << __FUNCTION__ << "  " << __LINE__ << "  "
+    //             << dep->m_var->getName() << "  "
+    //             << dep->m_matls << "  "
+    //             << matls.expandedString()
+    //             << std::endl;
+    
+    for( ConsecutiveRangeSet::iterator crs_iter = levels.begin(); crs_iter != levels.end(); ++crs_iter ) {
+      ConsecutiveRangeSet& unionedVarMatls = label_map[ dep->m_var->getName() ][ *crs_iter ];
+      unionedVarMatls = unionedVarMatls.unioned(matls);
+    }
+  }
          
-   m_checkpointLabels.reserve( label_map.size() );
-   bool hasDelT = false;
-
-   for( label_type::iterator lt_iter = label_map.begin(); lt_iter != label_map.end(); lt_iter++ ) {
-     VarLabel* var = VarLabel::find( lt_iter->first );
+  m_checkpointLabels.reserve( label_map.size() );
+  bool hasDelT = false;
+  
+  for( label_type::iterator lt_iter = label_map.begin(); lt_iter != label_map.end(); lt_iter++ ) {
+    VarLabel* var = VarLabel::find( lt_iter->first );
+    
+    if (var == nullptr) {
+      throw ProblemSetupException( lt_iter->first + " variable not found to checkpoint.",__FILE__, __LINE__ );
+    }
      
-     if (var == nullptr) {
-       throw ProblemSetupException( lt_iter->first + " variable not found to checkpoint.",__FILE__, __LINE__ );
-     }
+    saveItem.label = var;
+    saveItem.matlSet.clear();
      
-     saveItem.label = var;
-     saveItem.matlSet.clear();
+    for( map<int, ConsecutiveRangeSet>::iterator map_iter = lt_iter->second.begin(); map_iter != lt_iter->second.end(); ++map_iter ) {
+      saveItem.setMaterials( map_iter->first, map_iter->second, m_prevMatls, m_prevMatlSet );
+
+      if( string(var->getName()) == delT_name ) {
+        hasDelT = true;
+      }
+    }
      
-     for( map<int, ConsecutiveRangeSet>::iterator map_iter = lt_iter->second.begin(); map_iter != lt_iter->second.end(); ++map_iter ) {
-              saveItem.setMaterials( map_iter->first, map_iter->second, m_prevMatls, m_prevMatlSet );
-
-       if( string(var->getName()) == delT_name ) {
-         hasDelT = true;
-       }
-     }
+    // Skip this variable if the default behavior of variable has
+    // been overwritten.  For example ignore checkpointing
+    // PerPatch<FileInfo> variable
+    bool skipVar = ( notCheckPointVars.count(saveItem.label->getName() ) > 0 );
      
-     // Skip this variable if the default behavior of variable has
-     // been overwritten.  For example ignore checkpointing
-     // PerPatch<FileInfo> variable
-     bool skipVar = ( notCheckPointVars.count(saveItem.label->getName() ) > 0 );
+    if( !skipVar ) {
+      if ( saveItem.label->typeDescription()->getType() == TypeDescription::ReductionVariable ||
+           saveItem.label->typeDescription()->getType() == TypeDescription::SoleVariable ) {
+        m_checkpointGlobalLabels.push_back( saveItem );
+      }
+      else {
+        m_checkpointLabels.push_back( saveItem );
+      }
+    }
+  } // end for lt_iter
+
+
+  if ( !hasDelT ) {
+    VarLabel* var = VarLabel::find( delT_name );
+    if (var == nullptr) {
+      throw ProblemSetupException("delT variable not found to checkpoint.",__FILE__, __LINE__);
+    }
      
-     if( !skipVar ) {
-       if ( saveItem.label->typeDescription()->getType() == TypeDescription::ReductionVariable ||
-            saveItem.label->typeDescription()->getType() == TypeDescription::SoleVariable ) {
-         m_checkpointGlobalLabels.push_back( saveItem );
-       }
-       else {
-         m_checkpointLabels.push_back( saveItem );
-       }
-     }
-   } // end for lt_iter
+    saveItem.label = var;
+    saveItem.matlSet.clear();
 
+    ConsecutiveRangeSet globalMatl( "-1" );
+    saveItem.setMaterials( -1, globalMatl, m_prevMatls, m_prevMatlSet );
 
-   if ( !hasDelT ) {
-     VarLabel* var = VarLabel::find( delT_name );
-     if (var == nullptr) {
-       throw ProblemSetupException("delT variable not found to checkpoint.",__FILE__, __LINE__);
-     }
-     
-     saveItem.label = var;
-     saveItem.matlSet.clear();
+    ASSERT( saveItem.label->typeDescription()->getType() == TypeDescription::ReductionVariable ||
+            saveItem.label->typeDescription()->getType() == TypeDescription::SoleVariable );
 
-     ConsecutiveRangeSet globalMatl( "-1" );
-     saveItem.setMaterials( -1, globalMatl, m_prevMatls, m_prevMatlSet );
-
-     ASSERT( saveItem.label->typeDescription()->getType() == TypeDescription::ReductionVariable ||
-             saveItem.label->typeDescription()->getType() == TypeDescription::SoleVariable );
-
-     m_checkpointGlobalLabels.push_back( saveItem );
-   }     
+    m_checkpointGlobalLabels.push_back( saveItem );
+  }     
 }
 
 //______________________________________________________________________
