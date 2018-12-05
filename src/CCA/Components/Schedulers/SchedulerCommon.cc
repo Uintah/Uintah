@@ -1797,21 +1797,6 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
     }
   }
 
-  //__________________________________
-  //  copy Sole Variables to the new_dw
-  for (unsigned int i = 0; i < levelVariableInfo.size(); i++) {
-    VarLabelMatl<Level> Var = levelVariableInfo[i];
-    const VarLabel* label = Var.m_label;
-
-    if ( label->typeDescription()->getType() == TypeDescription::SoleVariable ){
-      SoleVariableBase* var = dynamic_cast<SoleVariableBase*>( label->typeDescription()->createInstance() );
-
-      oldDataWarehouse->get( *var, label );
-      newDataWarehouse->put( *var, label );
-      delete var;
-    }
-  }
-
   newDataWarehouse->refinalize();
 
   (*d_runtimeStats)[RegriddingCopyDataTime] += timer().seconds();
@@ -1841,30 +1826,6 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
   OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(old_dw);
   OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
 
-  //__________________________________
-  //  copy Sole Variables to the new_dw
-#if 1  
-  // ARS NOTE: This method is called for all patches. Sole var are on
-  // a per rank basis. So when there are multiple patches on a rank
-  // the get/put is duplicated. Really need a per rank method for this
-  // copying.
-  std::vector<VarLabelMatl<Level> > levelVariableInfo;
-  oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);
-
-  for (unsigned int i = 0; i < levelVariableInfo.size(); i++) {
-    VarLabelMatl<Level> Var = levelVariableInfo[i];
-    const VarLabel* label = Var.m_label;
-
-    if ( label->typeDescription()->getType() == TypeDescription::SoleVariable ){
-      SoleVariableBase* var = dynamic_cast<SoleVariableBase*>( label->typeDescription()->createInstance() );
-
-      oldDataWarehouse->get( *var, label );
-      newDataWarehouse->put( *var, label );
-      delete var;
-    }
-  }
- #endif
- 
   // For each patch in the patch subset which contains patches in the new grid
   for (int p = 0; p < patches->size(); p++) {
     const Patch* newPatch = patches->get(p);
@@ -1903,49 +1864,49 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
           continue;
         }
 
-	switch (label->typeDescription()->getType()) {
-	case TypeDescription::PerPatch :
-	case TypeDescription::NCVariable :
-	case TypeDescription::CCVariable :
-	case TypeDescription::SFCXVariable :
-	case TypeDescription::SFCYVariable :
-	case TypeDescription::SFCZVariable : {
-          Patch::selectType oldPatches;
-          oldLevel->selectPatches(newLowIndex, newHighIndex, oldPatches);
-	  
-          for (unsigned int oldIdx = 0; oldIdx < oldPatches.size(); oldIdx++) {
-            const Patch* oldPatch = oldPatches[oldIdx];
+        switch (label->typeDescription()->getType()) {
+          case TypeDescription::PerPatch :
+          case TypeDescription::NCVariable :
+          case TypeDescription::CCVariable :
+          case TypeDescription::SFCXVariable :
+          case TypeDescription::SFCYVariable :
+          case TypeDescription::SFCZVariable : {
+            Patch::selectType oldPatches;
+            oldLevel->selectPatches(newLowIndex, newHighIndex, oldPatches);
+            
+            for (unsigned int oldIdx = 0; oldIdx < oldPatches.size(); oldIdx++) {
+              const Patch* oldPatch = oldPatches[oldIdx];
 
-            if (!oldDataWarehouse->exists(label, matl, oldPatch)) {
-              continue;  // see comment about oldPatchToTest in ScheduleAndDoDataCopy
-            }
+              if (!oldDataWarehouse->exists(label, matl, oldPatch)) {
+                continue;  // see comment about oldPatchToTest in ScheduleAndDoDataCopy
+              }
 
-            IntVector oldLowIndex;
-            IntVector oldHighIndex;
+              IntVector oldLowIndex;
+              IntVector oldHighIndex;
 
-            if (newLevel->getIndex() > 0) {
-              oldLowIndex = oldPatch->getLowIndexWithDomainLayer(basis);
-              oldHighIndex = oldPatch->getHighIndexWithDomainLayer(basis);
-            } else {
-              oldLowIndex = oldPatch->getExtraLowIndex(basis, label->getBoundaryLayer());
-              oldHighIndex = oldPatch->getExtraHighIndex(basis, label->getBoundaryLayer());
-            }
+              if (newLevel->getIndex() > 0) {
+                oldLowIndex = oldPatch->getLowIndexWithDomainLayer(basis);
+                oldHighIndex = oldPatch->getHighIndexWithDomainLayer(basis);
+              } else {
+                oldLowIndex = oldPatch->getExtraLowIndex(basis, label->getBoundaryLayer());
+                oldHighIndex = oldPatch->getExtraHighIndex(basis, label->getBoundaryLayer());
+              }
 
-            IntVector copyLowIndex = Max(newLowIndex, oldLowIndex);
-            IntVector copyHighIndex = Min(newHighIndex, oldHighIndex);
+              IntVector copyLowIndex = Max(newLowIndex, oldLowIndex);
+              IntVector copyHighIndex = Min(newHighIndex, oldHighIndex);
 
-            // based on the selectPatches above, we might have patches we don't want to use, so prune them here.
-            if (copyLowIndex.x() >= copyHighIndex.x() || copyLowIndex.y() >= copyHighIndex.y()
-                || copyLowIndex.z() >= copyHighIndex.z()) {
-              continue;
-            }
+              // based on the selectPatches above, we might have patches we don't want to use, so prune them here.
+              if (copyLowIndex.x() >= copyHighIndex.x() || copyLowIndex.y() >= copyHighIndex.y()
+                  || copyLowIndex.z() >= copyHighIndex.z()) {
+                continue;
+              }
 
-	    // bulletproofing
-	    if (!oldDataWarehouse->exists(label, matl, oldPatch)) {
-	      SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl, "in copyDataTo GridVariableBase", __FILE__, __LINE__));
-	    }
-	    
-	    if( label->typeDescription()->getType() == TypeDescription::PerPatch ) {
+              // bulletproofing
+              if (!oldDataWarehouse->exists(label, matl, oldPatch)) {
+                SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl, "in copyDataTo GridVariableBase", __FILE__, __LINE__));
+              }
+            
+              if( label->typeDescription()->getType() == TypeDescription::PerPatch ) {
                 // DOUTALL( true, "copyDataToNewGrid PerPatch vars begin" );
                 std::vector<Variable *> varlist;
                 oldDataWarehouse->m_var_DB.getlist(label, matl, oldPatch, varlist);
@@ -1977,7 +1938,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                   // DOUTALL( true, "copyDataToNewGrid PerPatch vars end " << label->getName() );
                 }
                 // DOUTALL( true, "copyDataToNewGrid PerPatch vars end" );
-	      } else {
+              } else {
 
                 std::vector<Variable *> varlist;
                 oldDataWarehouse->m_var_DB.getlist(label, matl, oldPatch, varlist);
@@ -2021,65 +1982,65 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                     } else {
                       newVariable->copyPatch(v, srclow, srchigh);
 
-		    }
-		  }
-		}
-	    }
-	  }  // end oldPatches
-	}
-	  break;
-	  //__________________________________
-	  //  Particle Variables
-	case TypeDescription::ParticleVariable: {
-	  ParticleSubset* oldsub = oldsubsets[matl];
-          if (!oldsub) {
-            // collect the particles from the range encompassing this patch.  Use interior cells since
-            // extracells aren't collected across processors in the data copy, and they don't matter
-            // for particles anyhow (but we will have to reset the bounds to copy the data)
-            oldsub = oldDataWarehouse->getParticleSubset(matl, newPatch->getLowIndexWithDomainLayer(Patch::CellBased),
-                                                         newPatch->getHighIndexWithDomainLayer(Patch::CellBased), newPatch,
-                                                         m_reloc_new_pos_label, oldLevel.get_rep());
-            oldsubsets[matl] = oldsub;
-            oldsub->addReference();
+                    }
+                  }
+                }
+              }
+            }  // end oldPatches
           }
-
-          ParticleSubset* newsub = newsubsets[matl];
-          // it might have been created in Refine
-          if (!newsub) {
-            if (!newDataWarehouse->haveParticleSubset(matl, newPatch)) {
-              newsub = newDataWarehouse->createParticleSubset(oldsub->numParticles(), matl, newPatch);
-            } else {
-              newsub = newDataWarehouse->getParticleSubset(matl, newPatch);
-              ASSERT(newsub->numParticles() == 0);
-              newsub->addParticles(oldsub->numParticles());
+          break;
+          //__________________________________
+          //  Particle Variables
+          case TypeDescription::ParticleVariable: {
+            ParticleSubset* oldsub = oldsubsets[matl];
+            if (!oldsub) {
+              // collect the particles from the range encompassing this patch.  Use interior cells since
+              // extracells aren't collected across processors in the data copy, and they don't matter
+              // for particles anyhow (but we will have to reset the bounds to copy the data)
+              oldsub = oldDataWarehouse->getParticleSubset(matl, newPatch->getLowIndexWithDomainLayer(Patch::CellBased),
+                                                           newPatch->getHighIndexWithDomainLayer(Patch::CellBased), newPatch,
+                                                           m_reloc_new_pos_label, oldLevel.get_rep());
+              oldsubsets[matl] = oldsub;
+              oldsub->addReference();
             }
-            newsubsets[matl] = newsub;
+
+            ParticleSubset* newsub = newsubsets[matl];
+            // it might have been created in Refine
+            if (!newsub) {
+              if (!newDataWarehouse->haveParticleSubset(matl, newPatch)) {
+                newsub = newDataWarehouse->createParticleSubset(oldsub->numParticles(), matl, newPatch);
+              } else {
+                newsub = newDataWarehouse->getParticleSubset(matl, newPatch);
+                ASSERT(newsub->numParticles() == 0);
+                newsub->addParticles(oldsub->numParticles());
+              }
+              newsubsets[matl] = newsub;
+            }
+
+            ParticleVariableBase* newv = dynamic_cast<ParticleVariableBase*>(label->typeDescription()->createInstance());
+            newv->allocate(newsub);
+            // don't get and copy if there were no old patches
+            if (oldsub->getNeighbors().size() > 0) {
+
+              constParticleVariableBase* var = newv->cloneConstType();
+              oldDataWarehouse->get(*var, label, oldsub);
+
+              // reset the bounds of the old var's data so copyData doesn't complain
+              ParticleSubset* tempset = scinew ParticleSubset(oldsub->numParticles(), matl, newPatch,
+                                                              newPatch->getExtraCellLowIndex(), newPatch->getExtraCellHighIndex());
+              const_cast<ParticleVariableBase*>(&var->getBaseRep())->setParticleSubset(tempset);
+              newv->copyData(&var->getBaseRep());
+              delete var;  //pset and tempset are deleted with it.
+            }
+            newDataWarehouse->put(*newv, label, true);
+            delete newv;  // the container is copied
           }
-
-          ParticleVariableBase* newv = dynamic_cast<ParticleVariableBase*>(label->typeDescription()->createInstance());
-          newv->allocate(newsub);
-          // don't get and copy if there were no old patches
-          if (oldsub->getNeighbors().size() > 0) {
-
-            constParticleVariableBase* var = newv->cloneConstType();
-            oldDataWarehouse->get(*var, label, oldsub);
-
-            // reset the bounds of the old var's data so copyData doesn't complain
-            ParticleSubset* tempset = scinew ParticleSubset(oldsub->numParticles(), matl, newPatch,
-                                                            newPatch->getExtraCellLowIndex(), newPatch->getExtraCellHighIndex());
-            const_cast<ParticleVariableBase*>(&var->getBaseRep())->setParticleSubset(tempset);
-            newv->copyData(&var->getBaseRep());
-            delete var;  //pset and tempset are deleted with it.
+          break;
+          
+          default : {
+            SCI_THROW(InternalError("Unknown variable type in copyData: "+label->getName(), __FILE__, __LINE__));
           }
-          newDataWarehouse->put(*newv, label, true);
-          delete newv;  // the container is copied
-        }
-	  break;
-	  
-	default : {
-	  SCI_THROW(InternalError("Unknown variable type in copyData: "+label->getName(), __FILE__, __LINE__));
-	}
-	}  // end switch
+        }  // end switch
       }  // end matls
     }  // end label_matls
 
