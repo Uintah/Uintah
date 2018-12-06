@@ -357,12 +357,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
               int rank = lb->getPatchwiseProcessorAssignment(patch);
               int node = sim->myworld->getNodeFromRank(rank);
 
-              sprintf(tmpName,"level%d, patch%d, node%d, rank%d",
-                      level, local_patch, node, rank);
-
-              // sprintf(tmpName,"node%d, rank%d, level%d, patch%d",
-              //         level, local_patch,
-              //         sim->myworld->getNodeFromRank(rank), rank);
+              sprintf(tmpName,"level%d, patch%d", level, local_patch);
 
               VisIt_MeshMetaData_addGroupId(mmd, level);
               VisIt_MeshMetaData_addDomainName(mmd, tmpName);
@@ -415,16 +410,18 @@ visit_handle visit_SimGetMetaData(void *cbdata)
               for( unsigned int r=0; r<nRanks; ++r ) {
                 char msg[12];
                 sprintf( msg, "Rank_%04d", r );
-                rank_enum_id[r] = r;
-                VisIt_VariableMetaData_addEnumNameValue( smd, msg, r );
+                int index;
+                VisIt_VariableMetaData_addEnumNameValue( smd, msg, r, &index );
+                rank_enum_id[r] = index;
               }
 
               if( nNodes > 1 ) {
                 for( unsigned int n=0; n<nNodes; ++n ) {
                   char msg[12];
                   sprintf( msg, "Node_%04d", n );
-                  node_enum_id[n] = nRanks + n;
-                  VisIt_VariableMetaData_addEnumNameValue( smd, msg, nRanks+n );
+                  int index;
+                  VisIt_VariableMetaData_addEnumNameValue( smd, msg, nRanks+n, &index );
+                  node_enum_id[n] = index;
                 }
           
                 for( unsigned int r=0; r<nRanks; ++r ) {
