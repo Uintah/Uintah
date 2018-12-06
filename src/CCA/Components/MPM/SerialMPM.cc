@@ -4416,8 +4416,6 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
 
       // Check to see if a tracer has left the domain
       if(!domain.inside(tx_new[idx])){
-        static ProgressiveWarning warn("A tracer has moved outside the domain. Pushing it back in.  This is a ProgressiveWarning.",10);
-        warn.invoke();
         double epsilon = 1.e-15;
         Point txn = tx_new[idx];
         if(periodic.x()==0){
@@ -4429,6 +4427,8 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           tx_new[idx] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
           txn = tx_new[idx];
          }
+         static ProgressiveWarning warn("A tracer has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+         warn.invoke();
         }
         if(periodic.y()==0){
          if(tx_new[idx].y()<dom_min.y()){
@@ -4439,6 +4439,8 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           tx_new[idx] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
           txn = tx_new[idx];
          }
+         static ProgressiveWarning warn("A tracer has moved outside the domain through a y boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+         warn.invoke();
         }
         if(periodic.z()==0){
          if(tx_new[idx].z()<dom_min.z()){
@@ -4447,6 +4449,8 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
          if(tx_new[idx].z()>dom_max.z()){
           tx_new[idx] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
          }
+         static ProgressiveWarning warn("A tracer has moved outside the domain through a z boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+         warn.invoke();
         }
       }
     }
