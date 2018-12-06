@@ -20,7 +20,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-       <max_Timesteps>     50           </max_Timesteps>
+       <max_Timesteps>     10          </max_Timesteps>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -158,14 +158,14 @@
       <save label="vol_frac_CC"/>
       <save label="mag_grad_vol_frac_CC"/>
       <save label="refineFlag"/>
-      <checkpoint timestepInterval="20" cycle="2"/>
+      <checkpoint timestepInterval="3" cycle="2"/>
    </DataArchiver>
    
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.4</cfl>
+       <cfl>0.4</cfl>
        <ICE>
         <advection type = "SecondOrder"/>        
       </ICE>      
@@ -181,7 +181,7 @@
       </ICE>
       
       <Regridder type="Tiled">
-        <max_levels>                   2       </max_levels>
+        <max_levels>                   3       </max_levels>
         <cell_refinement_ratio>    [[2,2,1]]   </cell_refinement_ratio>
         <cell_stability_dilation>   [2,2,0]    </cell_stability_dilation>   
         <min_boundary_cells>       [1,1,0]     </min_boundary_cells>
@@ -228,7 +228,7 @@
                <temperature>   300.0                    </temperature>
            </geom_object>
          </material>
-         <material>
+         <material name = "air">
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
@@ -252,7 +252,11 @@
         </exchange_properties> 
     </MaterialProperties>           
     <!--____________________________________________________________________-->
+
+  <!--
     <DataAnalysis>
+    
+  
        <Module name="lineExtract">
        
         <material>Atmosphere</material>
@@ -280,7 +284,7 @@
           </line>
         </lines>
       </Module>
-      <!--__________________________________-->
+      
       <Module name="planeExtract">
        
         <material>Atmosphere</material>
@@ -304,5 +308,26 @@
           </plane>
         </planes>
       </Module>
-    </DataAnalysis>        
+
+      
+      <Module name="planeAverage">
+       
+        <material>Atmosphere</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>         0.00 </timeStart>
+        <timeStop>          100  </timeStop>
+       
+        <planeOrientation>  XY   </planeOrientation>
+        <weight label= "mass_adv"/>
+        
+        <Variables>
+          <analyze label="press_CC" matl="0" weighting="nCells"/> 
+          <analyze label="rho_CC"            weighting="mass"/>
+          <analyze label="mass_adv"          weighting="mass"/>
+          <analyze label="mom_adv"           weighting="mass"/>
+        </Variables>
+
+      </Module>
+    </DataAnalysis>  
+-->      
 </Uintah_specification>
