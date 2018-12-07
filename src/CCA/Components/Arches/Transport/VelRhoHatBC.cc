@@ -17,12 +17,15 @@ VelRhoHatBC::~VelRhoHatBC()
 
 //--------------------------------------------------------------------------------------------------
 void VelRhoHatBC::problemSetup( ProblemSpecP& db ){
+
+  using namespace ArchesCore;
+  
   m_xmom = "x-mom";
   m_ymom = "y-mom";
   m_zmom = "z-mom";
-  m_uVel = ArchesCore::default_uVel_name;
-  m_vVel = ArchesCore::default_vVel_name;
-  m_wVel = ArchesCore::default_wVel_name;
+  m_uVel = parse_ups_for_role( UVELOCITY, db, default_uVel_name );
+  m_vVel = parse_ups_for_role( VVELOCITY, db, default_vVel_name );
+  m_wVel = parse_ups_for_role( WVELOCITY, db, default_wVel_name );
 }
 
 //--------------------------------------------------------------------------------------------------

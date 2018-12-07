@@ -49,9 +49,9 @@
     <save label="x-mom_z_flux"/>
     <save label="rho_phi"/>
     <save label="phi"/>
-    <save label="uVelocity"/>
-    <save label="vVelocity"/>
-    <save label="wVelocity"/>
+    <save label="uVel"/>
+    <save label="vVel"/>
+    <save label="wVel"/>
     <save label="ucell_yvel"/>
     <save label="ucell_zvel"/>
     <save label="ucell_xvel"/>
@@ -91,6 +91,9 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
       <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
@@ -139,7 +142,7 @@
         </PressureSolver>
       </KMomentum>
       <Initialization>
-        <task task_label="uVel-init" variable_label="uVelocity" type="shunn_mms_p3">
+        <task task_label="uVel-init" variable_label="uVel" type="shunn_mms_p3">
           <variable type="FX"/>
           <which_vel>u</which_vel>
           <uf>0.5</uf>
@@ -147,7 +150,7 @@
           <coordinates x="ucellX" y="gridY"/>
           <which_density label="density" />
         </task>
-        <task task_label="vVel-init" variable_label="vVelocity" type="shunn_mms_p3">
+        <task task_label="vVel-init" variable_label="vVel" type="shunn_mms_p3">
           <variable type="FY"/>
           <which_vel>u</which_vel>
           <uf>0.5</uf>
