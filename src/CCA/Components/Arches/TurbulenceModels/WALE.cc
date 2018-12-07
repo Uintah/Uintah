@@ -28,9 +28,9 @@ WALE::problemSetup( ProblemSpecP& db ){
   m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocity" );
   m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
-  m_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "uVelocity_cc" );
-  m_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "vVelocity_cc" );
-  m_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "wVelocity_cc" );
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "uVelocity_cc" );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "vVelocity_cc" );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "wVelocity_cc" );
 
   m_IsI_name = "strainMagnitudeLabel";
   m_turb_viscosity_name = "turb_viscosity";
@@ -38,14 +38,12 @@ WALE::problemSetup( ProblemSpecP& db ){
 
   db->getWithDefault("Cs", m_Cs, .5);
 
-  if (db->findBlock("use_my_name_viscosity")){
-    db->findBlock("use_my_name_viscosity")->getAttribute("label",m_t_vis_name);
-  } else{
-    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "viscosityCTS" );
-  }
+  m_total_vis_name = m_task_name;
 
-  if (m_u_vel_name == "uVelocitySPBC") { // this is production code
+  // Use the production velocity name to signal if this is being used in the ExplicitSolver.
+  if (m_u_vel_name == "uVelocitySPBC") {
     m_create_labels_IsI_t_viscosity = false;
+    m_total_vis_name = "viscosityCTS";
   }
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("PhysicalConstants")) {
@@ -71,7 +69,7 @@ WALE::create_local_labels(){
 
   if (m_create_labels_IsI_t_viscosity) {
     register_new_variable<CCVariable<double> >(m_IsI_name);
-    register_new_variable<CCVariable<double> >( m_t_vis_name);
+    register_new_variable<CCVariable<double> >( m_total_vis_name);
     register_new_variable<CCVariable<double> >( m_turb_viscosity_name);
   }
 
@@ -82,7 +80,7 @@ void
 WALE::register_initialize( std::vector<AFC::VariableInformation>&
                                        variable_registry , const bool packed_tasks){
 
-  register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
+  register_variable( m_total_vis_name, AFC::COMPUTES, variable_registry );
   register_variable( m_turb_viscosity_name, AFC::COMPUTES, variable_registry );
 
 }
@@ -91,27 +89,10 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 void
 WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
+  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_total_vis_name));
   CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
   mu_sgc.initialize(0.0);
   mu_turb.initialize(0.0);
-
-}
-
-//---------------------------------------------------------------------------------
-void
-WALE::register_timestep_init( std::vector<AFC::VariableInformation>&
-                              variable_registry , const bool packed_tasks){
-
-  //register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
-
-}
-
-//---------------------------------------------------------------------------------
-void
-WALE::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
- // CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
 
 }
 
@@ -132,10 +113,10 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
 
   register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
   if (m_create_labels_IsI_t_viscosity) {
-    register_variable( m_t_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );
+    register_variable( m_total_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, AFC::COMPUTES ,  variable_registry, time_substep );
   } else {
-    register_variable( m_t_vis_name, AFC::MODIFIES ,  variable_registry, time_substep );
+    register_variable( m_total_vis_name, AFC::MODIFIES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, AFC::MODIFIES ,  variable_registry, time_substep );
   }
 }
@@ -152,7 +133,7 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_v_vel_name);
   constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
 
-  CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_t_vis_name);
+  CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_total_vis_name);
   CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
   CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >(m_IsI_name);
   constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));

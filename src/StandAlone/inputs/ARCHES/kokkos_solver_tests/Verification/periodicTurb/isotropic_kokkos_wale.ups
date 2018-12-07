@@ -33,7 +33,7 @@
     <save label="drhodt"/>
     <!--save label="density_star"/-->
     <save label="density"/>
-    <save label="gamma"/>
+    <save label="wale_model_visc"/>
     <save label="pressure"/>
     <save label="b_press"/>
     <!--save label="viscosity_csigma"/-->
@@ -65,7 +65,7 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
       <VarID>
-        <var role="total_viscosity" label="gamma"/>
+        <var role="total_viscosity" label="wale_model_visc"/>
         <var role="density" label="density"/>
       </VarID>
       <StateProperties> 
@@ -88,7 +88,7 @@
         </PressureSolver>
       </KMomentum>
       <TurbulenceModels>
-       <model label="Cwale" type="wale">
+       <model label="wale_model_visc" type="wale">
         <Cs>0.5</Cs>
        </model>
       </TurbulenceModels>

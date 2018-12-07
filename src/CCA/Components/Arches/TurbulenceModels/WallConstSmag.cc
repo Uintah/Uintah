@@ -38,11 +38,10 @@ WallConstSmag::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocity" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocity" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocity" );
   m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
-
 
   m_IsI_name = "strainMagnitudeLabel";
   m_sigma_t_names.resize(3);
@@ -51,7 +50,6 @@ WallConstSmag::problemSetup( ProblemSpecP& db ){
   m_sigma_t_names[2] = "sigma23";
   db->getWithDefault("Cs", m_Cs, 0.17);
   db->getWithDefault("standoff", m_standoff, 1);
-
 
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("PhysicalConstants")) {
@@ -140,7 +138,7 @@ WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   Uintah::parallel_for( range, [&](int i, int j, int k){
-  
+
     //apply u-mom bc -
     if ( eps(xm) * eps(c) > .5 ){
       // Y- sigma 12
@@ -177,7 +175,7 @@ WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         const double ISI     = 0.5 * ( IsI(i,j,k+i_so) + IsI(i-1,j,k+i_so) );
         const double rho_int = 0.5 *(rho(c)+rho(xm));
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
-        const double dudz    =   ( uVel(c)-uVel(zm) )/ dz; 
+        const double dudz    =   ( uVel(c)-uVel(zm) )/ dz;
         // sigma 13
         sigma13(c) += ( mu_t + m_molecular_visc ) * dudz;
 
@@ -191,7 +189,7 @@ WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         const double ISI     = 0.5*(IsI(i,j,k-i_so) + IsI(i-1,j,k-i_so));
         const double rho_int = 0.5 *(rho(c)+rho(xm));
         const double mu_t    = pow( m_Cs*delta, 2.0 ) * rho_int * ISI;
-        const double dudz    =   ( uVel(zp) - uVel(c))/ dz; 
+        const double dudz    =   ( uVel(zp) - uVel(c))/ dz;
         // sigma 13
         sigma13(c) +=  ( mu_t + m_molecular_visc ) * dudz;
 
@@ -207,12 +205,12 @@ WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         const double ISI     = 0.5 * ( IsI(i+i_so,j,k) + IsI(i+i_so,j-1,k) );
         const double rho_int = 0.5 *(rho(c)+rho(ym));
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
-        const double dvdx    =   ( vVel(c) - vVel(xm))/ dx; 
+        const double dvdx    =   ( vVel(c) - vVel(xm))/ dx;
         // sigma 12
         sigma12(c) +=  ( mu_t + m_molecular_visc ) * dvdx ;
 
       }
-      // X+ 
+      // X+
       if ( eps(xp) * eps(xpym) < .5 ){
         const double i_so = ( eps(i-m_standoff,j,k) * eps(i-m_standoff,j-1,k) > .5 ) ?
                              m_standoff :
@@ -236,7 +234,7 @@ WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
         const double dvdz    = (vVel(c)- vVel(zm) )/ dz;
 
-        // sigma 23 
+        // sigma 23
         sigma23(c) += ( mu_t + m_molecular_visc ) * dvdz;
 
       }
@@ -250,7 +248,7 @@ WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
         const double dvdz    = (vVel(zp)- vVel(c) )/ dz;
 
-        // sigma 23 
+        // sigma 23
         sigma23(c) +=  ( mu_t + m_molecular_visc ) * dvdz ;
 
       }
@@ -268,7 +266,7 @@ WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
         const double dwdx    = (wVel(c)- wVel(xm) )/ dx;
 
-        // sigma 13 
+        // sigma 13
         sigma13(c) +=  ( mu_t + m_molecular_visc ) * dwdx ;
 
       }
@@ -282,8 +280,8 @@ WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
         const double dwdx    = (wVel(xp)- wVel(c) )/ dx;
 
-        // sigma 13 
-        sigma13(c) += ( mu_t + m_molecular_visc ) * dwdx ; 
+        // sigma 13
+        sigma13(c) += ( mu_t + m_molecular_visc ) * dwdx ;
 
       }
       // Y-
@@ -296,8 +294,8 @@ WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
         const double dwdy    = (wVel(c)- wVel(ym) )/ dy;
 
-        // sigma 23 
-        sigma23(c) += ( mu_t + m_molecular_visc ) * dwdy ; 
+        // sigma 23
+        sigma23(c) += ( mu_t + m_molecular_visc ) * dwdy ;
 
       }
         // Y+
@@ -310,13 +308,13 @@ WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         const double mu_t    = pow( m_Cs*delta, 2.0 ) * rho_int * ISI;
         const double dwdy    = (wVel(yp)- wVel(c) )/ dy;
 
-        // sigma 23 
+        // sigma 23
         sigma23(c) += ( mu_t + m_molecular_visc ) * dwdy ;
 
       }
       }
   });
-  
+
 
 }
 } //namespace Uintah
