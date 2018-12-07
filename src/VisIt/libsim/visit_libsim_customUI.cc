@@ -892,12 +892,7 @@ void visit_SetStripChartValue( visit_simulation_data *sim,
     {
       if( name == sim->stripChartNames[chart][curve] )
       {
-        char cmd[128];
-      
-        sprintf( cmd, "%d | %d | %lf | %lf",
-                 chart, curve, (double) sim->cycle, value );
-        
-        VisItUI_setValueS("STRIP_CHART_ADD_POINT", cmd, 1);
+        VisItUI_addStripChartPoint( chart, curve, (double) sim->cycle, value ); 
       }
     }
   }
