@@ -35,7 +35,7 @@ WALE::problemSetup( ProblemSpecP& db ){
   std::stringstream composite_name;
   composite_name << "strainMagnitudeLabel_" << m_task_name;
   m_IsI_name = composite_name.str();
-  
+
   m_turb_viscosity_name = "turb_viscosity";
   m_volFraction_name = "volFraction";
 
@@ -47,6 +47,7 @@ WALE::problemSetup( ProblemSpecP& db ){
   if (m_u_vel_name == "uVelocitySPBC") {
     m_create_labels_IsI_t_viscosity = false;
     m_total_vis_name = "viscosityCTS";
+    m_IsI_name = "strainMagnitudeLabel";
   }
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("PhysicalConstants")) {

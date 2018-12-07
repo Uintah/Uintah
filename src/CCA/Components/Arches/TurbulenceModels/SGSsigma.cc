@@ -46,7 +46,7 @@ SGSsigma::problemSetup( ProblemSpecP& db ){
   m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
 
   std::stringstream composite_name;
-  composite_name << "strainMagnitudeLabel_" << m_task_name;  
+  composite_name << "strainMagnitudeLabel_" << m_task_name;
   m_IsI_name = composite_name.str();
 
   m_turb_viscosity_name = "turb_viscosity";
@@ -62,6 +62,7 @@ SGSsigma::problemSetup( ProblemSpecP& db ){
 
   if (m_u_vel_name == "uVelocitySPBC") { // this is production code
     m_create_labels_IsI_t_viscosity = false;
+    m_IsI_name = "strainMagnitudeLabel";
   }
 
   const ProblemSpecP params_root = db->getRootNode();

@@ -89,10 +89,10 @@
                                         need_applies_to="type sigma, wale, wall_constant_smagorinsky,constant_smagorinsky, multifractal"/> <!-- default for sigma is 1.35
                                                                                                                                                 default for wale is 0.5 default for 
                                                                                                                                                 wall_constant_smagorinsky is 0.17-->
-           <filter                        spec="OPTIONAL NO_DATA"
+           <filter                        spec="REQUIRED NO_DATA"
                                           attribute1="type REQUIRED STRING 'three_points, simpson, box'"
                                           need_applies_to="type dynamic_smagorinsky" />
-           <epsilon                       spec="OPTIONAL DOUBLE"
+           <epsilon                       spec="REQUIRED DOUBLE"
                                           need_applies_to="type dynamic_smagorinsky"/>
            <standoff                      spec="OPTIONAL INTEGER"
                                           need_applies_to="type wall_constant_smagorinsky"/> <!-- Allows the user to use tangential velocities at a standoff distance from the wall -->
@@ -674,9 +674,12 @@
                                                                            smagorinsky, none'" >
 
         <!--smagorinsky -->
-        <cf                             spec="OPTIONAL DOUBLE 'positive'" />
-        <fac_mesh                       spec="OPTIONAL DOUBLE 'positive'" />
-        <filterl                        spec="OPTIONAL DOUBLE 'positive'" />
+        <cf                             spec="REQUIRED DOUBLE 'positive'" 
+                                        need_applies_to="model smagorinsky"/> <!-- Constant -->
+        <fac_mesh                       spec="REQUIRED DOUBLE 'positive'" 
+                                        need_applies_to="model smagorinsky"/> <!-- Scale the delta by this factor -->
+        <filterl                        spec="REQUIRED DOUBLE 'positive'" 
+                                        need_applies_to="model smagorinsky"/> <!-- Filter length, set independently of the delta computed based on mesh resolution. The max value is retained -->
 
         <!--dyn. smagorinsky -->
         <filter_cs_squared              spec="OPTIONAL BOOLEAN" /> <!-- filter the dynamic Cs constant -->
