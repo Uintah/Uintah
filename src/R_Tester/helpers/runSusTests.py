@@ -889,7 +889,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
       
       if compUda_RC != 0:
         if compUda_RC == 10 * 256:
-          print( "\t*** Input file(s) differs from the goldstandard" )
+          #print( "\t*** Input file(s) differs from the goldstandard" )  uncomment when there's a better input file comparison
 
         elif compUda_RC == 1 * 256:
           print( "\t*** ERROR, test (%s) failed uda comparison, tolerances exceeded (%s)" % (testname, compUda_RC) ) 
