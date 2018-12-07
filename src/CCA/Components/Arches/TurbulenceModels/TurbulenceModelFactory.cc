@@ -71,7 +71,7 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
 
       } else if (type == "wall_constant_smagorinsky"){
 
-        TaskInterface::TaskBuilder* tsk_builder = scinew WallConstSmag::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk_builder = scinew WallConstSmag::Builder( name, 0, db_m );
         register_task( name, tsk_builder );
         m_wall_momentum_closure_tasks.push_back(name);
 
@@ -88,37 +88,41 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
 
         if ( packed_tasks.turbulence ){
 
-          name = "DS_task1";
-          TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( name, 0 );
-          register_task( name, tsk_builder );
-          m_momentum_closure_tasks.push_back(name);
+          std::string sub_name = "DS_task1";
+          TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( sub_name, 0, name );
+          register_task( sub_name, tsk_builder );
+          m_momentum_closure_tasks.push_back(sub_name);
 
-          name = "DS_task2";
-          TaskInterface::TaskBuilder* tsk_builder2 = scinew DSmaMMML< CCVariable<double> >::Builder( name, 0 );
-          register_task( name, tsk_builder2 );
-          m_momentum_closure_tasks.push_back(name);
+          sub_name = "DS_task2";
+          TaskInterface::TaskBuilder* tsk_builder2
+            = scinew DSmaMMML< CCVariable<double> >::Builder( sub_name, 0, name );
+          register_task( sub_name, tsk_builder2 );
+          m_momentum_closure_tasks.push_back(sub_name);
 
-          name = "DS_task3";
-          TaskInterface::TaskBuilder* tsk_builder3 = scinew DSmaCs< CCVariable<double> >::Builder( name, 0 );
-          register_task( name, tsk_builder3 );
-          m_momentum_closure_tasks.push_back(name);
+          sub_name = "DS_task3";
+          TaskInterface::TaskBuilder* tsk_builder3
+            = scinew DSmaCs< CCVariable<double> >::Builder( sub_name, 0, name );
+          register_task( sub_name, tsk_builder3 );
+          m_momentum_closure_tasks.push_back(sub_name);
 
         } else {
 
-          name = "DS_task1";
-          TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( name, 0 );
-          register_task( name, tsk_builder );
-          m_momentum_closure_tasks.push_back(name);
+          std::string sub_name = "DS_task1";
+          TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( sub_name, 0, name );
+          register_task( sub_name, tsk_builder );
+          m_momentum_closure_tasks.push_back(sub_name);
 
-          name = "DS_task2";
-          TaskInterface::TaskBuilder* tsk_builder2 = scinew DSmaMMML< constCCVariable<double> >::Builder( name, 0 );
-          register_task( name, tsk_builder2 );
-          m_momentum_closure_tasks.push_back(name);
+          sub_name = "DS_task2";
+          TaskInterface::TaskBuilder* tsk_builder2
+            = scinew DSmaMMML< constCCVariable<double> >::Builder( sub_name, 0, name );
+          register_task( sub_name, tsk_builder2 );
+          m_momentum_closure_tasks.push_back(sub_name);
 
-          name = "DS_task3";
-          TaskInterface::TaskBuilder* tsk_builder3 = scinew DSmaCs< constCCVariable<double> >::Builder( name, 0 );
-          register_task( name, tsk_builder3 );
-          m_momentum_closure_tasks.push_back(name);
+          sub_name = "DS_task3";
+          TaskInterface::TaskBuilder* tsk_builder3
+            = scinew DSmaCs< constCCVariable<double> >::Builder( sub_name, 0, name );
+          register_task( sub_name, tsk_builder3 );
+          m_momentum_closure_tasks.push_back(sub_name);
 
         }
 

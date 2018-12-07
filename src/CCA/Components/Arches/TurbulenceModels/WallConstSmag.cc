@@ -24,8 +24,8 @@ namespace Uintah{
 typedef ArchesFieldContainer AFC;
 
 //---------------------------------------------------------------------------------
-WallConstSmag::WallConstSmag( std::string task_name, int matl_index ) :
-TaskInterface( task_name, matl_index )
+WallConstSmag::WallConstSmag( std::string task_name, int matl_index, const ProblemSpecP db_turb_parent ) :
+TaskInterface( task_name, matl_index ), m_db_turb_parent(db_turb_parent)
 {}
 
 //---------------------------------------------------------------------------------
@@ -43,7 +43,28 @@ WallConstSmag::problemSetup( ProblemSpecP& db ){
   m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocity" );
   m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
 
-  m_IsI_name = "strainMagnitudeLabel";
+  //Which turb model is going to supply the strain rate mag?
+  std::string which_model = "NotSet";
+  bool found_the_model = false;
+  db->findBlock("momentum_closure_model")->getAttribute("label", which_model);
+  //Now parse through the closure models and get the label for the strain rate magnitude:
+  for ( ProblemSpecP db_model = m_db_turb_parent->findBlock("model"); db_model != nullptr;
+        db_model=db_model->findNextBlock("model")){
+    std::string label;
+    db_model->getAttribute("label",label);
+
+    if ( label == which_model ){
+      found_the_model = true;
+    }
+  }
+
+  m_IsI_name = "strainMagnitude";
+  if ( found_the_model ){
+    m_IsI_name += "_" + which_model;
+  } else {
+    throw ProblemSetupException("Error: Could not match wall closure model with the turbulence model: "+which_model, __FILE__, __LINE__);
+  }
+
   m_sigma_t_names.resize(3);
   m_sigma_t_names[0] = "sigma12";
   m_sigma_t_names[1] = "sigma13";
@@ -53,11 +74,10 @@ WallConstSmag::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("PhysicalConstants")) {
-    params_root->findBlock("PhysicalConstants")->require("viscosity",
-                                                          m_molecular_visc);
+      params_root->findBlock("PhysicalConstants")->require("viscosity", m_molecular_visc);
     if( m_molecular_visc == 0 ) {
       std::stringstream msg;
-      msg << "ERROR: Constant WallConstSmag: problemSetup(): Zero viscosity specified \n"
+      msg << "Error: Constant WallConstSmag::problemSetup() - Zero viscosity specified \n"
           << "       in <PhysicalConstants> section of input file." << std::endl;
       throw InvalidValue(msg.str(),__FILE__,__LINE__);
     }

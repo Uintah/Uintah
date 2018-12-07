@@ -3,8 +3,8 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
-DSFT::DSFT( std::string task_name, int matl_index ) :
-TaskInterface( task_name, matl_index ) {
+DSFT::DSFT( std::string task_name, int matl_index, const std::string turb_model_name ) :
+TaskInterface( task_name, matl_index ), m_turb_model_name(turb_model_name) {
 
 }
 
@@ -32,15 +32,19 @@ DSFT::problemSetup( ProblemSpecP& db ){
   m_cc_v_vel_name = m_v_vel_name + "_cc";
   m_cc_w_vel_name = m_w_vel_name + "_cc";
 
-  if (m_u_vel_name == "uVelocitySPBC") { // this is production code
-    m_create_labels_IsI_t_viscosity = false;
-  }
 
   std::string m_Type_filter_name;
   db->findBlock("filter")->getAttribute("type",m_Type_filter_name);
-  m_IsI_name = "strainMagnitudeLabel";
-  //m_ref_density_name = "denRefArray"; // name used in production code
-  //m_cell_type_name = "cellType";
+  std::stringstream composite_name;
+  composite_name << "strainMagnitude_" << m_turb_model_name;
+  m_IsI_name = composite_name.str();
+
+  //** HACK **//
+  if (m_u_vel_name == "uVelocitySPBC") { // this is production code
+    m_create_labels_IsI_t_viscosity = false;
+    m_IsI_name = "strainMagnitudeLabel";
+  }
+
   Type_filter = ArchesCore::get_filter_from_string( m_Type_filter_name );
   m_Filter.get_w(Type_filter);
 }

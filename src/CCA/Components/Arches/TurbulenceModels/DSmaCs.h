@@ -11,7 +11,7 @@ namespace Uintah{
 
 public:
 
-    DSmaCs( std::string task_name, int matl_index );
+    DSmaCs( std::string task_name, int matl_index, const std::string turb_model_name );
     ~DSmaCs();
 
     void problemSetup( ProblemSpecP& db );
@@ -39,16 +39,18 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index, const std::string turb_model_name )
+        : m_task_name(task_name), m_matl_index(matl_index), m_turb_model_name(turb_model_name){}
       ~Builder(){}
 
       DSmaCs* build()
-      { return scinew DSmaCs<TT>( m_task_name, m_matl_index ); }
+      { return scinew DSmaCs<TT>( m_task_name, m_matl_index, m_turb_model_name ); }
 
       private:
 
       std::string m_task_name;
       int m_matl_index;
+      const std::string m_turb_model_name;
     };
 
 private:
@@ -65,12 +67,13 @@ private:
     std::string m_IsI_name;
     bool m_create_labels_IsI_t_viscosity{true};
     Uintah::ArchesCore::TestFilter m_Filter;
+    const std::string m_turb_model_name;
   };
 
 //--------------------------------------------------------------------------------------------------
 template<typename TT>
-DSmaCs<TT>::DSmaCs( std::string task_name, int matl_index ) :
-TaskInterface( task_name, matl_index ) {
+DSmaCs<TT>::DSmaCs( std::string task_name, int matl_index, const std::string turb_model_name ) :
+TaskInterface( task_name, matl_index ), m_turb_model_name(turb_model_name) {
 
 }
 
@@ -113,10 +116,13 @@ DSmaCs<TT>::problemSetup( ProblemSpecP& db ){
 
   m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
   m_volFraction_name = "volFraction";
-  m_IsI_name = "strainMagnitudeLabel";
+  std::stringstream composite_name;
+  composite_name << "strainMagnitude_" << m_turb_model_name;
+  m_IsI_name = composite_name.str();
 
   if (m_t_vis_name == "viscosityCTS") { // this is production code
     m_create_labels_IsI_t_viscosity = false;
+    m_IsI_name = "strainMagnitudeLabel";
   }
 
 }

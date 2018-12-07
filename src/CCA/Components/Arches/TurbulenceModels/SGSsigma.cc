@@ -45,7 +45,10 @@ SGSsigma::problemSetup( ProblemSpecP& db ){
   m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
   m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
 
-  m_IsI_name = "strainMagnitudeLabel";
+  std::stringstream composite_name;
+  composite_name << "strainMagnitudeLabel_" << m_task_name;  
+  m_IsI_name = composite_name.str();
+
   m_turb_viscosity_name = "turb_viscosity";
   m_volFraction_name = "volFraction";
 

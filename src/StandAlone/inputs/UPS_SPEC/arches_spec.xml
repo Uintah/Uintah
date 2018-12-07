@@ -87,14 +87,17 @@
 
            <Cs                          spec="OPTIONAL DOUBLE"
                                         need_applies_to="type sigma, wale, wall_constant_smagorinsky,constant_smagorinsky, multifractal"/> <!-- default for sigma is 1.35
-                                                                                                        default for wale is 0.5 default for wall_constant_smagorinsky is 0.17-->
-         <filter                        spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'three_points, simpson, box'"
-                                        need_applies_to="type dynamic_smagorinsky" />
-         <epsilon                       spec="OPTIONAL DOUBLE"
-                                         need_applies_to="type dynamic_smagorinsky"/>
-         <standoff                       spec="OPTIONAL INTEGER"
-                                         need_applies_to="type wall_constant_smagorinsky"/>
+                                                                                                                                                default for wale is 0.5 default for 
+                                                                                                                                                wall_constant_smagorinsky is 0.17-->
+           <filter                        spec="OPTIONAL NO_DATA"
+                                          attribute1="type REQUIRED STRING 'three_points, simpson, box'"
+                                          need_applies_to="type dynamic_smagorinsky" />
+           <epsilon                       spec="OPTIONAL DOUBLE"
+                                          need_applies_to="type dynamic_smagorinsky"/>
+           <standoff                      spec="OPTIONAL INTEGER"
+                                          need_applies_to="type wall_constant_smagorinsky"/> <!-- Allows the user to use tangential velocities at a standoff distance from the wall -->
+           <momentum_closure_model        spec="REQUIRED NO_DATA"
+                                          need_applies_to="type wall_constant_smagorinsky"/>  <!-- Must input the label name from the momentum closure model to match the strainRateMag. -->
          </model>
       </TurbulenceModels>
 
