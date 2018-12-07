@@ -57,7 +57,7 @@ ArchesLabel::ArchesLabel()
     VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
   nonconstDelT->allowMultipleComputes();
   d_delTLabel = nonconstDelT;
-  
+
    // shortcuts
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   const TypeDescription* CC_Vector = CCVariable<Vector>::getTypeDescription();
@@ -130,6 +130,10 @@ ArchesLabel::ArchesLabel()
   d_uVelocitySPBCLabel = VarLabel::create("uVelocitySPBC", SFCX_double);
   d_vVelocitySPBCLabel = VarLabel::create("vVelocitySPBC", SFCY_double);
   d_wVelocitySPBCLabel = VarLabel::create("wVelocitySPBC", SFCZ_double);
+  // Duplicate Velocity Labels for Kokkos Arches
+  d_uVelocityLabel = VarLabel::create("uVelocity", SFCX_double);
+  d_vVelocityLabel = VarLabel::create("vVelocity", SFCY_double);
+  d_wVelocityLabel = VarLabel::create("wVelocity", SFCZ_double);
 
   d_uMomLabel = VarLabel::create("Umom", SFCX_double);
   d_vMomLabel = VarLabel::create("Vmom", SFCY_double);
@@ -287,7 +291,7 @@ ArchesLabel::~ArchesLabel()
     delete d_symTensorMatl;
   }
   for( ArchesLabel::MomentMap::iterator iMoment = DQMOMMoments.begin(); iMoment != DQMOMMoments.end(); ++iMoment ) {
-    VarLabel::destroy(iMoment->second); 
+    VarLabel::destroy(iMoment->second);
   }
 
   // Get rid of cqmom var labels
@@ -326,6 +330,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uVelocitySPBCLabel);
   VarLabel::destroy(d_vVelocitySPBCLabel);
   VarLabel::destroy(d_wVelocitySPBCLabel);
+  VarLabel::destroy(d_uVelocityLabel);
+  VarLabel::destroy(d_vVelocityLabel);
+  VarLabel::destroy(d_wVelocityLabel);
   VarLabel::destroy(d_uMomLabel);
   VarLabel::destroy(d_vMomLabel);
   VarLabel::destroy(d_wMomLabel);
@@ -439,7 +446,7 @@ ArchesLabel::problemSetup( const ProblemSpecP& db )
 
   if ( db_lab ){
 
-    for ( ProblemSpecP d = db_lab->findBlock("var"); d != nullptr; d = d->findNextBlock("var") ){ 
+    for ( ProblemSpecP d = db_lab->findBlock("var"); d != nullptr; d = d->findNextBlock("var") ){
 
       std::string label;
       std::string role;
@@ -482,9 +489,9 @@ ArchesLabel::getVarlabelByRole( VARID role )
    }
 };
 
-/** @brief Set a label to have a specific role **/ 
+/** @brief Set a label to have a specific role **/
 void
-ArchesLabel::setVarlabelToRole( const std::string label, const std::string role ){ 
+ArchesLabel::setVarlabelToRole( const std::string label, const std::string role ){
 
   // First make sure that the role is allowed:
   // Allowed roles are defined in the constructor of this class.
@@ -542,32 +549,32 @@ ArchesLabel::setVarlabelToRole( const std::string label, const std::string role 
 const string
 ArchesLabel::getRoleString( VARID role )
 {
-  std::string name; 
-  if ( role == TEMPERATURE ){ 
-    name = "temperature"; 
+  std::string name;
+  if ( role == TEMPERATURE ){
+    name = "temperature";
   }
-  else if ( role == DENSITY ){ 
-    name = "density"; 
+  else if ( role == DENSITY ){
+    name = "density";
   }
-  else if ( role == ENTHALPY ){ 
-    name = "enthalpy"; 
+  else if ( role == ENTHALPY ){
+    name = "enthalpy";
   }
-  else if ( role == SOOT ){ 
-    name = "soot"; 
+  else if ( role == SOOT ){
+    name = "soot";
   }
-  else if ( role == CO2 ){ 
-    name = "co2"; 
+  else if ( role == CO2 ){
+    name = "co2";
   }
-  else if ( role == H2O ){ 
-    name = "h2o"; 
+  else if ( role == H2O ){
+    name = "h2o";
   }
-  else if ( role == SPECIFICHEAT ){ 
-    name = "specific_heat"; 
+  else if ( role == SPECIFICHEAT ){
+    name = "specific_heat";
   }
-  else if ( role == MIXTUREFRACTION ){ 
-    name = "mixture_fraction"; 
+  else if ( role == MIXTUREFRACTION ){
+    name = "mixture_fraction";
   }
-  else { 
+  else {
     std::string msg = "Error: Role not recognized!\n";
     throw InvalidValue( msg, __FILE__, __LINE__ );
   }
