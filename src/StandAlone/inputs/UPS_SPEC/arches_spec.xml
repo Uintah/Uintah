@@ -92,8 +92,6 @@
            <filter                        spec="REQUIRED NO_DATA"
                                           attribute1="type REQUIRED STRING 'three_points, simpson, box'"
                                           need_applies_to="type dynamic_smagorinsky" />
-           <epsilon                       spec="REQUIRED DOUBLE"
-                                          need_applies_to="type dynamic_smagorinsky"/>
            <standoff                      spec="OPTIONAL INTEGER"
                                           need_applies_to="type wall_constant_smagorinsky"/> <!-- Allows the user to use tangential velocities at a standoff distance from the wall -->
            <momentum_closure_model        spec="REQUIRED NO_DATA"

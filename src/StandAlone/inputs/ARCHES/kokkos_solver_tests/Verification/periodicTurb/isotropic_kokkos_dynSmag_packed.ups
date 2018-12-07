@@ -92,7 +92,6 @@
       <TurbulenceModels>
        <model label="DS" type="dynamic_smagorinsky">
        <filter type="three_points"/>
-       <epsilon>3.0</epsilon>
        </model>
       </TurbulenceModels>
       <Initialization>

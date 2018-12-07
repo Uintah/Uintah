@@ -56,7 +56,7 @@ public:
 private:
 
   std::string m_u_vel_name;
-  double m_epsilon;
+  //double m_epsilon;
   Uintah::ArchesCore::FILTER Type_filter;
   std::string m_IsI_name;
   std::string m_volFraction_name;
@@ -89,7 +89,7 @@ DSmaMMML<TT>::problemSetup( ProblemSpecP& db ){
   m_Filter.get_w(Type_filter);
 
   const ProblemSpecP params_root = db->getRootNode();
-  db->require("epsilon",m_epsilon);
+  //db->require("epsilon",m_epsilon);
 
   std::string u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
 
@@ -256,9 +256,9 @@ template<typename TT> void
 DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   const Vector Dx = patch->dCell(); //
-  double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
-  double filter2  = filter*filter;
-  double fhat     = m_epsilon;
+  const double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
+  const double filter2  = filter*filter;
+  const double fhat     = 3.; //Mystery value for tilde(bar(delta))
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
 

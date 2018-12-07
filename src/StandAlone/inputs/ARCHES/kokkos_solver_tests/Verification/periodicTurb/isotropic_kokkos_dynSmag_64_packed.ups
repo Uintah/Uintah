@@ -98,7 +98,6 @@
       <TurbulenceModels>
        <model label="DS" type="dynamic_smagorinsky">
          <filter type="three_points"/>
-         <epsilon>3.0</epsilon>
        </model>
        <!--filter_type  TF="avg"/-->
        <!--filter_type  TF="Three_points"/-->
