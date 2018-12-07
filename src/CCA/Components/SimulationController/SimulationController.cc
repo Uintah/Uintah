@@ -879,27 +879,28 @@ SimulationController::ReportStats(const ProcessorGroup*,
     
     std::ostringstream message;
 
-    for (unsigned int i = 0; i < m_application->getApplicationStats().size(); ++i) {
-
-      if (message.str().size()) {
-        message << std::endl;
-      }
-
-      message << "  " << std::left << std::setw(24) << m_application->getApplicationStats().getName(i) << "[" << std::setw(15)
-              << m_application->getApplicationStats().getUnits(i) << "]";
-      if (m_application->getApplicationStats().calculateMinimum()) {
-        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMinimum(i) << " : " << std::setw(9)
-                << m_application->getApplicationStats().getRankForMinimum(i);
-      }
-      if (m_application->getApplicationStats().calculateAverage()) {
-        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankAverage(i);
-      }
-      if (m_application->getApplicationStats().calculateStdDev()) {
-        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankStdDev(i);
-      }
-      if (m_application->getApplicationStats().calculateMaximum()) {
-        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMaximum(i) << " : " << std::setw(9)
-                << m_application->getApplicationStats().getRankForMaximum(i);
+    for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
+      if( m_application->getApplicationStats().getRankMaximum(i) != 0.0 )
+      {
+	if (message.str().size()) {
+	  message << std::endl;
+	}
+	message << "  " << std::left << std::setw(24) << m_application->getApplicationStats().getName(i) << "[" << std::setw(15)
+		<< m_application->getApplicationStats().getUnits(i) << "]";
+	if (m_application->getApplicationStats().calculateMinimum()) {
+	  message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMinimum(i) << " : " << std::setw(9)
+		  << m_application->getApplicationStats().getRankForMinimum(i);
+	}
+	if (m_application->getApplicationStats().calculateAverage()) {
+	  message << " : " << std::setw(15) << m_application->getApplicationStats().getRankAverage(i);
+	}
+	if (m_application->getApplicationStats().calculateStdDev()) {
+	  message << " : " << std::setw(15) << m_application->getApplicationStats().getRankStdDev(i);
+	}
+	if (m_application->getApplicationStats().calculateMaximum()) {
+	  message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMaximum(i) << " : " << std::setw(9)
+		  << m_application->getApplicationStats().getRankForMaximum(i);
+	}
       }
     }
 
