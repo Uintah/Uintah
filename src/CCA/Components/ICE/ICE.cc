@@ -409,7 +409,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   //_________________________________
   // Exchange Model
   proc0cout << "numMatls " << m_materialManager->getNumMatls() << endl;
-  d_exchModel=ExchangeFactory::create( mat_ps, m_materialManager);
+  d_exchModel=ExchangeFactory::create( mat_ps, m_materialManager, d_with_mpm );
   d_exchModel->problemSetup(mat_ps);
   
   //__________________________________

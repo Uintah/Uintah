@@ -51,16 +51,14 @@ extern DebugStream dbgExch;
 //______________________________________________________________________
 //
 SlipExch::SlipExch(const ProblemSpecP     & exch_ps,
-                   const MaterialManagerP & materialManager )
-  : ExchangeModel( exch_ps, materialManager )
+                   const MaterialManagerP & materialManager,
+                   const bool with_mpm )
+  : ExchangeModel( exch_ps, materialManager, with_mpm )
 {
   proc0cout << "__________________________________\n";
   proc0cout << " Now creating the Slip Exchange model " << endl;
 
   d_exchCoeff = scinew ExchangeCoefficients();
-  Ilb  = scinew ICELabel();
-  Mlb  = scinew MPMLabel();
-
   d_vel_CCTransLabel  = VarLabel::create("vel_CCTransposed", CCVariable<Vector>::getTypeDescription());
   d_meanFreePathLabel = VarLabel::create("meanFreePath",     CCVariable<double>::getTypeDescription());
 }
@@ -70,8 +68,6 @@ SlipExch::SlipExch(const ProblemSpecP     & exch_ps,
 SlipExch::~SlipExch()
 {
   delete d_exchCoeff;
-  delete Ilb;
-  delete Mlb;
   VarLabel::destroy( d_vel_CCTransLabel );
   VarLabel::destroy( d_meanFreePathLabel );
 }
