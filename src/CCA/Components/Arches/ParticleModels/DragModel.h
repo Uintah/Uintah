@@ -3,6 +3,7 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
+#include <CCA/Components/Arches/UPSHelper.h>
 
 //-------------------------------------------------------
 
@@ -153,9 +154,9 @@ namespace Uintah{
       throw InvalidValue("Error: direction in drag model not recognized.", __FILE__, __LINE__ );
     }
 
-    _gas_u_velocity_name = "CCUVelocity";
-    _gas_v_velocity_name = "CCVVelocity";
-    _gas_w_velocity_name = "CCWVelocity";
+    _gas_u_velocity_name = ArchesCore::parse_ups_for_role( ArchesCore::UVELOCITY, db, ArchesCore::default_uVel_name ) + "_cc";
+    _gas_v_velocity_name = ArchesCore::parse_ups_for_role( ArchesCore::VVELOCITY, db, ArchesCore::default_vVel_name ) + "_cc";
+    _gas_w_velocity_name = ArchesCore::parse_ups_for_role( ArchesCore::WVELOCITY, db, ArchesCore::default_wVel_name ) + "_cc";
     _gas_density_name = "densityCP";
 
     const ProblemSpecP params_doot = db->getRootNode();

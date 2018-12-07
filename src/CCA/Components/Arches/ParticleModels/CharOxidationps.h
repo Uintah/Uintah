@@ -232,9 +232,10 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
   // gas variables
   m_density_gas_name = ArchesCore::parse_ups_for_role( ArchesCore::DENSITY,   db, "density" );
 
-  m_cc_u_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::CCUVELOCITY, db, "CCUVelocity" );
-  m_cc_v_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::CCVVELOCITY, db, "CCVVelocity" );
-  m_cc_w_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::CCWVELOCITY, db, "CCWVelocity" );
+  m_cc_u_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::UVELOCITY, db, ArchesCore::default_uVel_name ) + "_cc";
+  m_cc_v_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::VVELOCITY, db, ArchesCore::default_vVel_name ) + "_cc";
+  m_cc_w_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::WVELOCITY, db, ArchesCore::default_wVel_name ) + "_cc";
+  
   m_volFraction_name = "volFraction";
 
   m_gas_temperature_label = "temperature";

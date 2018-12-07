@@ -29,9 +29,9 @@
     <save label="x-mom_z_flux"/>
     <save label="phi"/>
     <save label="pressure"/>
-    <save label="uVel"/>
-    <save label="vVel"/>
-    <save label="wVel"/>
+    <save label="uVelocity"/>
+    <save label="vVelocity"/>
+    <save label="wVelocity"/>
     <save label="ucell_yvel"/>
     <save label="ucell_zvel"/>
     <save label="ucell_xvel"/>
@@ -277,12 +277,6 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
       <VarID>
-        <var role="uvelocity" label="uVel"/>
-        <var role="vvelocity" label="vVel"/>
-        <var role="wvelocity" label="wVel"/>
-        <var role="ccuvelocity" label="uVel_cc"/>
-        <var role="ccvvelocity" label="vVel_cc"/>
-        <var role="ccwvelocity" label="wVel_cc"/>
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
@@ -461,9 +455,9 @@
       <DQMOM>
         <number_quad_nodes>5</number_quad_nodes>
         <kokkos_translate/>
-        <velocity xlabel="uVel"
-                  ylabel="vVel"
-                  zlabel="wVel"/>
+        <velocity xlabel="uVelocity"
+                  ylabel="vVelocity"
+                  zlabel="wVelocity"/>
         <diffusion  scheme="central" D_label="gamma"/>
         <convection scheme="upwind"/>
         <Models/>

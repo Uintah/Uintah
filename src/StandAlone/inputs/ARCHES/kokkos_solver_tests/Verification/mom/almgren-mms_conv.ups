@@ -27,9 +27,9 @@
     <save label="y-mom"/>
     <save label="y_mms"/>
     <save label="z-mom"/>
-    <save label="uVel"/>
-    <save label="vVel"/>
-    <save label="wVel"/>
+    <save label="uVelocity"/>
+    <save label="vVelocity"/>
+    <save label="wVelocity"/>
     <save label="gamma"/>
     <save label="pressure"/>
     <save label="b_press"/>
@@ -61,9 +61,6 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
       <VarID>
-        <var role="uvelocity" label="uVel"/>
-        <var role="vvelocity" label="vVel"/>
-        <var role="wvelocity" label="wVel"/>
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
@@ -107,12 +104,12 @@
         </PressureSolver>
       </KMomentum>
       <Initialization>
-        <task task_label="uVel-init" variable_label="uVel" type="almgren_mms">
+        <task task_label="uVel-init" variable_label="uVelocity" type="almgren_mms">
           <variable type="FX"/>
           <which_vel>u</which_vel>
           <coordinates x="ucellX" y="gridY"/>
         </task>
-        <task task_label="vVel-init" variable_label="vVel" type="almgren_mms">
+        <task task_label="vVel-init" variable_label="vVelocity" type="almgren_mms">
           <variable type="FY"/>
           <which_vel>v</which_vel>
           <coordinates x="gridX" y="vcellY"/>
