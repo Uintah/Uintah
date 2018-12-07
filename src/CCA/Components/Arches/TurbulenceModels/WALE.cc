@@ -23,14 +23,14 @@ WALE::problemSetup( ProblemSpecP& db ){
 
   Nghost_cells = 1;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
-  m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocity" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocity" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocity" );
+  m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );//;m_u_vel_name + "_cc";
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
+  m_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "uVelocity_cc" );
+  m_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "vVelocity_cc" );
+  m_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "wVelocity_cc" );
 
   m_IsI_name = "strainMagnitudeLabel";
   m_turb_viscosity_name = "turb_viscosity";

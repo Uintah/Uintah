@@ -530,6 +530,14 @@
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVelocitySPBC"/>
+        <var role="vvelocity" label="vVelocitySPBC"/>
+        <var role="wvelocity" label="wVelocitySPBC"/>
+        <var role="ccuvelocity" label="CCUVelocity"/>
+        <var role="ccvvelocity" label="CCVVelocity"/>
+        <var role="ccwvelocity" label="CCWVelocity"/>
+      </VarID>
       <Turbulence model="compdynamicprocedure"/>
       <Properties>
         <table label="a_user_generated_label" type="constant">
