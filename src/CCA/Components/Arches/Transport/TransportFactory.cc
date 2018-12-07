@@ -634,7 +634,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       } else {
 
         //assume scaling constants of 1.
-        for ( int ii = 0; ii < nQn; ii++ ){
+        for ( unsigned int ii = 0; ii < nQn; ii++ ){
           scaling_constants_dbl.push_back(1.0);
           scaling_constants_str.push_back("1.0");
         }
@@ -686,7 +686,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       } else {
 
         //assume scaling constants of 1.
-        for ( int ii = 0; ii < nQn; ii++ ){
+        for ( unsigned int ii = 0; ii < nQn; ii++ ){
           scaling_constants_str.push_back("1.0");
           scaling_constants_dbl.push_back(1.0);
         }
@@ -695,7 +695,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
 
       }
 
-      for ( int ii = 0; ii < nQn; ii++ ){
+      for ( unsigned int ii = 0; ii < nQn; ii++ ){
 
         int this_qn = i;
         if ( this_qn == ii ){
