@@ -242,14 +242,14 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         temp_model_list.insert(temp_model_list.end(), task_name); // order hack
 
-       } else if  ( type == "particle_face_velocity" ) {
+      } else if  ( type == "particle_face_velocity" ) {
 
-         std::string dependent_type;
-         if ( db_model->findBlock("grid") != nullptr ){
-           db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
-         } else {
-           throw InvalidValue("Error: You must specify the <grid> for the constant model", __FILE__, __LINE__);
-         }
+        std::string dependent_type;
+        if ( db_model->findBlock("grid") != nullptr ){
+          db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
+        } else {
+          throw InvalidValue("Error: You must specify the <grid dependent_type=*> for the particle_face_velocity model.", __FILE__, __LINE__);
+        }
 
         if ( dependent_type == "CC" ){
 
@@ -260,7 +260,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           _dqmom_variables.push_back(task_name);
 
         }
-        
+
       } else if  ( type == "constant" ) {
 
         std::string dependent_type;
