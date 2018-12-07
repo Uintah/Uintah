@@ -12,6 +12,7 @@
 #include <CCA/Components/Arches/Task/TaskVariableTools.h>
 #include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctorHelper.h>
 #include <CCA/Components/Arches/WBCHelper.h>
+#include <CCA/Components/Arches/UPSHelper.h>
 #include <CCA/Components/Arches/GridTools.h>
 
 static Uintah::DebugStream dbgbc("ARCHES_BC_FUNCTORS", false);
@@ -280,20 +281,19 @@ void BCFunctors<T>::build_bcs( ProblemSpecP db_bc, const std::vector<std::string
            insert_functor( face_name, varname, fun );
 
          } else if ( custom_type == "PressureOutlet" ){
-           // HARD CODED! - fix me 
-           std::string vel_name = "uVel";
+           std::string vel_name;
            if (varname == "x-mom"){
-             vel_name = "uVel";
+             vel_name = ArchesCore::default_uVel_name;
              //vel_name = "x-mom";
            } else if (varname == "y-mom") {
-             vel_name = "vVel";
+             vel_name = ArchesCore::default_vVel_name;
              //vel_name = "y-mom";
            } else if  (varname == "z-mom") {
-             vel_name = "wVel";
+             vel_name = ArchesCore::default_wVel_name;
              //vel_name = "z-mom";
            } else {
              throw InvalidValue("Error: can not find velocity name "+type, __FILE__, __LINE__);
-           } 
+           }
            double vel_value=0.0;
            db_bc_type->require("value", vel_value);
 
@@ -859,20 +859,20 @@ public:
     // Now adding dependencies to the master list.
     // This checks for repeats to ensure a variable isn't added twice.
     //DepBCInfo vel_info; vel_info.variable_name = m_vel_name;
-    //vel_info.dw = ArchesFieldContainer::LATEST; 
+    //vel_info.dw = ArchesFieldContainer::LATEST;
     //BaseFunctor::m_dep.push_back( vel_info );
     //BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
 
   void add_mod( std::vector<std::string>& master_mod ){}
-  
+
 
 template <typename ES, typename MS>
   void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
-    // There is an issue with register variable for old_var. This BC is being applied in VelRhoHatBC.cc 
+    // There is an issue with register variable for old_var. This BC is being applied in VelRhoHatBC.cc
 
     //typedef typename VariableHelper<T>::ConstType CT;
     //T& var = *( tsk_info->get_uintah_field<T>(var_name));
@@ -906,15 +906,15 @@ template <typename ES, typename MS>
     //    int i_f = i + move_to_face[0]; // cell on the face
     //    int j_f = j + move_to_face[1];
     //    int k_f = k + move_to_face[2];
-  
+
     //    int im = i_f - iDir[0];// first interior cell
     //    int jm = j_f - iDir[1];
     //    int km = k_f - iDir[2];
-  
-    //    int ipp = i_f + iDir[0];// extra cell face in the last index (mostly outwardly position) 
+
+    //    int ipp = i_f + iDir[0];// extra cell face in the last index (mostly outwardly position)
     //    int jpp = j_f + iDir[1];
     //    int kpp = k_f + iDir[2];
-  
+
     //    if ( sign * old_var(i_f,j_f,k_f) > possmall ){
         //if ( sign * var(i_f,j_f,k_f) > possmall ){
           // du/dx = 0
@@ -923,9 +923,9 @@ template <typename ES, typename MS>
           // shut off the hatted value to encourage the mostly-* condition
     //      var(i_f,j_f,k_f) = 0.0;
     //    }
-  
+
     //    var(ipp,jpp,kpp) = var(i_f,j_f,k_f);
-  
+
     //  });
     //}
 

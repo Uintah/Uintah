@@ -16,9 +16,9 @@ void CCVel::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
 
   m_u_vel_name_cc = m_u_vel_name + "_cc";
   m_v_vel_name_cc = m_v_vel_name + "_cc";
@@ -44,7 +44,7 @@ void CCVel::problemSetup( ProblemSpecP& db ){
       std::string turb_closure_model;
       std::string conv_scheme;
       db->findBlock("TurbulenceModels")->findBlock("model")->getAttribute("type", turb_closure_model);
-      if ( turb_closure_model == "multifractal" ){ 
+      if ( turb_closure_model == "multifractal" ){
         if (db->findBlock("KMomentum")->findBlock("convection")){
           std::stringstream msg;
           msg << "ERROR: Cannot use KMomentum->convection if you are using the multifracal nles closure." << std::endl;

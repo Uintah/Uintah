@@ -226,7 +226,8 @@ private:
     std::vector<SourceInfo> eqn_srcs;
     if ( my_dir == ArchesCore::XDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" ));
+      m_vel_name.push_back(parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name ));
+
       for ( ProblemSpecP src_db = db->findBlock("src_x");
             src_db != nullptr; src_db = src_db->findNextBlock("src_x") ){
 
@@ -249,7 +250,7 @@ private:
 
     } else if ( my_dir == ArchesCore::YDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" ));
+      m_vel_name.push_back(parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name ));
       for ( ProblemSpecP src_db = db->findBlock("src_y");
             src_db != nullptr; src_db = src_db->findNextBlock("src_y") ){
 
@@ -272,7 +273,7 @@ private:
 
     } else if ( my_dir == ArchesCore::ZDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" ));
+      m_vel_name.push_back(parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name ));
       for ( ProblemSpecP src_db = db->findBlock("src_z");
             src_db != nullptr; src_db = src_db->findNextBlock("src_z") ){
 

@@ -244,20 +244,23 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
        } else if  ( type == "particle_face_velocity" ) {
 
-        std::string dependent_type;
-        if ( db_model->findBlock("grid") != nullptr ){
-          db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
-        } else {
-          throw InvalidValue("Error: You must specify the <grid> for the constant model", __FILE__, __LINE__);
-        }
-         if ( dependent_type == "CC" ){
+         std::string dependent_type;
+         if ( db_model->findBlock("grid") != nullptr ){
+           db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
+         } else {
+           throw InvalidValue("Error: You must specify the <grid> for the constant model", __FILE__, __LINE__);
+         }
+
+        if ( dependent_type == "CC" ){
 
           TaskInterface::TaskBuilder* tsk = scinew
           FaceParticleVel<CCVariable<double> >::Builder(task_name, 0, model_name);
 
           register_task( task_name, tsk );
           _dqmom_variables.push_back(task_name);
-       }
+
+        }
+        
       } else if  ( type == "constant" ) {
 
         std::string dependent_type;
@@ -518,5 +521,5 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
     tsk->problemSetup(db);
     tsk->create_local_labels();
   }
-  
+
 }

@@ -1545,6 +1545,7 @@
                                       attribute1="label REQUIRED STRING"
                                       attribute2="type REQUIRED STRING 'simple_rate,
                                                                         drag,
+                                                                        wdrag,
                                                                         gravity,
                                                                         constant,
                                                                         coal_density,
@@ -1564,8 +1565,8 @@
 
             <!-- The grid parameter is used for templated properties -->
             <grid                       spec="REQUIRED NO_DATA"
-                                        attribute1="dependent_type REQUIRED STRING 'CC, svol'"
-                                        attribute2="independent_type REQUIRED STRING 'CC, svol'"
+                                        attribute1="dependent_type REQUIRED STRING 'CC'"
+                                        attribute2="independent_type OPTIONAL STRING 'CC'"
                                         need_applies_to="type drag, gravity, constant"/>
 
             <IC                         spec="OPTIONAL STRING" />      <!-- base label for which internal coordiante this model affects -->
@@ -1604,15 +1605,15 @@
             
             <!-- char oxidation ps  -->
             <devol_model_name          spec="REQUIRED STRING" 
-                                        need_applies_to="type char_oxidation_ps"  /> <!-- label of devol model -->
+                                       need_applies_to="type char_oxidation_ps"  /> <!-- label of devol model -->
 
             <!-- drag model -->
-            <direction                  spec="REQUIRED STRING 'x,y,z,X,Y,Z'"
-                                        need_applies_to="type drag, gravity"/>     <!-- apply this source to which direction -->
+            <direction                 spec="REQUIRED STRING 'x,y,z,X,Y,Z'"
+                                       need_applies_to="type drag, wdrag, gravity"/>  <!-- apply drag model to this velocity direction -->
 
             <!-- constant property model: set a constant/environment -->
-            <constant                   spec="REQUIRED MULTIPLE_DOUBLES"
-                                        need_applies_to="type constant"/>
+            <constant                  spec="REQUIRED MULTIPLE_DOUBLES"
+                                       need_applies_to="type constant"/>
 
             <!-- constant property model: set a constant/environment -->
             <const_size                 spec="OPTIONAL BOOLEAN"
