@@ -177,7 +177,6 @@ int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
   }
 
   // indices
-  int i;
   int xM,yM,zM;
   int ix[8],iy[8],iz[8];
   int hash;
@@ -201,7 +200,7 @@ int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
   int maxX = -100000000, maxY = -100000000, maxZ = -100000000;
   
   // now  we will loop over each of the corners and find the current location: 
-  for(i=0;i<8;i++) {
+  for(int i=0;i<8;i++) {
     // first we need to find the position vector of the ith corner of
     // the particle with respect to the particle center:
     current_corner_pos = Vector(cellpos) + relative_node_location[i];
@@ -238,7 +237,7 @@ int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
     }
 
     // Loop over nodes
-    for(i=0;i<8;i++){
+    for(int i=0;i<8;i++){
       fx = (ccx[i]-ix[i]);
       fy = (ccy[i]-iy[i]);
       fz = (ccz[i]-iz[i]);
@@ -503,7 +502,7 @@ int fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     }
 
     // Loop over nodes
-    for(i=0;i<8;i++){
+    for(int i=0;i<8;i++){
       fx = (ccx[i]-ix[i]);
       fy = (ccy[i]-iy[i]);
       fz = (ccz[i]-iz[i]);
@@ -774,7 +773,7 @@ fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
     }
   
     // Loop over nodes
-    for(i=0;i<8;i++){
+    for(int i=0;i<8;i++){
       fx = (ccx[i]-ix[i]);
       fy = (ccy[i]-iy[i]);
       fz = (ccz[i]-iz[i]);
