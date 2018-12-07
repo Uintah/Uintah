@@ -697,7 +697,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
 
       for ( unsigned int ii = 0; ii < nQn; ii++ ){
 
-        int this_qn = i;
+        unsigned int this_qn = i;
         if ( this_qn == ii ){
           double value = 0.0;
           ProblemSpecP db_new_init = eqn_db->appendChild("initialize");
