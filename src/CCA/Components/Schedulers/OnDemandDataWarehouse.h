@@ -1397,7 +1397,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
 
     template <typename grid_T,typename T, typename MemSpace>
-    inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, CCVariable<T> >::type
+    inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, grid_T >::type
     getGridVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1417,14 +1417,14 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
 
     template <typename grid_CT,typename T, typename MemSpace>
-    inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, constCCVariable<T> >::type
+    inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, grid_CT >::type
     getConstGridVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
                                            Ghost::GhostType  gtype,
                                            int               numGhostCells ) {
 
-      constCCVariable<T> constVar;
+      grid_CT constVar;
       if (matlIndex!=-999) {
         this->get(constVar, label, matlIndex, patch, gtype, numGhostCells);
       }
