@@ -146,8 +146,8 @@ namespace WasatchCore{
     
     const int nGhost = get_n_ghost<FieldT>();
     const so::IntVec glob( gs[0] + nGhost*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),
-                          gs[1] + nGhost*2 + (bcPlus[1] ? FieldT::Location::BCExtra::Y : 0),
-                          gs[2] + nGhost*2 + (bcPlus[2] ? FieldT::Location::BCExtra::Z : 0) );
+                           gs[1] + nGhost*2 + (bcPlus[1] ? FieldT::Location::BCExtra::Y : 0),
+                           gs[2] + nGhost*2 + (bcPlus[2] ? FieldT::Location::BCExtra::Z : 0) );
     
     const so::IntVec extent = glob;
     const so::IntVec offset(0,0,0);

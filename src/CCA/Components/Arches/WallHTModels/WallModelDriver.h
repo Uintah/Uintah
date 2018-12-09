@@ -102,7 +102,7 @@ namespace Uintah{
       std::string _dep_vel_name;
       std::vector<std::string> _extra_src_flux_names;
       int _num_extra_src;
-      int _k_ash_uncertain;
+      double _k_ash_uncertain;
       int _Nenv;
       bool do_coal_region;
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency

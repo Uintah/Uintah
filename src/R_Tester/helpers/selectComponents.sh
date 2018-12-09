@@ -1,4 +1,5 @@
 #! /bin/bash
+export NCURSES_NO_UTF8_ACS=1   # fix for dialog issue with certain terminals
 
 #  This script is called from generateGoldStandars.py and 
 #  provides the user input.  It asks the user (using a

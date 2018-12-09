@@ -148,6 +148,8 @@ WARNING
     // Insert Documentation Here:
     virtual const std::string getOutputLocation() const = 0;
 
+    virtual void setScrubSavedVariables( bool val ) = 0;
+
     // Get the time/time step the next output will occur
     virtual double getNextOutputTime() const = 0;
     virtual int    getNextOutputTimeStep() const = 0;
@@ -192,7 +194,8 @@ WARNING
     virtual void   setSaveAsUDA() = 0;
     virtual void   setSaveAsPIDX() = 0;
 
-    //! Called by yn situ VisIt to force the dump of a time step's data.
+    //! Called by the in situ VisIt to output and chaeckpoint on
+    //! demand.
     virtual void outputTimeStep( const GridP& grid,
                                  SchedulerP& sched,
                                  bool previous ) = 0;

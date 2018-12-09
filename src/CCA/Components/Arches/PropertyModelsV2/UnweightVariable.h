@@ -209,7 +209,6 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
 
     m_un_var_name = eqn_name;
 
-    //if (m_eqn_class == ArchesCore::DQMOM) {
     if (db_eqn->findBlock("no_weight_factor") == nullptr ){
       m_un_eqn_names.push_back(m_un_var_name);
       m_eqn_names.push_back(m_var_name);
@@ -280,6 +279,7 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
     db->findBlock("weight_factor")->getAttribute("label", m_rho_name);
     Nghost_cells = 1;
   }
+  
 
 }
 
@@ -551,8 +551,8 @@ void UnweightVariable<T>::register_timestep_eval(
   const int istart = 0;
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
-    register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-    register_variable( m_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+    register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry );
+    register_variable( m_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry );
   }
   register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
@@ -599,7 +599,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
       un_var(i,j,k) *= ScalingConst;
     });
   }
-
+  
   // clipping   
   for ( auto ieqn = m_clipping_info.begin(); ieqn != m_clipping_info.end(); ieqn++ ){
     Clipping_info info = ieqn->second;
@@ -619,6 +619,9 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
     }
     });
   }
+  
+  
+
 }
 }
 #endif

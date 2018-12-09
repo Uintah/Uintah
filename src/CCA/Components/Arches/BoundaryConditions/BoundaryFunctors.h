@@ -20,6 +20,14 @@ static Uintah::DebugStream dbgbc("ARCHES_BC_FUNCTORS", false);
 
 namespace Uintah { namespace ArchesCore{
 
+  struct DepBCInfo {
+    std::string variable_name;
+    int n_ghosts{0};
+    ArchesFieldContainer::WHICH_DW dw{ArchesFieldContainer::NEWDW};
+  };
+
+  typedef std::vector<DepBCInfo> FunctorDepList;
+
   template <typename T>
   class BCFunctors {
 
@@ -41,7 +49,6 @@ namespace Uintah { namespace ArchesCore{
 
     BCFunctors(){}
     ~BCFunctors(){}
-
 
     std::string pair_face_var_names( std::string face_name, std::string var_name ){
       return face_name + "_" + var_name;
@@ -82,7 +89,7 @@ namespace Uintah { namespace ArchesCore{
     }
 
     void get_bc_dependencies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
-                              std::vector<std::string>& dep );
+                              FunctorDepList& dep );
 
     void get_bc_modifies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
                           std::vector<std::string>& mod );
@@ -331,7 +338,7 @@ public:
 
   /** @brief Add dependancies onto the Arches Task for the proper execution of the boundary
              condition. This may be a nullptr op.**/
-  virtual void add_dep( std::vector<std::string>& master_dep ) = 0;
+  virtual void add_dep( FunctorDepList& master_dep ) = 0;
   /** @brief Add additional modifies onto the Arches Task (outside the root variable) for
              proper execution of the boundary condition. This may be a nullptr op. **/
   virtual void add_mod( std::vector<std::string>& master_mod ) = 0;
@@ -344,7 +351,7 @@ public:
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
     }else if (BCFunctors<T>::Neumann*               child   = dynamic_cast<BCFunctors<T>::Neumann*             >(this)){
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
-    }else if (BCFunctors<T>::MassFlow*              child   = dynamic_cast<BCFunctors<T>::MassFlow*            >(this)){ 
+    }else if (BCFunctors<T>::MassFlow*              child   = dynamic_cast<BCFunctors<T>::MassFlow*            >(this)){
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
     }else if (BCFunctors<T>::MMSalmgren*            child   = dynamic_cast<BCFunctors<T>::MMSalmgren*          >(this)){
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
@@ -365,19 +372,25 @@ public:
 
 protected:
 
-  std::vector<std::string> m_dep;
+  FunctorDepList m_dep;
   std::vector<std::string> m_mod;
 
-  void check_master_list( std::vector<std::string>& local_dep ,
-    std::vector<std::string>& master_list ){
+  /** @brief Check the master list of all dependencies for the requirements of this specific bc functor **/
+  void check_master_list( FunctorDepList& local_dep ,
+    FunctorDepList& master_list ){
 
     for ( auto ilocal = local_dep.begin(); ilocal != local_dep.end(); ilocal++ ){
 
-      auto imaster = std::find( master_list.begin(), master_list.end(), *ilocal );
-      if ( imaster == master_list.end() ){
-        master_list.push_back( *ilocal );
+      bool found_match = false;
+      for ( auto imaster = master_list.begin(); imaster != master_list.end(); imaster++ ){
+        if ( ((*ilocal).variable_name == (*imaster).variable_name) && ((*ilocal).dw == (*imaster).dw) ){
+          found_match = true;
+        }
       }
 
+      if ( !found_match ){
+        master_list.push_back(*ilocal);
+      }
     }
   }
 
@@ -392,7 +405,7 @@ public:
   Dirichlet(){}
   ~Dirichlet(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){}
+  void add_dep( FunctorDepList& master_dep ){}
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
@@ -414,6 +427,7 @@ public:
 
     if ( var_help.dir == ArchesCore::NODIR || dot == 0){
 
+
       // CCVariable or CC position in the staggered variable
       parallel_for_unstructured( executionObject,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
         int im=i - iDir_p[0];
@@ -421,6 +435,7 @@ public:
         int km=k - iDir_p[2];
         var(i,j,k) = 2.0 * spec_value - var(im,jm,km);
       });
+
     } else {
 
       // Staggered Variable
@@ -455,7 +470,7 @@ public:
   Neumann(){}
   ~Neumann(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){}
+  void add_dep( FunctorDepList& master_dep ){}
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
@@ -464,7 +479,6 @@ template <typename ES, typename MemSpace>
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
-
     auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
     const IntVector iDir = patch->faceDirection( bnd->face );
     const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
@@ -477,14 +491,14 @@ template <typename ES, typename MemSpace>
     // CCvariables and CC positions in a staggered variable
 
       const IntVector normIDir = iDir * iDir;
-      const double dx = normIDir == IntVector(1,0,0) ? Dx.x() : normIDir == IntVector(1,0,0) ? Dx.y() : Dx.z() ;
+      const double dx = normIDir == IntVector(1,0,0) ? Dx.x() : normIDir == IntVector(0,1,0) ? Dx.y() : Dx.z() ;
 
       const double spec_value = bnd->find(var_name)->value;
 
       parallel_for_unstructured( executionObject,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
-        int im=i - iDir_p[0];
-        int jm=j - iDir_p[1];
-        int km=k - iDir_p[2];
+        int im = i - iDir_p[0];
+        int jm = j - iDir_p[1];
+        int km = k - iDir_p[2];
 
         var(i,j,k) = norm*dx * spec_value + var(im,jm,km);
 
@@ -530,9 +544,15 @@ public:
     m_density_name(density_name) {}
   ~MassFlow(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){
+  void add_dep( FunctorDepList& master_dep ){
 
-    BaseFunctor::m_dep.push_back( m_density_name );
+    // Note that the brace initializer won't work with compilers < c++14 because
+    // of the default values set in the struct for n_ghosts and dw.
+    DepBCInfo density_info;
+    density_info.variable_name = m_density_name;
+
+    BaseFunctor::m_dep.push_back( density_info );
+
     BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
@@ -588,7 +608,7 @@ private:
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-struct BCFunctors<T>::MMSalmgren : BaseFunctor{ 
+struct BCFunctors<T>::MMSalmgren : BaseFunctor{
 
 public:
 
@@ -596,10 +616,12 @@ public:
     m_y_name(y_name), m_which_vel(which_vel){}
   ~MMSalmgren(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){
+  void add_dep( FunctorDepList& master_dep ){
 
-    BaseFunctor::m_dep.push_back( m_y_name );
-    BaseFunctor::m_dep.push_back( m_x_name );
+    DepBCInfo y_info; y_info.variable_name = m_y_name;
+    DepBCInfo x_info; x_info.variable_name = m_x_name;
+    BaseFunctor::m_dep.push_back( y_info );
+    BaseFunctor::m_dep.push_back( x_info );
     BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
@@ -616,8 +638,8 @@ template <typename ES, typename MemSpace>
     auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
 
     auto x =  tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double,MemSpace >(m_x_name);
-    auto y =  tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double,MemSpace >(m_y_name);
 
+    auto y =  tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double,MemSpace >(m_y_name);
 
     VariableHelper<T> var_help;
     const IntVector iDir = patch->faceDirection( bnd->face );
@@ -717,9 +739,10 @@ public:
   MMSshunn( std::string x_name) : BaseFunctor(), m_x_name(x_name) {}
   ~MMSshunn(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){
+  void add_dep( FunctorDepList& master_dep ){
 
-    BaseFunctor::m_dep.push_back( m_x_name );
+    DepBCInfo x_info; x_info.variable_name = m_x_name;
+    BaseFunctor::m_dep.push_back( x_info );
     BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
@@ -780,11 +803,12 @@ struct BCFunctors<T>::SecondaryVariableBC : BaseFunctor {
 public:
 
   SecondaryVariableBC( std::string sec_var_name ) : m_sec_var_name(sec_var_name){
-    BaseFunctor::m_dep.push_back( m_sec_var_name );
+    DepBCInfo sec_info; sec_info.variable_name = m_sec_var_name;
+    BaseFunctor::m_dep.push_back( sec_info );
   }
   ~SecondaryVariableBC(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){
+  void add_dep( FunctorDepList& master_dep ){
 
     // Now adding dependencies to the master list.
     // This checks for repeats to ensure a variable isn't added twice.
@@ -800,9 +824,8 @@ template <typename ES, typename MemSpace>
 
     VariableHelper<T> var_help;
     typedef typename VariableHelper<T>::ConstType CT;
-    const IntVector iDir = patch->faceDirection( bnd->face );
     auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
-
+    const IntVector iDir = patch->faceDirection( bnd->face );
     auto sec_var =tsk_info->get_const_uintah_field_add<CT,const double,MemSpace>( m_sec_var_name);
 
     const int_3 iDir_p(iDir[0],iDir[1],iDir[2]);
@@ -833,8 +856,7 @@ public:
   }
   ~PressureOutletBC(){}
 
-  //void add_dep( FunctorDepList& master_dep ){
-  void add_dep( std::vector<std::string>& master_dep ){
+  void add_dep( FunctorDepList& master_dep ){
     // Now adding dependencies to the master list.
     // This checks for repeats to ensure a variable isn't added twice.
     //DepBCInfo vel_info; vel_info.variable_name = m_vel_name;
@@ -847,8 +869,8 @@ public:
   void add_mod( std::vector<std::string>& master_mod ){}
   
 
-template <typename ES, typename MS>
-  void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ES, typename MemSpace>
+  void eval_bc(ExecutionObject<ES,MemSpace>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     // There is an issue with register variable for old_var. This BC is being applied in VelRhoHatBC.cc 
@@ -925,14 +947,15 @@ struct BCFunctors<T>::VelocityBC : BaseFunctor {
 public:
 
   VelocityBC( std::string density_name, double value ):m_density_name(density_name), m_vel_value(value){
-    BaseFunctor::m_dep.push_back( m_density_name );
   }
   ~VelocityBC(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){
+  void add_dep( FunctorDepList& master_dep ){
 
     // Now adding dependencies to the master list.
     // This checks for repeats to ensure a variable isn't added twice.
+    DepBCInfo den_info; den_info.variable_name = m_density_name;
+    BaseFunctor::m_dep.push_back( den_info );
     BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
@@ -995,6 +1018,7 @@ template <typename ES, typename MemSpace>
     const int_3 offset_p(offset[0],offset[1],offset[2]);
 
     const double p_vel_value=m_vel_value;
+
     if ( parallel_dir ){
         //The face normal and the velocity are in parallel
         if (dot == -1) {
@@ -1070,13 +1094,12 @@ public:
   }
   ~SubGridInjector(){}
 
-  void add_dep( std::vector<std::string>& master_dep ){}
+  void add_dep( FunctorDepList& master_dep ){}
 
   void add_mod( std::vector<std::string>& master_mod ){
 
     const std::string rhs_name = m_phi_name+"_rhs";
 
-    std::cout << " Setting up for : " << rhs_name << std::endl;
     auto i = find(master_mod.begin(), master_mod.end(), rhs_name);
 
     if ( i == master_mod.end() ){
@@ -1092,7 +1115,7 @@ template <typename ES, typename MemSpace>
     VariableHelper<T> var_help;
     auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
 
-    auto rhs =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(m_phi_name+"rhs");
+    auto rhs =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(m_phi_name+"_rhs");
 
     const IntVector iDir = patch->faceDirection( bnd->face );
 
@@ -1129,7 +1152,7 @@ private:
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 void BCFunctors<T>::get_bc_dependencies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
-                                         std::vector<std::string>& dep ){
+                                         FunctorDepList& dep ){
 
   const BndMapT& bc_info = bc_helper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -1217,6 +1240,7 @@ template <typename T>
 template <typename ExecutionSpace, typename MemSpace>
 void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_helper,
                               ArchesTaskInfoManager* tsk_info, const Patch* patch, ExecutionObject<ExecutionSpace,MemSpace>& executionObject ){
+
   const BndMapT& bc_info = bc_helper->get_boundary_information();
 
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){

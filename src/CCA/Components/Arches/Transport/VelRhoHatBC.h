@@ -88,7 +88,6 @@ private:
     std::string m_vVel;
     std::string m_wVel;
 
-
   };
 } // namespace Uintah
 

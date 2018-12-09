@@ -74,9 +74,15 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_xmom, AFC::MODIFIES, variable_registry, m_task_name );
   register_variable( m_ymom, AFC::MODIFIES, variable_registry, m_task_name );
   register_variable( m_zmom, AFC::MODIFIES, variable_registry, m_task_name );
+//  register_variable( m_uVel, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+//  register_variable( m_vVel, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+//  register_variable( m_wVel, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
   register_variable( m_uVel, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
   register_variable( m_vVel, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
   register_variable( m_wVel, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
+
+  
+  
 }
 
 // wrapper templated function to deal with different types
@@ -113,14 +119,13 @@ void VelRhoHatBC::set_mom_bc( ExecutionObject<ExecutionSpace,MemSpace> &exObj,gr
       });
   }
 
-//--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
 void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
   auto xmom = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace >( m_xmom );
   auto ymom = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace >( m_ymom );
   auto zmom = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >( m_zmom );
-  
+
   auto old_uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >( m_uVel );
   auto old_vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >( m_vVel );
   auto old_wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace >( m_wVel );
@@ -145,7 +150,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
     } else if ( my_type == PRESSURE){
       bc_sign = -1.;
     }
-
+  
     sign = bc_sign * sign;
 
     if ( my_type == OUTLET || my_type == PRESSURE ){
@@ -160,8 +165,3 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
     }
   }
 }
-
-
-
-
-

@@ -45,6 +45,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/Endian.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FancyAssert.h>
@@ -2544,7 +2545,9 @@ DataArchiver::scheduleOutputTimeStep(       vector<SaveItem> & saveLabels,
         // This is needed when saving the old data warehouse as well
         // as the new data warehouse after the tasks are finished.
         sched->overrideVariableBehavior( (*saveIter).label->getName(),
-                                         false, false, true, false, false );
+                                         false, false,
+                                         !scrubSavedVariables,
+                                         false, false );
 
         var_cnt++;
       }

@@ -66,8 +66,6 @@ DensityStar::problemSetup( ProblemSpecP& db ){
   using namespace ArchesCore;
   m_label_density = parse_ups_for_role( DENSITY, db, "density" );
   m_label_densityStar = m_label_density + "_star" ;
-  ProblemSpecP db_root = db->getRootNode();
-
 
 }
 
@@ -178,15 +176,14 @@ void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
 
   }, check_guess_density_out); 
 
-
- if (check_guess_density_out > 0) {
-   std::cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density."<< std::endl ;
- } else {
-  Uintah::parallel_for(exObj,range, KOKKOS_LAMBDA(int i, int j, int k){  
-     rho(i,j,k)  = rhoStar(i,j,k); // I am copy density guess in density
-   });
- }
-
+  if (check_guess_density_out > 0){
+    std::cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density."<< std::endl ;
+  } else {
+    Uintah::parallel_for(exObj,range, KOKKOS_LAMBDA(int i, int j, int k){  
+      rho(i,j,k)  = rhoStar(i,j,k); // I am copy density guess in density
+    });
+  }
+  
 }
 
 } //namespace Uintah

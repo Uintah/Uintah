@@ -3,13 +3,35 @@
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 #include <Core/Parallel/Portability.h>
 
+using namespace Uintah;
+
 namespace {
 
-  Uintah::Dout dbg_arches_task{"Arches_Task_DBG", "TaskFactoryBase", "Scheduling and execution information of Arches tasks.", false };
+  Uintah::Dout dbg_arches_task{"Arches_Task_DBG", "Arches::TaskFactoryBase",
+    "Scheduling and execution information of Arches tasks.", false };
+
+
+  std::string get_task_exec_str( TaskInterface::TASK_TYPE type ){
+
+    if ( type == TaskInterface::INITIALIZE ){
+      return "INITIALIZE";
+    } else if ( type == TaskInterface::TIMESTEP_INITIALIZE ){
+      return "TIMESTEP INITIALIZE";
+    } else if ( type == TaskInterface::TIMESTEP_EVAL ){
+      return "TIMESTEP EVAL";
+    } else if ( type == TaskInterface::BC ){
+      return "BC";
+    } else if ( type == TaskInterface::RESTART_INITIALIZE ){
+      return "RESTART INITIALIZE";
+    } else if ( type == TaskInterface::ATOMIC ){
+      return "ATOMIC";
+    } else {
+      throw InvalidValue("Error: TASK_TYPE not recognized.", __FILE__, __LINE__);
+    }
+
+  }
 
 }
-
-using namespace Uintah;
 
 //--------------------------------------------------------------------------------------------------
 TaskFactoryBase::TaskFactoryBase( const ApplicationCommon* arches ) : m_arches(arches)
@@ -281,23 +303,27 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   ArchesFieldContainer::VariableRegistry variable_registry;
 
   const std::string type_string = TaskInterface::get_task_type_string(type);
+
   bool archesTasksMixMemSpaces = false;
   TaskAssignedExecutionSpace assignedExecutionSpace{};
 
-  DOUT( dbg_arches_task, "Scheduling the following task group with mode: " << type_string );
+  DOUT( dbg_arches_task, "[TaskFactoryBase]  Scheduling the following task group with mode: " << type_string );
 
   std::vector<std::string> taskNames(arches_tasks.size());
   std::vector<int> taskExecSpace(arches_tasks.size());
 
   int icount=0;
+
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
+
     taskNames[icount]=(*i_task)->get_task_name();
 
     TaskAssignedExecutionSpace temp{};
 
-    DOUT( dbg_arches_task, "    Task: " << (*i_task)->get_task_name() );
+    DOUT( dbg_arches_task, "[TaskFactoryBase]      Task: " << (*i_task)->get_task_name() );
 
     switch( type ){
+
       case (TaskInterface::INITIALIZE):
         {
           temp = (*i_task)->loadTaskInitializeFunctionPointers();
@@ -344,10 +370,9 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         }
         break;
       default:
-        {
-          throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
-        }
+        throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
         break;
+
     }
     taskExecSpace[icount]=temp;
     icount++;
@@ -359,6 +384,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   }
 
   auto TaskDependencies = [&](Task *& tsk) {
+
     int counter = 0;
     for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
 
@@ -371,26 +397,26 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         {
           if ( time_substep == 0 ) {
             if ( reinitialize ){
-              DOUT( dbg_arches_task, "    modifying: " << ivar.name );
+              DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
               tsk->modifies( ivar.label );   // was computed upstream
             } else {
-              DOUT( dbg_arches_task, "    computing: " << ivar.name );
+              DOUT( dbg_arches_task, "[TaskFactoryBase]      computing: " << ivar.name );
               tsk->computes( ivar.label );   //only compute on the zero time substep
             }
           } else {
-            DOUT( dbg_arches_task, "    modifying: " << ivar.name );
+            DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
             tsk->modifies( ivar.label );
         }}
         break;
       case ArchesFieldContainer::MODIFIES:
         {
-          DOUT( dbg_arches_task, "    modifying: " << ivar.name );
+          DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
           tsk->modifies( ivar.label );
         }
         break;
       case ArchesFieldContainer::REQUIRES:
         {
-          DOUT( dbg_arches_task, "    requiring: " << ivar.name << "with ghosts: " << ivar.nGhost);
+          DOUT( dbg_arches_task, "[TaskFactoryBase]      requiring: " << ivar.name << " with ghosts: " << ivar.nGhost);
           tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
         }
         break;
@@ -449,7 +475,6 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
                           variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
   }
 
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -496,41 +521,39 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
     tsk_info_mngr->set_field_container( field_container );
 
     for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
+
+      DOUT( dbg_arches_task, "[TaskFactoryBase]   " << _factory_name << " is executing "
+        << (*i_task)->get_task_name() << " with function " << get_task_exec_str(type) );
+
       switch( type ){
         case (TaskInterface::INITIALIZE):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " INITIALIZE " );
             (*i_task)->initialize<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, executionObject );
           }
           break;
         case (TaskInterface::RESTART_INITIALIZE):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " RESTART_INITIALIZE " );
             (*i_task)->restart_initialize( patch, tsk_info_mngr, executionObject  );
           }
           break;
         case (TaskInterface::TIMESTEP_INITIALIZE):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " TIMESTEP_INITIALIZE " );
             (*i_task)->timestep_init( patch, tsk_info_mngr, executionObject  );
             time_substep = 0;
           }
           break;
         case (TaskInterface::TIMESTEP_EVAL):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " EVAL " );
             (*i_task)->eval<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, executionObject );
           }
           break;
         case (TaskInterface::BC):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " BC " );
             (*i_task)->compute_bcs<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, executionObject );
           }
           break;
         case (TaskInterface::ATOMIC):
           {
-            DOUT( dbg_arches_task, " Executing " << (*i_task)->get_task_name() << " ATOMIC " );
             (*i_task)->eval<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, executionObject );
           }
           break;

@@ -79,7 +79,6 @@ void StressTensor::problemSetup( ProblemSpecP& db ){
   /* It is going to use central scheme as default   */
   diff_scheme = "central";
   Nghost_cells = 1;
-
   ArchesCore::GridVarMap< SFCXVariable<double> > var_map_x;
   var_map_x.problemSetup( db );
   m_eps_x_name = var_map_x.vol_frac_name;
@@ -222,7 +221,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   Uintah::parallel_for(exObj, range1, KOKKOS_LAMBDA (int i, int j, int k){
 
     const double mu11  = D(i-1,j,k); // it does not need interpolation
-    const double dudx  = eps_x(i,j,k)*eps_x(i-1,j,k)*(uVel(i,j,k) - uVel(i-1,j,k))/Dx.x();
+    const double dudx  = eps_x(i,j,k)*eps_x(i-1,j,k) * (uVel(i,j,k) - uVel(i-1,j,k))/Dx.x();
     sigma11(i,j,k)     =  mu11 * 2.0*dudx;
 
   });
@@ -234,7 +233,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   Uintah::BlockRange range2(lowNy, highNy);
   Uintah::parallel_for(exObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
     const double mu22 = D(i,j-1,k);  // it does not need interpolation
-    const double dvdy  = eps_y(i,j,k)*eps_y(i,j-1,k)*(vVel(i,j,k) - vVel(i,j-1,k))/Dx.y();
+    const double dvdy  = eps_y(i,j,k)*eps_y(i,j-1,k) * (vVel(i,j,k) - vVel(i,j-1,k))/Dx.y();
     sigma22(i,j,k) =  mu22 * 2.0*dvdy;
 
   });
@@ -246,8 +245,8 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   Uintah::BlockRange range3(lowNz, highNz);
   Uintah::parallel_for(exObj, range3, KOKKOS_LAMBDA (int i, int j, int k){
     const double mu33 = D(i,j,k-1);  // it does not need interpolation
-    const double dwdz  = eps_y(i,j,k)*eps_y(i,j,k-1)*(wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
-    sigma33(i,j,k) =  mu33 * 2.0*dwdz;
+    const double dwdz  = eps_y(i,j,k)*eps_y(i,j,k-1) * (wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
+    sigma33(i,j,k) = mu33 * 2.0*dwdz;
 
   });
 }

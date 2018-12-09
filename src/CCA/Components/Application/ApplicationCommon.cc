@@ -80,6 +80,8 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   nonconstDelT->allowMultipleComputes();
   m_delTLabel = nonconstDelT;
 
+  m_application_stats.calculateMinimum( true );
+  m_application_stats.calculateStdDev( true );
 
   // Reduction vars local to the application.
   
@@ -121,8 +123,10 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   m_appReductionVars[ endSimulation_name ] = new
     ApplicationReductionVariable( endSimulation_name, bool_or_vartype::getTypeDescription() );
  
-  // m_application_stats.insert( DummyEnum, std::string("DummyEnum"), "DummyEnum", 0 );
-}
+  // Use Alternative Task Graph
+  m_appReductionVars[ useAlternativeTaskGraph_name ] = new
+    ApplicationReductionVariable( useAlternativeTaskGraph_name, bool_or_vartype::getTypeDescription() );
+ }
 
 ApplicationCommon::~ApplicationCommon()
 {
@@ -196,10 +200,10 @@ void ApplicationCommon::setReductionVariables( UintahParallelComponent *comp )
     var.second->setActive( child->m_appReductionVars[ var.first ]->getActive() );
 }
 
-void ApplicationCommon::clearReductionVariables()
+void ApplicationCommon::resetReductionVariables()
 {
   for ( auto & var : m_appReductionVars )
-    var.second->setBenignValue();
+    var.second->reset();
 }
 
 void ApplicationCommon::releaseComponents()
@@ -484,19 +488,20 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   }
 
   // If delta T has been changed and if requested, for that change
-  // output or checkpoint. Must be done before the redcution call.
+  // output or checkpoint. Must be done before the reduction call.
   if( validDelT & m_outputIfInvalidNextDelTFlag )
-    setReductionVariable( outputTimeStep_name, true );
+    setReductionVariable( new_dw, outputTimeStep_name, true );
   
   if( validDelT & m_checkpointIfInvalidNextDelTFlag )
-    setReductionVariable( checkpointTimeStep_name, true );
+    setReductionVariable( new_dw, checkpointTimeStep_name, true );
   
   // Reduce the application specific reduction variables. If no value
   // was computed on an MPI rank, a benign value will be set. If the
   // reduction result is also a benign value, that means no MPI rank
   // wants to change the value and it will be ignored.
-  for ( auto & var : m_appReductionVars )
+  for ( auto & var : m_appReductionVars ) {
     var.second->reduce( new_dw );
+  }
 
   // When checking a reduction var, if it is not a benign value then
   // it was set at some point by at least one rank. Which is the only
@@ -751,7 +756,7 @@ ApplicationCommon::prepareForNextTimeStep()
   m_delT = delt_var;
 
   // Clear the time step based reduction variables.
-  clearReductionVariables();
+  resetReductionVariables();
 }
 
 //______________________________________________________________________
@@ -807,7 +812,7 @@ ApplicationCommon::setNextDelT( double delT, bool restart )
   if( restart && m_delTOverrideRestart )
   {
     proc0cout << "Overriding restart delT " << m_delT << " with "
-	      << m_delTOverrideRestart << "\n";
+              << m_delTOverrideRestart << "\n";
     
     m_delTNext = m_delTOverrideRestart;
     
@@ -1043,7 +1048,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
     ValidateFlag invalidAll;
     
     Uintah::MPI::Reduce( &invalid, &invalidAll, 1, MPI_UNSIGNED_CHAR, MPI_BOR,
-			 0, d_myworld->getComm() );
+                         0, d_myworld->getComm() );
 
     // Only report the summary on rank 0. One line for each instance
     // where the threshold was exceeded.
@@ -1261,9 +1266,8 @@ void ApplicationCommon::incrementTimeStep()
   // Write the new time to the new data warehouse as the scheduler has
   // not yet advanced to the next data warehouse - see
   // SchedulerCommon::advanceDataWarehouse()
-  DataWarehouse* newDW = m_scheduler->getLastDW();
-
-  newDW->override(timeStep_vartype(m_timeStep), m_timeStepLabel );
+  m_scheduler->getLastDW()->override(timeStep_vartype(m_timeStep),
+                                     m_timeStepLabel );
 }
 
 //______________________________________________________________________

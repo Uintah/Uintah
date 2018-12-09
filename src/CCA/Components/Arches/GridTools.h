@@ -415,6 +415,32 @@ namespace Uintah{ namespace ArchesCore{
   } // WE have to do this because of CCVariables
 
 
+  /**
+      @brief Returns the value (currently 0 or 1) of the volume/area fraction of gas on
+             at the location specified.
+      @param eps        The CC volume fraction.
+      @param i,j,k      Current cell location of interest
+      @param idir       Array of the direction of interest
+      @param vdir       Array of the variable direction  ([0,0,0] in the case of CC variables)
+  **/
+  inline double get_eps( const Array3<double>& eps, const int i, const int j, const int k,
+                         const int* idir, const int* vdir )
+  {
+
+    const int i1 = i - vdir[0];
+    const int j1 = j - vdir[1];
+    const int k1 = k - vdir[2];
+    const int i2 = i - idir[0];
+    const int j2 = j - idir[1];
+    const int k2 = k - idir[2];
+    const int i3 = i - idir[0] - vdir[0];
+    const int j3 = j - idir[1] - vdir[1];
+    const int k3 = k - idir[2] - vdir[2];
+
+    return eps(i,j,k)*eps(i1,j1,k1)*eps(i2,j2,k2)*eps(i3,j3,k3);
+
+   }
+
   INTERPOLANT get_interpolant_from_string(const std::string value);
 
   class GridTools{
@@ -427,5 +453,5 @@ namespace Uintah{ namespace ArchesCore{
   private:
 
   };
-}} //namespace Uintah::Arches
+}} //namespace Uintah::ArchesCore
 #endif

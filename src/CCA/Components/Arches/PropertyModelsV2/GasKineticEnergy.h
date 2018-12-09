@@ -1,16 +1,16 @@
-#ifndef Uintah_Component_Arches_DensityStar_h
-#define Uintah_Component_Arches_DensityStar_h
+#ifndef Uintah_Component_Arches_GasKineticEnergy_h
+#define Uintah_Component_Arches_GasKineticEnergy_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 namespace Uintah{
 
-  class DensityStar : public TaskInterface {
+  class GasKineticEnergy : public TaskInterface {
 
 public:
 
-    DensityStar( std::string task_name, int matl_index );
-    ~DensityStar();
+    GasKineticEnergy( std::string task_name, int matl_index );
+    ~GasKineticEnergy();
 
     TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
 
@@ -18,15 +18,15 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool pack_tasks);
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
@@ -38,14 +38,15 @@ public:
     template <typename ExecutionSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
+    template<typename ExecutionSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
 
     template <typename ExecutionSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
     void create_local_labels();
 
-    //Build instructions for this (DensityStar) class.
+    //Build instructions for this (GasKineticEnergy) class.
     class Builder : public TaskInterface::TaskBuilder {
 
       public:
@@ -53,8 +54,8 @@ public:
       Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
-      DensityStar* build()
-      { return scinew DensityStar( m_task_name, m_matl_index ); }
+      GasKineticEnergy* build()
+      { return scinew GasKineticEnergy( m_task_name, m_matl_index ); }
 
       private:
 
@@ -65,8 +66,13 @@ public:
 
 private:
 
-    std::string m_label_density;
-    std::string m_label_densityStar;
+    std::string m_u_vel_name; 
+    std::string m_v_vel_name; 
+    std::string m_w_vel_name; 
+    std::string m_kinetic_energy; 
+    double m_max_ke; 
+    //void compute_density(  const Patch* patch, ArchesTaskInfoManager* tsk_info);
+
 
   };
 }

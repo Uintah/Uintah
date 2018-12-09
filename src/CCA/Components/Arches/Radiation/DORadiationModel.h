@@ -48,8 +48,6 @@ GENERAL INFORMATION
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -58,6 +56,8 @@ GENERAL INFORMATION
 
 namespace Uintah {
 
+  class ApplicationInterface;
+  
   class ArchesLabel;
   class MPMArchesLabel;
 
@@ -77,6 +77,12 @@ public:
 
 
       virtual void problemSetup(ProblemSpecP& params);
+
+      // A pointer to the application so to get a handle to the
+      // performanance stats.
+      virtual void setApplicationInterface(ApplicationInterface * app) {
+        m_application = app;
+      };
 
       virtual void boundarycondition(const ProcessorGroup* pc,
                                      const Patch* patch,
@@ -288,12 +294,12 @@ private:
 
 
       void computeIntensitySource( const Patch* patch,
-				   std::vector <constCCVariable<double> >&abskp,
-				   std::vector <constCCVariable<double> > &pTemp,
-				   std::vector <constCCVariable<double> > &abskg,
-				   constCCVariable<double>  &gTemp,
-				   std::vector <CCVariable<double> >&b_sourceArray,
-				   std::vector <constCCVariable<double> >&spectral_weights);
+                                   std::vector <constCCVariable<double> >&abskp,
+                                   std::vector <constCCVariable<double> > &pTemp,
+                                   std::vector <constCCVariable<double> > &abskg,
+                                   constCCVariable<double>  &gTemp,
+                                   std::vector <CCVariable<double> >&b_sourceArray,
+                                   std::vector <constCCVariable<double> >&spectral_weights);
 
       std::vector<const VarLabel*>  _radIntSource;
       std::vector<std::string> _radIntSource_names;
@@ -314,6 +320,9 @@ private:
       int _nQn_part ;                                // number of quadrature nodes in DQMOM
       double _sigma;
 
+      // A pointer to the application so to get a handle to the
+      // performanance stats.
+      ApplicationInterface* m_application{nullptr};
 
 }; // end class RadiationModel
 

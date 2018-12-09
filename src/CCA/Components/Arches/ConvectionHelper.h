@@ -131,19 +131,19 @@ namespace Uintah {
       //X-dir
       {
         STENCIL5_1D(0);
-        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
         flux_x(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
       }
       //Y-dir
       {
         STENCIL5_1D(1);
-        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
         flux_y(IJK_) = afc * v(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
       }
       //Z-dir
       {
         STENCIL5_1D(2);
-        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
         flux_z(IJK_) = afc * w(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
       }
     }
@@ -213,7 +213,7 @@ namespace Uintah {
       {
         parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
         STENCIL3_1D(dir);
-        const double afc  = eps(IJK_)* eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         flux(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
        });
       }
@@ -273,8 +273,8 @@ namespace Uintah {
                 fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny )) ;
           VANLEERMACRO(r);
 
-          const double afc  =  eps(IJK_) * eps(IJK_M_) ;
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+          const double afc  = eps(IJK_)* eps(IJK_M_) ;
+          const double afcm = eps(IJK_M_)* eps(IJK_MM_);
           my_psi *= afc * afcm;
 
           const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
@@ -306,8 +306,8 @@ namespace Uintah {
 
           ROEMACRO(r);
 
-          const double afc  =  eps(IJK_) * eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+          const double afc  = eps(IJK_)* eps(IJK_M_) ;
+          const double afcm = eps(IJK_M_)* eps(IJK_MM_);
 
           my_psi *= afc * afcm;
 
@@ -333,7 +333,7 @@ namespace Uintah {
 
       parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
         STENCIL5_1D(dir);
-        const double afc = eps(IJK_) * eps(IJK_M_) ;
+        const double afc  = eps(IJK_)* eps(IJK_M_) ;
         flux(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
       });
     }
@@ -599,7 +599,7 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -621,7 +621,7 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -643,7 +643,7 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -694,7 +694,7 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -716,7 +716,7 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -738,7 +738,7 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -852,21 +852,21 @@ namespace Uintah {
       {
         STENCIL3_1D(0);
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         flux_x(IJK_) = afc * u(IJK_) * Sup;
       }
       //Y-dir
       {
         STENCIL3_1D(1);
         const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         flux_y(IJK_) = afc * v(IJK_) * Sup;
       }
       //Z-dir
       {
         STENCIL3_1D(2);
         const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         flux_z(IJK_) = afc * w(IJK_) * Sup;
       }
       });
@@ -890,21 +890,21 @@ namespace Uintah {
       //X-dir
       {
         STENCIL3_1D(0);
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
 
         flux_x(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
       }
       //Y-dir
       {
         STENCIL3_1D(1);
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
 
         flux_y(IJK_) = afc * v(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
       }
       //Z-dir
       {
         STENCIL3_1D(2);
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
+        const double afc = eps(IJK_)*eps(IJK_M_);
 
         flux_z(IJK_) = afc * w(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
       }
@@ -938,7 +938,7 @@ namespace Uintah {
 
         SUPERBEEMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -960,7 +960,7 @@ namespace Uintah {
 
         SUPERBEEMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -982,7 +982,7 @@ namespace Uintah {
 
         SUPERBEEMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -1023,7 +1023,7 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -1045,7 +1045,7 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -1067,7 +1067,7 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -1107,7 +1107,7 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -1129,7 +1129,7 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;
@@ -1151,7 +1151,7 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_)*eps(IJK_M_);
         const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
 
         my_psi *= afc * afcm;

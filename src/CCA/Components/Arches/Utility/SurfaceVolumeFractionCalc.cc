@@ -104,6 +104,7 @@ SurfaceVolumeFractionCalc::register_initialize( ArchesVIVector& variable_registr
   for ( auto i = m_var_names.begin(); i != m_var_names.end(); i++ ){
     register_variable( *i, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
   }
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -121,7 +122,7 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
   parallel_initialize(exObj,1.0, cc_vf,fx_vf,fy_vf,fz_vf);
   parallel_initialize(exObj,-1, cell_type);
 
-  //Now get the boundary conditions:
+  //Get the boundary conditions:
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
 
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -137,10 +138,12 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
       });
 
       if ( i_bc->second.type == WALL ){
+
         //Get the iterator
-         Uintah::ListOfCellsIterator& cell_iter  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+        Uintah::ListOfCellsIterator& cell_iter  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
       parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+
           cc_vf(i,j,k)= 0.0;
           fx_vf(i,j,k)= 0.0;
           fy_vf(i,j,k)= 0.0;
@@ -157,11 +160,13 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
           if ( i_bc->second.face == Patch::zminus || i_bc->second.face == Patch::zplus ){
             fz_vf(i,j,k+1) = 0.0;
           }
+
         });
 
       }
     }
   }
+
   //Clean out all intrusions that don't intersect with this patch:
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   for ( auto i = m_intrusions.begin(); i != m_intrusions.end(); i++ ){
@@ -182,13 +187,17 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
       if ( !intersecting_box.degenerate() ){
 
         intersecting_geometry.push_back(geom);
+
         parallel_for(exObj,range, KOKKOS_LAMBDA (int i,int j,int k){
-            Point p = patch->cellPosition(IntVector(i,j,k) );
-            if ( geom->inside(p) ){ // GPU portability challenge
+
+          Point p = patch->cellPosition(IntVector(i,j,k) );
+          if ( geom->inside(p) ){
+
             //PCELL
             cc_vf(i,j,k) = 0.0;
             cell_type(i,j,k) = INTRUSION;
-            }
+
+          }
 
           // X-dir
           IntVector ix = IntVector(i,j,k) - IntVector(1,0,0);
@@ -216,6 +225,7 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
               fz_vf(i,j,k) = 0.0;
             }
           }
+
         });
       }
     }

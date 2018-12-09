@@ -99,8 +99,6 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   SimpleMaterial * oneMatl = scinew SimpleMaterial();
   m_materialManager->registerSimpleMaterial( oneMatl );
 
-  delt_label = getDelTLabel();
-
   //__________________________________
   //  Find timestep data from the original uda
   d_dataArchive = scinew DataArchive( d_udaDir, d_myworld->myRank(), d_myworld->nRanks() );
@@ -138,9 +136,23 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
     m->problemSetup();
   }
 
-  // Adjust the time state - done after it is read.
-  m_timeStepsMax = d_udaTimes.size();
-  m_simTimeMax   = d_udaTimes[d_udaTimes.size()-1];
+  // Adjust the time state - done after it is read. If the values are
+  // zero they will be ignored when checked.
+  m_delTOverrideRestart  = 0;
+  m_delTInitialMax       = 0;
+  m_delTInitialRange     = 0;
+  
+  m_delTMin              = 0;
+  m_delTMax              = 0;
+  m_delTMultiplier       = 1.0;
+  m_delTMaxIncrease      = 0;
+  
+  m_simTime              = 0;
+  m_simTimeMax           = d_udaTimes[d_udaTimes.size()-1];
+  m_simTimeEndAtMax      = false;
+  m_simTimeClampToOutput = false;
+
+  m_timeStepsMax         = d_udaTimes.size();
 }
 
 //______________________________________________________________________
@@ -319,14 +331,13 @@ void PostProcessUda::scheduleComputeStableTimeStep(const LevelP& level,
   Task* t = scinew Task("PostProcessUda::computeDelT",
                   this, &PostProcessUda::computeDelT);
 
-  t->computes( delt_label, level.get_rep() );
+  t->computes( getDelTLabel(), level.get_rep() );
 
   GridP grid = level->getGrid();
   const PatchSet* perProcPatches = m_loadBalancer->getPerProcessorPatchSet(grid);
 
   t->setType(Task::OncePerProc);
   sched->addTask( t, perProcPatches, m_materialManager->allMaterials() );
-
 }
 
 //______________________________________________________________________
@@ -340,17 +351,21 @@ void PostProcessUda::computeDelT(const ProcessorGroup*,
 {
   ASSERT( d_simTimestep >= 0);
 
-  double delt = d_udaTimes[d_simTimestep];
+  double delt;
 
-  if ( d_simTimestep < (int) d_udaTimes.size() ){
+  // For time step 0 the sim time will be 0 so the delT will simply be
+  // the value of the first sim time. After that it will be the
+  // differential between the time steps. Until the last which is moot.
+  if ( d_simTimestep == 0 ) {
+    delt = d_udaTimes[d_simTimestep];    
+  } else if ( d_simTimestep < (int) d_udaTimes.size() ) {
     delt = d_udaTimes[d_simTimestep] - d_udaTimes[d_simTimestep-1];
   } else {
-    delt = 9999;
+    delt = 1e99;
   }
 
-  delt_vartype delt_var = delt;
-
-  new_dw->put(delt_var, delt_label);
+  new_dw->put(delt_vartype(delt), getDelTLabel());
+  
   proc0cout << "    *** delT (" << delt << ")\n" <<endl;
 }
 
@@ -364,6 +379,7 @@ double PostProcessUda::getMaxTime()
     return d_udaTimes[d_udaTimes.size()-2]; // the last one is the hacked one, see problemSetup
   }
 }
+
 //______________________________________________________________________
 //    Returns the physical time of the first output
 double PostProcessUda::getInitialTime()

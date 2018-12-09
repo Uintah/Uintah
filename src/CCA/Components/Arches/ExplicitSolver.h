@@ -55,7 +55,6 @@ DESCRIPTION
 WARNING
    none
 ****************************************/
-//#define ADD_PERFORMANCE_STATS
 
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Components/Arches/MomentumSolver.h>
@@ -406,17 +405,7 @@ public:
                                 SchedulerP& sched,
                                 const bool doing_restart );
 
-  int getTaskGraphIndex(const int time_step ) {
-    if (d_num_taskgraphs==1){
-      return 0;
-    }else{
-      return ((time_step % d_rad_calc_frequency == 0));
-    }
-  }
-
-  int taskGraphsRequested() {
-  return d_num_taskgraphs;
-  }
+  int getTaskGraphIndex(const int time_step ) const;
 
   void registerModels( ProblemSpecP& db );
   void registerTransportEqns( ProblemSpecP& db );
@@ -529,6 +518,5 @@ public:
 
 }; // End class ExplicitSolver
 } // End namespace Uintah
-
 
 #endif

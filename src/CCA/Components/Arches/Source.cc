@@ -44,8 +44,8 @@ using namespace std;
 //****************************************************************************
 // Constructor for Source
 //****************************************************************************
-Source::Source(PhysicalConstants* phys_const)
-                           :d_physicalConsts(phys_const)
+Source::Source(PhysicalConstants* phys_const, BoundaryCondition* boundaryCondition )
+                           :d_physicalConsts(phys_const), d_boundaryCondition(boundaryCondition)
 {
 }
 
@@ -194,7 +194,8 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
                                     const Patch* patch,
                                     double delta_t,
                                     ArchesVariables* vars,
-                                    ArchesConstVariables* constvars)
+                                    ArchesConstVariables* constvars,
+                                    DataWarehouse* new_dw )
 {
   // Get the patch and variable indices
   IntVector idxLo = patch->getFortranCellLowIndex();
@@ -220,6 +221,14 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
     IntVector c = *iter;
     vars->pressNonlinearSrc[c] -= constvars->filterdrhodt[c]/delta_t;
+  }
+
+  CCVariable<double> mass_src; new_dw->allocateTemporary(mass_src, patch); mass_src.initialize(0.0);
+  d_boundaryCondition->addIntrusionMassRHS( patch, mass_src );
+
+  for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+    IntVector c = *iter;
+    vars->pressNonlinearSrc[c] += mass_src[c]/delta_t;
   }
 
 }

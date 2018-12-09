@@ -14,7 +14,7 @@
 # UDA files that this script uses.
 #
 
-set UDA=/scratch/ash/lustre/spinti/handoff/ifrf_handoff.uda.008
+set UDA=$1
 
 echo
 echo "Creating <timesteps> section for new index.xml for uda: $UDA"

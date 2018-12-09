@@ -127,14 +127,20 @@ namespace Uintah{
                         DataWarehouse* new_dw,
                         const bool doing_restart);
 
+      /** @brief Compute the momentum source for the RHS of the Momentum cell for intrusion inlets. **/
+      void addMomRHS( const Patch* p,
+                      constSFCXVariable<double>& u,
+                      constSFCYVariable<double>& v,
+                      constSFCZVariable<double>& w,
+                      SFCXVariable<double>& usrc,
+                      SFCYVariable<double>& vsrc,
+                      SFCZVariable<double>& wsrc,
+                      constCCVariable<double>& density );
 
-      /** @brief Sets the hatted velocity boundary conditions */
-      void setHattedVelocity( const Patch* p,
-                              SFCXVariable<double>& u,
-                              SFCYVariable<double>& v,
-                              SFCZVariable<double>& w,
-                              constCCVariable<double>& density,
-                              bool& set_nonnormal_values );
+      /** @brief Compute the mass source **/
+      void
+      addMassRHS( const Patch*  patch,
+                  CCVariable<double>& mass_src );
 
       /** @brief Adds flux contribution to the RHS **/
       void addScalarRHS( const Patch* p,
@@ -151,7 +157,7 @@ namespace Uintah{
 
       /** @brief Sets the density in the intrusion for inlets */
       void setDensity( const Patch* patch,
-                       CCVariable<double>& density, 
+                       CCVariable<double>& density,
                        constCCVariable<double>& old_density );
 
       /** @brief Sets the temperature field to that of the intrusion temperature */
@@ -507,6 +513,9 @@ namespace Uintah{
       getVelocityCondition( const Patch* patch, const IntVector ijk,
                             bool& found_value, Vector& velocity );
 
+      /** @brief return the max velocity across all intrusions (inlets etc..) **/
+      Vector getMaxVelocity();
+
       /** @brief A base class for velocity inlet conditons **/
       class VelInletBase {
 
@@ -570,9 +579,12 @@ namespace Uintah{
           virtual void get_velocity( const IntVector, const Patch* patch,
                                      bool& found_value, Vector& velocity ) = 0;
 
+          virtual Vector get_max_velocity() = 0;
+
           virtual void massflowrate_velocity( int d, const double value ) = 0;
 
         protected:
+
           typedef std::map<int, std::vector<IntVector> > BCIterator;
 
           std::vector<IntVector> _dHelp;
@@ -666,6 +678,10 @@ namespace Uintah{
 
           }
 
+          Vector get_max_velocity(){
+            return _bc_velocity;
+          }
+
           void massflowrate_velocity( int d, const double v ){
             _bc_velocity[d] = v;
           }
@@ -673,6 +689,7 @@ namespace Uintah{
         private:
 
           Vector _bc_velocity;
+
       };
 
       /** @brief Velocity File from an input file **/
@@ -761,6 +778,19 @@ namespace Uintah{
 
             m_handoff_information.vec_values = new_map;
 
+            double mag = 0.0;
+            Vector max_vel(0,0,0);
+            for ( auto i = m_handoff_information.vec_values.begin(); i != m_handoff_information.vec_values.end(); i++ ){
+              double check_mag = std::sqrt( (i->second)[0]*(i->second)[0] +
+                                            (i->second)[1]*(i->second)[1] +
+                                            (i->second)[2]*(i->second)[2]);
+              if ( check_mag > mag ){
+                max_vel = i->second;
+              }
+            }
+
+            m_max_vel = max_vel;
+
           };
 
           inline void set_velocity( const Patch* patch,
@@ -841,6 +871,12 @@ namespace Uintah{
             }
           }
 
+          Vector get_max_velocity(){
+
+            return m_max_vel;
+
+          }
+
           void massflowrate_velocity( int d, const double v ){
               throw InvalidValue("Error: Not allowed to specify mass flow rate for intrusion + inputfile for velocity",__FILE__,__LINE__);
           }
@@ -856,6 +892,7 @@ namespace Uintah{
           ArchesCore::HandoffHelper::FFInfo m_handoff_information;
 
           Vector m_relative_xyz;
+          Vector m_max_vel;
       };
 
       typedef std::map<int, std::vector<IntVector> > BCIterator;

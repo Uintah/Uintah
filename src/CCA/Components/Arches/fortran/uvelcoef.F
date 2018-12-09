@@ -21,8 +21,8 @@ C LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 C FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 C IN THE SOFTWARE.
 C
-C 
-C 
+C
+C
 c*********************************************************************
 c
 c
@@ -59,7 +59,7 @@ c*********************************************************************
       double precision DUDXE, DUDXW
       double precision DVDXN, DVDXS
       double precision DWDXB, DWDXT
-      double precision PT5, PT25, small 
+      double precision PT5, PT25, small
       double precision EPSN, EPSS, EPSE, EPSW, EPST, EPSB
       double precision EPSP
 
@@ -87,11 +87,11 @@ c     Go thru all the cells
 c*********************************************************************
       DO 220 K = KSTU,KENDU
          DO 210 J = JSTU,JENDU
-            DO 200 I = ISTU,IENDU   
+            DO 200 I = ISTU,IENDU
 
               EPSP = eps(I,J,K)*eps(I-1,J,K)
 
-              IF ( EPSP .gt. SMALL) THEN 
+              IF ( EPSP .gt. SMALL) THEN
 
               EPSE = eps(I+1,J,K)
               EPSW = eps(I-2,J,K)
@@ -101,7 +101,7 @@ c*********************************************************************
               EPSB = eps(I,J,K-1)*eps(I-1,J,K-1)
 
 C-----------------------------------------------------------------------
-C     COMPUTE AREAS AND VOLUME 
+C     COMPUTE AREAS AND VOLUME
 C-----------------------------------------------------------------------
                AREAN = SEWU(I)*STB(K)
                AREAS = SEWU(I)*STB(K)
@@ -170,7 +170,7 @@ c     &              0.5D0*(VIS(I-1,J,K)+VIS(I-1,J-1,K)))
 c               VIST = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J,K+1))+
 c     &              0.5D0*(VIS(I-1,J,K)+VIS(I-1,J,K+1)))
 c               VISB = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J,K-1))+
-c     &              0.5D0*(VIS(I-1,J,K)+VIS(I-1,J,K-1)))  
+c     &              0.5D0*(VIS(I-1,J,K)+VIS(I-1,J,K-1)))
 
                VISN = FAC1NS(J)*0.5D0*(VIS(I,J+1,K)+VIS(I-1,J+1,K))+
      +                FAC2NS(J)*0.5D0*(VIS(I,J+N_shift(J),K)+
@@ -197,7 +197,7 @@ c viscosity interpolation for weighted central differencing is now done
 c directly to faces centered about P cell center, without intermediate
 c interpolation to standard P cell faces (where velocities are stored)
 c               DE = CEEU(I)*DEO + CWEU(I)*DWO*DXPWU(I)/DXEPU(I)
-c               DW = CWWU(I)*DWO - CWEU(I)*DEO*DXEPU(I)/DXPWU(I)   
+c               DW = CWWU(I)*DWO - CWEU(I)*DEO*DXEPU(I)/DXPWU(I)
 c               DN = CNN(J)*DNO + CSN(J)*DSO*DYPS(J)/DYNP(J)
 c               DS = CSS(J)*DSO - CSN(J)*DNO*DYNP(J)/DYPS(J)
 c               DT = CTT(K)*DTO + CBT(K)*DBO*DZPB(K)/DZTP(K)
@@ -294,12 +294,12 @@ C-----------------------------------------------------------------------
      &              + (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-
      $              pt5*(den_ref(i,j,k)+den_ref(i-1,j,k)))*
      $              GRAV
-     $              )*VOL*EPSP 
+     $              )*VOL*EPSP
 
                 SU(I,J,K) = SU(I,J,K) - UU(I,J,K)*(
-     $               CE - CW + CN - CS + CT - CB ) 
+     $               CE - CW + CN - CS + CT - CB )
              else
-               
+
                CESAV(I,J,K) = 0.0D0
                CWSAV(I,J,K) = 0.0D0
                CNSAV(I,J,K) = 0.0D0
@@ -314,7 +314,7 @@ C-----------------------------------------------------------------------
                AB(I,J,K) = 0.0D0
                SU(I,J,K) = 0.0D0
 
-             endif 
+             endif
 
  200        CONTINUE
  210     CONTINUE
@@ -322,4 +322,3 @@ C-----------------------------------------------------------------------
 
       RETURN
       END
-

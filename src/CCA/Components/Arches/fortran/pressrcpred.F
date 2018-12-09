@@ -22,8 +22,8 @@ C FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 C IN THE SOFTWARE.
 C
 C
-C 
-C 
+C
+C
 c
 c
 #include <CCA/Components/Arches/fortran/pressrcpred_fort.h>
@@ -64,6 +64,7 @@ c-----------------------------------------------------------------------
                dens = pt5*(den(i,j-1,k)+den(i,j,k))
                dent = pt5*(den(i,j,k+1)+den(i,j,k))
                denb = pt5*(den(i,j,k-1)+den(i,j,k))
+
                ce = areaew*dene
                cw = areaew*denw
                cn = areans*denn
@@ -84,4 +85,3 @@ c drho/dt is added in C code
 
       return
       end
-

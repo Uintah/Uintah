@@ -439,6 +439,8 @@ AMRSimulationController::run()
       first = false;
     }
 
+    // The wall time is needed at the top of the loop in the while
+    // conditional. So get it here.
     walltime = m_wall_timers.GetWallTime();
     
   } // end while main time loop (time is not up, etc)
