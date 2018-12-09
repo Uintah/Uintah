@@ -45,10 +45,10 @@
  * @todo
  *
  * @details
- * This class stores object for storing dependent variables for a classic arches table.  
- * In the header there are also utilities for populating the table using an input file using the 
+ * This class stores object for storing dependent variables for a classic arches table.
+ * In the header there are also utilities for populating the table using an input file using the
  * classic arches table format.
- * 
+ *
  *UPDATE: The table is now standalone, with static members for data construction.  THe table has the option to load
  *        only dependent variables requeseted by the class creating the object.  Additionally,  an access function
  *        that avoids indirection  within an i,j,k, loop is provided.
@@ -84,7 +84,7 @@ struct ClassicTableInfo {
 #endif
   std::vector<std::string> d_allIndepVarNames;     ///< Vector storing all independent variable names from table file
   std::vector<std::string> d_savedDep_var;         ///< std::vector storing  saved dependent variable names from the table file
-  std::vector<std::string>   d_allDepVarUnits;     
+  std::vector<std::string>   d_allDepVarUnits;
   std::map<std::string, double > d_constants;                           ///< List of constants in table header
 
 
@@ -104,11 +104,10 @@ struct ClassicTableInfo {
  ) :     ///< List of constants in table header
   indep_headers(arg1),
   d_allIndepVarNum(arg2),
-  d_allIndepVarNames (arg3),   
-  d_savedDep_var (arg4),     
-  d_allDepVarUnits(arg5),    
-  d_constants(arg6) 
- { }         
+  d_allIndepVarNames (arg3),
+  d_savedDep_var (arg4),
+  d_allDepVarUnits(arg5),
+  d_constants(arg6)  {}
 
 };
 
@@ -159,18 +158,16 @@ struct ClassicTableInfo {
 #endif
 }
 
-
            ~Interp_class() {
 #ifdef UINTAH_ENABLE_KOKKOS
         // no delete needed due to kokkos smart pointers
 #else
-               delete &ind_1; 
-               delete &d_allIndepVarNo; 
-               delete &indep; 
-               delete &table2; 
+            delete &ind_1;
+            delete &d_allIndepVarNo;
+            delete &indep;
+            delete &table2;
 #endif
              }
-
 
 // WORKING!!!!!!!!!!!!!!!!!!!
   template<typename ExecutionSpace,typename MemSpace ,class TYPE_1 , class TYPE_2  >
@@ -295,7 +292,7 @@ struct ClassicTableInfo {
 
        // ----------------perform search AGAIN for special IV  (indepednent variable-------//
        // LINEAR search
-      for (int iSp=0;  iSp< oneD_switch; iSp++){ 
+      for (int iSp=0;  iSp< oneD_switch; iSp++){
           const int cur_index=index[iSp][nDim_withSwitch-1];
 #ifdef UINTAH_ENABLE_KOKKOS
         if (iv[0] <  TDMS_ind_1(cur_index, TDMS_d_allIndepVarNo(0)-1))
@@ -333,9 +330,9 @@ struct ClassicTableInfo {
       }
 
 
-          // compute table indices 
+          // compute table indices
         for (int j=0; j<npts/2; j++){
-          int table_index=0;  
+          int table_index=0;
           int base2=npts/4;
           int high_or_low=false;
           for (int i=1; i<nDim; i++){
@@ -347,7 +344,7 @@ struct ClassicTableInfo {
           table_indices[npts/2+j]=table_index+theSpecial[iHigh][high_or_low];
         }
 
-  
+
         for (unsigned int k = 0; k < var_index.runTime_size; k++) {
  /////      get values from table
         for (int j=0; j<npts; j++){
@@ -359,14 +356,14 @@ struct ClassicTableInfo {
           }
 
 
- /////     do special interpolation for the first IV 
+ /////     do special interpolation for the first IV
             int remaining_points=npts/2;
-              for (int i=0; i < remaining_points; i++) {    
+              for (int i=0; i < remaining_points; i++) {
                 table_vals[i]=table_vals[i]*(1. - distal_val[i % 2]) + table_vals[i+remaining_points]*distal_val[i % 2];
               }
 
- /////     do interpolation for all other IVs 
-            for (int j = 0; j < nDim-1; j++) { 
+ /////     do interpolation for all other IVs
+            for (int j = 0; j < nDim-1; j++) {
               remaining_points /= 2;
               const double distl=distal_val[j+2];
               for (int i=0; i < remaining_points; i++) {
@@ -521,15 +518,14 @@ struct ClassicTableInfo {
 
       double table_vals[MAX_TABLE_READS];   // container for values read from the table needed to compute the interpolent
       double distal_val[MAX_TABLE_DIMENSION+1]; //  delta_x / DX   (nDim + 1  except for 1D)
-      int table_indices[MAX_TABLE_READS];   // container for table indices 
+      int table_indices[MAX_TABLE_READS];   // container for table indices
       int index[2][MAX_TABLE_DIMENSION-1]; // high and low indexes
       int theSpecial[2][2]; // high and low indexes of the special IV (first independent variable)
      //////////////-------------------------------------------------------------------//////
 
 
 
-
-      dliniate[0]=1; 
+      dliniate[0]=1;
       for( int  i=1 ; i<nDim; i++){
 #ifdef UINTAH_ENABLE_KOKKOS
         dliniate[i]=dliniate[i-1]*TDMS_d_allIndepVarNo(i-1); // compute effective 1-D index
@@ -583,7 +579,7 @@ struct ClassicTableInfo {
 
        // ----------------perform search AGAIN for special IV  (indepednent variable-------//
        // LINEAR search
-      for (int iSp=0;  iSp< oneD_switch; iSp++){ 
+      for (int iSp=0;  iSp< oneD_switch; iSp++){
           const int cur_index=index[iSp][nDim_withSwitch-1];
 #ifdef UINTAH_ENABLE_KOKKOS
         if (iv[0] <  TDMS_ind_1(cur_index, TDMS_d_allIndepVarNo(0)-1))
@@ -621,9 +617,9 @@ struct ClassicTableInfo {
       }
 
 
-          // compute table indices 
+          // compute table indices
         for (int j=0; j<npts/2; j++){
-          int table_index=0;  
+          int table_index=0;
           int base2=npts/4;
           int high_or_low=false;
           for (int i=1; i<nDim; i++){
@@ -635,7 +631,7 @@ struct ClassicTableInfo {
           table_indices[npts/2+j]=table_index+theSpecial[iHigh][high_or_low];
         }
 
-  
+
         for (unsigned int k = 0; k < var_index.runTime_size; k++) {
  /////      get values from table
         for (int j=0; j<npts; j++){
@@ -647,14 +643,14 @@ struct ClassicTableInfo {
           }
 
 
- /////     do special interpolation for the first IV 
+ /////     do special interpolation for the first IV
             int remaining_points=npts/2;
-              for (int i=0; i < remaining_points; i++) {    
+              for (int i=0; i < remaining_points; i++) {
                 table_vals[i]=table_vals[i]*(1. - distal_val[i % 2]) + table_vals[i+remaining_points]*distal_val[i % 2];
               }
 
- /////     do interpolation for all other IVs 
-            for (int j = 0; j < nDim-1; j++) { 
+ /////     do interpolation for all other IVs
+            for (int j = 0; j < nDim-1; j++) {
               remaining_points /= 2;
               const double distl=distal_val[j+2];
               for (int i=0; i < remaining_points; i++) {
@@ -667,11 +663,6 @@ struct ClassicTableInfo {
       return ;
 
     }
-
-
-
-
-
 
 
 
@@ -702,7 +693,6 @@ intContainer
   }
 
 
-
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -714,6 +704,7 @@ tableContainer
   getSecondaryVar(){
     return indep;
   }
+
 
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
@@ -735,17 +726,20 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, tableC
     return ind_1;
   }
 
+
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, tableContainer<Kokkos::HostSpace> >::type
   getSecondaryVar(){
     return indep;
   }
 
+
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, intContainer<Kokkos::HostSpace> >::type
   getInts(){
     return d_allIndepVarNo;
   }
+
 
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, tableContainer<Kokkos::HostSpace> >::type
@@ -768,11 +762,13 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, intCon
     return g_d_allIndepVarNo;
   }
 
+
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
   getSecondaryVar(){
     return g_indep;
   }
+
 
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
@@ -808,10 +804,5 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableC
     tableContainer<Kokkos::CudaSpace>  g_ind_1; // independent variable N
 #endif
   };
-
-
-
-
-
 }
 #endif

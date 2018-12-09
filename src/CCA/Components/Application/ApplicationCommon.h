@@ -133,11 +133,9 @@ WARNING
     // is restarted.
     virtual void restartInitialize() {}
 
-    // Ask the application which primary task graph it wishes to
-    // execute this time step, this will be an index into the
-    // scheduler's vector of task-graphs.
-    virtual int computeTaskGraphIndex();
-    virtual int computeTaskGraphIndex( const int timeStep ) { return 0; }
+    // Get the task graph the application wants to execute. Returns an
+    // index into the scheduler's list of task graphs.
+    virtual int getTaskGraphIndex() { return 0; }
 
     // Schedule the inital switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,

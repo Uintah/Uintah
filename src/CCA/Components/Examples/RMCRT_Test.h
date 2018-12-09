@@ -92,7 +92,7 @@ WARNING
     virtual void scheduleRefine                ( const PatchSet* patches, SchedulerP& scheduler );
     virtual void scheduleRefineInterface       ( const LevelP& level, SchedulerP& scheduler, bool needCoarseOld, bool needCoarseNew);
 
-    virtual int computeTaskGraphIndex( const int timeStep );
+    virtual int getTaskGraphIndex();
 
   private:
     void initialize ( const ProcessorGroup*,

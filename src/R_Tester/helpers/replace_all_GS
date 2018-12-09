@@ -3,6 +3,17 @@
 setenv NCURSES_NO_UTF8_ACS 1   # fix for dialog issue with certain terminals
 #______________________________________________________________________
 # This script is a gui for replacing the gold standards
+#
+#   Note: If you switch users (sudo su <user>) before running this script
+#         use:
+#           script /dev/null
+#              replace_all_GS
+#           exit
+#         
+#         otherwise you'll hit "dialog cannot open tty-output."
+#
+#______________________________________________________________________
+
 set tmp = (`which dialog` `which awk`)
 
 if ( $status ) then
@@ -58,7 +69,7 @@ foreach X (*-short.log)
   end
 end
 
-label begin
+begin:
 #__________________________________
 # open dialog box for user to select which tests to replace
 set choices = (`dialog --stdout --separate-output --checklist "The following regression tests have failed.  Please select the tests which you'd like to replace" 40 80 80 $failedTestList`)
@@ -101,7 +112,7 @@ end
 # When replacing many tests > 50 you can exceed the system word limit for shell variables
 #
 # write the header
-/bin/rm .dialog
+/bin/rm -f .dialog > /dev/null
 echo "--stdout --yesno " > .dialog
 echo '"Replace the following tests: (PgUp/PgDwn to scroll)\n' >> .dialog
 

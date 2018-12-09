@@ -165,11 +165,9 @@ WARNING
     // is restarted.
     virtual void restartInitialize() = 0;
 
-    // Ask the application which primary task graph it wishes to
-    // execute this time step, this will be an index into the
-    // scheduler's vector of task-graphs.
-    virtual int computeTaskGraphIndex() = 0;
-    virtual int computeTaskGraphIndex( const int TimeStep ) = 0;
+    // Get the task graph the application wants to execute. Returns an
+    // index into the scheduler's list of task graphs.
+    virtual int getTaskGraphIndex() = 0;
 
     // Schedule the inital switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,
@@ -274,8 +272,8 @@ WARNING
     
     // Some applications can set reduction variables
     virtual void addReductionVariable( std::string name,
-				       const TypeDescription *varType,
-				       bool varActive = false ) = 0;
+                                       const TypeDescription *varType,
+                                       bool varActive = false ) = 0;
     virtual unsigned int numReductionVariable() const = 0;
     virtual void activateReductionVariable(std::string name, bool val) = 0;
     virtual bool activeReductionVariable(std::string name) = 0;

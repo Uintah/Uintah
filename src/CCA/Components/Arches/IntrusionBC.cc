@@ -1223,7 +1223,6 @@ IntrusionBC::addMomRHS( const Patch*  patch,
               double area = 0;
 
               area = Dx.x() * Dx.z();
-              v_indx = 0;
 
               if ( directions[2] != 0 ){
                 IntVector cp = c;
@@ -1247,7 +1246,6 @@ IntrusionBC::addMomRHS( const Patch*  patch,
               double area = 0;
 
               area = Dx.x() * Dx.y();
-              v_indx = 0;
 
               if ( directions[4] != 0 ){
                 IntVector cp = c;

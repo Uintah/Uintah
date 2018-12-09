@@ -65,7 +65,7 @@ ClassicTableInterface::ClassicTableInterface( MaterialManagerP& materialManager 
 //---------------------------------------------------------------------------
 ClassicTableInterface::~ClassicTableInterface()
 {
-delete ND_interp;
+  delete ND_interp;
 }
 
 //---------------------------------------------------------------------------
@@ -74,6 +74,7 @@ delete ND_interp;
   void
 ClassicTableInterface::problemSetup( const ProblemSpecP& db )
 {
+  
   // Create sub-ProblemSpecP object
   string tableFileName;
   ProblemSpecP db_classic = db;
@@ -84,7 +85,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
 
    //READ TABLE:
   ND_interp=SCINEW_ClassicTable<MAX_NUM_DEP_VARS>(tableFileName); // requires a delete on ND_interp object by host class
-         
+
   d_allDepVarNames=ND_interp->tableInfo.d_savedDep_var;
   d_allIndepVarNames=ND_interp->tableInfo.d_allIndepVarNames;
   //d_allIndepVarNum=ND_interp->tableInfo.d_allIndepVarNum;
@@ -107,7 +108,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
 
   // This sets the table lookup variables and saves them in a map
   // Map<string name, Label>
-  setMixDVMap( db_rootnode );  
+  setMixDVMap( db_rootnode );
 
   proc0cout << "  Now matching user-defined IV's with table IV's" << endl;
   proc0cout << "     Note: If sus crashes here, check to make sure your" << endl;
@@ -438,13 +439,13 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
        int  ixx =0;
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
 
-   
+
         new_dw->getModifiable(CCVar_vec_lookup[ixx],i->second  , m_matl_index, patch );
 
         IndexMap::iterator i_index = d_depVarIndexMap.find( i->first );
         depVarIndexes[ixx]=i_index->second;
 
-   
+
         std::string name = i->first+"_old";
         VarMap::iterator i_old = d_oldDvVarMap.find(name);
 
@@ -518,22 +519,16 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
     });
 
+
+    //get the state from the Table
+    //ND_interp->getState( IVs_transformed, CCVar_vec_lookup   ,d_allIndepVarNames ,patch,depVarIndexes);
     ExecutionObject<UintahSpaces::CPU,UintahSpaces::HostSpace> tempObjectReplaceForPortability;
     ND_interp->getState<UintahSpaces::CPU,UintahSpaces::HostSpace>( tempObjectReplaceForPortability, IVs_transformed, CCVar_vec_lookup   ,patch,depVarIndexes);
-                             //need a getState where the 
-   //ND_interp->getState( IVs_transformed, CCVar_vec_lookup   ,patch,depVarIndexes);
-
-  //void getState(std::vector< TYPE > &indep_storage,        
-              //std::vector<CCVariable<double> > &dep_storage,  std::vector<std::string> requestedInd_var,
-              //const Patch* patch, const std::vector<int> depVar_indices={} ){
-  
-
-
 
 ////////    now deal with the mixing and density checks same as before
     int density_index=0;
 
-    for ( unsigned int depVar_i=0; depVar_i < d_dvVarMap.size(); depVar_i++){ 
+    for ( unsigned int depVar_i=0; depVar_i < d_dvVarMap.size(); depVar_i++){
           if ( d_allDepVarNames[depVarIndexes[depVar_i]] == "density" ){
           density_index=depVarIndexes[depVar_i];
         Uintah::parallel_for(range,  [&]( int i,  int j, int k){
@@ -640,7 +635,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           //take care of the mixing and density the same
           int depVarCount = 0;
           // now get state for boundary cell:
-          for ( unsigned int depVar_i=0; depVar_i < d_dvVarMap.size(); depVar_i++){ 
+          for ( unsigned int depVar_i=0; depVar_i < d_dvVarMap.size(); depVar_i++){
 
             // for post look-up mixing
             for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin();
@@ -669,7 +664,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             if (depVarIndexes[depVar_i] == density_index)
               arches_density[c] = ghost_value;
             depVarCount++;
-          } 
+          }
           iv.resize(0);
         }
       }
@@ -865,4 +860,3 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
   return table_value;
 
 }
-

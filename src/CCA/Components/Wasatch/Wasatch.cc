@@ -1973,11 +1973,14 @@ namespace WasatchCore{
  }
 
  int
- Wasatch::computeTaskGraphIndex( const int timeStep )
+ Wasatch::getTaskGraphIndex()
  {
    // The component specifies task graph index for next
    // timestep. SimController passes this to scheduler for execution.
    if (doRadiation_) {
+
+     Uintah::timeStep_vartype timeStep(0);
+     m_scheduler->get_dw(0)->get(timeStep, getTimeStepLabel() );
 
      // Setup the correct task graph for execution.
      // Also do radiation solve on timestep 1.
