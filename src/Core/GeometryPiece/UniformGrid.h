@@ -93,6 +93,9 @@ WARNING
    void buildUniformGrid(std::list<Tri>& polygons);
    /** @brief Assume the ray goes to infinity **/
    void countIntersections(const Point& pt, int& crossings);
+   void countIntersectionsx(const Point& pt, int& crossings);
+   void countIntersectionsy(const Point& pt, int& crossings);
+   void countIntersectionsz(const Point& pt, int& crossings);
    /** @brief Let the user specify the second point to define the ray (pt -> pt_away). This returns
               the total number of crossing and the min distance from pt **/
    void countIntersections(const Point& pt, const Point& pt_away, int& crossings, double& min_distance);

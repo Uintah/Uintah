@@ -1043,11 +1043,10 @@ bool setAllocated( atomicDataStatus& status )
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <sci_hash_map.h>
-
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 
@@ -1074,6 +1073,8 @@ bool setAllocated( atomicDataStatus& status )
 
 
 ****************************************/
+
+
 namespace {
 
 Uintah::MasterLock g_keyDB_mutex{};
@@ -1113,7 +1114,7 @@ public:
 
 private:
 
-  using keyDBtype = hashmap<VarLabelMatl<DomainType>, int>;
+  using keyDBtype = std::unordered_map<VarLabelMatl<DomainType>, int>;
   keyDBtype m_keys;
 
   int m_key_count { 0 };
@@ -1797,57 +1798,37 @@ DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatl<DomainT
 } // namespace Uintah
 
 
+//______________________________________________________________________
 //
-// Hash function for VarLabelMatl
+// Custom hash function for VarLabelMatl
 //
-#ifdef HAVE_GNU_HASHMAP
+// Specialize std::hash structure and inject into the std namespace so that
+// VarLabelMatl<DomainType> can be used as a key in std::unordered_map
+//
+// NOTE: this is legit, and likely the easiest way to get this done due to templates (APH - 10/25/18).
+//
+// It is allowed to add template specializations for any standard library class template to the std namespace
+// only if the declaration depends on at least one program-defined type and the specialization satisfies all
+// requirements for the original template (https://en.cppreference.com/w/cpp/language/extending_std).
+//
+namespace std {
 
-  namespace __gnu_cxx
+using Uintah::VarLabelMatl;
+
+template<class DomainType>
+struct hash<VarLabelMatl<DomainType> > {
+  size_t operator()( const VarLabelMatl<DomainType>& v ) const
   {
-    using Uintah::DWDatabase;
-    using Uintah::VarLabelMatl;
-    template <class DomainType>
-    struct hash<VarLabelMatl<DomainType> > : public std::unary_function<VarLabelMatl<DomainType>, size_t>
-    {
-      size_t operator()(const VarLabelMatl<DomainType>& v) const
-      {
-        size_t h=0;
-        char *str =const_cast<char*> (v.label_->getName().data());
-        while (int c = *str++) h = h*7+c;
-        return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
-                 ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
-      }
-    };
+    size_t h = 0;
+    char *str = const_cast<char*>(v.label_->getName().data());
+    while (int c = *str++) {
+      h = h * 7 + c;
+    }
+    return ((((size_t)v.label_) << (sizeof(size_t) / 2) ^ ((size_t)v.label_) >> (sizeof(size_t) / 2)) ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_);
   }
+};
 
-#elif HAVE_TR1_HASHMAP || HAVE_C11_HASHMAP
-
-  namespace std {
-#if HAVE_TR1_HASHMAP
-    namespace tr1 {
-#endif
-      using Uintah::DWDatabase;
-      using Uintah::VarLabelMatl;
-      template <class DomainType>
-      struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t>
-      {
-        size_t operator()(const VarLabelMatl<DomainType>& v) const
-        {
-          size_t h=0;
-          char *str =const_cast<char*> (v.label_->getName().data());
-          while (int c = *str++) h = h*7+c;
-          return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
-                   ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
-        }
-      };
-#if HAVE_TR1_HASHMAP
-    } // end namespace tr1
-#endif
-  } // end namespace std
-
-#endif // HAVE_GNU_HASHMAP
-
-
+}  // end namespace std
 
 #endif // #ifdef BRADS_NEW_DWDATABASE
 

@@ -27,8 +27,8 @@
 
 #ifdef BRADS_NEW_DWDATABASE
 
-#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/SendState.h>
 #include <CCA/Ports/DataWarehouse.h>
 
@@ -74,34 +74,31 @@ class TypeDescription;
 /**************************************
 
  CLASS
- OnDemandDataWarehouse
 
- Short description...
+   OnDemandDataWarehouse
+
 
  GENERAL INFORMATION
 
- OnDemandDataWarehouse.h
+   OnDemandDataWarehouse.h
 
- Steven G. Parker
- Department of Computer Science
- University of Utah
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
 
- Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
 
 
  KEYWORDS
- On_Demand_Data_Warehouse
+   OnDemandDataWarehouse
 
- DESCRIPTION
- Long description...
-
- WARNING
 
  ****************************************/
 
 class OnDemandDataWarehouse : public DataWarehouse {
 
   public:
+
     OnDemandDataWarehouse( const ProcessorGroup * myworld,
                                  Scheduler      * scheduler,
                            const int              generation,
@@ -308,7 +305,6 @@ class OnDemandDataWarehouse : public DataWarehouse {
                            const Patch* patch,
                            Ghost::GhostType gtype,
                            int numGhostCells);
-//                          const IntVector& boundaryLayer);
 
     void allocateAndPut(GridVariableBase& var,
                         const VarLabel* label,
@@ -329,9 +325,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
                           int matlIndex,
                           const Level* level);
 
-    //meant for the UnifiedScheduler only.  Puts a contiguous level in the *level* database
-    //so that it doesn't need to constantly make new deep copies each time the full level
-    //is requested.
+    //meant for the UnifiedScheduler only.  Puts a contiguous level in the *level* database so that
+    //it doesn't need to constantly make new deep copies each time the full level is requested.
     void putLevelDB( GridVariableBase* gridVar,
                            const VarLabel* label,
                            const Level* level,
@@ -465,8 +460,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                    const MaterialSubset* matls,
                    int nComm);
 
-    // Scrub counter manipulator functions -- when the scrub count goes to
-    // zero, the data is deleted
+    // Scrub counter manipulator functions -- when the scrub count goes to zero, the data is deleted
     void setScrubCount(const VarLabel* label,
                        int matlIndex,
                        const Patch* patch,
@@ -662,6 +656,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
     typedef std::multimap<PSPatchMatlGhost, ParticleSubset*> psetDBType;
     typedef std::map<std::pair<int, const Patch*>, std::map<const VarLabel*, ParticleVariableBase*>*> psetAddDBType;
     typedef std::map<std::pair<int, const Patch*>, int> particleQuantityType;
+
 #ifdef HAVE_CUDA
    std::map<Patch*, bool> assignedPatches;
    // indicates where a given patch should be stored in an accelerator
@@ -723,6 +718,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
     ScrubMode d_scrubMode;
 
     bool m_exchangeParticleQuantities {true};
+
 }; // end class OnDemandDataWarehouse
 
 }  // end namespace Uintah
@@ -731,8 +727,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/SendState.h>
 #include <CCA/Ports/DataWarehouse.h>
 
@@ -778,34 +774,31 @@ template <class T> class constNCVariable;
 /**************************************
 
  CLASS
- OnDemandDataWarehouse
 
- Short description...
+   OnDemandDataWarehouse
+
 
  GENERAL INFORMATION
 
- OnDemandDataWarehouse.h
+   OnDemandDataWarehouse.h
 
- Steven G. Parker
- Department of Computer Science
- University of Utah
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
 
- Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
 
 
  KEYWORDS
- On_Demand_Data_Warehouse
+   OnDemandDataWarehouse
 
- DESCRIPTION
- Long description...
-
- WARNING
 
  ****************************************/
 
 class OnDemandDataWarehouse : public DataWarehouse {
 
   public:
+
     OnDemandDataWarehouse( const ProcessorGroup * myworld,
                                  Scheduler      * scheduler,
                            const int              generation,
@@ -1012,7 +1005,6 @@ class OnDemandDataWarehouse : public DataWarehouse {
                            const Patch* patch,
                            Ghost::GhostType gtype,
                            int numGhostCells);
-//                          const IntVector& boundaryLayer);
 
     void allocateAndPut(GridVariableBase& var,
                         const VarLabel* label,
@@ -1033,9 +1025,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
                           int matlIndex,
                           const Level* level);
 
-    //meant for the UnifiedScheduler only.  Puts a contiguous level in the *level* database
-    //so that it doesn't need to constantly make new deep copies each time the full level
-    //is requested.
+    //meant for the UnifiedScheduler only.  Puts a contiguous level in the *level* database so that
+    //it doesn't need to constantly make new deep copies each time the full level is requested.
     void putLevelDB( GridVariableBase* gridVar,
                            const VarLabel* label,
                            const Level* level,
@@ -1167,8 +1158,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                    const MaterialSubset* matls,
                    int nComm);
 
-    // Scrub counter manipulator functions -- when the scrub count goes to
-    // zero, the data is deleted
+    // Scrub counter manipulator functions -- when the scrub count goes to zero, the data is deleted
     void setScrubCount(const VarLabel* label,
                        int matlIndex,
                        const Patch* patch,
@@ -1688,6 +1678,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
     typedef std::multimap<PSPatchMatlGhost, ParticleSubset*> psetDBType;
     typedef std::map<std::pair<int, const Patch*>, std::map<const VarLabel*, ParticleVariableBase*>*> psetAddDBType;
     typedef std::map<std::pair<int, const Patch*>, int> particleQuantityType;
+
 #ifdef HAVE_CUDA
    std::map<Patch*, bool> assignedPatches;
    // indicates where a given patch should be stored in an accelerator
@@ -1749,10 +1740,10 @@ class OnDemandDataWarehouse : public DataWarehouse {
     ScrubMode d_scrubMode;
 
     bool m_exchangeParticleQuantities {true};
+
 }; // end class OnDemandDataWarehouse
 
 }  // end namespace Uintah
-
 
 #endif // end #ifdef BRADS_NEW_DWDATABASE
 

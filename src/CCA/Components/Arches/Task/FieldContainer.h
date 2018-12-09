@@ -33,7 +33,7 @@ namespace Uintah{
 
     public:
 
-      enum VAR_DEPEND { COMPUTES, MODIFIES, REQUIRES };
+      enum VAR_DEPEND { COMPUTES, MODIFIES, REQUIRES, COMPUTESCRATCHGHOST };
       enum WHICH_DW { OLDDW, NEWDW, LATEST };
 
       /** @brief The variable registry information. Each task variable has one of these.
@@ -318,7 +318,7 @@ namespace Uintah{
         if ( ivar.depend == MODIFIES ){
           _new_dw->getModifiable( *field, ivar.label, m_matl_index, _patch );
         } else {
-          _new_dw->allocateAndPut( *field, ivar.label, m_matl_index, _patch );
+          _new_dw->allocateAndPut( *field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
         }
 
         FieldContainer icontain;

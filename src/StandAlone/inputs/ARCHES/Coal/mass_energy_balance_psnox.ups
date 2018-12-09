@@ -14,25 +14,25 @@
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
   <DataArchiver>
-    <filebase>mass_energy_balance.uda</filebase>
+    <filebase>mass_energy_balance_psnox.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <!--outputInterval>0.01</outputInterval-->
     <outputInitTimestep/>
     <save label="burnout"/>
     <save label="divQ"/>
     <save label="heat_source"/>
-    <save label="NO_zz"/>
-    <save label="HCN_zz"/>
-    <save label="NH3_zz"/>
-    <save label="NO_zz_src"/>
-    <save label="HCN_zz_src"/>
-    <save label="NH3_zz_src"/>
-    <save label="NO_zz_running_sum"/>
-    <save label="HCN_zz_running_sum"/>
-    <save label="NH3_zz_running_sum"/>
-    <save label="NO_zz_src_running_sum"/>
-    <save label="HCN_zz_src_running_sum"/>
-    <save label="NH3_zz_src_running_sum"/>
+    <save label="NO_ps"/>
+    <save label="HCN_ps"/>
+    <save label="NH3_ps"/>
+    <save label="NO_ps_src"/>
+    <save label="HCN_ps_src"/>
+    <save label="NH3_ps_src"/>
+    <save label="NO_ps_running_sum"/>
+    <save label="HCN_ps_running_sum"/>
+    <save label="NH3_ps_running_sum"/>
+    <save label="NO_ps_src_running_sum"/>
+    <save label="HCN_ps_src_running_sum"/>
+    <save label="NH3_ps_src_running_sum"/>
     <save label="pE_os_src_qn0"/>
     <save label="pE_os_src_qn1"/>
     <save label="pE_os_src_qn2"/>
@@ -247,13 +247,13 @@
         <BCType id="all" label="Tar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Neumann">
+        <BCType id="all" label="NO_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Neumann">
+        <BCType id="all" label="HCN_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Neumann">
+        <BCType id="all" label="NH3_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -378,13 +378,13 @@
         <BCType id="all" label="Tar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Neumann">
+        <BCType id="all" label="NO_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Neumann">
+        <BCType id="all" label="HCN_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Neumann">
+        <BCType id="all" label="NH3_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -509,13 +509,13 @@
         <BCType id="all" label="Tar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Neumann">
+        <BCType id="all" label="NO_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Neumann">
+        <BCType id="all" label="HCN_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Neumann">
+        <BCType id="all" label="NH3_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -640,13 +640,13 @@
         <BCType id="all" label="Tar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Neumann">
+        <BCType id="all" label="NO_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Neumann">
+        <BCType id="all" label="HCN_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Neumann">
+        <BCType id="all" label="NH3_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -771,13 +771,13 @@
         <BCType id="all" label="Tar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Neumann">
+        <BCType id="all" label="NO_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Neumann">
+        <BCType id="all" label="HCN_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Neumann">
+        <BCType id="all" label="NH3_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -902,13 +902,13 @@
         <BCType id="all" label="Tar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Neumann">
+        <BCType id="all" label="NO_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Neumann">
+        <BCType id="all" label="HCN_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Neumann">
+        <BCType id="all" label="NH3_ps" var="Neumann">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -1036,13 +1036,13 @@
         <BCType id="all" label="Tar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Dirichlet">
+        <BCType id="all" label="NO_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Dirichlet">
+        <BCType id="all" label="HCN_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Dirichlet">
+        <BCType id="all" label="NH3_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Neumann">
@@ -1167,13 +1167,13 @@
         <BCType id="all" label="Tar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Dirichlet">
+        <BCType id="all" label="NO_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Dirichlet">
+        <BCType id="all" label="HCN_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Dirichlet">
+        <BCType id="all" label="NH3_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -1298,13 +1298,13 @@
         <BCType id="all" label="Tar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Dirichlet">
+        <BCType id="all" label="NO_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Dirichlet">
+        <BCType id="all" label="HCN_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Dirichlet">
+        <BCType id="all" label="NH3_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -1429,13 +1429,13 @@
         <BCType id="all" label="Tar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Dirichlet">
+        <BCType id="all" label="NO_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Dirichlet">
+        <BCType id="all" label="HCN_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Dirichlet">
+        <BCType id="all" label="NH3_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -1560,13 +1560,13 @@
         <BCType id="all" label="Tar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Dirichlet">
+        <BCType id="all" label="NO_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Dirichlet">
+        <BCType id="all" label="HCN_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Dirichlet">
+        <BCType id="all" label="NH3_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -1691,13 +1691,13 @@
         <BCType id="all" label="Tar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NO_zz" var="Dirichlet">
+        <BCType id="all" label="NO_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="HCN_zz" var="Dirichlet">
+        <BCType id="all" label="HCN_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="NH3_zz" var="Dirichlet">
+        <BCType id="all" label="NH3_ps" var="Dirichlet">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -1848,12 +1848,12 @@
           <single_variable label="CO_model"/>
           <single_variable label="CO_model_moles"/>
           <single_variable label="O2_moles"/>
-          <single_variable label="NO_zz"/>
-          <single_variable label="HCN_zz"/>
-          <single_variable label="NH3_zz"/>
-          <single_variable label="NO_zz_src"/>
-          <single_variable label="HCN_zz_src"/>
-          <single_variable label="NH3_zz_src"/>
+          <single_variable label="NO_ps"/>
+          <single_variable label="HCN_ps"/>
+          <single_variable label="NH3_ps"/>
+          <single_variable label="NO_ps_src"/>
+          <single_variable label="HCN_ps_src"/>
+          <single_variable label="NH3_ps_src"/>
         </model>
         <model label="CO_model" type="CO">
           <CO_defect_label>CO_model_d</CO_defect_label>
@@ -2173,7 +2173,7 @@
             <weight>1.0</weight>
           </src>
         </Eqn>
-        <Eqn label="NO_zz" type="CCscalar">
+        <Eqn label="NO_ps" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <stage value="0"/>
@@ -2188,12 +2188,12 @@
             <high>1.0</high>
             <tol>1e-10</tol>
           </Clipping>
-          <src label="NO_zz_src">
+          <src label="NO_ps_src">
             <weight>1</weight>
           </src>
           <scaling_const>1</scaling_const>
         </Eqn>
-        <Eqn label="HCN_zz" type="CCscalar">
+        <Eqn label="HCN_ps" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <stage value="0"/>
@@ -2208,12 +2208,12 @@
             <high>1.0</high>
             <tol>1e-10</tol>
           </Clipping>
-          <src label="HCN_zz_src">
+          <src label="HCN_ps_src">
             <weight>1</weight>
           </src>
           <scaling_const>1</scaling_const>
         </Eqn>
-        <Eqn label="NH3_zz" type="CCscalar">
+        <Eqn label="NH3_ps" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <stage value="0"/>
@@ -2228,7 +2228,7 @@
             <high>1.0</high>
             <tol>1e-10</tol>
           </Clipping>
-          <src label="NH3_zz_src">
+          <src label="NH3_ps_src">
             <weight>1</weight>
           </src>
           <scaling_const>1</scaling_const>
@@ -2265,6 +2265,7 @@
             <devol_model_name>devol</devol_model_name>
             <tar_creation_src_label>Tar_src</tar_creation_src_label>
             <devol_src_label_for_nox>devol_nox_src</devol_src_label_for_nox>
+            <bd_devol_src_label>devol_bd_src</bd_devol_src_label>
             <devol_BirthDeath/>
           </src>
           <src label="momentum_eta_source1" type="coal_gas_devol_mom">
@@ -2272,6 +2273,8 @@
           </src>
           <src label="eta_source2" type="coal_gas_oxi">
             <char_oxidation_model_name>char</char_oxidation_model_name>
+            <char_src_label_for_nox>char_nox_src</char_src_label_for_nox>
+            <bd_char_src_label>char_bd_src</bd_char_src_label>
             <char_BirthDeath/>
           </src>
           <src label="momentum_eta_source2" type="coal_gas_oxi_mom">
@@ -2300,17 +2303,20 @@
             <soot_mass_src label="BrownYsoot"/>
             <mass_balance_src label="eta_source3"/>
           </src>
-          <src label="zz_Nox_solidphase_source" type="zzNox_Solid">
-            <A_BET>5000.0</A_BET>
-            <NSbeta1>0.0</NSbeta1>
-            <NSbeta2>0.5</NSbeta2>
-            <NSbeta3>0.5</NSbeta3>
-            <NSgamma1>0.4</NSgamma1>
-            <NSgamma2>0.3</NSgamma2>
-            <NSgamma3>0.3</NSgamma3>
-            <NO_src label="NO_zz_src"/>
-            <HCN_src label="HCN_zz_src"/>
-            <NH3_src label="NH3_zz_src"/>
+          <src label="ps_Nox_source" type="psNox">
+            <devol_to_HCN>0.677</devol_to_HCN>
+            <devol_to_NH3>0.323</devol_to_NH3>
+            <charOxy_to_HCN>0.503</charOxy_to_HCN>
+            <charOxy_to_NH3>0.043</charOxy_to_NH3>
+            <Tar_to_HCN>0.003</Tar_to_HCN>
+            <Tar_to_NH3>0.997</Tar_to_NH3>
+            <PreExpReburn>996.578</PreExpReburn>
+            <ExpReburn>27033.419</ExpReburn>
+            <PowerReburn>2.322</PowerReburn>
+            <F1_De_soete>1.546</F1_De_soete>
+            <NO_src label="NO_ps_src" />
+            <HCN_src label="HCN_ps_src" />
+            <NH3_src label="NH3_ps_src" />
             <o2_label>O2</o2_label>
             <n2_label>N2</n2_label>
             <co_label>CO</co_label>
@@ -2319,9 +2325,10 @@
             <temperature_label>temperature</temperature_label>
             <density_label>density</density_label>
             <mix_mol_weight_label>mixture_molecular_weight</mix_mol_weight_label>
-            <NO_label>NO_zz</NO_label>
-            <HCN_label>HCN_zz</HCN_label>
-            <NH3_label>NH3_zz</NH3_label>
+            <NO_label>NO_ps</NO_label>
+            <HCN_label>HCN_ps</HCN_label>
+            <NH3_label>NH3_ps</NH3_label>
+            <Tar_src_label>eta_source3</Tar_src_label>
           </src>
         </Sources>
       </TransportEqns>

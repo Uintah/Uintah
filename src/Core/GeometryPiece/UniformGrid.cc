@@ -121,7 +121,7 @@ bool Tri::inside(Point& pt)
 	double cmp = ((*p2)(x)-((*p2)(y)-ty)*((*p1)(x)-(*p2)(x))/((*p1)(y)-(*p2)(y)));
 	//	if (cmp >= tx)
 	//	if (abs(cmp - tx) >= 0.)
-	if (cmp - tx >= -1.e-8)
+	if ((cmp - tx) >= -1.e-8)
 	  inside = !inside;
       }
     }
@@ -231,7 +231,7 @@ void UniformGrid::countIntersections(const Point& pt, int& crossings)
 {
 
   //Assuming that the caller intends to check the intersection between pt and infinity:
-  Vector infinity = Vector(pt.x()+1e10,pt.y(),pt.z());
+  Vector infinity = Vector(pt.x()+1.e10, pt.y(), pt.z());
   IntVector test_pt_id = cellID(pt);
   IntVector start = d_grid.getLowIndex();
   IntVector stop = d_grid.getHighIndex();
@@ -243,37 +243,150 @@ void UniformGrid::countIntersections(const Point& pt, int& crossings)
     IntVector curr(i,test_pt_id.y(),test_pt_id.z());
     list<Tri> tris = d_grid[curr];
 
-    for ( list<Tri>::iterator itr = tris.begin(); itr != tris.end();
-	        ++itr ) {
+      for ( list<Tri>::iterator itr = tris.begin(); itr != tris.end(); ++itr ) {
+        Point hit;
+        if ((itr->plane()).Intersect(pt,infinity,hit)) {
+        Vector int_ray = hit.asVector() - pt.asVector();
+        double cos_angle = Dot(infinity,int_ray)/
+                           (infinity.length()*int_ray.length());
 
-      Point hit;
-      if ((itr->plane()).Intersect(pt,infinity,hit)) {
+        if (cos_angle < 0.)
+          continue;
 
-	      Vector int_ray = hit.asVector() - pt.asVector();
-	      double cos_angle = Dot(infinity,int_ray)/
-	                         (infinity.length()*int_ray.length());
-
-
-	      if (cos_angle < 0.)
-	        continue;
-
-	      if (itr->inside(hit)) {
-
-	        double distance = int_ray.length();
-	        map<double,Tri>::const_iterator duplicate = cross_map.find(distance);
-
-	        if (duplicate == cross_map.end()) {
-
-	          cross_map[distance] = *itr;
-	          crossings++;
-
-	        }
-	      }
+        if (itr->inside(hit)) {
+          double distance = int_ray.length();
+          map<double,Tri>::const_iterator duplicate = cross_map.find(distance);
+  
+          if (duplicate == cross_map.end()) {
+            cross_map[distance] = *itr;
+            crossings++;
+          }
+        }
       }
     }
   }
-
 }
+
+void UniformGrid::countIntersectionsx(const Point& pt, int& crossings)
+{
+
+  //Assuming that the caller intends to check the intersection between pt and infinity:
+  Vector infinity = Vector(pt.x()+1.e10, pt.y()+10000., pt.z()+100.);
+  IntVector test_pt_id = cellID(pt);
+  IntVector start = d_grid.getLowIndex();
+  IntVector stop = d_grid.getHighIndex();
+
+  map<double,Tri> cross_map;
+
+  for (int i = start.x(); i < stop.x(); i++) {
+
+    IntVector curr(i,test_pt_id.y(),test_pt_id.z());
+    list<Tri> tris = d_grid[curr];
+
+      for ( list<Tri>::iterator itr = tris.begin(); itr != tris.end(); ++itr ) {
+        Point hit;
+        if ((itr->plane()).Intersect(pt,infinity,hit)) {
+        Vector int_ray = hit.asVector() - pt.asVector();
+        double cos_angle = Dot(infinity,int_ray)/
+                           (infinity.length()*int_ray.length());
+
+        if (cos_angle < 0.)
+          continue;
+
+        if (itr->inside(hit)) {
+          double distance = int_ray.length();
+          map<double,Tri>::const_iterator duplicate = cross_map.find(distance);
+  
+          if (duplicate == cross_map.end()) {
+            cross_map[distance] = *itr;
+            crossings++;
+          }
+        }
+      }
+    }
+  }
+}
+
+void UniformGrid::countIntersectionsy(const Point& pt, int& crossings)
+{
+
+  //Assuming that the caller intends to check the intersection between pt and infinity:
+  Vector infinity = Vector(pt.x()+100., pt.y()+1.e10, pt.z()+10000.);
+  IntVector test_pt_id = cellID(pt);
+  IntVector start = d_grid.getLowIndex();
+  IntVector stop = d_grid.getHighIndex();
+
+  map<double,Tri> cross_map;
+
+  for (int i = start.y(); i < stop.y(); i++) {
+
+    IntVector curr(test_pt_id.x(),i,test_pt_id.z());
+    list<Tri> tris = d_grid[curr];
+
+      for ( list<Tri>::iterator itr = tris.begin(); itr != tris.end(); ++itr ) {
+        Point hit;
+        if ((itr->plane()).Intersect(pt,infinity,hit)) {
+        Vector int_ray = hit.asVector() - pt.asVector();
+        double cos_angle = Dot(infinity,int_ray)/
+                           (infinity.length()*int_ray.length());
+
+        if (cos_angle < 0.)
+          continue;
+
+        if (itr->inside(hit)) {
+          double distance = int_ray.length();
+          map<double,Tri>::const_iterator duplicate = cross_map.find(distance);
+  
+          if (duplicate == cross_map.end()) {
+            cross_map[distance] = *itr;
+            crossings++;
+          }
+        }
+      }
+    }
+  }
+}
+
+void UniformGrid::countIntersectionsz(const Point& pt, int& crossings)
+{
+
+  //Assuming that the caller intends to check the intersection between pt and infinity:
+  Vector infinity = Vector(pt.x()+10000., pt.y()+100., pt.z()+1.e10);
+  IntVector test_pt_id = cellID(pt);
+  IntVector start = d_grid.getLowIndex();
+  IntVector stop = d_grid.getHighIndex();
+
+  map<double,Tri> cross_map;
+
+  for (int i = start.z(); i < stop.z(); i++) {
+
+    IntVector curr(test_pt_id.x(),test_pt_id.y(),i);
+    list<Tri> tris = d_grid[curr];
+
+      for ( list<Tri>::iterator itr = tris.begin(); itr != tris.end(); ++itr ) {
+        Point hit;
+        if ((itr->plane()).Intersect(pt,infinity,hit)) {
+        Vector int_ray = hit.asVector() - pt.asVector();
+        double cos_angle = Dot(infinity,int_ray)/
+                           (infinity.length()*int_ray.length());
+
+        if (cos_angle < 0.)
+          continue;
+
+        if (itr->inside(hit)) {
+          double distance = int_ray.length();
+          map<double,Tri>::const_iterator duplicate = cross_map.find(distance);
+  
+          if (duplicate == cross_map.end()) {
+            cross_map[distance] = *itr;
+            crossings++;
+          }
+        }
+      }
+    }
+  }
+}
+
 void UniformGrid::countIntersections( const Point& pt, const Point& pt_away,
                                       int& crossings, double& min_distance )
 {
