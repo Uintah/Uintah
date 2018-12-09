@@ -45,15 +45,17 @@ TabRxnRate::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
   std::string taskname = "TabRxnRate::eval";
   Task* tsk = scinew Task(taskname, this, &TabRxnRate::computeSource, timeSubStep);
 
+  Task::WhichDW which_dw;
   if (timeSubStep == 0) {
-
     tsk->computes(_src_label);
+    which_dw = Task::OldDW;
   } else {
     tsk->modifies(_src_label);
+    which_dw = Task::NewDW;
   }
 
   const VarLabel* the_label = VarLabel::find(_rxn_rate);
-  tsk->requires( Task::OldDW, the_label, Ghost::None, 0 );
+  tsk->requires( which_dw, the_label, Ghost::None, 0 );
 
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
@@ -78,16 +80,19 @@ TabRxnRate::computeSource( const ProcessorGroup* pc,
     int matlIndex = _materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> rateSrc;
+    DataWarehouse* which_dw;
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
       new_dw->getModifiable( rateSrc, _src_label, matlIndex, patch );
       rateSrc.initialize(0.0);
+      which_dw = new_dw;
     } else {
       new_dw->allocateAndPut( rateSrc, _src_label, matlIndex, patch );
+      which_dw = old_dw;
     }
 
     constCCVariable<double> rxn_rate;
     const VarLabel* the_label = VarLabel::find(_rxn_rate);
-    old_dw->get( rxn_rate, the_label, matlIndex, patch, Ghost::None, 0 );
+    which_dw->get( rxn_rate, the_label, matlIndex, patch, Ghost::None, 0 );
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;

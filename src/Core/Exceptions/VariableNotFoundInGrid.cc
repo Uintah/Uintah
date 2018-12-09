@@ -34,8 +34,8 @@ using namespace Uintah;
 using std::cout;
 
 VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
-					       long particleID, int matlIndex,
-					       const std::string& extramsg,
+                                               long particleID, int matlIndex,
+                                               const std::string& extramsg,
                                                const char* file, int line)
 {
   std::ostringstream s;
@@ -58,9 +58,9 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
 }
 
 VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
-					       IntVector loc,
-					       int matlIndex,
-					       const std::string& extramsg,
+                                               IntVector loc,
+                                               int matlIndex,
+                                               const std::string& extramsg,
                                                const char* file, int line)
 {
   std::ostringstream s;
@@ -83,7 +83,7 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
 }
 
 VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
-					       const std::string& extramsg,
+                                               const std::string& extramsg,
                                                const char* file, int line)
 {
   std::ostringstream s;

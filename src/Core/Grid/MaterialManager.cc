@@ -145,7 +145,7 @@ MaterialManager::getMaterialByName( const std::string& name ) const
 //
 Material*
 MaterialManager::parseAndLookupMaterial( ProblemSpecP& params,
-					 const std::string& name ) const
+                                         const std::string& name ) const
 {
   // for single material problems return matl 0
   Material* result = getMaterial(0);
@@ -176,7 +176,7 @@ MaterialManager::registerMaterial( std::string name, Material* matl )
 
 void
 MaterialManager::registerMaterial( std::string name, Material* matl,
-				      unsigned int index )
+                                      unsigned int index )
 {
   m_app_matls[name].push_back(matl);
   registerMaterial(matl, index);

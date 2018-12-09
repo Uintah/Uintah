@@ -32,7 +32,7 @@ bool test(double b, double c, double d, double x);
 double newtons_method(double b, double c, double d, double x);
 
 int cubic_poly_roots(double b, double c, double d,
-			double& x0, double& x1, double& x2)
+                        double& x0, double& x1, double& x2)
 {
   /* convert x^3 + b*x^2 + c*x + d = 0 to y^3 + m*x = n */
   

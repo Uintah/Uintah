@@ -43,9 +43,9 @@ SinCosTable::SinCosTable(int n, double min, double max, double scale)
     cosdata=new double[n];
     double d=max-min;
     for(int i=0;i<n;i++){
-	double th=d*double(i)/double(n-1)+min;
-	sindata[i]=Sin(th)*scale;
-	cosdata[i]=Cos(th)*scale;
+        double th=d*double(i)/double(n-1)+min;
+        sindata[i]=Sin(th)*scale;
+        cosdata[i]=Cos(th)*scale;
     }
 }
 

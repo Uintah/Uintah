@@ -49,10 +49,9 @@ while doit == True:
     counter = 0
     
     print('State space: ')
-    for name in myTable.dep_names:
-    
-        print(name, ' = ', myTable.interpolate(x0,counter))
-        counter += 1
+    state_space = myTable.interpolate(x0)
+    for i, name in enumerate(myTable.dep_names):
+      print(name, ' = ', state_space[i])
     
     print('')
     goon = raw_input('Enter 0 to stop or any number to continue: ')

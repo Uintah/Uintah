@@ -23,8 +23,9 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
-#include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
+#include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
+#include <CCA/Components/OnTheFlyAnalysis/meanTurbFluxes.h>
 #include <CCA/Components/OnTheFlyAnalysis/momentumAnalysis.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeAverage.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
@@ -98,10 +99,13 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
         modules.push_back(scinew lineExtract(          myworld, materialManager, module_ps ) );
       }
       else if ( module == "planeAverage" ) {
-        modules.push_back( scinew planeAverage(        myworld, materialManager, module_ps ) );
+        modules.push_back( scinew planeAverage(        myworld, materialManager, module_ps, true ) );
       }
       else if ( module == "planeExtract" ) {
         modules.push_back( scinew planeExtract(        myworld, materialManager, module_ps ) );
+      }
+      else if ( module == "meanTurbFluxes" ) {
+        modules.push_back( scinew meanTurbFluxes(      myworld, materialManager, module_ps ) );
       }
       else if ( module == "momentumAnalysis" ) {
         modules.push_back( scinew momentumAnalysis(    myworld, materialManager, module_ps ) );

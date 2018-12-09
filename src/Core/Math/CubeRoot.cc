@@ -35,9 +35,9 @@
  *
  *  Jan 26, 1990    Version for Graphics Gems
  *  Oct 11, 1990    Fixed sign problem for negative q's in SolveQuartic
- *  	    	    (reported by Mark Podlipec),
- *  	    	    Old-style function definitions,
- *  	    	    IsZero() as a macro
+ *                  (reported by Mark Podlipec),
+ *                  Old-style function definitions,
+ *                  IsZero() as a macro
  *  Nov 23, 1990    Some systems do not declare acos() and cbrt() in
  *                  <cmath>, though the functions exist in the library.
  *                  If large coefficients are used, EQN_EPS should be
@@ -54,7 +54,7 @@
 /* epsilon surrounding for near zero values */
 
 #define     EQN_EPS     1e-12
-#define	    IsZero(x)	((x) > -EQN_EPS && (x) < EQN_EPS)
+#define     IsZero(x)   ((x) > -EQN_EPS && (x) < EQN_EPS)
 
 int SolveLinear(double *c, double *s) {
     if (c[ 1 ] < 0.0000001 && c[ 1 ] > -0.0000001)
@@ -100,7 +100,7 @@ int SolveCubic(double c[4], double s[3])
     C = c[ 0 ] / c[ 3 ];
 
     /*  substitute x = y - A/3 to eliminate quadric term:
-	x^3 +px + q = 0 */
+        x^3 +px + q = 0 */
 
     sq_A = A * A;
     p = 1.0/3 * (- 1.0/3 * sq_A + B);
@@ -113,37 +113,37 @@ int SolveCubic(double c[4], double s[3])
 
     if (IsZero(D))
     {
-	if (IsZero(q)) /* one triple solution */
-	{
-	    s[ 0 ] = 0;
-	    num = 1;
-	}
-	else /* one single and one double solution */
-	{
-	    double u = cbrt(-q);
-	    s[ 0 ] = 2 * u;
-	    s[ 1 ] = - u;
-	    num = 2;
-	}
+        if (IsZero(q)) /* one triple solution */
+        {
+            s[ 0 ] = 0;
+            num = 1;
+        }
+        else /* one single and one double solution */
+        {
+            double u = cbrt(-q);
+            s[ 0 ] = 2 * u;
+            s[ 1 ] = - u;
+            num = 2;
+        }
     }
     else if (D < 0) /* Casus irreducibilis: three real solutions */
     {
-	double phi = 1.0/3 * acos(-q / sqrt(-cb_p));
-	double t = 2 * sqrt(-p);
+        double phi = 1.0/3 * acos(-q / sqrt(-cb_p));
+        double t = 2 * sqrt(-p);
 
-	s[ 0 ] =   t * cos(phi);
-	s[ 1 ] = - t * cos(phi + M_PI / 3);
-	s[ 2 ] = - t * cos(phi - M_PI / 3);
-	num = 3;
+        s[ 0 ] =   t * cos(phi);
+        s[ 1 ] = - t * cos(phi + M_PI / 3);
+        s[ 2 ] = - t * cos(phi - M_PI / 3);
+        num = 3;
     }
     else /* one real solution */
     {
-	double sqrt_D = sqrt(D);
-	double u = cbrt(sqrt_D - q);
-	double v = - cbrt(sqrt_D + q);
+        double sqrt_D = sqrt(D);
+        double u = cbrt(sqrt_D - q);
+        double v = - cbrt(sqrt_D + q);
 
-	s[ 0 ] = u + v;
-	num = 1;
+        s[ 0 ] = u + v;
+        num = 1;
     }
 
     /* resubstitute */
@@ -151,7 +151,7 @@ int SolveCubic(double c[4], double s[3])
     sub = 1.0/3 * A;
 
     for (i = 0; i < num; ++i)
-	s[ i ] -= sub;
+        s[ i ] -= sub;
 
     return num;
 }

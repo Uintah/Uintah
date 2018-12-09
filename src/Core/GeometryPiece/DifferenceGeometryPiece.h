@@ -30,29 +30,29 @@
 namespace Uintah {
 
 /**************************************
-	
+        
 CLASS
    DifferenceGeometryPiece
-	
+        
    Creates the difference between two geometry Pieces from the xml input 
    file description. 
 
 
 GENERAL INFORMATION
-	
+        
    DifferenceGeometryPiece.h
-	
+        
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
-	
+        
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
+        
  
-	
+        
 KEYWORDS
    DifferenceGeometryPiece BoundingBox inside
-	
+        
 DESCRIPTION
    Creates the difference between two  geometry Pieces from the xml input 
    file description.
@@ -62,62 +62,62 @@ DESCRIPTION
    The input form looks like this:
        <difference>
          <box>
-	   <min>[0.,0.,0.]</min>
-	   <max>[1.,1.,1.]</max>
-	 </box>
-	 <sphere>
-	   <origin>[.5,.5,.5]</origin>
-	   <radius>1.5</radius>
-	 </sphere>
+           <min>[0.,0.,0.]</min>
+           <max>[1.,1.,1.]</max>
+         </box>
+         <sphere>
+           <origin>[.5,.5,.5]</origin>
+           <radius>1.5</radius>
+         </sphere>
        </difference>
 
-	
+        
 WARNING
-	
+        
 ****************************************/
 
       class DifferenceGeometryPiece : public GeometryPiece {
-	 
+         
       public:
-	 //////////
-	 //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
-	 // input specification and builds the union of geometry Pieces.
-	 DifferenceGeometryPiece(ProblemSpecP &);
-	 
-	 //////////
-	 // Construtor that takes two geometry pieces
-	 DifferenceGeometryPiece(GeometryPieceP p1, GeometryPieceP p2);
+         //////////
+         //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
+         // input specification and builds the union of geometry Pieces.
+         DifferenceGeometryPiece(ProblemSpecP &);
+         
+         //////////
+         // Construtor that takes two geometry pieces
+         DifferenceGeometryPiece(GeometryPieceP p1, GeometryPieceP p2);
 
-	 /// Copy constructor
-	 DifferenceGeometryPiece(const DifferenceGeometryPiece& rhs);
+         /// Copy constructor
+         DifferenceGeometryPiece(const DifferenceGeometryPiece& rhs);
 
-	 /// Assignment operator
-	 DifferenceGeometryPiece& operator=(const DifferenceGeometryPiece&);
+         /// Assignment operator
+         DifferenceGeometryPiece& operator=(const DifferenceGeometryPiece&);
 
-	 //////////
-	 // Destructor
-	 virtual ~DifferenceGeometryPiece();
+         //////////
+         // Destructor
+         virtual ~DifferenceGeometryPiece();
 
          static const std::string TYPE_NAME;
          virtual std::string getType() const { return TYPE_NAME; }
 
-	 /// Make a clone
+         /// Make a clone
          virtual GeometryPieceP clone() const;
-	 
-	 //////////
-	 // Determines whether a point is inside the union Piece.
-	 virtual bool inside(const Point &p) const;
-	 
-	 //////////
-	 // Returns the bounding box surrounding the union Piece.
-	 virtual Box getBoundingBox() const;
-	 
+         
+         //////////
+         // Determines whether a point is inside the union Piece.
+         virtual bool inside(const Point &p) const;
+         
+         //////////
+         // Returns the bounding box surrounding the union Piece.
+         virtual Box getBoundingBox() const;
+         
       private:
 
          virtual void outputHelper(ProblemSpecP & ps) const;
-	 
-	 GeometryPieceP left_;
-	 GeometryPieceP right_;
+         
+         GeometryPieceP left_;
+         GeometryPieceP right_;
       };
 } // End namespace Uintah
       

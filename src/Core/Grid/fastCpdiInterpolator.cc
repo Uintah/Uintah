@@ -23,6 +23,7 @@
  */
 
 #include <Core/Grid/fastCpdiInterpolator.h>
+#include <Core/Grid/cpdiInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
@@ -197,11 +198,12 @@ int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
 
   // Variables to hold minimum and maximum indicies
   int minX = 100000000, minY = 100000000, minZ = 100000000;
+  int maxX = -100000000, maxY = -100000000, maxZ = -100000000;
   
   // now  we will loop over each of the corners and find the current location: 
   for(i=0;i<8;i++) {
     // first we need to find the position vector of the ith corner of
-    //  the particle with respect to the particle center:
+    // the particle with respect to the particle center:
     current_corner_pos = Vector(cellpos) + relative_node_location[i];
     ccx[i] = (current_corner_pos).x();
     ccy[i] = (current_corner_pos).y();
@@ -213,80 +215,88 @@ int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
     if(ix[i] < minX){ minX = ix[i];}
     if(iy[i] < minY){ minY = iy[i];}
     if(iz[i] < minZ){ minZ = iz[i];}
+    if(ix[i] > maxX){ maxX = ix[i];}
+    if(iy[i] > maxY){ maxY = iy[i];}
+    if(iz[i] > maxZ){ maxZ = iz[i];}
   }
   
-  // Initialize Values
-  IntVector niVec = IntVector(minX,minY,minZ);
-  for(int i = 0; i < 64; i++) {
-    S[i]         = 0.0;
-    ni[i]        = niVec;  // this must be set after minimum indicies are found
-                           //  or index out of bound error will occur
-  }
-  
-  // Loop over nodes
-  for(i=0;i<8;i++){
-    fx = (ccx[i]-ix[i]);
-    fy = (ccy[i]-iy[i]);
-    fz = (ccz[i]-iz[i]);
-    fx1 = 1-fx;
-    fy1 = 1-fy;
-    fz1 = 1-fz;
+  // If the particle spans more than two cells, the hash table below fails
+  // so revert to the regular cpdiInterpolator
+  if(maxX-minX>1 || maxY-minY>1 || maxZ-minZ>1){
+    ParticleInterpolator* interp;
+    interp = scinew cpdiInterpolator(d_patch);
+    int NN = interp->findCellAndWeights(pos, ni, S, size, defgrad);
+    delete interp;
+    return NN;
+  } else {
+    // Initialize Values
+    IntVector niVec = IntVector(minX,minY,minZ);
+    for(int i = 0; i < 64; i++) {
+      S[i]      = 0.0;
+      ni[i]     = niVec;  // this must be set after minimum indicies are found
+                          //  or index out of bound error will occur
+    }
 
-    // grid offset variables so we only have to iterate over 
-    // two closest nodes each time we look at a corner 
-    xM = (int)(ccx[i] - minX);
-    yM = (int)(ccy[i] - minY);
-    zM = (int)(ccz[i] - minZ);
+    // Loop over nodes
+    for(i=0;i<8;i++){
+      fx = (ccx[i]-ix[i]);
+      fy = (ccy[i]-iy[i]);
+      fz = (ccz[i]-iz[i]);
+      fx1 = 1-fx;
+      fy1 = 1-fy;
+      fz1 = 1-fz;
 
-    // Uses a array index system like:
-    //       24---25--26
-    //      /    /   / |
-    //     15--16--17 23
-    //    /   /   / | /|
-    //   6---7---8  14 20
-    //   |   |   | / |/
-    //   3---4---5  11
-    //   |   |   | /
-    //   0---1---2
-    // 
-    for(int jx = 0; jx < 2; jx++) {
-      double phiX = fx1;
-      if(jx == 1)
-        phiX = fx;
-      
-      int curX = ix[i]+jx;
+      // grid offset variables so we only have to iterate over 
+      // two closest nodes each time we look at a corner 
+      xM = (int)(ccx[i] - minX);
+      yM = (int)(ccy[i] - minY);
+      zM = (int)(ccz[i] - minZ);
+
+      // Uses a array index system like:
+      //       24---25--26
+      //      /    /   / |
+      //     15--16--17 23
+      //    /   /   / | /|
+      //   6---7---8  14 20
+      //   |   |   | / |/
+      //   3---4---5  11
+      //   |   |   | /
+      //   0---1---2
+      // 
+      for(int jx = 0; jx < 2; jx++) {
+        double phiX = fx1;
+        if(jx == 1)
+          phiX = fx;
+        
+        int curX = ix[i]+jx;
       int xMjx = xM+jx;
       
-      for(int jy = 0; jy < 2; jy++) {
-        double phiY = fy1;
-        if(jy == 1)
-          phiY = fy;
-        
-        int curY = iy[i]+jy;
-        int yMjy = 3*(yM+jy);
+        for(int jy = 0; jy < 2; jy++) {
+          double phiY = fy1;
+          if(jy == 1)
+            phiY = fy;
 
-        for(int jz = 0; jz < 2; jz++) {
-          double phiZ = fz1;
-          if(jz == 1)
+          int curY = iy[i]+jy;
+          int yMjy = 3*(yM+jy);
+  
+          for(int jz = 0; jz < 2; jz++) {
+            double phiZ = fz1;
+            if(jz == 1)
             phiZ = fz;        
-
-          // Create hash to map to unique value between [0,26]
-          hash = xMjx + yMjy + 9*((zM)+jz);
-          hashMax=max(hash, hashMax);
-//          if( hash < 0 || hash > 26 ) {
-//             cerr << "hash = " << hash << endl;
-//             // send an exit to the program
-//             // exit(1);
-//          }
-          phi  = phiX * phiY * phiZ;
+  
+            // Create hash to map to unique value between [0,26]
+            hash = xMjx + yMjy + 9*((zM)+jz);
+            hashMax=max(hash, hashMax);
+            phi  = phiX * phiY * phiZ;
           
-          ni[hash]        = IntVector(curX,curY,iz[i]+jz);
-          S[hash]        += one_over_8  * phi;
-        } // z for
-      } // y for
-    } // x for
-  } // node for
-  return hashMax+1;
+            ni[hash]        = IntVector(curX,curY,iz[i]+jz);
+            S[hash]        += one_over_8  * phi;
+          } // z for
+        } // y for
+      } // x for
+    } // node for
+    return hashMax+1;
+  }
 }
  
 int fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
@@ -397,68 +407,18 @@ int fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   int ix[8],iy[8],iz[8];
   int hash;
   int hashMax=0;
-  
-  Vector current_corner_pos;
-
-  // Shape function contribution variables
-  double fx;
-  double fy;
-  double fz;
-  double fx1;
-  double fy1;
-  double fz1;
   double ccx[8],ccy[8],ccz[8];
-
-  Vector r1=Vector(dsize(0,0),dsize(1,0),dsize(2,0));
-  Vector r2=Vector(dsize(0,1),dsize(1,1),dsize(2,1));
-  Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
-
-  double volume = dsize.Determinant();
-
-  double one_over_4V = 1.0/(4.0*volume);
-  vector<Vector> alpha(8,zero);
-  double phi;
+  Vector current_corner_pos;
   
-  // construct the vectors necessary for the gradient calculation:
-  alpha[0][0]   =  one_over_4V* (-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
-  alpha[0][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
-  alpha[0][2]   =  one_over_4V* (-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-
-  alpha[1][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
-  alpha[1][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
-  alpha[1][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-
-  alpha[2][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
-  alpha[2][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
-  alpha[2][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-
-  alpha[3][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
-  alpha[3][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
-  alpha[3][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-
-  alpha[4][0]   = one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
-  alpha[4][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
-  alpha[4][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-
-  alpha[5][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
-  alpha[5][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
-  alpha[5][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-
-  alpha[6][0]   = one_over_4V* (r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
-  alpha[6][1]   = one_over_4V* (-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
-  alpha[6][2]   = one_over_4V* (r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-
-  alpha[7][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
-  alpha[7][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
-  alpha[7][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-
-
   // Variables to hold minimum and maximum indicies
   int minX = 100000000, minY = 100000000, minZ = 100000000;
+  int maxX = -100000000, maxY = -100000000, maxZ = -100000000;
 
- // now  we will loop over each of these "nodes" or corners and use the deformation gradient to find the current location: 
+  // now  we will loop over each of these "nodes" or corners and 
+  // use the deformation gradient to find the current location: 
   for(i=0;i<8;i++){
-    //    first we need to find the position vector of the ith corner of the particle with respect to the particle center:
+    // first we need to find the position vector of the ith 
+    // corner of the particle with respect to the particle center:
     current_corner_pos = Vector(cellpos) + relative_node_location[i];
     ccx[i] = (current_corner_pos).x();
     ccy[i] = (current_corner_pos).y();
@@ -467,85 +427,144 @@ int fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     iy[i] = Floor(ccy[i]);
     iz[i] = Floor(ccz[i]);
 
-    if(ix[i] < minX){minX = ix[i];}
-    if(iy[i] < minY){minY = iy[i];}
-    if(iz[i] < minZ){minZ = iz[i];}
+    if(ix[i] < minX){ minX = ix[i];}
+    if(iy[i] < minY){ minY = iy[i];}
+    if(iz[i] < minZ){ minZ = iz[i];}
+    if(ix[i] > maxX){ maxX = ix[i];}
+    if(iy[i] > maxY){ maxY = iy[i];}
+    if(iz[i] > maxZ){ maxZ = iz[i];}
   }
-    
-  // Initialize Values
-  IntVector niVec = IntVector(minX,minY,minZ);
-  for(int i = 0; i < 64; i++) {
-    d_S[i]       = zero;   // this must be set after minimum indicies are found
-    ni[i]        = niVec;  //  or index out of bound error will occur
-  }
+
+  // If the particle spans more than two cells, the hash table below fails
+  // so revert to the regular cpdiInterpolator
+  if(maxX-minX>1 || maxY-minY>1 || maxZ-minZ>1){
+    ParticleInterpolator* interp;
+    interp = scinew cpdiInterpolator(d_patch);
+    int NN = interp->findCellAndShapeDerivatives(pos, ni, d_S, size, defgrad);
+    delete interp;
+    return NN;
+  } else {
+    // Shape function contribution variables
+    double fx;
+    double fy;
+    double fz;
+    double fx1;
+    double fy1;
+    double fz1;
+
+    Vector r1=Vector(dsize(0,0),dsize(1,0),dsize(2,0));
+    Vector r2=Vector(dsize(0,1),dsize(1,1),dsize(2,1));
+    Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+
+    double volume = dsize.Determinant();
+
+    double one_over_4V = 1.0/(4.0*volume);
+    vector<Vector> alpha(8,zero);
+    double phi;
   
-  // Loop over nodes
-  for(i=0;i<8;i++){
-    fx = (ccx[i]-ix[i]);
-    fy = (ccy[i]-iy[i]);
-    fz = (ccz[i]-iz[i]);
-    fx1 = 1-fx;
-    fy1 = 1-fy;
-    fz1 = 1-fz;
-    
-    // grid offset variables so we only have to iterate over 
-    // two closes nodes each time we look at a corner 
-    xM = (int)(ccx[i] - minX);
-    yM = (int)(ccy[i] - minY);
-    zM = (int)(ccz[i] - minZ);
-   
-    // Uses a array index system like:
-    //       24---25--26
-    //      /    /   / |
-    //     15--16--17 23
-    //    /   /   / | /|
-    //   6---7---8  14 20
-    //   |   |   | / |/
-    //   3---4---5  11
-    //   |   |   | /
-    //   0---1---2
-    //
+    // construct the vectors necessary for the gradient calculation:
+    alpha[0][0]   =  one_over_4V* (-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
+    alpha[0][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
+    alpha[0][2]   =  one_over_4V* (-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
+
+    alpha[1][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
+    alpha[1][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
+    alpha[1][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
+
+    alpha[2][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
+    alpha[2][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
+    alpha[2][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
+
+    alpha[3][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
+    alpha[3][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
+    alpha[3][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
+
+    alpha[4][0]   = one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
+    alpha[4][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
+    alpha[4][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
+
+    alpha[5][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
+    alpha[5][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
+    alpha[5][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
+
+    alpha[6][0]   = one_over_4V* (r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
+    alpha[6][1]   = one_over_4V* (-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
+    alpha[6][2]   = one_over_4V* (r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
+
+    alpha[7][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
+    alpha[7][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
+    alpha[7][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
+
+    // Initialize Values
+    IntVector niVec = IntVector(minX,minY,minZ);
+    for(int i = 0; i < 64; i++) {
+      d_S[i]   = zero;   // this must be set after minimum indicies are found
+      ni[i]    = niVec;  //  or index out of bound error will occur
+    }
+
+    // Loop over nodes
+    for(i=0;i<8;i++){
+      fx = (ccx[i]-ix[i]);
+      fy = (ccy[i]-iy[i]);
+      fz = (ccz[i]-iz[i]);
+      fx1 = 1-fx;
+      fy1 = 1-fy;
+      fz1 = 1-fz;
+
+      // grid offset variables so we only have to iterate over 
+      // two closes nodes each time we look at a corner 
+      xM = (int)(ccx[i] - minX);
+      yM = (int)(ccy[i] - minY);
+      zM = (int)(ccz[i] - minZ);
+
+      // Uses a array index system like:
+      //       24---25--26
+      //      /    /   / |
+      //     15--16--17 23
+      //    /   /   / | /|
+      //   6---7---8  14 20
+      //   |   |   | / |/
+      //   3---4---5  11
+      //   |   |   | /
+      //   0---1---2
+      //
  
-    for(int jx = 0; jx < 2; jx++) {
-      double phiX = fx1;
-      if(jx == 1)
-        phiX = fx;
-      
-      int curX = ix[i]+jx;
-      int xMjx = xM+jx;
-      
-      for(int jy = 0; jy < 2; jy++) {
-        double phiY = fy1;
-        if(jy == 1)
-          phiY = fy;
-        
-        int curY = iy[i]+jy;
-        int yMjy = 3*(yM+jy);
-        
-        for(int jz = 0; jz < 2; jz++) {
-          double phiZ = fz1;
-          if(jz == 1)
-            phiZ = fz;        
-          
-          // Create hash to map to unique value between [0,26]
-          hash = xMjx + yMjy + 9*((zM)+jz);
-          hashMax=max(hash, hashMax);
-//          if( hash < 0 || hash > 26 ) {
-//             cerr << "hash = " << hash << endl;
-//             // send an exit to the program
-//             // exit(1);
-//          }
-          phi = phiX * phiY * phiZ;
-          
-          ni[hash]        = IntVector(curX,curY,iz[i]+jz);
-          d_S[hash][0]    += alpha[i][0]*phi;
-          d_S[hash][1]    += alpha[i][1]*phi;
-          d_S[hash][2]    += alpha[i][2]*phi;
-        } // z for
-      } // y for
-    } // x for
-  } // node for
-  return hashMax+1;
+      for(int jx = 0; jx < 2; jx++) {
+        double phiX = fx1;
+        if(jx == 1)
+          phiX = fx;
+
+        int curX = ix[i]+jx;
+        int xMjx = xM+jx;
+
+        for(int jy = 0; jy < 2; jy++) {
+          double phiY = fy1;
+          if(jy == 1)
+            phiY = fy;
+
+          int curY = iy[i]+jy;
+          int yMjy = 3*(yM+jy);
+
+          for(int jz = 0; jz < 2; jz++) {
+            double phiZ = fz1;
+            if(jz == 1)
+              phiZ = fz;        
+
+            // Create hash to map to unique value between [0,26]
+            hash = xMjx + yMjy + 9*((zM)+jz);
+            hashMax=max(hash, hashMax);
+            phi = phiX * phiY * phiZ;
+
+            ni[hash]        = IntVector(curX,curY,iz[i]+jz);
+            d_S[hash][0]    += alpha[i][0]*phi;
+            d_S[hash][1]    += alpha[i][1]*phi;
+            d_S[hash][2]    += alpha[i][2]*phi;
+          } // z for
+        } // y for
+      } // x for
+    } // node for
+    return hashMax+1;
+  }
 }
 
 int
@@ -669,55 +688,14 @@ fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   double fz1;
   double phi;
   double ccx[8],ccy[8],ccz[8];
-  
-  Vector r1=Vector(dsize(0,0),dsize(1,0),dsize(2,0));
-  Vector r2=Vector(dsize(0,1),dsize(1,1),dsize(2,1));
-  Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
-  double volume = dsize.Determinant();
-
-  //deformed volume:
-  double one_over_4V = 1.0/(4.0*volume);
-  double one_over_8 = .125;
-
-  vector<Vector> alpha(8,zero);
-  // now we construct the vectors necessary for the gradient calculation:
-  alpha[0][0]   =  one_over_4V* (-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
-  alpha[0][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
-  alpha[0][2]   =  one_over_4V* (-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-
-  alpha[1][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
-  alpha[1][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
-  alpha[1][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-
-  alpha[2][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
-  alpha[2][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
-  alpha[2][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-
-  alpha[3][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
-  alpha[3][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
-  alpha[3][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-
-  alpha[4][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
-  alpha[4][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
-  alpha[4][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-
-  alpha[5][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
-  alpha[5][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
-  alpha[5][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-
-  alpha[6][0]   =  one_over_4V* (r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
-  alpha[6][1]   =  one_over_4V* (-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
-  alpha[6][2]   =  one_over_4V* (r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-
-  alpha[7][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
-  alpha[7][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
-  alpha[7][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
 
   // Variables to hold minimum and maximum indicies
   int minX = 100000000, minY = 100000000, minZ = 100000000;
+  int maxX = -100000000, maxY = -100000000, maxZ = -100000000;
 
   for(i=0;i<8;i++){
-    //    first we need to find the position vector of the ith corner of the particle with respect to the particle center:
+    // first we need to find the position vector of the ith 
+    // corner of the particle with respect to the particle center:
     current_corner_pos = Vector(cellpos) + relative_node_location[i];
     ccx[i] = (current_corner_pos).x();
     ccy[i] = (current_corner_pos).y();
@@ -727,86 +705,137 @@ fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
     iz[i] = Floor(ccz[i]);
    
     // Find minimum indices of the corners in each direction 
-    if(ix[i] < minX){minX = ix[i];}
-    if(iy[i] < minY){minY = iy[i];}
-    if(iz[i] < minZ){minZ = iz[i];}
+    if(ix[i] < minX){ minX = ix[i];}
+    if(iy[i] < minY){ minY = iy[i];}
+    if(iz[i] < minZ){ minZ = iz[i];}
+    if(ix[i] > maxX){ maxX = ix[i];}
+    if(iy[i] > maxY){ maxY = iy[i];}
+    if(iz[i] > maxZ){ maxZ = iz[i];}
   }
-  
-  // Initialize Values
-  IntVector niVec = IntVector(minX,minY,minZ);
-  for(int i = 0; i < 64; i++) {
-    S[i]         = 0.0;    // this must be set after minimum indicies are found
-    d_S[i]       = zero;   // or index out of bound error will occur
-    ni[i]        = niVec;
-  }
-  
-  // Loop over nodes
-  for(i=0;i<8;i++){
-    fx = (ccx[i]-ix[i]);
-    fy = (ccy[i]-iy[i]);
-    fz = (ccz[i]-iz[i]);
-    fx1 = 1-fx;
-    fy1 = 1-fy;
-    fz1 = 1-fz;
 
-    // grid offset variables so we only have to iterate over 
-    // two closes nodes each time we look at a corner 
-    xM = (int)(ccx[i] - minX);
-    yM = (int)(ccy[i] - minY);
-    zM = (int)(ccz[i] - minZ);
+  if(maxX-minX>1 || maxY-minY>1 || maxZ-minZ>1){
+    ParticleInterpolator* interp;
+    interp = scinew cpdiInterpolator(d_patch);
+    int NN = interp->findCellAndWeightsAndShapeDerivatives(pos, ni, S, d_S, 
+                                                           size, defgrad);
+    delete interp;
+    return NN;
+  } else {
+  
+    Vector r1=Vector(dsize(0,0),dsize(1,0),dsize(2,0));
+    Vector r2=Vector(dsize(0,1),dsize(1,1),dsize(2,1));
+    Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+    double volume = dsize.Determinant();
+
+    //deformed volume:
+    double one_over_4V = 1.0/(4.0*volume);
+    double one_over_8 = .125;
+
+    vector<Vector> alpha(8,zero);
+    // now we construct the vectors necessary for the gradient calculation:
+    alpha[0][0]   =  one_over_4V* (-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
+    alpha[0][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
+    alpha[0][2]   =  one_over_4V* (-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
+  
+    alpha[1][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
+    alpha[1][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
+    alpha[1][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
+
+    alpha[2][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
+    alpha[2][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
+    alpha[2][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
+
+    alpha[3][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
+    alpha[3][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
+    alpha[3][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
+
+    alpha[4][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
+    alpha[4][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
+    alpha[4][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
+
+    alpha[5][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
+    alpha[5][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
+    alpha[5][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
+
+    alpha[6][0]   =  one_over_4V* (r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
+    alpha[6][1]   =  one_over_4V* (-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
+    alpha[6][2]   =  one_over_4V* (r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
+
+    alpha[7][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
+    alpha[7][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
+    alpha[7][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
+
+    // Initialize Values
+    IntVector niVec = IntVector(minX,minY,minZ);
+    for(int i = 0; i < 64; i++) {
+      S[i]     = 0.0;    // this must be set after minimum indicies are found
+      d_S[i]   = zero;   // or index out of bound error will occur
+      ni[i]    = niVec;
+    }
+  
+    // Loop over nodes
+    for(i=0;i<8;i++){
+      fx = (ccx[i]-ix[i]);
+      fy = (ccy[i]-iy[i]);
+      fz = (ccz[i]-iz[i]);
+      fx1 = 1-fx;
+      fy1 = 1-fy;
+      fz1 = 1-fz;
+
+      // grid offset variables so we only have to iterate over 
+      // two closes nodes each time we look at a corner 
+      xM = (int)(ccx[i] - minX);
+      yM = (int)(ccy[i] - minY);
+      zM = (int)(ccz[i] - minZ);
     
-    // Uses a array index system like:
-    //       24---25--26
-    //      /    /   / |
-    //     15--16--17 23
-    //    /   /   / | /|
-    //   6---7---8  14 20
-    //   |   |   | / |/
-    //   3---4---5  11
-    //   |   |   | /
-    //   0---1---2
-    // 
-    for(int jx = 0; jx < 2; jx++) {
-      double phiX = fx1;
-      if(jx == 1)
-        phiX = fx;
-      
-      int curX = ix[i]+jx;
-      int xMjx = xM+jx;
-      
-      for(int jy = 0; jy < 2; jy++) {
-        double phiY = fy1;
-        if(jy == 1)
-          phiY = fy;
+      // Uses a array index system like:
+      //       24---25--26
+      //      /    /   / |
+      //     15--16--17 23
+      //    /   /   / | /|
+      //   6---7---8  14 20
+      //   |   |   | / |/
+      //   3---4---5  11
+      //   |   |   | /
+      //   0---1---2
+      // 
+      for(int jx = 0; jx < 2; jx++) {
+        double phiX = fx1;
+        if(jx == 1)
+          phiX = fx;
         
-        int curY = iy[i]+jy;
-        int yMjy = 3*(yM+jy);
+        int curX = ix[i]+jx;
+        int xMjx = xM+jx;
+      
+        for(int jy = 0; jy < 2; jy++) {
+          double phiY = fy1;
+          if(jy == 1)
+            phiY = fy;
         
-        for(int jz = 0; jz < 2; jz++) {
-          double phiZ = fz1;
-          if(jz == 1)
-            phiZ = fz;        
+          int curY = iy[i]+jy;
+          int yMjy = 3*(yM+jy);
+        
+          for(int jz = 0; jz < 2; jz++) {
+            double phiZ = fz1;
+            if(jz == 1)
+              phiZ = fz;        
           
-          // Create hash to map to unique value between [0,26]
-          hash = xMjx + yMjy + 9*((zM)+jz);
-          hashMax=max(hash,hashMax);
-//          if( hash < 0 || hash > 26 ) {
-//             // send an exit to the program
-//              exit(1);
-//          }
+            // Create hash to map to unique value between [0,26]
+            hash = xMjx + yMjy + 9*((zM)+jz);
+            hashMax=max(hash, hashMax);
+            phi  = phiX * phiY * phiZ;          
 
-          phi  = phiX * phiY * phiZ;          
-
-          ni[hash]        = IntVector(curX,curY,iz[i]+jz);
-          S[hash]         += one_over_8 *phi;
-          d_S[hash][0]    += alpha[i][0]*phi;
-          d_S[hash][1]    += alpha[i][1]*phi;
-          d_S[hash][2]    += alpha[i][2]*phi;
-        } // z for
-      } // y for
-    } // x for
-  } // node for
-  return hashMax+1;
+            ni[hash]        = IntVector(curX,curY,iz[i]+jz);
+            S[hash]         += one_over_8 *phi;
+            d_S[hash][0]    += alpha[i][0]*phi;
+            d_S[hash][1]    += alpha[i][1]*phi;
+            d_S[hash][2]    += alpha[i][2]*phi;
+          } // z for
+        } // y for
+      } // x for
+    } // node for
+    return hashMax+1;
+  }
 }
 
 int fastCpdiInterpolator::size()

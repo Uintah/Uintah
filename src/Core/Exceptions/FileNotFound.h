@@ -42,18 +42,18 @@
 #include <string>
 
 namespace Uintah {
-	class FileNotFound : public Exception {
-	public:
-	    FileNotFound(const std::string&, const char* file, int line);
-	    FileNotFound(const FileNotFound&);
-	    virtual ~FileNotFound();
-	    virtual const char* message() const;
-	    virtual const char* type() const;
-	protected:
-	private:
-	    std::string message_;
-	    FileNotFound& operator=(const FileNotFound&);
-	};
+        class FileNotFound : public Exception {
+        public:
+            FileNotFound(const std::string&, const char* file, int line);
+            FileNotFound(const FileNotFound&);
+            virtual ~FileNotFound();
+            virtual const char* message() const;
+            virtual const char* type() const;
+        protected:
+        private:
+            std::string message_;
+            FileNotFound& operator=(const FileNotFound&);
+        };
 } // End namespace Uintah
 
 #endif

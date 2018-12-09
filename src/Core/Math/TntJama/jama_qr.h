@@ -34,7 +34,7 @@ namespace JAMA
 
 /** 
 <p>
-	Classical QR Decompisition:
+        Classical QR Decompisition:
    for an m-by-n matrix A with m >= n, the QR decomposition is an m-by-n
    orthogonal matrix Q and an n-by-n upper triangular matrix R so that
    A = Q*R.
@@ -46,13 +46,13 @@ namespace JAMA
    returns 0 (false).
 
 <p>
-	The Q and R factors can be retrived via the getQ() and getR()
-	methods. Furthermore, a solve() method is provided to find the
-	least squares solution of Ax=b using the QR factors.  
+        The Q and R factors can be retrived via the getQ() and getR()
+        methods. Furthermore, a solve() method is provided to find the
+        least squares solution of Ax=b using the QR factors.  
 
    <p>
-	(Adapted from JAMA, a Java Matrix Library, developed by jointly 
-	by the Mathworks and NIST; see  http://math.nist.gov/javanumerics/jama).
+        (Adapted from JAMA, a Java Matrix Library, developed by jointly 
+        by the Mathworks and NIST; see  http://math.nist.gov/javanumerics/jama).
 */
 
 template <class Real>
@@ -78,19 +78,19 @@ class QR {
 
 
 public:
-	
+        
 /**
-	Create a QR factorization object for A.
+        Create a QR factorization object for A.
 
-	@param A rectangular (m>=n) matrix.
+        @param A rectangular (m>=n) matrix.
 */
-	QR(const TNT::Array2D<Real> &A)		/* constructor */
-	{
+        QR(const TNT::Array2D<Real> &A)         /* constructor */
+        {
       QR_ = A.copy();
       m = A.dim1();
       n = A.dim2();
       Rdiag = TNT::Array1D<Real>(n);
-	  int i=0, j=0, k=0;
+          int i=0, j=0, k=0;
 
       // Main loop.
       for (k = 0; k < n; k++) {
@@ -128,21 +128,21 @@ public:
 
 
 /**
-	Flag to denote the matrix is of full rank.
+        Flag to denote the matrix is of full rank.
 
-	@return 1 if matrix is full rank, 0 otherwise.
+        @return 1 if matrix is full rank, 0 otherwise.
 */
-	int isFullRank() const		
-	{
+        int isFullRank() const          
+        {
       for (int j = 0; j < n; j++) 
-	  {
+          {
          if (Rdiag[j] == 0)
             return 0;
       }
       return 1;
-	}
-	
-	
+        }
+        
+        
 
 
    /** 
@@ -153,15 +153,15 @@ public:
 
    TNT::Array2D<Real> getHouseholder (void)  const
    {
-   	  TNT::Array2D<Real> H(m,n);
+          TNT::Array2D<Real> H(m,n);
 
-	  /* note: H is completely filled in by algorithm, so
-	     initializaiton of H is not necessary.
-	  */
+          /* note: H is completely filled in by algorithm, so
+             initializaiton of H is not necessary.
+          */
       for (int i = 0; i < m; i++) 
-	  {
+          {
          for (int j = 0; j < n; j++) 
-		 {
+                 {
             if (i >= j) {
                H[i][j] = QR_[i][j];
             } else {
@@ -169,7 +169,7 @@ public:
             }
          }
       }
-	  return H;
+          return H;
    }
 
 
@@ -178,8 +178,8 @@ public:
    @return     R
    */
 
-	TNT::Array2D<Real> getR() const
-	{
+        TNT::Array2D<Real> getR() const
+        {
       TNT::Array2D<Real> R(n,n);
       for (int i = 0; i < n; i++) {
          for (int j = 0; j < n; j++) {
@@ -192,23 +192,23 @@ public:
             }
          }
       }
-	  return R;
+          return R;
    }
-	
-	
+        
+        
 
 
 
    /** 
-   	Generate and return the (economy-sized) orthogonal factor
+        Generate and return the (economy-sized) orthogonal factor
    @param     Q the (ecnomy-sized) orthogonal factor (Q*R=A).
    */
 
-	TNT::Array2D<Real> getQ() const
-	{
-	  int i=0, j=0, k=0;
+        TNT::Array2D<Real> getQ() const
+        {
+          int i=0, j=0, k=0;
 
-	  TNT::Array2D<Real> Q(m,n);
+          TNT::Array2D<Real> Q(m,n);
       for (k = n-1; k >= 0; k--) {
          for (i = 0; i < m; i++) {
             Q[i][k] = 0.0;
@@ -227,47 +227,47 @@ public:
             }
          }
       }
-	  return Q;
+          return Q;
    }
 
 
    /** Least squares solution of A*x = b
    @param B     m-length array (vector).
    @return x    n-length array (vector) that minimizes the two norm of Q*R*X-B.
-   		If B is non-conformant, or if QR.isFullRank() is false,
-						the routine returns a null (0-length) vector.
+                If B is non-conformant, or if QR.isFullRank() is false,
+                                                the routine returns a null (0-length) vector.
    */
 
    TNT::Array1D<Real> solve(const TNT::Array1D<Real> &b) const
    {
-   	  if (b.dim1() != m)		/* arrays must be conformant */
-	  	return TNT::Array1D<Real>();
+          if (b.dim1() != m)            /* arrays must be conformant */
+                return TNT::Array1D<Real>();
 
-	  if ( !isFullRank() )		/* matrix is rank deficient */
-	  {
-	  	return TNT::Array1D<Real>();
-	  }
+          if ( !isFullRank() )          /* matrix is rank deficient */
+          {
+                return TNT::Array1D<Real>();
+          }
 
-	  TNT::Array1D<Real> x = b.copy();
-	  int i=0, j=0, k=0;
+          TNT::Array1D<Real> x = b.copy();
+          int i=0, j=0, k=0;
 
       // Compute Y = transpose(Q)*b
       for (k = 0; k < n; k++) 
-	  {
+          {
             Real s = 0.0; 
             for (i = k; i < m; i++) 
-			{
+                        {
                s += QR_[i][k]*x[i];
             }
             s = -s/QR_[k][k];
             for (i = k; i < m; i++) 
-			{
+                        {
                x[i] += s*QR_[i][k];
             }
       }
       // Solve R*X = Y;
       for (k = n-1; k >= 0; k--) 
-	  {
+          {
          x[k] /= Rdiag[k];
          for (i = 0; i < k; i++) {
                x[i] -= x[k]*QR_[i][k];
@@ -275,34 +275,34 @@ public:
       }
 
 
-	  /* return n x nx portion of X */
-	  TNT::Array1D<Real> x_(n);
-	  for (i=0; i<n; i++)
-			x_[i] = x[i];
+          /* return n x nx portion of X */
+          TNT::Array1D<Real> x_(n);
+          for (i=0; i<n; i++)
+                        x_[i] = x[i];
 
-	  return x_;
+          return x_;
    }
 
    /** Least squares solution of A*X = B
    @param B     m x k Array (must conform).
    @return X     n x k Array that minimizes the two norm of Q*R*X-B. If
-   						B is non-conformant, or if QR.isFullRank() is false,
-						the routine returns a null (0x0) array.
+                                                B is non-conformant, or if QR.isFullRank() is false,
+                                                the routine returns a null (0x0) array.
    */
 
    TNT::Array2D<Real> solve(const TNT::Array2D<Real> &B) const
    {
-   	  if (B.dim1() != m)		/* arrays must be conformant */
-	  	return TNT::Array2D<Real>(0,0);
+          if (B.dim1() != m)            /* arrays must be conformant */
+                return TNT::Array2D<Real>(0,0);
 
-	  if ( !isFullRank() )		/* matrix is rank deficient */
-	  {
-	  	return TNT::Array2D<Real>(0,0);
-	  }
+          if ( !isFullRank() )          /* matrix is rank deficient */
+          {
+                return TNT::Array2D<Real>(0,0);
+          }
 
       int nx = B.dim2(); 
-	  TNT::Array2D<Real> X = B.copy();
-	  int i=0, j=0, k=0;
+          TNT::Array2D<Real> X = B.copy();
+          int i=0, j=0, k=0;
 
       // Compute Y = transpose(Q)*B
       for (k = 0; k < n; k++) {
@@ -330,13 +330,13 @@ public:
       }
 
 
-	  /* return n x nx portion of X */
-	  TNT::Array2D<Real> X_(n,nx);
-	  for (i=0; i<n; i++)
-	  	for (j=0; j<nx; j++)
-			X_[i][j] = X[i][j];
+          /* return n x nx portion of X */
+          TNT::Array2D<Real> X_(n,nx);
+          for (i=0; i<n; i++)
+                for (j=0; j<nx; j++)
+                        X_[i][j] = X[i][j];
 
-	  return X_;
+          return X_;
    }
 
 

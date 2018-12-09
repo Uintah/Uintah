@@ -175,13 +175,13 @@ namespace Uintah {
   
     int returnParticleCount(const Patch* patch);
     int createParticles(const Patch* patch,
-			ParticleVariable<Point>&  pos,
-			ParticleVariable<double>& vol,
-			ParticleVariable<double>& pThickTop,
-			ParticleVariable<double>& pThickBot,
-			ParticleVariable<Vector>& pNormal,
-			ParticleVariable<Matrix3>& psize,
-			particleIndex start);
+                        ParticleVariable<Point>&  pos,
+                        ParticleVariable<double>& vol,
+                        ParticleVariable<double>& pThickTop,
+                        ParticleVariable<double>& pThickBot,
+                        ParticleVariable<Vector>& pNormal,
+                        ParticleVariable<Matrix3>& psize,
+                        particleIndex start);
 
     Point  d_origin;
     double d_radius;

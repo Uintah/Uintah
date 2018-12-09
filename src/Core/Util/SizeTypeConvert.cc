@@ -40,7 +40,7 @@ unsigned long convertSizeType(uint64_t* ssize, bool swapBytes, int nByteMode)
     if (swapBytes) swapbytes(size64);
 
     if (sizeof(unsigned long) < 8 && size64 > 0xffffffff)
-	throw InternalError("Overflow on 64 to 32 bit conversion", __FILE__, __LINE__);
+        throw InternalError("Overflow on 64 to 32 bit conversion", __FILE__, __LINE__);
   
     return (unsigned long)size64;
   }

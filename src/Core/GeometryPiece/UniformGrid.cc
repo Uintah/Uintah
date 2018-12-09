@@ -69,7 +69,7 @@ list<Tri> Tri::makeTriList(vector<IntVector>& tris ,vector<Point>& pts)
   vector<IntVector>::const_iterator tri_itr;
   for (tri_itr = tris.begin(); tri_itr != tris.end(); ++tri_itr) {
     Tri triangle = Tri(pts[(*tri_itr).x()],pts[(*tri_itr).y()],
-		       pts[(*tri_itr).z()]);
+                       pts[(*tri_itr).z()]);
     tri_list.push_back(triangle);
   }
   return tri_list;
@@ -115,14 +115,14 @@ bool Tri::inside(Point& pt)
     if (yflag0 != yflag1) {
       int xflag0 = ((*p1)(x) >= tx);
       if (xflag0 == ((*p2)(x) >= tx)) {
-	if (xflag0)
-	  inside = !inside;
+        if (xflag0)
+          inside = !inside;
       } else {
-	double cmp = ((*p2)(x)-((*p2)(y)-ty)*((*p1)(x)-(*p2)(x))/((*p1)(y)-(*p2)(y)));
-	//	if (cmp >= tx)
-	//	if (abs(cmp - tx) >= 0.)
-	if ((cmp - tx) >= -1.e-8)
-	  inside = !inside;
+        double cmp = ((*p2)(x)-((*p2)(y)-ty)*((*p1)(x)-(*p2)(x))/((*p1)(y)-(*p2)(y)));
+        //      if (cmp >= tx)
+        //      if (abs(cmp - tx) >= 0.)
+        if ((cmp - tx) >= -1.e-8)
+          inside = !inside;
       }
     }
     yflag0 = yflag1;
@@ -210,7 +210,7 @@ void UniformGrid::buildUniformGrid(list<Tri>& polygons)
       cout << "v2 = " << v2 << endl;
 
     cout << "Tri = " << tri->vertex(0) << " " << tri->vertex(1) << " "
-	 << tri->vertex(2) << endl;
+         << tri->vertex(2) << endl;
     cout << "v0 " << v0 << " v1 " << v1 << " v2 " << v2 << endl;
 #endif
     IntVector low = Min(v0,v1);
@@ -219,11 +219,11 @@ void UniformGrid::buildUniformGrid(list<Tri>& polygons)
     hi = Max(hi,v2);
     for (int i = low.x(); i <= hi.x(); i++)
       for (int j = low.y(); j <= hi.y(); j++)
-	for (int k = low.z(); k <= hi.z(); k++) {
-	  IntVector id(i,j,k);
-	  //  cout << "Inserting into cellID = " << id << endl;
-	  d_grid[id].push_back(*tri);
-	}
+        for (int k = low.z(); k <= hi.z(); k++) {
+          IntVector id(i,j,k);
+          //  cout << "Inserting into cellID = " << id << endl;
+          d_grid[id].push_back(*tri);
+        }
   }
 }
 

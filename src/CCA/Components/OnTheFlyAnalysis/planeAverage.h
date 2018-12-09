@@ -39,8 +39,8 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 
-#include <map>
 #include <vector>
+#include <memory>
 
 namespace Uintah {
 
@@ -51,7 +51,7 @@ GENERAL INFORMATION
 
    planeAverage.h
 
-   This computes the spatial average over a plane in the domain
+   This computes the spatial average over plane(s) in the domain.
 
    Todd Harman
    Department of Mechanical Engineering
@@ -67,8 +67,8 @@ ______________________________________________________________________*/
 
     planeAverage(const ProcessorGroup   * myworld,
                  const MaterialManagerP   materialManager,
-                 const ProblemSpecP     & module_spec);
-    planeAverage();
+                 const ProblemSpecP     & module_spec,
+                 const bool               parse_ups_variables);
 
     virtual ~planeAverage();
 
@@ -96,6 +96,9 @@ ______________________________________________________________________*/
 
     enum weightingType { NCELLS, MASS, NONE };
 
+    static MPI_Comm d_my_MPI_COMM_WORLD;
+
+
   private:
 
     //__________________________________
@@ -103,17 +106,16 @@ ______________________________________________________________________*/
     struct planarVarBase{
 
       //___________________________________
-      //  MPI user defined function for computing sum for Uintah::Point
+      //  MPI user defined function for computing max for Uintah::Point
       //  we need this so each plane location has a non-zero value
-      static void plusEqualPoint( Point * in,
-                                  Point * inOut,
-                                  int   * len,
-                                  MPI_Datatype * type)
+      static void MPI_OP_point( Point * in,
+                                Point * inOut,
+                                int   * len,
+                                MPI_Datatype * type)
       {
+
         for (auto i=0; i< *len; i++){
-          inOut[i].x( inOut[i].x() + in[i].x() );
-          inOut[i].y( inOut[i].y() + in[i].y() );
-          inOut[i].z( inOut[i].z() + in[i].z() );
+          inOut[i] = Uintah::Max( inOut[i], in[i] );
         }
       }
 
@@ -154,12 +156,15 @@ ______________________________________________________________________*/
         // sum over all procs the weight and nPlanar cells
         void ReduceWeight( const int rank )
         {
+
+          const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
+
           if( rank == rootRank ){
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &weight.front(), nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, MPI_COMM_WORLD);
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &nCells.front(), nPlanes, MPI_INT,    MPI_SUM, rootRank, MPI_COMM_WORLD);
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &weight.front(), nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, com );
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &nCells.front(), nPlanes, MPI_INT,    MPI_SUM, rootRank, com );
           } else {
-            Uintah::MPI::Reduce(  &weight.front(), 0,            nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, MPI_COMM_WORLD);
-            Uintah::MPI::Reduce(  &nCells.front(), 0,            nPlanes, MPI_INT,    MPI_SUM, rootRank, MPI_COMM_WORLD);
+            Uintah::MPI::Reduce(  &weight.front(), 0,            nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, com );
+            Uintah::MPI::Reduce(  &nCells.front(), 0,            nPlanes, MPI_INT,    MPI_SUM, rootRank, com );
           }
         }
 
@@ -180,21 +185,25 @@ ______________________________________________________________________*/
           Uintah::MPI::Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
           Uintah::MPI::Type_commit( &mpitype );
 
-          MPI_Op point_add;
-          MPI_Op_create( (MPI_User_function*) plusEqualPoint, 1, &point_add );
+          MPI_Op opt_point;
+          MPI_Op_create( (MPI_User_function*) MPI_OP_point, 1, &opt_point );
+
+          const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
 
           if( rank == rootRank ){
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &CC_pos.front(), nPlanes, mpitype, point_add, rootRank, MPI_COMM_WORLD );
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &CC_pos.front(), nPlanes, mpitype, opt_point, rootRank, com );
           } else {
-            Uintah::MPI::Reduce(  &CC_pos.front(), 0,            nPlanes, mpitype, point_add, rootRank, MPI_COMM_WORLD );
+            Uintah::MPI::Reduce(  &CC_pos.front(), 0,            nPlanes, mpitype, opt_point, rootRank, com );
           }
-          MPI_Op_free( &point_add );
+          MPI_Op_free( &opt_point );
         }
 
         //__________________________________
         //   VIRTUAL FUNCTIONS
 
         virtual void reserve() = 0;
+
+        virtual std::shared_ptr<planarVarBase> clone() const = 0;
 
         // virtual templated functions are not allowed in C++11
         // instantiate the various types
@@ -225,9 +234,15 @@ ______________________________________________________________________*/
       public:
 
         //__________________________________
+        // this makes a deep copy
+        virtual std::shared_ptr<planarVarBase> clone() const {
+          return std::make_shared<planarVar_double>(*this);
+        }
+
+        //__________________________________
         void reserve()
         {
-          CC_pos.resize(nPlanes, Point(0.,0.,0.));
+          CC_pos.resize(nPlanes, Point(-DBL_MAX,-DBL_MAX,-DBL_MAX) );
           sum.resize(   nPlanes, 0.);
           weight.resize(nPlanes, 0.);
           nCells.resize(nPlanes, 0 );
@@ -241,7 +256,7 @@ ______________________________________________________________________*/
         void zero_all_vars()
         {
           for(unsigned i=0; i<sum.size(); i++ ){
-            CC_pos[i] = Point(0,0,0);
+            CC_pos[i] = Point( -DBL_MAX,-DBL_MAX,-DBL_MAX );
             sum[i]    = 0.0;
             weight[i] = 0.0;
             nCells[i] = 0;
@@ -251,10 +266,11 @@ ______________________________________________________________________*/
         //__________________________________
         void ReduceVar( const int rank )
         {
+          const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
           if( rank == rootRank ){
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, MPI_COMM_WORLD);
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, com );
           } else {
-            Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, MPI_COMM_WORLD);
+            Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, com );
           }
         }
 
@@ -263,7 +279,7 @@ ______________________________________________________________________*/
                            const int levelIndex,
                            const double simTime )
         {
-          fprintf( fp,"# Level: %i \n", levelIndex );
+          fprintf( fp,"# Level: %i nCells per plane: %i\n", levelIndex, nCells[0] );
           fprintf( fp,"# Simulation time: %16.15E \n", simTime );
           fprintf( fp,"# Plane location x,y,z           Average\n" );
           fprintf( fp,"#________CC_loc.x_______________CC_loc.y______________CC_loc.z_______________ave" );
@@ -277,18 +293,18 @@ ______________________________________________________________________*/
           // loop over each plane, compute the ave and write to file
           for ( unsigned i =0; i< sum.size(); i++ ){
 
-            fprintf( fp, "%16.15E  %16.15E  %16.15E ", CC_pos[i].x(), CC_pos[i].y(), CC_pos[i].z() );
-            
+            fprintf( fp, "%15.14E  %15.14E  %15.14E ", CC_pos[i].x(), CC_pos[i].y(), CC_pos[i].z() );
+
             if( weightType == NCELLS ){
               double avg = sum[i]/nCells[i];
-              fprintf( fp, "%16.15E  %i\n", avg, nCells[i] );
+              fprintf( fp, "%15.14E  %i\n", avg, nCells[i] );
             }
             else if( weightType == MASS ){
               double avg = sum[i]/weight[i];
-              fprintf( fp, "%16.15E  %16.15E\n", avg, weight[i] );
-            } 
+              fprintf( fp, "%15.14E  %15.14E\n", avg, weight[i] );
+            }
             else{   // weightType == NONE
-              fprintf( fp, "%16.15E\n", sum[i] );
+              fprintf( fp, "%15.14E\n", sum[i] );
             }
           }
         }
@@ -321,10 +337,15 @@ ______________________________________________________________________*/
       public:
 
         //__________________________________
+        // this makes a deep copy
+        virtual std::shared_ptr<planarVarBase> clone() const {
+          return std::make_shared<planarVar_Vector>(*this);
+        }
+        //__________________________________
         void reserve()
         {
           Vector zero(0.);
-          CC_pos.resize( nPlanes, Point(0,0,0) );
+          CC_pos.resize( nPlanes, Point(-DBL_MAX,-DBL_MAX,-DBL_MAX) );
           sum.resize(    nPlanes, Vector(0,0,0) );
           weight.resize( nPlanes, 0 );
           nCells.resize( nPlanes, 0 );
@@ -337,7 +358,7 @@ ______________________________________________________________________*/
         void zero_all_vars()
         {
           for(unsigned i=0; i<sum.size(); i++ ){
-            CC_pos[i] = Point(0,0,0);
+            CC_pos[i] = Point( -DBL_MAX,-DBL_MAX,-DBL_MAX );
             sum[i]    = Vector(0,0,0);
             weight[i] = 0;
             nCells[i] = 0;
@@ -354,10 +375,12 @@ ______________________________________________________________________*/
           MPI_Op vector_add;
           MPI_Op_create( (MPI_User_function*) plusEqualVector, 1, &vector_add );
 
+          const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
+
           if( rank == rootRank ){
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, mpitype, vector_add, rootRank, MPI_COMM_WORLD );
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, mpitype, vector_add, rootRank, com );
           } else {
-            Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, mpitype, vector_add, rootRank, MPI_COMM_WORLD );
+            Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, mpitype, vector_add, rootRank, com );
           }
           MPI_Op_free( &vector_add );
         }
@@ -368,7 +391,7 @@ ______________________________________________________________________*/
                            const int levelIndex,
                            const double simTime )
         {
-          fprintf( fp,"# Level: %i \n", levelIndex );
+          fprintf( fp,"# Level: %i nCells per plane: %i\n", levelIndex, nCells[0] );;
           fprintf( fp,"# Simulation time: %16.15E \n", simTime );
           fprintf( fp,"# Plane location (x,y,z)           Average\n" );
           fprintf( fp,"# ________CC_loc.x_______________CC_loc.y______________CC_loc.z_____________ave.x__________________ave.y______________ave.z" );
@@ -381,19 +404,19 @@ ______________________________________________________________________*/
 
           // loop over each plane, compute the ave and write to file
           for ( unsigned i =0; i< sum.size(); i++ ){
-          
-            fprintf( fp, "%16.15E  %16.15E  %16.15E ", CC_pos[i].x(), CC_pos[i].y(), CC_pos[i].z() );
-            
+
+            fprintf( fp, "%15.14E  %15.14E  %15.14E ", CC_pos[i].x(), CC_pos[i].y(), CC_pos[i].z() );
+
             if( weightType == NCELLS ){
               Vector avg = sum[i]/Vector( nCells[i] );
-              fprintf( fp, "%16.15E %16.15E %16.15E %i\n", avg.x(), avg.y(), avg.z(), nCells[i] );
+              fprintf( fp, "%15.14E %15.14E %15.14E %i\n", avg.x(), avg.y(), avg.z(), nCells[i] );
             }
             else if( weightType == MASS ){
               Vector avg = sum[i]/Vector( weight[i] );
-              fprintf( fp, "%16.15E %16.15E %16.15E %16.15E\n", avg.x(), avg.y(), avg.z(), weight[i] );
+              fprintf( fp, "%15.14E %15.14E %15.14E %15.14E\n", avg.x(), avg.y(), avg.z(), weight[i] );
             }
             else{   // weightType == NONE
-              fprintf( fp, "%16.15E %16.15E %16.15E\n", sum[i].x(), sum[i].y(), sum[i].z() );
+              fprintf( fp, "%15.14E %15.14E %15.14E\n", sum[i].x(), sum[i].y(), sum[i].z() );
             }
           }
         }
@@ -402,30 +425,38 @@ ______________________________________________________________________*/
 
     // For each level there's a vector of planeVarBases
     //
-    std::vector<  std::vector< std::shared_ptr< planarVarBase > > > d_allLevels_planarVars;  
-    
-          
+    std::vector<  std::vector< std::shared_ptr< planarVarBase > > > d_allLevels_planarVars;
 
     //______________________________________________________________________
     //
     //
+  public:
+    void sched_computePlanarAve( SchedulerP   & sched,
+                                 const LevelP & level );
+
+    void sched_writeToFiles( SchedulerP   &    sched,
+                             const LevelP &    level,
+                             const std::string  dirName );
+
+    void sched_resetProgressVar( SchedulerP   & sched,
+                                 const LevelP & level );
+
+    void sched_updateTimeVar( SchedulerP   & sched,
+                              const LevelP & level );
+
+    void createMPICommunicator(const PatchSet* perProcPatches);
 
 
-    IntVector findCellIndex(const int i,
-                            const int j,
-                            const int k);
-
-    bool isItTime( DataWarehouse * old_dw);
-
-    bool isRightLevel( const int myLevel,
-                       const int L_indx,
-                       const LevelP& level);
-
+  private:
     void initialize(const ProcessorGroup *,
                     const PatchSubset    * patches,
                     const MaterialSubset *,
                     DataWarehouse        *,
                     DataWarehouse        * new_dw);
+
+
+    void sched_zeroPlanarVars( SchedulerP   & sched,
+                               const LevelP & level );
 
     void zeroPlanarVars(const ProcessorGroup * pg,
                      const PatchSubset    * patches,
@@ -433,11 +464,19 @@ ______________________________________________________________________*/
                      DataWarehouse        * old_dw,
                      DataWarehouse        * new_dw);
 
+
+    void sched_computePlanarSums( SchedulerP   & sched,
+                                  const LevelP & level );
+
     void computePlanarSums(const ProcessorGroup * pg,
                            const PatchSubset    * patches,
                            const MaterialSubset *,
                            DataWarehouse        * old_dw,
                            DataWarehouse        * new_dw);
+
+
+    void sched_sumOverAllProcs( SchedulerP   & sched,
+                                const LevelP & level);
 
     void sumOverAllProcs(const ProcessorGroup * pg,
                          const PatchSubset    * patches,
@@ -445,19 +484,19 @@ ______________________________________________________________________*/
                          DataWarehouse        * old_dw,
                          DataWarehouse        * new_dw);
 
+
     void writeToFiles(const ProcessorGroup  * pg,
                       const PatchSubset     * patches,
                       const MaterialSubset  *,
                       DataWarehouse         *,
-                      DataWarehouse         * new_dw);
+                      DataWarehouse         * new_dw,
+                      const std::string       dirName);
 
-    void createFile(std::string & filename,
-                    FILE*       & fp,
-                    std::string & levelIndex);
-
-    int createDirectory( mode_t mode,
-                         const std::string & rootPath,
-                         std::string       & path );
+    void updateTimeVar( const ProcessorGroup* pg,
+                        const PatchSubset   * patches,
+                        const MaterialSubset* matSubSet,
+                        DataWarehouse       * old_dw,
+                        DataWarehouse       * new_dw );
 
     template <class Tvar, class Ttype>
     void planarSum_Q( DataWarehouse  * new_dw,
@@ -470,18 +509,42 @@ ______________________________________________________________________*/
                            std::shared_ptr< planarVarBase > analyzeVar,
                            const Patch   * patch );
 
+    void resetProgressVar(const ProcessorGroup * ,
+                          const PatchSubset    * patches,
+                          const MaterialSubset *,
+                          DataWarehouse        *,
+                          DataWarehouse        *);
+
+
+
+    void createFile(std::string & filename,
+                    FILE*       & fp,
+                    std::string & levelIndex);
+
+    int createDirectory( mode_t mode,
+                         const std::string & rootPath,
+                         std::string       & path );
+
+    IntVector transformCellIndex(const int i,
+                            const int j,
+                            const int k);
+
+    bool isItTime( DataWarehouse * old_dw);
+
+    bool isRightLevel( const int myLevel,
+                       const int L_indx,
+                       const LevelP& level);
 
     void planeIterator( const GridIterator& patchIter,
                         IntVector & lo,
                         IntVector & hi );
-
 
     // general labels
     class planeAverageLabel {
     public:
       VarLabel* lastCompTimeLabel;
       VarLabel* fileVarsStructLabel;
-      VarLabel* weightLabel;
+      VarLabel* weightLabel = {nullptr};
     };
 
     planeAverageLabel* d_lb;
@@ -491,6 +554,8 @@ ______________________________________________________________________*/
     double d_writeFreq;
     double d_startTime;
     double d_stopTime;
+    bool   d_parse_ups_variables;              // parse ups file to define d_allLevels_planarVars
+                                               // this switch is needed for meanTurbFluxes module
 
     const Material*  d_matl;
     MaterialSet*     d_matl_set;
@@ -498,10 +563,10 @@ ______________________________________________________________________*/
     MaterialSubset*  d_zero_matl;
 
     const int d_MAXLEVELS {5};               // HARDCODED
-    
+
     // Flag: has this rank has executed this task on this level
     std::vector< std::vector< bool > > d_progressVar;
-    enum taskNames { INITIALIZE=0, ZERO=1, COMPUTE=2, SUM=3, N_TASKS=4 };
+    enum taskNames { INITIALIZE=0, ZERO=1, SUM=2, N_TASKS=3 };
 
     enum orientation { XY, XZ, YZ };        // plane orientation
     orientation d_planeOrientation;

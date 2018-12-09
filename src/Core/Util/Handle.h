@@ -130,12 +130,12 @@ WARNING
   {
     if(d_rep != copy){    
       if(d_rep){
-	if(d_rep->removeReference())
-	  delete d_rep;
+        if(d_rep->removeReference())
+          delete d_rep;
       }
       d_rep=copy;
       if(d_rep){
-	d_rep->addReference();
+        d_rep->addReference();
       }
     }
     return *this;

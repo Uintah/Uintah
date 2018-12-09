@@ -70,7 +70,7 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(int low, int high)
   rangeSet_.reserve(1);
   if (low == INT_MAX || high == INT_MAX)
     cerr << "Warning, initializing ConsectuiveRangeSet with a high of\n"
-	 << "INT_MAX may cause overflow.\n";
+         << "INT_MAX may cause overflow.\n";
   rangeSet_.push_back(Range(low, high));
   setSize();
 }
@@ -100,28 +100,28 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(const std::string& setstr)
       in >> n;
     
       if (in.fail()) {
-	// not an integer
-	in.clear();
-	in >> c;
-	if (c != ',')
-	  throw ConsecutiveRangeSetException(string("ConsecutiveRangeSet cannot parse integer set string: bad character '") + c + "'", __FILE__, __LINE__);
-	else {
-	  if (isInterval)
-	    throw ConsecutiveRangeSetException("ConsecutiveRangeSet cannot parse integer set string: ',' following '-'", __FILE__, __LINE__);
-	}
+        // not an integer
+        in.clear();
+        in >> c;
+        if (c != ',')
+          throw ConsecutiveRangeSetException(string("ConsecutiveRangeSet cannot parse integer set string: bad character '") + c + "'", __FILE__, __LINE__);
+        else {
+          if (isInterval)
+            throw ConsecutiveRangeSetException("ConsecutiveRangeSet cannot parse integer set string: ',' following '-'", __FILE__, __LINE__);
+        }
       }
       else if (isInterval) {
-	if (!hasLastNumber)
-	  throw ConsecutiveRangeSetException("ConsecutiveRangeSet cannot parse integer set string: ambiguous '-'", __FILE__, __LINE__);
-	rangeSet.push_back(Range(lastNumber, n));
-	isInterval = false;
-	hasLastNumber = false;
+        if (!hasLastNumber)
+          throw ConsecutiveRangeSetException("ConsecutiveRangeSet cannot parse integer set string: ambiguous '-'", __FILE__, __LINE__);
+        rangeSet.push_back(Range(lastNumber, n));
+        isInterval = false;
+        hasLastNumber = false;
       }
       else {
-	if (hasLastNumber)
-	  rangeSet.push_back(Range(lastNumber, lastNumber));
-	lastNumber = n;
-	hasLastNumber = true;
+        if (hasLastNumber)
+          rangeSet.push_back(Range(lastNumber, lastNumber));
+        lastNumber = n;
+        hasLastNumber = true;
       }
     }
   }
@@ -164,21 +164,21 @@ void ConsecutiveRangeSet::addInOrder(int value)
       Range& range = rangeSet_.back();
       int last_value = (int)(range.low_ + range.extent_);
       if (value < last_value) {
-	 ostringstream msg;
-	 msg << "ConsecutiveRangeSet::addInOrder given value not in order: "
-	     << value << " < " << last_value;
-	 throw ConsecutiveRangeSetException(msg.str(), __FILE__, __LINE__);
+         ostringstream msg;
+         msg << "ConsecutiveRangeSet::addInOrder given value not in order: "
+             << value << " < " << last_value;
+         throw ConsecutiveRangeSetException(msg.str(), __FILE__, __LINE__);
       }
       if (value > last_value) {
-	 if (value == last_value + 1)
-	    range.extent_++;
-	 else {
-	    // end of range
-	    rangeSet_.push_back(Range(value, value));
-	 }
+         if (value == last_value + 1)
+            range.extent_++;
+         else {
+            // end of range
+            rangeSet_.push_back(Range(value, value));
+         }
       }
       else
-	 return; // value == last_value -- don't increment the size
+         return; // value == last_value -- don't increment the size
    }
    size_++;
 }
@@ -221,7 +221,7 @@ bool ConsecutiveRangeSet::operator==(const ConsecutiveRangeSet& set2) const
 }
 
 ConsecutiveRangeSet ConsecutiveRangeSet::intersected(const ConsecutiveRangeSet&
-						     set2) const
+                                                     set2) const
 {
   list<Range> newRangeSet;
   Range range(0, 0);
@@ -233,13 +233,13 @@ ConsecutiveRangeSet ConsecutiveRangeSet::intersected(const ConsecutiveRangeSet&
     while ((*it).low_ > (*it2).high()) {
       it2++;
       if (it2 == set2.rangeSet_.end())
-	return ConsecutiveRangeSet(newRangeSet.begin(), newRangeSet.end());
+        return ConsecutiveRangeSet(newRangeSet.begin(), newRangeSet.end());
     }
 
     while ((*it2).low_ > (*it).high()) {
       it++;
       if (it == rangeSet_.end())
-	return ConsecutiveRangeSet(newRangeSet.begin(), newRangeSet.end());
+        return ConsecutiveRangeSet(newRangeSet.begin(), newRangeSet.end());
     }
 
     range.low_ = ((*it).low_ > (*it2).low_) ? (*it).low_ : (*it2).low_;
@@ -248,9 +248,9 @@ ConsecutiveRangeSet ConsecutiveRangeSet::intersected(const ConsecutiveRangeSet&
       range.extent_ =  (unsigned long)high - range.low_;
       newRangeSet.push_back(range);
       if ((*it).high() < (*it2).high())
-	it++;
+        it++;
       else
-	it2++;
+        it2++;
     }
   }
 
@@ -258,7 +258,7 @@ ConsecutiveRangeSet ConsecutiveRangeSet::intersected(const ConsecutiveRangeSet&
 }
 
 ConsecutiveRangeSet ConsecutiveRangeSet::unioned(const ConsecutiveRangeSet&
-						 set2) const
+                                                 set2) const
 {
   list<Range> newRangeSet;
   Range range(0, 0);
@@ -287,10 +287,10 @@ ConsecutiveRangeSet ConsecutiveRangeSet::unioned(const ConsecutiveRangeSet&
     // check for overlap
     // being careful about overflow -- for example all == MIN_INT..MAX_INT
     if ((lastRange.high() >= range.low_) ||
-	((unsigned long)range.low_ - lastRange.high() == 1)) {
+        ((unsigned long)range.low_ - lastRange.high() == 1)) {
       // combine ranges
       if (range.high() > lastRange.high())
-	lastRange.extent_ =  (unsigned long)range.high() - lastRange.low_;
+        lastRange.extent_ =  (unsigned long)range.high() - lastRange.low_;
     }
     else
       newRangeSet.push_back(range);
@@ -313,7 +313,7 @@ string ConsecutiveRangeSet::expandedString() const
    if (it != end()) {
       stream << *it;
       for (it++; it != end(); it++)
-	 stream << " " << *it;
+         stream << " " << *it;
    }
    return stream.str();
 }

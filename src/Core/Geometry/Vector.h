@@ -156,27 +156,27 @@ public:
   inline double minComponent() const {
     if(x_<y_){
       if(x_<z_)
-	return x_;
+        return x_;
       else
-	return z_;
+        return z_;
     } else {
       if(y_<z_)
-	return y_;
+        return y_;
       else
-	return z_;
+        return z_;
     }
   }
   inline double maxComponent() const {
     if(x_>y_){
       if(x_>z_)
-	return x_;
+        return x_;
       else
-	return z_;
+        return z_;
     } else {
       if(y_>z_)
-	return y_;
+        return y_;
       else
-	return z_;
+        return z_;
     }
   }
 
@@ -362,19 +362,19 @@ inline Vector Abs(const Vector& v)
 inline Vector Cross(const Vector& v1, const Vector& v2)
 {
     return Vector(
-	v1.y_*v2.z_-v1.z_*v2.y_,
-	v1.z_*v2.x_-v1.x_*v2.z_,
-	v1.x_*v2.y_-v1.y_*v2.x_);
+        v1.y_*v2.z_-v1.z_*v2.y_,
+        v1.z_*v2.x_-v1.x_*v2.z_,
+        v1.x_*v2.y_-v1.y_*v2.x_);
 }
 
 inline Vector Interpolate(const Vector& v1, const Vector& v2,
-			  double weight)
+                          double weight)
 {
     double weight1=1.0-weight;
     return Vector(
-	v2.x_*weight+v1.x_*weight1,
-	v2.y_*weight+v1.y_*weight1,
-	v2.z_*weight+v1.z_*weight1);
+        v2.x_*weight+v1.x_*weight1,
+        v2.y_*weight+v1.y_*weight1,
+        v2.z_*weight+v1.z_*weight1);
 }
 
 inline Vector& Vector::operator*=(const double d)
@@ -500,15 +500,15 @@ inline Point &Vector::asPoint() const {
 inline Vector Min(const Vector &v1, const Vector &v2)
 {
   return Vector(Min(v1.x(), v2.x()),
-		Min(v1.y(), v2.y()),
-		Min(v1.z(), v2.z()));
+                Min(v1.y(), v2.y()),
+                Min(v1.z(), v2.z()));
 }
 
 inline Vector Max(const Vector &v1, const Vector &v2)
 {
   return Vector(Max(v1.x(), v2.x()),
-		Max(v1.y(), v2.y()),
-		Max(v1.z(), v2.z()));
+                Max(v1.y(), v2.y()),
+                Max(v1.z(), v2.z()));
 }
 
 const TypeDescription* get_type_description(Vector*);

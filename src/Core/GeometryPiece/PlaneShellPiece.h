@@ -40,13 +40,13 @@ namespace Uintah {
 /////////////////////////////////////////////////////////////////////////////
 /*! 
   \class PlaneShellPiece
-	
+        
   \brief Creates a plane shell from the xml input file description.
-	
+        
   \author  Biswajit Banerjee \n
    C-SAFE and Department of Mechanical Engineering \n
    University of Utah \n
-	
+        
    Creates a plane circle from the xml input file description.
    The input form looks like this:
    \verbatim
@@ -58,22 +58,22 @@ namespace Uintah {
        <num_radial>20</num_radial>
      </plane>
    \endverbatim
-	
+        
    \warning Needs to be converted into the base class for classes such as
    TriShellPiece, QuadShellPiece, HexagonShellPiece etc.  Currently
    provides implementation for Rectangular Shell Piece.
 
 */
 /////////////////////////////////////////////////////////////////////////////
-	
+        
   class PlaneShellPiece : public ShellGeometryPiece {
-	 
+         
   public:
     //////////
     //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
     // input specification and builds a plane.
     PlaneShellPiece(ProblemSpecP &);
-	 
+         
     //////////
     // Destructor
     virtual ~PlaneShellPiece();
@@ -83,11 +83,11 @@ namespace Uintah {
 
     /// Make a clone
     virtual GeometryPieceP clone() const;
-	 
+         
     //////////
     // Determines whether a point is inside the plane. 
     virtual bool inside(const Point &p) const;
-	 
+         
     //////////
     // Returns the bounding box surrounding the box.
     virtual Box getBoundingBox() const;
@@ -99,13 +99,13 @@ namespace Uintah {
     //////////
     // Creates the particles
     int createParticles(const Patch* patch,
-			ParticleVariable<Point>&  pos,
-			ParticleVariable<double>& vol,
-			ParticleVariable<double>& pThickTop,
-			ParticleVariable<double>& pThickBot,
-			ParticleVariable<Vector>& pNormal,
-			ParticleVariable<Matrix3>& psize,
-			particleIndex start);
+                        ParticleVariable<Point>&  pos,
+                        ParticleVariable<double>& vol,
+                        ParticleVariable<double>& pThickTop,
+                        ParticleVariable<double>& pThickBot,
+                        ParticleVariable<Vector>& pNormal,
+                        ParticleVariable<Matrix3>& psize,
+                        particleIndex start);
 
 
   private:

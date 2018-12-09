@@ -67,24 +67,24 @@ class Stopwatch {
         Stopwatch();
         inline void start();
         inline double stop();
-		inline double read();
-		inline void resume();
-		inline int running();
+                inline double read();
+                inline void resume();
+                inline int running();
 };
 
 Stopwatch::Stopwatch() : running_(0), start_time_(0.0), total_(0.0) {}
 
 void Stopwatch::start() 
 {
-	running_ = 1;
-	total_ = 0.0;
-	start_time_ = seconds();
+        running_ = 1;
+        total_ = 0.0;
+        start_time_ = seconds();
 }
 
 double Stopwatch::stop()  
 {
-	if (running_) 
-	{
+        if (running_) 
+        {
          total_ += (seconds() - start_time_); 
          running_ = 0;
     }
@@ -93,22 +93,22 @@ double Stopwatch::stop()
 
 inline void Stopwatch::resume()
 {
-	if (!running_)
-	{
-		start_time_ = seconds();
-		running_ = 1;
-	}
+        if (!running_)
+        {
+                start_time_ = seconds();
+                running_ = 1;
+        }
 }
-		
+                
 
 inline double Stopwatch::read()   
 {
-	if (running_)
-	{
-		stop();
-		resume();
-	}
-	return total_;
+        if (running_)
+        {
+                stop();
+                resume();
+        }
+        return total_;
 }
 
 

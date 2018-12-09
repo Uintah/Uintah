@@ -172,7 +172,7 @@ OffsetArray1<T>::OffsetArray1(int l, int h)
     objs=new T[size]-_l;
   else
     objs=0;
-}	
+}       
 
 template<class T>
 OffsetArray1<T>::~OffsetArray1()
