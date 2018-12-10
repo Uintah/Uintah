@@ -599,12 +599,6 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
   m_local_neighbor_processes.insert(my_rank);
   m_distal_neighbor_processes.insert(my_rank);
 
-  // get the max ghost cells (local and distal) to consider for neighborhood creation
-  int maxLocalGhost  = m_scheduler->getMaxGhost();
-  int maxDistalGhost = m_scheduler->getMaxDistalGhost();
-  IntVector localGhost(maxLocalGhost, maxLocalGhost, maxLocalGhost);
-  IntVector distalGhost(maxDistalGhost, maxDistalGhost, maxDistalGhost);
-
   // go through all patches on all levels, and if the patch-wise processor assignment equals
   // the current processor, then store the patch's neighbors in the load balancer array
   const auto num_levels = grid->numLevels();
@@ -616,8 +610,8 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
 
       // we need to check both where the patch is and where
       // it used to be (in the case of a dynamic reallocation)
-      int proc    = getPatchwiseProcessorAssignment( patch );
-      int oldproc = getOldProcessorAssignment( patch );
+      const int proc    = getPatchwiseProcessorAssignment( patch );
+      const int oldproc = getOldProcessorAssignment( patch );
       IntVector low( patch->getExtraLowIndex( Patch::CellBased, IntVector(0,0,0)));
       IntVector high(patch->getExtraHighIndex(Patch::CellBased, IntVector(0,0,0)));
 
@@ -627,6 +621,8 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
       if (proc == my_rank || oldproc == my_rank || outputproc == my_rank) {
 
         // add owning processors (local)
+        const int maxLocalGhost = m_scheduler->getMaxGhost();
+        IntVector localGhost(maxLocalGhost, maxLocalGhost, maxLocalGhost);
         addPatchesAndProcsToNeighborhood(level.get_rep(),
                                          low-localGhost,
                                          high+localGhost,
@@ -635,6 +631,8 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
         
         // add owning processors (distal)
         if (hasDistalReqs) {
+          const int maxDistalGhost = m_scheduler->getMaxDistalGhost();
+          IntVector distalGhost(maxDistalGhost, maxDistalGhost, maxDistalGhost);
           addPatchesAndProcsToNeighborhood(level.get_rep(),
                                            low-distalGhost,
                                            high+distalGhost,
@@ -678,6 +676,8 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
           for (auto offset = 1; offset <= maxLevelOffset && coarseLevel->hasCoarserLevel(); ++offset) {
 
             // add owning processors (local)
+            const int maxLocalGhost = m_scheduler->getMaxGhost();
+            IntVector localGhost(maxLocalGhost, maxLocalGhost, maxLocalGhost);
             localGhost  = localGhost * coarseLevel->getRefinementRatio();
             coarseLevel = coarseLevel->getCoarserLevel();
             addPatchesAndProcsToNeighborhood(coarseLevel.get_rep(),
@@ -688,6 +688,8 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
 
             // add owning processors (distal)
             if (hasDistalReqs) {
+              const int maxDistalGhost = m_scheduler->getMaxDistalGhost();
+              IntVector distalGhost(maxDistalGhost, maxDistalGhost, maxDistalGhost);
               distalGhost = distalGhost * coarseLevel->getRefinementRatio();
               addPatchesAndProcsToNeighborhood(coarseLevel.get_rep(),
                                                level->mapCellToCoarser(low - distalGhost, offset),
@@ -742,9 +744,9 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
         int oldproc = getOldProcessorAssignment(oldPatch);
 
         if (oldproc == my_rank) {
-          // don't get extra cells or ghost cells
+          const int maxLocalGhost = m_scheduler->getMaxGhost();
           Patch::selectType neighborPatches;
-          newLevel->selectPatches(oldPatch->getExtraCellLowIndex() - localGhost, oldPatch->getExtraCellHighIndex() + localGhost, neighborPatches);
+          newLevel->selectPatches(oldPatch->getExtraCellLowIndex() - maxLocalGhost, oldPatch->getExtraCellHighIndex() + maxLocalGhost, neighborPatches);
           m_local_neighbor_patches.insert(oldPatch);
 
           int nproc = getPatchwiseProcessorAssignment(oldPatch);

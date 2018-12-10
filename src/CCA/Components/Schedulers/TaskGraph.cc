@@ -538,7 +538,7 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
 
           // Still make sure we have an entry for this task on this level.
           // Some tasks can go into the task graph without any requires, modifies, or computes.
-          bool search_distal_requires;
+          bool search_distal_requires = false;
 
           for (auto kv : task->m_max_ghost_cells) {
             int levelIDTemp = kv.first;
@@ -856,7 +856,6 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
     int levelID = 0;
     const Patch* origPatch = nullptr;
     const Level* origLevel = nullptr;
-    bool uses_SHRT_MAX = (req->m_num_ghost_cells == SHRT_MAX);
     if ((dtask->m_patches) && (dtask->getTask()->getType() != Task::OncePerProc) && (dtask->getTask()->getType() != Task::Hypre)) {
       origPatch = dtask->m_patches->get(0);
       origLevel = origPatch->getLevel();
@@ -902,8 +901,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       }
       else {  //This covers when req->m_patches_dom == Task::ThisLevel (single level problems)
               //or when req->m_patches_dom == Task::OtherGridDomain. (AMR problems)
-        //TODO: Change this to req->m_num_ghost_cells >= MAX_HALO_DEPTH Brad P. 11/5/2016
-        if (uses_SHRT_MAX) {
+        if (req->m_num_ghost_cells >= MAX_HALO_DEPTH) {
           //Finer patches probably shouldn't be using SHRT_MAX ghost cells, but just in case they do, at least compute the low and high correctly...
           origLevel->computeVariableExtents(req->m_var->typeDescription()->getType(), otherLevelLow, otherLevelHigh);
         }
@@ -941,7 +939,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
         Patch::VariableBasis basis = Patch::translateTypeToBasis(req->m_var->typeDescription()->getType(), false);
         
-        if (uses_SHRT_MAX) {
+        if (req->m_num_ghost_cells >= MAX_HALO_DEPTH) {
           patch->getLevel()->computeVariableExtents(req->m_var->typeDescription()->getType(), low, high);
         }
         else {
