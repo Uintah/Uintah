@@ -367,7 +367,23 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       break;
     case ArchesFieldContainer::COMPUTESCRATCHGHOST:
       {
-        tsk->computesWithScratchGhost( ivar.label, matls->getSubset(0), Uintah::Task::NormalDomain, ivar.ghost_type, ivar.nGhost );
+        if ( time_substep == 0 ){
+          DOUT( dbg_arches_task, "[TaskFactoryBase]  computing (wsg): " << ivar.name );
+          tsk->computesWithScratchGhost( ivar.label, matls->getSubset(0),
+                                         Uintah::Task::NormalDomain, ivar.ghost_type,
+                                         ivar.nGhost );
+        } else {
+          const Uintah::PatchSet* const allPatches =
+            sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+          const Uintah::PatchSubset* const localPatches =
+            allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+          DOUT( dbg_arches_task, "[TaskFactoryBase]  modifying (wsg): " << ivar.name );
+          tsk->modifiesWithScratchGhost( ivar.label,
+                                         localPatches, 
+                                         Uintah::Task::ThisLevel,
+                                         matls->getSubset(0), Uintah::Task::NormalDomain,
+                                         ivar.ghost_type, ivar.nGhost );
+        }
       }
       break;
     case ArchesFieldContainer::MODIFIES:

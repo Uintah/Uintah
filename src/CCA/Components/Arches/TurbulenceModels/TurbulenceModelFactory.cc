@@ -88,18 +88,18 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
 
         if ( packed_tasks.turbulence ){
 
-          std::string sub_name = "DS_task1";
+          std::string sub_name = "DSFT_task1";
           TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DS_task2";
+          sub_name = "DSmaMML_task2";
           TaskInterface::TaskBuilder* tsk_builder2
             = scinew DSmaMMML< CCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder2 );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DS_task3";
+          sub_name = "DSmaCs_task3";
           TaskInterface::TaskBuilder* tsk_builder3
             = scinew DSmaCs< CCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder3 );
@@ -107,18 +107,18 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
 
         } else {
 
-          std::string sub_name = "DS_task1";
+          std::string sub_name = "DSFT_task1";
           TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DS_task2";
+          sub_name = "DSmaMML_task2";
           TaskInterface::TaskBuilder* tsk_builder2
             = scinew DSmaMMML< constCCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder2 );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DS_task3";
+          sub_name = "DSmaCs_task3";
           TaskInterface::TaskBuilder* tsk_builder3
             = scinew DSmaCs< constCCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder3 );
@@ -198,17 +198,17 @@ TurbulenceModelFactory::build_all_tasks( ProblemSpecP& db )
 
       if (type == "dynamic_smagorinsky" ) {
 
-        name = "DS_task1";
+        name = "DSFT_task1";
         TaskInterface* tsk = retrieve_task(name);
         tsk->problemSetup(db_model);
         tsk->create_local_labels();
 
-        name = "DS_task2";
+        name = "DSmaMML_task2";
         TaskInterface* tsk2 = retrieve_task(name);
         tsk2->problemSetup(db_model);
         tsk2->create_local_labels();
 
-        name = "DS_task3";
+        name = "DSmaCs_task3";
         TaskInterface* tsk3 = retrieve_task(name);
         tsk3->problemSetup(db_model);
         tsk3->create_local_labels();
