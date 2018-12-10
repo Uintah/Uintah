@@ -128,14 +128,14 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     message << "   Originally needed deps (" << m_internal_dependencies.size() << "):\n";
 
     auto iter = m_internal_dependencies.begin();
-    for (auto i = 0u; iter != m_internal_dependencies.end(); ++iter, ++i) {
+    for (size_t i = 0u; iter != m_internal_dependencies.end(); ++iter, ++i) {
       message << i << ":    " << *((*iter).m_prerequisite_task->getTask()) << "\n";
     }
 
     DOUT(true, message.str());
   }
 
-  for (auto i = 0u; i < dws.size(); i++) {
+  for (size_t i = 0; i < dws.size(); ++i) {
     if (oddws[i] != nullptr) {
       oddws[i]->pushRunningTask(m_task, &oddws);
     }
@@ -185,10 +185,12 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 #else
     SCI_THROW(InternalError("A task was marked as GPU enabled, but Uintah was not compiled for CUDA support", __FILE__, __LINE__));
 #endif
+
   } else {
     m_task->doit( m_patches, m_matls, dws, uintahParams );
   }
-  for (auto i = 0u; i < dws.size(); i++) {
+
+  for (size_t i = 0u; i < dws.size(); ++i) {
     if ( oddws[i] != nullptr ) {
 //      oddws[i]->checkTasksAccesses( d_patches, d_matls );
       oddws[i]->popRunningTask();

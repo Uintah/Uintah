@@ -202,7 +202,7 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
   ASSERT(grid != nullptr);
 
   // Create two neighborhoods.  One that keeps track of patches and procs within just a few ghost cells
-  // and another that keeps track of patches and procs to within the maximum known ghost cell among all
+  // and another that keeps track of patches and procs to within the maximum known ghost cells among all
   // tasks in the task graph.
   //
   // The idea is that if a DetailedTask only has simulation variables which
@@ -961,7 +961,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
         ASSERT(std::is_sorted(neighbors.begin(), neighbors.end(), Patch::Compare()));
 
-        auto num_neighbors = neighbors.size();
+        size_t num_neighbors = neighbors.size();
 
         DOUT(g_detailed_deps_dbg, "Rank-" << my_rank << "    Creating detailed dependency on " << num_neighbors
                                           << " neighboring patch" << (num_neighbors > 1 ? "es " : "   ") << neighbors

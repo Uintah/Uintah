@@ -53,7 +53,8 @@ namespace Uintah {
 class ProcessorGroup;
 class ApplicationCommon;
 class ArchesBCHelper;
-
+class DataWarehouse;
+  
 class NonlinearSolver {
 
 public:
@@ -82,10 +83,13 @@ public:
 
   virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0;
 
-  virtual int getTaskGraphIndex(const int timeStep ) const = 0;
-
-  // virtual int taskGraphsRequested() const = 0;
-
+  // An optional call for the application to check their reduction vars.
+  virtual void checkReductionVars( const ProcessorGroup * pg,
+                                   const PatchSubset    * patches,
+                                   const MaterialSubset * matls,
+                                         DataWarehouse  * old_dw,
+                                         DataWarehouse  * new_dw ) {};
+    
   class NLSolverBuilder {
 
     public:

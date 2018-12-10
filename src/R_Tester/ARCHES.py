@@ -47,6 +47,7 @@ NIGHTLYTESTS = [
    ("isotropic-turbulence-decay"        , "periodicTurb/isotropic-turbulence-decay.ups"             , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("helium_1m"                         , "helium_1m.ups"                                           , 1   , "All"   , ["exactComparison"])   ,
    ("methane_fire"                      , "methane_fire.ups"                                        , 1   , "All"   , ["exactComparison"])   ,
+   ("methane_fire_dRad"                 , "methane_fire_dRad.ups"                                   , 4   , "All"   , ["exactComparison"]) ,
    ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"   , ["exactComparison"])   ,
    ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"   , ["exactComparison"     , "no_cuda" ])   ,    #11/1/6 gpu machine doesn't have petsc
    ("dqmom_test_1"                      , "DQMOM_regression/dqmom_test_1.ups"                       , 1   , "All"   , ["exactComparison"])   ,
@@ -157,6 +158,7 @@ LOCALTESTS = [
    ("isotropic-turbulence-decay"        , "periodicTurb/isotropic-turbulence-decay.ups"             , 1   , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("helium_1m"                         , "helium_1m.ups"                                           , 1   , "All"  , ["exactComparison"]) ,
    ("methane_fire"                      , "methane_fire.ups"                                        , 1   , "All"  , ["exactComparison"]) ,
+   ("methane_fire_dRad"                 , "methane_fire_dRad.ups"                                   , 4   , "All"  , ["exactComparison"]) ,
    ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"  , ["exactComparison"]) ,
    ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"  , ["exactComparison"]) ,
    ("dqmom_test_1"                      , "DQMOM_regression/dqmom_test_1.ups"                       , 1   , "All"  , ["exactComparison"]) ,

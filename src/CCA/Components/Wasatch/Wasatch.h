@@ -87,12 +87,12 @@
       If you find yourself writing a Uintah::Task directly in Wasatch,
       you are probably doing something wrong.
 
-  \defgroup Expressions		Expressions in Wasatch
-  \defgroup WasatchFields	Fields and field tools
-  \defgroup WasatchOperators	Operators
-  \defgroup WasatchCore		Wasatch Core
-  \defgroup WasatchGraph	Wasatch Graph
-  \defgroup WasatchParser	Wasatch Parsers
+  \defgroup Expressions         Expressions in Wasatch
+  \defgroup WasatchFields       Fields and field tools
+  \defgroup WasatchOperators    Operators
+  \defgroup WasatchCore         Wasatch Core
+  \defgroup WasatchGraph        Wasatch Graph
+  \defgroup WasatchParser       Wasatch Parsers
   \defgroup WasatchParticles    Particle Transport
 
 */
@@ -186,7 +186,7 @@ namespace WasatchCore{
     typedef std::map< int, std::pair<Expr::DualTime::BDFDualTimeIntegrator*, WasatchCore::DualTimeMatrixManager* > > DualTimePatchMapT; //<<< PatchID, Pair<DualTimeIntegrator, DualTimeMatrixManager> >>>
     
     Wasatch( const Uintah::ProcessorGroup* myworld,
-	     const Uintah::MaterialManagerP materialManager );
+             const Uintah::MaterialManagerP materialManager );
     
     ~Wasatch();
 
@@ -284,8 +284,6 @@ namespace WasatchCore{
     virtual void scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
                                          Uintah::SchedulerP& /*scheduler*/,
                                          bool, bool);
-
-    virtual int getTaskGraphIndex();
 
     const EquationAdaptors& equation_adaptors() const{ return adaptors_; }
     GraphCategories& graph_categories(){ return graphCategories_; }
