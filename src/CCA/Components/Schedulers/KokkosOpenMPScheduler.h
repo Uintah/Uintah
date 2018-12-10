@@ -106,9 +106,6 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
     void markTaskConsumed( volatile int * numTasksDone, int & currphase, int numPhases, DetailedTask * dtask );
     void runReadyTask( DetailedTask* readyTask );
 
-#ifdef BRADS_NEW_DWDATABASE
-    void allocateTaskComputesVariables( DetailedTask * dtask );
-#endif
     // thread shared data, needs lock protection when accessed
     std::vector<int>             m_phase_tasks;
     std::vector<int>             m_phase_tasks_done;
