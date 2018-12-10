@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Uintah_Include>
+  <ParticleProperties type="coal">
+      <!-- REQUIRED ARCHES/PYTHON INPUTS -->
+      <diameter_distribution>[40e-06,80e-6,100e-06]</diameter_distribution><!-- [m] -->
+      <density>1300.0</density><!-- [kg/m^3] -->
+      <ultimate_analysis>
+        <C>.64</C>
+        <H>.051</H>
+        <O>.16</O>
+        <N>.01</N>
+        <S>.003</S>
+        <CHAR>0</CHAR>
+        <ASH>.08</ASH>
+        <H2O>0.056</H2O>
+      </ultimate_analysis>
+
+      <raw_coal_enthalpy>-1.328e6</raw_coal_enthalpy><!-- raw coal enthalpy (at inlet conditions) [J/kg] -->
+      <char_enthalpy>0.0</char_enthalpy><!-- char enthalpy (at inlet conditions) [J/kg] -->
+      <ash_enthalpy>-1.504e7</ash_enthalpy><!-- ash enthalpy (at inlet conditions) [J/kg] -->
+      <Yamamoto_coefficients>[3.2159e16,2.647e5,0.58,7.008,-79.38,379.9,-853.0,836.7,-301.1]</Yamamoto_coefficients>
+      <!-- Yamamto 1 step rate coefficients in the following order:  -->
+      <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->     
+      <ShaddixChar>
+        <As> 344.0 </As>
+        <Es> 45.5e3 </Es>
+        <n> 0.18 </n>
+      </ShaddixChar>
+
+
+
+      <!-- OPTIONAL INPUTS -->
+      <ksi>0.5</ksi><!-- Optional Fraction of the heat released by char oxidation that goes to the particle (default=1.0) -->
+  </ParticleProperties>
+
+  <Coal_Properties>
+    <!-- REQUIRED ARCHES/PYTHON INPUTS -->
+    <particle_sizes>[4e-05,6.3e-05,10e-05]</particle_sizes><!-- [m] -->
+    <particle_density>1300.0</particle_density><!-- [kg/m^3] -->
+    <as_received>[0.683527840069441,0.044220514926679,0.134771469945525,0.012659550992926,0.003956109685289,0.0,0.120864514380140,0.0]</as_received> <!--C+H+O+N+S+char+ash+moisture = 1 [wt fractions] -->
+    <raw_coal_enthalpy>-1.328e6</raw_coal_enthalpy><!-- raw coal enthalpy (at inlet conditions) [J/kg] -->
+    <char_enthalpy>0.0</char_enthalpy><!-- char enthalpy (at inlet conditions) [J/kg] -->
+    <ash_enthalpy>-1.504e7</ash_enthalpy><!-- ash enthalpy (at inlet conditions) [J/kg] -->
+    <Yamamoto_coefficients>[3.2159e16,2.647e5,0.58,7.008,-79.38,379.9,-853.0,836.7,-301.1]</Yamamoto_coefficients>
+    <!-- Yamamto 1 step rate coefficients in the following order:  -->
+    <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->     
+    <ShaddixChar>
+      <As> 344.0 </As>
+      <Es> 45.5e3 </Es>
+      <n> 0.18 </n>
+    </ShaddixChar>
+
+
+
+    <!-- OPTIONAL INPUTS -->
+    <ksi>0.5</ksi><!-- Optional Fraction of the heat released by char oxidation that goes to the particle (default=1.0) -->
+
+  </Coal_properties>
+</Uintah_Include>

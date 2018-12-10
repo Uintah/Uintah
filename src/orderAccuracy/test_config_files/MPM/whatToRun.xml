@@ -1,0 +1,56 @@
+<config>
+<postProcessCmd_path>orderAccuracy/postProcessTools/compare_MPM_AA_MMS</postProcessCmd_path>
+
+<symbolicLinks> </symbolicLinks>
+
+<test>
+  <name>advect_3L_1D</name>
+  <tst>advect_3L_1D.tst</tst>
+</test>
+<test>
+  <name>advect_3L_2D</name>
+  <tst>advect_3L_2D.tst</tst>
+</test>
+<test>
+  <name>advect_3L_3D</name>
+  <tst>advect_3L_3D.tst</tst>
+</test>
+
+<!--
+<test>
+  <name>3rdorderBS_AA_MMS</name>
+  <tst>3rdorderBS_dx.tst</tst>
+</test>
+
+<test>
+  <name>cpdi_AA_MMS</name>
+  <tst>cpdi_dx.tst</tst>
+</test>
+
+<test>
+  <name>fastcpdi_AA_MMS</name>
+  <tst>fastcpdi_dx.tst</tst>
+</test>
+
+<test>
+  <name>gimp_AA_MMS</name>
+  <tst>gimp_dx.tst</tst>
+</test>
+
+<test>
+  <name>linear_AA_MMS</name>
+  <tst>linear_dx.tst</tst>
+</test>
+
+<test>
+  <name>linear_AA_MMS_2L</name>
+  <tst>linear_dx_3L.tst</tst>
+</test>
+
+<test>
+  <name>1D_MMS</name>
+  <tst>1D_MMS_Z.tst</tst>
+</test>
+-->
+
+</config>

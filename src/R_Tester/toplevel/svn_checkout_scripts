@@ -1,0 +1,22 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  This script downloads a copy of the toplevel RT scripts.
+#  Crontab should call this script before the nightly RT script
+#  so the latest scripts are used.
+#______________________________________________________________________
+
+set scriptsDir = $argv
+set svn_path   = https://gforge.sci.utah.edu/svn/uintah/trunk/src/R_Tester/toplevel/
+set files      = (startTester killTester svn_checkout_scripts cleanup)
+
+if( ! -d $scriptsDir ) then
+  echo " The directory $scriptsDir does not exist."  
+  echo "  Now exiting....."
+  exit (1)
+endif
+
+foreach X ( $files[*] )
+  svn export  --force $svn_path/$X $scriptsDir --username=anonymous --password=""
+end
+
+exit(0)

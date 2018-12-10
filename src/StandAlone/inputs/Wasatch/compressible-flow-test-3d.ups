@@ -1,0 +1,188 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>3D Compressible Flow Test</title>
+    <info> This is a good test to use for scaling studies on compressible flows. The speed of sound for this test is about 390 m/s - so set the timestep accordingly.
+    In general, for FE time integration, you CFL should be around 0.01. For RK3, it is possible to get to a CFL of 1.</info>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+        
+    <Density method="COMPRESSIBLE">
+      <NameTag name="density"/>
+    </Density>
+  
+  <TimeIntegrator>FE</TimeIntegrator>
+
+    <!-- Set the initial condition expression for pressure - currently pressure has to be named pressure -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="pressure"/>
+      <Constant>101325.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the molecular weight - needed both on initial condition and advance solution -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition expression for mixture fraction -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f0"/>
+      <GaussianFunction amplitude="4.64" deviation="0.2" mean="0.0" baseline="0.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f1"/>
+      <GaussianFunction amplitude="4.64" deviation="0.2" mean="0.0" baseline="0.0">
+        <NameTag name="ZSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f2"/>
+      <GaussianFunction amplitude="4.64" deviation="0.2" mean="0.0" baseline="0.0">
+        <NameTag name="YSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f012"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <!-- specify the list of tags of the source expressions -->
+        <NameTag name="f0"/>
+        <NameTag name="f1"/>
+        <NameTag name="f2"/>        
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f3"/>
+      <Constant>273.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <!-- specify the list of tags of the source expressions -->
+        <NameTag name="f012"/>
+        <NameTag name="f3"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+
+  <!-- Set the initial condition expression for x-momentum -->
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"  />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="v"  />
+      <Constant>0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="w"  />
+      <Constant>0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"  />
+      <Constant>2.181e-5</Constant>
+    </BasicExpression>
+    
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>      
+    </MomentumEquations>
+
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <DiffusiveFlux direction="XYZ" coefficient="0.024"/>
+      <ConvectiveFlux direction="X" method="VANLEER">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="VANLEER">
+        <AdvectiveVelocity>
+          <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Z" method="VANLEER">
+        <AdvectiveVelocity>
+          <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>        
+    </EnergyEquation>
+  </Wasatch>
+
+  <Time>
+    <maxTime>5</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.5e-6</delt_min>
+    <delt_max>1.5e-6</delt_max>
+    <max_Timesteps>20</max_Timesteps>
+    <timestep_multiplier>1</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>compressible-flow-test-3d.uda</filebase>
+    <outputTimestepInterval>8</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "1e-5"/>
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="u"/>
+    <save label="Temperature"/>
+    <save label="v"/>
+    <save label="density"/>
+    <save label="rhoet_rhs"/>
+    <save label="pressure"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      </BoundaryConditions>
+      <Level>
+      <Box label="domain">
+        <lower>[-2,-2,-2]</lower>
+        <upper>[2,  2, 2]</upper>
+        <resolution>[64,64,64]</resolution>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

@@ -1,0 +1,7 @@
+set terminal x11 1
+#set terminal postscript portrait color solid "Times-Roman" 18 size 8.88889 in, 6.68 in
+set xlabel "Piston Displacement (cm)"
+set ylabel "Reaction Force (ug-cm/us^2)"
+plot \
+ "time_disp_force.dat" using 2:3 w l lw 4 t "35 TPL Sim. Results",\
+pause -1

@@ -1,0 +1,37 @@
+#!/bin/csh -f
+setenv NCURSES_NO_UTF8_ACS 1   # fix for dialog issue with certain terminals
+#__________________________________
+#  This helper script executes one of two make commands
+#        make gold_standards
+#        make runLocalRT
+#  It MUST be executed from either the dbg or opt directories.
+#__________________________________
+set opts = (`dialog --stdout --separate-output --checklist "Local Regression Testing:\nPlease select one." 0 0 0 "1" "Generate gold standards"  off, "2" "Run local regression tests"  off,`)
+
+if( $status != 0 ) then
+  echo "cancel selected"
+  exit
+endif
+
+#remove quotations from options variable
+set opts = `echo $opts | tr -d '"'`
+
+if ( $opts != "1" && $opts != "2" ) then
+  echo "ERROR: localRT  there's a problem with the dialog options"
+  echo  "       Now exiting"
+  exit
+endif
+
+if ( $opts == "1" ) then
+  echo "make gold_standards" 
+  make gold_standards
+  set rc = $status
+endif
+if ( $opts == "2" ) then
+  echo "make runLocalRT"
+  make runLocalRT
+  set rc = $status
+endif
+
+
+exit($rc)

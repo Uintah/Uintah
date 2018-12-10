@@ -1,0 +1,13 @@
+void wvelcoef_central(constSFCZVariable<double> ww, SFCZVariable<double> cesav,
+     SFCZVariable<double> cwsav, SFCZVariable<double> cnsav,
+     SFCZVariable<double> cssav, SFCZVariable<double> ctsav,
+     SFCZVariable<double> cbsav, SFCZVariable<double> ap,
+     SFCZVariable<double> ae, SFCZVariable<double> aw,
+     SFCZVariable<double> an, SFCZVariable<double> as,
+     SFCZVariable<double> at, SFCZVariable<double> ab,
+     constSFCXVariable<double> uu, constSFCYVariable<double> vv,
+     constCCVariable<double> den, constCCVariable<double> vis,
+     constCCVariable<double> den_ref, SFCZVariable<double> SU,
+     constCCVariable<double> eps,
+     double deltat, double grav, double dx, double dy, double dz, 
+     IntVector idxLoW, IntVector idxHiW);

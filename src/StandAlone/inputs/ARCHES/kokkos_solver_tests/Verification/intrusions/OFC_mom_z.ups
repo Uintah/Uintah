@@ -1,0 +1,305 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Test of 1D transport of kokkos-ized scalars - Pure convection </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <!--Scheduler type='MPI'>
+    <TaskMonitoring>
+      <attribute>WaitTime</attribute>
+      <task name="TransportFactory::x-mom" attribute="ExecTime"/>
+    </TaskMonitoring>
+  </Scheduler-->
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-1</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>0.3</timestep_multiplier>
+    <max_Timesteps>5</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>z-ofc.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="A_press"/>
+    <save label="volFraction"/>
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="z-mom"/>
+    <save label="x-mom_RHS"/>
+    <save label="x-mom_x_flux"/>
+    <save label="x-mom_y_flux"/>
+    <save label="x-mom_z_flux"/>
+    <save label="pressure"/>
+    <save label="uVel"/>
+    <save label="uVel_cc"/>
+    <save label="vVel"/>
+    <save label="vVel_cc"/>
+    <save label="wVel"/>
+    <save label="wVel_cc"/>
+    <save label="density"/>
+    <save label="ucell_yvel"/>
+    <save label="ucell_zvel"/>
+    <save label="ucell_xvel"/>
+    <save label="gamma"/>
+    <save label="b_press"/>
+    <save label="A_press"/>
+    <!--save label="TransportFactory/x-mom/ExecTime"/-->
+    <!--<save label="WaitTime"/>-->
+    <checkpoint cycle="2" interval="1e-3"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="upper">
+        <lower>[0.0,0,0]</lower>
+        <upper>[0.6,0.6,1.7]</upper>
+        <extraCells>[1,1,1]</extraCells>
+        <resolution>[20,20,60]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face side="z-" type="Wall">
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="phi">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face annulus="z-" inner_radius="0.1" name="secondary_air" 
+       origin="0.3 0.3 0.0" outer_radius="0.2">
+        <BCType label="z-mom" var="Custom" type="velocity">
+          <value>.4158</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="phi">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face circle="z-" name="primary_air" 
+      type="Inlet" origin="0.3 0.3 0.0" radius="0.1">
+        <BCType label="z-mom" var="Custom" type="velocity">
+          <value>0.3707678</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="phi">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face circle="z+" name="outlet_circle" 
+      type ="Outflow" origin="0.3 0.3 1.7" radius="0.134">
+        <BCType var="Neumann" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="wall_x_p" type="Wall">
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" type="Wall">
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" type="Wall">
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x-" type="Wall">
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" type="Wall">
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <PropertyModelsV2>
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>1.e-4</value>
+        </model>
+      </PropertyModelsV2>
+      <StateProperties> 
+        <model label="my_constant_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
+      <KMomentum>
+        <convection scheme="central"/>
+        <inviscid/>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+      </KMomentum>
+      <BoundaryConditions>
+        <force_area_calc/>
+        <intrusions>
+          <intrusion label="FurnaceWall">
+            <geom_object>
+              <difference>
+                <cylinder label="furnace_out">
+                  <bottom>[0.3, 0.3, 0.]</bottom>
+                  <top>   [0.3, 0.3, 1.22]</top>
+                  <radius>0.6</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+                <cylinder label="furnace_inner">
+                  <bottom>[0.3, 0.3, 0.]</bottom>
+                  <top>   [0.3, 0.3, 1.22]</top>
+                  <radius>0.3</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+              </difference>
+              <difference>
+                <cylinder label="shrink_out">
+                  <bottom>[0.3, 0.3, 1.22]</bottom>
+                  <top>   [0.3, 0.3, 1.52]</top>
+                  <radius>0.6</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+                <cone label="shrink_inner">
+                  <bottom>[0.3, 0.3, 1.22]</bottom>
+                  <bottom_radius>0.3</bottom_radius>
+                  <top>   [0.3, 0.3, 1.52]</top>
+                  <top_radius>0.132</top_radius>
+                </cone>
+              </difference>
+              <difference>
+                <cylinder label="bottom_out">
+                  <bottom>[0.3, 0.3, 1.52]</bottom>
+                  <top>   [0.3, 0.3, 1.7]</top>
+                  <radius>0.6</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+                <cylinder label="bottom_inner">
+                  <bottom>[0.3, 0.3, 1.52]</bottom>
+                  <top>   [0.3, 0.3, 1.7]</top>
+                  <radius>0.132</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+              </difference>
+            </geom_object>
+          </intrusion>
+        </intrusions>
+      </BoundaryConditions>
+      <KokkosSolver/>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

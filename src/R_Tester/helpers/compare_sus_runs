@@ -1,0 +1,286 @@
+#!/bin/bash
+
+#______________________________________________________________________
+#   This function performs all of the comparsions between two udas.  Specifically:
+#   - input.xml files
+#   - dat files
+#   - uda directories
+#   - checkpoint comparisons
+#
+#   exit return values:
+#    -1:  not dat comparison
+#     0:  comparison passed
+#     1:  udas compared but the comparison failed
+#     5:  udas cannot be compared
+#    10:  input files differ
+#
+#______________________________________________________________________
+
+compareUda_function()
+{
+  test_uda_dir=$1     # path to uda being compared
+  gs_uda_dir=$2       # path to gold standard uda
+  sus_dir=$3          # path to sus
+  abs_tol=$4          # Absolute tolerance passed to compare_uda()
+  rel_tol=$5          # Relative tolerance passed to compare_uda()
+
+  compare_flags="-as_warnings -concise -abs_tolerance $abs_tol -rel_tolerance $rel_tol"
+
+  inputs_differ=0
+  echo
+  echo "*************************"
+  echo "Comparing $test_uda_dir with $gs_uda_dir"
+  echo "*************************"
+  echo
+  echo "Checking input files"
+  echo
+
+  if [ -s $test_uda_dir/input.xml.orig ]; then
+    echo "comparing input.xml.orig"
+    sdiff -Ws $test_uda_dir/input.xml.orig $gs_uda_dir/input.xml.orig
+  else
+    echo "comparing input.xml"
+    sdiff -Ws $test_uda_dir/input.xml $gs_uda_dir/input.xml
+  fi
+
+  if [ $? != "0" ]; then
+    echo
+    echo "  Input files differ."
+    inputs_differ=1
+  else
+    echo "  Input files are the same."
+  fi
+
+  failed="0"
+  echo
+  echo "Comparing dat files"
+  echo "======================================"
+  echo
+  echo "compare_dats $test_uda_dir $gs_uda_dir $abs_tol $rel_tol"
+
+  compare_dats $test_uda_dir $gs_uda_dir $abs_tol $rel_tol
+  compare_dats_retval=$?
+  if [ $compare_dats_retval = "1" ]; then
+    echo
+    echo "*** dat comparison tests failed ***"
+    failed="1"
+  elif [ $compare_dats_retval = "-1" ]; then
+    failed="-1"
+  fi
+
+  echo
+  echo "Comparing udas"
+  echo "======================================"
+  echo
+  echo "$sus_dir/compare_uda $compare_flags $test_uda_dir $gs_uda_dir"
+
+  $sus_dir/compare_uda $compare_flags $test_uda_dir $gs_uda_dir
+
+  uda_retval=$?
+  echo "compare_uda return value $uda_retval"
+
+  if [ $uda_retval == "5" ]; then
+    echo
+    echo "*** compare_uda aborted comparison. uda directories cannot be compared ***"
+    exit 5
+  fi
+
+  if [ $uda_retval != "0" ]; then
+
+    if [ $uda_retval == "2" ]; then
+      echo
+      echo "*** uda comparison tests failed:  tolerances exceeded ***"
+    fi
+
+    echo
+    echo "Computing the Lnorms between the two udas "
+    echo "======================================"
+    $sus_dir/tools/compute_Lnorm_udas $test_uda_dir $gs_uda_dir
+
+    failed="1"
+  fi
+
+
+  echo
+  echo "Comparing checkpoints"
+  echo "======================================"
+  if [[ -d "$test_uda_dir/checkpoints" &&  -d "$gs_uda_dir/checkpoints" ]]; then
+    echo
+    echo "$sus_dir/compare_uda -skip_unknown_types $compare_flags $test_uda_dir/checkpoints $gs_uda_dir/checkpoints"
+
+    $sus_dir/compare_uda -skip_unknown_types $compare_flags $test_uda_dir/checkpoints $gs_uda_dir/checkpoints
+    chp_retval=$?
+
+    if [ $chp_retval == "5" ]; then
+      echo
+      echo "*** compare_uda aborted comparison. uda directories cannot be compared ***"
+      exit 5
+    fi
+
+    if [ $chp_retval == "2" ]; then
+      echo
+      echo "*** uda comparison tests failed:  tolerances exceeded ***"
+      failed="1"
+    fi
+
+    if [ $chp_retval != "0" ]; then
+      echo
+      echo "*** checkpoint comparison tests failed ***"
+      failed="1"
+    fi
+
+  else
+    echo "       WARNING: The checkpoint directory was not present in either the goldstandard or the test"
+    echo "                No comparison performed"
+  fi
+  #______________________________________________________________________
+  #  all of the uda comparisons have been made
+
+  if [ $failed != "0" ]; then
+    exit $failed
+  fi
+
+  if [ $inputs_differ = "1" ]; then
+    exit 10;
+  fi
+  exit 0
+}
+
+
+#______________________________________________________________________
+#______________________________________________________________________
+#  This script is a wrapper around the compareUda_function().
+#    If the gold standard does not exist then it's created.
+#    The user must be the owner of the gold standards directory to copy to that dir
+#
+#   exit return values:
+#    -2:    copied existing uda to gold standards
+#    -1:
+#     0:    passed
+#     1:    Error creating the gold standards
+#     5:    The udas may not be compared
+#______________________________________________________________________
+
+test=$1                # name of regression test
+test_dir=$2            # path to uda to be compared
+gs_component_dir=$3    # path to gold standard component
+sus_dir=$4             # path to sus
+abs_tol=$5             # Absolute tolerance
+rel_tol=$6             # Relative tolerance
+create_gs=$7           # bool should the gold_standard be created?
+
+#__________________________________
+# determine the paths of the 2 udas
+here=`pwd`
+cd $test_dir
+uda_dir=`ls -d *.uda`
+cd $here
+command
+test_uda_dir=$test_dir/$uda_dir
+gs_uda_dir=$gs_component_dir/$test/$uda_dir
+
+
+# __________________________________
+# Do I own the gold standards directory
+gs_uid=`stat --format %u "$gs_component_dir"`
+my_uid=`id --user`
+
+is_owner="false"
+if [ $gs_uid == $my_uid ]; then
+  is_owner="true"
+fi
+
+
+if [ -d "$test_uda_dir" ]; then
+
+  #__________________________________
+  # Create the GS/<component> directory if needed
+  if [ ! -d "$gs_component_dir" ]; then
+    echo "Missing $gs_component_dir directory"
+
+    if [ "$is_owner" = "true" ]; then
+      echo "  Creating directory"
+      compare_PARENT_DIR=`echo "$gs_component_dir" | sed 's|/[^/]*$||'`
+      cd $compare_PARENT_DIR
+      compare_DIR=`echo "$gs_component_dir" | sed "s|.*/||"`
+      mkdir $compare_DIR
+    else
+      echo "  Cannot creating the missing $gs_component_dir directory.  You do not own the gold standards"
+      echo "  Now exiting"
+      exit 1
+    fi
+  fi
+
+  #__________________________________
+  # Create the GS/<component>/<test> directory if needed
+  if [ ! -d "$gs_component_dir/$test" ]; then
+    echo "Missing $gs_component_dir/$test directory"
+
+    if [ "$is_owner" = "true" ]; then
+      echo "  Creating directory"
+      cd $gs_component_dir
+      mkdir $test
+    else
+      echo "  Cannot creating the missing $gs_component_dir/$test directory.  You do not own the gold standards"
+      echo "  Now exiting"
+      exit 1
+    fi
+  fi
+
+  #__________________________________
+  # copy the gold standards if they don't exist
+  # be careful copying the restart data  
+  
+  if [[ "$is_owner" == "false" && "$create_gs" =~ yes.* ]]; then
+    echo "  Permissions failure:  Only the owner of the gold standards directory can copy an uda to it for the first time."
+    echo "  Now exiting"
+    exit 1
+  fi
+
+  # copy original uda and files
+  if [ $create_gs == "yes-inputFile" ]; then
+    echo "  Missing gold Standard uda directory: $gs_uda_dir"
+    echo "  copying the orginal uda to the gold standards"
+
+    # try to remove it in case it exists as a non-directory
+    /bin/rm $gs_uda_dir >/dev/null 2>&1
+
+    # --dereference option: always follow symbolic links
+    cp -r --dereference $test_uda_dir $gs_uda_dir
+
+    if [ $? != "0" ]; then
+	# try without --dereference -- not all cp's have this option
+	cp -r $test_uda_dir $gs_uda_dir
+    fi
+
+    # copy text files to the goldStandard. For each uda it passes
+    # through this section twice
+    cp "$test_dir/sus.log.txt"           $gs_component_dir/$test/.
+    cp "$test_dir/timestamp"             $gs_component_dir/$test/.
+    cp "$test_dir/malloc_stats"          $gs_component_dir/$test/.
+
+    chgrp -R $COMMON_GROUP "$gs_component_dir/$test"
+    chmod -R g+rwX "$gs_component_dir/$test"
+
+  # copy restart files
+  elif [ $create_gs == "yes-restart" ]; then
+    echo "  copying the restart files to the gold standards: $gs_uda_dir"
+    cp "$test_dir/restart_timestamp"     $gs_component_dir/$test/.
+    cp "$test_dir/restart_malloc_stats"  $gs_component_dir/$test/.
+    
+  else
+
+    #______________________________________________________________________
+    #  now run the comparison function
+    echo "`date +'%r %D'`"
+    echo "Testing $test"
+    compareUda_function $test_uda_dir $gs_uda_dir $sus_dir $abs_tol $rel_tol
+    exit $?
+  fi
+else
+  echo "$test_uda_dir was not created"
+  exit 1
+fi
+
+exit 0
+

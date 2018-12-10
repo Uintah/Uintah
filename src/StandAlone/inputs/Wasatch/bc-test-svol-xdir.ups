@@ -1,0 +1,140 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test Boundary Conditions</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+  
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-dirichlet-dirichlet-a"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-dirichlet-dirichlet-b"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-dirichlet-neumann"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-neumann-dirichlet"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-neumann-neumann"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi-dirichlet-dirichlet-a</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="1.0"/>
+    </TransportEquation>
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi-dirichlet-dirichlet-b</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="1.0"/>
+    </TransportEquation>
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi-dirichlet-neumann</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="1.0"/>
+    </TransportEquation>
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi-neumann-dirichlet</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="1.0"/>
+    </TransportEquation>
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi-neumann-neumann</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="1.0"/>
+    </TransportEquation>
+    </Wasatch>
+
+
+  <Time>
+    <maxTime>0.0005</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.00001</delt_max>
+    <max_Timesteps> 3 </max_Timesteps>    
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>bc-test-svol-xdir.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.00001"/>
+    <compression>gzip</compression>
+    <save label="phi-dirichlet-dirichlet-a"/>
+    <save label="phi-dirichlet-dirichlet-b"/>
+    <save label="phi-dirichlet-neumann"/>
+    <save label="phi-neumann-dirichlet"/>
+    <save label="phi-neumann-neumann"/>
+
+    <save label="phi-dirichlet-dirichlet-a_rhs"/>
+    <save label="phi-dirichlet-dirichlet-b_rhs"/>
+    <save label="phi-dirichlet-neumann_rhs"/>
+    <save label="phi-neumann-dirichlet_rhs"/>
+    <save label="phi-neumann-neumann_rhs"/>
+    
+  </DataArchiver> 
+
+  <Grid>
+	<BoundaryConditions>      
+      <DefaultMaterial>all</DefaultMaterial>
+      <!-- BOUNDARY CONDITIONS -->
+      <Face side="x-" name="left-wall">
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a" value="10.0"/>
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-b" value="5.0"/>
+        <BCType var="Dirichlet" label="phi-dirichlet-neumann" value="10.0"/>
+        <BCType var="Neumann" label="phi-neumann-dirichlet" value="-1.0"/>
+        <BCType var="Neumann" label="phi-neumann-neumann" value="1.0"/>                
+      </Face>      
+      <Face side="x+" name="right-wall">
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a" value="5.0"/>
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-b" value="10.0"/>
+        <BCType var="Neumann" label="phi-dirichlet-neumann" value="1.0"/>
+        <BCType var="Dirichlet" label="phi-neumann-dirichlet" value="10.0"/>
+        <BCType var="Neumann" label="phi-neumann-neumann" value="1.0"/>
+      </Face>
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,0.25,0.01]</upper>
+        <resolution>[40,2,2]</resolution>
+        <patches>[4,1,1]</patches>
+      </Box>
+      <periodic>[0,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

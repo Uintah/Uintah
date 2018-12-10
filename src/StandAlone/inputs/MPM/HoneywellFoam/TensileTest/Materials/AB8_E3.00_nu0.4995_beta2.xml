@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!--  Base Units -->
+<!--  mass        - microgram     -->
+<!--  time        - microsecond   -->
+<!--  length      - cm            -->
+<!--  temperature - Kelvin        -->
+<Uintah_Include>
+  <density>1.13e6</density>
+  <constitutive_model type="ArrudaBoyce8">
+    <bulk_modulus>10000.0</bulk_modulus>
+    <shear_modulus>10.00</shear_modulus>
+    <beta>2</beta>
+  </constitutive_model>
+  <thermal_conductivity>1.0</thermal_conductivity>
+  <specific_heat>5</specific_heat>
+</Uintah_Include>

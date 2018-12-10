@@ -1,0 +1,157 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Pressure Projection Test with a 1D Convective Case in x-direction</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>    
+    
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
+    </Density>
+    
+    <!-- Set the initial condition expression for mixture fraction -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f"/>
+      <GaussianFunction amplitude="1.0" deviation="1.0" mean="0.0" baseline="0.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <TwoStreamMixing rho0="1.0" rho1="3.0">
+      <Density><NameTag name="density"/></Density>
+      <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
+      <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
+    </TwoStreamMixing>  
+
+
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="u"/>
+       <Constant>1.0</Constant>
+    </BasicExpression>
+    
+        
+    <!-- Build a scalar transport equation for mixture fraction -->
+    <TransportEquation equation="mixturefraction">
+
+      <SolutionVariable>rhof</SolutionVariable>
+      <PrimitiveVariable>f</PrimitiveVariable>
+      
+      <ConvectiveFlux direction="X" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+
+    </TransportEquation>   
+    
+    <ForceOnGraph tasklist="advance_solution">
+        <NameTag name="f" state="STATE_NP1"/>
+    </ForceOnGraph>
+    
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+      
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+        
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+         
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+      
+      <Pressure>
+        <Use3DLaplacian>false</Use3DLaplacian>
+        <Parameters>
+          <skip>1</skip>
+          <solver>         cg      </solver>
+          <preconditioner> pfmg    </preconditioner>
+          <tolerance>      1e-12  </tolerance>
+          <maxiterations>  1000   </maxiterations>
+          <relax_type>     2       </relax_type>
+         </Parameters>
+      </Pressure>
+    </MomentumEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>5.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps> 200 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>varden-projection-advection-xdir-analytic-dens.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.02"/>
+    <save label="density"/>
+    <save label="x-mom"/>
+    <save label="x-mom_rhs_partial"/>
+    <save label="u"/>    
+    <save label="f"/>
+    <save label="rhof"/>
+    <save label="pressure"/>
+    <save label="pressure_src"/>
+  </DataArchiver> 
+
+  <Grid>
+
+      <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+
+      <Face side="x-">
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom" var="Neumann" value="0.0"/>
+        <BCType label="u" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+      </Face>
+      <Face side="x+">
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom" var="Neumann" value="0.0"/>
+        <BCType label="u" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+      </Face>
+      </BoundaryConditions>  
+
+      <Level>
+      <Box label="1">
+        <lower>[-15,0,0]</lower>
+        <upper>[15,1,1]</upper>
+        <resolution>[256,1,1]</resolution>
+        <patches>[3,1,1]</patches>
+      </Box>
+      <periodic>[0,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

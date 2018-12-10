@@ -1,0 +1,153 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  This script parses sus output and plots relevant hypre solver quantities
+#
+#  Usage:
+#     plotStat <sus output file> < output postScript and pdf files (y/Y), default is no>
+#
+#  This requires gnuplot 3.8 or greater.
+#______________________________________________________________________
+
+set tmp = (`which gnuplot`)
+
+if ( $status ) then
+  echo " ERROR: Could not find gnuplot"
+  exit(0)
+endif
+
+if( $#argv == 0 ) then
+  echo "plotStat <sus output file> <dump postScript File (y/Y), default is no>"
+  exit(1)
+endif
+set out = $argv[1]
+
+if ( !(-e $out) ) then
+    echo "Couldn't find your file $out"
+  exit(1)
+endif
+
+set hardcopy = "n"
+if ( $#argv == 2 ) then
+  set hardcopy = $argv[2]
+endif
+
+unalias rm
+#__________________________________
+# remove your droppings and make a copy of the output file
+/bin/rm -rf scraps
+
+mkdir scraps >&/dev/null
+cp $out scraps/tmp
+cd scraps
+
+grep Time= tmp |grep Mem >& rawData.clean
+
+#__________________________________
+# Parse the output file.  This is gross
+echo "Now extracting the data"
+
+grep "solve only" tmp   |  cut -d: -f2 | awk '{print $1}' >& solverTime
+grep "solve only" tmp   |  awk '{ match ($0, "solve only"); print substr($0, RSTART) }' | awk '{print $(NF -4)}' >& solverIters
+
+grep "Wall Time" rawData.clean | cut -d"=" -f4 | awk '{print $1}' >& elapsedTime
+grep EMA  rawData.clean        | cut -d"=" -f5 | awk '{print $1}' >& meanTime
+
+paste -d "  " elapsedTime meanTime solverTime solverIters >& data
+sed  -i s/","//g data    # eliminate any "," 
+
+
+echo "Done extracting data"
+
+@ procs     = `grep "MPI processes" tmp | awk '{print $2}'`
+@ threads   = `grep "threads per MPI process" tmp | awk '{print $2}'`
+
+set machine = `grep Machine    tmp | cut -d":" -f 2`
+set date    = `grep -m1 Date   tmp | cut -d" " -f2-8,10`
+set uda     = `grep "DataArchiver created" tmp | awk '{print $3}'`
+echo "Done extracting data"
+
+#______________________________________________________________________
+#  create the gnuplot script
+
+touch gp
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then
+echo "Generating the postscript file plotSolverStats.ps"
+
+cat >> gp << fin
+set terminal postscript color solid "Times-Roman" 12
+set output "plotSolverStats.ps"
+fin
+else
+cat >> gp << fin
+set terminal x11 font "fixed,bold,12" size 1024,768
+fin
+endif
+
+cat >> gp << fin
+
+#__________________________________
+# compute stats this version of gnuplot is > 3.8
+haveStats =0
+if ( strstrt(GPVAL_COMPILE_OPTIONS,"+STATS") ) print "Computing the statistics of the mean time per timestep"; haveStats = 1
+# compute statistics of mean time and scale the results
+if(haveStats == 1) stats 'data' using 2 name "A"; 
+if(haveStats == 1) stats 'data' using 3 name "B"; 
+if(haveStats == 1) stats 'data' using 4 name "C"; 
+
+
+set multiplot
+set size   1.0, 0.5
+set autoscale
+
+set origin 0.0, 0.5
+set grid xtics ytics
+
+set title "$date, $machine, $procs MPI ranks, $threads Threads, uda: $uda"
+set xlabel 'Timesteps'
+set y2tics
+set ylabel  'Time [s]'        textcolor lt 1
+set y2label 'Solver Time [s]' textcolor lt 2
+
+set yrange[A_mean - 2*A_stddev:A_mean + 2*A_stddev]
+set y2range[B_mean - 2*B_stddev:B_mean + 2*B_stddev]
+
+
+plot 'data' using 2            t 'meanTime/timestep' with lines,\
+     'data' using 3  axes x1y2 t 'solver Time ' with lines
+#__________________________________
+set size 1.0,0.5
+set origin 0.0,0.0
+set ylabel 'Solver iterations'
+unset title
+unset y2tics
+unset y2label
+set autoscale
+
+
+set yrange[C_min - .01*C_min:C_max + .01*C_max]
+plot 'data' using 4 t 'solver iterations' with lines
+
+set nomultiplot
+fin
+
+if( $hardcopy == "n") then
+  echo "pause -1 'Hit return to exit'" >> gp
+endif
+
+#__________________________________
+# plot it up
+gnuplot gp
+
+if($hardcopy == "y" || $hardcopy == "Y") then
+  echo "converting PostScript files to PDF"
+  ps2pdf plotSolverStats.ps
+  mv plotSolverStats* ../.
+endif
+
+#__________________________________
+# clean up
+/bin/rm -rf scraps
+
+exit(0)

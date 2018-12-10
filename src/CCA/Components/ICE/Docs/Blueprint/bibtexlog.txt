@@ -1,0 +1,5 @@
+This is BibTeX, Version 0.99d (TeX Live 2015/dev/Debian)
+The top-level auxiliary file: ICE_MM.aux
+A level-1 auxiliary file: newcommands.aux
+The style file: chicago.bst
+Database file #1: ICE_MM.bib

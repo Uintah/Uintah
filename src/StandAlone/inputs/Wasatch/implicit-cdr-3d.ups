@@ -1,0 +1,210 @@
+<Uintah_specification>
+
+  <Meta> <title>a 2-D advection-diffusion-reaction example</title> </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+    <Density method="CONSTANT"> <Constant value="1.0" name="density"/> </Density>
+    <TimeIntegrator>FE</TimeIntegrator>
+    <DualTime iterations="10000" tolerance="1e-4" ds="1.e16" blockimplicit="true"/>
+     
+    <BasicExpression type="XVOL"> <TaskList>advance_solution</TaskList>
+      <NameTag name="u"/>
+      <GaussianFunction amplitude="-1.0" deviation="0.1" mean="0.5" baseline="0.0">
+        <NameTag name="YXVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <BasicExpression type="YVOL"> <TaskList>advance_solution</TaskList>
+      <NameTag name="v"/>
+      <GaussianFunction amplitude="1.0" deviation="0.1" mean="0.5" baseline="0.0">
+        <NameTag name="XYVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <BasicExpression type="ZVOL"> <TaskList>advance_solution</TaskList>
+      <NameTag name="w"/>
+      <Constant>0.1</Constant>
+    </BasicExpression>
+
+    <BCExpression type="SVOL"> <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="A_bc"/>
+      <GaussianFunction amplitude="1.0" deviation="0.1" mean="0.5" baseline="0.0">
+        <NameTag name="YSVOL"/>
+      </GaussianFunction>
+    </BCExpression>
+    <BCExpression type="SVOL"> <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="B_bc"/>
+      <GaussianFunction amplitude="1.0" deviation="0.1" mean="0.5" baseline="0.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction>
+    </BCExpression>
+
+    <BasicExpression type="SVOL"> <TaskList>initialization</TaskList>
+      <NameTag name="A"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL"> <TaskList>initialization</TaskList>
+      <NameTag name="B"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL"> <TaskList>initialization</TaskList>
+      <NameTag name="C"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL"> <TaskList>advance_solution</TaskList>
+      <NameTag name="k"/>
+      <Constant>10.</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL"> <TaskList>advance_solution</TaskList>
+      <NameTag name="q"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="k"/>
+        <NameTag name="A" state="STATE_DYNAMIC"/>
+        <NameTag name="A" state="STATE_DYNAMIC"/>
+        <NameTag name="B" state="STATE_DYNAMIC"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL"> <TaskList>advance_solution</TaskList>
+      <NameTag name="A-source"/> <LinearFunction slope="-2.0" intercept="0.0"> <NameTag name="q"/> </LinearFunction>
+    </BasicExpression>
+    <BasicExpression type="SVOL"> <TaskList>advance_solution</TaskList>
+      <NameTag name="B-source"/> <LinearFunction slope="-1.0" intercept="0.0"> <NameTag name="q"/> </LinearFunction>
+    </BasicExpression>
+    <BasicExpression type="SVOL"> <TaskList>advance_solution</TaskList>
+      <NameTag name="C-source"/> <LinearFunction slope="1.0"  intercept="0.0"> <NameTag name="q"/> </LinearFunction>
+    </BasicExpression>
+    
+    <TransportEquation equation="generic">
+      <SolutionVariable>A</SolutionVariable>
+      <ConvectiveFlux direction="X" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Z" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DiffusiveFlux  direction="X" coefficient="1.e-2"/>
+      <DiffusiveFlux  direction="Y" coefficient="1.e-2"/>
+      <DiffusiveFlux  direction="Z" coefficient="1.e-2"/>
+      <SourceTermExpression> <NameTag name="A-source"/></SourceTermExpression>
+    </TransportEquation>
+
+    <TransportEquation equation="generic">
+      <SolutionVariable>B</SolutionVariable>
+      <ConvectiveFlux direction="X" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Z" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DiffusiveFlux  direction="X" coefficient="1.e-2"/>
+      <DiffusiveFlux  direction="Y" coefficient="1.e-2"/>
+      <DiffusiveFlux  direction="Z" coefficient="1.e-2"/>
+      <SourceTermExpression> <NameTag name="B-source"/></SourceTermExpression>
+    </TransportEquation>
+
+    <TransportEquation equation="generic">
+      <SolutionVariable>C</SolutionVariable>
+      <ConvectiveFlux direction="X" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Z" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DiffusiveFlux  direction="X" coefficient="1.e-2"/>
+      <DiffusiveFlux  direction="Y" coefficient="1.e-2"/>
+      <DiffusiveFlux  direction="Z" coefficient="1.e-2"/>
+      <SourceTermExpression> <NameTag name="C-source"/></SourceTermExpression>
+    </TransportEquation>
+
+  </Wasatch>
+  <DataArchiver>
+    <filebase>implicit-cdr-3d.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="A"/>
+    <save label="B"/>
+    <save label="C"/>
+  </DataArchiver> 
+
+  <Time>
+    <maxTime>0.1</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.01</delt_min>
+    <delt_max>0.01</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face side="x-" name="left"  >
+        <BCType var="Neumann"   label="A" value="0.0" />
+        <BCType var="Neumann"   label="B" value="0.0" />
+        <BCType var="Neumann"   label="C" value="0.0" />
+      </Face>
+      <Face side="x+" name="right" >
+        <BCType var="Dirichlet" label="A" value="A_bc"/>
+        <BCType var="Dirichlet" label="B" value="0.0" />
+        <BCType var="Dirichlet" label="C" value="0.0" />
+      </Face>
+      <Face side="y-" name="bottom">
+        <BCType var="Dirichlet" label="A" value="0.0" />
+        <BCType var="Dirichlet" label="B" value="B_bc"/>
+        <BCType var="Dirichlet" label="C" value="0.0" />
+      </Face>
+      <Face side="y+" name="top"   >
+        <BCType var="Neumann"   label="A" value="0.0" />
+        <BCType var="Neumann"   label="B" value="0.0" />
+        <BCType var="Neumann"   label="C" value="0.0" />
+      </Face>
+      <Face side="z-" name="in">
+        <BCType var="Dirichlet" label="A" value="1.0" />
+        <BCType var="Dirichlet" label="B" value="1.0"/>
+        <BCType var="Dirichlet" label="C" value="0.0" />
+      </Face>
+      <Face side="z+" name="out"   >
+        <BCType var="Neumann"   label="A" value="0.0" />
+        <BCType var="Neumann"   label="B" value="0.0" />
+        <BCType var="Neumann"   label="C" value="0.0" />
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="domain">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[32,16,16]</resolution>
+        <patches>[2,1,1]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

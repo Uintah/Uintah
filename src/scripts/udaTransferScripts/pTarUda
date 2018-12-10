@@ -1,0 +1,326 @@
+#!/bin/bash
+#
+#______________________________________________________________________
+#  This script tars/untars, in parallel, each timestep in the uda and inside of the checkpoints 
+#  directory.
+#
+#  Usage:
+#   pTarUda 
+#          -np:              [int]        10       Number of processores used.
+#          -allTimesteps:    [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
+#          -create           blank         X       create new archives
+#          -extract          blank                 extract timestep archieves
+#          -continueTarring  blank                 continue tarring if previous attempts failed
+#          -uda              [dir name]            uda name
+#          -help:                                  Display this option summary
+#
+#  It does not delete the original timestep directories. 
+#
+#______________________________________________________________________
+
+#echo $argv
+#
+#------------------
+# unalias commands
+unalias -a rm
+unalias -a cd
+
+#__________________________________
+# defaults
+nproc="10"
+allTimesteps="Y"
+continueTarring="N"
+deleteOrgTimesteps="N"
+MAKE=make
+OS="Linux"
+FIND=find
+recordName="ptar_record"
+
+#______________________________________________________________________
+# Parse input
+show_help=0
+if test $# -lt 2; then
+  echo "Wrong number of arguments ($#)."
+  show_help=1
+fi
+
+# command line arguments
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+  -np|--np)
+      shift
+      nproc="$1"
+      ;;
+  -allTimesteps|--allTimesteps)
+      shift
+      ans=`echo $1 | tr [:lower:] [:upper:]` # upper case trick
+      allTimesteps=$ans
+      ;;
+  -uda|--uda)
+      shift
+      uda="$1"
+      ;;
+  -create|--create)
+      createExtract="create"
+      ;;
+  -deleteOrgTimesteps|---deleteOrgTimesteps)
+      deleteOrgTimesteps="Y"
+      ;;
+  -extract|--extract)
+      createExtract="extract"
+      recordName="pUntar_record"
+      ;;
+  -continueTarring|--continueTarring)
+      continueTarring="Y"
+      ;;    
+  -help|--help|-h)
+      show_help=1
+      ;;
+   *)
+      echo "$1: Unknown option, -help for help"
+      exit 1
+      ;;
+   esac
+   shift
+done
+
+# usage string - exit
+if [ $show_help -ne 0 ]; then
+  cat <<EOF
+      This script does not delete the original timestep directories. 
+
+      Options:                        default
+          -np:                 [int]        10       Number of processores used.
+          -allTimesteps:       [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
+          -create              blank         X       create new archives
+          -deleteOrgTimesteps  blank                 delete  original timesteps directories after they have been tarred. 
+          -extract             blank                 extract timestep archieves
+          -continueTarring     blank                 continue tarring if previous attempts failed
+          -uda                 [dir name]            uda name
+          -help:                                     Display this option summary
+EOF
+  exit 0
+fi
+
+#__________________________________
+pTarfulldir=`readlink -f $0`
+pTardir=`dirname $pTarfulldir`
+
+if test `echo $uda | cut -c1` != "/"; then
+  # Not absolute path... fix it.
+  uda=`pwd`/$uda
+fi
+
+#__________________________________
+# Bulletproofing the uda directory name cannot contain ":" or " "
+
+rc=`echo $uda | grep --count [\:\|\ ]`
+
+if test "$rc" != "0";  then
+  echo "  ERROR: the uda directory name cannot contain a colon : or whitespace"
+  echo "  You can rename using: (find . -type d -name '*.uda.*' -exec rename 's/:/_/g' {} \;"
+  echo "  Now exiting...."
+  exit 1
+fi
+ 
+
+
+#__________________________________
+#  Create the TAR command used in the make file
+which pigz >& /dev/null                       # is the parallel version of gzip installed?
+rc=$?
+
+if test $createExtract == "create"; then
+  if test "$rc" = "0"; then
+    TAR="tar  --use-compress-program 'pigz' -cBf"
+  else
+    TAR="tar --use-compress-program 'gzip'  -cBf"
+  fi
+fi
+
+which unpigz >& /dev/null                      # is the parallel version of gunzip installed?
+rc=$?
+if test $createExtract == "extract"; then
+  if test "$rc" = "0"; then
+    TAR="tar  --use-compress-program 'unpigz' -xf"
+  else
+    TAR="tar --use-compress-program 'gunzip' -xf"
+  fi
+fi
+
+
+export TAR createExtract deleteOrgTimesteps
+
+export PTAR_FILES=/tmp/ptar_`basename $uda`_`whoami`
+
+echo "_____________________________________"
+echo "Inputs:"
+echo "	# processors:          $nproc"
+echo "	allDirectories:        $allTimesteps"
+echo "	create/extract:        $createExtract"
+echo "	deleteOrgTimesteps:    $deleteOrgTimesteps"
+echo "	continueTarring:       $continueTarring"
+echo "	uda:                   $uda"
+echo "	PTAR_FILES:            $PTAR_FILES"
+echo "	pTardir:               $pTardir"
+echo "	tar command:           $TAR"
+echo "_____________________________________"
+echo ""
+
+#______________________________________________________________________
+# Bulletproofing
+echo "Bullet proof tests:"
+
+validateTarredFilesDir()
+{
+  continueTarring=$1
+  
+  if test -d "$STAMP_DIR"; then
+    echo ""
+    echo "  WARNING: The previous attempt at tarring/untarring the directores was interrupted."
+    echo "           The list of directories already tarred can be found at:"
+    echo "                 $STAMP_DIR/stamp"
+    echo ""
+    echo "            It is possible, though unlikely, that some of the directories listed"
+    echo "            did not complete successfully."
+    echo ""
+    
+    if test "$continueTarring" == "Y"; then
+      return
+    fi
+    
+    echo "  Do you wish to continue tarring/untarring the remaining directories? (y/n)"
+    echo "  If not, manually remove the following directory and run this script again:"
+    echo "           $STAMP_DIR"
+    echo ""
+    echo -n " Please answer y/n: "
+    read answer
+    echo ""
+     if test "$answer" != "y"; then
+      echo "Goodbye."
+      echo ""
+      exit 1
+    fi
+  else
+    echo "  Making the stamp directory $STAMP_DIR"
+    mkdir $STAMP_DIR
+  fi
+}
+
+#__________________________________
+export STAMP_DIR=$uda/.tarred_files
+validateTarredFilesDir $continueTarring
+
+if test ! -d "$STAMP_DIR"; then
+  # Didn't have permissions to make the directory... so place it in tmp
+  printf "\n \t %s \n"  "WARNING: Was not able to create $STAMP_DIR directory (bad permissions?)."
+  
+  export STAMP_DIR=/tmp/.tarred_files_`basename $uda`_`whoami`
+  
+  printf " \t %s \n"  "Placing it in $STAMP_DIR instead."
+  validateTarredFilesDir $continueTarring
+fi
+
+if test ! -d "$STAMP_DIR"; then
+  printf "\n \t %s \n" "  ERROR: Did not have permissions to create $STAMP_DIR directory.  Goodbye."
+fi
+
+if test "$uda" == "."; then
+  printf "\n \t %s \n" "  ERROR: You can't set the local dir to '.'"
+  exit 1
+fi
+
+echo -n "  Testing: does the local folder ($uda) exist... "
+if test ! -e $uda; then
+  printf "\n \t %s \n" "  ERROR: Local directory '$uda' does not exist"
+  exit 1
+fi
+echo "yes."
+
+echo "_____________________________________"
+
+#______________________________________________________________________
+# Now do the work
+#______________________________________________________________________
+# record some info for posterity
+
+PTAR_RECORD=$uda/$recordName
+
+touch $PTAR_RECORD
+
+if test ! -f $PTAR_RECORD; then
+  # Can't write to that directory... just place it in tmp for now.
+  PTAR_RECORD=/tmp/$recordName_`whoami`
+fi
+
+echo "--------------------------------" >> $PTAR_RECORD
+echo "Started on `date`."               >> $PTAR_RECORD
+echo "Uda:  $uda"                       >> $PTAR_RECORD
+echo ""                                 >> $PTAR_RECORD
+
+cd $uda
+
+#-------------------------------
+# make a sorted list of directories to tar/untar
+# Let the user edit that file with vi
+/bin/rm -f $PTAR_FILES
+
+if test $createExtract == "create"; then
+  $FIND .                -maxdepth 1 -type d  -exec basename {} \; | grep -v "\.\|t[0-9]\|checkpoints\|.tarred_files" >$PTAR_FILES
+  $FIND ./t*             -maxdepth 0 -type d  -exec basename {} \; >>$PTAR_FILES
+  $FIND ./checkpoints    -maxdepth 1 -type d   | sed "s|^\./||"    >>$PTAR_FILES
+fi
+if test $createExtract == "extract"; then
+  $FIND .                -maxdepth 1 -name "*.gz" -exec basename {} \;  >$PTAR_FILES
+  $FIND ./checkpoints    -maxdepth 1 -name "*.gz" | sed "s|^\./||"     >>$PTAR_FILES
+fi
+
+
+#remove "./checkpoints" from PTAR_FILES
+sed -i /"checkpoints$"/d $PTAR_FILES
+
+#more $PTAR_FILES
+
+if test "$allTimesteps" == "N"; then
+  echo "Now starting an editor:  Remove the files you don't want transferred"
+
+  if test ! $?EDITOR || test "$EDITOR" == ""; then
+    echo
+    echo WARNING: \$EDITOR is not defined... defaulting to 'vi'
+    echo "And 'vi' sometimes doesn't work well..."
+    export EDITOR=vi
+  fi
+  $EDITOR $PTAR_FILES
+fi
+
+#__________________________________
+# Some uda have _hundreds_ of timesteps.
+# You must break up the list of files into smaller files
+let nLines=$nproc*10
+
+split --lines=$nLines --suffix-length=3 --numeric-suffixes $PTAR_FILES $PTAR_FILES.
+
+chmod ug+rw $PTAR_FILES* 
+
+#______________________________________________________________________ 
+# Now tar the directories
+echo
+echo -n "Starting at: " | tee -a $PTAR_RECORD
+date | tee -a $PTAR_RECORD
+echo | tee -a $PTAR_RECORD
+
+for X in $PTAR_FILES.*; do
+  PTAR_FILES_N="$X"
+  export PTAR_FILES_N
+  $MAKE  -s -f $pTardir/pTarUda_driver_$OS -j $nproc | tee -a $PTAR_RECORD 
+done
+
+# remove the .tarred/stamp directory
+$MAKE  -s -f $pTardir/pTarUda_driver_$OS clean | tee -a $PTAR_RECORD
+ 
+echo | tee -a $PTAR_RECORD
+echo -n "Ending at: " | tee -a $PTAR_RECORD
+date |tee -a $PTAR_RECORD
+echo
+
+exit 0

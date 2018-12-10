@@ -1,0 +1,439 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+  <!--__________________________________-->
+  <Models                     spec="OPTIONAL NO_DATA" >
+
+    <!--__________________________________-->
+    <!-- Used by Arches and Examples/RMCRT_test -->
+    <RMCRT                    spec="OPTIONAL NO_DATA" attribute1="type OPTIONAL STRING 'float, double'" >
+      <randomSeed             spec="OPTIONAL BOOLEAN"/>
+      <sigmaScat              spec="OPTIONAL DOUBLE  'positive'"/>
+      <nDivQRays              spec="OPTIONAL INTEGER 'positive'"/>
+      <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>
+      <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>
+      <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>
+      <CCRays                 spec="OPTIONAL BOOLEAN"/>
+      <VRViewAngle            spec="OPTIONAL DOUBLE 'positive'"/>
+      <VROrientation          spec="OPTIONAL VECTOR"/>
+      <VRLocationsMin         spec="OPTIONAL VECTOR 'positive'"/>
+      <VRLocationsMax         spec="OPTIONAL VECTOR 'positive'"/>
+      <nRadRays               spec="OPTIONAL INTEGER 'positive'"/>
+      <nFluxRays              spec="OPTIONAL INTEGER 'positive'"/>
+      <allowReflect           spec="OPTIONAL BOOLEAN"/>
+      <solveDivQ              spec="OPTIONAL BOOLEAN"/>
+      <applyFilter            spec="OPTIONAL BOOLEAN"/>
+      <rayDirSampleAlgo       spec="OPTIONAL STRING 'naive, Naive LatinHyperCube'"/>
+      <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
+
+      <include href="RMCRT_radiometer.xml" section="Radiometer" />
+
+      <algorithm                spec="OPTIONAL NO_DATA"
+                                    attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">
+
+        <coarsenExtraCells      spec="OPTIONAL BOOLEAN" need_applies_to="type RMCRT_coarseLevel, dataOnion" />
+                
+        <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
+        <haloCells              spec="OPTIONAL VECTOR  'positive'" need_applies_to="type dataOnion" />
+        <haloLength             spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dataOnion" />
+        
+        <ROI_extents            spec="OPTIONAL NO_DATA"
+                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based boundedRayLength'">
+
+          <abskg_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+          <sigmaT4_threshold    spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+
+          <min                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+          <max                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+          <length               spec="REQUIRED DOUBLE" need_applies_to="type boundedRayLength"/>
+        </ROI_extents>
+
+      </algorithm>
+
+    </RMCRT>
+
+    <!--__________________________________-->
+    <!--  Models used by ICE & MPMICE     -->
+    <Model                    spec="MULTIPLE NO_DATA"
+                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, IandG, JWL, JWLC, JWLpp, ZeroOrder, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, PassiveScalar, flameSheet_rxn, DDT0, DDT1, SolidReactionModel, MesoBurn'" >
+
+      <!--__________________________________-->
+      <!-- mass momentum and energy source model -->
+      <MassMomEng_src         spec="OPTIONAL NO_DATA">
+        <material             spec="REQUIRED STRING" />
+        <energy_src           spec="REQUIRED DOUBLE"/>
+        <mass_src             spec="REQUIRED DOUBLE"/>
+        <momentum_src         spec="REQUIRED VECTOR"/>
+
+        <mme_src_t_start      spec="OPTIONAL DOUBLE"/>
+        <mme_src_t_final      spec="OPTIONAL DOUBLE"/>
+        <rate                 spec="OPTIONAL DOUBLE 'positive'"/>
+      </MassMomEng_src>
+
+      <!--__________________________________-->
+      <!-- Test -->
+      <Test                   spec="OPTIONAL NO_DATA">
+        <fromMaterial         spec="OPTIONAL STRING" />
+        <toMaterial           spec="OPTIONAL STRING" />
+        <rate                 spec="REQUIRED DOUBLE 'positive'"/>
+        <startTime            spec="OPTIONAL DOUBLE 'positive'"/>
+      </Test>
+
+      <!--__________________________________-->
+      <!-- LightTime -->
+      <LightTime              spec="OPTIONAL NO_DATA">
+        <fromMaterial         spec="OPTIONAL STRING" />
+        <toMaterial           spec="OPTIONAL STRING" />
+        <D                    spec="REQUIRED DOUBLE 'positive'" />
+        <E0                   spec="REQUIRED DOUBLE 'positive'" />
+        <starting_location    spec="REQUIRED VECTOR"  />
+        <react_mixed_cells    spec="REQUIRED BOOLEAN" />
+        <direction_if_plane   spec="REQUIRED VECTOR" />
+      </LightTime>
+
+      <!--__________________________________-->
+      <!-- JWLpp -->
+      <JWLpp              spec="OPTIONAL NO_DATA">
+        <fromMaterial         spec="REQUIRED STRING" />
+        <toMaterial           spec="REQUIRED STRING" />
+        <ThresholdPressure    spec="REQUIRED DOUBLE 'positive'" />
+        <ThresholdVolFrac     spec="OPTIONAL DOUBLE 'positive'" />
+        <rho0                 spec="REQUIRED DOUBLE 'positive'" />
+        <G                    spec="REQUIRED DOUBLE 'positive'" />
+        <b                    spec="REQUIRED DOUBLE 'positive'" />
+        <E0                   spec="REQUIRED DOUBLE 'positive'" />
+      </JWLpp>
+
+      <!--__________________________________-->
+      <!--  SimpleRxn -->
+      <SimpleRxn              spec="OPTIONAL NO_DATA">
+        <material             spec="REQUIRED STRING"/>
+        <scalar               spec="OPTIONAL NO_DATA"
+                                attribute1="name REQUIRED STRING" >
+          <constants            spec="OPTIONAL NO_DATA">
+            <f_stoichometric    spec="REQUIRED DOUBLE '0,1'"/>
+            <diffusivity        spec="REQUIRED DOUBLE 'positive'"/>
+            <rho_air            spec="REQUIRED DOUBLE 'positive'"/>
+            <rho_fuel           spec="REQUIRED DOUBLE 'positive'"/>
+            <cv_air             spec="REQUIRED DOUBLE 'positive'"/>
+            <cv_fuel            spec="REQUIRED DOUBLE 'positive'"/>
+            <R_air              spec="REQUIRED DOUBLE 'positive'"/>
+            <R_fuel             spec="REQUIRED DOUBLE 'positive'"/>
+            <thermalCond_air    spec="REQUIRED DOUBLE 'positive'"/>
+            <thermalCond_fuel   spec="REQUIRED DOUBLE 'positive'"/>
+            <viscosity_air      spec="REQUIRED DOUBLE 'positive'"/>
+            <viscosity_fuel     spec="REQUIRED DOUBLE 'positive'"/>
+            <initialize_diffusion_knob  spec="REQUIRED DOUBLE 'positive'"/>
+          </constants>
+          <geom_object          spec="MULTIPLE" />
+          <test_conservation    spec="OPTIONAL BOOLEAN"/>
+        </scalar>
+      </SimpleRxn>
+
+      <!--__________________________________-->
+      <!--  flameSheet_rxn -->
+      <flameSheet_rxn             spec="OPTIONAL NO_DATA">                                      
+        <material                 spec="REQUIRED STRING"/>                                      
+        <scalar                   spec="OPTIONAL NO_DATA" attribute1="name REQUIRED STRING" >   
+          <reaction_constants       spec="OPTIONAL NO_DATA">
+            <f_stoichometric        spec="REQUIRED DOUBLE '0,1'"/>
+            <delta_H_combustion     spec="REQUIRED DOUBLE 'positive'"/>
+            <oxidizer_temp_infinity spec="REQUIRED DOUBLE 'positive'"/>
+            <initial_fuel_temp      spec="REQUIRED DOUBLE 'positive'"/>
+            <diffusivity            spec="REQUIRED DOUBLE 'positive'"/>
+          </reaction_constants>
+          <geom_object              spec="MULTIPLE" />
+        </scalar>
+      </flameSheet_rxn>
+      <!--__________________________________-->
+      <!-- SolidReactionModel -->
+      <SolidReactionModel           spec="OPTIONAL NO_DATA">
+        <fromMaterial               spec="REQUIRED STRING" />
+        <toMaterial                 spec="REQUIRED STRING" />
+        <RateConstantModel          spec="OPTIONAL NO_DATA"
+                                        attribute="type REQUIRED STRING 'Arrhenius, ModifiedArrhenius'">
+          <A                        spec="REQUIRED DOUBLE"/>
+          <Ea                       spec="REQUIRED DOUBLE"/>
+          <b                        spec="REQUIRED DOUBLE" need_applies_to="type ModifiedArrhenius"/>
+        </RateConstantModel>
+        <RateModel                  spec="OPTIONAL NO_DATA"
+                                      attribute="type REQUIRED STRING 'AvaramiErofeev, ContractingCylinder, ContractingSphere, Diffusion,
+                                                                       NthOrder, Power, ProutTompkins'">
+          <a                        spec="REQUIRED DOUBLE" need_applies_to="type AvaramiErofeev Power"/>
+          <b                        spec="REQUIRED DOUBLE" need_applies_to="type AvaramiErofeev Power"/>
+          <dimension                spec="REQUIRED DOUBLE" need_applies_to="type Diffusion"/>
+          <n                        spec="REQUIRED DOUBLE" need_applies_to="type NthOrder ProutTompkins"/>
+          <q                        spec="REQUIRED DOUBLE" need_applies_to="type ProutTompkins"/>
+          <p                        spec="OPTIONAL DOUBLE"/>
+          <m                        spec="REQUIRED DOUBLE" need_applies_to="type ProutTompkins"/>
+        </RateModel>
+      </SolidReactionModel>
+
+      <!--__________________________________-->
+      <!-- ZeroOrder  -->
+      <ZeroOrder             spec="OPTIONAL NO_DATA">
+        <fromMaterial        spec="REQUIRED STRING" />
+        <toMaterial          spec="REQUIRED STRING" />
+        <ThresholdPressure   spec="REQUIRED DOUBLE 'positive'"/>
+        <ThresholdVolFrac    spec="OPTIONAL DOUBLE 'positive'"/>
+        <b                   spec="REQUIRED DOUBLE 'positive'"/>
+        <E0                  spec="REQUIRED DOUBLE 'positive'"/>
+        <G                   spec="REQUIRED DOUBLE 'positive'"/>
+        <rho0                spec="REQUIRED DOUBLE 'positive'"/>
+      </ZeroOrder>
+
+      <!--__________________________________-->
+      <!-- SIMPLE BURN  -->
+      <Simple_Burn             spec="OPTIONAL NO_DATA">
+        <fromMaterial          spec="REQUIRED STRING" />
+        <toMaterial            spec="REQUIRED STRING" />
+        <ThresholdPressure     spec="REQUIRED DOUBLE 'positive'"/>
+        <ThresholdTemp         spec="REQUIRED DOUBLE 'positive'"/>
+        <Enthalpy              spec="REQUIRED DOUBLE 'positive'"/>
+        <BurnCoeff             spec="REQUIRED DOUBLE 'positive'"/>
+        <refPressure           spec="REQUIRED DOUBLE 'positive'"/>
+      </Simple_Burn>
+
+
+      <!--__________________________________-->
+      <!-- STEADY BURN  -->
+      <Steady_Burn             spec="OPTIONAL NO_DATA">
+        <fromMaterial          spec="REQUIRED STRING" />
+        <toMaterial            spec="REQUIRED STRING" />
+        <IdealGasConst         spec="REQUIRED DOUBLE 'positive'"/>
+        <PreExpCondPh          spec="REQUIRED DOUBLE 'positive'"/>
+        <ActEnergyCondPh       spec="REQUIRED DOUBLE 'positive'"/>
+        <PreExpGasPh           spec="REQUIRED DOUBLE 'positive'"/>
+        <CondPhaseHeat         spec="REQUIRED DOUBLE 'positive'"/>
+        <GasPhaseHeat          spec="REQUIRED DOUBLE 'positive'"/>
+        <HeatConductGasPh      spec="REQUIRED DOUBLE 'positive'"/>
+        <HeatConductCondPh     spec="REQUIRED DOUBLE 'positive'"/>
+        <SpecificHeatBoth      spec="REQUIRED DOUBLE 'positive'"/>
+        <MoleWeightGasPh       spec="REQUIRED DOUBLE 'positive'"/>
+        <BoundaryParticles     spec="REQUIRED INTEGER 'positive'"/>
+        <ThresholdPressure     spec="REQUIRED DOUBLE 'positive'"/>
+        <IgnitionTemp          spec="REQUIRED DOUBLE 'positive'"/>
+      </Steady_Burn>
+
+      <!--__________________________________-->
+      <!-- UNSTEADY BURN  -->
+      <Unsteady_Burn           spec="OPTIONAL NO_DATA">
+        <fromMaterial          spec="REQUIRED STRING" />
+        <toMaterial            spec="REQUIRED STRING" />
+        <IdealGasConst         spec="REQUIRED STRING" />
+        <PreExpCondPh          spec="REQUIRED STRING" />
+        <ActEnergyCondPh       spec="REQUIRED DOUBLE 'positive'"/>
+        <PreExpGasPh           spec="REQUIRED DOUBLE 'positive'"/>
+        <CondPhaseHeat         spec="REQUIRED DOUBLE 'positive'"/>
+        <GasPhaseHeat          spec="REQUIRED DOUBLE 'positive'"/>
+        <HeatConductGasPh      spec="REQUIRED DOUBLE 'positive'"/>
+        <HeatConductCondPh     spec="REQUIRED DOUBLE 'positive'"/>
+        <SpecificHeatBoth      spec="REQUIRED DOUBLE 'positive'"/>
+        <MoleWeightGasPh       spec="REQUIRED DOUBLE 'positive'"/>
+        <BoundaryParticles     spec="REQUIRED DOUBLE 'positive'"/>
+        <BurnrateModCoef       spec="REQUIRED DOUBLE 'positive'"/>
+        <CondUnsteadyCoef      spec="REQUIRED INTEGER 'positive'"/>
+        <GasUnsteadyCoef       spec="REQUIRED DOUBLE 'positive'"/>
+        <ThresholdPressure     spec="REQUIRED DOUBLE 'positive'"/>
+        <IgnitionTemp          spec="REQUIRED DOUBLE 'positive'"/>
+      </Unsteady_Burn>
+
+      <!--__________________________________-->
+      <!-- DDT0  -->
+      <DDT0                      spec="OPTIONAL NO_DATA">
+        <fromMaterial            spec="REQUIRED STRING" />
+        <toMaterial              spec="REQUIRED STRING" />
+
+        <b                       spec="REQUIRED DOUBLE"  />
+        <E0                      spec="REQUIRED DOUBLE"  />
+        <G                       spec="REQUIRED DOUBLE"  />
+
+        <useCrackModel           spec="OPTIONAL BOOLEAN" />
+        <Gcrack                  spec="OPTIONAL DOUBLE" />
+        <CrackVolThreshold       spec="OPTIONAL DOUBLE" />
+        <nCrack                  spec="OPTIONAL DOUBLE" />
+
+        <ThresholdPressureJWL    spec="REQUIRED DOUBLE 'positive'" />
+        <ThresholdPressureSB     spec="REQUIRED DOUBLE 'positive'" />
+        <ThresholdVolFrac        spec="OPTIONAL DOUBLE 'positive'" />
+        <ThresholdTemp           spec="REQUIRED DOUBLE 'positive'"/>
+        <Enthalpy                spec="REQUIRED DOUBLE 'positive'"/>
+        <BurnCoeff               spec="REQUIRED DOUBLE 'positive'"/>
+        <refPressure             spec="REQUIRED DOUBLE 'positive'"/>
+
+      </DDT0>
+
+
+      <!--__________________________________-->
+      <!-- DDT1  -->
+      <DDT1                      spec="OPTIONAL NO_DATA">
+        <fromMaterial            spec="REQUIRED STRING" />
+        <toMaterial              spec="REQUIRED STRING" />
+        <burnMaterial            spec="OPTIONAL STRING" />
+
+        <b                       spec="REQUIRED DOUBLE"  />
+        <E0                      spec="REQUIRED DOUBLE"  />
+        <G                       spec="REQUIRED DOUBLE"  />
+
+        <useCrackModel           spec="OPTIONAL BOOLEAN" />
+        <Gcrack                  spec="OPTIONAL DOUBLE" />
+        <CrackVolThreshold       spec="OPTIONAL DOUBLE" />
+        <nCrack                  spec="OPTIONAL DOUBLE" />
+
+        <SpecificHeatBoth        spec="REQUIRED DOUBLE 'positive'"/>
+        <ThresholdPressureJWL    spec="REQUIRED DOUBLE 'positive'" />
+        <ThresholdPressureSB     spec="REQUIRED DOUBLE 'positive'" />
+        <ThresholdVolFrac        spec="OPTIONAL DOUBLE 'positive'" />
+        <IdealGasConst           spec="REQUIRED DOUBLE" />
+
+        <PreExpCondPh            spec="REQUIRED DOUBLE" />
+        <PreExpGasPh             spec="REQUIRED DOUBLE" />
+        <ActEnergyCondPh         spec="REQUIRED DOUBLE" />
+
+        <CondPhaseHeat           spec="REQUIRED DOUBLE" />
+        <GasPhaseHeat            spec="REQUIRED DOUBLE" />
+
+        <HeatConductGasPh        spec="REQUIRED DOUBLE" />
+        <HeatConductCondPh       spec="REQUIRED DOUBLE" />
+
+        <MoleWeightGasPh         spec="REQUIRED DOUBLE" />
+        <BoundaryParticles       spec="REQUIRED INTEGER" />
+        <IgnitionTemp            spec="REQUIRED DOUBLE 'positive'" />
+
+
+        <useInductionTime        spec="OPTIONAL BOOLEAN" />
+        <IgnitionConst           spec="OPTIONAL DOUBLE 'positive'" />
+        <PressureShift           spec="OPTIONAL DOUBLE 'positive'" />
+        <PreexpoConst            spec="OPTIONAL DOUBLE 'positive'" />
+        <ExponentialConst        spec="OPTIONAL DOUBLE 'positive'" />
+
+        <adjust_IO_intervals       spec="OPTIONAL NO_DATA">
+          <PressureSwitch          spec="OPTIONAL NO_DATA">
+            <PressureThreshold     spec="REQUIRED DOUBLE 'positive'"/>
+            <newOutputInterval     spec="REQUIRED DOUBLE 'positive'"/>
+            <newCheckPointInterval spec="REQUIRED DOUBLE 'positive'"/>
+          </PressureSwitch>
+          <DetonationDetected      spec="OPTIONAL NO_DATA">
+            <remainingTimesteps    spec="REQUIRED INTEGER 'positive'"/>
+            <newOutputInterval     spec="REQUIRED DOUBLE 'positive'"/>
+            <newCheckPointInterval spec="REQUIRED DOUBLE 'positive'"/>
+          </DetonationDetected>
+        </adjust_IO_intervals>
+      </DDT1>
+
+     <!--__________________________________-->
+     <!-- Ignition and growth -->
+      <IandG                  spec="OPTIONAL NO_DATA">
+        <fromMaterial         spec="REQUIRED STRING" />
+        <toMaterial           spec="REQUIRED STRING" />
+        <I                    spec="REQUIRED DOUBLE 'positive'" />
+        <G1                   spec="REQUIRED DOUBLE 'positive'" />
+        <G2                   spec="REQUIRED DOUBLE 'positive'" />
+        <a                    spec="REQUIRED DOUBLE 'positive'" />
+        <b                    spec="REQUIRED DOUBLE 'positive'" />
+        <c                    spec="REQUIRED DOUBLE 'positive'" />
+        <d                    spec="REQUIRED DOUBLE 'positive'" />
+        <e                    spec="REQUIRED DOUBLE 'positive'" />
+        <g                    spec="REQUIRED DOUBLE 'positive'" />
+        <x                    spec="REQUIRED DOUBLE 'positive'" />
+        <y                    spec="REQUIRED DOUBLE 'positive'" />
+        <z                    spec="REQUIRED DOUBLE 'positive'" />
+        <Figmax               spec="REQUIRED DOUBLE 'positive'" />
+        <FG1max               spec="REQUIRED DOUBLE 'positive'" />
+        <FG2min               spec="REQUIRED DOUBLE 'positive'" />
+        <rho0                 spec="REQUIRED DOUBLE 'positive'" />
+        <E0                   spec="REQUIRED DOUBLE 'positive'" />
+        <ThresholdPressure    spec="REQUIRED DOUBLE 'positive'" />
+      </IandG>
+
+      <!--__________________________________-->
+      <!--  Passive Scalar -->
+      <PassiveScalar                  spec="OPTIONAL NO_DATA">
+        <material                     spec="OPTIONAL STRING"/>
+        <scalar                       spec="OPTIONAL NO_DATA"
+                                         attribute1="name REQUIRED STRING" >
+
+          <test_conservation           spec="OPTIONAL BOOLEAN"/>
+          <doTableTest                 spec="OPTIONAL BOOLEAN" />
+          <constants                   spec="OPTIONAL NO_DATA" >
+            <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
+            <diffusivity               spec="OPTIONAL DOUBLE" />
+            <initialize_diffusion_knob spec="OPTIONAL DOUBLE" />
+          </constants>
+          <initialization              spec="REQUIRED NO_DATA" >
+            <geom_object               spec="MULTIPLE" />
+          </initialization>
+
+          <interiorSources              spec="OPTIONAL NO_DATA" >
+            <geom_object                spec="MULTIPLE" />
+          </interiorSources>
+        </scalar>
+      </PassiveScalar>
+
+      <!--__________________________________-->
+      <!--  Gas Phase reaction model -->
+      <AdiabaticTable           spec="OPTIONAL NO_DATA">
+        <material               spec="REQUIRED STRING"/>
+        <table                  spec="OPTIONAL NO_DATA"
+                                    attribute1="name REQUIRED STRING 'adiabatic'"
+                                    attribute2="type REQUIRED STRING 'Arches'" >
+
+          <defaultValue         spec="MULTIPLE DOUBLE"
+                                    attribute1="name REQUIRED STRING 'heat_loss, mixture_fraction_variance'" />
+          <derivedValue         spec="MULTIPLE STRING"
+                                    attribute1="name REQUIRED STRING 'heat_capac_Cv, gamma, reference_heat_capac_Cp,
+                                                                    reference_mixture_molecular_weight, reference_heat_capac_Cv, reference_gamma'" />
+          <constantValue        spec="MULTIPLE DOUBLE"
+                                    attribute1="name REQUIRED STRING 'viscosity, thermal_conductivity, reference_Temp'" />
+          <filename             spec="REQUIRED STRING" />
+        </table>
+        <varianceMax            spec="OPTIONAL DOUBLE" />
+        <varianceScale          spec="OPTIONAL DOUBLE" />
+        <tableValue             spec="MULTIPLE STRING 'CO2, H2O, Temp, density'" />
+
+        <scalar                        spec="OPTIONAL NO_DATA"
+                                          attribute1="name REQUIRED STRING" >
+          <material                    spec="OPTIONAL STRING"/>
+          <test_conservation           spec="OPTIONAL BOOLEAN"/>
+          <doTableTest                 spec="OPTIONAL BOOLEAN" />
+          <constants                   spec="OPTIONAL NO_DATA" >
+            <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
+            <diffusivity               spec="OPTIONAL DOUBLE" />
+          </constants>
+          <geom_object                 spec="MULTIPLE" />
+        </scalar>
+
+      </AdiabaticTable>
+
+      <!--__________________________________-->
+      <!--  Radiation  -->
+      <RadiationModel               spec="OPTIONAL NO_DATA" >
+        <radiatingGas               spec="REQUIRED STRING"/>
+        <absorbingSolid             spec="OPTIONAL STRING"/>
+        <calcFreq                   spec="OPTIONAL INTEGER" />
+        <calcInterval               spec="OPTIONAL DOUBLE" />
+        <table_or_ice_temp_density  spec="OPTIONAL STRING 'ice table'" />
+        <useTableValues             spec="OPTIONAL BOOLEAN" />
+        <DORadiationModel           spec="OPTIONAL NO_DATA" >
+          <ordinates                spec="REQUIRED INTEGER '2,8'" />
+          <opl                      spec="REQUIRED DOUBLE  '0,1'"/>
+          <property_model           spec="REQUIRED STRING 'radcoef patchmean wsggm'" />
+          <spherical_harmonics      spec="REQUIRED BOOLEAN" />
+          <test_problem             spec="OPTIONAL BOOLEAN" />
+          <test_problem_number      spec="OPTIONAL INTEGER" />
+          <linear_solver            spec="REQUIRED STRING 'hypre petsc'" />
+          <LinearSolver             spec="OPTIONAL NO_DATA" >
+            <solver                 spec="REQUIRED STRING 'gmres'" />
+            <preconditioner         spec="REQUIRED STRING 'jacobi'" />
+            <max_iter               spec="REQUIRED INTEGER 'positive'" />
+            <tolerance              spec="REQUIRED DOUBLE 'positive'" />
+          </LinearSolver>
+        </DORadiationModel>
+        <geom_object                spec="OPTIONAL" />
+      </RadiationModel>
+
+
+    </Model>
+  </Models>
+  <!--__________________________________-->
+</Uintah_Include>

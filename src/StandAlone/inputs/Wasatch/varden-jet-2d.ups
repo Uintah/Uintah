@@ -1,0 +1,206 @@
+<Uintah_specification>
+  <Meta>
+    <title>Variable Density 2D Jet</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+  
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
+    </Density>
+        
+    <TimeIntegrator>FE</TimeIntegrator>
+    
+    <TwoStreamMixing rho0="1.0" rho1="5.0">
+      <Density><NameTag name="density"/></Density>
+      <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
+      <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
+    </TwoStreamMixing>
+
+    <!-- Set the initial condition expression for velocity components -->    
+   <BasicExpression type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="v"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+               
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>1e-3</Constant>
+    </BasicExpression>
+
+   <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <!-- Build a scalar transport equation for mixture fraction -->
+    <TransportEquation equation="mixturefraction">
+  
+      <SolutionVariable>rhof</SolutionVariable>
+      <PrimitiveVariable>f</PrimitiveVariable>
+  
+      <DiffusiveFlux direction="XY" coefficient="1e-4"/>
+  
+      <ConvectiveFlux direction="X" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+  
+      <ConvectiveFlux direction="Y" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+
+    </TransportEquation>
+
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f"/>
+      </FieldExpression>
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f*"/>
+      </FieldExpression>
+      <FieldExpression type="SVOL" min="0.0" max="5.0">
+        <NameTag name="rhof" state="STATE_NP1"/>
+      </FieldExpression>
+    </FieldClipping>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+         
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+      <ComputeMassResidual/>
+      <Pressure>
+      	<Use3DLaplacian>false</Use3DLaplacian>
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-10  </tolerance>
+            <maxiterations>  100    </maxiterations>
+            <relax_type>     2       </relax_type>
+        </Parameters>
+      </Pressure>
+    </MomentumEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>25</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-3</delt_min>
+    <delt_max>1e-3</delt_max>
+    <max_Timesteps>10</max_Timesteps>
+    <timestep_multiplier>1</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>varden-jet-2d.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" timestepInterval="2"/>
+    <save label="x-mom"/>
+<!--     <save label="x-mom_rhs"/> -->
+    <save label="y-mom"/>
+<!--     <save label="y-mom_rhs"/> -->
+     <save label="f"/>
+    
+    <save label="density"/>
+    <save label="rhof"/>
+    <save label="u"/>
+    <save label="v"/>
+    <save label="viscosity"/>
+    
+    <save label="strain_xy"/>
+    <save label="strain_yx"/>
+    <!-- save label="ContinuityResidual"/ -->
+    
+    <save label="pressure"/>
+    <!-- save label="pressure_old"/>
+    <save label="pressure_rhs"/>
+    <save label="pressure_src"/>
+    <save label="dilatation"/ -->
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      
+      <DefaultMaterial>all</DefaultMaterial>
+
+      <Face circle="x-" origin="0 0.0 0.0" radius="0.05" name="circle-inlet" type="Velocity">
+        <BCType label="u" var="Dirichlet" value="0.1"/>
+        <BCType label="f" var="Dirichlet" value="1.0"/>
+        <BCType label="rhof" var="Dirichlet" value="5.0"/>
+        <BCType label="density" var="Dirichlet" value="5.0"/>
+      </Face>
+
+      <Face side="x-" name="inlet" type="Wall">
+        <BCType label="rhof" var="Dirichlet" value="0.0"/>
+        <BCType label="f" var="Dirichlet" value="0.0"/>
+        <BCType label="density" var="Dirichlet" value="1.0"/>
+      </Face>
+      
+      <Face side="x+" name="outlet" type="Outflow">
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
+      </Face>
+      
+      <Face side="y-" name="ym-pressure" type="Wall">
+        <BCType label="rhof" var="Dirichlet" value="0.0"/>
+        <BCType label="f" var="Dirichlet" value="0.0"/>
+        <BCType label="density" var="Dirichlet" value="1.0"/>
+      </Face>
+
+      <Face side="y+" name="yp-pressure" type="Wall">
+        <BCType label="rhof" var="Dirichlet" value="0.0"/>
+        <BCType label="f" var="Dirichlet" value="0.0"/>
+        <BCType label="density" var="Dirichlet" value="1.0"/>
+      </Face>
+
+      <Face side="z-" name="zm-pressure" type="Wall">
+        <BCType label="rhof" var="Dirichlet" value="0.0"/>
+        <BCType label="f" var="Dirichlet" value="0.0"/>
+        <BCType label="density" var="Dirichlet" value="1.0"/>
+      </Face>
+
+      <Face side="z+" name="zp-pressure" type="Wall">
+        <BCType label="rhof" var="Dirichlet" value="0.0"/>
+        <BCType label="f" var="Dirichlet" value="0.0"/>
+        <BCType label="density" var="Dirichlet" value="1.0"/>
+      </Face>
+
+      </BoundaryConditions>
+
+      <Level>
+      <Box label="1">
+        <lower>[0,-0.5,-0.5]</lower>
+        <upper>[2, 0.5,0.5]</upper>
+        <resolution>[60,30,1]</resolution>
+        <patches>[4,1,1]</patches>
+      </Box>
+      <periodic>[0,0,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>
