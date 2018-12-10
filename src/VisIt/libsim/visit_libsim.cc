@@ -246,8 +246,8 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->switchIndex = -1;
   sim->nodeIndex = -1;
 
-  std::string hostName = sim->myworld->myProcName();
-  std::string hostNode = sim->myworld->myProcName();
+  std::string hostName = sim->myworld->myNodeName();
+  std::string hostNode = sim->myworld->myNodeName();
   
   hostName.erase(std::remove_if(hostName.begin(), hostName.end(), (int(*)(int))std::isdigit), hostName.end());
   hostNode.erase(std::remove_if(hostNode.begin(), hostNode.end(), (int(*)(int))std::isalpha), hostNode.end());
@@ -262,13 +262,13 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // three digits whereas a head will be have one digit.
   for( unsigned int i=0; i<nMachines; ++i )
   {
-    if( sim->myworld->myProcName().find( hostNames[i] ) == 0 )
+    if( sim->myworld->myNodeName().find( hostNames[i] ) == 0 )
     {
       sim->hostName = hostNames[i];
 
       // Remove the hostname leaving only the node number.
       std::string nodeStr =
-        sim->myworld->myProcName().substr(sim->hostName.size());
+        sim->myworld->myNodeName().substr(sim->hostName.size());
     
       // Nodes with three digits are compute nodes.
       // Compute node (i.e. node001) vs head node (i.e. node1)
@@ -392,7 +392,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
       {
         std::stringstream msg;
         msg << "Visit libsim - "
-            << "Can not find node " << sim->myworld->myProcName() << " "
+            << "Can not find node " << sim->myworld->myNodeName() << " "
             << "in the current network file: " << filename;
           
         VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
@@ -401,7 +401,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
       DOUT( (sim->switchNodeList.size() &&
              ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) ),
             "Visit libsim - "
-            << "Can not find node " << sim->myworld->myProcName() << " "
+            << "Can not find node " << sim->myworld->myNodeName() << " "
             << "in the current network file: " << filename );
 
       infile.close();
@@ -461,24 +461,24 @@ void visit_EndLibSim( visit_simulation_data *sim )
       
       if(sim->isProc0)
       {
-	VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
-	
-	std::stringstream msg;
-	msg << "Visit libsim - "
-	    << "The simulation has finished, stopping at the last time step.";
-	
-	DOUT( visitdbg, msg.str().c_str() );
-	
-	VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+        VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
+        
+        std::stringstream msg;
+        msg << "Visit libsim - "
+            << "The simulation has finished, stopping at the last time step.";
+        
+        DOUT( visitdbg, msg.str().c_str() );
+        
+        VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
       }
       
       // Now check for the user to have finished or issue a terminate.
       do
       {
-	visit_CheckState(sim);
+        visit_CheckState(sim);
       }
       while( sim->runMode != VISIT_SIMMODE_FINISHED &&
-	     sim->simMode != VISIT_SIMMODE_TERMINATED );
+             sim->simMode != VISIT_SIMMODE_TERMINATED );
       
       VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
     }
@@ -559,8 +559,8 @@ bool visit_CheckState( visit_simulation_data *sim )
         // will not be running so change the state to allow
         // asyncronious commands like saving a timestep or a
         // checkpoint to happen.
-	if( sim->simMode != VISIT_SIMMODE_FINISHED &&
-	    sim->simMode != VISIT_SIMMODE_TERMINATED )
+        if( sim->simMode != VISIT_SIMMODE_FINISHED &&
+            sim->simMode != VISIT_SIMMODE_TERMINATED )
         {
           sim->simMode = VISIT_SIMMODE_STOPPED;
           
