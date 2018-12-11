@@ -1974,54 +1974,46 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    // we always want p.x when setting up the mesh
-//    string vars = "p.x";
-
-    const std::string &vars = Uintah::VarLabel::getParticlePositionName();
-//  string vars = getParticlePositionName(schedulerP);
-
+    const std::string &pName = Uintah::VarLabel::getParticlePositionName();
+    
+    std::cerr << pName << "  " << matlNo << "  " << level << "  " << local_patch << std::endl;
+    
     ParticleDataRaw *pd =
-      getParticleData(schedulerP, gridP, level, local_patch, vars, matlNo);
-
-    visit_handle cordsH = VISIT_INVALID_HANDLE;
-
-    if(VisIt_VariableData_alloc(&cordsH) == VISIT_OKAY)
+      getParticleData(schedulerP, gridP, level, local_patch, pName, matlNo);
+    
+    if(pd && VisIt_PointMesh_alloc(&meshH) != VISIT_ERROR)
     {
-      VisIt_VariableData_setDataD(cordsH, VISIT_OWNER_VISIT,
-                                  3, pd->num*pd->components, pd->data);
+      // visit_handle cordH[3] = { VISIT_INVALID_HANDLE,
+      // 				VISIT_INVALID_HANDLE,
+      // 				VISIT_INVALID_HANDLE };
+
+      // VisIt_VariableData_alloc(&cordH[0]);
+      // VisIt_VariableData_alloc(&cordH[1]);
+      // VisIt_VariableData_alloc(&cordH[2]);
+
+      // VisIt_VariableData_setDataF(cordH[0], VISIT_OWNER_SIM, 1, NPTS, sim->x);
+      // VisIt_VariableData_setDataF(cordH[1], VISIT_OWNER_SIM, 1, NPTS, sim->y);
+      // VisIt_VariableData_setDataF(cordH[2], VISIT_OWNER_SIM, 1, NPTS, sim->z);
+
+      // VisIt_PointMesh_setCoordsXYZ(meshH, cordH[0], cordH[1], cordH[2]);
+
+      visit_handle cordsH = VISIT_INVALID_HANDLE;
+      if(VisIt_VariableData_alloc(&cordsH) == VISIT_OKAY)
+      {
+	VisIt_VariableData_setDataD(cordsH, VISIT_OWNER_VISIT,
+				    3, pd->num*pd->components, pd->data);
+
+	VisIt_PointMesh_setCoords(meshH, cordsH );
+      }
+      
+      // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
+      // owns the data (VISIT_OWNER_SIM - indicates the simulation owns
+      // the data). However pd needs to be deleted.
+      
+      // delete pd->data
+      delete pd;
     }
-
-    // Create the vtkPoints object and copy points into it.
-    // vtkDoubleArray *doubleArray = vtkDoubleArray::New();
-    // doubleArray->SetNumberOfComponents(3);
-    // doubleArray->SetArray(pd->data, pd->num*pd->components, 0);
-
-    // vtkPoints *points = vtkPoints::New();
-    // points->SetData(doubleArray);
-    // doubleArray->Delete();
-
-    // 
-    // Create a vtkUnstructuredGrid to contain the point cells. 
-    // 
-    // vtkUnstructuredGrid *ugrid = vtkUnstructuredGrid::New(); 
-    // ugrid->SetPoints(points); 
-    // points->Delete(); 
-    // ugrid->Allocate(pd->num); 
-    // vtkIdType onevertex; 
-
-    // for(int i = 0; i < pd->num; ++i)
-    // {
-    //   onevertex = i; 
-    //   ugrid->InsertNextCell(VTK_VERTEX, 1, &onevertex); 
-    // } 
     
-    // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
-    // owns the data (VISIT_OWNER_SIM - indicates the simulation owns
-    // the data). However pd needs to be delted.
-    
-    // delete pd->data
-    delete pd;
-
 #ifdef COMMENTOUT_FOR_NOW
     //try to retrieve existing cache ref
     void_ref_ptr vrTmp =
@@ -2526,6 +2518,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     return varH;
   }
 
+  std::cerr << "var " << isMachineMeshVar << "  " << isInternalVar << std::endl;
+
   if (isMachineMeshVar)
   {
     MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
@@ -2773,9 +2767,10 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
           int matlNo = -1;
           if (matl.compare("*") != 0)
             matlNo = atoi(matl.c_str());
-          
+
           gd->num = getNumberParticles(schedulerP, gridP, level, local_patch, matlNo);
 
+	  std::cerr << "material " << matlNo << "num Particles " << gd->num << std::endl;
         }
         // Using the cell mesh for Nodes and Ranks.
         else /* if (strcmp(&(varname[6]), "CC_Mesh") == 0 ||

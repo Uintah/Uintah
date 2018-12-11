@@ -784,40 +784,49 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
       matlsForVar.addInOrder(material);
   }
 
-  // first get all the particle subsets so that we know how many total
+  // First get all the particle subsets so that we know how many total
   // particles we'll have
   std::vector<ParticleVariable<T>*> particle_vars;
+
   for( ConsecutiveRangeSet::iterator matlIter =
          matlsForVar.begin(); matlIter != matlsForVar.end(); matlIter++ )
   {
-    int matl = *matlIter;
+    const int matl = *matlIter;
 
     ParticleVariable<T> *var = new ParticleVariable<T>;
-    archive->query(*var, variable_name, matl, patch, timestep);
 
-    particle_vars.push_back(var);
-    pd->num += var->getParticleSubset()->numParticles();
-  }
-
-  // copy all the data
-  int pi = 0;
-  pd->data = new double[pd->components * pd->num];
-  for (unsigned int i=0; i<particle_vars.size(); ++i)
-  {
-    ParticleSubset::iterator p;
-
-    for (p = particle_vars[i]->getParticleSubset()->begin();
-         p != particle_vars[i]->getParticleSubset()->end(); ++p)
+    if( archive->exists( variable_name, patch, timestep ) )
     {
-      //TODO: need to be able to read data as array of longs for
-      //particle id, but copyComponents always reads double
-      copyComponents<T>(&pd->data[pi*pd->components],
-                        (*particle_vars[i])[*p]);
-      ++pi;
+      archive->query(*var, variable_name, matl, patch, timestep);
+
+      particle_vars.push_back(var);
+      pd->num += var->getParticleSubset()->numParticles();
     }
   }
 
-  // cleanup
+  // Copy all the data
+  if( pd->num ) {
+    int pi = 0;
+
+    pd->data = new double[pd->components * pd->num];
+
+    for (unsigned int i=0; i<particle_vars.size(); ++i)
+    {
+      ParticleSubset *pSubset = particle_vars[i]->getParticleSubset();
+
+      for (ParticleSubset::iterator p = pSubset->begin();
+	   p != pSubset->end(); ++p)
+      {
+	//TODO: need to be able to read data as array of longs for
+	//particle id, but copyComponents always reads double
+	copyComponents<T>(&pd->data[pi*pd->components],
+			  (*particle_vars[i])[*p]);
+	++pi;
+      }
+    }
+  }
+
+  // Cleanup
   for (unsigned int i=0; i<particle_vars.size(); ++i)
     delete particle_vars[i];
 
