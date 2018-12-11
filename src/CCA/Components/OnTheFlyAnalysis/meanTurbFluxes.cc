@@ -379,7 +379,10 @@ void meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
     t->requires( Task::NewDW, Q->label, Q->matSubSet, Ghost::None, 0 );
     t->computes ( Q->primeLabel );
   }
-  sched->addTask( t, level->eachPatch() , d_matl_set, planeAverage::TG_COMPUTE );
+  
+  const int TG_indx = d_planeAve_1->getTaskGraphIndex();
+  
+  sched->addTask( t, level->eachPatch() , d_matl_set, TG_indx );
 }
 
 //______________________________________________________________________
@@ -489,7 +492,8 @@ void meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
   t->computes ( d_velVar->normalTurbStrssLabel );
   t->computes ( d_velVar->shearTurbStrssLabel );
 
-  sched->addTask( t, level->eachPatch() , d_matl_set, planeAverage::TG_COMPUTE );
+  const int TG_indx = d_planeAve_1->getTaskGraphIndex();
+  sched->addTask( t, level->eachPatch() , d_matl_set, TG_indx );
 }
 
 

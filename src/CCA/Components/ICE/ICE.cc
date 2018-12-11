@@ -550,6 +550,8 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
       am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
       am->problemSetup(prob_spec, restart_prob_spec, grid, dummy, dummy);
     }
+    
+    AnalysisModule::setTaskGraphIndex( d_analysisModules );
   }  // mpm
   
 #ifdef HAVE_VISIT

@@ -141,7 +141,6 @@ WARNING
        
     //__________________________________
     // global constants
-    double d_writeFreq; 
     double d_startTime;
     double d_stopTime;
     double d_colorThreshold;

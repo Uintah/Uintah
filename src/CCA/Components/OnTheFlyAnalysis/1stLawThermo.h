@@ -170,7 +170,6 @@ WARNING
     std::map< int, double > d_mpm_specificHeat;
     
     double d_conversion;        // conversion of between KJ -> J in SI units.
-    double d_analysisFreq; 
     double d_StartTime;
     double d_StopTime;    
   };

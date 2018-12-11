@@ -142,7 +142,6 @@ WARNING
        
     //__________________________________
     // global constants
-    double d_writeFreq; 
     double d_startTime;
     double d_stopTime;
     std::vector<VarLabel*> d_varLabels;

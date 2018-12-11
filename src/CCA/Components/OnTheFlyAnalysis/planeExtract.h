@@ -103,10 +103,7 @@ WARNING
                                               const LevelP& level);
                                       
   private:
-
-    int d_TG_COMPUTE;
-    enum GRAPH_INDX { TG_SKIP =0, TG_COMPUTE =1, NUM_GRAPHS = 2 };
-
+  
     enum PlaneType {XY=0, XZ=1, YZ=2, NONE=-9};
     
     void initialize( const ProcessorGroup*, 
@@ -204,7 +201,6 @@ WARNING
        
     //__________________________________
     // global constants
-    double d_writeFreq; 
     double d_startTime;
     double d_stopTime;
     

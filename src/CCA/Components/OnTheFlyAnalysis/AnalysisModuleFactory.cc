@@ -67,6 +67,8 @@ AnalysisModuleFactory::~AnalysisModuleFactory()
 {
 }
 
+//______________________________________________________________________
+//
 std::vector<AnalysisModule*>
 AnalysisModuleFactory::create(const ProcessorGroup* myworld,
                               const MaterialManagerP materialManager,

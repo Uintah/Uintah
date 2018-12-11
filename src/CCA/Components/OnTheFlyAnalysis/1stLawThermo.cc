@@ -115,7 +115,7 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
   
   //__________________________________
   //  Read in timing information
-  m_module_spec->require( "samplingFrequency", d_analysisFreq );
+  m_module_spec->require( "samplingFrequency", m_analysisFreq );
   m_module_spec->require( "timeStart",         d_StartTime );            
   m_module_spec->require( "timeStop",          d_StopTime );
   m_module_spec->get(     "engy_convt_factor", d_conversion );   // energy conversion factor in SI it KJ->J   
@@ -229,7 +229,7 @@ FirstLawThermo::initialize( const ProcessorGroup *,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing initialize");
     
-    double tminus = -1.0/d_analysisFreq;    
+    double tminus = -1.0/m_analysisFreq;    
     new_dw->put(max_vartype(tminus), FL_lb->lastCompTimeLabel);
 
     //__________________________________
@@ -349,7 +349,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
   old_dw->get(delT, m_delTLabel, level);
   
   double lastCompTime = analysisTime;
-  double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
+  double nextCompTime = lastCompTime + 1.0/m_analysisFreq;  
   // double now = m_materialManager->getElapsedSimTime();
 
   simTime_vartype simTimeVar;
@@ -589,7 +589,7 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
   old_dw->get(analysisTime, FL_lb->lastCompTimeLabel);
 
   double lastCompTime = analysisTime;
-  double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
+  double nextCompTime = lastCompTime + 1.0/m_analysisFreq;  
   // double now = m_materialManager->getElapsedSimTime();
 
   simTime_vartype simTimeVar;
@@ -650,7 +650,7 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
   double now = simTimeVar;
 
   // double now = m_materialManager->getElapsedSimTime();
-  double nextTime = lastTime + 1.0/d_analysisFreq;
+  double nextTime = lastTime + 1.0/m_analysisFreq;
   
   double time_dw  = lastTime;  
   if( now >= nextTime ){

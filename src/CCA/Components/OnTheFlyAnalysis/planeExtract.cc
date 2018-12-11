@@ -59,10 +59,6 @@ planeExtract::planeExtract(const ProcessorGroup* myworld,
   d_matl_set = 0;
   d_zero_matl = 0;
   d_lb = scinew planeExtractLabel();
-  AnalysisModule::m_NUM_GRAPHS += 1;
-  d_TG_COMPUTE = AnalysisModule::m_NUM_GRAPHS;
-  
-  cout << " planeExtract: m_NUM_GRAPHS: " << AnalysisModule::m_NUM_GRAPHS << " d_TG_COMPUTE: "<<  d_TG_COMPUTE << endl;
 }
 
 //__________________________________
@@ -102,14 +98,10 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
                                
   d_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_planeE",
                                             max_vartype::getTypeDescription());
-
-  // TG-0 = ignore 
-  // TG-1 = compute plane averages
-  m_scheduler->setNumTaskGraphs( NUM_GRAPHS );
-  
+ 
   //__________________________________
   //  Read in timing information
-  m_module_spec->require("samplingFrequency", d_writeFreq);
+  m_module_spec->require("samplingFrequency", m_analysisFreq);
   m_module_spec->require("timeStart",         d_startTime);
   m_module_spec->require("timeStop",          d_stopTime);
 
@@ -348,6 +340,9 @@ void planeExtract::scheduleInitialize(SchedulerP& sched,
   
   Task* t = scinew Task("planeExtract::initialize", 
                   this, &planeExtract::initialize);
+                  
+  // TG-0 = ignore 
+  sched->setNumTaskGraphs( m_NUM_GRAPHS );
   
   t->computes(d_lb->lastWriteTimeLabel);
  
@@ -364,7 +359,7 @@ void planeExtract::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask( patch, dbg_OTF_PE,"Doing  planeExtract::initialize" );
      
-    double tminus = -1.0/d_writeFreq;
+    double tminus = -1.0/m_analysisFreq;
     new_dw->put(max_vartype(tminus), d_lb->lastWriteTimeLabel);
 
     
@@ -420,7 +415,7 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
     }
   }
   
-  sched->addTask(t, level->eachPatch(), d_matl_set, TG_COMPUTE );
+  sched->addTask(t, level->eachPatch(), d_matl_set, m_TG_computeIndex );
 
 }
 
@@ -710,16 +705,17 @@ void planeExtract::computeTaskGraphIndex(const ProcessorGroup * ,
   old_dw->get( simTimeVar, m_simulationTimeLabel );
 
   double lastWriteTime = writeTime;
-  double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
+  double nextWriteTime = lastWriteTime + 1.0/m_analysisFreq;
   double now = simTimeVar;
   
-  if(now < d_startTime || now > d_stopTime || now < nextWriteTime ){
-    m_application->setTaskGraphIndex ( TG_SKIP );
-    new_dw->put( max_vartype(lastWriteTime), d_lb->lastWriteTimeLabel );
+  
+  if( ( now > d_startTime && now < d_stopTime ) && now > nextWriteTime ){
+    cout << " planeExtract::computeTaskGraphIndex: tg_index: " << m_TG_computeIndex <<endl;
+    m_application->setTaskGraphIndex ( m_TG_computeIndex );
+    new_dw->put( max_vartype( nextWriteTime ), d_lb->lastWriteTimeLabel );
   }
   else{
-    m_application->setTaskGraphIndex ( TG_COMPUTE );
-    new_dw->put( max_vartype(nextWriteTime), d_lb->lastWriteTimeLabel );
+    new_dw->put( max_vartype( lastWriteTime ), d_lb->lastWriteTimeLabel );
   }
 }
 

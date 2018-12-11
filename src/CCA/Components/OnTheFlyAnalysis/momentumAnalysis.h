@@ -212,7 +212,6 @@ WARNING
     MaterialSet* d_zeroMatlSet;
     PatchSet* d_zeroPatch;
 
-    double d_analysisFreq;
     double d_StartTime;
     double d_StopTime;
 

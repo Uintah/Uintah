@@ -534,10 +534,6 @@ ______________________________________________________________________*/
     //__________________________________
     //     PUBLIC:  VARIABLES
     MaterialSet*  d_matl_set;
-    int d_TG_PLANEAVE;
-    enum GRAPH_INDX { TG_SKIP =0, TG_COMPUTE =1, NUM_GRAPHS = 2 };
-    
-    
     
   //______________________________________________________________________
   //
@@ -640,7 +636,6 @@ ______________________________________________________________________*/
     //__________________________________
     // global constants always begin with "d_"
     std::string d_className;                   // identifier for each instantiation of this class
-    double d_writeFreq;
     double d_startTime;
     double d_stopTime;
     bool   d_parse_ups_variables;              // parse ups file to define d_allLevels_planarVars

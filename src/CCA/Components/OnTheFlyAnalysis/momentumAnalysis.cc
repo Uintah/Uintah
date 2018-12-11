@@ -134,7 +134,7 @@ void momentumAnalysis::problemSetup(const ProblemSpecP& ,
 
   //__________________________________
   //  Read in timing information
-  m_module_spec->require( "samplingFrequency", d_analysisFreq );
+  m_module_spec->require( "samplingFrequency", m_analysisFreq );
   m_module_spec->require( "timeStart",         d_StartTime );
   m_module_spec->require( "timeStop",          d_StopTime );
 
@@ -274,7 +274,7 @@ void momentumAnalysis::initialize( const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing initialize");
 
-    double tminus = -1.0/d_analysisFreq;
+    double tminus = -1.0/m_analysisFreq;
     new_dw->put( max_vartype(tminus), labels->lastCompTime );
 
     //__________________________________
@@ -391,7 +391,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
   old_dw->get( analysisTime, labels->lastCompTime );
 
   double lastCompTime = analysisTime;
-  double nextCompTime = lastCompTime + 1.0/d_analysisFreq;
+  double nextCompTime = lastCompTime + 1.0/m_analysisFreq;
 
   // double now = m_materialManager->getElapsedSimTime();
 
@@ -571,7 +571,7 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
   double now = simTimeVar;
 
   // double now = m_materialManager->getElapsedSimTime();
-  double nextTime = lastTime + ( 1.0 / d_analysisFreq );
+  double nextTime = lastTime + ( 1.0 / m_analysisFreq );
 
   double time_dw  = lastTime;
   if( now >= nextTime ){

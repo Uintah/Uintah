@@ -85,20 +85,30 @@ namespace Uintah {
                                              
     virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
                                               const LevelP& level) = 0;
+                                              
+    static void setTaskGraphIndex( std::vector<AnalysisModule*> &  modules);
+    
+    int getTaskGraphIndex() const { return m_TG_computeIndex;}
+                                         
+    //__________________________________
+    //  Variables                            
   protected:
+    enum GRAPH_INDX { TG_SKIP =0 };
+  
     ApplicationInterface*  m_application {nullptr};
     Output*                m_output      {nullptr};
     Scheduler*             m_scheduler   {nullptr};
 
     MaterialManagerP m_materialManager {nullptr};
-    
-    ProblemSpecP m_module_spec {nullptr};
+    ProblemSpecP     m_module_spec     {nullptr};
 
     const VarLabel* m_timeStepLabel       {nullptr};
     const VarLabel* m_simulationTimeLabel {nullptr};
     const VarLabel* m_delTLabel           {nullptr};
     
-    static int m_NUM_GRAPHS;
+    static int m_NUM_GRAPHS;                 // number of task graphs
+    int        m_TG_computeIndex;            // task graph index for this module
+    double     m_analysisFreq;               // analysis frequency: units 1/sec
   };
 }
 

@@ -33,7 +33,6 @@
 
 using namespace Uintah;
 
-// NOTE: UintahParallelComponent is noramlly called with the ProcessorGroup
 
 int AnalysisModule::m_NUM_GRAPHS = 1;
 
@@ -117,4 +116,75 @@ void AnalysisModule::releaseComponents()
   m_application  = nullptr;
   m_scheduler    = nullptr;
   m_output       = nullptr;
+}
+
+//______________________________________________________________________
+/*
+ Find the task graph index for each analysis module, which is needed if the module.
+ is using temporal scheduling.
+
+               This is tricky!!!  
+
+ Modules may have unique sampling frequencies or may not.  If they're unique 
+ then each module has it's own taskgraph compute index.
+  
+  Consider 4 modules with different analysis frequencies (f*)
+  1) f1 = f2 = f3, f4    -> 2 Task graphs
+  2) f1 = f4, f2 = f3    -> 2 Task graphs
+  3) f1, f2, f3 = f4     -> 3 Task graphs
+  3) f1, f2, f3, f4      -> 4 Task graphs
+*/
+//______________________________________________________________________
+
+void
+AnalysisModule::setTaskGraphIndex( std::vector<AnalysisModule*> &  modules)
+{
+  //Scheduler* sched = dynamic_cast<Scheduler*>( getPort("scheduler") );
+  //int num_TG= sched->getNumTaskGraphs();
+  
+  // container filled with of the module analysis frequencies
+  std::vector<double> freqs;
+  
+  for( size_t i=0; i!= modules.size(); i++){
+    freqs.push_back( modules[i]->m_analysisFreq );
+  }
+  
+  //__________________________________
+  double ignoreMe = -9;
+  int offset      = 1;           // this should be the number of TG
+  int TG_index    = offset-1;
+  
+  //__________________________________
+  //
+  for( size_t i=0; i!= freqs.size(); i++){
+    
+    if (freqs[i] == ignoreMe){
+      continue;
+    }
+    TG_index +=1;
+    
+    modules[i]->m_TG_computeIndex = TG_index;
+    
+    // if two module have identical analysis frequencies
+    for( size_t j = i+1; j != freqs.size(); j++){
+
+      if ( freqs[i] == freqs[j] ){
+        modules[j]->m_TG_computeIndex = TG_index;
+        freqs[j] = ignoreMe;
+      }
+    }
+  }
+  
+  //__________________________________
+  //  find number of unique task graphs
+  int n_UniqueTG = 0;
+  for( size_t i=0; i!= modules.size(); i++){
+    int iTG = modules[i]->m_TG_computeIndex;
+    std::cout << " OnTheFly AnalysisModule: " << i << " computeIndex: " << iTG  << std::endl;
+    n_UniqueTG = std::max( n_UniqueTG, iTG );
+    
+  }
+  m_NUM_GRAPHS = offset + n_UniqueTG;
+  std::cout << " OnTheFly AnalysisModule: num TaskGraphs: " << m_NUM_GRAPHS << std::endl;
+  
 }
