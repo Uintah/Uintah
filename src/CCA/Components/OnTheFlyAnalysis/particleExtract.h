@@ -97,6 +97,9 @@ WARNING
     
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level);
+
+    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
+                                              const LevelP& level){};
    
   private:
 
@@ -138,7 +141,6 @@ WARNING
        
     //__________________________________
     // global constants
-    double d_writeFreq; 
     double d_startTime;
     double d_stopTime;
     double d_colorThreshold;

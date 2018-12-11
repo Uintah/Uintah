@@ -39,7 +39,8 @@ namespace Uintah {
           
     public:      
       static ExchangeModel* create(const ProblemSpecP     & prob_spec,
-                                   const MaterialManagerP & materialManager);
+                                   const MaterialManagerP & materialManager,
+                                   const bool with_mpm);
   };
 }
 

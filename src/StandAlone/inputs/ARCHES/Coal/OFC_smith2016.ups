@@ -1239,6 +1239,7 @@
           <ASH>0.0786348668</ASH>
           <H2O>0.0578784552</H2O>
         </ultimate_analysis>
+        <daf_volatiles_fraction>.45</daf_volatiles_fraction>  <!--dray ash free volatiles content - computed from SUFCO proximate analysis -->
         <raw_coal_enthalpy>-1064549.81069</raw_coal_enthalpy>
         <char_enthalpy>0.0</char_enthalpy>
         <ash_enthalpy>-9.5686e7</ash_enthalpy>

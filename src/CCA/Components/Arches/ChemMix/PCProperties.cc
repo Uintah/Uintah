@@ -109,11 +109,12 @@ PCProperties::getState( const ProcessorGroup* pc,
 {
   for (int p=0; p < patches->size(); p++){
 
-    const Patch* patch = patches->get(p);
+    //const Patch* patch = patches->get(p);
 
   }
 }
 
 double
 PCProperties::getTableValue( std::vector<double>, std::string ){
+  return -99.0; 
 }

@@ -16,7 +16,7 @@ ArchesCore::EQUATION_CLASS assign_eqn_class_enum( std::string my_class ){
   } else if ( my_class == "momentum" ){
     return MOMENTUM;
   } else {
-    throw ProblemSetupException( "Error: eqn group type not recognized.",
+    throw ProblemSetupException( "Error: eqn group type not recognized: "+my_class,
                                  __FILE__, __LINE__ );
   }
 }

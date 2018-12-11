@@ -44,7 +44,8 @@ namespace ExchangeModels{
 
   public:
     ScalarExch(const ProblemSpecP     & prob_spec,
-               const MaterialManagerP & materialManager );
+               const MaterialManagerP & materialManager,
+               const bool with_mpm );
 
     virtual ~ScalarExch();
 
@@ -117,8 +118,6 @@ namespace ExchangeModels{
     //__________________________________
     //  variables
     ExchangeCoefficients* d_exchCoeff;
-    MPMLabel* Mlb;
-    ICELabel* Ilb;
   };
 }
 }

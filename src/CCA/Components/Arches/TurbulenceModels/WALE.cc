@@ -67,29 +67,31 @@ WALE::problemSetup( ProblemSpecP& db ){
 
   Nghost_cells = 1;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
-  m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocity" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocity" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocity" );
+  m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );//;m_u_vel_name + "_cc";
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "uVelocity_cc" );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "vVelocity_cc" );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "wVelocity_cc" );
 
-  m_IsI_name = "strainMagnitudeLabel";
+  std::stringstream composite_name;
+  composite_name << "strainMagnitudeLabel_" << m_task_name;
+  m_IsI_name = composite_name.str();
+
   m_turb_viscosity_name = "turb_viscosity";
   m_volFraction_name = "volFraction";
 
   db->getWithDefault("Cs", m_Cs, .5);
 
-  if (db->findBlock("use_my_name_viscosity")){
-    db->findBlock("use_my_name_viscosity")->getAttribute("label",m_t_vis_name);
-  } else{
-    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "viscosityCTS" );
-  }
+  m_total_vis_name = m_task_name;
 
-  if (m_u_vel_name == "uVelocitySPBC") { // this is production code
+  // Use the production velocity name to signal if this is being used in the ExplicitSolver.
+  if (m_u_vel_name == "uVelocitySPBC") {
     m_create_labels_IsI_t_viscosity = false;
+    m_total_vis_name = "viscosityCTS";
+    m_IsI_name = "strainMagnitudeLabel";
   }
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("PhysicalConstants")) {
@@ -115,7 +117,7 @@ WALE::create_local_labels(){
 
   if (m_create_labels_IsI_t_viscosity) {
     register_new_variable<CCVariable<double> >(m_IsI_name);
-    register_new_variable<CCVariable<double> >( m_t_vis_name);
+    register_new_variable<CCVariable<double> >( m_total_vis_name);
     register_new_variable<CCVariable<double> >( m_turb_viscosity_name);
   }
 
@@ -126,7 +128,7 @@ void
 WALE::register_initialize( std::vector<AFC::VariableInformation>&
                                        variable_registry , const bool packed_tasks){
 
-  register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
+  register_variable( m_total_vis_name, AFC::COMPUTES, variable_registry );
   register_variable( m_turb_viscosity_name, AFC::COMPUTES, variable_registry );
   register_variable( m_IsI_name, AFC::COMPUTES ,  variable_registry );
 
@@ -136,28 +138,10 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 template<typename ExecutionSpace, typename MemSpace>
 void WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
 
-  auto mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_t_vis_name);
+  auto mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_total_vis_name);
   auto mu_turb = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_turb_viscosity_name);
   auto IsI = tsk_info->get_uintah_field_add< CCVariable<double>  ,double,MemSpace >(m_IsI_name);
   parallel_initialize(exObj,0.0, mu_sgc, mu_turb, IsI);
-
-}
-
-//---------------------------------------------------------------------------------
-void
-WALE::register_timestep_init( std::vector<AFC::VariableInformation>&
-                              variable_registry , const bool packed_tasks){
-
-  //register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
-
-}
-
-//---------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void
-WALE::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
-
- // CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
 
 }
 
@@ -176,10 +160,10 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_volFraction_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
   register_variable( m_IsI_name, AFC::COMPUTES ,  variable_registry, time_substep );
   if (m_create_labels_IsI_t_viscosity) {
-    register_variable( m_t_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );
+    register_variable( m_total_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, AFC::COMPUTES ,  variable_registry, time_substep );
   } else {
-    register_variable( m_t_vis_name, AFC::MODIFIES ,  variable_registry, time_substep );
+    register_variable( m_total_vis_name, AFC::MODIFIES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, AFC::MODIFIES ,  variable_registry, time_substep );
   }
 
@@ -197,7 +181,7 @@ void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
   auto CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_cc_v_vel_name);
   auto CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_cc_w_vel_name);
 
-  auto mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double>,double,MemSpace >(m_t_vis_name);
+  auto mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double>,double,MemSpace >(m_total_vis_name);
   auto mu_turb = tsk_info->get_uintah_field_add<CCVariable<double> ,double,MemSpace >(m_turb_viscosity_name);
   auto IsI = tsk_info->get_uintah_field_add< CCVariable<double>  ,double,MemSpace >(m_IsI_name);
   auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_density_name);

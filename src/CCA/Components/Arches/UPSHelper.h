@@ -91,6 +91,12 @@ namespace Uintah{ namespace ArchesCore {
     return mydefault;
   }
 
+  // Defining default names for specific CFD variables.
+  static std::string default_uVel_name{"uVelocity"};             // u-velocity, staggered
+  static std::string default_vVel_name{"vVelocity"};             // v-velocity, staggered
+  static std::string default_wVel_name{"wVelocity"};             // w-velocity, staggered
+  static std::string default_viscosity_name{"total_viscosity"};  // total viscosity (molecular + turb closure) - note: turb closure may or may not exist
+
 }} // end Uintah::ArchesCore
 
 #endif

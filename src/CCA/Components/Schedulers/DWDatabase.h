@@ -321,6 +321,7 @@ DWDatabase<DomainType>::decrementScrubCount( const VarLabel   * label
   //   If scrubCount then is equal to 0, the var is scrubbed.
 
   ASSERT(matlIndex >= -1);
+
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
     return 0;
@@ -363,16 +364,8 @@ DWDatabase<DomainType>::scrub( const VarLabel   * label
                              )
 {
   ASSERT(matlIndex >= -1);
+
   int idx = m_keyDB->lookup(label, matlIndex, dom);
-
-#if 0
-  if (m_vars[idx] == nullptr) {  // scrub not found
-    std::ostringstream msgstr;
-    msgstr << label->getName() << ", matl " << matlIndex << ", patch/level " << dom->getID() << " not found for scrubbing.";
-    SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
-  }
-#endif
-
   if (idx != -1 && m_vars[idx]) {
     delete m_vars[idx];
     m_vars[idx] = nullptr;
@@ -394,7 +387,7 @@ DWDatabase<DomainType>::initializeScrubs(       int                        dwid
     if (m_vars[keyiter->second]) {
       VarLabelMatl<DomainType> vlm = keyiter->first;
       // See if it is in the scrubcounts map.
-      ScrubItem key(vlm.label_, vlm.matlIndex_, vlm.domain_, dwid);
+      ScrubItem key(vlm.m_label, vlm.m_matl_index, vlm.m_domain, dwid);
       ScrubItem* result = scrubcounts->lookup(&key);
       if (!result && !add) {
         delete m_vars[keyiter->second];
@@ -411,11 +404,11 @@ DWDatabase<DomainType>::initializeScrubs(       int                        dwid
             }
           }
         }
-        keyiter++;
+        ++keyiter;
       }
     }
     else {
-      keyiter++;
+      ++keyiter;
     }
   }
 }
@@ -447,8 +440,7 @@ template<class DomainType>
 void
 KeyDatabase<DomainType>::merge( const KeyDatabase<DomainType> & newDB )
 {
-  for (typename keyDBtype::const_iterator const_keyiter = newDB.m_keys.begin(); const_keyiter != newDB.m_keys.end();
-      const_keyiter++) {
+  for (typename keyDBtype::const_iterator const_keyiter = newDB.m_keys.cbegin(); const_keyiter != newDB.m_keys.cend(); ++const_keyiter) {
     typename keyDBtype::const_iterator const_db_iter = m_keys.find(const_keyiter->first);
     if (const_db_iter == m_keys.end()) {
       m_keys.insert(std::pair<VarLabelMatl<DomainType>, int>(const_keyiter->first, m_key_count++));
@@ -488,7 +480,7 @@ template<class DomainType>
 void
 KeyDatabase<DomainType>::print( std::ostream & out, int rank ) const
 {
-  for (auto keyiter = m_keys.begin(); keyiter != m_keys.end(); keyiter++) {
+  for (auto keyiter = m_keys.begin(); keyiter != m_keys.end(); ++keyiter) {
     const VarLabelMatl<DomainType>& vlm = keyiter->first;
     const DomainType* dom = vlm.domain_;
     if (dom) {
@@ -562,7 +554,7 @@ DWDatabase<DomainType>::put( const VarLabel   * label
   // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
-    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes - put", __FILE__, __LINE__));
+    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "DWDatabase::put", __FILE__, __LINE__));
   }
 
   if (m_vars[idx]) {
@@ -604,7 +596,7 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
   // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
-    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes - putReduce", __FILE__, __LINE__));
+    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "DWDatabase::putReduce", __FILE__, __LINE__));
   }
 
   DataItem* newdi = new DataItem();
@@ -649,7 +641,7 @@ DWDatabase<DomainType>::putForeign( const VarLabel   * label
   // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
-    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes - putForeign", __FILE__, __LINE__));
+    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "DWDatabase::putForeign", __FILE__, __LINE__));
   }
 
   DataItem* newdi = new DataItem();
@@ -733,12 +725,12 @@ DWDatabase<DomainType>::print( std::ostream & out, int rank ) const
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
     if (m_vars[keyiter->second]) {
       const VarLabelMatl<DomainType>& vlm = keyiter->first;
-      const DomainType* dom = vlm.domain_;
+      const DomainType* dom = vlm.m_domain;
       if (dom) {
-        out << rank << " Name: " << vlm.label_->getName() << "  domain: " << *dom << "  matl:" << vlm.matlIndex_ << '\n';
+        out << rank << " Name: " << vlm.m_label->getName() << "  domain: " << *dom << "  matl:" << vlm.m_matl_index << '\n';
       }
       else {
-        out << rank << " Name: " << vlm.label_->getName() << "  domain: N/A  matl: " << vlm.matlIndex_ << '\n';
+        out << rank << " Name: " << vlm.m_label->getName() << "  domain: N/A  matl: " << vlm.m_matl_index << '\n';
       }
     }
   }
@@ -758,15 +750,15 @@ DWDatabase<DomainType>::logMemoryUse(       std::ostream  & out
     if (m_vars[keyiter->second]) {
       Variable* var = m_vars[keyiter->second]->m_var;
       VarLabelMatl<DomainType> vlm = keyiter->first;
-      const VarLabel* label = vlm.label_;
+      const VarLabel* label = vlm.m_label;
       std::string elems;
       unsigned long totsize;
       void* ptr;
       var->getSizeInfo(elems, totsize, ptr);
       const TypeDescription* td = label->typeDescription();
 
-      logMemory(out, total, tag, label->getName(), (td ? td->getName() : "-"), vlm.domain_,
-                vlm.matlIndex_, elems, totsize, ptr, dwid);
+      logMemory(out, total, tag, label->getName(), (td ? td->getName() : "-"), vlm.m_domain,
+                vlm.m_matl_index, elems, totsize, ptr, dwid);
     }
   }
 }
@@ -810,11 +802,11 @@ struct hash<VarLabelMatl<DomainType> > {
   size_t operator()( const VarLabelMatl<DomainType>& v ) const
   {
     size_t h = 0u;
-    char* str = const_cast<char*>(v.label_->getName().data());
+    char* str = const_cast<char*>(v.m_label->getName().data());
     while (int c = *str++) {
       h = h * 7 + c;
     }
-    return ((((size_t)v.label_) << (sizeof(size_t) / 2) ^ ((size_t)v.label_) >> (sizeof(size_t) / 2)) ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_);
+    return ((((size_t)v.m_label) << (sizeof(size_t) / 2) ^ ((size_t)v.m_label) >> (sizeof(size_t) / 2)) ^ (size_t)v.m_domain ^ (size_t)v.m_matl_index);
   }
 };
 

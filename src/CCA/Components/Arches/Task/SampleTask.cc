@@ -74,8 +74,8 @@ SampleTask::register_timestep_init(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace> void
-SampleTask::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
+template<typename ExecutionSpace, typename MemSpace>
+void SampleTask::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
 //--------------------------------------------------------------------------------------------------
 void

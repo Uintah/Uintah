@@ -52,19 +52,16 @@ extern DebugStream dbgExch;
 //______________________________________________________________________
 //
 ScalarExch::ScalarExch( const ProblemSpecP     & prob_spec,
-                        const MaterialManagerP & materialManager )
-  : ExchangeModel( prob_spec, materialManager )
+                        const MaterialManagerP & materialManager,
+                        const bool with_mpm )
+  : ExchangeModel( prob_spec, materialManager, with_mpm )
 {
   d_exchCoeff = scinew ExchangeCoefficients();
-  Ilb  = scinew ICELabel();
-  Mlb  = scinew MPMLabel();
 }
 
 ScalarExch::~ScalarExch()
 {
   delete d_exchCoeff;
-  delete Ilb;
-  delete Mlb;
 }
 
 //______________________________________________________________________

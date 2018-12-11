@@ -26,7 +26,7 @@ public:
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
@@ -38,7 +38,8 @@ public:
     template <typename ExecutionSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
+    template <typename ExecutionSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
 
     template <typename ExecutionSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
@@ -56,7 +57,7 @@ public:
       { return scinew WALE( m_task_name, m_matl_index ); }
 
       private:
-      
+
 
       std::string m_task_name;
       int m_matl_index;
@@ -75,8 +76,8 @@ private:
     std::string m_density_name;
     double m_Cs; //Wale constant
     double m_molecular_visc;
-    std::string m_t_vis_name;
-    bool m_create_labels_IsI_t_viscosity{true};   
+    std::string m_total_vis_name;
+    bool m_create_labels_IsI_t_viscosity{true};
     std::string m_turb_viscosity_name;
     std::string m_volFraction_name;
 

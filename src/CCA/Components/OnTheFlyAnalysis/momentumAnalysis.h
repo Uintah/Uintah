@@ -94,6 +94,9 @@ WARNING
 
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                              const LevelP& level) {};
+                                             
+    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
+                                              const LevelP& level){};
 
   private:
 
@@ -209,7 +212,6 @@ WARNING
     MaterialSet* d_zeroMatlSet;
     PatchSet* d_zeroPatch;
 
-    double d_analysisFreq;
     double d_StartTime;
     double d_StopTime;
 

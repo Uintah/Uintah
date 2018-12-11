@@ -147,6 +147,7 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
       }
 
       assign_task_to_type_storage(name, type);
+
       }
     }
   }
@@ -217,6 +218,7 @@ SourceTermFactoryV2::add_task( ProblemSpecP& db )
         } else {
           tsk = scinew MMS_mom<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
+
         register_task( name, tsk );
         _pre_update_source_tasks.push_back( name );
 
@@ -236,8 +238,10 @@ SourceTermFactoryV2::add_task( ProblemSpecP& db )
         } else {
           tsk = scinew MMS_Shunn<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
+
         register_task( name, tsk );
         _pre_update_source_tasks.push_back( name );
+
       } else if ( type == "MMS_mom_csmag" ) {
 
         std::string var_type;
@@ -275,6 +279,7 @@ SourceTermFactoryV2::add_task( ProblemSpecP& db )
     }
   }
 }
+
 //--------------------------------------------------------------------------------------------------
 
 void SourceTermFactoryV2::schedule_initialization( const LevelP& level,

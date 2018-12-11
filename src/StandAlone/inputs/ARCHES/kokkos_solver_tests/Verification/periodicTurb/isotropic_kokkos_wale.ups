@@ -24,16 +24,16 @@
     <save label="x_mms_source"/-->
     <save label="y-mom"/>
     <save label="z-mom"/>
-    <save label="uVel"/>
-    <save label="vVel"/>
-    <save label="wVel"/>
-    <save label="uVel_cc"/>
-    <save label="vVel_cc"/>
-    <save label="wVel_cc"/>
+    <save label="uVelocity"/>
+    <save label="vVelocity"/>
+    <save label="wVelocity"/>
+    <save label="uVelocity_cc"/>
+    <save label="vVelocity_cc"/>
+    <save label="wVelocity_cc"/>
     <save label="drhodt"/>
     <!--save label="density_star"/-->
     <save label="density"/>
-    <save label="gamma"/>
+    <save label="wale_model_visc"/>
     <save label="pressure"/>
     <save label="b_press"/>
     <!--save label="viscosity_csigma"/-->
@@ -65,13 +65,7 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
       <VarID>
-        <var role="uvelocity" label="uVel"/>
-        <var role="vvelocity" label="vVel"/>
-        <var role="wvelocity" label="wVel"/>
-        <var role="ccuvelocity" label="uVel_cc"/>
-        <var role="ccvvelocity" label="vVel_cc"/>
-        <var role="ccwvelocity" label="wVel_cc"/>
-        <var role="total_viscosity" label="gamma"/>
+        <var role="total_viscosity" label="wale_model_visc"/>
         <var role="density" label="density"/>
       </VarID>
       <StateProperties> 
@@ -94,23 +88,23 @@
         </PressureSolver>
       </KMomentum>
       <TurbulenceModels>
-       <model label="Cwale" type="wale">
+       <model label="wale_model_visc" type="wale">
         <Cs>0.5</Cs>
        </model>
       </TurbulenceModels>
       <Initialization>
-        <task task_label="uVel-init" variable_label="uVel"  type="input_file">
+        <task task_label="uVel-init" variable_label="uVelocity"  type="input_file">
           <!--filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename-->
           <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
           <vector index="0"/>
           <variable type="FX"/>
         </task>
-        <task task_label="vVel-init" variable_label="vVel"  type="input_file">
+        <task task_label="vVel-init" variable_label="vVelocity"  type="input_file">
           <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
           <vector index="1"/>
           <variable type="FY"/>
         </task>
-        <task task_label="wVel-init" variable_label="wVel"  type="input_file">
+        <task task_label="wVel-init" variable_label="wVelocity"  type="input_file">
           <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
           <vector index="2"/>
           <variable type="FZ"/>

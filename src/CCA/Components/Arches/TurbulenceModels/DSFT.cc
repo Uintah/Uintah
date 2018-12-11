@@ -3,8 +3,8 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
-DSFT::DSFT( std::string task_name, int matl_index ) :
-TaskInterface( task_name, matl_index ) {
+DSFT::DSFT( std::string task_name, int matl_index, const std::string turb_model_name ) :
+TaskInterface( task_name, matl_index ), m_turb_model_name(turb_model_name) {
 
 }
 
@@ -61,29 +61,35 @@ DSFT::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
   // u, v , w velocities
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, m_u_vel_name + "_cc" );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, m_v_vel_name + "_cc" );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, m_w_vel_name + "_cc" );
+
   m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
   m_rhou_vel_name = "x-mom";
   m_rhov_vel_name = "y-mom";
   m_rhow_vel_name = "z-mom" ;
 
-  m_volFraction_name = "volFraction";
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );//;m_u_vel_name + "_cc";
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
 
-  if (m_u_vel_name == "uVelocitySPBC") { // this is production code
-    m_create_labels_IsI_t_viscosity = false;
-  }
+  m_volFraction_name = "volFraction";
 
   std::string m_Type_filter_name;
   db->findBlock("filter")->getAttribute("type",m_Type_filter_name);
-  m_IsI_name = "strainMagnitudeLabel";
-  //m_ref_density_name = "denRefArray"; // name used in production code
-  //m_cell_type_name = "cellType";
+
+  std::stringstream composite_name;
+  composite_name << "strainMagnitude_" << m_turb_model_name;
+  m_IsI_name = composite_name.str();
+
+  //** HACK **//
+  if (m_u_vel_name == "uVelocitySPBC") { // this is production code
+    m_create_labels_IsI_t_viscosity = false;
+    m_IsI_name = "strainMagnitudeLabel";
+  }
+
   Type_filter = ArchesCore::get_filter_from_string( m_Type_filter_name );
   m_Filter.get_w(Type_filter);
 }

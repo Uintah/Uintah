@@ -10,73 +10,80 @@ namespace Uintah{
 
 public:
 
-    DSmaMMML( std::string task_name, int matl_index );
-    ~DSmaMMML();
+  DSmaMMML( std::string task_name, int matl_index, const std::string turb_model_name );
+  ~DSmaMMML();
 
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+  TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+  TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
+  TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+  TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
 
-    void problemSetup( ProblemSpecP& db );
+  TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+  void problemSetup( ProblemSpecP& db );
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+  void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
+  void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){}
+  void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
+  void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){}
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+  template <typename ExecutionSpace, typename MemSpace>
+  void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
+  template <typename ExecutionSpace, typename MemSpace>
+  void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+  template <typename ExecutionSpace, typename MemSpace>
+  void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
 
-    void create_local_labels();
+  template <typename ExecutionSpace, typename MemSpace>
+  void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
-    //Build instructions for this (DSmaMMML) class.
-    class Builder : public TaskInterface::TaskBuilder {
+  void create_local_labels();
 
-      public:
+  //Build instructions for this (DSmaMMML) class.
+  class Builder : public TaskInterface::TaskBuilder {
 
-      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
-      ~Builder(){}
+    public:
 
-      DSmaMMML* build()
-      { return scinew DSmaMMML<TT>( m_task_name, m_matl_index ); }
+    Builder( std::string task_name, int matl_index, const std::string turb_model_name )
+      : m_task_name(task_name), m_matl_index(matl_index), m_turb_model_name(turb_model_name){}
+    ~Builder(){}
 
-      private:
+    DSmaMMML* build()
+    { return scinew DSmaMMML<TT>( m_task_name, m_matl_index, m_turb_model_name ); }
 
-      std::string m_task_name;
-      int m_matl_index;
-    };
+    private:
+
+    std::string m_task_name;
+    int m_matl_index;
+    const std::string m_turb_model_name;
+
+  };
 
 private:
+
   std::string m_u_vel_name;
-  //int Type_filter;
-  double m_epsilon;
+  //double m_epsilon;
   Uintah::ArchesCore::FILTER Type_filter;
   std::string m_IsI_name;
   std::string m_volFraction_name;
   Uintah::ArchesCore::TestFilter m_Filter;
-  };
+  const std::string m_turb_model_name;
 
-//--------------------------------------------------------------------------------------------------
+};
+
+//-------------------- CLASS DEFINITIONS -----------------------------------------------------------
+
 template<typename TT>
-DSmaMMML<TT>::DSmaMMML( std::string task_name, int matl_index ) :
-TaskInterface( task_name, matl_index ) {
+DSmaMMML<TT>::DSmaMMML( std::string task_name, int matl_index, const std::string turb_model_name ) :
+TaskInterface( task_name, matl_index ), m_turb_model_name(turb_model_name) {
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -128,7 +135,7 @@ TaskAssignedExecutionSpace DSmaMMML<TT>::loadTaskTimestepInitFunctionPointers()
 template<typename TT>
 TaskAssignedExecutionSpace DSmaMMML<TT>::loadTaskRestartInitFunctionPointers()
 {
- return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+ return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
@@ -143,10 +150,19 @@ DSmaMMML<TT>::problemSetup( ProblemSpecP& db ){
   m_Filter.get_w(Type_filter);
 
   const ProblemSpecP params_root = db->getRootNode();
-  db->require("epsilon",m_epsilon);
+  //db->require("epsilon",m_epsilon);
 
+  std::string u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
 
-  m_IsI_name = "strainMagnitudeLabel";
+  std::stringstream composite_name;
+  composite_name << "strainMagnitude_" << m_turb_model_name;
+  m_IsI_name = composite_name.str();
+
+  //** HACK **//
+  if ( u_vel_name == "uVelocitySPBC"){
+    m_IsI_name = "strainMagnitudeLabel";
+  }
+
   m_volFraction_name = "volFraction";
 
 }
@@ -304,9 +320,9 @@ template<typename ExecutionSpace, typename MemSpace>
 void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
 
   const Vector Dx = patch->dCell(); //
-  double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
-  double filter2  = filter*filter;
-  double fhat     = m_epsilon;
+  const double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
+  const double filter2  = filter*filter;
+  const double fhat     = 3.; //Mystery value for tilde(bar(delta))
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
 

@@ -48,7 +48,8 @@ DebugStream dbgExch("EXCHANGEMODELS", false);
 //______________________________________________________________________
 //
 ExchangeModel::ExchangeModel(const ProblemSpecP     & prob_spec,
-                             const MaterialManagerP & materialManager )
+                             const MaterialManagerP & materialManager,
+                             const bool with_mpm )
 {
   d_matlManager = materialManager;
   d_numMatls    = materialManager->getNumMatls();
@@ -56,7 +57,13 @@ ExchangeModel::ExchangeModel(const ProblemSpecP     & prob_spec,
   d_zero_matl->add(0);
   d_zero_matl->addReference();
   
-  Mlb  = scinew MPMLabel();
+  d_with_mpm = with_mpm;
+  Ilb = scinew ICELabel();
+  
+  if(with_mpm){
+    Mlb = scinew MPMLabel();
+  }
+  
   
   d_surfaceNormLabel   = VarLabel::create("surfaceNorm",   CCVariable<Vector>::getTypeDescription());
   d_isSurfaceCellLabel = VarLabel::create("isSurfaceCell", CCVariable<int>::getTypeDescription());
@@ -66,14 +73,19 @@ ExchangeModel::ExchangeModel(const ProblemSpecP     & prob_spec,
 //
 ExchangeModel::~ExchangeModel()
 {
-  delete Mlb;
- 
   VarLabel::destroy( d_surfaceNormLabel );
   VarLabel::destroy( d_isSurfaceCellLabel );
   
   if( d_zero_matl  && d_zero_matl->removeReference() ) {
     delete d_zero_matl;
   }
+  
+  delete Ilb;
+  
+  if( d_with_mpm ){
+    delete Mlb;
+  }
+  
 }
 
 

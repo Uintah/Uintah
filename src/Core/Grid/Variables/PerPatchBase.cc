@@ -23,15 +23,17 @@
  */
 
 #include <Core/Grid/Variables/PerPatchBase.h>
-
 #include <Core/Exceptions/InternalError.h>
 
 using namespace Uintah;
 
-/////////////////////////////////////////////////////////////////////////////////////
+PerPatchBase::PerPatchBase()
+{
+}
 
-PerPatchBase::PerPatchBase() {}
-PerPatchBase::~PerPatchBase() {}
+PerPatchBase::~PerPatchBase()
+{
+}
 
 RefCounted*
 PerPatchBase::getRefCounted()
@@ -39,36 +41,8 @@ PerPatchBase::getRefCounted()
   SCI_THROW(InternalError("getRefCounted not implemented for PerPatch", __FILE__, __LINE__));
 }
 
-const Uintah::TypeDescription*
-PerPatchBase::virtualGetTypeDescription() const
-{
-  SCI_THROW(InternalError("virtualGetTypeDescription not implemented for PerPatch", __FILE__, __LINE__));
-}
-
-void
-PerPatchBase::offsetGrid( const IntVector& )
-{
-}
-
-void
-PerPatchBase::emitNormal( std::ostream&, const IntVector&,
-                          const IntVector&, ProblemSpecP, bool )
-{
-  SCI_THROW(InternalError("emitNormal not implemented for PerPatch", __FILE__, __LINE__));
-
-}
-
-void
-PerPatchBase::readNormal( std::istream&, bool )
-{
-  SCI_THROW(InternalError("readNormal not implemented for PerPatch", __FILE__, __LINE__));
-
-}
-
 void
 PerPatchBase::allocate( const Patch*, const IntVector& )
 {
   SCI_THROW(InternalError("Should not call allocate for PerPatch", __FILE__, __LINE__));
-
 }
-

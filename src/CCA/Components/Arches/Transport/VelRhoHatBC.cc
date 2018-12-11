@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/Transport/VelRhoHatBC.h>
+#include <CCA/Components/Arches/UPSHelper.h>
 
 using namespace Uintah;
 typedef ArchesFieldContainer AFC;
@@ -56,12 +57,15 @@ TaskAssignedExecutionSpace VelRhoHatBC::loadTaskRestartInitFunctionPointers()
 
 //--------------------------------------------------------------------------------------------------
 void VelRhoHatBC::problemSetup( ProblemSpecP& db ){
+
+  using namespace ArchesCore;
+  
   m_xmom = "x-mom";
   m_ymom = "y-mom";
   m_zmom = "z-mom";
-  m_uVel ="uVel";
-  m_vVel ="vVel";
-  m_wVel ="wVel";
+  m_uVel = parse_ups_for_role( UVELOCITY, db, default_uVel_name );
+  m_vVel = parse_ups_for_role( VVELOCITY, db, default_vVel_name );
+  m_wVel = parse_ups_for_role( WVELOCITY, db, default_wVel_name );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -81,8 +85,8 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_vVel, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
   register_variable( m_wVel, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
 
-  
-  
+
+
 }
 
 // wrapper templated function to deal with different types
@@ -114,6 +118,7 @@ void VelRhoHatBC::set_mom_bc( ExecutionObject<ExecutionSpace,MemSpace> &exObj,gr
           // shut off the hatted value to encourage the mostly-* condition
           var(i_f,j_f,k_f) = 0.0;
         }
+
           var(ipp,jpp,kpp) = var(i_f,j_f,k_f); 
 
       });

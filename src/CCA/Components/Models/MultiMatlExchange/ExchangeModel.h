@@ -45,7 +45,8 @@ namespace Uintah {
 
   public:
     ExchangeModel(const ProblemSpecP     & prob_spec,
-                  const MaterialManagerP & materialManager );
+                  const MaterialManagerP & materialManager,
+                  const bool with_mpm );
 
     virtual ~ExchangeModel();
 
@@ -104,7 +105,8 @@ namespace Uintah {
                                const MaterialSubset *,
                                DataWarehouse        * old_dw,
                                DataWarehouse        * new_dw );
-
+    
+    protected:
     //__________________________________
     // variables & objects needed by
     // the different exchange models.
@@ -115,10 +117,11 @@ namespace Uintah {
     int    d_numMatls  = -9;
     MaterialManagerP  d_matlManager;
     MaterialSubset * d_zero_matl;
-
-  private:
+    
     MPMLabel* Mlb;
-
+    ICELabel* Ilb;
+    bool d_with_mpm;
+    
   };
 }
 

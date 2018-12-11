@@ -10,7 +10,7 @@ namespace Uintah{
 
 public:
 
-    DSFT( std::string task_name, int matl_index );
+    DSFT( std::string task_name, int matl_index, const std::string turb_model_name );
     ~DSFT();
 
     TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
@@ -52,16 +52,19 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index, const std::string turb_model_name )
+        : m_task_name(task_name), m_matl_index(matl_index), m_turb_model_name(turb_model_name){}
       ~Builder(){}
 
       DSFT* build()
-      { return scinew DSFT( m_task_name, m_matl_index ); }
+      { return scinew DSFT( m_task_name, m_matl_index, m_turb_model_name ); }
 
       private:
 
       std::string m_task_name;
       int m_matl_index;
+      const std::string m_turb_model_name;
+
     };
 
 private:
@@ -79,6 +82,8 @@ private:
     std::string m_rhov_vel_name;
     std::string m_rhow_vel_name;
     std::string m_IsI_name;
+
+    const std::string m_turb_model_name; 
     //std::string m_ref_density_name;
     //std::string m_cell_type_name;
     //int Type_filter ;

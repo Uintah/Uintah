@@ -89,7 +89,7 @@ VarLabel::create( const std::string     & name
       DOUT(g_varlabel_dbg, "Created VarLabel: " << label->m_name << " [address = " << label);
     }
     label->addReference();
-    }
+  }
   g_label_mutex.unlock(); 
   
   return label;

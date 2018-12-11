@@ -67,15 +67,15 @@ namespace Uintah {
 
     , XMLIOTime
     , OutputIOTime
-    , ReductionIOTime
+    , OutputGlobalIOTime
     , CheckpointIOTime
-    , CheckpointReductionIOTime
+    , CheckpointGlobalIOTime
     , TotalIOTime
 
     , OutputIORate
-    , ReductionIORate
+    , OutputGlobalIORate
     , CheckpointIORate
-    , CheckpointReductionIORate
+    , CheckpointGlobalIORate
 
     , SCIMemoryUsed
     , SCIMemoryMaxUsed

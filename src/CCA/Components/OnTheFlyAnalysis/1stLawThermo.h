@@ -93,6 +93,9 @@ WARNING
    
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                              const LevelP& level) {};
+                                             
+    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
+                                              const LevelP& level){};
                                       
   private:
 
@@ -167,7 +170,6 @@ WARNING
     std::map< int, double > d_mpm_specificHeat;
     
     double d_conversion;        // conversion of between KJ -> J in SI units.
-    double d_analysisFreq; 
     double d_StartTime;
     double d_StopTime;    
   };

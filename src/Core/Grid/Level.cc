@@ -126,14 +126,14 @@ void Level::setPatchDistributionHint( const IntVector & hint )
 //
 Level::const_patch_iterator Level::patchesBegin() const
 {
-  return m_real_patches.begin();
+  return m_real_patches.cbegin();
 }
 
 //______________________________________________________________________
 //
 Level::const_patch_iterator Level::patchesEnd() const
 {
-  return m_real_patches.end();
+  return m_real_patches.cend();
 }
 
 //______________________________________________________________________
@@ -505,7 +505,7 @@ void Level::selectPatches( const IntVector  & low
 
     // look it up in the cache first
     select_cache::const_iterator iter = m_select_cache.find(std::make_pair(low, high));
-    if (iter != m_select_cache.end()) {
+    if (iter != m_select_cache.cend()) {
       const std::vector<const Patch*>& cache = iter->second;
       for (size_t i = 0; i < cache.size(); ++i) {
         neighbors.push_back(cache[i]);

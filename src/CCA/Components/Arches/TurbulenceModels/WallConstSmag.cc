@@ -24,8 +24,8 @@ namespace Uintah{
 typedef ArchesFieldContainer AFC;
 
 //---------------------------------------------------------------------------------
-WallConstSmag::WallConstSmag( std::string task_name, int matl_index ) :
-TaskInterface( task_name, matl_index )
+WallConstSmag::WallConstSmag( std::string task_name, int matl_index, const ProblemSpecP db_turb_parent ) :
+TaskInterface( task_name, matl_index ), m_db_turb_parent(db_turb_parent)
 {}
 
 //---------------------------------------------------------------------------------
@@ -84,13 +84,33 @@ WallConstSmag::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocity" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocity" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocity" );
   m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
 
+  //Which turb model is going to supply the strain rate mag?
+  std::string which_model = "NotSet";
+  bool found_the_model = false;
+  db->findBlock("momentum_closure_model")->getAttribute("label", which_model);
+  //Now parse through the closure models and get the label for the strain rate magnitude:
+  for ( ProblemSpecP db_model = m_db_turb_parent->findBlock("model"); db_model != nullptr;
+        db_model=db_model->findNextBlock("model")){
+    std::string label;
+    db_model->getAttribute("label",label);
 
-  m_IsI_name = "strainMagnitudeLabel";
+    if ( label == which_model ){
+      found_the_model = true;
+    }
+  }
+
+  m_IsI_name = "strainMagnitude";
+  if ( found_the_model ){
+    m_IsI_name += "_" + which_model;
+  } else {
+    throw ProblemSetupException("Error: Could not match wall closure model with the turbulence model: "+which_model, __FILE__, __LINE__);
+  }
+
   m_sigma_t_names.resize(3);
   m_sigma_t_names[0] = "sigma12";
   m_sigma_t_names[1] = "sigma13";
@@ -98,14 +118,12 @@ WallConstSmag::problemSetup( ProblemSpecP& db ){
   db->getWithDefault("Cs", m_Cs, 0.17);
   db->getWithDefault("standoff", m_standoff, 1);
 
-
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("PhysicalConstants")) {
-    params_root->findBlock("PhysicalConstants")->require("viscosity",
-                                                          m_molecular_visc);
+      params_root->findBlock("PhysicalConstants")->require("viscosity", m_molecular_visc);
     if( m_molecular_visc == 0 ) {
       std::stringstream msg;
-      msg << "ERROR: Constant WallConstSmag: problemSetup(): Zero viscosity specified \n"
+      msg << "Error: Constant WallConstSmag::problemSetup() - Zero viscosity specified \n"
           << "       in <PhysicalConstants> section of input file." << std::endl;
       throw InvalidValue(msg.str(),__FILE__,__LINE__);
     }
@@ -186,7 +204,7 @@ void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   Uintah::parallel_for( range, [&](int i, int j, int k){
-  
+
     //apply u-mom bc -
     if ( eps(xm) * eps(c) > .5 ){
       // Y- sigma 12
@@ -223,7 +241,7 @@ void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
         const double ISI     = 0.5 * ( IsI(i,j,k+i_so) + IsI(i-1,j,k+i_so) );
         const double rho_int = 0.5 *(rho(c)+rho(xm));
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
-        const double dudz    =   ( uVel(c)-uVel(zm) )/ dz; 
+        const double dudz    =   ( uVel(c)-uVel(zm) )/ dz;
         // sigma 13
         sigma13(c) += ( mu_t + m_molecular_visc ) * dudz;
 
@@ -237,7 +255,7 @@ void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
         const double ISI     = 0.5*(IsI(i,j,k-i_so) + IsI(i-1,j,k-i_so));
         const double rho_int = 0.5 *(rho(c)+rho(xm));
         const double mu_t    = pow( m_Cs*delta, 2.0 ) * rho_int * ISI;
-        const double dudz    =   ( uVel(zp) - uVel(c))/ dz; 
+        const double dudz    =   ( uVel(zp) - uVel(c))/ dz;
         // sigma 13
         sigma13(c) +=  ( mu_t + m_molecular_visc ) * dudz;
 
@@ -253,12 +271,12 @@ void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
         const double ISI     = 0.5 * ( IsI(i+i_so,j,k) + IsI(i+i_so,j-1,k) );
         const double rho_int = 0.5 *(rho(c)+rho(ym));
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
-        const double dvdx    =   ( vVel(c) - vVel(xm))/ dx; 
+        const double dvdx    =   ( vVel(c) - vVel(xm))/ dx;
         // sigma 12
         sigma12(c) +=  ( mu_t + m_molecular_visc ) * dvdx ;
 
       }
-      // X+ 
+      // X+
       if ( eps(xp) * eps(xpym) < .5 ){
         const double i_so = ( eps(i-m_standoff,j,k) * eps(i-m_standoff,j-1,k) > .5 ) ?
                              m_standoff :
@@ -282,7 +300,7 @@ void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
         const double dvdz    = (vVel(c)- vVel(zm) )/ dz;
 
-        // sigma 23 
+        // sigma 23
         sigma23(c) += ( mu_t + m_molecular_visc ) * dvdz;
 
       }
@@ -296,7 +314,7 @@ void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
         const double dvdz    = (vVel(zp)- vVel(c) )/ dz;
 
-        // sigma 23 
+        // sigma 23
         sigma23(c) +=  ( mu_t + m_molecular_visc ) * dvdz ;
 
       }
@@ -314,7 +332,7 @@ void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
         const double dwdx    = (wVel(c)- wVel(xm) )/ dx;
 
-        // sigma 13 
+        // sigma 13
         sigma13(c) +=  ( mu_t + m_molecular_visc ) * dwdx ;
 
       }
@@ -328,8 +346,8 @@ void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
         const double dwdx    = (wVel(xp)- wVel(c) )/ dx;
 
-        // sigma 13 
-        sigma13(c) += ( mu_t + m_molecular_visc ) * dwdx ; 
+        // sigma 13
+        sigma13(c) += ( mu_t + m_molecular_visc ) * dwdx ;
 
       }
       // Y-
@@ -342,8 +360,8 @@ void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
         const double mu_t    = pow( m_Cs * delta, 2.0 ) * rho_int * ISI;
         const double dwdy    = (wVel(c)- wVel(ym) )/ dy;
 
-        // sigma 23 
-        sigma23(c) += ( mu_t + m_molecular_visc ) * dwdy ; 
+        // sigma 23
+        sigma23(c) += ( mu_t + m_molecular_visc ) * dwdy ;
 
       }
         // Y+
@@ -356,13 +374,13 @@ void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
         const double mu_t    = pow( m_Cs*delta, 2.0 ) * rho_int * ISI;
         const double dwdy    = (wVel(yp)- wVel(c) )/ dy;
 
-        // sigma 23 
+        // sigma 23
         sigma23(c) += ( mu_t + m_molecular_visc ) * dwdy ;
 
       }
       }
   });
-  
+
 
 }
 } //namespace Uintah

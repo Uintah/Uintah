@@ -303,11 +303,10 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   ArchesFieldContainer::VariableRegistry variable_registry;
 
   const std::string type_string = TaskInterface::get_task_type_string(type);
+  DOUT( dbg_arches_task, "[TaskFactoryBase]  Scheduling the following task group with mode: " << type_string << " for factory: " << _factory_name );
 
   bool archesTasksMixMemSpaces = false;
   TaskAssignedExecutionSpace assignedExecutionSpace{};
-
-  DOUT( dbg_arches_task, "[TaskFactoryBase]  Scheduling the following task group with mode: " << type_string );
 
   std::vector<std::string> taskNames(arches_tasks.size());
   std::vector<int> taskExecSpace(arches_tasks.size());
@@ -408,31 +407,47 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
             tsk->modifies( ivar.label );
         }}
         break;
-      case ArchesFieldContainer::COMPUTESCRATCHGHOST:
-        {
-          tsk->computesWithScratchGhost( ivar.label, matls->getSubset(0), Uintah::Task::NormalDomain, ivar.ghost_type, ivar.nGhost );
+    case ArchesFieldContainer::COMPUTESCRATCHGHOST:
+      {
+        if ( time_substep == 0 ){
+          DOUT( dbg_arches_task, "[TaskFactoryBase]  computing (wsg): " << ivar.name );
+          tsk->computesWithScratchGhost( ivar.label, matls->getSubset(0),
+                                         Uintah::Task::NormalDomain, ivar.ghost_type,
+                                         ivar.nGhost );
+        } else {
+          const Uintah::PatchSet* const allPatches =
+            sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+          const Uintah::PatchSubset* const localPatches =
+            allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+          DOUT( dbg_arches_task, "[TaskFactoryBase]  modifying (wsg): " << ivar.name );
+          tsk->modifiesWithScratchGhost( ivar.label,
+                                         localPatches, 
+                                         Uintah::Task::ThisLevel,
+                                         matls->getSubset(0), Uintah::Task::NormalDomain,
+                                         ivar.ghost_type, ivar.nGhost );
         }
-        break;
-      case ArchesFieldContainer::MODIFIES:
-        {
-          DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
-          tsk->modifies( ivar.label );
-        }
-        break;
-      case ArchesFieldContainer::REQUIRES:
-        {
-          DOUT( dbg_arches_task, "[TaskFactoryBase]      requiring: " << ivar.name << " with ghosts: " << ivar.nGhost);
-          tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
-        }
-        break;
-      default:
-        {
-          std::stringstream msg;
-          msg << "Arches Task Error: Cannot schedule task because "
-              << "of incomplete variable dependency. \n";
-          throw InvalidValue(msg.str(), __FILE__, __LINE__);
-        }
-        break;
+      }
+      break;
+    case ArchesFieldContainer::MODIFIES:
+      {
+        DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
+        tsk->modifies( ivar.label );
+      }
+      break;
+    case ArchesFieldContainer::REQUIRES:
+      {
+        DOUT( dbg_arches_task, "[TaskFactoryBase]      requiring: " << ivar.name << " with ghosts: " << ivar.nGhost);
+        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
+      }
+      break;
+    default:
+      {
+        std::stringstream msg;
+        msg << "Arches Task Error: Cannot schedule task because "
+            << "of incomplete variable dependency. \n";
+        throw InvalidValue(msg.str(), __FILE__, __LINE__);
+      }
+      break;
       }
     }
 

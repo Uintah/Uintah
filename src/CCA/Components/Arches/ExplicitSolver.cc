@@ -267,7 +267,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
           // Tell the infrastructure that two tasksgraphs will be used.
           d_perform_radiation = true;
           m_arches->getScheduler()->setNumTaskGraphs( 2 );
-          
+
           rad_src_ps->require("calc_frequency", d_rad_calc_frequency);
 
           // Check to see if the dynamic frequency radiation solve
@@ -276,7 +276,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
              rad_src_ps->findBlock("use_dynamic_frequency") != nullptr) {
             d_dynamicSolveFrequency = true;
           }
-          
+
           if (src_type == "do_radiation" ) {
             m_arches->getApplicationStats().insert( (ApplicationCommon::ApplicationStatsEnum) DORadiationTime,   std::string("DO_Radiation_Time"),   "seconds" );
             m_arches->getApplicationStats().insert( (ApplicationCommon::ApplicationStatsEnum) DORadiationSweeps, std::string("DO_Radiation_Sweeps"), "sweeps"  );
@@ -903,7 +903,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 #ifdef HAVE_VISIT
 
 #define IGNORE_LEVEL -2
-    
+
     static bool initialized = false;
 
     if( m_arches->getVisIt() && !initialized ) {
@@ -971,7 +971,7 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   tsk->computes( VarLabel::find(checkpointTimeStep_name) );
   tsk->computes( VarLabel::find(     endSimulation_name) );
 #endif
-  
+
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 
   // When restarting with radiation compute the next task graph index
@@ -1201,9 +1201,9 @@ ExplicitSolver::sched_computeTaskGraphIndex(const LevelP& level, SchedulerP& sch
   if ( !level->hasFinerLevel() ) {
     Task* task = scinew Task( "ExplicitSolver::computeTaskGraphIndex",this,
                               &ExplicitSolver::computeTaskGraphIndex);
-    
+
     task->setType(Task::OncePerProc);
-    
+
     // This method is called at both initialization and otherwise. At
     // initialization the old DW, i.e. DW(0) will not exist so require
     // the value from the new DW.  Otherwise for a normal time step
@@ -1214,11 +1214,11 @@ ExplicitSolver::sched_computeTaskGraphIndex(const LevelP& level, SchedulerP& sch
     else if(sched->get_dw(1) ) {
       task->requires( Task::NewDW, VarLabel::find(timeStep_name) );
     }
-    
+
     task->requires(Task::NewDW, d_lab->d_delTLabel, level.get_rep());
-    
+
     const PatchSet* perProcPatchSet = sched->getLoadBalancer()->getPerProcessorPatchSet( level->getGrid() );
-    
+
     sched->addTask(task, perProcPatchSet, d_materialManager->allMaterials());
   }
 }
@@ -1458,6 +1458,9 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
   tsk->computes(d_lab->d_vVelocitySPBCLabel);
   tsk->computes(d_lab->d_wVelocitySPBCLabel);
+  tsk->computes(d_lab->d_uVelocityLabel);
+  tsk->computes(d_lab->d_vVelocityLabel);
+  tsk->computes(d_lab->d_wVelocityLabel);
   tsk->computes(d_lab->d_uVelRhoHatLabel);
   tsk->computes(d_lab->d_vVelRhoHatLabel);
   tsk->computes(d_lab->d_wVelRhoHatLabel);
@@ -1647,6 +1650,9 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
     allocateAndInitializeToC( d_lab->d_vVelocitySPBCLabel , new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_wVelRhoHatLabel    , new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_wVelocitySPBCLabel , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_uVelocityLabel     , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_vVelocityLabel     , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_wVelocityLabel     , new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_CCUVelocityLabel   , new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_CCVVelocityLabel   , new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_CCWVelocityLabel   , new_dw, indx, patch, 0.0 );
@@ -2460,6 +2466,9 @@ ExplicitSolver::sched_setInitialGuess(       SchedulerP  & sched,
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
   tsk->computes(d_lab->d_vVelocitySPBCLabel);
   tsk->computes(d_lab->d_wVelocitySPBCLabel);
+  tsk->computes(d_lab->d_uVelocityLabel);
+  tsk->computes(d_lab->d_vVelocityLabel);
+  tsk->computes(d_lab->d_wVelocityLabel);
   tsk->computes(d_lab->d_uVelRhoHatLabel);
   tsk->computes(d_lab->d_vVelRhoHatLabel);
   tsk->computes(d_lab->d_wVelRhoHatLabel);
@@ -3042,6 +3051,16 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(wVelocity_new, d_lab->d_wVelocitySPBCLabel, indx, patch);
     wVelocity_new.copyData(wVelocity); // copy old into new
 
+    SFCXVariable<double> uVelocity_kokkos;
+    new_dw->allocateAndPut(uVelocity_kokkos, d_lab->d_uVelocityLabel, indx, patch);
+    uVelocity_kokkos.copyData(uVelocity); // copy old into new
+    SFCYVariable<double> vVelocity_kokkos;
+    new_dw->allocateAndPut(vVelocity_kokkos, d_lab->d_vVelocityLabel, indx, patch);
+    vVelocity_kokkos.copyData(vVelocity); // copy old into new
+    SFCZVariable<double> wVelocity_kokkos;
+    new_dw->allocateAndPut(wVelocity_kokkos, d_lab->d_wVelocityLabel, indx, patch);
+    wVelocity_kokkos.copyData(wVelocity); // copy old into new
+
     SFCXVariable<double> uVelRhoHat_new;
     new_dw->allocateAndPut(uVelRhoHat_new, d_lab->d_uVelRhoHatLabel, indx, patch);
     uVelRhoHat_new.initialize(0.0);     // copy old into new
@@ -3412,7 +3431,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 
       // For intrusion inlets:
       if ( d_boundaryCondition->is_using_new_intrusion() ){
-        
+
         CCVariable<double> mass_src;
         new_dw->allocateTemporary(mass_src, patch);
         mass_src.initialize(0.0);

@@ -94,8 +94,11 @@ WARNING
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
    
-    void scheduleDoAnalysis_preReloc(SchedulerP& sched,
+    virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) {};
+                                    
+    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
+                                          const LevelP& level){};
                                       
   private:
 

@@ -218,6 +218,9 @@ using namespace ExchangeModels;
                                     const PatchSet*,
                                     const MaterialSubset*,
                                     const MaterialSet*);
+                                    
+      void scheduleComputeTaskGraphIndex( SchedulerP& sched,
+                                          const LevelP& level);
 
 //__________________________________
 //__________________________________
@@ -497,6 +500,12 @@ using namespace ExchangeModels;
                                      const MaterialSubset*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
+                                     
+      void computeTaskGraphIndex(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
 
 //__________________________________
 //  I M P L I C I T   I C E

@@ -116,7 +116,7 @@ void particleExtract::problemSetup(const ProblemSpecP& ,
                                              
   //__________________________________
   //  Read in timing information
-  m_module_spec->require("samplingFrequency", d_writeFreq);
+  m_module_spec->require("samplingFrequency", m_analysisFreq);
   m_module_spec->require("timeStart",         d_startTime);            
   m_module_spec->require("timeStop",          d_stopTime);
 
@@ -214,7 +214,7 @@ void particleExtract::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing particleExtract::initialize");
      
-    double tminus = -1.0/d_writeFreq;
+    double tminus = -1.0/m_analysisFreq;
     new_dw->put( max_vartype( tminus ), ps_lb->lastWriteTimeLabel );
     
     ParticleVariable<FILE*> myFiles;
@@ -389,7 +389,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
     return;
   }  
 
-  double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
+  double nextWriteTime = lastWriteTime + 1.0/m_analysisFreq;
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

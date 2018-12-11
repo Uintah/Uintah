@@ -98,9 +98,12 @@ WARNING
    
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) {};
+
+    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
+                                              const LevelP& level);
                                       
   private:
-
+  
     enum PlaneType {XY=0, XZ=1, YZ=2, NONE=-9};
     
     void initialize( const ProcessorGroup*, 
@@ -114,6 +117,12 @@ WARNING
                      const MaterialSubset*,
                      DataWarehouse*,
                      DataWarehouse* new_dw );
+                     
+    void  computeTaskGraphIndex(const ProcessorGroup * ,
+                                const PatchSubset    * patches,
+                                const MaterialSubset *,
+                                DataWarehouse        * old_dw,
+                                DataWarehouse        *);
                     
     void createFile( const std::string& filename,
                      const VarLabel* varLabel,
@@ -178,7 +187,7 @@ WARNING
       VarLabel* fileVarsStructLabel;
     };
     
-    planeExtractLabel* ps_lb;
+    planeExtractLabel* d_lb;
    
     struct plane{
       std::string  name;
@@ -192,7 +201,6 @@ WARNING
        
     //__________________________________
     // global constants
-    double d_writeFreq; 
     double d_startTime;
     double d_stopTime;
     

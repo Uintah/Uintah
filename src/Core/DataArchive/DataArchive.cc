@@ -1029,9 +1029,11 @@ DataArchive::queryPIDXSerial(       Variable     & var,
     (static_cast<ParticleVariableBase*>(&var))->allocate( psubset );
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
   }
-  else if (td->getType() == TypeDescription::PerPatch) {
+  else if (td->getType() == TypeDescription::PerPatch ||
+           td->getType() == TypeDescription::SoleVariable ||
+           td->getType() == TypeDescription::ReductionVariable) {
   }
-  else if (td->getType() != TypeDescription::ReductionVariable) {
+  else { // Grid Var
     const IntVector bl( 0, 0, 0 );
     var.allocate( patch, bl );
   }
@@ -1115,8 +1117,9 @@ DataArchive::query(       Variable     & var,
     data_filename = ostr.str();
   }
   else {
-    varType = REDUCTION_VAR;
-    // reference reduction file 'global.data' will a null patch
+    varType = GLOBAL_VAR;
+    // reference reduction and sole var in the file 'global.data' with
+    // a null patch
     patchid = -1;
     data_filename = timedata.d_ts_directory + timedata.d_globaldata;
   }
@@ -1177,9 +1180,11 @@ DataArchive::query(       Variable     & var,
     (static_cast<ParticleVariableBase*>(&var))->allocate( psubset );
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
   }
-  else if (td->getType() == TypeDescription::PerPatch) {
+  else if (td->getType() == TypeDescription::PerPatch ||
+           td->getType() == TypeDescription::SoleVariable ||
+           td->getType() == TypeDescription::ReductionVariable) {
   }
-  else if (td->getType() != TypeDescription::ReductionVariable) {
+  else { // Grid Var
     var.allocate( patch, varinfo.boundaryLayer );
   }
 
@@ -1187,7 +1192,7 @@ DataArchive::query(       Variable     & var,
 
   //__________________________________
   // open data file Standard Uda Format
-  if( d_fileFormat == UDA || varType == REDUCTION_VAR) {
+  if( d_fileFormat == UDA || varType == GLOBAL_VAR) {
     int fd = open( data_filename.c_str(), O_RDONLY );
 
     if(fd == -1) {
@@ -1514,7 +1519,8 @@ DataArchive::restartInitialize( const int                timestep_index,
       VarnameMatlPatch & key  = *iter;
       DataFileInfo     & data = timedata.d_datafileInfoValue[ pos ];
       
-      // Get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
+      // Get the Patch from the Patch ID. An ID of -1 = nullptr is for
+      // reduction and sole vars.
       const Patch* patch = key.patchid_ == -1 ? nullptr : grid->getPatchByID( key.patchid_, 0 );
       int matl = key.matlIndex_;
 
@@ -1544,6 +1550,7 @@ DataArchive::restartInitialize( const int                timestep_index,
             ASSERTEQ(dw->getParticleSubset(matl, patch), particles->getParticleSubset());
           }
         }
+
         dw->put( var, label, matl, patch );
         delete var; // should have been cloned when it was put
       }
@@ -1573,10 +1580,11 @@ DataArchive::restartInitialize( const int                timestep_index,
         const string            var_name = varMapIter->first;
         int                     number_of_materials;
 
-        if( type->isReductionVariable() ) {
+        if( type->getType() == TypeDescription::ReductionVariable ||
+            type->getType() == TypeDescription::SoleVariable ) {
           number_of_materials = 0;
 
-          // read in the reduction var data here
+          // read in the reduction and sole var data here
             
           // FIXME: should this happen here or outside of the level loop?
 
@@ -1614,7 +1622,9 @@ DataArchive::restartInitialize( const int                timestep_index,
           PIDX_variable varDesc;
           PIDX_access   access;
 
-          if( !type->isReductionVariable() ) {
+          // Non-reduction and non-sole variables:
+          if( type->getType() != TypeDescription::ReductionVariable &&
+              type->getType() != TypeDescription::SoleVariable ) {
             // cout << Uintah::Parallel::getMPIRank() << ": calling setupQueryPIDX()\n";
             bool found = setupQueryPIDX( access, idxFile, varDesc, level, type, var_name, matl, timestep_index );
             // cout << Uintah::Parallel::getMPIRank() << ": done calling setupQueryPIDX()\n";
@@ -1640,7 +1650,9 @@ DataArchive::restartInitialize( const int                timestep_index,
 
               // cout << Uintah::Parallel::getMPIRank() << ":         is my patch.\n";
 
-              if( !type->isReductionVariable() ) { // Non-reduction variables:
+              // Non-reduction and non-sole variables:
+              if( type->getType() != TypeDescription::ReductionVariable &&
+                  type->getType() != TypeDescription::SoleVariable ) {
 
                 // cout << Uintah::Parallel::getMPIRank() << ":         create buffer\n";
                 BufferAndSizeTuple * data = new BufferAndSizeTuple();
@@ -1680,7 +1692,9 @@ DataArchive::restartInitialize( const int                timestep_index,
           } // end for patch
 
 
-          if( !type->isReductionVariable() ) {
+          // Non-reduction and non-sole variables:
+          if( type->getType() != TypeDescription::ReductionVariable &&
+              type->getType() != TypeDescription::SoleVariable ) {
 
             // Finish up reading in the PIDX data... in the above loop in the queryPIDX() calls, we provided PIDX with a list
             // of all the patches that we need... Now we call PIDX_close() to tell PIDX to actually read that data.
