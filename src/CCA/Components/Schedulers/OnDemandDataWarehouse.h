@@ -217,8 +217,8 @@ public:
 
   virtual bool haveParticleSubset(       int         matlIndex
                                  , const Patch     * patch
-                                 ,       IntVector   low  = IntVector(0, 0, 0)
-                                 ,       IntVector   high = IntVector(0, 0, 0)
+                                 ,       IntVector   low   = IntVector(0, 0, 0)
+                                 ,       IntVector   high  = IntVector(0, 0, 0)
                                  ,       bool        exact = false
                                  );
 
@@ -927,7 +927,7 @@ public:
                       ,       int                numGhostCells
                       )
   {
-    if (matlIndex!=-999) {
+    if ( matlIndex != -999 ) {
       return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
     } else {
       return KokkosView3<T, Kokkos::CudaSpace>();
@@ -1079,9 +1079,10 @@ private:
                             ,       bool       replace
                             );
 
-  inline void checkModifyAccess(const VarLabel* label,
-                                int matlIndex,
-                                const Patch* patch);
+  inline void checkModifyAccess( const VarLabel * label
+                               ,       int        matlIndex
+                               , const Patch    * patch
+                               );
 
   // These will return false if access is not allowed for the current task.
   inline bool hasGetAccess( const Task            * runningTask

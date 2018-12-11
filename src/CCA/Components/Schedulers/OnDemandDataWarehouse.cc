@@ -1261,7 +1261,7 @@ OnDemandDataWarehouse::queryPSetDB(       psetDBType & subsetDB
                                   ,       IntVector    low
                                   ,       IntVector    high
                                   , const VarLabel   * pos_var
-                                  ,       bool         exact
+                                  ,       bool         exact /* = false */
                                   )
 {
   ParticleSubset* subset = nullptr;
@@ -1874,8 +1874,8 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase & var
                                      , const VarLabel         * label
                                      ,       int                matlIndex
                                      , const Patch            * patch
-                                     ,       Ghost::GhostType   gtype
-                                     ,       int                numGhostCells
+                                     ,       Ghost::GhostType   gtype         /* = Ghost::None */
+                                     ,       int                numGhostCells /* = 0 */
                                      )
 {
 #if SCI_ASSERTION_LEVEL >= 1
@@ -2959,7 +2959,7 @@ void OnDemandDataWarehouse::getValidNeighbors( const VarLabel                   
                                              ,       Ghost::GhostType              gtype
                                              ,       int                           numGhostCells
                                              ,       std::vector<ValidNeighbors> & validNeighbors
-                                             ,       bool                          ignoreMissingNeighbors
+                                             ,       bool                          ignoreMissingNeighbors /* = false */
                                              )
 {
 
@@ -3329,9 +3329,10 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse           * from
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::logMemoryUse(       std::ostream&       out,
-                                           unsigned long&      total,
-                                     const std::string&        tag )
+OnDemandDataWarehouse::logMemoryUse(       std::ostream  & out
+                                   ,       unsigned long & total
+                                   , const std::string   & tag
+                                   )
 {
   int dwid = d_generation;
   m_var_DB.logMemoryUse(out, total, tag, dwid);
