@@ -59,6 +59,12 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                          int high[3],
                          LoadExtra loadExtraElements);
 
+unsigned int getNumberParticles(SchedulerP schedulerP,
+                                GridP gridP,
+                                int level_i,
+                                int patch_i,
+                                int material);
+
 ParticleDataRaw* getParticleData(SchedulerP schedulerP,
                                  GridP gridP,
                                  int level_i,

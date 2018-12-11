@@ -315,8 +315,6 @@ static GridDataRaw* readGridData(DataArchive *archive,
 {
   if( archive->exists( variable_name, patch, timestep ) )
   {
-    // printTask( patch, dbgOut, "    readGridData", timestep, material, variable_name );
-   
     GridDataRaw *gd = new GridDataRaw;
     gd->components = numComponents<T>();
     
@@ -451,8 +449,6 @@ static GridDataRaw* readPatchData(DataArchive *archive,
 {
   if( archive->exists( variable_name, patch, timestep ) )
   {
-    // printTask( patch, dbgOut, "    readPatchData ", timestep, material, variable_name );
-    
     GridDataRaw *gd = new GridDataRaw;
     gd->components = numComponents<T>();
     
@@ -516,8 +512,6 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
                                  LoadExtra loadExtraElements,
                                  const Uintah::TypeDescription *subtype)
 {
-  // printTask( patch, dbgOut, "  getGridDataMainType", timestep, material, variable_name );
-
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
     return readGridData<VAR, double>(archive, patch, level, variable_name,
@@ -569,9 +563,6 @@ GridDataRaw* getPatchDataMainType(DataArchive *archive,
                                   int timestep,
                                   const Uintah::TypeDescription *subtype)
 {
-
-  // printTask( patch, dbgOut, "    getPatchDataMainType ", timestep, material, variable_name );
-  
   switch (subtype->getType())
   {
   case Uintah::TypeDescription::double_type:
@@ -622,8 +613,6 @@ GridDataRaw* getGridData(DataArchive *archive,
   LevelP level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
   
-  // printTask( patch, dbgOut, "getGridData ", timestep, material, variable_name );
-
   // Get variable type from the archive.
   std::vector<std::string>                    vars;
   std::vector<const Uintah::TypeDescription*> types;
@@ -719,6 +708,56 @@ bool variableExists(DataArchive *archive,
 /////////////////////////////////////////////////////////////////////
 // Read all the particle data for a given patch.
 // This function uses the archive for file reading.
+extern "C"
+unsigned int getNumberParticles(DataArchive *archive,
+                                GridP *grid,
+                                int level_i,
+                                int patch_i,
+                                int material,
+                                int timestep)
+{
+  LevelP level = (*grid)->getLevel(level_i);
+  const Patch *patch = level->getPatch(patch_i);
+
+  std::string variable_name("p.particleID");
+  
+  unsigned int numParticles = 0;
+
+  // figure out which material we're interested in
+  ConsecutiveRangeSet allMatls =
+    archive->queryMaterials(variable_name, patch, timestep);
+
+  ConsecutiveRangeSet matlsForVar;
+  if (material < 0) {
+    matlsForVar = allMatls;
+  }
+  else {
+    // make sure the patch has the variable - use empty material set
+    // if it doesn't
+    if (allMatls.size() > 0 && allMatls.find(material) != allMatls.end())
+      matlsForVar.addInOrder(material);
+  }
+
+  // first get all the particle subsets so that we know how many total
+  // particles we'll have
+  for( ConsecutiveRangeSet::iterator matlIter =
+         matlsForVar.begin(); matlIter != matlsForVar.end(); matlIter++ )
+  {
+    int matl = *matlIter;
+
+    ParticleVariable<long64> *var = new ParticleVariable<long64>;
+    archive->query(*var, variable_name, matl, patch, timestep);
+
+    numParticles += var->getParticleSubset()->numParticles();
+  }
+
+  return numParticles;
+}
+
+
+/////////////////////////////////////////////////////////////////////
+// Read all the particle data for a given patch.
+// This function uses the archive for file reading.
 template<typename T>
 ParticleDataRaw* readParticleData(DataArchive *archive,
                                   const Patch *patch,
@@ -726,9 +765,6 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
                                   int material,
                                   int timestep)
 {
-
-  // printTask( patch, dbgOut, "  readParticleData", timestep, material, variable_name );
-
   ParticleDataRaw *pd = new ParticleDataRaw;
   pd->components = numComponents<T>();
   pd->num = 0;
@@ -804,8 +840,6 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
   LevelP level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
-  // printTask( patch, dbgOut, "getParticleData", timestep, material, variable_name );
-  
   // figure out what the type of the variable we're querying is
   std::vector<std::string>                    vars;
   std::vector<const Uintah::TypeDescription*> types;
@@ -876,7 +910,7 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
 extern "C"
 std::string getParticlePositionName(DataArchive *archive)
 {
-    return archive->getParticlePositionName();
+  return archive->getParticlePositionName().c_str();
 }
 
 

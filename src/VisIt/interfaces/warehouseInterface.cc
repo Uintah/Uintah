@@ -562,8 +562,8 @@ static GridDataRaw* readPatchData(DataWarehouse *dw,
         copyComponents<T>(&gd->data[i*gd->components], *p);
 
       // std::cerr << *p << " ************* "
-      // 		<< gd->data[0] << " ************* " 
-      // 		<< std::endl;
+      //                << gd->data[0] << " ************* " 
+      //                << std::endl;
     }
   
     return gd;
@@ -639,8 +639,6 @@ GridDataRaw* getPatchDataMainType(DataWarehouse *dw,
                                   int material,
                                   const TypeDescription *subtype)
 {
-  // printTask( patch, dbgOut, "getPatchDataMainType" );
-  
   switch (subtype->getType())
   {
   case TypeDescription::double_type:
@@ -764,6 +762,99 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
 /////////////////////////////////////////////////////////////////////
 // Read all the particle data for a given patch.
 // This uses the scheduler for in-situ.
+unsigned int getNumberParticles(SchedulerP schedulerP,
+                                GridP gridP,
+                                int level_i,
+                                int patch_i,
+                                int material)
+{
+  DataWarehouse *dw = schedulerP->getLastDW();
+
+  LevelP level = gridP->getLevel(level_i);
+  const Patch *patch = level->getPatch(patch_i);
+
+  std::string variable_name("p.particleID");
+
+  unsigned int numParticles = 0;
+
+  // get the variable information
+  const VarLabel* varLabel        = nullptr;
+
+  std::set<const VarLabel*, VarLabel::Compare> varLabels;
+  std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
+
+  // Loop through all of the required and computed variables
+  for (int i=0; i<2; ++i )
+  {
+    if( i == 0 )
+        varLabels = schedulerP->getInitialRequiredVars();
+    else
+        varLabels = schedulerP->getComputedVars();
+
+    for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter)
+    {
+      varLabel = *varIter;
+      
+      if (varLabel->getName() == variable_name)
+      {
+        break;
+      }
+    }
+  }
+
+  // get the material information for all variables
+  Scheduler::VarLabelMaterialMap* pLabelMatlMap =
+    schedulerP->makeVarLabelMaterialMap();
+
+  // get the materials for this variable
+  Scheduler::VarLabelMaterialMap::iterator matMapIter =
+    pLabelMatlMap->find( variable_name );
+
+  // figure out which material we're interested in
+  std::list< int > &allMatls = matMapIter->second;
+  std::list< int > matlsForVar;
+
+  if (material < 0)
+  {
+    matlsForVar = allMatls;
+  }
+  else
+  {
+    // make sure the patch has the variable - use empty material set
+    // if it doesn't
+    for (std::list< int >::iterator matIter = allMatls.begin();
+         matIter != allMatls.end(); matIter++)
+    {
+      if( *matIter == material )
+      {
+        matlsForVar.push_back(material);
+        break;
+      }
+    }
+  }
+
+  // first get all the particle subsets so that we know how many total
+  // particles we'll have
+  for( std::list< int >::iterator matIter = matlsForVar.begin();
+       matIter != matlsForVar.end(); matIter++ )
+  {
+    const int material = *matIter;
+
+    constParticleVariable<long64> *var = new constParticleVariable<long64>;
+
+    if( dw->exists( varLabel, material, patch ) )
+      dw->get( *var, varLabel, material, patch);
+
+    numParticles += var->getParticleSubset()->numParticles();
+  }
+
+  return numParticles;
+}
+
+
+/////////////////////////////////////////////////////////////////////
+// Read all the particle data for a given patch.
+// This uses the scheduler for in-situ.
 template<typename T>
 ParticleDataRaw* readParticleData(SchedulerP schedulerP,
                                   const Patch *patch,
@@ -829,40 +920,6 @@ ParticleDataRaw* readParticleData(SchedulerP schedulerP,
     pd->num += var->getParticleSubset()->numParticles();
   }
 
-  // figure out which material we're interested in
-  // ConsecutiveRangeSet allMatls =
-  //   archive->queryMaterials(variable_name, patch, timestep);
-
-  // ConsecutiveRangeSet matlsForVar;
-
-  // if (material < 0)
-  // {
-  //   matlsForVar = allMatls;
-  // }
-  // else
-  // {
-       // make sure the patch has the variable - use empty material set
-       // if it doesn't
-  //   if (0 < allMatls.size() && allMatls.find(material) != allMatls.end())
-  //     matlsForVar.addInOrder(material);
-  // }
-
-  // first get all the particle subsets so that we know how many total
-  // particles we'll have
-  // std::vector<ParticleVariable<T>*> particle_vars;
-
-  // for( ConsecutiveRangeSet::iterator matlIter = matlsForVar.begin();
-  //      matlIter != matlsForVar.end(); matlIter++ )
-  // {
-  //   int matl = *matlIter;
-
-  //   ParticleVariable<T> *var = new ParticleVariable<T>;
-  //   archive->query(*var, variable_name, matl, patch, timestep);
-
-  //   particle_vars.push_back(var);
-  //   pd->num += var->getParticleSubset()->numParticles();
-  // }
-
   // copy all the data
   int pi = 0;
 
@@ -907,10 +964,8 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
   LevelP level = gridP->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
-  // printTask( patch, dbgOut, "getParticleData variable: " + variable_name );
-  
   // get the variable information
-  const VarLabel* varLabel                = nullptr;
+  const VarLabel* varLabel        = nullptr;
   const TypeDescription* maintype = nullptr;
   const TypeDescription* subtype  = nullptr;
 
