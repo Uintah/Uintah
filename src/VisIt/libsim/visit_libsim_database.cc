@@ -660,130 +660,131 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 
       if (meshes_added.find(mesh_for_this_var) == meshes_added.end())
       {
-	// Mesh meta data
-	visit_handle mmd = VISIT_INVALID_HANDLE;
-	
-	/* Set the first mesh’s properties.*/
-	if(VisIt_MeshMetaData_alloc(&mmd) == VISIT_OKAY)
-	{
-	  /* Set the mesh’s properties.*/
-	  VisIt_MeshMetaData_setName(mmd, "Patch_Mesh");
-	  if( sim->simController->getApplicationInterface()->isAMR() )
-	    VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
-	  else
-	    VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_RECTILINEAR);
-	  
-	  VisIt_MeshMetaData_setTopologicalDimension(mmd, 3);
-	  VisIt_MeshMetaData_setSpatialDimension(mmd, 3);
-	  
-	  VisIt_MeshMetaData_setNumDomains(mmd, totalPatches);
-	  VisIt_MeshMetaData_setDomainTitle(mmd, "patches");
-	  VisIt_MeshMetaData_setDomainPieceName(mmd, "patch");
-	  VisIt_MeshMetaData_setNumGroups(mmd, numLevels);
-	  VisIt_MeshMetaData_setGroupTitle(mmd, "levels");
-	  VisIt_MeshMetaData_setGroupPieceName(mmd, "level");
-	  
-	  for (int k=0; k<totalPatches; ++k)
-	  {
-	    char tmpName[64];
-	    int level, local_patch;
-	    
-	    GetLevelAndLocalPatchNumber(stepInfo, k, level, local_patch);
-	    sprintf(tmpName,"level%d, patch%d", level, local_patch);
-	    
-	    VisIt_MeshMetaData_addGroupId(mmd, level);
-	    VisIt_MeshMetaData_addDomainName(mmd, tmpName);
-	  }
-	  
-	  // ARS - FIXME
-	  // VisIt_MeshMetaData_setContainsExteriorBoundaryGhosts(mmd, false);
-	  
-	  VisIt_MeshMetaData_setHasSpatialExtents(mmd, 1);
-	  
-	  double extents[6] = { box_min[0], box_max[0],
-				box_min[1], box_max[1],
-				box_min[2], box_max[2] };
-	  
-	  VisIt_MeshMetaData_setSpatialExtents(mmd, extents);
-	  
-	  int low[3], high[3];
-	  levelInfo.getBounds(low, high, "CC_Mesh");
-	  int logical[3];
-	  for (int i=0; i<3; ++i)
-	    logical[i] = high[i] - low[i];
-	  
-	  // std::cerr << "logical: " << logical[0] << ", " << logical[1] << ", "
-	  //        << logical[2] << std::endl;
-	  
-	  VisIt_MeshMetaData_setHasLogicalBounds(mmd, 1);
-	  VisIt_MeshMetaData_setLogicalBounds(mmd, logical);
-	  
-	  VisIt_SimulationMetaData_addMesh(md, mmd);
-	  // Add a SIL for subsettng via the nodes and ranks.
-	  visit_handle smd_node = VISIT_INVALID_HANDLE;
-	  visit_handle smd_rank = VISIT_INVALID_HANDLE;
+        // Mesh meta data
+        visit_handle mmd = VISIT_INVALID_HANDLE;
+        
+        /* Set the first mesh’s properties.*/
+        if(VisIt_MeshMetaData_alloc(&mmd) == VISIT_OKAY)
+        {
+          /* Set the mesh’s properties.*/
+          VisIt_MeshMetaData_setName(mmd, "Patch_Mesh");
+          if( sim->simController->getApplicationInterface()->isAMR() )
+            VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
+          else
+            VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_RECTILINEAR);
           
-	  if(VisIt_VariableMetaData_alloc(&smd_node) == VISIT_OKAY &&
-	     VisIt_VariableMetaData_alloc(&smd_rank) == VISIT_OKAY)
-	  {
-	    const unsigned int nRanks = sim->myworld->nRanks();
-	    const unsigned int nNodes = sim->myworld->nNodes();
+          VisIt_MeshMetaData_setTopologicalDimension(mmd, 3);
+          VisIt_MeshMetaData_setSpatialDimension(mmd, 3);
+          
+          VisIt_MeshMetaData_setNumDomains(mmd, totalPatches);
+          VisIt_MeshMetaData_setDomainTitle(mmd, "patches");
+          VisIt_MeshMetaData_setDomainPieceName(mmd, "patch");
+          VisIt_MeshMetaData_setNumGroups(mmd, numLevels);
+          VisIt_MeshMetaData_setGroupTitle(mmd, "levels");
+          VisIt_MeshMetaData_setGroupPieceName(mmd, "level");
+          
+          for (int k=0; k<totalPatches; ++k)
+          {
+            char tmpName[64];
+            int level, local_patch;
             
-	    int rank_enum_id[nRanks];
-	    int node_enum_id[nNodes];
+            GetLevelAndLocalPatchNumber(stepInfo, k, level, local_patch);
+            sprintf(tmpName,"level%d, patch%d", level, local_patch);
             
-	    // Node
-	    std::string enum_name_node = std::string("Nodes/") + mesh_for_this_var;
-	    VisIt_VariableMetaData_setName(smd_node, enum_name_node.c_str());
-	    VisIt_VariableMetaData_setMeshName(smd_node, mesh_for_this_var.c_str());
-	    VisIt_VariableMetaData_setCentering(smd_node, VISIT_VARCENTERING_ZONE);
-	    VisIt_VariableMetaData_setType(smd_node, VISIT_VARTYPE_SCALAR);
-	    VisIt_VariableMetaData_setNumComponents(smd_node, 1);
+            VisIt_MeshMetaData_addGroupId(mmd, level);
+            VisIt_MeshMetaData_addDomainName(mmd, tmpName);
+          }
+          
+          // ARS - FIXME
+          // VisIt_MeshMetaData_setContainsExteriorBoundaryGhosts(mmd, false);
+          
+          VisIt_MeshMetaData_setHasSpatialExtents(mmd, 1);
+          
+          double extents[6] = { box_min[0], box_max[0],
+                                box_min[1], box_max[1],
+                                box_min[2], box_max[2] };
+          
+          VisIt_MeshMetaData_setSpatialExtents(mmd, extents);
+          
+          int low[3], high[3];
+          levelInfo.getBounds(low, high, "CC_Mesh");
+          int logical[3];
+          for (int i=0; i<3; ++i)
+            logical[i] = high[i] - low[i];
+          
+          // std::cerr << "logical: " << logical[0] << ", " << logical[1] << ", "
+          //        << logical[2] << std::endl;
+          
+          VisIt_MeshMetaData_setHasLogicalBounds(mmd, 1);
+          VisIt_MeshMetaData_setLogicalBounds(mmd, logical);
+          
+          VisIt_SimulationMetaData_addMesh(md, mmd);
+
+          // Add a SIL for subsettng via the nodes and ranks.
+          visit_handle smd_node = VISIT_INVALID_HANDLE;
+          visit_handle smd_rank = VISIT_INVALID_HANDLE;
+          
+          if(VisIt_VariableMetaData_alloc(&smd_node) == VISIT_OKAY &&
+             VisIt_VariableMetaData_alloc(&smd_rank) == VISIT_OKAY)
+          {
+            const unsigned int nRanks = sim->myworld->nRanks();
+            const unsigned int nNodes = sim->myworld->nNodes();
             
-	    VisIt_VariableMetaData_setEnumerationType(smd_node, VISIT_ENUMTYPE_BY_VALUE);
-	    VisIt_VariableMetaData_setHideFromGUI(smd_node, true);
+            int rank_enum_id[nRanks];
+            int node_enum_id[nNodes];
             
-	    // Rank
-	    std::string enum_name_rank = std::string("Ranks/") + mesh_for_this_var;
-	    VisIt_VariableMetaData_setName(smd_rank, enum_name_rank.c_str());
-	    VisIt_VariableMetaData_setMeshName(smd_rank, mesh_for_this_var.c_str());
-	    VisIt_VariableMetaData_setCentering(smd_rank, VISIT_VARCENTERING_ZONE);
-	    VisIt_VariableMetaData_setType(smd_rank, VISIT_VARTYPE_SCALAR);
-	    VisIt_VariableMetaData_setNumComponents(smd_rank, 1);
+            // Node
+            std::string enum_name_node = std::string("Nodes/") + mesh_for_this_var;
+            VisIt_VariableMetaData_setName(smd_node, enum_name_node.c_str());
+            VisIt_VariableMetaData_setMeshName(smd_node, mesh_for_this_var.c_str());
+            VisIt_VariableMetaData_setCentering(smd_node, VISIT_VARCENTERING_ZONE);
+            VisIt_VariableMetaData_setType(smd_node, VISIT_VARTYPE_SCALAR);
+            VisIt_VariableMetaData_setNumComponents(smd_node, 1);
             
-	    VisIt_VariableMetaData_setEnumerationType(smd_rank, VISIT_ENUMTYPE_BY_VALUE);
-	    VisIt_VariableMetaData_setHideFromGUI(smd_rank, true);
+            VisIt_VariableMetaData_setEnumerationType(smd_node, VISIT_ENUMTYPE_BY_VALUE);
+            VisIt_VariableMetaData_setHideFromGUI(smd_node, true);
             
-	    for( unsigned int r=0; r<nRanks; ++r ) {
-	      char msg_node[12];
-	      sprintf( msg_node, "Rank_%04d", r );
-	      int index;
-	      VisIt_VariableMetaData_addEnumNameValue( smd_node, msg_node, r, &index );
-	      rank_enum_id[r] = index;
+            // Rank
+            std::string enum_name_rank = std::string("Ranks/") + mesh_for_this_var;
+            VisIt_VariableMetaData_setName(smd_rank, enum_name_rank.c_str());
+            VisIt_VariableMetaData_setMeshName(smd_rank, mesh_for_this_var.c_str());
+            VisIt_VariableMetaData_setCentering(smd_rank, VISIT_VARCENTERING_ZONE);
+            VisIt_VariableMetaData_setType(smd_rank, VISIT_VARTYPE_SCALAR);
+            VisIt_VariableMetaData_setNumComponents(smd_rank, 1);
+            
+            VisIt_VariableMetaData_setEnumerationType(smd_rank, VISIT_ENUMTYPE_BY_VALUE);
+            VisIt_VariableMetaData_setHideFromGUI(smd_rank, true);
+            
+            for( unsigned int r=0; r<nRanks; ++r ) {
+              char msg_node[12];
+              sprintf( msg_node, "Rank_%04d", r );
+              int index;
+              VisIt_VariableMetaData_addEnumNameValue( smd_node, msg_node, r, &index );
+              rank_enum_id[r] = index;
               
-	      char msg_rank[36];
-	      sprintf( msg_rank, "%s, Rank_%04d", sim->myworld->getNodeNameFromRank( r ).c_str(), r );
-	      VisIt_VariableMetaData_addEnumNameValue( smd_rank, msg_rank, r, &index );
-	    }
+              char msg_rank[36];
+              sprintf( msg_rank, "%s, Rank_%04d", sim->myworld->getNodeNameFromRank( r ).c_str(), r );
+              VisIt_VariableMetaData_addEnumNameValue( smd_rank, msg_rank, r, &index );
+            }
             
-	    if( nNodes > 1 ) {
-	      for( unsigned int n=0; n<nNodes; ++n ) {
-		int index;
-		VisIt_VariableMetaData_addEnumNameValue( smd_node, sim->myworld->getNodeName( n ).c_str(), nRanks+n, &index );
-		node_enum_id[n] = index;
-	      }
+            if( nNodes > 1 ) {
+              for( unsigned int n=0; n<nNodes; ++n ) {
+                int index;
+                VisIt_VariableMetaData_addEnumNameValue( smd_node, sim->myworld->getNodeName( n ).c_str(), nRanks+n, &index );
+                node_enum_id[n] = index;
+              }
               
-	      for( unsigned int r=0; r<nRanks; ++r ) {
-		unsigned int n = sim->myworld->getNodeIndexFromRank( r );
+              for( unsigned int r=0; r<nRanks; ++r ) {
+                unsigned int n = sim->myworld->getNodeIndexFromRank( r );
                 
-		VisIt_VariableMetaData_addEnumGraphEdge(smd_node, node_enum_id[n], rank_enum_id[r], "Ranks" );
-	      }
-	    }
+                VisIt_VariableMetaData_addEnumGraphEdge(smd_node, node_enum_id[n], rank_enum_id[r], "Ranks" );
+              }
+            }
             
-	    VisIt_SimulationMetaData_addVariable(md, smd_node);
-	    VisIt_SimulationMetaData_addVariable(md, smd_rank);
-	  }
-	}
+            VisIt_SimulationMetaData_addVariable(md, smd_node);
+            VisIt_SimulationMetaData_addVariable(md, smd_rank);
+          }
+        }
       }
       
       visit_handle vmd = VISIT_INVALID_HANDLE;
@@ -2767,17 +2768,16 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         // Using the patch mesh
         if (strcmp(&(varname[6]), "Patch_Mesh") == 0)
           gd->num = 1;
-	else if(strncmp(&(varname[6]), "Particle_Mesh", 13) == 0)
-	{
-	  int matlNo = -1;
-	  if (matl.compare("*") != 0)
-	    matlNo = atoi(matl.c_str());
-	  
-	  gd->num = getNumberParticles(archive, grid, level, local_patch,
-				       matlNo, timestate);
+        else if(strncmp(&(varname[6]), "Particle_Mesh", 13) == 0)
+        {
+          int matlNo = -1;
+          if (matl.compare("*") != 0)
+            matlNo = atoi(matl.c_str());
+          
+          gd->num = getNumberParticles(schedulerP, gridP, level, local_patch, matlNo);
 
-	}
-	// Using the cell mesh for Nodes and Ranks.
+        }
+        // Using the cell mesh for Nodes and Ranks.
         else /* if (strcmp(&(varname[6]), "CC_Mesh") == 0 ||
                     strcmp(&(varname[6]), "NC_Mesh") == 0 ||
                     strcmp(&(varname[6]), "SFCX_Mesh") == 0 ||
