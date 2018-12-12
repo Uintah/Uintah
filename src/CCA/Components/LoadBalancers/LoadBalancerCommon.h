@@ -283,11 +283,12 @@ private:
   LoadBalancerCommon( LoadBalancerCommon && )                 = delete;
   LoadBalancerCommon& operator=( LoadBalancerCommon && )      = delete;
 
-  void addPatchesAndProcsToNeighborhood( const Level                      * const level
-                                       , const IntVector                  & low
-                                       , const IntVector                  & high
-                                       , std::unordered_set<const Patch*> & neighbors
-                                       , std::unordered_set<int>          & processors
+  ///< Convenience method for patch/proc neighborhood creation
+  void addPatchesAndProcsToNeighborhood( const Level                            * const level
+                                       , const IntVector                        & low
+                                       , const IntVector                        & high
+                                       ,       std::unordered_set<const Patch*> & neighbors
+                                       ,       std::unordered_set<int>          & processors
                                        );
 };
 

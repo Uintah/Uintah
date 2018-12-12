@@ -262,7 +262,7 @@ class TaskGraph {
       m_current_iteration = iter;
     }
 
-    inline int getNumTaskPhases()
+    inline const int getNumTaskPhases() const
     {
       return m_num_task_phases;
     }
@@ -270,6 +270,11 @@ class TaskGraph {
     std::vector<std::shared_ptr<Task> > & getTasks()
     {
       return m_tasks;
+    }
+
+    inline const bool getDistalRequires() const
+    {
+      return m_has_distal_requires;
     }
 
     /// Makes and returns a map that associates VarLabel names with
@@ -355,6 +360,9 @@ class TaskGraph {
     int m_num_task_phases{0};
 
     int m_index{-1};
+
+    // does this TG contain requires with halo > MAX_HALO_DEPTH
+    bool m_has_distal_requires{false};
 
     std::vector<std::shared_ptr<Task> > m_tasks{};
 
