@@ -1018,7 +1018,7 @@ void SchedulerCommon::addTask(       std::shared_ptr<Task>   task
     m_num_tasks++;
   }
   else {
-    // add it to all "Normal" task graphs (default value == -1)
+    // add it to all "Normal" task graphs (default value == -1, from public addTask() method)
     if (tg_num < 0) {
       for (int i = 0; i < m_num_task_graphs; ++i) {
         m_task_graphs[i]->addTask(task, patches, matls);
@@ -1369,8 +1369,8 @@ SchedulerCommon::compile()
       Timers::Simple tg_compile_timer;
       tg_compile_timer.start();
 
-      // check if there are tasks with halo requirements > MAX_HALO_DEPTH? Determined in SchedulerCommon::addTask
-      const bool has_distal_reqs = ( (m_task_graphs[i]->getIndex() > 0) && (m_max_distal_ghost_cells != 0) );
+      // check if this TG has any tasks with halo requirements > MAX_HALO_DEPTH (determined in public SchedulerCommon::addTask())
+      const bool has_distal_reqs = m_task_graphs[i]->getDistalRequires();
 
       // NOTE: this single call is where all the TG compilation complexity arises (dependency analysis for auto MPI mesgs)
       m_task_graphs[i]->createDetailedTasks( useInternalDeps(), grid, oldGrid, has_distal_reqs );

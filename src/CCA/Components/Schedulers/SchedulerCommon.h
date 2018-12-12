@@ -131,7 +131,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     /// For more complicated models
     virtual void addTaskGraph( tgType type, int index /* == -1 */ );
 
-    virtual int getNumTaskGraphs() { return m_task_graphs.size(); }
+    virtual int getNumTaskGraphs() { return m_num_task_graphs; }
 
     virtual void setNumTaskGraphs( const int num_task_graphs ) {
       ASSERT( num_task_graphs  >= 1 );
@@ -388,10 +388,10 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
   private:
 
     // helper method for primary addTask()
-    void addTask(       std::shared_ptr<Task>
-                , const PatchSet    * patches
-                , const MaterialSet * matls
-                , const int           tg_num
+    void addTask(       std::shared_ptr<Task>   task
+                , const PatchSet              * patches
+                , const MaterialSet           * matls
+                , const int                     tg_num
                 );
 
     // eliminate copy, assignment and move

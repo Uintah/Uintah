@@ -164,6 +164,12 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
     }
 #endif
   }
+
+  // does this TG contain requires with halo > MAX_HALO_DEPTH
+  if (task->hasDistalRequires()) {
+    m_has_distal_requires = true;
+  }
+
 }
 
 //______________________________________________________________________

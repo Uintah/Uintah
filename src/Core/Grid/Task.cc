@@ -756,6 +756,18 @@ bool Task::hasModifies( const VarLabel * var
 
 //______________________________________________________________________
 //
+bool Task::hasDistalRequires() const
+{
+  for (auto dep = m_req_head; dep != nullptr; dep = dep->m_next) {
+    if (dep->m_num_ghost_cells >= MAX_HALO_DEPTH) {
+      return true;
+    }
+  }
+  return false;
+}
+
+//______________________________________________________________________
+//
 Task::Dependency*
 Task::isInDepMap( const DepMap   & depMap
                 , const VarLabel * var
