@@ -1974,36 +1974,20 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    const std::string &pName = Uintah::VarLabel::getParticlePositionName();
-    
-    std::cerr << pName << "  " << matlNo << "  " << level << "  " << local_patch << std::endl;
+    const std::string &varName = Uintah::VarLabel::getParticlePositionName();
     
     ParticleDataRaw *pd =
-      getParticleData(schedulerP, gridP, level, local_patch, pName, matlNo);
+      getParticleData(schedulerP, gridP, level, local_patch, varName, matlNo);
     
     if(pd && VisIt_PointMesh_alloc(&meshH) != VISIT_ERROR)
     {
-      // visit_handle cordH[3] = { VISIT_INVALID_HANDLE,
-      // 				VISIT_INVALID_HANDLE,
-      // 				VISIT_INVALID_HANDLE };
-
-      // VisIt_VariableData_alloc(&cordH[0]);
-      // VisIt_VariableData_alloc(&cordH[1]);
-      // VisIt_VariableData_alloc(&cordH[2]);
-
-      // VisIt_VariableData_setDataF(cordH[0], VISIT_OWNER_SIM, 1, NPTS, sim->x);
-      // VisIt_VariableData_setDataF(cordH[1], VISIT_OWNER_SIM, 1, NPTS, sim->y);
-      // VisIt_VariableData_setDataF(cordH[2], VISIT_OWNER_SIM, 1, NPTS, sim->z);
-
-      // VisIt_PointMesh_setCoordsXYZ(meshH, cordH[0], cordH[1], cordH[2]);
-
       visit_handle cordsH = VISIT_INVALID_HANDLE;
       if(VisIt_VariableData_alloc(&cordsH) == VISIT_OKAY)
       {
-	VisIt_VariableData_setDataD(cordsH, VISIT_OWNER_VISIT,
-				    3, pd->num*pd->components, pd->data);
+        VisIt_VariableData_setDataD(cordsH, VISIT_OWNER_VISIT,
+                                    pd->components, pd->num, pd->data);
 
-	VisIt_PointMesh_setCoords(meshH, cordsH );
+        VisIt_PointMesh_setCoords(meshH, cordsH );
       }
       
       // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
@@ -2013,7 +1997,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       // delete pd->data
       delete pd;
     }
-    
+
 #ifdef COMMENTOUT_FOR_NOW
     //try to retrieve existing cache ref
     void_ref_ptr vrTmp =
@@ -2123,8 +2107,6 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
         array[0] = levelInfo.anchor[c] +  plow[c] * levelInfo.spacing[c];
         array[1] = levelInfo.anchor[c] + phigh[c] * levelInfo.spacing[c];
 
-        // std::cerr << "Patch " << array[0] << "  " << array[1] << std::endl;
-          
         VisIt_VariableData_setDataF(cordH[c], VISIT_OWNER_VISIT,
                                     1, dims[c], array);
 
@@ -2439,9 +2421,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       isMachineMeshVar = (hostName == sim->hostName);
     }
   }
-  else if( strncmp(varname, "Nodes/", 6) == 0 ||
-           strncmp(varname, "Ranks/", 6) == 0 ||
-           strncmp(varname, "Patch/Id", 8) == 0 ||
+  else if( strncmp(varname, "Patch/Id", 8) == 0 ||
            strncmp(varname, "Patch/ProcRank", 14) == 0 ||
            strncmp(varname, "Patch/ProcNode", 14) == 0 )
   {
@@ -2455,6 +2435,28 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     }
 
     varType = "CC_Mesh";
+  }
+
+  else if( strncmp(varname, "Nodes/", 6) == 0 ||
+           strncmp(varname, "Ranks/", 6) == 0 )
+  {
+    isInternalVar = true;
+
+    if(strncmp(&(varname[6]), "Particle_Mesh", 13) == 0)
+    {
+      isParticleVar = true;
+
+      varType = "Particle_Mesh";
+
+      // Get the material sans "Particle_Mesh".
+      varName = std::string(varname);
+      found = varName.find_last_of("/");
+      matl = varName.substr(found + 1);
+    }
+    else
+    {
+      varType = "CC_Mesh";
+    }
   }
 
   else if( strncmp(varname, "Patch/Bounds/Low",  16) == 0 ||
@@ -2517,8 +2519,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
     return varH;
   }
-
-  std::cerr << "var " << isMachineMeshVar << "  " << isInternalVar << std::endl;
 
   if (isMachineMeshVar)
   {
@@ -2635,8 +2635,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
     if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
     {
-      VisIt_VariableData_setDataD(varH, VISIT_OWNER_VISIT, gd->components,
-                                  gd->num*gd->components, gd->data);
+      VisIt_VariableData_setDataD(varH, VISIT_OWNER_VISIT,
+                                  gd->components, gd->num, gd->data);
 
       // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
       // owns the data (VISIT_OWNER_SIM - indicates the simulation
@@ -2656,20 +2656,39 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     int matlNo = -1;
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
-      
-    ParticleDataRaw *pd = 
-      getParticleData(schedulerP, gridP, level, local_patch, varName, matlNo);
 
-    CheckNaNs(pd->data, pd->num*pd->components, varname, level, local_patch);
-
-    if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
+    ParticleDataRaw *pd = nullptr;
+    
+    if( isInternalVar )
     {
-      VisIt_VariableData_setDataD(varH, VISIT_OWNER_VISIT, pd->components,
-                                  pd->num * pd->components, pd->data);
+      unsigned int numParticles =
+        getNumberParticles(schedulerP, gridP, level, local_patch, matlNo);
+
+      if( numParticles )
+      {
+        pd = new ParticleDataRaw;
+        pd->num = numParticles;
+        pd->components = 1;
+        pd->data = new double[pd->num * pd->components];
+
+        double val = sim->myworld->myRank();
+
+        for (int i=0; i<pd->num*pd->components; ++i)
+          pd->data[i] = val;
+      }
+    }
+    else
+    {
+      pd = getParticleData(schedulerP, gridP, level, local_patch, varName, matlNo);
       
-      // vtkDoubleArray *rv = vtkDoubleArray::New();
-      // rv->SetNumberOfComponents(pd->components);
-      // rv->SetArray(pd->data, pd->num*pd->components, 0);
+      if( pd )
+        CheckNaNs(pd->data, pd->num*pd->components, varname, level, local_patch);
+    }
+
+    if(pd && VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
+    {
+      VisIt_VariableData_setDataD(varH, VISIT_OWNER_VISIT,
+                                  pd->components, pd->num, pd->data);
       
       // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
       // owns the data (VISIT_OWNER_SIM - indicates the simulation
@@ -2762,16 +2781,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         // Using the patch mesh
         if (strcmp(&(varname[6]), "Patch_Mesh") == 0)
           gd->num = 1;
-        else if(strncmp(&(varname[6]), "Particle_Mesh", 13) == 0)
-        {
-          int matlNo = -1;
-          if (matl.compare("*") != 0)
-            matlNo = atoi(matl.c_str());
-
-          gd->num = getNumberParticles(schedulerP, gridP, level, local_patch, matlNo);
-
-	  std::cerr << "material " << matlNo << "num Particles " << gd->num << std::endl;
-        }
         // Using the cell mesh for Nodes and Ranks.
         else /* if (strcmp(&(varname[6]), "CC_Mesh") == 0 ||
                     strcmp(&(varname[6]), "NC_Mesh") == 0 ||
@@ -2789,6 +2798,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       {
         gd->num = 1;
         gd->components = 1;
+        gd->data = new double[gd->num * gd->components];
 
         std::stringstream msg;
         msg << "Visit libsim - "
@@ -2798,7 +2808,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
 
         for (int i=0; i<gd->num*gd->components; ++i)
-          gd->data[i] = 0;      
+          gd->data[i] = 0;
       }
 
       gd->data = new double[gd->num * gd->components];
@@ -3076,10 +3086,11 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
     }
 
+    
     if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
     {
-      VisIt_VariableData_setDataD(varH, VISIT_OWNER_VISIT, gd->components,
-                                  gd->num*gd->components, gd->data);
+      VisIt_VariableData_setDataD(varH, VISIT_OWNER_VISIT,
+                                  gd->components, gd->num, gd->data);
 
       // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
       // owns the data (VISIT_OWNER_SIM - indicates the simulation

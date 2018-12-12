@@ -520,58 +520,54 @@ static GridDataRaw* readPatchData(DataWarehouse *dw,
                                   const VarLabel *varLabel,
                                   int material)
 {
-  if( dw->exists( varLabel, material, patch ) )
-  {
-    GridDataRaw *gd = new GridDataRaw;
-    gd->components = numComponents<T>();
-
-    gd->num = 1;
-    gd->data = new double[gd->num*gd->components];
-    
-    if (varLabel->getName() == "refinePatchFlag")
-    {
-      VAR< PatchFlagP > refinePatchFlag;
-
-      // This queries the entire patch, including extra cells and boundary cells
-      dw->get(refinePatchFlag, varLabel, material, patch);
-      
-      const T p = refinePatchFlag.get().get_rep()->flag;
-
-      for (int i=0; i<gd->num; ++i)
-        copyComponents<T>(&gd->data[i*gd->components], p);
-    }
-
-    else if (varLabel->getName().find("FileInfo") == 0 ||
-             varLabel->getName().find("CellInformation") == 0 ||
-             varLabel->getName().find("CutCellInfo") == 0)
-    {
-      for (int i=0; i<gd->num*gd->components; ++i)
-        gd->data[i] = 0;
-    }
-    else
-    {
-      VAR<T> var;
-      PerPatchBase* patchVar = dynamic_cast<PerPatchBase*>(&var);
-
-      // This queries the entire patch, including extra cells and boundary cells
-      dw->get(*patchVar, varLabel, material, patch);
-
-      const T *p = (T*) patchVar->getBasePointer();
-
-      for (int i=0; i<gd->num; ++i)
-        copyComponents<T>(&gd->data[i*gd->components], *p);
-
-      // std::cerr << *p << " ************* "
-      //                << gd->data[0] << " ************* " 
-      //                << std::endl;
-    }
+  if( !dw->exists( varLabel, material, patch ) )
+    return nullptr;
   
-    return gd;
+  GridDataRaw *gd = new GridDataRaw;
+  gd->components = numComponents<T>();
+  
+  gd->num = 1;
+  gd->data = new double[gd->num*gd->components];
+  
+  if (varLabel->getName() == "refinePatchFlag")
+  {
+    VAR< PatchFlagP > refinePatchFlag;
+    
+    // This queries the entire patch, including extra cells and boundary cells
+    dw->get(refinePatchFlag, varLabel, material, patch);
+      
+    const T p = refinePatchFlag.get().get_rep()->flag;
+
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], p);
+  }
+
+  else if (varLabel->getName().find("FileInfo") == 0 ||
+           varLabel->getName().find("CellInformation") == 0 ||
+           varLabel->getName().find("CutCellInfo") == 0)
+  {
+    for (int i=0; i<gd->num*gd->components; ++i)
+      gd->data[i] = 0;
   }
   else
   {
-    return nullptr;
+    VAR<T> var;
+    PerPatchBase* patchVar = dynamic_cast<PerPatchBase*>(&var);
+
+    // This queries the entire patch, including extra cells and boundary cells
+    dw->get(*patchVar, varLabel, material, patch);
+
+    const T *p = (T*) patchVar->getBasePointer();
+
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], *p);
+
+    // std::cerr << *p << " ************* "
+    //                << gd->data[0] << " ************* " 
+    //                << std::endl;
   }
+  
+  return gd;
 }
 
 
@@ -773,7 +769,8 @@ unsigned int getNumberParticles(SchedulerP schedulerP,
   LevelP level = gridP->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
-  std::string variable_name("p.particleID");
+  const std::string &variable_name =
+    Uintah::VarLabel::getParticlePositionName();
   
   // get the variable information
   const VarLabel* varLabel = nullptr;
@@ -795,66 +792,66 @@ unsigned int getNumberParticles(SchedulerP schedulerP,
       
       if (varLabel->getName() == variable_name)
       {
-	break;
+        break;
       }
     }
   }
-    
-  if( dw->exists( varLabel, material, patch ) )
-  {
-    // get the material information for all variables
-    Scheduler::VarLabelMaterialMap* pLabelMatlMap =
-      schedulerP->makeVarLabelMaterialMap();
-    
-    // get the materials for this variable
-    Scheduler::VarLabelMaterialMap::iterator matMapIter =
-      pLabelMatlMap->find( variable_name );
-    
-    // figure out which material we're interested in
-    std::list< int > &allMatls = matMapIter->second;
-    std::list< int > matlsForVar;
-    
-    if (material < 0)
-    {
-      matlsForVar = allMatls;
-    }
-    else
-    {
-      // make sure the patch has the variable - use empty material set
-      // if it doesn't
-      for (std::list< int >::iterator matIter = allMatls.begin();
-	   matIter != allMatls.end(); matIter++)
-      {
-	if( *matIter == material )
-	{
-	  matlsForVar.push_back(material);
-	  break;
-	}
-      }
-    }
-    
-    unsigned int numParticles = 0;
+
+  // if( dw->exists( varLabel, material, patch ) )
+  //   return 0;
   
-    // first get all the particle subsets so that we know how many total
-    // particles we'll have
-    for( std::list< int >::iterator matIter = matlsForVar.begin();
-	 matIter != matlsForVar.end(); matIter++ )
-    {
-      const int material = *matIter;
-      
-      constParticleVariable<long64> *var = new constParticleVariable<long64>;
-      
-      dw->get( *var, varLabel, material, patch);
-      
-      numParticles += var->getParticleSubset()->numParticles();
-
-      delete var;
-    }
-
-    return numParticles;
+  // get the material information for all variables
+  Scheduler::VarLabelMaterialMap* pLabelMatlMap =
+    schedulerP->makeVarLabelMaterialMap();
+    
+  // get the materials for this variable
+  Scheduler::VarLabelMaterialMap::iterator matMapIter =
+    pLabelMatlMap->find( variable_name );
+    
+  // figure out which material we're interested in
+  std::list< int > &allMatls = matMapIter->second;
+  std::list< int > matlsForVar;
+    
+  if (material < 0)
+  {
+    matlsForVar = allMatls;
   }
   else
-    return 0;
+  {
+    // make sure the patch has the variable - use empty material set
+    // if it doesn't
+    for (std::list< int >::iterator matIter = allMatls.begin();
+         matIter != allMatls.end(); matIter++)
+    {
+      if( *matIter == material )
+      {
+        matlsForVar.push_back(material);
+        break;
+      }
+    }
+  }
+    
+  // Get all the particle subsets and the total number of particles.
+  unsigned int numParticles = 0;
+  
+  for( std::list< int >::iterator matIter = matlsForVar.begin();
+       matIter != matlsForVar.end(); matIter++ )
+  {
+    const int material = *matIter;
+      
+    constParticleVariable<Point> *var = new constParticleVariable<Point>;
+      
+    dw->get( *var, varLabel, material, patch);
+
+    numParticles += var->getParticleSubset()->numParticles();
+
+    delete var;
+  }
+
+  // cleanup
+  delete pLabelMatlMap;
+  
+  return numParticles;
 }
 
 
@@ -869,107 +866,95 @@ ParticleDataRaw* readParticleData(SchedulerP schedulerP,
 {
   DataWarehouse *dw = schedulerP->getLastDW();
 
-//  if( dw->exists( varLabel, material, patch ) )
-  {
-    std::string variable_name = varLabel->getName();
-    
-    ParticleDataRaw *pd = new ParticleDataRaw;
-    pd->components = numComponents<T>();
-    pd->num = 0;
-    
-    std::cerr << __LINE__ << " components " << pd->components << std::endl;
-      
-    // get the material information for all variables
-    Scheduler::VarLabelMaterialMap* pLabelMatlMap =
-      schedulerP->makeVarLabelMaterialMap();
-    
-    // get the materials for this variable
-    Scheduler::VarLabelMaterialMap::iterator matMapIter =
-      pLabelMatlMap->find( variable_name );
-    
-    // figure out which material we're interested in
-    std::list< int > &allMatls = matMapIter->second;
-    std::list< int > matlsForVar;
-    
-    if (material < 0)
-    {
-      matlsForVar = allMatls;
-    }
-    else
-    {
-      // make sure the patch has the variable - use empty material set
-      // if it doesn't
-      for (std::list< int >::iterator matIter = allMatls.begin();
-	   matIter != allMatls.end(); matIter++)
-      {
-	if( *matIter == material )
-	{
-	  matlsForVar.push_back(material);
-	  break;
-	}
-      }
-    }
-    
-    // first get all the particle subsets so that we know how many total
-    // particles we'll have
-    std::vector<constParticleVariable<T>*> particle_vars;
-    
-    for( std::list< int >::iterator matIter = matlsForVar.begin();
-	 matIter != matlsForVar.end(); matIter++ )
-    {
-      const int material = *matIter;
-      
-      constParticleVariable<T> *var = new constParticleVariable<T>;
-      
-      dw->get( *var, varLabel, material, patch);
-
-      particle_vars.push_back(var);
-      pd->num += var->getParticleSubset()->numParticles();
-
-      ParticleSubset* pset = dw->getParticleSubset(material, patch);
-      int numParticles  = pset->end() - pset->begin();
-
-      std::cerr << __LINE__ << " number of particles " << variable_name << "  "
-		<< material << "  " << numParticles << "  "
-		<< var->getParticleSubset()->numParticles() << std::endl;     
-    }
-    
-    std::cerr << __LINE__ << " number of vals " << pd->num << std::endl;
-    
-    // Copy all the data
-    if( pd->num ) {
-      int pi = 0;
-      
-      pd->data = new double[pd->components * pd->num];
-      
-      for (unsigned int i=0; i<particle_vars.size(); ++i)
-      {
-	ParticleSubset *pSubset = particle_vars[i]->getParticleSubset();
-	
-	for (ParticleSubset::iterator p = pSubset->begin();
-	     p != pSubset->end(); ++p)
-	{	
-	  //TODO: need to be able to read data as array of longs for
-	  //particle id, but copyComponents always reads double
-	  copyComponents<T>(&pd->data[pi*pd->components],
-			    (*particle_vars[i])[*p]);
-	  ++pi;
-	}
-      }
-    }
-    
-    // cleanup
-    for (unsigned int i=0; i<particle_vars.size(); ++i)
-      delete particle_vars[i];
-    
-    delete pLabelMatlMap;
-
-    return pd;
-  }
-  // else
-  // {
+  // if( !dw->exists( varLabel, material, patch ) )
   //   return nullptr;
-  // }
+  
+  std::string variable_name = varLabel->getName();
+        
+  // get the material information for all variables
+  Scheduler::VarLabelMaterialMap* pLabelMatlMap =
+    schedulerP->makeVarLabelMaterialMap();
+    
+  // get the materials for this variable
+  Scheduler::VarLabelMaterialMap::iterator matMapIter =
+    pLabelMatlMap->find( variable_name );
+    
+  // figure out which material we're interested in
+  std::list< int > &allMatls = matMapIter->second;
+  std::list< int > matlsForVar;
+    
+  if (material < 0)
+  {
+    matlsForVar = allMatls;
+  }
+  else
+  {
+    // make sure the patch has the variable - use empty material set
+    // if it doesn't
+    for (std::list< int >::iterator matIter = allMatls.begin();
+         matIter != allMatls.end(); matIter++)
+    {
+      if( *matIter == material )
+      {
+        matlsForVar.push_back(material);
+        break;
+      }
+    }
+  }
+ 
+  // Get all the particle subsets and the total number of particles.
+  std::vector<constParticleVariable<T>*> particle_vars;
+    
+  unsigned int numParticles = 0;
+  
+  for( std::list< int >::iterator matIter = matlsForVar.begin();
+       matIter != matlsForVar.end(); matIter++ )
+  {
+    const int material = *matIter;
+      
+    constParticleVariable<T> *var = new constParticleVariable<T>;
+      
+    dw->get( *var, varLabel, material, patch);
+
+    particle_vars.push_back(var);
+    numParticles += var->getParticleSubset()->numParticles();
+  }
+
+  ParticleDataRaw *pd = nullptr;
+
+  // Copy all the data
+  if( numParticles )
+  {
+    pd = new ParticleDataRaw;
+    pd->components = numComponents<T>();
+    pd->num = numParticles;
+    pd->data = new double[pd->components * pd->num];
+
+    int pi = 0;
+
+    for (unsigned int i=0; i<particle_vars.size(); ++i)
+    {
+        ParticleSubset *pSubset = particle_vars[i]->getParticleSubset();
+        
+        for (ParticleSubset::iterator p = pSubset->begin();
+             p != pSubset->end(); ++p)
+        {       
+          // TODO: need to be able to read data as array of longs for
+          // particle id, but copyComponents always reads double
+          copyComponents<T>(&pd->data[pi*pd->components],
+                            (*particle_vars[i])[*p]);
+          ++pi;
+        }
+      }
+  }
+    
+  // cleanup
+  for (unsigned int i=0; i<particle_vars.size(); ++i)
+    delete particle_vars[i];
+  
+  delete pLabelMatlMap;
+  
+  return pd;
 }
 
 

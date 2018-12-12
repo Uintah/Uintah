@@ -313,126 +313,122 @@ static GridDataRaw* readGridData(DataArchive *archive,
                                  int high[3],
                                  LoadExtra loadExtraElements)
 {
-  if( archive->exists( variable_name, patch, timestep ) )
-  {
-    GridDataRaw *gd = new GridDataRaw;
-    gd->components = numComponents<T>();
-    
-    int dims[3];
-    for (int i=0; i<3; ++i) {
-      gd->low[i]  =  low[i];
-      gd->high[i] = high[i];
-      
-      dims[i] = high[i] - low[i];
-    }
-
-    gd->num = dims[0] * dims[1] * dims[2];
-    gd->data = new double[gd->num*gd->components];
-    
-    VAR<T> var;
-    
-    // This queries just the patch
-    if( loadExtraElements == NONE )
-    {
-      IntVector ilow(low[0], low[1], low[2]);
-      IntVector ihigh(high[0], high[1], high[2]);
-      
-      archive->queryRegion(var, variable_name, material,
-                           level.get_rep(), timestep, ilow, ihigh);
-    }
-    // This queries the entire patch, including extra cells and boundary cells
-    else if( loadExtraElements == CELLS )
-    {
-      archive->query(var, variable_name, material, patch, timestep);
-    }
-    else if( loadExtraElements == PATCHES )
-    {
-      // This call does not work properly as it will return garbage
-      // where the cells do not exists.
-      
-      // IntVector ilow(low[0], low[1], low[2]);
-      // IntVector ihigh(high[0], high[1], high[2]);
-      
-      // archive->queryRegion(var, variable_name, material,
-      //                      level.get_rep(), timestep, ilow, ihigh);
-
-      // This queries the entire patch, including extra cells and
-      // boundary cells which is smaller than the requeste region.
-      archive->query(var, variable_name, material, patch, timestep);
-    }
+  if( !archive->exists( variable_name, patch, timestep ) )
+    return nullptr;
   
-    T *p = var.getPointer();
+  GridDataRaw *gd = new GridDataRaw;
+  gd->components = numComponents<T>();
+    
+  int dims[3];
+  for (int i=0; i<3; ++i) {
+    gd->low[i]  =  low[i];
+    gd->high[i] = high[i];
+      
+    dims[i] = high[i] - low[i];
+  }
 
-    IntVector tmplow;
-    IntVector tmphigh;
-    IntVector size;
+  gd->num = dims[0] * dims[1] * dims[2];
+  gd->data = new double[gd->num*gd->components];
     
-    var.getSizes(tmplow, tmphigh, size);
+  VAR<T> var;
     
-    // Fail safe option if the data returned does match the data requested.
-    if(  low[0] !=  tmplow[0] ||  low[1] !=  tmplow[1] ||  low[2] !=  tmplow[2] ||
-        high[0] != tmphigh[0] || high[1] != tmphigh[1] || high[2] != tmphigh[2] )
+  // This queries just the patch
+  if( loadExtraElements == NONE )
+  {
+    IntVector ilow(low[0], low[1], low[2]);
+    IntVector ihigh(high[0], high[1], high[2]);
+    
+    archive->queryRegion(var, variable_name, material,
+                         level.get_rep(), timestep, ilow, ihigh);
+  }
+  // This queries the entire patch, including extra cells and boundary cells
+  else if( loadExtraElements == CELLS )
+  {
+    archive->query(var, variable_name, material, patch, timestep);
+  }
+  else if( loadExtraElements == PATCHES )
+  {
+    // This call does not work properly as it will return garbage
+    // where the cells do not exists.
+      
+    // IntVector ilow(low[0], low[1], low[2]);
+    // IntVector ihigh(high[0], high[1], high[2]);
+      
+    // archive->queryRegion(var, variable_name, material,
+    //                      level.get_rep(), timestep, ilow, ihigh);
+
+    // This queries the entire patch, including extra cells and
+    // boundary cells which is smaller than the requeste region.
+    archive->query(var, variable_name, material, patch, timestep);
+  }
+  
+  T *p = var.getPointer();
+
+  IntVector tmplow;
+  IntVector tmphigh;
+  IntVector size;
+    
+  var.getSizes(tmplow, tmphigh, size);
+    
+  // Fail safe option if the data returned does match the data requested.
+  if(  low[0] !=  tmplow[0] ||  low[1] !=  tmplow[1] ||  low[2] !=  tmplow[2] ||
+       high[0] != tmphigh[0] || high[1] != tmphigh[1] || high[2] != tmphigh[2] )
+  {
+    // std::cerr << __LINE__ << "  " << variable_name << "  "
+    //           << dims[0] << "  " << dims[1] << "  " << dims[2] << "     "
+    //           << size[0] << "  " << size[1] << "  " << size[2] << "     "
+      
+    //           << low[0] << "  " << tmplow[0] << "  "
+    //           << low[1] << "  " << tmplow[1] << "  "
+    //           << low[2] << "  " << tmplow[2] << "    "
+      
+    //           << high[0] << "  " << tmphigh[0] << "  "
+    //           << high[1] << "  " << tmphigh[1] << "  "
+    //           << high[2] << "  " << tmphigh[2] << "  "
+    //           << std::endl;
+
+    for (int i=0; i<gd->num*gd->components; ++i)
+      gd->data[i] = 0;
+
+    int kd = 0, jd = 0, id;
+    int ks = 0, js = 0, is;
+    
+    for (int k=low[2]; k<high[2]; ++k)
     {
-      // std::cerr << __LINE__ << "  " << variable_name << "  "
-      //           << dims[0] << "  " << dims[1] << "  " << dims[2] << "     "
-      //           << size[0] << "  " << size[1] << "  " << size[2] << "     "
-      
-      //           << low[0] << "  " << tmplow[0] << "  "
-      //           << low[1] << "  " << tmplow[1] << "  "
-      //           << low[2] << "  " << tmplow[2] << "    "
-      
-      //           << high[0] << "  " << tmphigh[0] << "  "
-      //           << high[1] << "  " << tmphigh[1] << "  "
-      //           << high[2] << "  " << tmphigh[2] << "  "
-      //           << std::endl;
-
-      for (int i=0; i<gd->num*gd->components; ++i)
-        gd->data[i] = 0;
-
-      int kd = 0, jd = 0, id;
-      int ks = 0, js = 0, is;
-    
-      for (int k=low[2]; k<high[2]; ++k)
+      if( tmplow[2] <= k && k < tmphigh[2] )
       {
-        if( tmplow[2] <= k && k < tmphigh[2] )
-        {
-          kd = (k-   low[2]) * dims[1] * dims[0];
-          ks = (k-tmplow[2]) * size[1] * size[0];
+        kd = (k-   low[2]) * dims[1] * dims[0];
+        ks = (k-tmplow[2]) * size[1] * size[0];
         
-          for (int j=low[1]; j<high[1]; ++j)
+        for (int j=low[1]; j<high[1]; ++j)
+        {
+          if( tmplow[1] <= j && j < tmphigh[1] )
           {
-            if( tmplow[1] <= j && j < tmphigh[1] )
-            {
-              jd = kd + (j-   low[1]) * dims[0];
-              js = ks + (j-tmplow[1]) * size[0];
-          
-              for (int i=low[0]; i<high[0]; ++i)
-              {
-                if( tmplow[0] <= i && i < tmphigh[0] )
-                {
-                  id = jd + (i-   low[0]);
-                  is = js + (i-tmplow[0]);
+            jd = kd + (j-   low[1]) * dims[0];
+            js = ks + (j-tmplow[1]) * size[0];
             
-                  copyComponents<T>(&gd->data[id*gd->components], p[is]);
-                }
+            for (int i=low[0]; i<high[0]; ++i)
+            {
+              if( tmplow[0] <= i && i < tmphigh[0] )
+              {
+                id = jd + (i-   low[0]);
+                is = js + (i-tmplow[0]);
+            
+                copyComponents<T>(&gd->data[id*gd->components], p[is]);
               }
             }
           }
         }
       }
     }
-    else
-    {
-      for (int i=0; i<gd->num; ++i)
-        copyComponents<T>(&gd->data[i*gd->components], p[i]);
-    }
-
-    return gd;
   }
   else
   {
-    return nullptr;
-  }  
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], p[i]);
+  }
+  
+  return gd;
 }
 
 
@@ -447,53 +443,49 @@ static GridDataRaw* readPatchData(DataArchive *archive,
                                   int material,
                                   int timestep)
 {
-  if( archive->exists( variable_name, patch, timestep ) )
-  {
-    GridDataRaw *gd = new GridDataRaw;
-    gd->components = numComponents<T>();
-    
-    gd->num = 1;
-    gd->data = new double[gd->num*gd->components];
+  if( !archive->exists( variable_name, patch, timestep ) )
+    return nullptr;
   
-    if (variable_name == "refinePatchFlag")
-    {
-      VAR< PatchFlagP > refinePatchFlag;
-
-      // This queries the entire patch, including extra cells and boundary cells
-      archive->query(refinePatchFlag, variable_name, material, patch, timestep);
-
-      const T p = refinePatchFlag.get().get_rep()->flag;
-
-      for (int i=0; i<gd->num; ++i)
-        copyComponents<T>(&gd->data[i*gd->components], p);
-    }
-    else if (variable_name.find("FileInfo") == 0 ||
-             variable_name.find("CellInformation") == 0 ||
-             variable_name.find("CutCellInfo") == 0)
-    {
-      for (int i=0; i<gd->num*gd->components; ++i)
-        gd->data[i] = 0;
-    }
-    else
-    {
-      VAR<T> var;
-      PerPatchBase* patchVar = dynamic_cast<PerPatchBase*>(&var);
-
-      // This queries the entire patch, including extra cells and boundary cells
-      archive->query(*patchVar, variable_name, material, patch, timestep);
-
-      const T *p = (T*) patchVar->getBasePointer();
-
-      for (int i=0; i<gd->num; ++i)
-        copyComponents<T>(&gd->data[i*gd->components], *p);
-    }
-
-    return gd;
+  GridDataRaw *gd = new GridDataRaw;
+  gd->components = numComponents<T>();
+  
+  gd->num = 1;
+  gd->data = new double[gd->num*gd->components];
+  
+  if (variable_name == "refinePatchFlag")
+  {
+    VAR< PatchFlagP > refinePatchFlag;
+    
+    // This queries the entire patch, including extra cells and boundary cells
+    archive->query(refinePatchFlag, variable_name, material, patch, timestep);
+    
+    const T p = refinePatchFlag.get().get_rep()->flag;
+    
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], p);
+  }
+  else if (variable_name.find("FileInfo") == 0 ||
+           variable_name.find("CellInformation") == 0 ||
+           variable_name.find("CutCellInfo") == 0)
+  {
+    for (int i=0; i<gd->num*gd->components; ++i)
+      gd->data[i] = 0;
   }
   else
   {
-    return nullptr;
+    VAR<T> var;
+    PerPatchBase* patchVar = dynamic_cast<PerPatchBase*>(&var);
+
+    // This queries the entire patch, including extra cells and boundary cells
+    archive->query(*patchVar, variable_name, material, patch, timestep);
+
+    const T *p = (T*) patchVar->getBasePointer();
+
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], *p);
   }
+
+  return gd;
 }
 
 
@@ -719,11 +711,13 @@ unsigned int getNumberParticles(DataArchive *archive,
   LevelP level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
-  std::string variable_name("p.particleID");
+  const std::string &variable_name =
+    Uintah::VarLabel::getParticlePositionName();
   
-  unsigned int numParticles = 0;
+  if( !archive->exists( variable_name, patch, timestep ) )
+    return 0;
 
-  // figure out which material we're interested in
+  // Figure out which material we're interested in
   ConsecutiveRangeSet allMatls =
     archive->queryMaterials(variable_name, patch, timestep);
 
@@ -732,14 +726,15 @@ unsigned int getNumberParticles(DataArchive *archive,
     matlsForVar = allMatls;
   }
   else {
-    // make sure the patch has the variable - use empty material set
+    // Make sure the patch has the variable - use empty material set
     // if it doesn't
     if (allMatls.size() > 0 && allMatls.find(material) != allMatls.end())
       matlsForVar.addInOrder(material);
   }
 
-  // first get all the particle subsets so that we know how many total
-  // particles we'll have
+  // Get all the particle subsets and the total number of particles.
+  unsigned int numParticles = 0;
+
   for( ConsecutiveRangeSet::iterator matlIter =
          matlsForVar.begin(); matlIter != matlsForVar.end(); matlIter++ )
   {
@@ -765,11 +760,10 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
                                   int material,
                                   int timestep)
 {
-  ParticleDataRaw *pd = new ParticleDataRaw;
-  pd->components = numComponents<T>();
-  pd->num = 0;
-
-  // figure out which material we're interested in
+  if( !archive->exists( variable_name, patch, timestep ) )
+    return nullptr;
+  
+  // Figure out which material we're interested in
   ConsecutiveRangeSet allMatls =
     archive->queryMaterials(variable_name, patch, timestep);
 
@@ -778,16 +772,17 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
     matlsForVar = allMatls;
   }
   else {
-    // make sure the patch has the variable - use empty material set
+    // Make sure the patch has the variable - use empty material set
     // if it doesn't
     if (allMatls.size()>0 && allMatls.find(material) != allMatls.end())
       matlsForVar.addInOrder(material);
   }
 
-  // First get all the particle subsets so that we know how many total
-  // particles we'll have
+  // Get all the particle subsets and the total number of particles.
   std::vector<ParticleVariable<T>*> particle_vars;
 
+  unsigned int numParticles = 0;
+  
   for( ConsecutiveRangeSet::iterator matlIter =
          matlsForVar.begin(); matlIter != matlsForVar.end(); matlIter++ )
   {
@@ -795,33 +790,36 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
 
     ParticleVariable<T> *var = new ParticleVariable<T>;
 
-    if( archive->exists( variable_name, patch, timestep ) )
-    {
-      archive->query(*var, variable_name, matl, patch, timestep);
-
-      particle_vars.push_back(var);
-      pd->num += var->getParticleSubset()->numParticles();
-    }
+    archive->query(*var, variable_name, matl, patch, timestep);
+    
+    particle_vars.push_back(var);
+    numParticles += var->getParticleSubset()->numParticles();
   }
 
-  // Copy all the data
-  if( pd->num ) {
-    int pi = 0;
+  ParticleDataRaw *pd = nullptr;
 
+  // Copy all the data
+  if( numParticles ) {
+    pd = new ParticleDataRaw;
+    pd->components = numComponents<T>();
+    pd->num = numParticles;
+    
     pd->data = new double[pd->components * pd->num];
+
+    int pi = 0;
 
     for (unsigned int i=0; i<particle_vars.size(); ++i)
     {
       ParticleSubset *pSubset = particle_vars[i]->getParticleSubset();
 
       for (ParticleSubset::iterator p = pSubset->begin();
-	   p != pSubset->end(); ++p)
+           p != pSubset->end(); ++p)
       {
-	//TODO: need to be able to read data as array of longs for
-	//particle id, but copyComponents always reads double
-	copyComponents<T>(&pd->data[pi*pd->components],
-			  (*particle_vars[i])[*p]);
-	++pi;
+        // TODO: need to be able to read data as array of longs for
+        // particle id, but copyComponents always reads double
+        copyComponents<T>(&pd->data[pi*pd->components],
+                          (*particle_vars[i])[*p]);
+        ++pi;
       }
     }
   }
