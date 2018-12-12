@@ -495,8 +495,7 @@ public:
                      );
 
 
-#if 0
-
+#if HAVE_PIDX
      void emitPIDX(       PIDXOutputContext & context
                   , const VarLabel          * label
                   ,       int                 matlIndex
@@ -504,7 +503,6 @@ public:
                   ,       unsigned char     * pidx_buffer
                   ,       size_t              pidx_bufferSize
                   );
-
 #endif
 
 

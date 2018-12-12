@@ -2643,7 +2643,7 @@ OnDemandDataWarehouse::emitPIDX(       PIDXOutputContext & pc
 {
   checkGetAccess( label, matlIndex, patch );
 
-  Variable* m_var = nullptr;
+  Variable* var = nullptr;
   IntVector l, h;
 
   if( patch ) {
@@ -2677,14 +2677,14 @@ OnDemandDataWarehouse::emitPIDX(       PIDXOutputContext & pc
             break;
           }
         }
-        m_var = v;
+        var = v;
       }
       break;
     case TypeDescription::ParticleVariable :
     case TypeDescription::PerPatch :
     default :
       if (m_var_DB.exists(label, matlIndex, patch)) {
-        m_var = m_var_DB.get( label, matlIndex, patch );
+        var = m_var_DB.get( label, matlIndex, patch );
       }
     }
   }
@@ -2704,7 +2704,7 @@ OnDemandDataWarehouse::emitPIDX(       PIDXOutputContext & pc
     }
   }
 
-  if( m_var == nullptr ) {
+  if( var == nullptr ) {
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "OnDemandDataWarehouse::emit ", __FILE__, __LINE__) );
   }
 
