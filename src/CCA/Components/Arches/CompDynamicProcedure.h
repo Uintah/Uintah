@@ -137,7 +137,7 @@ private:
   bool d_3d_periodic;
 
   const VarLabel* d_denRefArrayLabel;
-  
+
   template< typename grid_T, typename grid_CT>
   void apply_zero_neumann(  const Patch* patch, grid_T& var,
                            grid_T& var2, grid_CT vol_fraction ){

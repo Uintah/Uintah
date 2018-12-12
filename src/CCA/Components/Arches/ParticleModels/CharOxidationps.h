@@ -34,9 +34,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -237,6 +237,7 @@ TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 template <typename T>
 TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskTimestepInitFunctionPointers()
 {
@@ -246,6 +247,7 @@ TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskTimestepInitFunctionPoint
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 template <typename T>
 TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskRestartInitFunctionPointers()
 {

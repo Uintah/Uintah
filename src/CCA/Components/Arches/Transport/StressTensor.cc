@@ -52,6 +52,7 @@ TaskAssignedExecutionSpace StressTensor::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace StressTensor::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -61,6 +62,7 @@ TaskAssignedExecutionSpace StressTensor::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace StressTensor::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

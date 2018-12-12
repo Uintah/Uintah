@@ -20,9 +20,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -131,20 +131,22 @@ private:
                                        );
   }
 
-template <typename T>
-TaskAssignedExecutionSpace TaylorGreen3D<T>::loadTaskTimestepInitFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &TaylorGreen3D<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &TaylorGreen3D<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
-}
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace TaylorGreen3D<T>::loadTaskTimestepInitFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                       , &TaylorGreen3D<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &TaylorGreen3D<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       );
+  }
 
-template <typename T>
-TaskAssignedExecutionSpace TaylorGreen3D<T>::loadTaskRestartInitFunctionPointers()
-{
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace TaylorGreen3D<T>::loadTaskRestartInitFunctionPointers()
+  {
+    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>

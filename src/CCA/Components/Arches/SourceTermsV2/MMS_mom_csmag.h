@@ -19,9 +19,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -139,6 +139,7 @@ TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 template <typename T>
 TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskTimestepInitFunctionPointers()
 {
@@ -148,6 +149,7 @@ TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskTimestepInitFunctionPointer
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 template <typename T>
 TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskRestartInitFunctionPointers()
 {

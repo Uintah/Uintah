@@ -50,9 +50,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -188,6 +188,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace TaskAlgebra<T>::loadTaskTimestepInitFunctionPointers()
   {
@@ -197,6 +198,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace TaskAlgebra<T>::loadTaskRestartInitFunctionPointers()
   {

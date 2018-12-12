@@ -34,6 +34,7 @@ TaskAssignedExecutionSpace sumRadiation::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sumRadiation::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -42,11 +43,11 @@ TaskAssignedExecutionSpace sumRadiation::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sumRadiation::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
-
 
 //--------------------------------------------------------------------------------------------------
 void

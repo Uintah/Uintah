@@ -22,9 +22,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -153,6 +153,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskTimestepInitFunctionPointers()
   {
@@ -162,12 +163,14 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskRestartInitFunctionPointers()
   {
     return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
   void ExampleParticleModel<IT, DT>::problemSetup( ProblemSpecP& db ){
 

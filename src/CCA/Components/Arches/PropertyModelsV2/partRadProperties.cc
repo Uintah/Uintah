@@ -71,6 +71,7 @@ TaskAssignedExecutionSpace partRadProperties::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace partRadProperties::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -80,10 +81,12 @@ TaskAssignedExecutionSpace partRadProperties::loadTaskTimestepInitFunctionPointe
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace partRadProperties::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
+
 //---------------------------------------------------------------------------
 //Method: Problem Setup
 //---------------------------------------------------------------------------

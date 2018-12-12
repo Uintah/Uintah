@@ -41,6 +41,7 @@ TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -50,6 +51,7 @@ TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskTimestepInitFunctionPoin
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

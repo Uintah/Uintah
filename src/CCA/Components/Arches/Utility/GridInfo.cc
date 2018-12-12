@@ -35,6 +35,7 @@ TaskAssignedExecutionSpace GridInfo::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GridInfo::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -44,10 +45,12 @@ TaskAssignedExecutionSpace GridInfo::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GridInfo::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
+
 //--------------------------------------------------------------------------------------------------
 void
 GridInfo::create_local_labels(){

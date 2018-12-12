@@ -41,6 +41,7 @@ TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -49,11 +50,11 @@ TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskTimestepInitFunctionPointer
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskRestartInitFunctionPointers()
 {
     return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
-
 
 //--------------------------------------------------------------------------------------------------
 void DQMOMNoInversion::problemSetup( ProblemSpecP& db ){

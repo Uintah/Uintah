@@ -45,6 +45,7 @@ TaskAssignedExecutionSpace SurfaceNormals::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceNormals::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -53,6 +54,7 @@ TaskAssignedExecutionSpace SurfaceNormals::loadTaskTimestepInitFunctionPointers(
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceNormals::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

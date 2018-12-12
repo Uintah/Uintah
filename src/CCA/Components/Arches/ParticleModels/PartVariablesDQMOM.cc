@@ -39,6 +39,7 @@ TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -47,6 +48,7 @@ TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskTimestepInitFunctionPoint
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

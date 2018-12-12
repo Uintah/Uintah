@@ -25,9 +25,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -182,6 +182,7 @@ TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 template <typename T>
 TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskTimestepInitFunctionPointers()
 {
@@ -192,11 +193,13 @@ TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskTimestepInitFunctionPoin
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 template <typename T>
 TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
+
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){

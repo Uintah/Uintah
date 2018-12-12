@@ -54,6 +54,7 @@ TaskAssignedExecutionSpace gasRadProperties::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace gasRadProperties::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -62,6 +63,7 @@ TaskAssignedExecutionSpace gasRadProperties::loadTaskTimestepInitFunctionPointer
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace gasRadProperties::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

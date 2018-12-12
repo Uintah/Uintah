@@ -45,6 +45,7 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RateDeposition::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -53,6 +54,7 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskTimestepInitFunctionPointers(
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RateDeposition::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

@@ -52,9 +52,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
@@ -189,6 +189,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace SUpdate<T>::loadTaskTimestepInitFunctionPointers()
   {
@@ -199,11 +200,13 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace SUpdate<T>::loadTaskRestartInitFunctionPointers()
   {
     return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
+
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void SUpdate<T>::problemSetup( ProblemSpecP& db ){

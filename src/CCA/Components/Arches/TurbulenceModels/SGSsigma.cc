@@ -57,6 +57,7 @@ TaskAssignedExecutionSpace SGSsigma::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SGSsigma::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -65,6 +66,7 @@ TaskAssignedExecutionSpace SGSsigma::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SGSsigma::loadTaskRestartInitFunctionPointers()
 {
  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

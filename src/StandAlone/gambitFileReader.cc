@@ -32,7 +32,6 @@
 #include <vector>                   
 #include <cmath>
 #include <cstdlib>
-
 #define d_SMALL_NUM 1e-100;
 using namespace std;
 

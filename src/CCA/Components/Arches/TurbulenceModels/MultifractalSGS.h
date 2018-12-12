@@ -18,9 +18,9 @@ namespace Uintah{
 
       TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-      TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-    
       TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+      TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
       void problemSetup( ProblemSpecP& db );
 

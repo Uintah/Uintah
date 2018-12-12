@@ -20,9 +20,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -153,6 +153,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace ShunnMMSP3<T>::loadTaskTimestepInitFunctionPointers()
   {
@@ -162,11 +163,13 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace ShunnMMSP3<T>::loadTaskRestartInitFunctionPointers()
   {
     return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
+
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void ShunnMMSP3<T>::problemSetup( ProblemSpecP& db ){

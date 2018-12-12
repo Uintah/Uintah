@@ -88,6 +88,7 @@ namespace Uintah{
                                        );
   }
 
+//--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace MultifractalSGS::loadTaskTimestepInitFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -96,6 +97,7 @@ namespace Uintah{
                                        );
   }
 
+//--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace MultifractalSGS::loadTaskRestartInitFunctionPointers()
   {
    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

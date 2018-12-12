@@ -38,9 +38,9 @@ namespace Uintah{
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -192,6 +192,7 @@ namespace Uintah{
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace ShaddixOxidation<T>::loadTaskTimestepInitFunctionPointers()
   {
@@ -201,13 +202,14 @@ namespace Uintah{
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace ShaddixOxidation<T>::loadTaskRestartInitFunctionPointers()
   {
     return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
-
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void ShaddixOxidation<T>::problemSetup( ProblemSpecP& db ){
     proc0cout << "WARNING: ParticleModels ShaddixOxidation needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."

@@ -130,6 +130,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace Diffusion<T>::loadTaskTimestepInitFunctionPointers()
   {
@@ -140,6 +141,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace Diffusion<T>::loadTaskRestartInitFunctionPointers()
   {

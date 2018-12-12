@@ -74,6 +74,7 @@ TaskAssignedExecutionSpace MassFlowRate::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace MassFlowRate::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -82,11 +83,13 @@ TaskAssignedExecutionSpace MassFlowRate::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace MassFlowRate::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
-// Define ----------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------------------------------
 void MassFlowRate::problemSetup( ProblemSpecP& db ){
 
   // Parse from UPS file

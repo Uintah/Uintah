@@ -42,6 +42,7 @@ TaskAssignedExecutionSpace DSFTv2::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DSFTv2::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -50,6 +51,7 @@ TaskAssignedExecutionSpace DSFTv2::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DSFTv2::loadTaskRestartInitFunctionPointers()
 {
  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

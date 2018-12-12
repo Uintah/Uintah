@@ -34,6 +34,7 @@ TaskAssignedExecutionSpace CoalDensity::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CoalDensity::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -42,11 +43,13 @@ TaskAssignedExecutionSpace CoalDensity::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CoalDensity::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 CoalDensity::problemSetup( ProblemSpecP& db ){
 

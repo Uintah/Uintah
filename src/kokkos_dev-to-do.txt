@@ -28,6 +28,7 @@ Cleanup and standardize newly added macros
 
 Standardize boiler plate code added for Kokkos throughout Arches tasks
 - e.g. execution space and memory space template typenames
+- ExecutionObject vs. ExObj
 
 Replace mentions of partitions with task executors
 

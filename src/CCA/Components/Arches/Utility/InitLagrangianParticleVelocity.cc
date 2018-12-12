@@ -38,7 +38,7 @@ TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskEvalFunctionP
                                      );
 }
 
-
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -47,11 +47,13 @@ TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskTimestepInitF
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 InitLagrangianParticleVelocity::problemSetup( ProblemSpecP& db ){
 

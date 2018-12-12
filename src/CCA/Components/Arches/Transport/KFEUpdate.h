@@ -52,9 +52,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
@@ -189,6 +189,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskTimestepInitFunctionPointers()
   {
@@ -199,12 +200,14 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskRestartInitFunctionPointers()
   {
     return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
-  //------------------------------------------------------------------------------------------------
+
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void KFEUpdate<T>::problemSetup( ProblemSpecP& db ){
 

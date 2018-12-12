@@ -39,24 +39,27 @@ TaskAssignedExecutionSpace BoundaryInfo::loadTaskEvalFunctionPointers()
                                      );
 }
 
-  TaskAssignedExecutionSpace BoundaryInfo::loadTaskTimestepInitFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &BoundaryInfo::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &BoundaryInfo::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       );
-  }
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BoundaryInfo::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &BoundaryInfo::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &BoundaryInfo::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     );
+}
 
-  TaskAssignedExecutionSpace BoundaryInfo::loadTaskRestartInitFunctionPointers()
-  {
-   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BoundaryInfo::loadTaskRestartInitFunctionPointers()
+{
+ return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
 
-
+//--------------------------------------------------------------------------------------------------
 void
 BoundaryInfo::problemSetup( ProblemSpecP& db ){
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 BoundaryInfo::create_local_labels(){
 

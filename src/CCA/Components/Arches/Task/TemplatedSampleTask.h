@@ -19,9 +19,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -59,7 +59,8 @@ protected:
     template <typename ExecutionSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
+    template <typename ExecutionSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj ){}
 
     template <typename ExecutionSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
@@ -72,16 +73,19 @@ private:
 
   //Function definitions:
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TemplatedSampleTask<T>::TemplatedSampleTask( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ){
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TemplatedSampleTask<T>::~TemplatedSampleTask()
   {
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskComputeBCsFunctionPointers()
   {
@@ -92,6 +96,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskInitializeFunctionPointers()
   {
@@ -102,6 +107,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskEvalFunctionPointers()
   {
@@ -112,6 +118,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskTimestepInitFunctionPointers()
   {
@@ -122,16 +129,19 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskRestartInitFunctionPointers()
   {
     return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void TemplatedSampleTask<T>::problemSetup( ProblemSpecP& db ){
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void TemplatedSampleTask<T>::create_local_labels(){
 
@@ -139,7 +149,7 @@ private:
 
   }
 
-
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void TemplatedSampleTask<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
                                                     const bool packed_tasks ){
@@ -149,6 +159,7 @@ private:
 
   }
 
+  //--------------------------------------------------------------------------------------------------
   //This is the work for the task.  First, get the variables. Second, do the work!
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
@@ -162,7 +173,7 @@ private:
 
   }
 
-
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void TemplatedSampleTask<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
@@ -171,6 +182,7 @@ private:
 
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
   void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
@@ -183,10 +195,12 @@ private:
 
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void TemplatedSampleTask<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
   void TemplatedSampleTask<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}

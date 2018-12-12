@@ -22,9 +22,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -134,6 +134,7 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T, typename CT>
   TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskTimestepInitFunctionPointers()
   {
@@ -143,12 +144,14 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T, typename CT>
   TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskRestartInitFunctionPointers()
   {
     return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T, typename CT>
   void WaveFormInit<T, CT>::problemSetup( ProblemSpecP& db ){
 

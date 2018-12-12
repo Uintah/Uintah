@@ -1156,16 +1156,14 @@ DetailedTasks::getDeviceCheckIfExecutableTask(DetailedTask *& dtask)
 bool
 DetailedTasks::getDeviceReadyToExecuteTask(DetailedTask *& dtask)
 {
-
   //This function should ONLY be called within runTasks() part 1.
   //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
-  bool retVal{false};
+  bool retVal = false;
   dtask = nullptr;
 
   auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
   TaskPool::iterator device_readyToExecute_pool_iter = device_readyToExecute_pool.find_any(ready_request);
   if (device_readyToExecute_pool_iter) {
-
     dtask = *device_readyToExecute_pool_iter;
     int task_to_debug_threshold = Uintah::Parallel::getAmountTaskNameExpectedToRun();
 

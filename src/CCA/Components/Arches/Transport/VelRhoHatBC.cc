@@ -45,11 +45,13 @@ TaskAssignedExecutionSpace VelRhoHatBC::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VelRhoHatBC::loadTaskTimestepInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VelRhoHatBC::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

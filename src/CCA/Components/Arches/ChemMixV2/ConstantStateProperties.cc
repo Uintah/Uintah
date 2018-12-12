@@ -42,6 +42,7 @@ TaskAssignedExecutionSpace ConstantStateProperties::loadTaskEvalFunctionPointers
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ConstantStateProperties::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -50,6 +51,7 @@ TaskAssignedExecutionSpace ConstantStateProperties::loadTaskTimestepInitFunction
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ConstantStateProperties::loadTaskRestartInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this

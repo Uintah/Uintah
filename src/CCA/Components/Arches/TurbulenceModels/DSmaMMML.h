@@ -123,6 +123,7 @@ TaskAssignedExecutionSpace DSmaMMML<TT>::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 template<typename TT>
 TaskAssignedExecutionSpace DSmaMMML<TT>::loadTaskTimestepInitFunctionPointers()
 {
@@ -132,11 +133,13 @@ TaskAssignedExecutionSpace DSmaMMML<TT>::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 template<typename TT>
 TaskAssignedExecutionSpace DSmaMMML<TT>::loadTaskRestartInitFunctionPointers()
 {
  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
+
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
 DSmaMMML<TT>::problemSetup( ProblemSpecP& db ){

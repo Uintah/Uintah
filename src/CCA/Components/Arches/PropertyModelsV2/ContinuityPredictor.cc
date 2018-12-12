@@ -42,6 +42,7 @@ TaskAssignedExecutionSpace ContinuityPredictor::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ContinuityPredictor::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -51,10 +52,12 @@ TaskAssignedExecutionSpace ContinuityPredictor::loadTaskTimestepInitFunctionPoin
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ContinuityPredictor::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
+
 //--------------------------------------------------------------------------------------------------
 void
 ContinuityPredictor::problemSetup( ProblemSpecP& db ){

@@ -45,15 +45,18 @@ TaskAssignedExecutionSpace AddPressGradient::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace AddPressGradient::loadTaskTimestepInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace AddPressGradient::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
+
 //--------------------------------------------------------------------------------------------------
 void AddPressGradient::problemSetup( ProblemSpecP& db ){
 

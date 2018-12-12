@@ -315,7 +315,7 @@ DWDatabase<DomainType>::decrementScrubCount( const VarLabel   * label
                                            )
 {
   // Dav's conjectures on how this works:
-  //   setScrubCount is called the first time with "count" set to some X.
+  //   setScrubCount is called the first time with "count" set to some X.  
   //   This X represents the number of tasks that will use the var.  Later,
   //   after a task has used the var, it will call decrementScrubCount
   //   If scrubCount then is equal to 0, the var is scrubbed.
@@ -811,5 +811,6 @@ struct hash<VarLabelMatl<DomainType> > {
 };
 
 }  // end namespace std
+
 
 #endif // CCA_COMPONENTS_SCHEDULERS_DWDATABASE_H

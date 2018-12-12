@@ -32,6 +32,7 @@ TaskAssignedExecutionSpace RandParticleLoc::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RandParticleLoc::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -40,6 +41,7 @@ TaskAssignedExecutionSpace RandParticleLoc::loadTaskTimestepInitFunctionPointers
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RandParticleLoc::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

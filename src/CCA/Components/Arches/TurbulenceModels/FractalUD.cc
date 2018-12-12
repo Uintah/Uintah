@@ -88,18 +88,21 @@ namespace Uintah{
                                        );
   }
 
-TaskAssignedExecutionSpace FractalUD::loadTaskTimestepInitFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &FractalUD::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &FractalUD::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
-}
+  //--------------------------------------------------------------------------------------------------
+  TaskAssignedExecutionSpace FractalUD::loadTaskTimestepInitFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                       , &FractalUD::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                       , &FractalUD::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       );
+  }
 
-TaskAssignedExecutionSpace FractalUD::loadTaskRestartInitFunctionPointers()
-{
- return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
+  //--------------------------------------------------------------------------------------------------
+  TaskAssignedExecutionSpace FractalUD::loadTaskRestartInitFunctionPointers()
+  {
+    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
   //---------------------------------------------------------------------------------
   void
     FractalUD::problemSetup( ProblemSpecP& db ){

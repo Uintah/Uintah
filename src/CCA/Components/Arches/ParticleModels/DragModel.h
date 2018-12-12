@@ -48,9 +48,9 @@ namespace Uintah{
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -178,6 +178,7 @@ namespace Uintah{
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskTimestepInitFunctionPointers()
   {
@@ -187,13 +188,14 @@ namespace Uintah{
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskRestartInitFunctionPointers()
   {
     return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
-
+  //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
   void DragModel<IT, DT>::problemSetup( ProblemSpecP& db ){
     proc0cout << "WARNING: ParticleModels DragModel needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."

@@ -43,6 +43,7 @@ TaskAssignedExecutionSpace GravityA::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GravityA::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -51,6 +52,7 @@ TaskAssignedExecutionSpace GravityA::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GravityA::loadTaskRestartInitFunctionPointers()
 {
  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

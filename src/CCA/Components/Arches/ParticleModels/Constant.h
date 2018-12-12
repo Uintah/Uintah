@@ -36,9 +36,9 @@ namespace Uintah{
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -152,6 +152,7 @@ namespace Uintah{
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace Constant<T>::loadTaskTimestepInitFunctionPointers()
   {
@@ -161,6 +162,7 @@ namespace Uintah{
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace Constant<T>::loadTaskRestartInitFunctionPointers()
   {

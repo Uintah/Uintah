@@ -41,6 +41,7 @@ TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskEvalFunctionPointers(
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -49,6 +50,7 @@ TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskTimestepInitFunctionP
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

@@ -77,9 +77,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -205,10 +205,6 @@ enum cartSpace {x_direc,y_direc,z_direc};
              //}
           //}
 
-
-
-
-
 template<typename ExecutionSpace, typename MemSpace, unsigned int Cscheme > 
 inline
 typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, void>::type
@@ -228,8 +224,8 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
              }
           }
 
-
 #if defined(UINTAH_ENABLE_KOKKOS)
+
 template<typename ExecutionSpace, typename MemSpace, unsigned int Cscheme > 
 inline
 typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, void>::type
@@ -250,6 +246,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
           }
 
 #if defined(HAVE_CUDA)
+
 template<typename ExecutionSpace, typename MemSpace, unsigned int Cscheme > 
 inline
 typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, void>::type
@@ -273,9 +270,6 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
 #endif
 
   };
-
-
-
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT>
@@ -332,6 +326,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T, typename PT>
   TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskTimestepInitFunctionPointers()
   {
@@ -342,6 +337,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T, typename PT>
   TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskRestartInitFunctionPointers()
   {

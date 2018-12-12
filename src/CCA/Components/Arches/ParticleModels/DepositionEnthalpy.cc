@@ -45,6 +45,7 @@ TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -53,11 +54,13 @@ TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskTimestepInitFunctionPoint
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 DepositionEnthalpy::problemSetup( ProblemSpecP& db ){
 

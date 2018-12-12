@@ -33,6 +33,7 @@ TaskAssignedExecutionSpace BurnsChriston::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BurnsChriston::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -41,7 +42,7 @@ TaskAssignedExecutionSpace BurnsChriston::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
-
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BurnsChriston::loadTaskRestartInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
@@ -49,7 +50,6 @@ TaskAssignedExecutionSpace BurnsChriston::loadTaskRestartInitFunctionPointers()
                                      , &BurnsChriston::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
-
 
 //--------------------------------------------------------------------------------------------------
 void

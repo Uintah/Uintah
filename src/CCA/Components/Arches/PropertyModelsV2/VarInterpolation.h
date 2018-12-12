@@ -21,9 +21,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -157,6 +157,7 @@ TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskEvalFunctionPointers
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
 TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskTimestepInitFunctionPointers()
 {
@@ -166,6 +167,7 @@ TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskTimestepInitFunction
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
 TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskRestartInitFunctionPointers()
 {

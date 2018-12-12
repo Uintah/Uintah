@@ -70,6 +70,7 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld,
   d_divQLabel     = VarLabel::create( "divQ",     CCVariable<double>::getTypeDescription() );
   d_compAbskgLabel= VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );
   d_cellTypeLabel = VarLabel::create( "cellType", CCVariable<int>::getTypeDescription() );
+
   d_gac = Ghost::AroundCells;
   d_gn  = Ghost::None;
   d_matl = 0;

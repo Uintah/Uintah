@@ -43,6 +43,7 @@ TaskAssignedExecutionSpace DensityPredictor::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DensityPredictor::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -51,6 +52,7 @@ TaskAssignedExecutionSpace DensityPredictor::loadTaskTimestepInitFunctionPointer
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DensityPredictor::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

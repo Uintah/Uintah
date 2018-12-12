@@ -44,6 +44,7 @@ TaskAssignedExecutionSpace DepositionVelocity::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DepositionVelocity::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -52,11 +53,13 @@ TaskAssignedExecutionSpace DepositionVelocity::loadTaskTimestepInitFunctionPoint
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DepositionVelocity::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 DepositionVelocity::problemSetup( ProblemSpecP& db ){
 

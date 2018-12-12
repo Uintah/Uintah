@@ -52,9 +52,9 @@ public:
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
@@ -100,7 +100,6 @@ protected:
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
-
 
 private:
 
@@ -189,6 +188,7 @@ private:
                                        );
   }
 
+ //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace TimeAve<T>::loadTaskTimestepInitFunctionPointers()
   {
@@ -199,11 +199,13 @@ private:
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace TimeAve<T>::loadTaskRestartInitFunctionPointers()
   {
     return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
+
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void TimeAve<T>::problemSetup( ProblemSpecP& db ){

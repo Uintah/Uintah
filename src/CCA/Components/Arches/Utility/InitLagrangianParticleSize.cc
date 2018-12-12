@@ -39,6 +39,7 @@ TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskEvalFunctionPoint
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -47,6 +48,7 @@ TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskTimestepInitFunct
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

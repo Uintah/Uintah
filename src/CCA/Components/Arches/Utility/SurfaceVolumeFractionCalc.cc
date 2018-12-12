@@ -34,6 +34,7 @@ TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskEvalFunctionPointe
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -43,11 +44,11 @@ TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskTimestepInitFuncti
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
-
 
 //--------------------------------------------------------------------------------------------------
 void SurfaceVolumeFractionCalc::problemSetup( ProblemSpecP& db ){

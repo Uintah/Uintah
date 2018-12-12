@@ -33,6 +33,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace cloudBenchmark::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -41,6 +42,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskTimestepInitFunctionPointers(
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace cloudBenchmark::loadTaskRestartInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
@@ -48,6 +50,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskRestartInitFunctionPointers()
                                      , &cloudBenchmark::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      );
 }
+
 //--------------------------------------------------------------------------------------------------
 void
 cloudBenchmark::problemSetup( ProblemSpecP& db ){

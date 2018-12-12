@@ -45,9 +45,9 @@ namespace Uintah{
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -190,6 +190,7 @@ namespace Uintah{
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace ShaddixEnthalpy<T>::loadTaskTimestepInitFunctionPointers()
   {
@@ -199,6 +200,7 @@ namespace Uintah{
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace ShaddixEnthalpy<T>::loadTaskRestartInitFunctionPointers()
   {

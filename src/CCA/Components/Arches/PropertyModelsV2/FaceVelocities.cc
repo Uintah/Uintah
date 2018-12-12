@@ -54,6 +54,7 @@ TaskAssignedExecutionSpace FaceVelocities::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace FaceVelocities::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -64,6 +65,7 @@ TaskAssignedExecutionSpace FaceVelocities::loadTaskTimestepInitFunctionPointers(
    //return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE ; // No task (not supported currently)
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace FaceVelocities::loadTaskRestartInitFunctionPointers()
 {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

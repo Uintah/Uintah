@@ -44,6 +44,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VariableStats::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -52,6 +53,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VariableStats::loadTaskRestartInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this

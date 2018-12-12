@@ -45,6 +45,7 @@ TaskAssignedExecutionSpace WALE::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WALE::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -54,6 +55,7 @@ TaskAssignedExecutionSpace WALE::loadTaskTimestepInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WALE::loadTaskRestartInitFunctionPointers()
 {
  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;

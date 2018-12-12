@@ -42,9 +42,9 @@ namespace Uintah{
 
     TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-  
     TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -175,6 +175,7 @@ namespace Uintah{
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskTimestepInitFunctionPointers()
   {
@@ -184,12 +185,14 @@ namespace Uintah{
                                        );
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskRestartInitFunctionPointers()
   {
   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void FOWYDevol<T>::problemSetup( ProblemSpecP& db ){
     proc0cout << "WARNING: ParticleModels FOWYDevol needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."

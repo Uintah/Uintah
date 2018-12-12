@@ -515,13 +515,13 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
 
 }
 
-
 //______________________________________________________________________
 // This method puts an empty placeholder entry into the GPUDW database and marks it as unallocated
 __host__ void
 GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 offset, int3 size)
 {
 
+  varLock->lock();
 
   // If it's a normal non-staging variable, check if doesn't exist.  If so, add an "unallocated" entry.
   // If it's a staging variable, then still check if the non-staging part exists.  A staging must exist within a non-staging variable.
@@ -529,10 +529,6 @@ GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int 
   // For example, suppose node A has patch 0, and node B has patch 1, and A's patch 0 needs ghost cells from B's patch 1.  Node A will
   // receive those ghost cells, but they will be marked as belonging to patch 1.  Since A doesn't have the regular non-staging var
   // for patch 1, we make an empty placeholder for patch 1 so A can have a staging var to hold the ghost cell for patch 1.
-
-
-
-  varLock->lock();  //Lock this entire section
 
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);

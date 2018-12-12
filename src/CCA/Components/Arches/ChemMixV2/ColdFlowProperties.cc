@@ -42,6 +42,7 @@ TaskAssignedExecutionSpace ColdFlowProperties::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ColdFlowProperties::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -51,6 +52,7 @@ TaskAssignedExecutionSpace ColdFlowProperties::loadTaskTimestepInitFunctionPoint
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ColdFlowProperties::loadTaskRestartInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
@@ -59,7 +61,6 @@ TaskAssignedExecutionSpace ColdFlowProperties::loadTaskRestartInitFunctionPointe
                                      , &ColdFlowProperties::restart_initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
-
 
 //--------------------------------------------------------------------------------------------------
 void ColdFlowProperties::problemSetup( ProblemSpecP& db ){

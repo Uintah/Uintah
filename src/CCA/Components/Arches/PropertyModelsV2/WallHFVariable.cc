@@ -48,6 +48,7 @@ TaskAssignedExecutionSpace WallHFVariable::loadTaskEvalFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WallHFVariable::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
@@ -56,6 +57,7 @@ TaskAssignedExecutionSpace WallHFVariable::loadTaskTimestepInitFunctionPointers(
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WallHFVariable::loadTaskRestartInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
@@ -64,6 +66,7 @@ TaskAssignedExecutionSpace WallHFVariable::loadTaskRestartInitFunctionPointers()
                                      );
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 WallHFVariable::problemSetup( ProblemSpecP& db ){
 
