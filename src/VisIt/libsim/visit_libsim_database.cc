@@ -220,7 +220,12 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         std::string varname = stepInfo->varInfo[i].name;
         std::string vartype = stepInfo->varInfo[i].type;
         
-        VisIt_VarCentering cent = VISIT_VARCENTERING_NODE;
+	if (vartype.find("filePointer") != std::string::npos)
+	{
+	  continue;
+	}
+	
+	VisIt_VarCentering cent = VISIT_VARCENTERING_NODE;
 
         // j = -1 -> all materials (*)
         int numMaterials = stepInfo->varInfo[i].materials.size();
@@ -295,7 +300,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 
           isPerPatchVar = true;
         }
-        else if (vartype.find("ReductionVariable") != std::string::npos &&
+        else if (vartype.find("ReductionVariable") != std::string::npos ||
                  vartype.find("SoleVariable")      != std::string::npos)
         {
           continue;
@@ -307,7 +312,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
             std::stringstream msg;
             msg << "Visit libsim - "
                 << "Uintah variable \"" << varname << "\"  "
-                << "has an unknown variable type \""
+                << "has an unknown grid variable type \""
                 << vartype << "\"";
             
             VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
@@ -1598,12 +1603,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     // bool global = (varName.find("Global") != std::string::npos);
     // bool local  = (varName.find("Local" ) != std::string::npos);
 
-    bool global = false;
-    bool local  = true;
+    // bool global = false;
+    // bool local  = true;
 
     // Only rank 0 return the whole of the mesh.
-    if( global && sim->myworld->myRank() != 0 )
-      return VISIT_INVALID_HANDLE;
+    // if( global && sim->myworld->myRank() != 0 )
+    //   return VISIT_INVALID_HANDLE;
 
     unsigned int totalCores = 0;
     unsigned int nValues = 0;
@@ -2626,68 +2631,69 @@ void addMeshVariable( visit_handle md, std::set<std::string> &mesh_vars_added,
   {
     mesh_vars_added.insert(meshName+varName);
     
-    visit_handle vmd = VISIT_INVALID_HANDLE;
+    int nComponents;
+    int type;
     
+    // 3 -> point/vector dimension
+    if (varType.find("Point") != std::string::npos ||
+	varType.find("Vector") != std::string::npos ||
+	varType.find("IntVector") != std::string::npos)
+    {
+      type = VISIT_VARTYPE_VECTOR;
+      nComponents = 3;
+    }
+    // 9 -> tensor 
+    else if (varType.find("Matrix3") != std::string::npos)
+    {
+      type = VISIT_VARTYPE_TENSOR;
+      nComponents = 9;
+    }
+    // 7 -> vector
+    else if (varType.find("Stencil7") != std::string::npos)
+    {
+      type = VISIT_VARTYPE_VECTOR;
+      nComponents = 7;
+    }
+    // 4 -> vector
+    else if (varType.find("Stencil4") != std::string::npos)
+    {
+      type = VISIT_VARTYPE_VECTOR;
+      nComponents = 4;
+    }
+    // 1 -> scalar
+    else
+    {
+      type = VISIT_VARTYPE_SCALAR;
+      nComponents = 1;
+    }
+    // else
+    // {
+    //   std::stringstream msg;
+    //   msg << "Visit libsim - "
+    // 	  << "Uintah variable \"" << varName << "\"  "
+    // 	  << "has an unknown grid variable type \""
+    // 	  << varType << "\"";
+      
+    //   VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+      
+    //   return;
+    // }
+
+    visit_handle vmd = VISIT_INVALID_HANDLE;
+
     if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
     {
       VisIt_VariableMetaData_setName(vmd, varName.c_str());
       VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
       VisIt_VariableMetaData_setCentering(vmd, cent);
       
-      // 3 -> point/vector dimension
-      if (varType.find("Point") != std::string::npos ||
-          varType.find("Vector") != std::string::npos ||
-          varType.find("IntVector") != std::string::npos)
-      {
-        VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
-        VisIt_VariableMetaData_setNumComponents(vmd, 3);
-      }
-      // 9 -> tensor 
-      else if (varType.find("Matrix3") != std::string::npos)
-      {
-        VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_TENSOR);
-        VisIt_VariableMetaData_setNumComponents(vmd, 9);
-      }
-      // 7 -> vector
-      else if (varType.find("Stencil7") != std::string::npos)
-      {
-        VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
-        VisIt_VariableMetaData_setNumComponents(vmd, 7);
-      }
-      // 4 -> vector
-      else if (varType.find("Stencil4") != std::string::npos)
-      {
-        VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
-        VisIt_VariableMetaData_setNumComponents(vmd, 4);
-      }
-      // 1 -> scalar
-      else if (varType.find("CCVariable")   != std::string::npos ||
-               varType.find("NCVariable")   != std::string::npos ||
-               varType.find("SFCXVariable") != std::string::npos ||
-               varType.find("SFCYVariable") != std::string::npos ||
-               varType.find("SFCZVariable") != std::string::npos ||
-               varType.find("PerPatch")     != std::string::npos )
-      {
-        VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-        VisIt_VariableMetaData_setNumComponents(vmd, 1);
-      }
-      else
-      {
-        // std::stringstream msg;
-        // msg << "Visit libsim - "
-        //     << "Uintah variable \"" << varName << "\"  "
-        //     << "has an unknown variable type \""
-        //     << varType << "\"";
-      
-        // VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
-        VisIt_VariableMetaData_free(vmd);
-        
-        return;
-      }
+      VisIt_VariableMetaData_setType(vmd, type);
+      VisIt_VariableMetaData_setNumComponents(vmd, nComponents);
       
       // ARS - FIXME
       //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
       VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+      
       VisIt_SimulationMetaData_addVariable(md, vmd);
     }
   }
