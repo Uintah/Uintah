@@ -125,6 +125,7 @@ class Output;
     bool        d_GEVelProj;                                   // Use the velocity gradient in projecting particle velocity to grid
 
     bool        d_doAuthigenesis;
+    bool        d_changeGrainMaterials;
     std::string d_authigenesisBaseFilename;                      // File containing overgrowth points
     bool        d_with_ice;
     bool        d_with_arches;

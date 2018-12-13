@@ -95,6 +95,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_prescribedDeformationFile          =  "time_defgrad_rotation";
   d_exactDeformation                   =  false;
   d_doAuthigenesis                     =  false;
+  d_changeGrainMaterials               =  false;
   d_authigenesisBaseFilename           =  "";
   d_insertParticles                    =  false;
   d_doGridReset                        =  true;
@@ -258,6 +259,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   mpm_flag_ps->get("DoAuthigenesis",     d_doAuthigenesis);
   mpm_flag_ps->get("AuthigenesisBaseFilename",d_authigenesisBaseFilename);
+  mpm_flag_ps->get("ChangeGrainMaterials",    d_changeGrainMaterials);
 
   //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);

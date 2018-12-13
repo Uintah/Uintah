@@ -555,6 +555,9 @@ MPMLabel::MPMLabel()
   AddedParticlesLabel = VarLabel::create("AddedParticles",
                                  sum_vartype::getTypeDescription());
 
+  ChangedGrainMaterialsLabel = VarLabel::create("ChangedGrainMaterials",
+                                 sum_vartype::getTypeDescription());
+
   for(int iside=0;iside<6;iside++) {
       string label_name = Patch::getFaceName( (Patch::FaceType) iside ); // FIXME: assumes face indices
       
@@ -864,7 +867,21 @@ MPMLabel::MPMLabel()
   pCellNATracerIDLabel =
     VarLabel::create("cellNATracerID", 
                                    CCVariable<short int>::getTypeDescription());
-} 
+
+  bElBarLabel                = VarLabel::create("p.bElBar",
+                             ParticleVariable<Matrix3>::getTypeDescription());
+  bElBarLabel_preReloc       = VarLabel::create("p.bElBar+",
+                             ParticleVariable<Matrix3>::getTypeDescription());
+
+  pPlasticStrainLabel          = VarLabel::create("p.plasticStrain", 
+                         ParticleVariable<double>::getTypeDescription() );
+  pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
+                         ParticleVariable<double>::getTypeDescription() );
+  pYieldStressLabel            = VarLabel::create("p.yieldStress",   
+                         ParticleVariable<double>::getTypeDescription() );
+  pYieldStressLabel_preReloc   = VarLabel::create("p.yieldStress+",  
+                         ParticleVariable<double>::getTypeDescription() );
+}
 
 MPMLabel::~MPMLabel()
 {
@@ -1047,6 +1064,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(StrainEnergyLabel);
   VarLabel::destroy(KineticEnergyLabel);
   VarLabel::destroy(AddedParticlesLabel);
+  VarLabel::destroy(ChangedGrainMaterialsLabel);
   VarLabel::destroy(ThermalEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
   VarLabel::destroy(TotalVolumeDeformedLabel);
@@ -1175,4 +1193,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czBotMatLabel_preReloc);
   VarLabel::destroy(czFailedLabel);
   VarLabel::destroy(czFailedLabel_preReloc);
+  VarLabel::destroy(bElBarLabel);
+  VarLabel::destroy(bElBarLabel_preReloc);
+  VarLabel::destroy(pPlasticStrainLabel);
+  VarLabel::destroy(pPlasticStrainLabel_preReloc);
+  VarLabel::destroy(pYieldStressLabel);
+  VarLabel::destroy(pYieldStressLabel_preReloc);
 }

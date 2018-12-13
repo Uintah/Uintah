@@ -224,6 +224,7 @@ namespace Uintah {
       const VarLabel* ThermalEnergyLabel;
       const VarLabel* TotalMassLabel;
       const VarLabel* AddedParticlesLabel;
+      const VarLabel* ChangedGrainMaterialsLabel;
       const VarLabel* BndyForceLabel[6];
       const VarLabel* BndyTractionLabel[6];
       const VarLabel* BndyContactAreaLabel[6];
@@ -359,6 +360,15 @@ namespace Uintah {
       const VarLabel* pCellNATracerIDLabel;
       const VarLabel* pModalIDLabel;
       const VarLabel* pModalIDLabel_preReloc;
+
+      // The below is hopefully temporary, 12-13-18 JEG
+      const VarLabel* bElBarLabel;
+      const VarLabel* bElBarLabel_preReloc;
+      const VarLabel* pPlasticStrainLabel;
+      const VarLabel* pPlasticStrainLabel_preReloc;
+      const VarLabel* pYieldStressLabel;
+      const VarLabel* pYieldStressLabel_preReloc;
+
     };
 } // End namespace Uintah
 

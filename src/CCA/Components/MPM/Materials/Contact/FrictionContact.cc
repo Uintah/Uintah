@@ -211,6 +211,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 //              double sepscal= Dot(sepvec,normal);
               double sepscal= sepvec.length();
               if(sepscal < sepDis){
+//              if(sepscal < sepDis || totalNodalVol/cell_vol >= 1.0){
                double normalDeltaVel=Dot(deltaVelocity,normal);
                Vector Dv(0.,0.,0.);
                double Tn = gnormtraction[n][c];
@@ -402,6 +403,8 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
               double sepscal= sepvec.length();
 
               if(sepscal < sepDis){
+
+//              if(sepscal < sepDis || totalNodalVol/cell_vol >= 1.0){
               double normalDeltaVel=Dot(deltaVelocity,normal);
 
               Vector Dv(0.,0.,0.);

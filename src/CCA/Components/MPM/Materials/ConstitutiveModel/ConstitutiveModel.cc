@@ -465,8 +465,20 @@ ConstitutiveModel::splitCMSpecificParticleData(const Patch* patch,
                                                ParticleVariable<int> &prefOld,
                                                ParticleVariable<int> &prefNew,
                                                const unsigned int oldNumPar,
-                                               const unsigned int numNewPartNeeded,
+                                               const unsigned int numNewPrtNdd,
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw)
 {
 }
+#if 0
+void
+ConstitutiveModel::changeCMSpecificParticleData(const Patch* patch,
+                                                const int dwi,
+                                                const int nDims,
+                                                const unsigned int oldNumPar,
+                                                const unsigned int numNewPrtNdd,
+                                                DataWarehouse* old_dw,
+                                                DataWarehouse* new_dw)
+{
+}
+#endif

@@ -421,6 +421,15 @@ protected:
                             DataWarehouse* new_dw);
 
   //////////
+  // Change grains that are colliding with other grains of the same material:
+  virtual void changeGrainMaterials(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
+
+  //////////
+  //////////
   // Add new particles to the simulation based on criteria TBD:
   virtual void addTracers(const ProcessorGroup*,
                           const PatchSubset* patches,
@@ -575,6 +584,10 @@ protected:
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
+
+  virtual void scheduleChangeGrainMaterials(SchedulerP&, 
+                                            const PatchSet*,
+                                            const MaterialSet*);
 
   void readPrescribedDeformations(std::string filename);
 

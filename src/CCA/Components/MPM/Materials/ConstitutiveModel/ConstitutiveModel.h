@@ -230,9 +230,19 @@ namespace Uintah {
                                              ParticleVariable<int> &prefOld,
                                              ParticleVariable<int> &pref,
                                              const unsigned int oldNumPar,
-                                             const unsigned int numNewPartNeeded,
+                                             const unsigned int numNewPartNdd,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw);
+
+#if 0
+    virtual void changeCMSpecificParticleData(const Patch* patch,
+                                              const int dwi,
+                                              const int nDims,
+                                              const unsigned int oldNumPar,
+                                              const unsigned int numNewPartNdd,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw);
+#endif
 
   protected:
 

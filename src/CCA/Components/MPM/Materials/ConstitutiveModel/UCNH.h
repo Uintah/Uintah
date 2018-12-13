@@ -92,10 +92,6 @@ namespace Uintah {
     const VarLabel* bElBarLabel;
     const VarLabel* bElBarLabel_preReloc;
 
-    const VarLabel* pDeformRateLabel;
-    const VarLabel* pDeformRateLabel_preReloc;
-    
-
     // Plasticity Requirements //
     /////////////////////////////
     const VarLabel* pPlasticStrainLabel;
@@ -236,9 +232,21 @@ namespace Uintah {
                                              ParticleVariable<int> &prefOld,
                                              ParticleVariable<int> &prefNew,
                                              const unsigned int oldNumPar,
-                                             const unsigned int numNewPartNeeded,
+                                             const unsigned int numNewPartNeed,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw);
+
+#if 0
+    virtual void changeCMSpecificParticleData(const Patch* patch,
+                                              const int dwi,
+                                              const int fourOrEight,
+                                              ParticleVariable<int> &prefOld,
+                                              ParticleVariable<int> &prefNew,
+                                              const unsigned int oldNumPar,
+                                              const unsigned int numNewPartNeed,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw);
+#endif
 
   private:
     
