@@ -186,8 +186,8 @@ void particleExtract::problemSetup(const ProblemSpecP& ,
 }
 
 //______________________________________________________________________
-void particleExtract::scheduleInitialize(SchedulerP& sched,
-                                         const LevelP& level)
+void particleExtract::scheduleInitialize(SchedulerP   & sched,
+                                         const LevelP & level)
 {
   int L_indx = level->getIndex();
   if(!doMPMOnLevel(L_indx,level->getGrid()->numLevels())){
@@ -204,11 +204,11 @@ void particleExtract::scheduleInitialize(SchedulerP& sched,
   sched->addTask( t, level->eachPatch(), d_matl_set );
 }
 //______________________________________________________________________
-void particleExtract::initialize(const ProcessorGroup*, 
-                                 const PatchSubset* patches,
-                                 const MaterialSubset*,
-                                 DataWarehouse*,
-                                 DataWarehouse* new_dw)
+void particleExtract::initialize(const ProcessorGroup *, 
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset *,
+                                 DataWarehouse        *,
+                                 DataWarehouse        * new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -226,7 +226,6 @@ void particleExtract::initialize(const ProcessorGroup*,
       particleIndex idx = *iter;
       myFiles[idx] = nullptr;
     }
-    
     
     //__________________________________
     //bullet proofing
@@ -252,12 +251,13 @@ void particleExtract::initialize(const ProcessorGroup*,
     } 
   }  
 }
-
-void particleExtract::restartInitialize()
+//______________________________________________________________________
+void particleExtract::scheduleRestartInitialize(SchedulerP   & sched,
+                                                const LevelP & level)
 {
-// need to do something here
-//  new_dw->put(max_vartype(0.0), ps_lb->lastWriteTimeLabel);
+  scheduleInitialize( sched, level);
 }
+
 //______________________________________________________________________
 void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                                   const LevelP& level)
@@ -282,6 +282,7 @@ void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
   sched->addTask(t, level->eachPatch(),  d_matl_set);
 }
 //______________________________________________________________________
+//
 void particleExtract::doAnalysis_preReloc(const ProcessorGroup* pg,
                                           const PatchSubset* patches,
                                           const MaterialSubset*,
@@ -296,8 +297,8 @@ void particleExtract::doAnalysis_preReloc(const ProcessorGroup* pg,
     int indx = d_matl->getDWIndex();
     
     ParticleSubset* pset = old_dw->getParticleSubset(indx, patch);
-    constParticleVariable<FILE*>myFiles;
-    ParticleVariable<FILE*> myFiles_preReloc;
+    constParticleVariable<FILE*> myFiles;
+    ParticleVariable<FILE*>      myFiles_preReloc;
 
     new_dw->allocateAndPut( myFiles_preReloc, ps_lb->filePointerLabel_preReloc, pset );
 
@@ -322,6 +323,7 @@ void particleExtract::doAnalysis_preReloc(const ProcessorGroup* pg,
 }   
  
 //______________________________________________________________________
+//
 void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
                                          const LevelP& level)
 {
@@ -332,13 +334,12 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
   }
 
   printSchedule(level,cout_doing,"particleExtract::scheduleDoAnalysis");
+  
   Task* t = scinew Task("particleExtract::doAnalysis", 
                    this,&particleExtract::doAnalysis);
                      
-                     
-  t->requires(Task::OldDW, m_simulationTimeLabel);
-  t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
-  
+  sched_TimeVars( t, level, ps_lb->lastWriteTimeLabel, true );
+    
   Ghost::GhostType gn = Ghost::None;
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
@@ -349,18 +350,18 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
     }
     t->requires(Task::NewDW,d_varLabels[i], gn, 0);
   }
+  
   t->requires( Task::NewDW,  M_lb->pXLabel,           gn );
   t->requires( Task::NewDW,  M_lb->pParticleIDLabel,  gn );
   t->requires( Task::NewDW,  M_lb->pColorLabel,       gn );
   t->requires( Task::NewDW,  ps_lb->filePointerLabel, gn );
-  
-  t->computes( ps_lb->lastWriteTimeLabel );
   t->modifies( ps_lb->filePointerLabel );
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
 //______________________________________________________________________
+//
 void
 particleExtract::doAnalysis( const ProcessorGroup * pg,
                              const PatchSubset    * patches,
@@ -370,38 +371,25 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
 {   
   const Level* level = getLevel(patches);
   
-  // the user may want to restart from an uda that wasn't using the DA module
-  // This logic allows that.
-  max_vartype writeTime;
-  double lastWriteTime = 0;
-  if( old_dw->exists( ps_lb->lastWriteTimeLabel ) ){
-    old_dw->get(writeTime, ps_lb->lastWriteTimeLabel);
-    lastWriteTime = writeTime;
-  }
-
-  // double now = m_materialManager->getElapsedSimTime();
-
-  simTime_vartype simTimeVar;
-  old_dw->get(simTimeVar, m_simulationTimeLabel);
-  double now = simTimeVar;
-
-  if(now < d_startTime || now > d_stopTime){
+  timeVars tv;
+    
+  getTimeVars( old_dw, ps_lb->lastWriteTimeLabel, tv );
+  putTimeVars( new_dw, ps_lb->lastWriteTimeLabel, tv );
+  
+  if( tv.isItTime == false ){
     return;
-  }  
-
-  double nextWriteTime = lastWriteTime + 1.0/m_analysisFreq;
+  }
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
-    int proc =
-      m_scheduler->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
+    int proc = m_scheduler->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
 
     cout_dbg << Parallel::getMPIRank() << "   working on patch " << patch->getID() << " which is on proc " << proc << endl;
     //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write
-    if( proc == pg->myRank() && now >= nextWriteTime){
+    if( proc == pg->myRank() ){
     
       printTask(patches, patch,cout_doing,"Doing particleExtract::doAnalysis");
 
@@ -534,7 +522,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
           }
 
           // write particle position and time
-          fprintf(fp,    "%E\t %E\t %E\t %E",now, px[idx].x(),px[idx].y(),px[idx].z());
+          fprintf(fp,    "%E\t %E\t %E\t %E",tv.now, px[idx].x(),px[idx].y(),px[idx].z());
 
            // WARNING If you change the order that these are written
            // out you must also change the order that the header is
@@ -575,11 +563,8 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
           fclose(fp);
           myFiles[idx] = nullptr;
         }
-      }  // loop over particles
-      lastWriteTime = now;     
+      }  // loop over particles 
     }  // time to write data
-    
-   new_dw->put(max_vartype(lastWriteTime), ps_lb->lastWriteTimeLabel); 
   }  // patches
 }
 //______________________________________________________________________

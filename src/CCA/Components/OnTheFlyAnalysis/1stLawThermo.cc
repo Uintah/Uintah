@@ -50,11 +50,10 @@
 
 using namespace Uintah;
 using namespace std;
-//______________________________________________________________________ 
-//  To turn on the output
-//  setenv SCI_DEBUG "FirstLawThermo_DBG_COUT:+" 
+
 static DebugStream cout_doing("FirstLawThermo",   false);
 static DebugStream cout_dbg("FirstLawThermo_dbg", false);
+
 //______________________________________________________________________
 FirstLawThermo::FirstLawThermo(const ProcessorGroup* myworld,
                                const MaterialManagerP materialManager,
@@ -105,9 +104,9 @@ FirstLawThermo::~FirstLawThermo()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void FirstLawThermo::problemSetup(const ProblemSpecP&,
-                                  const ProblemSpecP& restart_prob_spec,
-                                  GridP& grid,
+void FirstLawThermo::problemSetup(const ProblemSpecP &,
+                                  const ProblemSpecP & restart_prob_spec,
+                                  GridP              & grid,
                                   std::vector<std::vector<const VarLabel* > > &PState,
                                   std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
@@ -202,11 +201,12 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
     } 
   }
 }
-//______________________________________________________________________
 
+//______________________________________________________________________
+//
 void
-FirstLawThermo::scheduleInitialize(       SchedulerP & sched,
-                                    const LevelP     & level )
+FirstLawThermo::scheduleInitialize( SchedulerP   & sched,
+                                    const LevelP & level )
 {
   printSchedule(level,cout_doing,"FirstLawThermo::scheduleInitialize");
   
@@ -216,8 +216,9 @@ FirstLawThermo::scheduleInitialize(       SchedulerP & sched,
   t->computes(FL_lb->fileVarsStructLabel, d_zeroMatl); 
   sched->addTask(t, d_zeroPatch, d_zeroMatlSet);
 }
-//______________________________________________________________________
 
+//______________________________________________________________________
+//
 void
 FirstLawThermo::initialize( const ProcessorGroup *, 
                             const PatchSubset    * patches,
@@ -255,13 +256,20 @@ FirstLawThermo::initialize( const ProcessorGroup *,
   }  
 }
 
-void FirstLawThermo::restartInitialize()
+
+//______________________________________________________________________
+//
+void 
+FirstLawThermo::scheduleRestartInitialize(SchedulerP   & sched,
+                                          const LevelP & level)
 {
+  scheduleInitialize( sched, level);
 }
 
 //______________________________________________________________________
-void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
-                                        const LevelP& level)
+//
+void FirstLawThermo::scheduleDoAnalysis(SchedulerP   & sched,
+                                        const LevelP & level)
 {
 
   // Tell the scheduler to not copy this variable to a new AMR grid and 
@@ -278,11 +286,9 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSet* all_matls = m_materialManager->allMaterials();
   const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
-  const MaterialSubset* ice_ss = ice_matls->getUnion();
+  const MaterialSubset* ice_ss = ice_matls->getUnion(); 
   
-  t0->requires( Task::OldDW, m_simulationTimeLabel );
-  t0->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
-  t0->requires( Task::OldDW, m_delTLabel, level.get_rep() ); 
+  sched_TimeVars( t0, level, FL_lb->lastCompTimeLabel, false );
   
   t0->requires( Task::NewDW, I_lb->rho_CCLabel,        ice_ss, gn );
   t0->requires( Task::NewDW, I_lb->temp_CCLabel,       ice_ss, gn );
@@ -305,8 +311,8 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   const MaterialSet* mpm_matls = m_materialManager->allMaterials( "MPM" );
   const MaterialSubset* mpm_ss = mpm_matls->getUnion();
   
-  t1->requires( Task::OldDW, m_simulationTimeLabel );
-  t1->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
+  sched_TimeVars( t1, level, FL_lb->lastCompTimeLabel, false );
+
   t1->requires( Task::NewDW, M_lb->pMassLabel_preReloc,        mpm_ss, gn );
   t1->requires( Task::NewDW, M_lb->pTemperatureLabel_preReloc, mpm_ss, gn );
   t1->computes( FL_lb->MPM_totalIntEngLabel );
@@ -318,16 +324,14 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   //  output the contributions
   Task* t2 = scinew Task("FirstLawThermo::doAnalysis", 
                     this,&FirstLawThermo::doAnalysis );
-                    
-  t2->requires( Task::OldDW, m_simulationTimeLabel );
-  t2->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
-  t2->requires( Task::OldDW, FL_lb->fileVarsStructLabel, d_zeroMatl, gn, 0 );
   
+  sched_TimeVars( t1, level, FL_lb->lastCompTimeLabel, true );
+   
+  t2->requires( Task::OldDW, FL_lb->fileVarsStructLabel, d_zeroMatl, gn, 0 );
   t2->requires( Task::NewDW, FL_lb->ICE_totalIntEngLabel );
   t2->requires( Task::NewDW, FL_lb->MPM_totalIntEngLabel );
   t2->requires( Task::NewDW, FL_lb->totalFluxesLabel );
-  
-  t2->computes( FL_lb->lastCompTimeLabel );
+
   t2->computes( FL_lb->fileVarsStructLabel, d_zeroMatl );
   sched->addTask( t2, d_zeroPatch, d_zeroMatlSet);        // you only need to schedule this  patch 0 since all you're doing is writing out data
 
@@ -335,28 +339,15 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
 
 //______________________________________________________________________
 //        ICE Contributions to the energy
-void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
-                                               const PatchSubset* patches,
-                                               const MaterialSubset* matl_sub ,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw)
+void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup * pg,
+                                               const PatchSubset    * patches,
+                                               const MaterialSubset * matl_sub ,
+                                               DataWarehouse        * old_dw,
+                                               DataWarehouse        * new_dw)
 {
   const Level* level = getLevel(patches);
-  max_vartype analysisTime;
-  delt_vartype delT;
   
-  old_dw->get(analysisTime, FL_lb->lastCompTimeLabel);
-  old_dw->get(delT, m_delTLabel, level);
-  
-  double lastCompTime = analysisTime;
-  double nextCompTime = lastCompTime + 1.0/m_analysisFreq;  
-  // double now = m_materialManager->getElapsedSimTime();
-
-  simTime_vartype simTimeVar;
-  old_dw->get(simTimeVar, m_simulationTimeLabel);
-  double now = simTimeVar;
-
-  if( now < nextCompTime  ){
+  if( isItTime(old_dw, FL_lb->lastCompTimeLabel) == false){
     return;
   }
 
@@ -424,20 +415,35 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
                  << " startPt: " << cvFace->startPt << " endPt: " << cvFace->endPt << endl;
         cout_dbg << "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir << endl;
 
+        
         // define the iterator on this face  The defauls is the entire face
         Patch::FaceIteratorType SFC = Patch::SFCVars;
         CellIterator iterLimits=patch->getFaceIterator(face, SFC);
         
+        //__________________________________
+        //
         if( cvFace->face == partialFace ){
         
           IntVector lo  = level->getCellIndex( cvFace->startPt );
           IntVector hi  = level->getCellIndex( cvFace->endPt );
-          IntVector pLo = patch->getCellLowIndex();
-          IntVector pHi = patch->getCellHighIndex();
+          IntVector pLo = patch->getExtraCellLowIndex();
+          IntVector pHi = patch->getExtraCellHighIndex();
           
           IntVector low  = Max(lo, pLo);    // find the intersection
           IntVector high = Min(hi, pHi);
            
+          //__________________________________
+          // enlarge the iterator by oneCell
+          // x-           x+        y-       y+       z-        z+
+          // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
+          IntVector oneCell = patch->faceDirection( face );
+          if( face == Patch::xminus || face == Patch::yminus || face == Patch::zminus) {
+            low += oneCell;
+          }
+          if( face == Patch::xplus || face == Patch::yplus || face == Patch::zplus) {
+            high += oneCell;
+          }
+         
           iterLimits = CellIterator(low,high);
         }
 
@@ -579,24 +585,13 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //        MPM Contributions to the energy
-void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
-                                               const PatchSubset* patches,
-                                               const MaterialSubset* matl_sub ,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw)
+void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup * pg,
+                                               const PatchSubset    * patches,
+                                               const MaterialSubset * matl_sub ,
+                                               DataWarehouse        * old_dw,
+                                               DataWarehouse        * new_dw)
 {
-  max_vartype analysisTime;  
-  old_dw->get(analysisTime, FL_lb->lastCompTimeLabel);
-
-  double lastCompTime = analysisTime;
-  double nextCompTime = lastCompTime + 1.0/m_analysisFreq;  
-  // double now = m_materialManager->getElapsedSimTime();
-
-  simTime_vartype simTimeVar;
-  old_dw->get(simTimeVar, m_simulationTimeLabel);
-  double now = simTimeVar;
-
-  if( now < nextCompTime  ){
+  if( isItTime(old_dw, FL_lb->lastCompTimeLabel) == false){
     return;
   }
 
@@ -631,29 +626,20 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
   }
 }
 
-
-
-
 //______________________________________________________________________
 // 
-void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls ,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
+void FirstLawThermo::doAnalysis(const ProcessorGroup * pg,
+                                const PatchSubset    * patches,
+                                const MaterialSubset * matls ,
+                                DataWarehouse        * old_dw,
+                                DataWarehouse        * new_dw)
 {
-  max_vartype lastTime;
-  old_dw->get( lastTime, FL_lb->lastCompTimeLabel );
-
-  simTime_vartype simTimeVar;
-  old_dw->get(simTimeVar, m_simulationTimeLabel);
-  double now = simTimeVar;
-
-  // double now = m_materialManager->getElapsedSimTime();
-  double nextTime = lastTime + 1.0/m_analysisFreq;
+  timeVars tv;
   
-  double time_dw  = lastTime;  
-  if( now >= nextTime ){
+  getTimeVars( old_dw, FL_lb->lastCompTimeLabel, tv );
+  putTimeVars( new_dw, FL_lb->lastCompTimeLabel, tv );
+                 
+  if( tv.isItTime ){
   
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
@@ -703,14 +689,13 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
       
       double totalIntEng = (double)ICE_totalIntEng + (double)MPM_totalIntEng;
       
-      fprintf(fp, "%16.15E      %16.15E      %16.15E       %16.15E       %16.15E\n", now, 
+      fprintf(fp, "%16.15E      %16.15E      %16.15E       %16.15E       %16.15E\n", tv.now, 
                   (double)ICE_totalIntEng, 
                   (double)MPM_totalIntEng, 
                   totalIntEng,
                   (double)total_flux );
       
 //      fflush(fp);   If you want to write the data right now, no buffering.
-      time_dw = now;
       
       //__________________________________
       // put the file pointers into the DataWarehouse
@@ -721,7 +706,6 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
       new_dw->put(fileInfo, FL_lb->fileVarsStructLabel, 0, patch);
     }
   }
-  new_dw->put(max_vartype( time_dw ), FL_lb->lastCompTimeLabel);
 }
 
 

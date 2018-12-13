@@ -61,9 +61,7 @@ using namespace std;
 
 static DebugStream cout_doing("momentumAnalysis",   false);
 static DebugStream cout_dbg("momentumAnalysis_dbg", false);
-//______________________________________________________________________
-//______________________________________________________________________
-//
+
 momentumAnalysis::momentumAnalysis( const ProcessorGroup* myworld,
                                     const MaterialManagerP materialManager,
                                     const ProblemSpecP& module_spec )
@@ -90,7 +88,8 @@ momentumAnalysis::momentumAnalysis( const ProcessorGroup* myworld,
   labels->pressForces        = VarLabel::create( "pressForces",       sumvec_vartype::getTypeDescription() );
 }
 
-//__________________________________
+//______________________________________________________________________
+//
 momentumAnalysis::~momentumAnalysis()
 {
   cout_doing << " Doing: destorying momentumAnalysis " << endl;
@@ -120,8 +119,7 @@ momentumAnalysis::~momentumAnalysis()
   delete labels;
 }
 
-//______________________________________________________________________
-//     P R O B L E M   S E T U P
+
 //______________________________________________________________________
 //
 void momentumAnalysis::problemSetup(const ProblemSpecP& ,
@@ -135,8 +133,8 @@ void momentumAnalysis::problemSetup(const ProblemSpecP& ,
   //__________________________________
   //  Read in timing information
   m_module_spec->require( "samplingFrequency", m_analysisFreq );
-  m_module_spec->require( "timeStart",         d_StartTime );
-  m_module_spec->require( "timeStop",          d_StopTime );
+  m_module_spec->require( "timeStart",         d_startTime );
+  m_module_spec->require( "timeStop",          d_stopTime );
 
   d_zeroMatl = scinew MaterialSubset();
   d_zeroMatl->add(0);
@@ -244,12 +242,11 @@ void momentumAnalysis::problemSetup(const ProblemSpecP& ,
     d_cv_faces[index]  = cvFace;
   }
 }
+
 //______________________________________________________________________
 //
-//______________________________________________________________________
-//
-void momentumAnalysis::scheduleInitialize( SchedulerP& sched,
-                                        const LevelP& level )
+void momentumAnalysis::scheduleInitialize( SchedulerP   & sched,
+                                           const LevelP & level )
 {
   printSchedule(level,cout_doing,"momentumAnalysis::scheduleInitialize");
 
@@ -260,15 +257,14 @@ void momentumAnalysis::scheduleInitialize( SchedulerP& sched,
   t->computes( labels->fileVarsStruct, d_zeroMatl );
   sched->addTask(t, d_zeroPatch, d_zeroMatlSet);
 }
+
 //______________________________________________________________________
 //
-//______________________________________________________________________
-//
-void momentumAnalysis::initialize( const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset*,
-                                   DataWarehouse*,
-                                   DataWarehouse* new_dw )
+void momentumAnalysis::initialize( const ProcessorGroup *,
+                                   const PatchSubset    * patches,
+                                   const MaterialSubset *,
+                                   DataWarehouse        *,
+                                   DataWarehouse         * new_dw )
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -300,16 +296,19 @@ void momentumAnalysis::initialize( const ProcessorGroup*,
   }
 }
 
-void momentumAnalysis::restartInitialize()
+//______________________________________________________________________
+//
+void momentumAnalysis::scheduleRestartInitialize(SchedulerP   & sched,
+                                                 const LevelP & level)
 {
+  scheduleInitialize( sched, level);
 }
+
 
 //______________________________________________________________________
 //
-//______________________________________________________________________
-//
-void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
-                                        const LevelP& level)
+void momentumAnalysis::scheduleDoAnalysis(SchedulerP   & sched,
+                                          const LevelP & level)
 {
 
   // Tell the scheduler to not copy this variable to a new AMR grid and
@@ -329,8 +328,7 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
   matl_SS->add( d_matlIndx );
   matl_SS->addReference();
 
-  t0->requires( Task::OldDW, m_simulationTimeLabel );
-  t0->requires( Task::OldDW, labels->lastCompTime );
+  sched_TimeVars( t0, level, labels->lastCompTime, false );
 
   t0->requires( Task::NewDW, labels->vel_CC,    matl_SS, gn );
   t0->requires( Task::NewDW, labels->rho_CC,    matl_SS, gn );
@@ -359,8 +357,7 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
   Task* t1 = scinew Task("momentumAnalysis::doAnalysis",
                     this,&momentumAnalysis::doAnalysis );
 
-  t1->requires( Task::OldDW, m_simulationTimeLabel );
-  t1->requires( Task::OldDW, labels->lastCompTime );
+  sched_TimeVars( t1, level, labels->lastCompTime, true );
   t1->requires( Task::OldDW, labels->fileVarsStruct, d_zeroMatl, gn, 0 );
 
   t1->requires( Task::NewDW, labels->totalCVMomentum );
@@ -368,7 +365,6 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
   t1->requires( Task::NewDW, labels->viscousMom_fluxes );
   t1->requires( Task::NewDW, labels->pressForces );
 
-  t1->computes( labels->lastCompTime );
   t1->computes( labels->fileVarsStruct, d_zeroMatl );
   sched->addTask( t1, d_zeroPatch, d_zeroMatlSet);        // you only need to schedule patch 0 since all you're doing is writing out data
 }
@@ -378,31 +374,20 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
 //  through the control surfaces and the pressure forces
 //______________________________________________________________________
 //
-void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
-                                              const PatchSubset* patches,
-                                              const MaterialSubset* matl_sub ,
-                                              DataWarehouse* old_dw,
-                                              DataWarehouse* new_dw)
+void momentumAnalysis::integrateMomentumField(const ProcessorGroup * pg,
+                                              const PatchSubset    * patches,
+                                              const MaterialSubset * matl_sub ,
+                                              DataWarehouse        * old_dw,
+                                              DataWarehouse        * new_dw)
 {
 
   const Level* level = getLevel(patches);
 
-  max_vartype analysisTime;
-  old_dw->get( analysisTime, labels->lastCompTime );
-
-  double lastCompTime = analysisTime;
-  double nextCompTime = lastCompTime + 1.0/m_analysisFreq;
-
-  // double now = m_materialManager->getElapsedSimTime();
-
-  simTime_vartype simTimeVar;
-  old_dw->get(simTimeVar, m_simulationTimeLabel);
-  double now = simTimeVar;
-
   // Ignore the task if a recompute time step has been requested upstream
-  bool rts = new_dw->recomputeTimeStep();
+  bool rts      = new_dw->recomputeTimeStep();
+  bool itItTime = isItTime( old_dw, labels->lastCompTime );
 
-  if( now < nextCompTime  || rts ) {
+  if( itItTime == false  || rts ) {
     return;
   }
 
@@ -479,6 +464,8 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
         Patch::FaceIteratorType SFC = Patch::SFCVars;
         CellIterator iterLimits=patch->getFaceIterator(face, SFC);
 
+        //__________________________________
+        //  partial face iterator
         if( cvFace->face == partialFace ){
 
           IntVector lo  = level->getCellIndex( cvFace->startPt );
@@ -489,9 +476,20 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
           IntVector low  = Max(lo, pLo);    // find the intersection
           IntVector high = Min(hi, pHi);
 
+          //__________________________________
+          // enlarge the iterator by oneCell
+          // x-           x+        y-       y+       z-        z+
+          // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
+          IntVector oneCell = patch->faceDirection( face );
+          if( face == Patch::xminus || face == Patch::yminus || face == Patch::zminus) {
+            low += oneCell;
+          }
+          if( face == Patch::xplus || face == Patch::yplus || face == Patch::zplus) {
+            high += oneCell;
+          }
+
           iterLimits = CellIterator(low,high);
         }
-
 
         //__________________________________
         //           X faces
@@ -513,9 +511,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
           integrateOverFace( faceName, area, iterLimits,  faceQ, wvel_FC, pressZ_FC, tau_Z_FC, rho_CC, vel_CC);
 
         }
-
       }  // boundary faces
-
     }  // patch has faces
 
 
@@ -547,117 +543,106 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
-//______________________________________________________________________
-//
-void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls ,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw)
+void momentumAnalysis::doAnalysis(const ProcessorGroup * pg,
+                                  const PatchSubset    * patches,
+                                  const MaterialSubset * matls ,
+                                  DataWarehouse        * old_dw,
+                                  DataWarehouse        * new_dw)
 {
 
   // Ignore the task if a recompute time step has been requested upstream
   bool rts = new_dw->recomputeTimeStep();
+  
+  timeVars tv;
+    
+  getTimeVars( old_dw, labels->lastCompTime, tv );
+  putTimeVars( new_dw, labels->lastCompTime, tv );
 
-  if( rts ) {
+  if( rts || tv.isItTime == false) {
     return;
   }
 
-  max_vartype lastTime;
-  old_dw->get( lastTime, labels->lastCompTime );
+  //__________________________________
+  //
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing doAnalysis");
 
-  simTime_vartype simTimeVar;
-  old_dw->get(simTimeVar, m_simulationTimeLabel);
-  double now = simTimeVar;
+    //__________________________________
+    // open the struct that contains the file pointer map.  We use FileInfoP types
+    // and store them in the DW to avoid doing system calls (SLOW).
+    // Note: after regridding this may not exist for this patch in the old_dw
+    PerPatch<FileInfoP> fileInfo;
 
-  // double now = m_materialManager->getElapsedSimTime();
-  double nextTime = lastTime + ( 1.0 / m_analysisFreq );
+    if( old_dw->exists( labels->fileVarsStruct, 0, patch ) ){
+      old_dw->get(fileInfo, labels->fileVarsStruct, 0, patch);
+    }
+    else{
+      FileInfo* myFileInfo = scinew FileInfo();
+      fileInfo.get() = myFileInfo;
+    }
 
-  double time_dw  = lastTime;
-  if( now >= nextTime ){
+    std::map<string, FILE *> myFiles;
 
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
-      printTask(patches, patch,cout_doing,"Doing doAnalysis");
+    if( fileInfo.get().get_rep() ){
+      myFiles = fileInfo.get().get_rep()->files;
+    }
 
-      //__________________________________
-      // open the struct that contains the file pointer map.  We use FileInfoP types
-      // and store them in the DW to avoid doing system calls (SLOW).
-      // Note: after regridding this may not exist for this patch in the old_dw
-      PerPatch<FileInfoP> fileInfo;
-
-      if( old_dw->exists( labels->fileVarsStruct, 0, patch ) ){
-        old_dw->get(fileInfo, labels->fileVarsStruct, 0, patch);
-      }else{
-        FileInfo* myFileInfo = scinew FileInfo();
-        fileInfo.get() = myFileInfo;
-      }
-
-      std::map<string, FILE *> myFiles;
-
-      if( fileInfo.get().get_rep() ){
-        myFiles = fileInfo.get().get_rep()->files;
-      }
-
-      string udaDir = m_output->getOutputLocation();
-      string filename = udaDir + "/" + "momentumAnalysis.dat";
-      FILE *fp=nullptr;
+    string udaDir = m_output->getOutputLocation();
+    string filename = udaDir + "/" + "momentumAnalysis.dat";
+    FILE *fp=nullptr;
 
 
-      if( myFiles.count(filename) == 0 ){
-        createFile(filename, fp);
-        myFiles[filename] = fp;
+    if( myFiles.count(filename) == 0 ){
+      createFile(filename, fp);
+      myFiles[filename] = fp;
+    }
+    else {
+      fp = myFiles[filename];
+    }
 
-      } else {
-        fp = myFiles[filename];
-      }
+    if (!fp){
+      throw InternalError("\nERROR:dataAnalysisModule:momentumAnalysis:  failed opening file"+filename,__FILE__, __LINE__);
+    }
+    //__________________________________
+    //
+    sumvec_vartype totalCVMomentum, convectFlux, viscousFlux, pressForce;
+    new_dw->get( totalCVMomentum, labels->totalCVMomentum );
+    new_dw->get( convectFlux,      labels->convectMom_fluxes );
+    new_dw->get( viscousFlux,      labels->viscousMom_fluxes );
+    new_dw->get( pressForce,       labels->pressForces );
 
-      if (!fp){
-        throw InternalError("\nERROR:dataAnalysisModule:momentumAnalysis:  failed opening file"+filename,__FILE__, __LINE__);
-      }
-      //__________________________________
-      //
-      sumvec_vartype totalCVMomentum, convectFlux, viscousFlux, pressForce;
-      new_dw->get( totalCVMomentum, labels->totalCVMomentum );
-      new_dw->get( convectFlux,      labels->convectMom_fluxes );
-      new_dw->get( viscousFlux,      labels->viscousMom_fluxes );
-      new_dw->get( pressForce,       labels->pressForces );
+    // so fprintf can deal with it
+    Vector momentum = totalCVMomentum;
+    Vector conFlux = convectFlux;
+    Vector visFlux = viscousFlux;
+    Vector pForce  = pressForce;
 
-      // so fprintf can deal with it
-      Vector momentum = totalCVMomentum;
-      Vector conFlux = convectFlux;
-      Vector visFlux = viscousFlux;
-      Vector pForce  = pressForce;
-
-      fprintf(fp, "%16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E\n", 
-                  now,
-                  (double)momentum.x(),
-                  (double)momentum.y(),
-                  (double)momentum.z(),
-                  (double)conFlux.x(),
-                  (double)conFlux.y(),
-                  (double)conFlux.z(),
-                  (double)visFlux.x(),
-                  (double)visFlux.y(),
-                  (double)visFlux.z(),
-                  (double)pForce.x(),
-                  (double)pForce.y(),
-                  (double)pForce.z()
-              );
+    fprintf(fp, "%16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E\n", 
+                tv.now,
+                (double)momentum.x(),
+                (double)momentum.y(),
+                (double)momentum.z(),
+                (double)conFlux.x(),
+                (double)conFlux.y(),
+                (double)conFlux.z(),
+                (double)visFlux.x(),
+                (double)visFlux.y(),
+                (double)visFlux.z(),
+                (double)pForce.x(),
+                (double)pForce.y(),
+                (double)pForce.z()
+            );
 
 //      fflush(fp);   If you want to write the data right now, no buffering.
-      time_dw = now;
 
-      //__________________________________
-      // put the file pointers into the DataWarehouse
-      // these could have been altered. You must
-      // reuse the Handle fileInfo and just replace the contents
-      fileInfo.get().get_rep()->files = myFiles;
-
-      new_dw->put(fileInfo, labels->fileVarsStruct, 0, patch);
-    }
+    //__________________________________
+    // put the file pointers into the DataWarehouse
+    // these could have been altered. You must
+    // reuse the Handle fileInfo and just replace the contents
+    fileInfo.get().get_rep()->files = myFiles;
+    new_dw->put(fileInfo, labels->fileVarsStruct, 0, patch);
   }
-  new_dw->put(max_vartype( time_dw ), labels->lastCompTime);
 }
 
 //______________________________________________________________________
@@ -719,7 +704,8 @@ void momentumAnalysis::integrateOverFace( const std::string faceName,
 //  Open the file if it doesn't exist and write the file header
 //______________________________________________________________________
 //
-void momentumAnalysis::createFile(string& filename,  FILE*& fp)
+void momentumAnalysis::createFile(string& filename,  
+                                  FILE*& fp)
 {
   // if the file already exists then exit.  The file could exist but not be owned by this processor
   ifstream doExists( filename.c_str() );
@@ -909,8 +895,7 @@ void momentumAnalysis::initializeVars( faceQuantities* faceQ)
   }
 }
 
-//______________________________________________________________________
-//
+
 //______________________________________________________________________
 //
 Vector momentumAnalysis::L_minus_R( std::map <int, Vector >& faceFlux)

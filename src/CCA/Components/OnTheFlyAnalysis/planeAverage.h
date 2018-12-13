@@ -636,8 +636,6 @@ ______________________________________________________________________*/
     //__________________________________
     // global constants always begin with "d_"
     std::string d_className;                   // identifier for each instantiation of this class
-    double d_startTime;
-    double d_stopTime;
     bool   d_parse_ups_variables;              // parse ups file to define d_allLevels_planarVars
                                                // this switch is needed for meanTurbFluxes module
     bool   d_writeOutput;
@@ -645,7 +643,7 @@ ______________________________________________________________________*/
     const Material*  d_matl;
     
     std::set<std::string> d_isDirCreated;
-    MaterialSubset*  d_zero_matl;
+    MaterialSubset*       d_zero_matl;
 
     const int d_MAXLEVELS {5};               // HARDCODED
 

@@ -107,9 +107,9 @@ statistics::~statistics()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void statistics::problemSetup(const ProblemSpecP&,
-                              const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
+void statistics::problemSetup(const ProblemSpecP &,
+                              const ProblemSpecP & restart_prob_spec,
+                              GridP & grid,
                               std::vector<std::vector<const VarLabel* > > &PState,
                               std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
@@ -150,11 +150,13 @@ void statistics::problemSetup(const ProblemSpecP&,
 
   if(m_module_spec->findBlock("material") ){
     matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
-  } else if (m_module_spec->findBlock("materialIndex") ){
+  } 
+  else if (m_module_spec->findBlock("materialIndex") ){
     int indx;
     m_module_spec->get("materialIndex", indx);
     matl = m_materialManager->getMaterial(indx);
-  } else {
+  } 
+  else {
     matl = m_materialManager->getMaterial(0);
   }
 
@@ -168,7 +170,8 @@ void statistics::problemSetup(const ProblemSpecP&,
   if (d_doHigherOrderStats){
 
     proc0cout << "         Computing 2nd, 3rd and 4th order statistics for all of the variables listed"<< endl;
-  } else {
+  } 
+  else {
     proc0cout << "         Computing 2nd order statistics for all of the variables listed"<< endl;
   }
 
