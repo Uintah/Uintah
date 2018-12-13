@@ -65,6 +65,7 @@ namespace Uintah{
 
     int m_Nenv;
     bool particleMethod_bool;
+    std::string m_volFraction_name;
 
     std::string m_g_uVel_name;
     std::string m_g_vVel_name;
@@ -85,6 +86,18 @@ namespace Uintah{
     std::vector<std::string > m_w_names;
     std::vector<std::string > m_RC_names;
     std::vector<std::string > m_CH_names;
+
+    std::vector<std::string > m_m_dot_gas_name;
+    std::vector<std::string > m_m_dot_p_name;
+
+    struct MFInfo{
+      std::string name;
+      std::string face_name;
+      double value;
+    };
+
+    std::vector< MFInfo > m_m_gas_info;
+    std::vector< MFInfo > m_m_p_info;
 
     std::vector<double> m_w_scaling_constant;
     std::vector<double> m_RC_scaling_constant;

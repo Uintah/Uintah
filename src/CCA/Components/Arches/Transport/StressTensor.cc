@@ -197,7 +197,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::BlockRange range3(lowNz, highNz);
   Uintah::parallel_for( range3, [&](int i, int j, int k){
     const double mu33 = D(i,j,k-1);  // it does not need interpolation
-    const double dwdz  = eps_y(i,j,k)*eps_y(i,j,k-1) * (wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
+    const double dwdz  = eps_z(i,j,k)*eps_z(i,j,k-1) * (wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
     sigma33(i,j,k) = mu33 * 2.0*dwdz;
 
   });
