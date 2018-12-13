@@ -29,7 +29,6 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Parallel/UintahMemorySpaces.h>
 
 namespace Uintah {
 
@@ -104,7 +103,6 @@ struct VarLabelMatlMemspaceHasher {
              ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
   }
 };
-
 
 } // End namespace Uintah
 
