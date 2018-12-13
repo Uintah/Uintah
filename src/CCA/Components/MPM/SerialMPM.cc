@@ -5998,8 +5998,20 @@ void SerialMPM::scheduleFindGrainCollisions(SchedulerP   & sched,
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gnone);
 
   t->requires(Task::NewDW, lb->gColorLabel,              gnone);
+  t->computes(lb->TotalLocalizedParticleLabel);
 
   sched->addTask(t, patches, matls);
+
+#if 1
+  Task* t2 = scinew Task("MPM::communicateGrainCollisions", this, 
+                         &SerialMPM::communicateGrainCollisions);
+
+//  t2->setType( Task::OncePerProc );
+
+  t2->requires(Task::NewDW, lb->TotalLocalizedParticleLabel);
+  sched->addTask(t2, patches, matls);
+#endif
+
 }
 
 
@@ -6018,9 +6030,9 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
 
 //  int doit=timestep%interval;
 
-//  if(doit == 0){
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    int patchID =  patch->getID();
 
     printTask(patches,patch,cout_doing,
               "Doing SerialMPM::findGrainCollisions");
@@ -6032,6 +6044,8 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
     string interp_type = flags->d_interpolator_type;
 
     Ghost::GhostType gnone = Ghost::None;
+
+    set<double> collideColors;
 
     for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
@@ -6079,22 +6093,75 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
         }
       } // End of particle loop
 
-      int iCol=0;
-      for (set<double>::iterator it1 = collideColors.begin(); 
-                        it1!= collideColors.end();  it1++){
-        if(iCol%2 == 1){
-          collideColors.erase(*it1);
-        }
-        iCol++;
-      }
-
+#if 0
       for (set<double>::iterator it1 = collideColors.begin(); 
                         it1!= collideColors.end();  it1++){
         cout << "Color " << *it1 << " collides " << endl;
       }
+#endif
     }
+#if 1
+    ostringstream pnum; pnum << patchID;
+    string filename = "collideColors." + pnum.str();
+    ofstream colout(filename.c_str());
+    if(!colout){
+      cerr << "file not opened:  " << filename << endl;
+      cerr << "exiting" << endl;
+      exit(1);
+    }
+    for (set<double>::iterator it1 = collideColors.begin(); 
+                               it1!= collideColors.end();  it1++){
+      colout << *it1 << endl;
+    }
+    colout.close();
+#endif
+    new_dw->put(sum_vartype(1),     lb->TotalLocalizedParticleLabel);
    }
-//  }
+}
+
+void SerialMPM::communicateGrainCollisions(const ProcessorGroup * pg,
+                                           const PatchSubset    * patches,
+                                           const MaterialSubset * ,
+                                                 DataWarehouse  * old_dw,
+                                                 DataWarehouse  * new_dw)
+{
+   int numPatches = 0;
+   sum_vartype TLP;
+   new_dw->get(TLP,   lb->TotalLocalizedParticleLabel);
+   for(int p=0;p<patches->size();p++){
+     const Patch* patch = patches->get(p);
+     numPatches = patch->getLevel()->numPatches();
+
+     printTask(patches,patch,cout_doing,
+               "Doing SerialMPM::communicateGrainCollisions");
+   }
+
+   for(int p=0;p<numPatches;p++){
+
+    ostringstream pnum; pnum << p;
+    string filename = "collideColors." + pnum.str();
+    ifstream colin(filename.c_str());
+    if(!colin){
+      cerr << "file not opened:  " << filename << endl;
+      cerr << "exiting" << endl;
+      exit(1);
+    }
+
+    double cc;
+    while(colin >> cc){
+      d_collideColors.insert(cc); 
+    }
+    colin.close();
+
+   }
+   for (set<double>::iterator it1 = d_collideColors.begin(); 
+                              it1!= d_collideColors.end();  it1++){
+     cout << "Color " << *it1 << " collides " << endl;
+   }
+
+//   cout << "In Communicate Grain Collisions" << endl;
+//   int rank = pg->myRank();
+//   ReduceSet(rank);
 }
 
 void SerialMPM::scheduleChangeGrainMaterials(SchedulerP& sched,

@@ -261,6 +261,12 @@ protected:
                                          DataWarehouse   * old_dw,
                                          DataWarehouse   * new_dw );
 
+  virtual void communicateGrainCollisions(const ProcessorGroup  *,
+                                          const PatchSubset     * patches,
+                                          const MaterialSubset  * ,
+                                                DataWarehouse   * old_dw,
+                                                DataWarehouse   * new_dw );
+
   virtual void computeSSPlusVp(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
@@ -670,6 +676,8 @@ protected:
 
   bool             d_fracture;
   MaterialSubset*  d_loadCurveIndex;
+  std::set<double> d_collideColors;
+  std::vector<double> d_collideColorsV;
   
   std::vector<AnalysisModule*> d_analysisModules;
   SwitchingCriteria* d_switchCriteria;
