@@ -80,8 +80,8 @@ void addMeshVariable( visit_handle md, std::set<std::string> &mesh_vars_added,
 
 template< class ENUM, class T >
 void addReductionStats( visit_handle md, ReductionInfoMapper< ENUM, T > stats,
-			std::string statName,
-			std::string meshName, bool addMachineData )
+			std::string statName, std::string meshName,
+			std::string meshLayout )
 {
   // There is performance on a per rank and per node basis.
   const unsigned int nProcLevels = 3;
@@ -98,9 +98,8 @@ void addReductionStats( visit_handle md, ReductionInfoMapper< ENUM, T > stats,
 	std::string tmp_name = statName + 
 	  stats.getName( i ) + proc_level[j];
 	
-	if( addMachineData )
-	  tmp_name += meshName;
-	
+	tmp_name += meshLayout;
+
 	std::string units = stats.getUnits( i );
 	
 	VisIt_VariableMetaData_setName(vmd, tmp_name.c_str());

@@ -469,7 +469,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           {
             std::string tmp_name = patch_names[i];
 
-            if( addMachineData )
+	    // Only put the patch id goes to both the simulation and
+	    // machine patch mesh.
+            if( i == 0 && addMachineData )
               tmp_name += mesh_layout[k];
 
             VisIt_VariableMetaData_setName(vmd, tmp_name.c_str());
@@ -494,25 +496,25 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       // Per rank and per node performance data on the simulation
       // patch mesh and possibly machine rank mesh.
       mesh_name[1] = "Machine_" + sim->hostName + "/Local";
-
+      
       // Runtime data on both the sim and machine.
       for( unsigned k=0; k<1+addMachineData; ++k )
       {
         // Add in the infrastructure runtime stats.
         addReductionStats( md, sim->simController->getRuntimeStats(),
-                           "Processor/Runtime/",
-                           mesh_name[k], addMachineData );
+                           "Processor/Runtime/", mesh_name[k],
+                           (addMachineData ? mesh_layout[k] : "") );
           
         // Add in the mpi runtime stats.
         if( mpiScheduler )
           addReductionStats( md, mpiScheduler->mpi_info_,
-                             "Processor/MPI/",
-                             mesh_name[k], addMachineData );
+                             "Processor/MPI/", mesh_name[k],
+                             (addMachineData ? mesh_layout[k] : "") );
 
         // Add in the application runtime stats.
         addReductionStats( md, appInterface->getApplicationStats(),
-                           "Processor/Application/",
-                           mesh_name[k], addMachineData );
+                           "Processor/Application/", mesh_name[k],
+                           (addMachineData ? mesh_layout[k] : "") );
       }
     }
 
@@ -1723,11 +1725,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   // structures.
   std::string varType("");
 
-  if( strncmp(varname, "Patch/Id", 8) == 0 ||
-      strncmp(varname, "Patch/Rank", 10) == 0 ||
-      strncmp(varname, "Patch/Node", 10) == 0 ||
-      strncmp(varname, "Patch/Bounds/Low",  16) == 0 ||
-      strncmp(varname, "Patch/Bounds/High", 17) == 0 )
+  if( strncmp(varname, "Patch/Id", 8) == 0 )
   {
     isInternalVar = true;
     varType = "Patch_Mesh";
@@ -1741,6 +1739,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
       isMachineMeshVar = (hostName == sim->hostName);
     }
+  }
+  else if( strncmp(varname, "Patch/Rank", 10) == 0 ||
+	   strncmp(varname, "Patch/Node", 10) == 0 ||
+	   strncmp(varname, "Patch/Bounds/Low",  16) == 0 ||
+	   strncmp(varname, "Patch/Bounds/High", 17) == 0 )
+  {
+    isInternalVar = true;
+    varType = "Patch_Mesh";
   }
   else if( strncmp(varname, "Patch/Nodes", 11) == 0 )
   {
