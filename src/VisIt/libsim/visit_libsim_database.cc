@@ -220,12 +220,12 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         std::string varname = stepInfo->varInfo[i].name;
         std::string vartype = stepInfo->varInfo[i].type;
         
-	if (vartype.find("filePointer") != std::string::npos)
-	{
-	  continue;
-	}
-	
-	VisIt_VarCentering cent = VISIT_VARCENTERING_NODE;
+        if (vartype.find("filePointer") != std::string::npos)
+        {
+          continue;
+        }
+        
+        VisIt_VarCentering cent = VISIT_VARCENTERING_NODE;
 
         // j = -1 -> all materials (*)
         int numMaterials = stepInfo->varInfo[i].materials.size();
@@ -469,8 +469,8 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           {
             std::string tmp_name = patch_names[i];
 
-	    // Only put the patch id goes to both the simulation and
-	    // machine patch mesh.
+            // Only put the patch id goes to both the simulation and
+            // machine patch mesh.
             if( i == 0 && addMachineData )
               tmp_name += mesh_layout[k];
 
@@ -1741,9 +1741,9 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     }
   }
   else if( strncmp(varname, "Patch/Rank", 10) == 0 ||
-	   strncmp(varname, "Patch/Node", 10) == 0 ||
-	   strncmp(varname, "Patch/Bounds/Low",  16) == 0 ||
-	   strncmp(varname, "Patch/Bounds/High", 17) == 0 )
+           strncmp(varname, "Patch/Node", 10) == 0 ||
+           strncmp(varname, "Patch/Bounds/Low",  16) == 0 ||
+           strncmp(varname, "Patch/Bounds/High", 17) == 0 )
   {
     isInternalVar = true;
     varType = "Patch_Mesh";
@@ -2642,8 +2642,8 @@ void addMeshVariable( visit_handle md, std::set<std::string> &mesh_vars_added,
     
     // 3 -> point/vector dimension
     if (varType.find("Point") != std::string::npos ||
-	varType.find("Vector") != std::string::npos ||
-	varType.find("IntVector") != std::string::npos)
+        varType.find("Vector") != std::string::npos ||
+        varType.find("IntVector") != std::string::npos)
     {
       type = VISIT_VARTYPE_VECTOR;
       nComponents = 3;
@@ -2676,9 +2676,9 @@ void addMeshVariable( visit_handle md, std::set<std::string> &mesh_vars_added,
     // {
     //   std::stringstream msg;
     //   msg << "Visit libsim - "
-    // 	  << "Uintah variable \"" << varName << "\"  "
-    // 	  << "has an unknown grid variable type \""
-    // 	  << varType << "\"";
+    //    << "Uintah variable \"" << varName << "\"  "
+    //    << "has an unknown grid variable type \""
+    //    << varType << "\"";
       
     //   VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
       
