@@ -493,8 +493,8 @@ private:
           case DIVIDE_CONST_VARIABLE:
             if ( op_iter->second.sum_into_dep ){
               Uintah::parallel_for(range, [&](int i, int j, int k){
-                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + ((*ind_ptr)(i,j,k) == 0) ? 0.0
-                  : op_iter->second.constant / (*ind_ptr)(i,j,k);
+                  (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) +
+                    (((*ind_ptr)(i,j,k) == 0) ? 0.0 : op_iter->second.constant / (*ind_ptr)(i,j,k));
               });
             } else {
               Uintah::parallel_for(range, [&](int i, int j, int k){
