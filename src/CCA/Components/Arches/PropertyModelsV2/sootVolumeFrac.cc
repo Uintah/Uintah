@@ -98,7 +98,7 @@ sootVolumeFrac::register_initialize( VIVec& variable_registry , const bool pack_
 }
 
 template<typename ExecutionSpace, typename MemSpace>
-void sootVolumeFrac::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void sootVolumeFrac::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
   CCVariable<double>& fvSoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( _fvSoot);
   fvSoot.initialize(0.0);
 }
@@ -113,7 +113,7 @@ void sootVolumeFrac::register_timestep_init( VIVec& variable_registry , const bo
 
 
 template<typename ExecutionSpace, typename MemSpace> void
-sootVolumeFrac::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+sootVolumeFrac::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
 }
 
@@ -125,7 +125,7 @@ sootVolumeFrac::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 }
 
 template<typename ExecutionSpace, typename MemSpace>
-void sootVolumeFrac::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void sootVolumeFrac::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   CCVariable<double>& fvSoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( _fvSoot);
   fvSoot.initialize(0.0);

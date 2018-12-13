@@ -188,7 +188,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(const PatchSubset* patches,
                                               OnDemandDataWarehouse* old_dw,
                                               OnDemandDataWarehouse* new_dw,
                                               UintahParams& uintahParams,
-                                              ExecutionObject& executionObject)
+                                              ExecutionObject& execObj)
 {
   // When Task is scheduled to CPU
   if (event == Task::CPU) {
@@ -292,7 +292,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(const PatchSubset* patches,
 
       launchUnifiedSchedulerTestKernel(dimGrid,
                                        dimBlock,
-                                       (cudaStream_t*) executionObject.getStream(),
+                                       (cudaStream_t*) execObj.getStream(),
                                        patch->getID(),
                                        patchNodeLowIndex,
                                        patchNodeHighIndex,

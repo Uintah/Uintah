@@ -205,7 +205,7 @@ RateDeposition::register_initialize( std::vector<AFC_VI>& variable_registry , co
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   for ( int e=0; e< _Nenv;e++){
     const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);
@@ -310,7 +310,7 @@ RateDeposition::register_timestep_init( std::vector<AFC_VI>& variable_registry ,
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-RateDeposition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+RateDeposition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   for ( int e=0; e< _Nenv;e++){
     const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);
@@ -447,7 +447,7 @@ RateDeposition::register_timestep_eval( std::vector<AFC_VI>& variable_registry, 
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   //double CaO=_CaO;double MgO=_MgO; double AlO=_AlO;double SiO=_SiO; //const double alpha=0;
   // const double B0=0; const doulbe B1=0; const double B3=0;

@@ -45,15 +45,15 @@ public:
     };
 
     template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
 
     template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& execObj){}
 
     template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
 
 protected:
 
@@ -218,7 +218,7 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
-  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
     for (int ieqn = 0; ieqn < int(m_eqn_names.size()); ieqn++ ){
 
@@ -226,7 +226,7 @@ private:
         auto x_flux = tsk_info->get_uintah_field_add<FXT,double,MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
         auto y_flux = tsk_info->get_uintah_field_add<FYT,double,MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
         auto z_flux = tsk_info->get_uintah_field_add<FZT,double,MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
-        parallel_initialize(exObj, 0.0, x_flux,y_flux,z_flux);
+        parallel_initialize(execObj, 0.0, x_flux,y_flux,z_flux);
       }
     }
   }
@@ -259,7 +259,7 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
-  void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+  void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
     auto eps = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eps_name);
 
@@ -275,14 +275,14 @@ private:
 
         auto phi = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(m_eqn_names[ieqn]);
 
-        parallel_initialize(exObj,0.0, x_flux,y_flux,z_flux);
+        parallel_initialize(execObj,0.0, x_flux,y_flux,z_flux);
 
         auto D = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_D_name);
 
          //x - Direction
         GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
         Uintah::BlockRange xrange(low_fx_patch_range, high_fx_patch_range);
-        Uintah::parallel_for(exObj, xrange, KOKKOS_LAMBDA (int i, int j, int k){
+        Uintah::parallel_for(execObj, xrange, KOKKOS_LAMBDA (int i, int j, int k){
 
           const double afx  = ( eps(i,j,k) + eps(i-1,j,k) ) / 2. < 0.51 ? 0.0 : 1.0;
 
@@ -294,7 +294,7 @@ private:
         // y - Direction
         GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
         Uintah::BlockRange yrange(low_fy_patch_range, high_fy_patch_range);
-        Uintah::parallel_for(exObj, yrange, KOKKOS_LAMBDA (int i, int j, int k){
+        Uintah::parallel_for(execObj, yrange, KOKKOS_LAMBDA (int i, int j, int k){
 
           const double afy  = ( eps(i,j,k) + eps(i,j-1,k) ) / 2. < 0.51 ? 0.0 : 1.0;
 
@@ -306,7 +306,7 @@ private:
         // z - Direction
         GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
         Uintah::BlockRange zrange(low_fz_patch_range, high_fz_patch_range);
-        Uintah::parallel_for(exObj, zrange, KOKKOS_LAMBDA (int i, int j, int k){
+        Uintah::parallel_for(execObj, zrange, KOKKOS_LAMBDA (int i, int j, int k){
 
           const double afz  = ( eps(i,j,k) + eps(i,j,k-1) ) / 2. < 0.51 ? 0.0 : 1.0;
 
@@ -331,7 +331,7 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
-  void Diffusion<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+  void Diffusion<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   }
 

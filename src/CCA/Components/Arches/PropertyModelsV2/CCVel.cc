@@ -130,9 +130,9 @@ void CCVel::register_initialize( AVarInfo& variable_registry , const bool pack_t
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
-  compute_velocities(exObj, patch, tsk_info );
+  compute_velocities(execObj, patch, tsk_info );
 
 }
 
@@ -153,7 +153,7 @@ void CCVel::register_timestep_init( AVarInfo& variable_registry , const bool pac
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto old_u_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_u_vel_name_cc);
   auto old_v_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_v_vel_name_cc);
@@ -164,7 +164,7 @@ CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execu
   auto w_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);
 
   Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+    Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       u_cc(i,j,k)=old_u_cc(i,j,k);
       v_cc(i,j,k)=old_v_cc(i,j,k);
       w_cc(i,j,k)=old_w_cc(i,j,k);
@@ -189,15 +189,15 @@ void CCVel::register_timestep_eval( VIVec& variable_registry, const int time_sub
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
-  compute_velocities(exObj, patch, tsk_info );
+  compute_velocities(execObj, patch, tsk_info );
 
 }
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void CCVel::compute_velocities(ExecutionObject<ExecutionSpace, MemSpace>& exObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void CCVel::compute_velocities(ExecutionObject<ExecutionSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   auto u = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >(m_u_vel_name);
   auto v = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >(m_v_vel_name);
@@ -206,12 +206,12 @@ void CCVel::compute_velocities(ExecutionObject<ExecutionSpace, MemSpace>& exObj,
   auto v_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_v_vel_name_cc);
   auto w_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);
 
-  parallel_initialize(exObj,0.0,u_cc,v_cc,w_cc);
+  parallel_initialize(execObj,0.0,u_cc,v_cc,w_cc);
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  ArchesCore::doInterpolation(exObj, range, u_cc, u , 1, 0, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(exObj, range, v_cc, v , 0, 1, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(exObj, range, w_cc, w , 0, 0, 1 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, range, u_cc, u , 1, 0, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, range, v_cc, v , 0, 1, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, range, w_cc, w , 0, 0, 1 ,m_int_scheme);
 
 }

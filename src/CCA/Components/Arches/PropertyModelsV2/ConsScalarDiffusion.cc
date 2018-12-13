@@ -87,14 +87,14 @@ void ConsScalarDiffusion::register_initialize( AVarInfo& variable_registry , con
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
 
   auto gamma = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_gamma_name);
   //constCCVariable<double>& mu_t    = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_turb_viscosity_name);
   //constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_density_name);
 
-  parallel_initialize(exObj,0.0,gamma);
+  parallel_initialize(execObj,0.0,gamma);
 
   //Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
   //Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -110,7 +110,7 @@ void ConsScalarDiffusion::register_timestep_init( AVarInfo& variable_registry , 
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-ConsScalarDiffusion::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+ConsScalarDiffusion::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
 
 }
@@ -128,17 +128,17 @@ void ConsScalarDiffusion::register_timestep_eval( VIVec& variable_registry, cons
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void ConsScalarDiffusion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void ConsScalarDiffusion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto gamma = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_gamma_name);
   auto  mu_t    = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double , MemSpace >(m_turb_viscosity_name);
   auto  density = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double , MemSpace >(m_density_name);
 
-  parallel_initialize(exObj, 0.0, gamma);
+  parallel_initialize(execObj, 0.0, gamma);
   const double  PrNo= m_Pr;
   const double molecular_diffusivity =m_Diffusivity;
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
    gamma(i,j,k) = density(i,j,k)*molecular_diffusivity + mu_t(i,j,k)/PrNo;
   });
 

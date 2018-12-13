@@ -204,7 +204,7 @@ namespace Uintah{
                    OnDemandDataWarehouse* old_dw,
                    OnDemandDataWarehouse* new_dw,
                    UintahParams& uintahParams,
-                   ExecutionObject<ExecutionSpace, MemSpace>& executionObject,
+                   ExecutionObject<ExecutionSpace, MemSpace>& execObj,
                    std::vector<ArchesFieldContainer::VariableInformation>  variable_registry,
                    std::vector<TaskInterface*> arches_task,
                    TaskInterface::TASK_TYPE type,

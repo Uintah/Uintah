@@ -93,7 +93,7 @@ UpdateParticleSize::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   ParticleTuple pd_t = tsk_info->get_uintah_particle_field( _size_name );
   ParticleVariable<double>& pd = *(std::get<0>(pd_t));
@@ -121,7 +121,7 @@ UpdateParticleSize::register_timestep_eval(
 
 //This is the work for the task.  First, get the variables. Second, do the work!
 template<typename ExecutionSpace, typename MemSpace>
-void UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   ParticleTuple pd_t = tsk_info->get_uintah_particle_field( _size_name );
   ParticleVariable<double>& pd = *(std::get<0>(pd_t));

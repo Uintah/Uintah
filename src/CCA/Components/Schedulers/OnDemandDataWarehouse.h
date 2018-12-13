@@ -466,7 +466,7 @@ public:
                            , const VarLabel                                  * label
                            , const PatchSubset                               * patches
                            , const MaterialSubset                            * matls
-                           ,       ExecutionObject<ExecutionSpace, MemSpace> & executionObject
+                           ,       ExecutionObject<ExecutionSpace, MemSpace> & execObj
                            ,       bool                                        replace
                            , const PatchSubset                               * newPatches
                            );

@@ -142,13 +142,13 @@ DensityRK::register_initialize( std::vector<ArchesFieldContainer::VariableInform
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void DensityRK::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void DensityRK::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto rhoRK = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_label_densityRK );
   auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double, MemSpace>( m_label_density );
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
     rhoRK(i,j,k)   = rho(i,j,k);
   });
 
@@ -169,7 +169,7 @@ DensityRK::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInf
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void DensityRK::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void DensityRK::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace  >( m_label_density,ArchesFieldContainer::OLDDW);
   auto rho = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace  >( m_label_density );
@@ -181,7 +181,7 @@ void DensityRK::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execu
   const double beta = _beta[time_substep];
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for(exObj,range, KOKKOS_LAMBDA(int i, int j, int k){
+  Uintah::parallel_for(execObj,range, KOKKOS_LAMBDA(int i, int j, int k){
 
     rhoRK(i,j,k) =  alpha * old_rho(i,j,k) +  beta * rho(i,j,k);
 

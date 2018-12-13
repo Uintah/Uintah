@@ -174,7 +174,7 @@ namespace Uintah {
   **/
     template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT , unsigned int Cscheme>
     struct ComputeConvectiveFlux1D{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> exObj, BlockRange& range,
+ void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -187,13 +187,13 @@ namespace Uintah {
     // UPWIND STRUCT
     template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
     struct ComputeConvectiveFlux1D<ExecutionSpace, MemSpace,grid_T,grid_CT,UpwindConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> exObj, BlockRange& range,
+ void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
           grid_CT &eps, int dir ) 
       {
-        parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+        parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
         STENCIL3_1D(dir);
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double afc = eps(IJK_)*eps(IJK_M_);
@@ -205,13 +205,13 @@ namespace Uintah {
     // CENTRAL STRUCT
     template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
     struct ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,grid_T,grid_CT,CentralConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> exObj, BlockRange& range,
+ void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
           grid_CT &eps, int dir ) 
       {
-        parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+        parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
         STENCIL3_1D(dir);
         const double afc = eps(IJK_)*eps(IJK_M_);
         flux(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
@@ -222,7 +222,7 @@ namespace Uintah {
     // SUPERBEE STRUCT
     template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
     struct ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,grid_T,grid_CT,SuperBeeConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> exObj, BlockRange& range,
+ void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -230,7 +230,7 @@ namespace Uintah {
       {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
-        parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+        parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
         double my_psi;
         STENCIL5_1D(dir);
         double r = u(IJK_) > 0 ?
@@ -256,7 +256,7 @@ namespace Uintah {
     // VanLeer STRUCT
     template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
     struct ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,grid_T,grid_CT,VanLeerConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> exObj, BlockRange& range,
+ void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -264,7 +264,7 @@ namespace Uintah {
       {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
-        parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+        parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
           double my_psi;
 
           STENCIL5_1D(dir);
@@ -289,7 +289,7 @@ namespace Uintah {
     // ROEMINMODSTRUCT
     template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
     struct ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,grid_T,grid_CT,RoeConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> exObj, BlockRange& range,
+ void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -297,7 +297,7 @@ namespace Uintah {
       {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
-      parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
           double my_psi;
           STENCIL5_1D(dir);
           double r = u(IJK_) > 0 ?
@@ -322,7 +322,7 @@ namespace Uintah {
     // FOURTH TRUCT
     template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
     struct ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,grid_T,grid_CT,FourthConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> exObj, BlockRange& range,
+ void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -331,7 +331,7 @@ namespace Uintah {
       const double c1{7./12.};
       const double c2{-1./12.};
 
-      parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
         STENCIL5_1D(dir);
         const double afc  = eps(IJK_)* eps(IJK_M_) ;
         flux(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
@@ -828,7 +828,7 @@ namespace Uintah {
   template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT , unsigned int Cscheme>
   struct ComputeConvectiveFlux3D{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& exObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -846,7 +846,7 @@ namespace Uintah {
   template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
   struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,UpwindConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& exObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -854,7 +854,7 @@ namespace Uintah {
               grid_T& flux_z,
               const grid_CT& eps ) 
       {
-      parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       //X-dir
       {
         STENCIL3_1D(0);
@@ -885,7 +885,7 @@ namespace Uintah {
   template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
   struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,CentralConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& exObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -893,7 +893,7 @@ namespace Uintah {
               grid_T& flux_z,
               const grid_CT& eps ) 
       {
-      parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       //X-dir
       {
         STENCIL3_1D(0);
@@ -923,7 +923,7 @@ namespace Uintah {
   template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
   struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,SuperBeeConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& exObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -933,7 +933,7 @@ namespace Uintah {
       {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
-      parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       //X-dir
       {
         double my_psi;
@@ -1008,7 +1008,7 @@ namespace Uintah {
   template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
   struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,VanLeerConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& exObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -1018,7 +1018,7 @@ namespace Uintah {
       {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
-      parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       //X-dir
       {
         double my_psi;
@@ -1093,7 +1093,7 @@ namespace Uintah {
   template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
   struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,RoeConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& exObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -1103,7 +1103,7 @@ namespace Uintah {
       {
       const double tiny{1.0e-16};
       const double huge{1.0e10};
-      parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       //X-dir
       {
         double my_psi;
@@ -1178,7 +1178,7 @@ namespace Uintah {
   template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
   struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,FourthConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& exObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -1188,7 +1188,7 @@ namespace Uintah {
       {
       const double c1 {7./12.};
       const double c2 {-1./12.};
-      parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       //X-dir
       {
         STENCIL5_1D(0);

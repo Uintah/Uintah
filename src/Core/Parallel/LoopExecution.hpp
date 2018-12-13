@@ -315,7 +315,7 @@ struct int_3{
 
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor )
+parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& execObj, BlockRange const & r, const Functor & functor )
 {
 
   const unsigned int i_size = r.end(0) - r.begin(0);
@@ -341,7 +341,7 @@ parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, Blo
 
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor )
+parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& execObj, BlockRange const & r, const Functor & functor )
 {
 
   // Team policy approach (reuses CUDA threads)
@@ -362,9 +362,9 @@ parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, Blo
   const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 
   // Get the requested amount of threads per streaming multiprocessor (SM) and number of SMs totals.
-  const unsigned int cuda_threads_per_block   = executionObject.getCudaThreadsPerBlock();
-  const unsigned int cuda_blocks_per_loop     = executionObject.getCudaBlocksPerLoop();
-  const unsigned int streamPartitions = executionObject.getNumStreams();
+  const unsigned int cuda_threads_per_block   = execObj.getCudaThreadsPerBlock();
+  const unsigned int cuda_blocks_per_loop     = execObj.getCudaBlocksPerLoop();
+  const unsigned int streamPartitions = execObj.getNumStreams();
 
   // The requested range of data may not have enough work for the requested command line arguments, so shrink them if necessary.
   const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_block * cuda_blocks_per_loop)
@@ -378,7 +378,7 @@ parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, Blo
     Kokkos::Cuda instanceObject();
     Kokkos::TeamPolicy< Kokkos::Cuda > tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
 #else
-    void* stream = executionObject.getStream(i);
+    void* stream = execObj.getStream(i);
     if (!stream) {
       std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
       SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
@@ -434,8 +434,8 @@ parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, Blo
 //  unsigned int rbegin2 = r.begin(2);
 //
 //
-//  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
-//  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
+//  int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
+//  int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
 //
 //  //If 256 threads aren't needed, use less.
 //  //But cap at 256 threads total, as this will correspond to 256 threads in a block.
@@ -489,7 +489,7 @@ parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, Blo
 
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor )
+parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& execObj, BlockRange const & r, const Functor & functor )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -508,8 +508,8 @@ void
 parallel_for( BlockRange const & r, const Functor & functor )
 {
   //Force users into using a single CPU thread if they didn't specify OpenMP
-  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject; // Make an empty object
-  parallel_for<UintahSpaces::CPU>( executionObject, r, functor );
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> execObj; // Make an empty object
+  parallel_for<UintahSpaces::CPU>( execObj, r, functor );
 }
 
 // -------------------------------------  parallel_reduce_sum loops  ---------------------------------------------
@@ -518,7 +518,7 @@ parallel_for( BlockRange const & r, const Functor & functor )
 
 template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_reduce_sum(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_sum(ExecutionObject<ExecutionSpace, MemorySpace>& execObj, BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   ReductionType tmp = red;
   const unsigned int i_size = r.end(0) - r.begin(0);
@@ -591,7 +591,7 @@ parallel_reduce_sum(ExecutionObject<ExecutionSpace, MemorySpace>& executionObjec
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red )
+parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& execObj, BlockRange const & r, const Functor & functor, ReductionType & red )
 {
   // Overall goal, split a 3D range requested by the user into various SMs on the GPU.  (In essence, this would be a Kokkos MD_Team+Policy, if one existed)
   // The process requires going from 3D range to a 1D range, partitioning the 1D range into groups that are multiples of 32,
@@ -610,9 +610,9 @@ parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
   const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 
   // Get the requested amount of threads per streaming multiprocessor (SM) and number of SMs totals.
-  const unsigned int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
-  const unsigned int cuda_blocks_per_loop     = executionObject.getCudaBlocksPerLoop();
-  const unsigned int streamPartitions = executionObject.getNumStreams();
+  const unsigned int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
+  const unsigned int cuda_blocks_per_loop     = execObj.getCudaBlocksPerLoop();
+  const unsigned int streamPartitions = execObj.getNumStreams();
 
   // The requested range of data may not have enough work for the requested command line arguments, so shrink them if necessary.
   const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_block * cuda_blocks_per_loop)
@@ -625,7 +625,7 @@ parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
     Kokkos::Cuda instanceObject();
     Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
 #else
-    void* stream = executionObject.getStream(i);
+    void* stream = execObj.getStream(i);
     if (!stream) {
       std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
       SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
@@ -709,7 +709,7 @@ parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
 
 template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& execObj, BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -730,8 +730,8 @@ void
 parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionType & red )
 {
   //Force users into using a single CPU thread if they didn't specify OpenMP
-  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject; // Make an empty object
-  parallel_reduce_sum<UintahSpaces::CPU>( executionObject, r, functor, red );
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> execObj; // Make an empty object
+  parallel_reduce_sum<UintahSpaces::CPU>( execObj, r, functor, red );
 }
 
 // -------------------------------------  parallel_reduce_min loops  ---------------------------------------------
@@ -740,7 +740,7 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 #if defined(UINTAH_ENABLE_KOKKOS)
 template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& execObj,
                      BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   ReductionType tmp0 = red;
@@ -768,7 +768,7 @@ parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,  
+parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& execObj,  
                      BlockRange const & r, const Functor & functor, ReductionType & red )
 {
   ReductionType tmp = red;
@@ -785,9 +785,9 @@ parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
   const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 
   // Get the requested amount of threads per streaming multiprocessor (SM) and number of SMs totals.
-  const unsigned int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
-  const unsigned int cuda_blocks_per_loop     = executionObject.getCudaBlocksPerLoop();
-  const unsigned int streamPartitions = executionObject.getNumStreams();
+  const unsigned int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
+  const unsigned int cuda_blocks_per_loop     = execObj.getCudaBlocksPerLoop();
+  const unsigned int streamPartitions = execObj.getNumStreams();
 
   // The requested range of data may not have enough work for the requested command line arguments, so shrink them if necessary.
   const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_block * cuda_blocks_per_loop)
@@ -800,7 +800,7 @@ parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
     Kokkos::Cuda instanceObject();
     Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
 #else
-    void* stream = executionObject.getStream(i);
+    void* stream = execObj.getStream(i);
     if (!stream) {
       std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
       SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
@@ -860,7 +860,7 @@ parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
 //TODO: This appears to not do any "min" on the reduction.
 template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& execObj,
                      BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
@@ -878,7 +878,7 @@ parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
 
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU >::value, void>::type
-sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
+sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& execObj,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
 {
 
     const int   idir= plusX ? 1 : -1; 
@@ -907,7 +907,7 @@ sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObj
 #if defined(UINTAH_ENABLE_KOKKOS)
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
+sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& execObj,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -1006,7 +1006,7 @@ sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObj
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
+sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& execObj,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
 {
 
     SCI_THROW(InternalError("Error: sweeps on cuda has not been implimented .", __FILE__, __LINE__));
@@ -1020,7 +1020,7 @@ sweeping_parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObj
 #if defined(UINTAH_ENABLE_KOKKOS)
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& execObj,
              Kokkos::View<int_3*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
   Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, list_size).set_chunk_size(1), [=](const unsigned int & iblock) {
@@ -1037,12 +1037,12 @@ parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executio
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& execObj,
              Kokkos::View<int_3*, Kokkos::CudaSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
 
-  unsigned int cudaThreadsPerBlock = executionObject.getCudaThreadsPerBlock();
-  unsigned int cudaBlocksPerLoop   = executionObject.getCudaBlocksPerLoop();
+  unsigned int cudaThreadsPerBlock = execObj.getCudaThreadsPerBlock();
+  unsigned int cudaBlocksPerLoop   = execObj.getCudaBlocksPerLoop();
 
   const unsigned int actualThreads = list_size > cudaThreadsPerBlock ? cudaThreadsPerBlock : list_size;
 
@@ -1050,7 +1050,7 @@ parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executio
   Kokkos::Cuda instanceObject();
   Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( cudaBlocksPerLoop, actualThreads );
 #else
-  void* stream = executionObject.getStream();
+  void* stream = execObj.getStream();
   if (!stream) {
     std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
     SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
@@ -1083,10 +1083,10 @@ parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executio
 // TODO: What is this?  It needs a better name
 template <typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, T2 KV3, const T3 init_val)
+parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& execObj, T2 KV3, const T3 init_val)
 {
-  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
-  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
+  int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
+  int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
 
   const int num_cells=KV3.m_view.size();
   const int actualThreads = num_cells > cuda_threads_per_block ? cuda_threads_per_block : num_cells;
@@ -1113,7 +1113,7 @@ parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, T2 K
 
 template <typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& execObj,
                             const struct1DArray<T, ARRAY_SIZE>& KKV3,  const ValueType& init_val ){
 
   //TODO: This should probably be serialized and not use a Kokkos::parallel_for?
@@ -1138,7 +1138,7 @@ parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& execut
 
 //template <typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
 //typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-//parallel_initialize_single(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
+//parallel_initialize_single(ExecutionObject& execObj, T2 KKV3, const T3 init_val ){
 //  for (unsigned int j=0; j < KKV3.size(); j++){
 //    Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,KKV3(j).m_view.size() ).set_chunk_size(2), [=](int i) {
 //      KKV3(j)(i)=init_val;
@@ -1163,7 +1163,7 @@ class KokkosView3;
 
 template < typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& execObj,
                             const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ){
 
   // n_cells is the amount of cells total to process among collection of vars (the view of Kokkos views)
@@ -1174,8 +1174,8 @@ parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& execut
     n_cells += KKV3[j].m_view.size();
   }
 
-  unsigned int cudaThreadsPerBlock = executionObject.getCudaThreadsPerBlock();
-  unsigned int cudaBlocksPerLoop   = executionObject.getCudaBlocksPerLoop();
+  unsigned int cudaThreadsPerBlock = execObj.getCudaThreadsPerBlock();
+  unsigned int cudaBlocksPerLoop   = execObj.getCudaBlocksPerLoop();
 
   const unsigned int actualThreads = n_cells > cudaThreadsPerBlock ? cudaThreadsPerBlock : n_cells;
 
@@ -1183,7 +1183,7 @@ parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& execut
   Kokkos::Cuda instanceObject();
   Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( cudaBlocksPerLoop, actualThreads );
 #else
-  void* stream = executionObject.getStream();
+  void* stream = execObj.getStream();
   if (!stream) {
     std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
     SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
@@ -1264,7 +1264,7 @@ inline void sumViewSize(const struct1DArray< T, Capacity> & small_v, int &index)
 
 template<typename ExecutionSpace, typename MemorySpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containers of grid variables?
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, const T& initializationValue,  Ts & ... inputs) {
+parallel_initialize(ExecutionObject<ExecutionSpace, MemorySpace>& execObj, const T& initializationValue,  Ts & ... inputs) {
 
   // Count the number of views used (sometimes they may be views of views)
   int n = 0 ; // Get number of variadic arguments
@@ -1284,15 +1284,15 @@ parallel_initialize(ExecutionObject<ExecutionSpace, MemorySpace>& executionObjec
 
   for (int j=0; j<n_init_groups; j++){
     hostArrayOfViews[j].runTime_size=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n % ARRAY_SIZE+1;
-    parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >(executionObject, hostArrayOfViews[j], initializationValue );
-    //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
+    parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >(execObj, hostArrayOfViews[j], initializationValue );
+    //parallel_initialize_single<ExecutionSpace>(execObj, inputs_, inside_value ); // safer version, less ambitious
   }
 }
 
 ////This function is the same as above,but appears to be necessary due to CCVariable support.....
 template<typename ExecutionSpace, typename MemorySpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containers of grid variables?
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+parallel_initialize(ExecutionObject<ExecutionSpace, MemorySpace>& execObj,
                     const T & initializationValue,  Ts & ... inputs) {
 
   // Count the number of views used (sometimes they may be views of views)
@@ -1312,8 +1312,8 @@ parallel_initialize(ExecutionObject<ExecutionSpace, MemorySpace>& executionObjec
 
   for (int j=0; j<n_init_groups; j++){
     hostArrayOfViews[j].runTime_size=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n % ARRAY_SIZE+1;
-    parallel_initialize_grouped<ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >( executionObject, hostArrayOfViews[j], initializationValue );
-    //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
+    parallel_initialize_grouped<ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >( execObj, hostArrayOfViews[j], initializationValue );
+    //parallel_initialize_single<ExecutionSpace>(execObj, inputs_, inside_value ); // safer version, less ambitious
   }
 }
 
@@ -1336,7 +1336,7 @@ void legacy_initialize(T inside_value, T2& data_fields) {  // for stand alone da
 
 template<typename ExecutionSpace, typename MemorySpace, typename T, class ...Ts>
 typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_initialize(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+parallel_initialize(ExecutionObject<ExecutionSpace, MemorySpace>& execObj,
                     const T& initializationValue,  Ts & ... inputs) {
   Alias<int[]>{( //first part of magic unpacker
              //inputs.initialize (inside_value)
@@ -1396,7 +1396,7 @@ void parallel_for( BlockRange const & r, const Functor & f, const Option& op )
 #if defined( UINTAH_ENABLE_KOKKOS )
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& execObj,
              Kokkos::View<int_3*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
   for (unsigned int iblock=0; iblock<list_size; ++iblock) {
@@ -1406,7 +1406,7 @@ parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executio
 #else
 template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+parallel_for_unstructured(ExecutionObject<ExecutionSpace, MemorySpace>& execObj,
              std::vector<int_3> &iterSpace ,const unsigned int list_size , const Functor & functor )
 {
   for (unsigned int iblock=0; iblock<list_size; ++iblock) {

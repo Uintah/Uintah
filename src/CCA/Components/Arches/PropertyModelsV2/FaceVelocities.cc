@@ -123,7 +123,7 @@ void FaceVelocities::register_initialize( AVarInfo& variable_registry , const bo
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void FaceVelocities::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void FaceVelocities::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto ucell_xvel = tsk_info->get_uintah_field_add<SFCXVariable<double> ,double, MemSpace>("ucell_xvel");
   auto ucell_yvel = tsk_info->get_uintah_field_add<SFCXVariable<double> ,double, MemSpace>("ucell_yvel");
@@ -137,7 +137,7 @@ void FaceVelocities::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_
   auto wcell_yvel = tsk_info->get_uintah_field_add<SFCZVariable<double> ,double, MemSpace>("wcell_yvel");
   auto wcell_zvel = tsk_info->get_uintah_field_add<SFCZVariable<double> ,double, MemSpace>("wcell_zvel");
 
-  parallel_initialize(exObj,0.0,ucell_xvel
+  parallel_initialize(execObj,0.0,ucell_xvel
                                ,ucell_yvel
                                ,ucell_zvel
                                ,vcell_xvel
@@ -160,7 +160,7 @@ void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>,const double, MemSpace>(m_u_vel_name);
   auto vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>,const double, MemSpace>(m_v_vel_name);
@@ -178,7 +178,7 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
   auto wcell_yvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >("wcell_yvel");
   auto wcell_zvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >("wcell_zvel");
 
-  parallel_initialize(exObj,0.0,ucell_xvel 
+  parallel_initialize(execObj,0.0,ucell_xvel 
                                ,ucell_yvel
                                ,ucell_zvel
                                ,vcell_xvel
@@ -200,26 +200,26 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,1,1,0,1,0,1);
   Uintah::BlockRange x_range(low, high);
 
-  ArchesCore::doInterpolation(exObj, x_range, ucell_xvel, uVel , -1, 0, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(exObj, x_range, ucell_yvel, vVel , -1, 0, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(exObj, x_range, ucell_zvel, wVel , -1, 0, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, x_range, ucell_xvel, uVel , -1, 0, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, x_range, ucell_yvel, vVel , -1, 0, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, x_range, ucell_zvel, wVel , -1, 0, 0 ,m_int_scheme);
 
   low = patch->getCellLowIndex();
   high = patch->getCellHighIndex();
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,1,1,0,1);
   Uintah::BlockRange y_range(low, high);
 
-  ArchesCore::doInterpolation(exObj, y_range, vcell_xvel, uVel , 0, -1, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(exObj, y_range, vcell_yvel, vVel , 0, -1, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(exObj, y_range, vcell_zvel, wVel , 0, -1, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, y_range, vcell_xvel, uVel , 0, -1, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, y_range, vcell_yvel, vVel , 0, -1, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, y_range, vcell_zvel, wVel , 0, -1, 0 ,m_int_scheme);
 
   low = patch->getCellLowIndex();
   high = patch->getCellHighIndex();
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,0,1,1,1);
   Uintah::BlockRange z_range(low, high);
 
-  ArchesCore::doInterpolation(exObj, z_range, wcell_xvel, uVel , 0, 0, -1 ,m_int_scheme);
-  ArchesCore::doInterpolation(exObj, z_range, wcell_yvel, vVel , 0, 0, -1 ,m_int_scheme);
-  ArchesCore::doInterpolation(exObj, z_range, wcell_zvel, wVel , 0, 0, -1 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, z_range, wcell_xvel, uVel , 0, 0, -1 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, z_range, wcell_yvel, vVel , 0, 0, -1 ,m_int_scheme);
+  ArchesCore::doInterpolation(execObj, z_range, wcell_zvel, wVel , 0, 0, -1 ,m_int_scheme);
 
 }

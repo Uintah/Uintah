@@ -55,15 +55,15 @@ public:
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){}
 
     template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){}
 
     template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& execObj){}
 
     template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
 
     void create_local_labels();
 
@@ -213,10 +213,10 @@ void VarInterpolation<T,IT>::register_initialize(
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
 template<typename ExecutionSpace, typename MemSpace>
-void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto int_var = tsk_info->get_uintah_field_add<IT, double, MemSpace>(m_inter_var_name);
-  parallel_initialize(exObj,0.0,int_var);
+  parallel_initialize(execObj,0.0,int_var);
 
 }
 
@@ -235,7 +235,7 @@ void VarInterpolation<T,IT>::register_timestep_eval(
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
 template<typename ExecutionSpace, typename MemSpace>
-void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto int_var = tsk_info->get_uintah_field_add<IT,  double, MemSpace>(m_inter_var_name);
   auto var = tsk_info->get_const_uintah_field_add<T, const double, MemSpace >(m_var_name);
@@ -245,7 +245,7 @@ void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* ts
   const int koff = m_ijk_off[2];
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-  ArchesCore::doInterpolation(exObj, range, int_var, var, ioff, joff, koff, m_int_scheme);
+  ArchesCore::doInterpolation(execObj, range, int_var, var, ioff, joff, koff, m_int_scheme);
 
 
 }

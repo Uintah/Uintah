@@ -112,7 +112,7 @@ namespace Uintah {
                               OnDemandDataWarehouse* old_dw,
                               OnDemandDataWarehouse* new_dw,
                               UintahParams& uintahParams,
-                              ExecutionObject& executionObject);
+                              ExecutionObject& execObj);
 
       void timeAdvance1DP(const ProcessorGroup*,
                           const PatchSubset* patches,

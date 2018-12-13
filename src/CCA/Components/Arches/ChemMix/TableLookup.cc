@@ -162,7 +162,7 @@ TableLookup::setDependBCs(
                            OnDemandDataWarehouse* old_dw,
                            OnDemandDataWarehouse* new_dw,
                            UintahParams& uintahParams,
-                           ExecutionObject<ExecutionSpace,MemSpace>& exObj ,
+                           ExecutionObject<ExecutionSpace,MemSpace>& execObj ,
                            MixingRxnModel* model )
 {
   for (int p=0; p < patches->size(); p++){
@@ -195,7 +195,7 @@ TableLookup::setDependBCs(
               m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
             if ( (*spec).bcType == DIRICHLET ){
-              parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
                 var(i,j,k) = (*spec).value;
               });
             } else {

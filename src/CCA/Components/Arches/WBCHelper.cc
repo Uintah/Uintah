@@ -932,7 +932,7 @@ WBCHelper::computeBCAreaHelper(
                           OnDemandDataWarehouse        * old_dw,
                           OnDemandDataWarehouse        * new_dw,
                           UintahParams& uintahParams,
-                          ExecutionObject<ExecutionSpace,MemSpace>& executionObject ,
+                          ExecutionObject<ExecutionSpace,MemSpace>& execObj ,
                           const IntVector lo,
                           const IntVector hi ){
   for (int p = 0; p < patches->size(); p++) {

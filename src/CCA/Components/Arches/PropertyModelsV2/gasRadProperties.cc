@@ -149,7 +149,7 @@ gasRadProperties::register_initialize( VIVec& variable_registry , const bool pac
 }
 
 template<typename ExecutionSpace, typename MemSpace>
-void gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   CCVariable<double>& abskg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abskg_name);
 
@@ -166,7 +166,7 @@ void gasRadProperties::register_timestep_init( VIVec& variable_registry , const 
 }
 
 template<typename ExecutionSpace, typename MemSpace> void
-gasRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+gasRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
 }
 
@@ -196,7 +196,7 @@ gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 }
 
 template<typename ExecutionSpace, typename MemSpace>
-void gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskg_name));

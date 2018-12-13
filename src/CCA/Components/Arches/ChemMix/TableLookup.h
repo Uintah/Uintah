@@ -90,7 +90,7 @@ private:
                 OnDemandDataWarehouse* old_dw,
                 OnDemandDataWarehouse* new_dw,
                 UintahParams& uintahParams,
-                ExecutionObject<ExecutionSpace,MemSpace>& executionObject ,
+                ExecutionObject<ExecutionSpace,MemSpace>& execObj ,
                 MixingRxnModel* model );
 
   std::map<std::string, MixingRxnModel*> m_tables;        ///< The lookup interface

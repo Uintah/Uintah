@@ -152,7 +152,7 @@ WallConstSmag::register_initialize( std::vector<AFC::VariableInformation>&
 
 //---------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void WallConstSmag::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void WallConstSmag::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
 
 }
@@ -178,7 +178,7 @@ WallConstSmag::register_timestep_eval( std::vector<AFC::VariableInformation>&
 
 //---------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);

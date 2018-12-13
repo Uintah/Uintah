@@ -42,7 +42,7 @@ namespace Uintah{
   class TaskInterface;
 
   template <typename ES, typename MS>
-  using archesFunctionPtr  = void (TaskInterface::*)( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject<ES, MS>& executionObject );
+  using archesFunctionPtr  = void (TaskInterface::*)( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject<ES, MS>& execObj );
 
   class TaskInterface{
 
@@ -132,7 +132,7 @@ public:
 
     //--------------------------------------------------------------------------------------------------
     template<typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& executionObject ) {
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& execObj ) {
 
       archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
@@ -151,7 +151,7 @@ public:
           reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemSpace > >(function_ptr);
 
       if ( handler_ptr ) {
-        (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
+        (this->*handler_ptr)( patch, tsk_info_mngr, execObj );
       }
     }
 
@@ -163,7 +163,7 @@ public:
 
     //--------------------------------------------------------------------------------------------------
     template<typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& executionObject ) {
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& execObj ) {
 
       archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
@@ -184,7 +184,7 @@ public:
           reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemSpace > >(function_ptr);
 
       if ( handler_ptr ) {
-        (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
+        (this->*handler_ptr)( patch, tsk_info_mngr, execObj );
       }
     }
 
@@ -196,7 +196,7 @@ public:
 
     //--------------------------------------------------------------------------------------------------
     template<typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& executionObject ) {
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& execObj ) {
 
       archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
@@ -215,7 +215,7 @@ public:
           reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemSpace > >(function_ptr);
 
       if ( handler_ptr ) {
-        (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
+        (this->*handler_ptr)( patch, tsk_info_mngr, execObj );
       }
     }
 
@@ -227,7 +227,7 @@ public:
     }
 
     template<typename ExecutionSpace, typename MemSpace>
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& executionObject ) {
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& execObj ) {
 
       archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
@@ -246,7 +246,7 @@ public:
           reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemSpace > >(function_ptr);
 
       if ( handler_ptr ) {
-        (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
+        (this->*handler_ptr)( patch, tsk_info_mngr, execObj );
       }
     }
 
@@ -257,7 +257,7 @@ public:
     }
 
     template<typename ExecutionSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& executionObject ) {
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject< ExecutionSpace, MemSpace>& execObj ) {
 
       archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
 
@@ -276,7 +276,7 @@ public:
           reinterpret_cast< archesFunctionPtr< ExecutionSpace, MemSpace > >(function_ptr);
 
       if ( handler_ptr ) {
-        (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
+        (this->*handler_ptr)( patch, tsk_info_mngr, execObj );
       }
     }
 
@@ -458,15 +458,15 @@ protected:
   TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject* taskPtr
                                                          , void ( ArchesTaskObject::*afp1 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES1, MS1> & executionObject
+                                                                                           ,       ExecutionObject<ES1, MS1> & execObj
                                                                                            )
                                                          , void ( ArchesTaskObject::*afp2 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES2, MS2> & executionObject
+                                                                                           ,       ExecutionObject<ES2, MS2> & execObj
                                                                                            )
                                                          , void ( ArchesTaskObject::*afp3 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES3, MS3> & executionObject
+                                                                                           ,       ExecutionObject<ES3, MS3> & execObj
                                                                                            )
                                                          )
   {
@@ -534,11 +534,11 @@ protected:
   TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject * taskPtr
                                                          , void ( ArchesTaskObject::*afp1 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES1, MS1> & executionObject
+                                                                                           ,       ExecutionObject<ES1, MS1> & execObj
                                                                                            )
                                                          , void ( ArchesTaskObject::*afp2 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES2, MS2> & executionObject
+                                                                                           ,       ExecutionObject<ES2, MS2> & execObj
                                                                                            )
                                                          )
   {
@@ -595,7 +595,7 @@ protected:
   TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject * taskPtr
                                                          , void ( ArchesTaskObject::*afp1 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES1, MS1> & executionObject
+                                                                                           ,       ExecutionObject<ES1, MS1> & execObj
                                                                                            )
                               )
   {

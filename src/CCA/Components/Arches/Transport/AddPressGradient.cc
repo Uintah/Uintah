@@ -83,7 +83,7 @@ void AddPressGradient::register_timestep_eval( std::vector<AFC::VariableInformat
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   const double dt = tsk_info->get_dt();
   Vector DX = patch->dCell();
@@ -103,7 +103,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0, 1)
   Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
 
-  Uintah::parallel_for(exObj, x_range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, x_range, KOKKOS_LAMBDA (int i, int j, int k){
 
     const double afc = floor(( eps(i,j,k) + eps(i-1,j,k) ) / 2. );
     xmom(i,j,k) += dt * ( p(i-1,j,k) - p(i,j,k) ) / DX.x()*afc;
@@ -113,7 +113,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0, 1)
   Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
 
-  Uintah::parallel_for(exObj, y_range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, y_range, KOKKOS_LAMBDA (int i, int j, int k){
 
     const double afc = floor(( eps(i,j,k) + eps(i,j-1,k) ) / 2. );
     ymom(i,j,k) += dt * ( p(i,j-1,k) - p(i,j,k) ) / DX.y()*afc;
@@ -122,7 +122,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0, 1)
   Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
-  Uintah::parallel_for(exObj, z_range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, z_range, KOKKOS_LAMBDA (int i, int j, int k){
 
     const double afc = floor(( eps(i,j,k) + eps(i,j,k-1) ) / 2. );
     zmom(i,j,k) += dt * ( p(i,j,k-1) - p(i,j,k) ) / DX.z()*afc;

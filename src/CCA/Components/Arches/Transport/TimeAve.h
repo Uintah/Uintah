@@ -82,15 +82,15 @@ public:
     };
 
     template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
 
     template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){}
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj){}
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& execObj){}
 
     template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
 
 protected:
 
@@ -365,7 +365,7 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemSpace>
-  void TimeAve<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+  void TimeAve<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
     //const double dt = tsk_info->get_dt();
     //Vector DX = patch->dCell();
@@ -407,7 +407,7 @@ private:
         const double alpha=_alpha[time_substep];
         const double beta=_beta[time_substep];
 
-        Uintah::parallel_for(exObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
+        Uintah::parallel_for(execObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
        
           phi(i,j,k) = alpha * old_phi(i,j,k) + beta * phi(i,j,k);
 
@@ -432,7 +432,7 @@ private:
 
       Uintah::BlockRange range3( patch->getCellLowIndex(), patch->getCellHighIndex() );
       const double ScalingConstant=info.constant  ;
-      Uintah::parallel_for(exObj, range3, KOKKOS_LAMBDA(int i, int j, int k){
+      Uintah::parallel_for(execObj, range3, KOKKOS_LAMBDA(int i, int j, int k){
 
         phi_unscaled(i,j,k) = phi(i,j,k) * ScalingConstant* vol_fraction(i,j,k);
 
@@ -456,7 +456,7 @@ private:
 //--------------------------------------------------------------------------------------------------
   template <typename T >
   template<typename ExecutionSpace, typename MemSpace>
-  void TimeAve<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+  void TimeAve<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   ArchesCore::VariableHelper<T> helper;
@@ -475,7 +475,7 @@ private:
       if ( on_this_patch ){
         Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
         const double scalConstant=(ieqn->second).constant;
-            parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+            parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
             phi_unscaled(i,j,k) = phi(i,j,k) *scalConstant *vol_fraction(i,j,k) ;
           });
         }

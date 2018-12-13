@@ -95,7 +95,7 @@ cloudBenchmark::register_initialize( VIVec& variable_registry , const bool pack_
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){
@@ -144,8 +144,8 @@ void cloudBenchmark::register_restart_initialize( VIVec& variable_registry , con
 }
 
 template<typename ExecutionSpace, typename MemSpace>
-void cloudBenchmark::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
-  BBox domain(m_min,m_max); // when restart_init gets executionObject then remove this function and call initialize
+void cloudBenchmark::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  BBox domain(m_min,m_max); // when restart_init gets execObj then remove this function and call initialize
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){
     const Level* level = patch->getLevel();
     GridP grid  = level->getGrid();
@@ -196,7 +196,7 @@ void cloudBenchmark::register_timestep_init( VIVec& variable_registry , const bo
 }
 
 template<typename ExecutionSpace, typename MemSpace> void
-cloudBenchmark::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+cloudBenchmark::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskg_name));
   constCCVariable<double>& old_abskg = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_abskg_name));

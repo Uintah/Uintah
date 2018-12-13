@@ -53,7 +53,7 @@ namespace Uintah { namespace ArchesCore {
     }
 
     template<typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT>
-    void apply_zero_neumann( ExecutionObject<ExecutionSpace,MemSpace>& exObj, const Patch* patch, grid_T& var,
+    void apply_zero_neumann( ExecutionObject<ExecutionSpace,MemSpace>& execObj, const Patch* patch, grid_T& var,
                              grid_CT& vol_fraction ){
 
       std::vector<Patch::FaceType> bf;
@@ -71,7 +71,7 @@ namespace Uintah { namespace ArchesCore {
         IntVector loVal  = (pom < 0) ?patch->getCellLowIndex()  + f_dir: patch->getCellLowIndex()  + f_dir*dcdp ; 
         IntVector HiVal  = (pom < 0) ?patch->getCellHighIndex() + f_dir*dcdp: patch->getCellHighIndex() +f_dir; 
 
-        parallel_for(exObj, BlockRange(loVal,HiVal), KOKKOS_LAMBDA (int i, int j, int k){
+        parallel_for(execObj, BlockRange(loVal,HiVal), KOKKOS_LAMBDA (int i, int j, int k){
 
           int im=i-f_dir[0];
           int jm=j-f_dir[1];
@@ -139,7 +139,7 @@ namespace Uintah { namespace ArchesCore {
     }
 
     template<typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT, typename VarHelper>
-    void apply_zero_neumann(ExecutionObject<ExecutionSpace,MemSpace>& exObj, const Patch* patch, grid_T& var,
+    void apply_zero_neumann(ExecutionObject<ExecutionSpace,MemSpace>& execObj, const Patch* patch, grid_T& var,
                              grid_CT& vol_fraction, VarHelper& var_help  ){ // NOT USED??
 
       std::vector<Patch::FaceType> bf;

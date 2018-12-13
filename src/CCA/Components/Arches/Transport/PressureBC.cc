@@ -79,7 +79,7 @@ void PressureBC::register_timestep_eval( std::vector<AFC::VariableInformation>& 
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto p = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_press );
 
@@ -95,7 +95,7 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
 
     if ( my_type == WALL || my_type == INLET  ){
 
-      parallel_for_unstructured(exObj, cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+      parallel_for_unstructured(execObj, cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
         // enforce dp/dn = 0
         p(i,j,k) = p(i-iDir[0],j-iDir[1],k-iDir[2]);
 
@@ -104,7 +104,7 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
     } else if ( my_type == OUTLET || my_type == PRESSURE ) {
 
       //enforce p = 0
-      parallel_for_unstructured(exObj, cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+      parallel_for_unstructured(execObj, cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
         p(i,j,k) = -p(i-iDir[0],j-iDir[1],k-iDir[2]);
       });
     }

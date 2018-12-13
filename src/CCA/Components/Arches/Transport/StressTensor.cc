@@ -110,7 +110,7 @@ void StressTensor::register_initialize( AVarInfo& variable_registry , const bool
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void StressTensor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void StressTensor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
 
   auto sigma11 = tsk_info->get_uintah_field_add<CCVariable<double>,double, MemSpace >(m_sigma_t_names[0]);
@@ -120,7 +120,7 @@ void StressTensor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_in
   auto sigma23 = tsk_info->get_uintah_field_add<CCVariable<double>,double, MemSpace >(m_sigma_t_names[4]);
   auto sigma33 = tsk_info->get_uintah_field_add<CCVariable<double>,double, MemSpace >(m_sigma_t_names[5]);
 
-  parallel_initialize(exObj,0.0,sigma11
+  parallel_initialize(execObj,0.0,sigma11
                                ,sigma12
                                ,sigma13
                                ,sigma22
@@ -145,7 +145,7 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
   auto vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
@@ -163,7 +163,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto sigma33 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_sigma_t_names[5]);
 
   // initialize all velocities
-  parallel_initialize(exObj,0.0, sigma11, sigma12, sigma13, sigma22, sigma23,sigma33);
+  parallel_initialize(execObj,0.0, sigma11, sigma12, sigma13, sigma22, sigma23,sigma33);
 
   Vector Dx = patch->dCell();
 
@@ -177,7 +177,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   //auto apply_vVelStencil=functorCreationWrapper(  vVel,  Dx);
   //auto apply_wVelStencil=functorCreationWrapper(  wVel,  Dx);
 
-  Uintah::parallel_for(exObj, x_range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, x_range, KOKKOS_LAMBDA (int i, int j, int k){
 
     double dudx = 0.0;
     double dudy = 0.0;
@@ -220,7 +220,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
 
   GET_WALL_BUFFERED_PATCH_RANGE(lowNx, highNx,1,1,0,0,0,0);
   Uintah::BlockRange range1(lowNx, highNx);
-  Uintah::parallel_for(exObj, range1, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, range1, KOKKOS_LAMBDA (int i, int j, int k){
 
     const double mu11  = D(i-1,j,k); // it does not need interpolation
     const double dudx  = eps_x(i,j,k)*eps_x(i-1,j,k) * (uVel(i,j,k) - uVel(i-1,j,k))/Dx.x();
@@ -233,7 +233,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
 
   GET_WALL_BUFFERED_PATCH_RANGE(lowNy, highNy,0,0,1,1,0,0);
   Uintah::BlockRange range2(lowNy, highNy);
-  Uintah::parallel_for(exObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
     const double mu22 = D(i,j-1,k);  // it does not need interpolation
     const double dvdy  = eps_y(i,j,k)*eps_y(i,j-1,k) * (vVel(i,j,k) - vVel(i,j-1,k))/Dx.y();
     sigma22(i,j,k) =  mu22 * 2.0*dvdy;
@@ -245,7 +245,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
 
   GET_WALL_BUFFERED_PATCH_RANGE(lowNz, highNz,0,0,0,0,1,1);
   Uintah::BlockRange range3(lowNz, highNz);
-  Uintah::parallel_for(exObj, range3, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, range3, KOKKOS_LAMBDA (int i, int j, int k){
     const double mu33 = D(i,j,k-1);  // it does not need interpolation
     const double dwdz  = eps_y(i,j,k)*eps_y(i,j,k-1) * (wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
     sigma33(i,j,k) = mu33 * 2.0*dwdz;

@@ -138,12 +138,12 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 
 //---------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_total_vis_name);
   auto mu_turb = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_turb_viscosity_name);
   auto IsI = tsk_info->get_uintah_field_add< CCVariable<double>  ,double,MemSpace >(m_IsI_name);
-  parallel_initialize(exObj,0.0, mu_sgc, mu_turb, IsI);
+  parallel_initialize(execObj,0.0, mu_sgc, mu_turb, IsI);
 
 }
 
@@ -172,7 +172,7 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
 
 //---------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>,const double, MemSpace >(m_u_vel_name);
   auto vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>,const double, MemSpace >(m_v_vel_name);
@@ -188,7 +188,7 @@ void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
   auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_density_name);
   auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_volFraction_name);
 
-  parallel_initialize(exObj,0.0,IsI,mu_sgc);
+  parallel_initialize(execObj,0.0,IsI,mu_sgc);
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);
 
@@ -197,7 +197,7 @@ void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
   const double SMALL = 1e-16;
   const double local_Cs=m_Cs;
   const double local_molecular_visc=m_molecular_visc;
-  Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
 
     double uep = 0.0;
     double uwp = 0.0;
@@ -306,8 +306,8 @@ void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
     mu_turb(i,j,k) = mu_sgc(i,j,k) - local_molecular_visc; //
   });
   Uintah::ArchesCore::BCFilter bcfilter;
-  bcfilter.apply_zero_neumann(exObj,patch,mu_sgc,vol_fraction);
-  bcfilter.apply_zero_neumann(exObj,patch,mu_turb,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,mu_sgc,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,mu_turb,vol_fraction);
 
 }
 } //namespace Uintah

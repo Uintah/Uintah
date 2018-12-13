@@ -105,7 +105,7 @@ SurfaceNormals::register_initialize( VIVec& variable_registry , const bool packe
 }
 
 template<typename ExecutionSpace, typename MemSpace>
-void SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1)
   GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1)
@@ -185,7 +185,7 @@ SurfaceNormals::register_timestep_init( VIVec& variable_registry, const bool pac
 }
 
 template<typename ExecutionSpace, typename MemSpace> void
-SurfaceNormals::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+SurfaceNormals::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   SFCXVariable<double>& n_in_x = *(tsk_info->get_uintah_field<SFCXVariable<double> >("surf_in_normX"));
   SFCYVariable<double>& n_in_y = *(tsk_info->get_uintah_field<SFCYVariable<double> >("surf_in_normY"));

@@ -140,7 +140,7 @@ DSFTv2::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
 
 //--------------------------------------------------------------------------------------------------
 template <typename ExecutionSpace, typename MemSpace>
-void DSFTv2::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void DSFTv2::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho");
   SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrho");
@@ -162,7 +162,7 @@ DSFTv2::register_timestep_init( std::vector<ArchesFieldContainer::VariableInform
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-DSFTv2::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+DSFTv2::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
 }
 
@@ -217,7 +217,7 @@ DSFTv2::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInform
 
 //--------------------------------------------------------------------------------------------------
 template <typename ExecutionSpace, typename MemSpace>
-void DSFTv2::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void DSFTv2::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   constSFCXVariable<double>& uVel = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(m_u_vel_name));
   constSFCYVariable<double>& vVel = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(m_v_vel_name));

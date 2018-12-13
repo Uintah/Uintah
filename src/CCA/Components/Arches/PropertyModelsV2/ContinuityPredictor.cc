@@ -95,10 +95,10 @@ ContinuityPredictor::register_initialize( std::vector<ArchesFieldContainer::Vari
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void ContinuityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void ContinuityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto Balance = tsk_info->get_uintah_field_add<CCVariable<double>,double, MemSpace >( m_label_balance );
-  parallel_initialize(exObj,0.0,Balance);
+  parallel_initialize(execObj,0.0,Balance);
 
 }
 
@@ -111,7 +111,7 @@ ContinuityPredictor::register_timestep_init( std::vector<ArchesFieldContainer::V
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-ContinuityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+ContinuityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
 }
 
@@ -133,7 +133,7 @@ ContinuityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::V
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> ,const double, MemSpace>("x-mom");
   auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> ,const double, MemSpace>("y-mom");
@@ -141,7 +141,7 @@ void ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   auto drho_dt = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >( m_label_drhodt );
   auto Balance = tsk_info->get_uintah_field_add<CCVariable<double>, double,  MemSpace >( m_label_balance );
-  parallel_initialize(exObj,0.0,Balance);
+  parallel_initialize(execObj,0.0,Balance);
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();
   const double area_NS = DX.x()*DX.z();
@@ -149,7 +149,7 @@ void ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   const double vol     = DX.x()*DX.y()*DX.z();
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
     Balance(i,j,k) = vol*drho_dt(i,j,k) + ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
                                             area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
                                             area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) ));

@@ -311,7 +311,7 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
                                     OnDemandDataWarehouse* old_dw,
                                     OnDemandDataWarehouse* new_dw,
                                     UintahParams& uintahParams,
-                                    ExecutionObject<ExecutionSpace, MemSpace>& executionObject)
+                                    ExecutionObject<ExecutionSpace, MemSpace>& execObj)
 {
 
   const Level* level = getLevel(patches);
@@ -340,7 +340,7 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
     const double dy = Dx.y();
     const double dz = Dx.z();
 
-    Uintah::parallel_reduce_min( executionObject, range, KOKKOS_LAMBDA ( const int i, const int j, const int k, double & m_dt ) {
+    Uintah::parallel_reduce_min( execObj, range, KOKKOS_LAMBDA ( const int i, const int j, const int k, double & m_dt ) {
 
        m_dt = 1. / (std::fabs( u(i,j,k) ) / dx +
                    std::fabs( v(i,j,k) ) / dy +
@@ -363,7 +363,7 @@ KokkosSolver::setTimeStep(const PatchSubset* patches,
                           OnDemandDataWarehouse* old_dw,
                           OnDemandDataWarehouse* new_dw,
                           UintahParams& uintahParams,
-                          ExecutionObject<ExecutionSpace, MemSpace>& executionObject)
+                          ExecutionObject<ExecutionSpace, MemSpace>& execObj)
 {
   const Level* level = getLevel(patches);
   for (int p = 0; p < patches->size(); p++) {

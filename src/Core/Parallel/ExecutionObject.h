@@ -30,11 +30,11 @@
 //                        DataWarehouse* fromDW,
 //                        DataWarehouse* toDW,
 //                        UintahParams & uintahParams,
-//                        ExecutionObject & executionObject
+//                        ExecutionObject & execObj
 // For Cuda related tasks in particular, this object wraps a Cuda Stream.  Further, this task
 // wraps the command line execution arguments given so that a particular task can modify
 // these arguments further.
-// From the application developer's perpsective, the executionObject received should be
+// From the application developer's perpsective, the execObj received should be
 // passed into a Uintah parallel loop from LoopExecution.hpp.  The application developer does not
 // need to modify this object at all, and likely most of the time won't need to.
 

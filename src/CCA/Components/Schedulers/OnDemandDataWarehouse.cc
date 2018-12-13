@@ -3176,8 +3176,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
                                    , const MaterialSubset * matls
                                    )
 {
-  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject;
-  this->transferFrom( from, label, patches, matls, executionObject, false, nullptr );
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> execObj;
+  this->transferFrom( from, label, patches, matls, execObj, false, nullptr );
 }
 
 //______________________________________________________________________
@@ -3190,8 +3190,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
                                    ,       bool             replace
                                    )
 {
-  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject;
-  this->transferFrom( from, label, patches, matls, executionObject, replace, nullptr );
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> execObj;
+  this->transferFrom( from, label, patches, matls, execObj, replace, nullptr );
 }
 
 //______________________________________________________________________
@@ -3205,8 +3205,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
                                    , const PatchSubset    * newPatches
                                    )
 {
-  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject;
-  this->transferFrom( from, label, patches, matls, executionObject, replace, newPatches );
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> execObj;
+  this->transferFrom( from, label, patches, matls, execObj, replace, newPatches );
 }
 
 //______________________________________________________________________
@@ -3224,7 +3224,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse           * from
                                    , const VarLabel                * label
                                    , const PatchSubset             * patches
                                    , const MaterialSubset          * matls
-                                   ,       ExecutionObject<ES, MS> & executionObject
+                                   ,       ExecutionObject<ES, MS> & execObj
                                    ,       bool                      replace
                                    , const PatchSubset             * newPatches
                                    )
@@ -3266,7 +3266,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse           * from
             const int patchID = patch->getID();
             GPUGridVariableBase* device_var_source = OnDemandDataWarehouse::createGPUGridVariable(label->typeDescription()->getSubType()->getType());
             GPUGridVariableBase* device_var_dest = OnDemandDataWarehouse::createGPUGridVariable(label->typeDescription()->getSubType()->getType());
-            if(!executionObject.getStream()) {
+            if(!execObj.getStream()) {
               std::cout << "ERROR! transferFrom() does not have access to the task and its associated CUDA stream."  
                         << " You need to update the task's callback function to include more parameters which supplies this information."
                         << " Then you need to pass that detailed task pointer into the transferFrom method." 
@@ -3274,7 +3274,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse           * from
               throw InternalError("transferFrom() needs access to the task's pointer and its associated CUDA stream.\n", __FILE__, __LINE__); 
             }
             //The GPU assigns streams per task.  For transferFrom to work, it *must* know which correct stream to use
-            bool foundGPU = getGPUDW(0)->transferFrom((cudaStream_t*)executionObject.getStream(),
+            bool foundGPU = getGPUDW(0)->transferFrom((cudaStream_t*)execObj.getStream(),
                                                       *device_var_source, *device_var_dest,
                                                       from->getGPUDW(0),
                                                       label->getName().c_str(), patchID, matl, levelID);

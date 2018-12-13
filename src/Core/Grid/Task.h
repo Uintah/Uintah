@@ -174,7 +174,7 @@ protected: // class Task
                   ,       OnDemandDataWarehouse * fromDW
                   ,       OnDemandDataWarehouse * toDW
                   ,       UintahParams          & uintahParams
-                  ,       ExecutionObject<ES, MS> & executionObject
+                  ,       ExecutionObject<ES, MS> & execObj
                   ,       Args...               args
                   );
     std::tuple<Args...> m_args;
@@ -188,7 +188,7 @@ protected: // class Task
                                 ,       OnDemandDataWarehouse  * fromDW
                                 ,       OnDemandDataWarehouse  * toDW
                                 ,       UintahParams   & uintahParams
-                                ,       ExecutionObject<ES, MS>& executionObject
+                                ,       ExecutionObject<ES, MS>& execObj
                                 ,       Args...          args
                                 )
                , Args... args
@@ -207,14 +207,14 @@ protected: // class Task
                      ,       UintahParams   & uintahParams
                      )
     {
-      ExecutionObject<ES, MS> executionObject;
-      executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-      executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+      ExecutionObject<ES, MS> execObj;
+      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
       const int numStreams = uintahParams.getNumStreams();
       for (int i = 0; i < numStreams; i++) {
-        executionObject.setStream(uintahParams.getStream(i), 0);
+        execObj.setStream(uintahParams.getStream(i), 0);
       }
-      doit_impl(patches, matls, fromDW, toDW, uintahParams, executionObject, typename Tuple::gens<sizeof...(Args)>::type());
+      doit_impl(patches, matls, fromDW, toDW, uintahParams, execObj, typename Tuple::gens<sizeof...(Args)>::type());
     }
 
   private : // class ActionPortable
@@ -225,12 +225,12 @@ protected: // class Task
                   ,       DataWarehouse  * fromDW
                   ,       DataWarehouse  * toDW
                   ,       UintahParams   & uintahParams
-                  ,       ExecutionObject<ES, MS>& executionObject
+                  ,       ExecutionObject<ES, MS>& execObj
                   ,       Tuple::seq<S...>
                   )
       {
         (ptr->*pmf)(patches, matls, static_cast<OnDemandDataWarehouse*>(fromDW), static_cast<OnDemandDataWarehouse*>(toDW),
-                    uintahParams, executionObject, std::get<S>(m_args)...);
+                    uintahParams, execObj, std::get<S>(m_args)...);
       }
 
   };  // end Kokkos enabled task Action constructor
@@ -528,7 +528,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject<ES, MS> & executionObject);
+                     ExecutionObject<ES, MS> & execObj);
     public:
       // class ActionPortable
       ActionPortable( T * ptr,
@@ -537,7 +537,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject<ES, MS> & executionObject) ) :
+                                   ExecutionObject<ES, MS> & execObj) ) :
         ptr(ptr), pmf(pmf)
       {
       }
@@ -553,14 +553,14 @@ private:
                         DataWarehouse* toDW,
                         UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> executionObject;
-        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        ExecutionObject<ES, MS> execObj;
+        execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
         for (int i = 0; i < numStreams; i++) {
-          executionObject.setStream(uintahParams.getStream(i), 0);
+          execObj.setStream(uintahParams.getStream(i), 0);
         }
-        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj);
       }
   };  // end class ActionPortable
 
@@ -572,7 +572,7 @@ private:
                             OnDemandDataWarehouse* fromDW,
                             OnDemandDataWarehouse* toDW,
                             UintahParams& uintahParams,
-                            ExecutionObject<ES, MS> & executionObject,
+                            ExecutionObject<ES, MS> & execObj,
                             Arg1 arg1);
       Arg1 arg1;
     public:
@@ -583,7 +583,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject<ES, MS> & executionObject,
+                                   ExecutionObject<ES, MS> & execObj,
                                    Arg1 arg1),
                     Arg1 arg1)
           : ptr(ptr), pmf(pmf), arg1(arg1)
@@ -601,14 +601,14 @@ private:
                         DataWarehouse* toDW,
                         UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> executionObject;
-        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        ExecutionObject<ES, MS> execObj;
+        execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
         for (int i = 0; i < numStreams; i++) {
-          executionObject.setStream(uintahParams.getStream(i), 0);
+          execObj.setStream(uintahParams.getStream(i), 0);
         }
-        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, arg1);
       }
   };  // end class ActionPortable1
 
@@ -620,7 +620,7 @@ private:
                            OnDemandDataWarehouse* fromDW,
                            OnDemandDataWarehouse* toDW,
                            UintahParams& uintahParams,
-                           ExecutionObject<ES, MS> & executionObject,
+                           ExecutionObject<ES, MS> & execObj,
                            Arg1 arg1,
                            Arg2 arg2);
       Arg1 arg1;
@@ -633,7 +633,7 @@ private:
                                          OnDemandDataWarehouse* fromDW,
                                          OnDemandDataWarehouse* toDW,
                                          UintahParams& uintahParams,
-                                         ExecutionObject<ES, MS> & executionObject,
+                                         ExecutionObject<ES, MS> & execObj,
                                          Arg1 arg1,
                                          Arg2 arg2),
                     Arg1 arg1,
@@ -653,14 +653,14 @@ private:
                         DataWarehouse* toDW,
                         UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> executionObject;
-        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        ExecutionObject<ES, MS> execObj;
+        execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
         for (int i = 0; i < numStreams; i++) {
-          executionObject.setStream(uintahParams.getStream(i), 0);
+          execObj.setStream(uintahParams.getStream(i), 0);
         }
-        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, arg1, arg2);
       }
   };  // end class ActionPortable2
 
@@ -672,7 +672,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject<ES, MS> & executionObject,
+                     ExecutionObject<ES, MS> & execObj,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3);
@@ -688,7 +688,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject<ES, MS> & executionObject,
+                                   ExecutionObject<ES, MS> & execObj,
                                    Arg1 arg1,
                                    Arg2 arg2,
                                    Arg3 arg3),
@@ -710,14 +710,14 @@ private:
                                DataWarehouse  * toDW,
                                UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> executionObject;
-        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        ExecutionObject<ES, MS> execObj;
+        execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
         for (int i = 0; i < numStreams; i++) {
-          executionObject.setStream(uintahParams.getStream(i), 0);
+          execObj.setStream(uintahParams.getStream(i), 0);
         }
-        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2, arg3);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, arg1, arg2, arg3);
       }
   };  // end class ActionPortable3
 
@@ -729,7 +729,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject<ES, MS> & executionObject,
+                     ExecutionObject<ES, MS> & execObj,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3,
@@ -746,7 +746,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject<ES, MS> & executionObject,
+                                   ExecutionObject<ES, MS> & execObj,
                                    Arg1 arg1,
                                    Arg2 arg2,
                                    Arg3 arg3,
@@ -770,14 +770,14 @@ private:
                               DataWarehouse* toDW,
                               UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> executionObject;
-        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        ExecutionObject<ES, MS> execObj;
+        execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
         for (int i = 0; i < numStreams; i++) {
-          executionObject.setStream(uintahParams.getStream(i), 0);
+          execObj.setStream(uintahParams.getStream(i), 0);
         }
-        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2, arg3, arg4);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, arg1, arg2, arg3, arg4);
       }
   };  // end class ActionPortable4
 
@@ -789,7 +789,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject<ES, MS> & executionObject,
+                     ExecutionObject<ES, MS> & execObj,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3,
@@ -808,7 +808,7 @@ private:
                                     OnDemandDataWarehouse * fromDW,
                                     OnDemandDataWarehouse * toDW,
                                     UintahParams& uintahParams,
-                                    ExecutionObject<ES, MS> & executionObject,
+                                    ExecutionObject<ES, MS> & execObj,
                                     Arg1 arg1,
                                     Arg2 arg2,
                                     Arg3 arg3,
@@ -834,14 +834,14 @@ private:
                         DataWarehouse* toDW,
                         UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> executionObject;
-        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        ExecutionObject<ES, MS> execObj;
+        execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
         for (int i = 0; i < numStreams; i++) {
-          executionObject.setStream(uintahParams.getStream(i), 0);
+          execObj.setStream(uintahParams.getStream(i), 0);
         }
-        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2, arg3, arg4, arg5);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, arg1, arg2, arg3, arg4, arg5);
       }
   };  // end class ActionPortable5
 #endif
@@ -918,7 +918,7 @@ public: // class Task
                       ,       OnDemandDataWarehouse  * fromDW
                       ,       OnDemandDataWarehouse  * toDW
                       ,       UintahParams& uintahParams
-                      ,       ExecutionObject<ES, MS>& executionObject
+                      ,       ExecutionObject<ES, MS>& execObj
                       ,       Args...          args
                       )
       , Args... args
@@ -1066,7 +1066,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & executionObject))
+                      ExecutionObject<ES, MS> & execObj))
       :
         m_task_name(taskName),
           m_action(scinew ActionPortable<T, ES, MS>(ptr, pmf))
@@ -1084,7 +1084,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & executionObject,
+                      ExecutionObject<ES, MS> & execObj,
                       Arg1 arg1),
        Arg1 arg1)
       :
@@ -1103,7 +1103,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & executionObject,
+                      ExecutionObject<ES, MS> & execObj,
                       Arg1 arg1,
                       Arg2 arg2),
        Arg1 arg1,
@@ -1124,7 +1124,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & executionObject,
+                      ExecutionObject<ES, MS> & execObj,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3),
@@ -1147,7 +1147,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & executionObject,
+                      ExecutionObject<ES, MS> & execObj,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3,
@@ -1172,7 +1172,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & executionObject,
+                      ExecutionObject<ES, MS> & execObj,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3,

@@ -92,7 +92,7 @@ WARNING
                       OnDemandDataWarehouse* old_dw,
                       OnDemandDataWarehouse* new_dw,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS>& executionObject );
+                      ExecutionObject<ES, MS>& execObj );
 
   private:
     void initialize(const ProcessorGroup*,

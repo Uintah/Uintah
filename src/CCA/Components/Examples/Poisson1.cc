@@ -223,7 +223,7 @@ void Poisson1::timeAdvance( const PatchSubset* patches,
                             OnDemandDataWarehouse* old_dw,
                             OnDemandDataWarehouse* new_dw,
                             UintahParams& uintahParams,
-                            ExecutionObject<ES, MS>& executionObject )
+                            ExecutionObject<ES, MS>& execObj )
 {
 
   int matl = 0;
@@ -249,13 +249,13 @@ void Poisson1::timeAdvance( const PatchSubset* patches,
     auto newphi = new_dw->getNCVariable<double, MS> (phi_label, matl, patch);
 
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
-    //Uintah::parallel_for<ExecutionSpace, LaunchBounds< 640,1 > >( executionObject, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
-    Uintah::parallel_for(executionObject, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+    //Uintah::parallel_for<ExecutionSpace, LaunchBounds< 640,1 > >( execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+    Uintah::parallel_for(execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
         newphi(i, j, k) = phi(i,j,k);
     });
 
     // Perform the main loop
-    Uintah::parallel_reduce_sum(executionObject, range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
+    Uintah::parallel_reduce_sum(execObj, range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
       newphi(i, j, k) = (1. / 6)
           * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
               phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));

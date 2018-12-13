@@ -90,13 +90,13 @@ DensityStar::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_label_densityStar );
   auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double, MemSpace>( m_label_density );
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
     rhoStar(i,j,k)   = rho(i,j,k);
   });
 
@@ -114,13 +114,13 @@ DensityStar::register_timestep_init( std::vector<ArchesFieldContainer::VariableI
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-DensityStar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+DensityStar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_label_densityStar );
   auto old_rhoStar = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >( m_label_densityStar );
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-  Uintah::parallel_for(exObj,range, KOKKOS_LAMBDA(int i, int j, int k){
+  Uintah::parallel_for(execObj,range, KOKKOS_LAMBDA(int i, int j, int k){
     rhoStar(i,j,k)=old_rhoStar(i,j,k);
   });
 
@@ -144,7 +144,7 @@ DensityStar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >("x-mom");
   auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >("y-mom");
@@ -162,7 +162,7 @@ void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
   const double vol       = DX.x()*DX.y()*DX.z();
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for(exObj,range, KOKKOS_LAMBDA(int i, int j, int k){
+  Uintah::parallel_for(execObj,range, KOKKOS_LAMBDA(int i, int j, int k){
 
     rhoStar(i,j,k)   = rho(i,j,k) - ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
                                       area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
@@ -171,7 +171,7 @@ void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
   });
 
   double check_guess_density_out = 0;
-  Uintah::parallel_reduce_sum( exObj, range, KOKKOS_LAMBDA (int i, int j, int k, double& check_guess_density)
+  Uintah::parallel_reduce_sum( execObj, range, KOKKOS_LAMBDA (int i, int j, int k, double& check_guess_density)
   {
    check_guess_density += (rhoStar(i,j,k) < 0) ;
 
@@ -180,7 +180,7 @@ void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
   if (check_guess_density_out > 0){
     std::cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density."<< std::endl ;
   } else {
-    Uintah::parallel_for(exObj,range, KOKKOS_LAMBDA(int i, int j, int k){  
+    Uintah::parallel_for(execObj,range, KOKKOS_LAMBDA(int i, int j, int k){  
       rho(i,j,k)  = rhoStar(i,j,k); // I am copy density guess in density
     });
   }

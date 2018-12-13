@@ -864,15 +864,15 @@ RMCRTCommon::carryForward_FineLevelLabels( const PatchSubset* patches,
                                            OnDemandDataWarehouse* old_dw,
                                            OnDemandDataWarehouse* new_dw,
                                            UintahParams& uintahParams,
-                                           ExecutionObject<ES, MS>& executionObject)
+                                           ExecutionObject<ES, MS>& execObj)
 {
   printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_FineLevelLabels" );
 
   bool replaceVar = true;
-  new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, executionObject, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_boundFluxLabel,     patches, matls, executionObject, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, executionObject, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, executionObject, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, execObj, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_boundFluxLabel,     patches, matls, execObj, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, execObj, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, execObj, replaceVar, nullptr );
 }
 
 //______________________________________________________________________
@@ -903,10 +903,10 @@ RMCRTCommon::carryForward_Var ( const PatchSubset* patches,
                                 OnDemandDataWarehouse* old_dw,
                                 OnDemandDataWarehouse* new_dw,
                                 UintahParams& uintahParams,
-                                ExecutionObject<ES, MS>& executionObject,
+                                ExecutionObject<ES, MS>& execObj,
                                 const VarLabel* variable )
 {
-  new_dw->transferFrom(old_dw, variable, patches, matls, executionObject, true, nullptr);
+  new_dw->transferFrom(old_dw, variable, patches, matls, execObj, true, nullptr);
 }
 
 //______________________________________________________________________

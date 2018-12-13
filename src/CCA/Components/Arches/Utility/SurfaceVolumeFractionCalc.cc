@@ -110,7 +110,7 @@ SurfaceVolumeFractionCalc::register_initialize( ArchesVIVector& variable_registr
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   typedef CCVariable<double> T;
 
@@ -120,8 +120,8 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
   auto fz_vf = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >("volFractionZ");
   auto cell_type = tsk_info->get_uintah_field_add<CCVariable<int>, int, MemSpace>("cellType");
 
-  parallel_initialize(exObj,1.0, cc_vf,fx_vf,fy_vf,fz_vf);
-  parallel_initialize(exObj,-1, cell_type);
+  parallel_initialize(execObj,1.0, cc_vf,fx_vf,fy_vf,fz_vf);
+  parallel_initialize(execObj,-1, cell_type);
 
   //Get the boundary conditions:
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
@@ -136,7 +136,7 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
 
       //Handle cell type first
       Uintah::ListOfCellsIterator& cell_iter_ct  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-      parallel_for_unstructured(exObj,cell_iter_ct.get_ref_to_iterator<MemSpace>(),cell_iter_ct.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured(execObj,cell_iter_ct.get_ref_to_iterator<MemSpace>(),cell_iter_ct.size(), KOKKOS_LAMBDA (int i,int j,int k) {
         cell_type(i,j,k) = i_bc->second.type;
       });
 
@@ -145,7 +145,7 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
         //Get the iterator
         Uintah::ListOfCellsIterator& cell_iter  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-      parallel_for_unstructured(exObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
 
           cc_vf(i,j,k)= 0.0;
           fx_vf(i,j,k)= 0.0;
@@ -197,7 +197,7 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
 
         intersecting_geometry.push_back(geom);
 
-        parallel_for(exObj,range, KOKKOS_LAMBDA (int i,int j,int k){
+        parallel_for(execObj,range, KOKKOS_LAMBDA (int i,int j,int k){
 
           Point p = patch->cellPosition(IntVector(i,j,k) );
           if ( geom->inside(p) ){
@@ -266,7 +266,7 @@ SurfaceVolumeFractionCalc::register_timestep_init( ArchesVIVector& variable_regi
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj){
+SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj){
 
   auto cc_vol_frac = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("volFraction");
   auto cc_vol_frac_old = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >("volFraction");
@@ -284,7 +284,7 @@ SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoMana
   auto fz_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace >("volFractionZ");
   
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-  parallel_for( exObj, range, KOKKOS_LAMBDA (int i,int j,int k){
+  parallel_for( execObj, range, KOKKOS_LAMBDA (int i,int j,int k){
     cc_vol_frac(i,j,k) = cc_vol_frac_old(i,j,k);
     fx_vol_frac(i,j,k) = fx_vol_frac_old(i,j,k);
     fy_vol_frac(i,j,k) = fy_vol_frac_old(i,j,k);

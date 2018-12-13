@@ -30,7 +30,7 @@
 //                        DataWarehouse* fromDW,
 //                        DataWarehouse* toDW,
 //                        UintahParams & uintahParams,
-//                        ExecutionObject & executionObject
+//                        ExecutionObject & execObj
 // The first 4 parameters are rather important parameters that help a task execute.
 // uintahParams may contain a collection of additional helpful items inside.
 

@@ -49,15 +49,15 @@ public:
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep, const bool packed_tasks ){}
 
     template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){}
 
     template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& exObj);
+    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& execObj);
 
     template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
 
     void create_local_labels();
 
@@ -597,7 +597,7 @@ template<typename T>
 template<typename ExecutionSpace, typename MemSpace>
 void CharOxidationps<T>::initialize( const Patch                                     * patch
                                    ,       ArchesTaskInfoManager                     * tsk_info
-                                   ,       ExecutionObject<ExecutionSpace, MemSpace> & executionObject
+                                   ,       ExecutionObject<ExecutionSpace, MemSpace> & execObj
                                    )
 {
   // model variables
@@ -633,7 +633,7 @@ template<typename T>
 template<typename ExecutionSpace, typename MemSpace> void
 CharOxidationps<T>::timestep_init( const Patch                                     * patch
                                  ,       ArchesTaskInfoManager                     * tsk_info
-                                 ,       ExecutionObject<ExecutionSpace, MemSpace> & executionObject
+                                 ,       ExecutionObject<ExecutionSpace, MemSpace> & execObj
                                  )
 {
 }
@@ -718,7 +718,7 @@ template <typename ExecutionSpace, typename MemSpace>
 void
 CharOxidationps<T>::eval( const Patch                                     * patch
                         ,       ArchesTaskInfoManager                     * tsk_info
-                        ,       ExecutionObject<ExecutionSpace, MemSpace> & executionObject
+                        ,       ExecutionObject<ExecutionSpace, MemSpace> & execObj
                         )
 {
 
@@ -854,12 +854,12 @@ CharOxidationps<T>::eval( const Patch                                     * patc
   double local_add_length_birth        = this->m_add_length_birth;
   double local_add_char_birth          = this->m_add_char_birth;
 
-  parallel_initialize(executionObject, 0.0,
+  parallel_initialize(execObj, 0.0,
       char_rate, gas_char_rate, particle_temp_rate, particle_Size_rate, surface_rate, reaction_rate);
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  Uintah::parallel_for(executionObject, range, KOKKOS_LAMBDA(int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
 
     if ( volFraction(i,j,k) > 0 ) {
 

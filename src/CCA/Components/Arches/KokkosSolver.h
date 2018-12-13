@@ -111,7 +111,7 @@ namespace Uintah{
                               OnDemandDataWarehouse* old_dw,
                               OnDemandDataWarehouse* new_dw,
                               UintahParams& uintahParams,
-                              ExecutionObject<ExecutionSpace, MemSpace>& executionObject);
+                              ExecutionObject<ExecutionSpace, MemSpace>& execObj);
 
   template <typename ExecutionSpace, typename MemSpace>
   void setTimeStep( const PatchSubset* patches,
@@ -119,7 +119,7 @@ namespace Uintah{
                     OnDemandDataWarehouse* old_dw,
                     OnDemandDataWarehouse* new_dw,
                     UintahParams& uintahParams,
-                    ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
+                    ExecutionObject<ExecutionSpace, MemSpace>& execObj );
 
   double recomputeDelT(const double delT) { return delT/2.0; };
 

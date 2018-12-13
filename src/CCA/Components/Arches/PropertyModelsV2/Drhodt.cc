@@ -89,10 +89,10 @@ Drhodt::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto drhodt = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_label_drhodt );
-  parallel_initialize(exObj,0.0,drhodt);
+  parallel_initialize(execObj,0.0,drhodt);
 
 }
 
@@ -109,17 +109,17 @@ Drhodt::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInform
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& exObj ){
+void Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >( m_label_density );
   auto old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >( m_label_density, ArchesFieldContainer::OLDDW);
 
   auto drhodt = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_label_drhodt );
-  parallel_initialize(exObj,0.0,drhodt);
+  parallel_initialize(execObj,0.0,drhodt);
   const double dt = tsk_info->get_dt();
   //Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for(exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
     drhodt(i,j,k)   = (rho(i,j,k) - old_rho(i,j,k))/dt;
   });
 }

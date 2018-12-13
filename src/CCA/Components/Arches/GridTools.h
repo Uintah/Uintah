@@ -400,15 +400,15 @@ namespace Uintah{ namespace ArchesCore{
 
   template<typename ExecutionSpace, typename MemSpace,  typename grid_T, typename grid_CT> 
   void
-  doInterpolation( ExecutionObject<ExecutionSpace, MemSpace> exObj, Uintah::BlockRange& range,  grid_T& i_u_interpolated, grid_CT& i_u, const int &ioff, 
+  doInterpolation( ExecutionObject<ExecutionSpace, MemSpace> execObj, Uintah::BlockRange& range,  grid_T& i_u_interpolated, grid_CT& i_u, const int &ioff, 
                   const int &joff, const int &koff , unsigned int interpMode ){ // we need this wrapper, because we are supporting CCVariable data types
     if (interpMode ==FOURTHCENTRAL){
-        Uintah::parallel_for(exObj, range,  KOKKOS_LAMBDA (int i, int j, int k) {
+        Uintah::parallel_for(execObj, range,  KOKKOS_LAMBDA (int i, int j, int k) {
       i_u_interpolated(i,j,k) = (9./16.)*(i_u(i,j,k) + i_u(i+ioff,j+joff,k+koff))
                  - (1./16.)*(i_u(i+2*ioff,j+2*joff,k+2*koff) + i_u(i-ioff,j-joff,k-koff)) ;
                } );
     }else{
-        Uintah::parallel_for(exObj, range,  KOKKOS_LAMBDA (int i, int j, int k) {
+        Uintah::parallel_for(execObj, range,  KOKKOS_LAMBDA (int i, int j, int k) {
                 i_u_interpolated(i,j,k) = 0.5 * ( i_u(i,j,k) + i_u(i+ioff,j+joff,k+koff) );
                } );
     }

@@ -172,7 +172,7 @@ sumRadiation::shared_initialize_code( const Patch* patch, ArchesTaskInfoManager*
 }
 
 template<typename ExecutionSpace, typename MemSpace>
-void sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   shared_initialize_code( patch, tsk_info );
 
@@ -190,7 +190,7 @@ void sumRadiation::register_timestep_init( VIVec& variable_registry , const bool
 }
 
 template<typename ExecutionSpace, typename MemSpace> void
-sumRadiation::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+sumRadiation::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
   //initialize( patch,tsk_info);
 }
 
@@ -200,7 +200,7 @@ void sumRadiation::register_timestep_eval( VIVec& variable_registry, const int t
 }
 
 template<typename ExecutionSpace, typename MemSpace>
-void sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
   shared_initialize_code( patch, tsk_info );
 }
 

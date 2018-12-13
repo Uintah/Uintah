@@ -78,7 +78,7 @@ void GridInfo::register_initialize( std::vector<AFC::VariableInformation>& varia
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace>
-void GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+void GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto gridX = tsk_info->get_uintah_field_add<CCVariable<double> , double, MemSpace>( "gridX" );
   auto gridY = tsk_info->get_uintah_field_add<CCVariable<double> , double, MemSpace>( "gridY" );
@@ -138,7 +138,7 @@ GridInfo::register_timestep_init( std::vector<AFC::VariableInformation>& variabl
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemSpace> void
-GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){
+GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
 
   auto gridX = tsk_info->get_uintah_field_add<CCVariable<double> , double, MemSpace>( "gridX" );
   auto gridY = tsk_info->get_uintah_field_add<CCVariable<double> , double, MemSpace>( "gridY" );
@@ -155,7 +155,7 @@ GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto old_wcellZ = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace>( "wcellZ" );
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-  Uintah::parallel_for(executionObject, range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
     gridX(i,j,k) = old_gridX(i,j,k);
     gridY(i,j,k) = old_gridY(i,j,k);
     gridZ(i,j,k) = old_gridZ(i,j,k);

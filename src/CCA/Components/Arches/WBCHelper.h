@@ -377,7 +377,7 @@ template <typename ExecutionSpace, typename MemSpace> void
                           OnDemandDataWarehouse        * old_dw,
                           OnDemandDataWarehouse        * new_dw,
                           UintahParams& uintahParams,
-                          ExecutionObject<ExecutionSpace,MemSpace>& executionObject ,
+                          ExecutionObject<ExecutionSpace,MemSpace>& execObj ,
                           const IntVector lo,
                           const IntVector hi );
 

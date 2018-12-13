@@ -184,7 +184,7 @@ namespace Uintah{
                                           OnDemandDataWarehouse* old_dw,
                                           OnDemandDataWarehouse* new_dw,
                                           UintahParams& uintahParams,
-                                          ExecutionObject<ES, MS>& executionObject );
+                                          ExecutionObject<ES, MS>& execObj );
        
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
@@ -197,7 +197,7 @@ namespace Uintah{
                              OnDemandDataWarehouse*,
                              OnDemandDataWarehouse*,
                              UintahParams& uintahParams,
-                             ExecutionObject<ES, MS>& executionObject,
+                             ExecutionObject<ES, MS>& execObj,
                              const VarLabel* variable );
 
       //__________________________________
