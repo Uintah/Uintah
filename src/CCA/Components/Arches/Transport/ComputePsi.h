@@ -140,7 +140,6 @@ private:
         int buffer = 0;
         if ( tsk_info->packed_tasks() ) buffer = 1;
 
-
         IntVector low_patch_range(0,0,0), high_patch_range(0,0,0);
         IntVector lbuffer(0,0,0), hbuffer(0,0,0);
 

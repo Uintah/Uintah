@@ -50,7 +50,6 @@ public:
     template <typename ExecutionSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject );
 
-
    template< typename grid_CT>
    struct VelocityDerivative_central{
      VelocityDerivative_central( grid_CT &_u, const Vector& _Dx) : u(_u),Dx(_Dx){}
@@ -77,8 +76,6 @@ public:
         return  VelocityDerivative_central<grid_CT>(_u,_Dx);
      } // WE have to do this because of CCVariables
 
-
-
 #define dVeldDir(u, eps, Dx, dudx, dudy, dudz, i,  j, k ) \
          {                                           \
            STENCIL3_1D(0);                           \
@@ -92,7 +89,6 @@ public:
            STENCIL3_1D(2);                           \
            dudz = eps(IJK_)*eps(IJK_M_)*(u(IJK_) - u(IJK_M_))/Dx.z();      \
          }    
-
 
 #define dVeldDir(u, eps, Dx, dudx, dudy, dudz, i,  j, k ) \
          {                                           \

@@ -141,8 +141,8 @@ void ColdFlowProperties::timestep_init( const Patch* patch, ArchesTaskInfoManage
     auto old_var = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >( i->first );
     auto var = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( i->first );
     parallel_for(exObj, BlockRange(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex()) , KOKKOS_LAMBDA (int i,int j,int k){
-               var(i,j,k) = old_var(i,j,k);
-             });
+      var(i,j,k) = old_var(i,j,k);
+    });
   }
 }
 

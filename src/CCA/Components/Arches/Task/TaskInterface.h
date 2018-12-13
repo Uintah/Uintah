@@ -41,8 +41,6 @@ namespace Uintah{
   class WBCHelper;
   class TaskInterface;
 
-
-
   template <typename ES, typename MS>
   using archesFunctionPtr  = void (TaskInterface::*)( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject<ES, MS>& executionObject );
 
@@ -289,8 +287,6 @@ public:
       timestepInitFunctionPtrs.emplace( ti, reinterpret_cast< archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
     }
 
-
-
 private:
     std::map<std::type_index, archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > > computeBCsFunctionPtrs;
     std::map<std::type_index, archesFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > > initializeFunctionPtrs;
@@ -368,6 +364,7 @@ protected:
         if ( name == "char_gas_reaction0_qn0" ) {
           printf(" Registering variable char_gas_reaction0_qn0 for task \n");
         }
+
         test = VarLabel::find( name );
 
         if ( test == nullptr ){
@@ -406,7 +403,6 @@ protected:
         std::cout << "Invalid use of ArchesSchedulingHelper  \n";
      }
   };
-
 
   template< >
   struct ArchesSchedulingHelper<TaskInterface::INITIALIZE>{
@@ -452,7 +448,6 @@ protected:
        ArchTI->addTimestepInitFunctionPtr<ExecutionSpace,MemSpace>(ti,ep);
      }
   };
-
 
   template <unsigned int ArchesTaskType 
            , typename ArchesTaskObject

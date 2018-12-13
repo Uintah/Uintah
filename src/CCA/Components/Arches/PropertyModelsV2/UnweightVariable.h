@@ -592,7 +592,6 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
     auto un_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_un_eqn_names[ieqn]);
     auto var = tsk_info->get_uintah_field_add<T,double, MemSpace>(m_eqn_names[ieqn]);
-    //auto var = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(m_eqn_names[ieqn]);
     Uintah::parallel_for( exObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
       un_var(i,j,k) = var(i,j,k)/ ( rho_inter + 1.e-16);

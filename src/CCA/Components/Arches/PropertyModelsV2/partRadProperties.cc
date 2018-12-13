@@ -4,11 +4,13 @@
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/ChemMixV2/ClassicTableUtility.h>
+// includes for Arches
 
 #include <Core/Parallel/Portability.h>
 #include <Core/Parallel/LoopExecution.hpp>
-// includes for Arches
+
 #define MAX_DQMOM_ENV 3
+
 using namespace Uintah;
 
 //---------------------------------------------------------------------------
@@ -261,6 +263,7 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
     if (_nQn_part > MAX_DQMOM_ENV){
       throw ProblemSetupException("Portability Error:Number of DQMOM environments exceeds compile time limits.",__FILE__,__LINE__);
     }
+
     std::string base_temperature_name = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_TEMPERATURE);
     std::string base_size_name        = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_SIZE );
     std::string base_weight_name      = "w"; //hard coded as w
@@ -381,9 +384,9 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
     register_variable( _asymmetryParam_name , Uintah::ArchesFieldContainer::COMPUTES , variable_registry, time_substep);
   }
 
-    for (int i=0; i<_nDVs; i++){
+  for (int i=0; i<_nDVs; i++){
     register_variable( "partRadProps_temporary_"+std::to_string(i) , Uintah::ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
-    } 
+  } 
 
   register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
 

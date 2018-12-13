@@ -137,7 +137,6 @@ TableLookup::sched_setDependBCs( const LevelP& level,
                                  SchedulerP& sched,
                                  MixingRxnModel* model ){
 
-
   auto TaskDependencies = [&](Task* tsk) {
     std::map<std::string, const VarLabel*> depend_var_map = model->getDVVars();
 
@@ -152,13 +151,11 @@ TableLookup::sched_setDependBCs( const LevelP& level,
                         &TableLookup::setDependBCs<KOKKOS_OPENMP_TAG>,
                         //&TableLookup::setDependBCs<KOKKOS_CUDA_TAG>,
                         sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT, model);
-  //Task* tsk = scinew Task("setDependBCs", this, &TableLookup::setDependBCs, model );
-  //sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
 
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecutionSpace, typename MemSpace> void 
+template <typename ExecutionSpace, typename MemSpace> void
 TableLookup::setDependBCs( 
                            const PatchSubset* patches,
                            const MaterialSubset* matls,

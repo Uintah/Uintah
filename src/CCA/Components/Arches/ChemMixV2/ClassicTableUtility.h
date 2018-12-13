@@ -58,7 +58,6 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
   if (d_savedDep_var.size()==0)
     loadAll=true;
 
-
   std::vector<std::string> d_allIndepVarNames;     ///< Vector storing all independent variable names from table file
   std::vector<std::string> d_allDepVarUnits;       ///< Units for the dependent variables
 
@@ -70,9 +69,9 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
   d_allIndepVarNames = std::vector<std::string>(d_indepvarscount);
 
 #ifdef UINTAH_ENABLE_KOKKOS
-  tempIntContainer<Kokkos::HostSpace> d_allIndepVarNum("array_of_ind_var_sizes",d_indepvarscount);            ///< std::vector storing the grid size for the Independent variables
+  tempIntContainer<Kokkos::HostSpace> d_allIndepVarNum("array_of_ind_var_sizes",d_indepvarscount);  //< std::vector storing the grid size for the Independent variables
 #else
-  std::vector<int> *d_allIndepVarNum=scinew std::vector<int>(d_indepvarscount);            ///< std::vector storing the grid size for the Independent variables
+  std::vector<int> *d_allIndepVarNum=scinew std::vector<int>(d_indepvarscount);                     //< std::vector storing the grid size for the Independent variables
 #endif
 
   for (int ii = 0; ii < d_indepvarscount; ii++){
@@ -249,7 +248,6 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
       if ( read_assign ) { read_assign = false; }
     }
 
-
 #ifdef UINTAH_ENABLE_KOKKOS
         ClassicTableInfo infoStruct(indep_headers, d_allIndepVarNum, d_allIndepVarNames,d_savedDep_var, d_allDepVarUnits,d_constants); 
     return   scinew Interp_class<max_dep_request_at_a_time>( table,d_allIndepVarNum, indep_headers, i1,infoStruct);
@@ -395,7 +393,7 @@ checkForConstants(std::stringstream &table_stream,
 }
 #endif
 
-template<unsigned int max_dep_request_at_a_time>
+template <unsigned int max_dep_request_at_a_time>
 static
 Interp_class<max_dep_request_at_a_time>*
 SCINEW_ClassicTable(std::string tableFileName, std::vector<std::string> requested_depVar_names={} ){

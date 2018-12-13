@@ -33,33 +33,10 @@
 #include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctors.h>
 #include <CCA/Components/Arches/UPSHelper.h>
 #include <Core/Util/Timers/Timers.hpp>
+
 #define  IMAX_SIZE 10 
+
 namespace Uintah{
-
-
-
-//inline void doConvection(
-//template<typename ExecutionSpace, typename MemSpace, unsigned int Cscheme > 
-//inline void doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
-             //Uintah::BlockRange& range_conv,
-             //const Array3<double>& phi,
-             //const Array3<double>& rho_phi,
-             //const Array3<double>& xyzVel,
-             //Array3<double>& xyzFlux,
-             //const Array3<double>& eps,
-    //unsigned int xyzDir,
-     //int& ieqn ){
-             //if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { 
-               //Uintah::ComputeConvectiveFlux1D<Array3<double>, Cscheme >                
-                 //get_flux( rho_phi, xyzVel, xyzFlux, eps, xyzDir );                
-               //Uintah::parallel_for(exObj, range_conv, get_flux );    // for weighted scalars
-             //} else {                                                    
-               //Uintah::ComputeConvectiveFlux1D<Array3<double>, Cscheme >                             
-                 //get_flux( phi, xyzVel, xyzFlux, eps, xyzDir);               
-               //Uintah::parallel_for(exObj, range_conv, get_flux  ); // for scalars
-             //}
-          //}
-
 
   template<typename T, typename PT>
   class KScalarRHS : public TaskInterface {
@@ -184,26 +161,6 @@ private:
     //std::string m_volFraction_name{"volFraction"};
 
 enum cartSpace {x_direc,y_direc,z_direc};
-//template<typename ExecutionSpace, typename MemSpace, unsigned int Cscheme , typename grid_T, typename grid_CT> 
-//inline
-//typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, void>::type
-//doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
-             //Uintah::BlockRange& range_conv,
-             //grid_CT& phi,
-             //grid_CT& rho_phi ,
-             //grid_CT& xyzVel,
-             //grid_T&& xyzFlux,
-             //grid_CT& eps, unsigned int xyzDir, int& ieqn ){
-             //if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { 
-               //Uintah::ComputeConvectiveFlux1D<grid_T,grid_CT, Cscheme >                
-                 //get_flux( rho_phi, xyzVel, xyzFlux, eps, xyzDir );                
-               //Uintah::parallel_for(exObj, range_conv, get_flux );    // for weighted scalars
-             //} else {                                                    
-               //Uintah::ComputeConvectiveFlux1D<grid_T,grid_CT, Cscheme >                             
-                 //get_flux( phi, xyzVel, xyzFlux, eps, xyzDir);               
-               //Uintah::parallel_for(exObj, range_conv, get_flux  ); // for scalars
-             //}
-          //}
 
 template<typename ExecutionSpace, typename MemSpace, unsigned int Cscheme > 
 inline
@@ -267,6 +224,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
           }
 
 #endif
+
 #endif
 
   };
@@ -631,7 +589,6 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
       });
     } //eqn loop
 
-
     for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
       auto phi_unscaled = tsk_info->get_uintah_field_add<T, double, MemSpace>((i->second).unscaled_var);
       auto phi = tsk_info->get_uintah_field_add<T, double, MemSpace>(i->first);
@@ -652,9 +609,11 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
   KScalarRHS<T, PT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
     const int istart = 0;
     const int iend = m_eqn_names.size();
+
     if (iend >IMAX_SIZE){
-          throw InvalidValue("compiler static container size exceed at runtime.", __FILE__, __LINE__);
+      throw InvalidValue("compiler static container size exceed at runtime.", __FILE__, __LINE__);
     } 
+
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, m_task_name );
@@ -688,6 +647,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
     auto z_flux = createContainer<FZT,double, IMAX_SIZE,MemSpace>(iend);
 
     int icount=0;
+
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
       tsk_info->get_unmanaged_uintah_field<T,double, MemSpace>( m_eqn_names[ieqn], phi[ieqn] );
@@ -704,21 +664,21 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
       tsk_info->get_unmanaged_uintah_field<FYT,double,MemSpace>(m_eqn_names[ieqn]+"_y_flux",y_flux[ieqn]);
       tsk_info->get_unmanaged_uintah_field<FZT,double,MemSpace>(m_eqn_names[ieqn]+"_z_flux",z_flux[ieqn]);
 
-
     } //equation loop
-      Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-      Uintah::parallel_for(exObj,  range, KOKKOS_LAMBDA (int i, int j, int k){
-          for (int ieqn = 0; ieqn < iend; ieqn++ ){
-            rhs[ieqn](i,j,k)=(0.0);
-            x_flux[ieqn](i,j,k)=(0.0);
-            y_flux[ieqn](i,j,k)=(0.0);
-            z_flux[ieqn](i,j,k)=(0.0);
-            phi[ieqn](i,j,k)=old_phi[ieqn](i,j,k);
-          }
-          for (int ieqn = 0; ieqn < icount; ieqn++ ){
-             rho_phi[ieqn](i,j,k)=old_rho_phi[ieqn](i,j,k);
-          }
-      });
+
+    Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for(exObj,  range, KOKKOS_LAMBDA (int i, int j, int k){
+      for (int ieqn = 0; ieqn < iend; ieqn++ ){
+        rhs[ieqn](i,j,k)=(0.0);
+        x_flux[ieqn](i,j,k)=(0.0);
+        y_flux[ieqn](i,j,k)=(0.0);
+        z_flux[ieqn](i,j,k)=(0.0);
+        phi[ieqn](i,j,k)=old_phi[ieqn](i,j,k);
+      }
+      for (int ieqn = 0; ieqn < icount; ieqn++ ){
+        rho_phi[ieqn](i,j,k)=old_rho_phi[ieqn](i,j,k);
+      }
+    });
   }
 
   //------------------------------------------------------------------------------------------------
@@ -775,14 +735,10 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
 
     auto eps = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(m_eps_name);
 
-
     const int istart = 0;
     const int iend = m_eqn_names.size();
 
-
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-
-
 
       auto rho_phi=createConstContainer<CT,const double,1,MemSpace>(1);
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ){
@@ -844,7 +800,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &exObj,
           IntVector high = patch->getExtraCellHighIndex();
           high[0] = low[0] + 1 ;
           Uintah::BlockRange range( low, high);
-          
+
           doConvection<ExecutionSpace, MemSpace,CentralConvection>(exObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
         }
 

@@ -71,7 +71,6 @@ public:
 
 private:
 
-
     typedef std::vector<ArchesFieldContainer::VariableInformation> AVarInfo;
 
     std::string m_u_vel_name;

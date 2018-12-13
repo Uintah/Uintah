@@ -33,7 +33,6 @@
 #include <CCA/Components/Arches/UPSHelper.h>
 #include <Core/Parallel/LoopExecution.hpp>
 
-
 namespace Uintah{
 
   template<typename T>

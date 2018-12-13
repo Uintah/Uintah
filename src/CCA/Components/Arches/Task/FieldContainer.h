@@ -516,7 +516,6 @@ namespace Uintah{
       DataWarehouse* _new_dw;
       VariableRegistry _variable_reg;
 
-
       /** @brief From the vector of VariableInformation, return a single set of information based
                  variable's name with specified DW. **/
       VariableInformation get_variable_information( const std::string name, const bool is_constant,

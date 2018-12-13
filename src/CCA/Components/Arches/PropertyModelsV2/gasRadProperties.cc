@@ -161,11 +161,9 @@ void gasRadProperties::register_restart_initialize( VIVec& variable_registry , c
 
 }
 
-
 void gasRadProperties::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
 }
-
 
 template<typename ExecutionSpace, typename MemSpace> void
 gasRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){

@@ -63,6 +63,7 @@ public:
 
     //Build instructions for this (CharOxidationps) class.
     class Builder : public TaskInterface::TaskBuilder {
+
     private:
 
       std::string m_task_name{""};
@@ -594,7 +595,10 @@ CharOxidationps<T>::register_initialize(       std::vector<ArchesFieldContainer:
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 template<typename ExecutionSpace, typename MemSpace>
-void CharOxidationps<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject )
+void CharOxidationps<T>::initialize( const Patch                                     * patch
+                                   ,       ArchesTaskInfoManager                     * tsk_info
+                                   ,       ExecutionObject<ExecutionSpace, MemSpace> & executionObject
+                                   )
 {
   // model variables
   T& char_rate          = tsk_info->get_uintah_field_add< T >( m_modelLabel );
@@ -614,6 +618,7 @@ void CharOxidationps<T>::initialize( const Patch* patch, ArchesTaskInfoManager* 
    T& reaction_rate = tsk_info->get_uintah_field_add< T >( m_reaction_rate_names[r] );
    reaction_rate.initialize( 0.0 );
   }
+
 }
 //--------------------------------------------------------------------------------------------------
 template<typename T> void
@@ -626,8 +631,9 @@ CharOxidationps<T>::register_timestep_init(       std::vector<ArchesFieldContain
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 template<typename ExecutionSpace, typename MemSpace> void
-CharOxidationps<T>::timestep_init( const Patch                 * patch
-                                 ,       ArchesTaskInfoManager * tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject
+CharOxidationps<T>::timestep_init( const Patch                                     * patch
+                                 ,       ArchesTaskInfoManager                     * tsk_info
+                                 ,       ExecutionObject<ExecutionSpace, MemSpace> & executionObject
                                  )
 {
 }
@@ -710,9 +716,10 @@ CharOxidationps<T>::register_timestep_eval(       std::vector<ArchesFieldContain
 template<typename T>
 template <typename ExecutionSpace, typename MemSpace>
 void
-CharOxidationps<T>::eval( const Patch                 * patch
-                        ,       ArchesTaskInfoManager * tsk_info
-                        ,       ExecutionObject<ExecutionSpace, MemSpace>& executionObject)
+CharOxidationps<T>::eval( const Patch                                     * patch
+                        ,       ArchesTaskInfoManager                     * tsk_info
+                        ,       ExecutionObject<ExecutionSpace, MemSpace> & executionObject
+                        )
 {
 
   const int _time_substep = tsk_info->get_time_substep();
@@ -782,6 +789,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
   auto rawcoal_birth        = tsk_info->get_empty_const_uintah_field_add<CT, const double, MemSpace>();
   auto char_birth           = tsk_info->get_empty_const_uintah_field_add<CT, const double, MemSpace>();
   auto length_birth         = tsk_info->get_empty_const_uintah_field_add<CT, const double, MemSpace>();
+
   if (m_add_rawcoal_birth) {
     tsk_info->get_const_uintah_field< CT, const double, MemSpace>(
                            rawcoal_birth, m_rawcoal_birth_qn_name, _patch, m_matl_index, _time_substep);

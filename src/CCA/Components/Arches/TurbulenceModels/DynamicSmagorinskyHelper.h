@@ -71,7 +71,6 @@ namespace Uintah { namespace ArchesCore {
         IntVector loVal  = (pom < 0) ?patch->getCellLowIndex()  + f_dir: patch->getCellLowIndex()  + f_dir*dcdp ; 
         IntVector HiVal  = (pom < 0) ?patch->getCellHighIndex() + f_dir*dcdp: patch->getCellHighIndex() +f_dir; 
 
-
         parallel_for(exObj, BlockRange(loVal,HiVal), KOKKOS_LAMBDA (int i, int j, int k){
 
           int im=i-f_dir[0];
@@ -82,7 +81,6 @@ namespace Uintah { namespace ArchesCore {
             var(i,j,k) = var(im,jm,km);
           }
         });
-
       }
     }
 
@@ -136,9 +134,10 @@ namespace Uintah { namespace ArchesCore {
               var(i,j,k) = vel(i,j,k)*(rho(im,jm,km)+rho(i,j,k))/2.;
             }
           }
-       }
-       }
+        }
       }
+    }
+
     template<typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT, typename VarHelper>
     void apply_zero_neumann(ExecutionObject<ExecutionSpace,MemSpace>& exObj, const Patch* patch, grid_T& var,
                              grid_CT& vol_fraction, VarHelper& var_help  ){ // NOT USED??

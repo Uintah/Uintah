@@ -88,7 +88,6 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
 
   d_allDepVarNames=ND_interp->tableInfo.d_savedDep_var;
   d_allIndepVarNames=ND_interp->tableInfo.d_allIndepVarNames;
-  //d_allIndepVarNum=ND_interp->tableInfo.d_allIndepVarNum;
 
   d_constants=(ND_interp->tableInfo.d_constants);     ///< List of constants in table header
   d_indepvarscount=d_allIndepVarNames.size();       ///< Number of independent variables
@@ -213,7 +212,6 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
 
   if ( _iv_transform->has_heat_loss() ){
 
-    //const vector<double> hl_bounds = _iv_transform->get_hl_bounds(ND_interp->tableInfo.indep_headers , d_allIndepVarNum);
     const vector<double> hl_bounds = _iv_transform->get_hl_bounds(ND_interp->tableInfo.indep_headers ,ND_interp->tableInfo.d_allIndepVarNum);
 
     d_hl_lower_bound = hl_bounds[0];
@@ -521,7 +519,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
 
     //get the state from the Table
-    //ND_interp->getState( IVs_transformed, CCVar_vec_lookup   ,d_allIndepVarNames ,patch,depVarIndexes);
     ExecutionObject<UintahSpaces::CPU,UintahSpaces::HostSpace> tempObjectReplaceForPortability;
     ND_interp->getState<UintahSpaces::CPU,UintahSpaces::HostSpace>( tempObjectReplaceForPortability, IVs_transformed, CCVar_vec_lookup   ,patch,depVarIndexes);
 

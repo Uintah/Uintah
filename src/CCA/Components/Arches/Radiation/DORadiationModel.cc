@@ -1482,8 +1482,8 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   // ---------------------------------------------------------------------------//
     
   constCCVariable<int> cellType;
-  constCCVariable<double> abskt;
   old_dw->get(cellType,_cellTypeLabel, matlIndex , patch,Ghost::None, 0  );
+  constCCVariable<double> abskt;
   old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );
 
 
@@ -1497,9 +1497,9 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   for (int iband=0; iband<d_nbands; iband++){
 
     CCVariable <double > intensity;
-    constCCVariable <double > emissSrc;
     new_dw->getModifiable(intensity,_IntensityLabels[cdirecn+iband*d_totalOrds] , matlIndex, patch, _gv[_plusX[cdirecn] ][_plusY[cdirecn]  ][_plusZ[cdirecn]  ],1 );
 
+    constCCVariable <double > emissSrc;
     if(_scatteringOn){
       new_dw->get( emissSrc, _emiss_plus_scat_source_label[cdirecn+iband*d_totalOrds], matlIndex, patch, Ghost::None,0 );  
     }else{
@@ -1596,9 +1596,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     }
 #endif
   } // end band loop
-
   return;
-
 }
 
 

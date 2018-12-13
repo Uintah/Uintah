@@ -32,6 +32,7 @@
 #include <CCA/Components/Arches/Directives.h>
 #include <iomanip>
 #include <Core/Parallel/LoopExecution.hpp>
+
 #ifdef DO_TIMINGS
 #  include <spatialops/util/TimeLogger.h>
 #endif
@@ -100,7 +101,6 @@ protected:
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
-
 
 private:
 
@@ -486,10 +486,10 @@ private:
       auto phi_unscaled = tsk_info->get_uintah_field_add<T,double,MemSpace>(info.unscaled_var);
 
       Uintah::BlockRange range3( patch->getCellLowIndex(), patch->getCellHighIndex() );
-      const double ScalingConstant=info.constant  ;
+      const double ScalingConstant=info.constant;
       Uintah::parallel_for(exObj, range3, KOKKOS_LAMBDA(int i, int j, int k){
 
-        phi_unscaled(i,j,k) = phi(i,j,k) * ScalingConstant* vol_fraction(i,j,k);
+        phi_unscaled(i,j,k) = phi(i,j,k) * ScalingConstant * vol_fraction(i,j,k);
 
       });
     }

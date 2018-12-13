@@ -158,7 +158,6 @@ void spectralProperties::register_restart_initialize( VIVec& variable_registry ,
 
 }
 
-
 void spectralProperties::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
 }

@@ -151,10 +151,3 @@ void ConstantStateProperties::restart_initialize( const Patch* patch, ArchesTask
   }
 
 }
-
-void ConstantStateProperties::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
-void ConstantStateProperties::register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
-template<typename ExecutionSpace, typename MemSpace>
-void ConstantStateProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}
-template<typename ExecutionSpace, typename MemSpace>
-void ConstantStateProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& executionObject ){}

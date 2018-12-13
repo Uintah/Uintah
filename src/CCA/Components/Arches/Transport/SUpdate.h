@@ -32,6 +32,7 @@
 #include <CCA/Components/Arches/Directives.h>
 #include <iomanip>
 #include <Core/Parallel/LoopExecution.hpp>
+
 #ifdef DO_TIMINGS
 #  include <spatialops/util/TimeLogger.h>
 #endif
@@ -101,7 +102,6 @@ protected:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks) {}
 
-
 private:
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
@@ -114,7 +114,6 @@ private:
 
     std::vector<std::string> _eqn_names;
     std::vector<std::string> m_transported_eqn_names;
-    //std::map<std::string, double> m_scaling_info;
 
     struct Scaling_info {
       std::string unscaled_var; // unscaled value
@@ -130,8 +129,6 @@ private:
 
     ArchesCore::DIR m_dir;
     std::string m_volFraction_name;
-
-    //std::string m_premultiplier_name;
 
   };
 
@@ -152,7 +149,6 @@ private:
   void SUpdate<T>::create_local_labels(){
     for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
       register_new_variable<T>( (i->second).unscaled_var);
-
     }
   }
 
@@ -359,9 +355,7 @@ private:
 #endif
 
     }
-
   }
 
-//--------------------------------------------------------------------------------------------------
 }
 #endif

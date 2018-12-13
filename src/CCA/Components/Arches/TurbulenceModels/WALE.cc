@@ -168,7 +168,6 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
     register_variable( m_total_vis_name, AFC::MODIFIES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, AFC::MODIFIES ,  variable_registry, time_substep );
   }
-
 }
 
 //---------------------------------------------------------------------------------
@@ -227,7 +226,7 @@ void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
     double wtp = 0.0;
     double wbp = 0.0;
 
-//     x-dir
+    // x-dir
     {
       STENCIL3_1D(0);
       uep = uVel(IJK_P_);

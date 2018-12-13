@@ -56,17 +56,14 @@
 */
 namespace Uintah {
 #ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
-
-template<typename MemSpace>
-using tempTableContainer=Kokkos::View<double**,  Kokkos::LayoutLeft,MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
-template<typename MemSpace>
-using tableContainer    =Kokkos::View< double**,   Kokkos::LayoutLeft,MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess>  >;
-
-template<typename MemSpace>
-using intContainer   =Kokkos::View< int*,   Kokkos::LayoutLeft,MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess>  >;
-
-template<typename MemSpace>
-using tempIntContainer   =Kokkos::View<int*,   Kokkos::LayoutLeft,MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess>  >;
+template <typename MemSpace>
+using tempIntContainer   = Kokkos::View<int*,     Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
+template <typename MemSpace>
+using intContainer       = Kokkos::View<int*,     Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
+template <typename MemSpace>
+using tempTableContainer = Kokkos::View<double**, Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
+template <typename MemSpace>
+using tableContainer     = Kokkos::View<double**, Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
 #else
 typedef std::vector<int> tempIntContainer;
 typedef const std::vector<int> &intContainer;
@@ -113,7 +110,7 @@ struct ClassicTableInfo {
 
   /*********interp derived classes*****************************************/
   /** @brief A base class for Interpolation */
-  template< unsigned int max_dep_var >
+  template <unsigned int max_dep_var>
   class Interp_class {
 
   public:
@@ -355,7 +352,6 @@ struct ClassicTableInfo {
 #endif
           }
 
-
  /////     do special interpolation for the first IV
             int remaining_points=npts/2;
               for (int i=0; i < remaining_points; i++) {
@@ -372,8 +368,6 @@ struct ClassicTableInfo {
             }
             var_values[k] =table_vals[0];
         } // end K
-        
-        
 
         for (unsigned int ix = 0 ; ix<dep_storage.runTime_size; ix++) {
         dep_storage[ix](i,j,k) = var_values[ix];
@@ -382,8 +376,6 @@ struct ClassicTableInfo {
 
 
         });
-
-
     }
 
 

@@ -373,13 +373,16 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         break;
 
     }
-    taskExecSpace[icount]=temp;
+
+    taskExecSpace[icount] = temp;
     icount++;
-    if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE && assignedExecutionSpace != temp && temp != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE) {
+
+    if ( assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE && assignedExecutionSpace != temp && temp != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE ) {
       archesTasksMixMemSpaces = true;
-    } else if(  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE != temp){
+    } else if ( TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE != temp ){
       assignedExecutionSpace = temp;
     }
+
   }
 
   auto TaskDependencies = [&](Task *& tsk) {

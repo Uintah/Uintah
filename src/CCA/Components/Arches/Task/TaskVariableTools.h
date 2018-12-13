@@ -97,6 +97,7 @@ namespace Uintah{
         get_uintah_field_add( const std::string& name, const int patch, const int matl_indx, const int DW_index ){
           return get_uintah_field_add<T>(name);
         }
+
 #if defined(KOKKOS_ENABLE_OPENMP)
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<ElemType, Kokkos::HostSpace>>::type
@@ -104,6 +105,7 @@ namespace Uintah{
           return get_uintah_field_add<T>(name).getKokkosView();
         }
 #endif
+
 #if defined(KOKKOS_ENABLE_CUDA)
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<ElemType, Kokkos::CudaSpace> >::type
@@ -118,18 +120,21 @@ namespace Uintah{
         get_const_uintah_field_add( const std::string& name, const int patch, const int matl_indx, const int DW_index ){
           return get_const_uintah_field_add<T>(name);
         }
+
         template <typename T, typename ElemType, typename MemSpace> inline
         typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, T >::type
         get_const_uintah_field_add( const std::string name,
           ArchesFieldContainer::WHICH_DW which_dw ){
           return *(_field_container->get_const_field<T>(name, which_dw));
         }
+
 #if defined(KOKKOS_ENABLE_OPENMP)
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<ElemType, Kokkos::HostSpace> >::type
         get_const_uintah_field_add( const std::string& name, const int patch, const int matl_indx, const int DW_index ){
           return get_const_uintah_field_add<T>( name ).getKokkosView();
         }
+
         template <typename T, typename ElemType, typename MemSpace> inline
         typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<ElemType, Kokkos::HostSpace> >::type
         get_const_uintah_field_add( const std::string& name,
@@ -137,6 +142,7 @@ namespace Uintah{
           return (*(_field_container->get_const_field<T>(name, which_dw))).getKokkosView();
         }
 #endif
+
 #if defined(KOKKOS_ENABLE_CUDA)
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<ElemType, Kokkos::CudaSpace> >::type
@@ -147,6 +153,7 @@ namespace Uintah{
             return getNewDW()->getGPUDW(0)->getKokkosView<ElemType>( name.c_str(), patch, matl_indx, 0 );
           }
         }
+
         template <typename T, typename ElemType, typename MemSpace> inline
         typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<ElemType, Kokkos::CudaSpace> >::type
         get_const_uintah_field_add( const std::string& name,
@@ -165,6 +172,7 @@ namespace Uintah{
         get_empty_const_uintah_field_add( ){
           return T();
         }
+
 #if defined(KOKKOS_ENABLE_OPENMP)
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<ElemType, Kokkos::HostSpace> >::type
@@ -173,6 +181,7 @@ namespace Uintah{
           return temp;
         }
 #endif
+
 #if defined(KOKKOS_ENABLE_CUDA)
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<ElemType, Kokkos::CudaSpace> >::type
@@ -188,6 +197,7 @@ namespace Uintah{
         get_unmanaged_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx, const int DW_index ){
           _field_container->get_unmanaged_field<T>( name, field );
         }
+
 #if defined(KOKKOS_ENABLE_OPENMP)
         template < typename T, typename ElemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, void >::type
@@ -195,6 +205,7 @@ namespace Uintah{
           field = get_uintah_field_add< T >( name ).getKokkosView();
         }
 #endif
+
 #if defined(KOKKOS_ENABLE_CUDA)
         template < typename T, typename ElemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, void >::type
@@ -209,6 +220,7 @@ namespace Uintah{
         get_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx, const int DW_index ){
           field = get_uintah_field_add<T>( name);
         }
+
 #if defined(KOKKOS_ENABLE_OPENMP)
         template < typename T, typename elemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, void >::type
@@ -216,6 +228,7 @@ namespace Uintah{
           field = get_uintah_field_add<T>( name ).getKokkosView();
         }
 #endif
+
 #if defined(KOKKOS_ENABLE_CUDA)
         template < typename T, typename elemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, void >::type
@@ -230,6 +243,7 @@ namespace Uintah{
         get_const_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx, const int DW_index ){
           field = get_const_uintah_field_add<T>( name);
         }
+
 #if defined(KOKKOS_ENABLE_OPENMP)
         template < typename T, typename ElemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, void >::type
@@ -237,6 +251,7 @@ namespace Uintah{
           field = get_const_uintah_field_add<T>( name ).getKokkosView();
         }
 #endif
+
 #if defined(KOKKOS_ENABLE_CUDA)
         template < typename T, typename ElemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, void >::type
@@ -285,8 +300,10 @@ namespace Uintah{
                    the memory. **/
         template <typename FIELD_TYPE>
         inline void
-        get_unmanaged_uintah_field( const std::string name,
-                                          FIELD_TYPE&          field ){
+        get_unmanaged_uintah_field( const std::string   name
+                                  ,       FIELD_TYPE  & field
+                                  )
+        {
           _field_container->get_unmanaged_field( name, field );
         }
 
@@ -307,17 +324,20 @@ namespace Uintah{
         get_uintah_field( const std::string name ){
           return _field_container->get_field<T>(name);
         }
+
         //--- get_uintah_field_add ---
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, T >::type
         get_uintah_field_add( const std::string& name ){
           return *(_field_container->get_field<T>(name));
         }
+
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, T >::type
         get_const_uintah_field_add( const std::string& name){
           return *(_field_container->get_const_field<T>(name));
         }
+
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, void >::type
         get_unmanaged_uintah_field( const std::string name,
@@ -327,11 +347,11 @@ namespace Uintah{
 
 #if defined(KOKKOS_ENABLE_OPENMP)
         template <typename T, typename ElemType, typename MemSpace>
-        //inline typename std::enable_if< std::is_same< MemSpace, Spaces::HostSpace >::value, T >::type
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<ElemType, Kokkos::HostSpace> >::type
         get_const_uintah_field_add( const std::string& name ){
           return (*(get_const_uintah_field<T>( name ))).getKokkosView();
         }
+
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<ElemType, Kokkos::HostSpace>>::type
         get_uintah_field_add( const std::string& name ){
@@ -345,12 +365,14 @@ namespace Uintah{
             field = get_uintah_field_add< T >( name ).getKokkosView();
         }
 #endif
+
 #if defined(KOKKOS_ENABLE_CUDA)
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<ElemType, Kokkos::CudaSpace> >::type
         get_uintah_field_add( const std::string& name ){
            return getNewDW()->getGPUDW(0)->getKokkosView<ElemType>( name.c_str(),_field_container->getPatch()->getID(),_field_container->getMaterialIndex(), 0 );
         }
+
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<ElemType, Kokkos::CudaSpace> >::type
         get_const_uintah_field_add( const std::string& name ){
@@ -361,6 +383,7 @@ namespace Uintah{
             return getNewDW()->getGPUDW(0)->getKokkosView<ElemType>( name.c_str(),_field_container->getPatch()->getID(),_field_container->getMaterialIndex(), 0 );
           }
         }
+
         template < typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, void >::type
         get_unmanaged_uintah_field( const std::string name,
@@ -368,6 +391,7 @@ namespace Uintah{
             field = getNewDW()->getGPUDW(0)->getKokkosView<ElemType>( name.c_str(),_field_container->getPatch()->getID(), _field_container->getMaterialIndex() , 0 );
         }
 #endif
+
         /** @brief Return a UINTAH field **/
         template <typename T>
         inline
@@ -427,24 +451,28 @@ namespace Uintah{
     createConstContainer(int num=MaxCapacity){
       return struct1DArray<T,MaxCapacity>(num); // perform deep copy   (should be ok since it is an empty CCVariable?)
     }
+
 #if defined(KOKKOS_ENABLE_OPENMP)
     template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace >
     typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
     createContainer(int num=MaxCapacity){
       return struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity>(num);
     }
+
     template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace >
     typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
     createConstContainer(int num=MaxCapacity){
       return struct1DArray<KokkosView3<const elemType, MemSpace>, MaxCapacity>(num);
     }
 #endif
+
 #if defined(KOKKOS_ENABLE_CUDA)
     template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace >
     typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
     createContainer(int num=MaxCapacity){
       return struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity>(num);
     }
+
     template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace >
     typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
     createConstContainer(int num=MaxCapacity){

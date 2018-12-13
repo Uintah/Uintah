@@ -44,6 +44,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Parallel/TaskDeclaration.h>
+
 //-- Debug Stream --//
 #include <Core/Util/DebugStream.h>
 
@@ -617,19 +618,19 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
               // This method is sometimes overestimates by 4 due to double counting//
               // the corners.                                                      //
               ///////////////////////////////////////////////////////////////////////
-              //int i_size=0;
-            //Uintah::Iterator iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xminus, Uintah::Patch::ExtraCells );
-              //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
-                             //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xplus, Uintah::Patch::ExtraCells );
-              //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
-                             //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yminus, Uintah::Patch::ExtraCells );
-              //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
-                             //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yplus, Uintah::Patch::ExtraCells );
-              //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
-                             //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zminus, Uintah::Patch::ExtraCells );
-              //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
-                             //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zplus, Uintah::Patch::ExtraCells );
-              //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                //int i_size=0;
+              //Uintah::Iterator iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xminus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xplus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yminus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yplus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zminus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
+                               //iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zplus, Uintah::Patch::ExtraCells );
+                //add_counter_if_exluded_from_arg_1(bndIter,iterLimits,i_size);
               /////////////END GET BC size ////////////////////
 
 

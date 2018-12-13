@@ -12,6 +12,7 @@
 
 #define DEP_VAR_SIZE 2
 #define IND_VAR_SIZE 2
+
 // SEE PROPTEMPLATE.CC FOR INSTRUCTIONS
 //
 // /** 
@@ -161,11 +162,7 @@ namespace Uintah{
       double _constAsymmFact;
       double _Qabs;
 
-      //Interp_class_port<Kokkos::HostSpace>*  myTable;
       Interp_class<DEP_VAR_SIZE>*  myTable;
-//#if defined( HAVE_CUDA )
-      //Interp_class_port<Kokkos::CudaSpace>  myGPUTable;
-//#endif
 
        // coal optics data members
       double _rawCoalReal;

@@ -32,6 +32,7 @@
 #include <CCA/Components/Arches/Directives.h>
 #include <iomanip>
 #include <Core/Parallel/LoopExecution.hpp>
+
 #ifdef DO_TIMINGS
 #  include <spatialops/util/TimeLogger.h>
 #endif
@@ -219,7 +220,6 @@ private:
     m_eqn_class = ArchesCore::assign_eqn_class_enum( eqn_class );
     std::string premultiplier_name = get_premultiplier_name( m_eqn_class );
     std::string postmultiplier_name = get_postmultiplier_name( m_eqn_class );
-    //m_premultiplier_name = get_premultiplier_name( m_eqn_class );
 
     ProblemSpecP db_root = db->getRootNode();
     db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", _time_order);
@@ -461,7 +461,6 @@ private:
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-
   auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_volFraction_name);
   
 

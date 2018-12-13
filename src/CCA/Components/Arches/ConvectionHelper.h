@@ -360,6 +360,7 @@ namespace Uintah {
         "Error: Convection scheme not valid.",__FILE__, __LINE__);
 
     }
+ 
   private:
 
     const grid_CT& phi;
@@ -411,6 +412,7 @@ namespace Uintah {
         flux_z(IJK_) = afc * w(IJK_) * Sup;
       }
     }
+
   private:
 
     const grid_CT& phi;
@@ -461,6 +463,7 @@ namespace Uintah {
         flux_z(IJK_) = afc * w(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
       }
     }
+
   private:
 
     const grid_CT& phi;
@@ -558,6 +561,7 @@ namespace Uintah {
 
       }
     }
+
   private:
 
     const grid_CT& phi;
@@ -655,6 +659,7 @@ namespace Uintah {
 
       }
     }
+
   private:
 
     const grid_CT& phi;
@@ -750,6 +755,7 @@ namespace Uintah {
 
       }
     }
+
   private:
 
     const grid_CT& phi;
@@ -779,8 +785,9 @@ namespace Uintah {
       flux_x(i_flux_x), flux_y(i_flux_y), flux_z(i_flux_z),
       eps(i_eps)
       {}
-    void
-    operator()( int i, int j, int k ) const {
+
+    // Default operator - throw an error
+    void operator()( int i, int j, int k ) const {
 
       //X-dir
       {
@@ -1081,6 +1088,7 @@ namespace Uintah {
       });
     }
   };
+
     // ------------------------------ROEconvection-------------------//
   template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
   struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,RoeConvection>{
@@ -1202,6 +1210,7 @@ namespace Uintah {
       });
   }
 };
+
   /**
       @struct GetPsi
       @brief Interface for computing psi. If
@@ -1222,6 +1231,7 @@ namespace Uintah {
         "Error: No implementation of this limiter type or direction in Arches.h",
         __FILE__, __LINE__);
     }
+
   private:
 
     const grid_T& phi;
@@ -1264,6 +1274,7 @@ namespace Uintah {
       psi(IJK_) = my_psi * afc * afcm;
 
     }
+
   private:
 
     const grid_T& phi;

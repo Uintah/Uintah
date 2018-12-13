@@ -34,3 +34,6 @@ Replace mentions of partitions with task executors
 
 Bulletproofing on the OMP_NESTED environment variable
 - Warn when the value specified doesn't match support need for the command line arguments passed
+
+Revisit MasterLock
+- Necessary to manage threading models with <get/set>CpuThreadEnvironment?

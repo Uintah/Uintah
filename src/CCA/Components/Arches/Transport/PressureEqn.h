@@ -3,6 +3,7 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <Core/Parallel/Portability.h>
+
 namespace Uintah{
 
   class SolverInterface;
@@ -142,7 +143,6 @@ std::vector< const VarLabel *> d_corrSumLabel{};                    /// reductio
 std::vector< const VarLabel *> d_convMaxLabel{};                    /// reduction checking for convergence1
 std::vector< const VarLabel *> d_resSumLabel{};                     /// reduction computing sum of residuals
 
-
 std::vector<const VarLabel *> d_precMLabel{};                       /// fields used to store preconditioner
 
 #define num_prec_elem 4 // number of fields used to store the preconditioner matrix
@@ -150,7 +150,6 @@ std::vector<const VarLabel *> d_precMLabel{};                       /// fields u
 int  d_custom_relax_type;
 
 public:
-
 
 template <typename ExecutionSpace, typename MemSpace>
 void
@@ -161,7 +160,6 @@ dummyTask(const PatchSubset* patches,
          UintahParams& uintahParams,
          ExecutionObject<ExecutionSpace, MemSpace>& exObj,int iter){ // use to force scheduler copies
                                                                    }
-
 
 template <typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT>
 void
@@ -183,9 +181,6 @@ cg_init1(const PatchSubset* patches,
          UintahParams& uintahParams,
          ExecutionObject<ExecutionSpace, MemSpace>& exObj, int rk_step);
 
-
-
-
 template <typename ExecutionSpace, typename MemSpace>
 void
 cg_init2(const PatchSubset* patches,
@@ -195,8 +190,6 @@ cg_init2(const PatchSubset* patches,
          UintahParams& uintahParams,
          ExecutionObject<ExecutionSpace, MemSpace>& exObj, int iter,  int rk_step);
 
-
-
 template <typename ExecutionSpace, typename MemSpace>
 void
 cg_task1(const PatchSubset* patches,
@@ -205,6 +198,7 @@ cg_task1(const PatchSubset* patches,
          OnDemandDataWarehouse* new_dw,
          UintahParams& uintahParams,
          ExecutionObject<ExecutionSpace, MemSpace>& exObj,int iter);
+
 template <typename ExecutionSpace, typename MemSpace>
 void
 cg_task2(const PatchSubset* patches,
@@ -231,9 +225,6 @@ cg_task4(const PatchSubset* patches,
          OnDemandDataWarehouse* new_dw,
          UintahParams& uintahParams,
          ExecutionObject<ExecutionSpace, MemSpace>& exObj,int iter);
-
-
-
 
 };
 }
