@@ -940,10 +940,12 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch
                                    << std::setw(10) << *label << "  patch: "
                                    << patch->getID() << "  matl: " << matlIndex << "  level: " << patch->getLevel()->getIndex()
                                    << "  from proc: " << lb->getPatchwiseProcessorAssignment( patch )
-                                   << "  low: " << low << "  high: " << high << " sizes: " << size);
+                                   << "  low: " << low << "  high: " << high << " sizes: " << size
+                                   << "  num ghost cells: " << dep->m_req->m_num_ghost_cells);
 
       m_var_DB.putForeign( label, matlIndex, patch, var, d_scheduler->copyTimestep() );  //put new var in data warehouse
       var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
+
       break;
     }
     case TypeDescription::PerPatch :
