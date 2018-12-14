@@ -6252,8 +6252,25 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
     cout << "Doing changeGrainMaterials" << endl;
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
-    unsigned int aMI = 2; // acceptorMatlIndex TODO
-    double donorColor = 1.2;
+    unsigned int aMI = flags->d_acceptorMaterialIndex;
+
+    vector<double> donorColors;
+    for (set<double>::iterator it1 = d_collideColors.begin(); 
+                               it1!= d_collideColors.end();  it1++){
+      bool baseColorExists=false;
+      for(unsigned int i=0;i<donorColors.size();i++){
+        if(*it1-donorColors[i] < 1.0){
+          baseColorExists = true;
+        }
+      }
+      if(!baseColorExists){
+       donorColors.push_back(*it1);
+      }
+    }
+
+//    for(unsigned int i=0;i<donorColors.size();i++){
+//      cout << "donorColor = " << donorColors[i] << endl;
+//    }
 
     // Loop over all materials, except for acceptor, look for particles with
     // color = donorColor.  If found, copy particle data into acceptor matl and
@@ -6278,9 +6295,10 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        if(pcolor[idx]==donorColor){
-        //cout << "pcolor = " << pcolor[idx] << endl;
-          numNewPartNeeded++;
+        for(unsigned int i=0;i<donorColors.size();i++){
+          if(pcolor[idx]==donorColors[i]){
+            numNewPartNeeded++;
+          }
         }
       }
      }
@@ -6385,45 +6403,51 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
         new_dw->getModifiable(pLoadCID,lb->pLoadCurveIDLabel_preReloc, pset);
       }
 
+//      bool doCopy = false;
+//      if(dwi==dw_ami){
+//        doCopy=true;
+//      }
+
       // copy data from old variables for particle IDs and the position vector
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
-
-        if(pcolor[idx]==donorColor){
-          pidstmp[pp]  = pids[idx];
-          pMIDtmp[pp]  = pModID[idx];
-          pxtmp[pp]    = px[idx];
-          psurftmp[pp] = pSurf[idx];
-          pdTdttmp[pp] = pdTdt[idx];
-          pvoltmp[pp]  = pvolume[idx];
-          pveltmp[pp]  = pvelocity[idx];
-          pextFtmp[pp] = pextforce[idx];
-          ptemptmp[pp] = ptemp[idx];
-          ptempgtmp[pp]= ptempgrad[idx];
-          ptempPtmp[pp]= ptempP[idx];
-          pFtmp[pp]    = pF[idx];
-          psizetmp[pp] = pSize[idx];
-          pdisptmp[pp] = pdisp[idx];
-          pstrstmp[pp] = pstress[idx];
-          if(flags->d_computeScaleFactor){
-            pSFtmp[pp]   = pscalefac[idx];
-          }
-          if (flags->d_with_color) {
-            pcolortmp[pp]= pcolor[idx];
-          }
-          if (flags->d_useLoadCurves) {
-            pLoadCIDtmp[pp]= pLoadCID[idx];
-          }
-          pmasstmp[pp] = pmass[idx];
-          ploctmp[pp]  = ploc[idx];
-          ploc[idx]  = -999;
-          pvgradtmp[pp]= pvelgrad[idx];
-          belbartmp[pp]= belbar[idx];
-          pYStmp[pp]= pYS[idx];
-          pPStmp[pp]= pPS[idx];
-          pp++;
-       } // Color == donorColor
+         for(unsigned int i=0;i<donorColors.size();i++){
+          if(pcolor[idx]==donorColors[i]){
+           pidstmp[pp]  = pids[idx];
+           pMIDtmp[pp]  = pModID[idx];
+           pxtmp[pp]    = px[idx];
+           psurftmp[pp] = pSurf[idx];
+           pdTdttmp[pp] = pdTdt[idx];
+           pvoltmp[pp]  = pvolume[idx];
+           pveltmp[pp]  = pvelocity[idx];
+           pextFtmp[pp] = pextforce[idx];
+           ptemptmp[pp] = ptemp[idx];
+           ptempgtmp[pp]= ptempgrad[idx];
+           ptempPtmp[pp]= ptempP[idx];
+           pFtmp[pp]    = pF[idx];
+           psizetmp[pp] = pSize[idx];
+           pdisptmp[pp] = pdisp[idx];
+           pstrstmp[pp] = pstress[idx];
+           if(flags->d_computeScaleFactor){
+             pSFtmp[pp]   = pscalefac[idx];
+           }
+           if (flags->d_with_color) {
+             pcolortmp[pp]= pcolor[idx];
+           }
+           if (flags->d_useLoadCurves) {
+             pLoadCIDtmp[pp]= pLoadCID[idx];
+           }
+           pmasstmp[pp] = pmass[idx];
+           ploctmp[pp]  = ploc[idx];
+           ploc[idx]  = -999;
+           pvgradtmp[pp]= pvelgrad[idx];
+           belbartmp[pp]= belbar[idx];
+           pYStmp[pp]= pYS[idx];
+           pPStmp[pp]= pPS[idx];
+           pp++;
+         } // Color == donorColor
+        } // Loop over donorColors
       } // Loop over particles
 //      TODO
 //      cm->changeCMSpecificParticleData(patch, dwi, 8,

@@ -51,6 +51,8 @@
       <exactDeformation                   spec="OPTIONAL BOOLEAN" /> 
       <DoAuthigenesis                     spec="OPTIONAL BOOLEAN" /> 
       <AuthigenesisBaseFilename           spec="OPTIONAL STRING" />
+      <ChangeGrainMaterials               spec="OPTIONAL BOOLEAN" /> 
+      <AcceptorMaterialIndex              spec="OPTIONAL INTEGER" /> 
       <InsertParticles                    spec="OPTIONAL BOOLEAN" /> 
       <InsertParticlesFile                spec="OPTIONAL STRING" /> 
       <withColor                          spec="OPTIONAL BOOLEAN" />

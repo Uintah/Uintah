@@ -96,6 +96,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_exactDeformation                   =  false;
   d_doAuthigenesis                     =  false;
   d_changeGrainMaterials               =  false;
+  d_acceptorMaterialIndex              =  -999;
   d_authigenesisBaseFilename           =  "";
   d_insertParticles                    =  false;
   d_doGridReset                        =  true;
@@ -260,6 +261,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("DoAuthigenesis",     d_doAuthigenesis);
   mpm_flag_ps->get("AuthigenesisBaseFilename",d_authigenesisBaseFilename);
   mpm_flag_ps->get("ChangeGrainMaterials",    d_changeGrainMaterials);
+  mpm_flag_ps->get("AcceptorMaterialIndex",   d_acceptorMaterialIndex);
 
   //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);
@@ -490,8 +492,9 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("use_tracers",       d_useTracers);
   ps->appendElement("DoAuthigenesis",    d_doAuthigenesis);
   ps->appendElement("AuthigenesisBaseFilename",d_authigenesisBaseFilename);
+  ps->appendElement("ChangeGrainMaterials",    d_changeGrainMaterials);
+  ps->appendElement("AcceptorMaterialIndex",   d_acceptorMaterialIndex);
 }
-
 
 bool
 MPMFlags::doMPMOnLevel(int level, int numLevels) const
