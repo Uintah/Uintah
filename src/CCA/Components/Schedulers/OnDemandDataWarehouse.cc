@@ -2708,7 +2708,7 @@ OnDemandDataWarehouse::emitPIDX(       PIDXOutputContext & pc
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "OnDemandDataWarehouse::emit ", __FILE__, __LINE__) );
   }
 
-  m_var->emitPIDX( pc, buffer, l, h, bufferSize );
+  var->emitPIDX( pc, buffer, l, h, bufferSize );
 }
 
 #endif
