@@ -4321,7 +4321,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
         // a negative temperature
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
             (pLocalized[idx]==-999)){
-          cout << "Adding to delset, m = " << m << endl;
+//          cout << "Adding to delset, m = " << m << endl;
 //          cout << "pmassNew[idx] = " << pmassNew[idx] << endl;
 //          cout << "pTempNew[idx] = " << pTempNew[idx] << endl;
 //          cout << "pdTdt[idx] = " << pdTdt[idx] << endl;
@@ -5990,14 +5990,15 @@ void SerialMPM::scheduleFindGrainCollisions(SchedulerP   & sched,
                         &SerialMPM::findGrainCollisions);
 
   Ghost::GhostType gnone = Ghost::None;
+  Ghost::GhostType gan   = Ghost::AroundNodes;
 
   //t->requires(Task::OldDW, lb->timeStepLabel);
   t->requires(Task::OldDW, lb->ChangedGrainMaterialsLabel );
-  t->requires(Task::OldDW, lb->pXLabel,                  gnone);
-  t->requires(Task::OldDW, lb->pSurfLabel,               gnone);
-  t->requires(Task::OldDW, lb->pColorLabel,              gnone);
-  t->requires(Task::OldDW, lb->pSizeLabel,               gnone);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gnone);
+  t->requires(Task::OldDW, lb->pXLabel,                  gan, NGP);
+  t->requires(Task::OldDW, lb->pSurfLabel,               gan, NGP);
+  t->requires(Task::OldDW, lb->pColorLabel,              gan, NGP);
+  t->requires(Task::OldDW, lb->pSizeLabel,               gan, NGP);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
 
   t->requires(Task::NewDW, lb->gColorLabel,              gnone);
   t->computes(lb->TotalLocalizedParticleLabel);
@@ -6043,6 +6044,7 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
               "Doing SerialMPM::findGrainCollisions");
 
    if(ChangedGrainMaterials<1.0){
+    cout << "looking for collisions" << endl;
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -6050,6 +6052,7 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
     string interp_type = flags->d_interpolator_type;
 
     Ghost::GhostType gnone = Ghost::None;
+    Ghost::GhostType  gan   = Ghost::AroundNodes;
 
     set<double> collideColors;
 
@@ -6063,7 +6066,9 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
       constParticleVariable<Matrix3> psize, pFOld;
       constNCVariable<double>        gColor;
 
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+//      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
 
       old_dw->get(px,           lb->pXLabel,                         pset);
       old_dw->get(pColor,       lb->pColorLabel,                     pset);
@@ -6071,8 +6076,6 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
 
       new_dw->get(gColor,       lb->gColorLabel,      dwi, patch, gnone, 0);
-
-      set<double> collideColors;
 
       for (ParticleSubset::iterator iter = pset->begin();
            iter != pset->end();
@@ -6098,14 +6101,13 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
           }
         }
       } // End of particle loop
-
-#if 0
-      for (set<double>::iterator it1 = collideColors.begin(); 
-                        it1!= collideColors.end();  it1++){
-        cout << "Color " << *it1 << " collides " << endl;
-      }
-#endif
     }
+#if 0
+    for (set<double>::iterator it1 = collideColors.begin(); 
+                               it1!= collideColors.end();  it1++){
+      cout << "Color " << *it1 << " collides " << endl;
+    }
+#endif
 
     ostringstream pnum; pnum << patchID;
     string filename = "collideColors." + pnum.str();
@@ -6151,7 +6153,7 @@ void SerialMPM::communicateGrainCollisions(const ProcessorGroup * pg,
      string filename = "collideColors." + pnum.str();
      ifstream colin(filename.c_str());
       if(!colin){
-      cerr << "file not opened:  " << filename << endl;
+       cerr << "file not opened:  " << filename << endl;
        cerr << "exiting" << endl;
        exit(1);
      }
@@ -6164,7 +6166,7 @@ void SerialMPM::communicateGrainCollisions(const ProcessorGroup * pg,
     }
 
     for (set<double>::iterator it1 = d_collideColors.begin(); 
-                              it1!= d_collideColors.end();  it1++){
+                               it1!= d_collideColors.end();  it1++){
      cout << "Color " << *it1 << " collides " << endl;
     }
    } // If haven't already done this
