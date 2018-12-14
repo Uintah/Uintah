@@ -86,9 +86,6 @@ ______________________________________________________________________*/
     virtual void scheduleDoAnalysis_preReloc(SchedulerP   & sched,
                                              const LevelP & level) {};
 
-    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
-                                              const LevelP& level);
-
   private:
 
     // remove this once C++14 is adopted
@@ -182,6 +179,7 @@ ______________________________________________________________________*/
       planeAverage * d_planeAve_1;
       planeAverage * d_planeAve_2;
       IntVector d_monitorCell;             // Monitor this cells.  Used for debugging
+      VarLabel* d_lastCompTimeLabel {nullptr};
   };
 }
 

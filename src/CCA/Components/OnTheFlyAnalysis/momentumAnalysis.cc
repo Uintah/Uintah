@@ -270,7 +270,7 @@ void momentumAnalysis::initialize( const ProcessorGroup *,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing initialize");
 
-    double tminus = -1.0/m_analysisFreq;
+    double tminus = d_startTime - 1.0/m_analysisFreq;
     new_dw->put( max_vartype(tminus), labels->lastCompTime );
 
     //__________________________________
@@ -385,7 +385,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup * pg,
 
   // Ignore the task if a recompute time step has been requested upstream
   bool rts      = new_dw->recomputeTimeStep();
-  bool itItTime = isItTime( old_dw, labels->lastCompTime );
+  bool itItTime = isItTime( old_dw, level, labels->lastCompTime );
 
   if( itItTime == false  || rts ) {
     return;
@@ -553,9 +553,10 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup * pg,
   // Ignore the task if a recompute time step has been requested upstream
   bool rts = new_dw->recomputeTimeStep();
   
+  const Level* level = getLevel(patches);
   timeVars tv;
     
-  getTimeVars( old_dw, labels->lastCompTime, tv );
+  getTimeVars( old_dw, level, labels->lastCompTime, tv );
   putTimeVars( new_dw, labels->lastCompTime, tv );
 
   if( rts || tv.isItTime == false) {

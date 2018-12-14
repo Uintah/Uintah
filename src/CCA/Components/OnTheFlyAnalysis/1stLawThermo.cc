@@ -230,7 +230,7 @@ FirstLawThermo::initialize( const ProcessorGroup *,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing initialize");
     
-    double tminus = -1.0/m_analysisFreq;    
+    double tminus = d_startTime - 1.0/m_analysisFreq;    
     new_dw->put(max_vartype(tminus), FL_lb->lastCompTimeLabel);
 
     //__________________________________
@@ -347,7 +347,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup * pg,
 {
   const Level* level = getLevel(patches);
   
-  if( isItTime(old_dw, FL_lb->lastCompTimeLabel) == false){
+  if( isItTime(old_dw, level, FL_lb->lastCompTimeLabel) == false){
     return;
   }
 
@@ -591,7 +591,8 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup * pg,
                                                DataWarehouse        * old_dw,
                                                DataWarehouse        * new_dw)
 {
-  if( isItTime(old_dw, FL_lb->lastCompTimeLabel) == false){
+  const Level* level = getLevel(patches);
+  if( isItTime(old_dw, level, FL_lb->lastCompTimeLabel) == false){
     return;
   }
 
@@ -634,9 +635,10 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup * pg,
                                 DataWarehouse        * old_dw,
                                 DataWarehouse        * new_dw)
 {
+  const Level* level = getLevel(patches);
   timeVars tv;
   
-  getTimeVars( old_dw, FL_lb->lastCompTimeLabel, tv );
+  getTimeVars( old_dw, level, FL_lb->lastCompTimeLabel, tv );
   putTimeVars( new_dw, FL_lb->lastCompTimeLabel, tv );
                  
   if( tv.isItTime ){

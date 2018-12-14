@@ -332,10 +332,6 @@ void planeAverage::scheduleInitialize(SchedulerP   & sched,
 
   // no checkpointing
   sched->overrideVariableBehavior(d_lb->lastCompTimeName, false, false, false, false, true);
-
-  
-  // TG-0 = ignore 
-  m_scheduler->setNumTaskGraphs( m_NUM_GRAPHS );
   
   //__________________________________
   //
@@ -371,7 +367,7 @@ void planeAverage::initialize(const ProcessorGroup  *,
     const Patch* patch = patches->get(p);
     printTask( patch, dbg_OTF_PA,"Doing "+ d_className + "::initialize 1/2");
 
-    double tminus = -1.0/m_analysisFreq;
+    double tminus = d_startTime - 1.0/m_analysisFreq;
     new_dw->put(max_vartype(tminus), d_lb->lastCompTimeLabel );
 
 
@@ -491,8 +487,6 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_resetProgressVar( sched, level );
 
-  sched_updateTimeVar(     sched, level );
-
   //__________________________________
   //  Not all ranks own patches, need custom MPI communicator
   const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
@@ -515,7 +509,9 @@ void planeAverage::sched_zeroPlanarVars(SchedulerP   & sched,
   t->setType( Task::OncePerProc );
   const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
 
-  sched->addTask( t, perProcPatches, d_matl_set, m_TG_computeIndex );
+  sched_TimeVars( t, level, d_lb->lastCompTimeLabel, false );
+  
+  sched->addTask( t, perProcPatches, d_matl_set );
 }
 
 //______________________________________________________________________
@@ -532,12 +528,12 @@ void planeAverage::zeroPlanarVars(const ProcessorGroup * ,
   }
 
   //__________________________________
-  // zero variables if it's time to write if this MPIRank hasn't excuted this
+  // zero variables if it's time to write and if this MPIRank hasn't excuted this
   // task on this level
-  const LevelP level = getLevelP( patches );
+  const Level* level = getLevel( patches );
   const int L_indx = level->getIndex();
 
-  if (d_progressVar[ZERO][L_indx] == true){
+  if (d_progressVar[ZERO][L_indx] == true || isItTime( old_dw, level, d_lb->lastCompTimeLabel) == false){
     return;
   }
 
@@ -569,6 +565,9 @@ void planeAverage::sched_computePlanarSums(SchedulerP   & sched,
 
   t->setType( Task::OncePerProc );
 
+
+  sched_TimeVars( t, level, d_lb->lastCompTimeLabel, false );
+  
   Ghost::GhostType gn = Ghost::None;
   if( d_lb->weightLabel != nullptr ){
     t->requires( Task::NewDW, d_lb->weightLabel, gn, 0);
@@ -600,7 +599,7 @@ void planeAverage::sched_computePlanarSums(SchedulerP   & sched,
 
   const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
 
-  sched->addTask( t, perProcPatches, d_matl_set, m_TG_computeIndex );
+  sched->addTask( t, perProcPatches, d_matl_set );
 }
 
 //______________________________________________________________________
@@ -615,10 +614,14 @@ void planeAverage::computePlanarSums(const ProcessorGroup * pg,
   if( patches->empty() ){
     return;
   }
-
-  // Is it the right time and has this MPIRank executed this task on this level?
-  const LevelP level = getLevelP( patches );
+  
+  const Level* level = getLevel( patches );
   const int L_indx = level->getIndex();
+
+  // is it time to execute
+  if( isItTime( old_dw, level, d_lb->lastCompTimeLabel) == false ){
+    return;
+  }
 
   //__________________________________
   // Loop over patches
@@ -849,10 +852,12 @@ void planeAverage::sched_sumOverAllProcs( SchedulerP   & sched,
 
   t->setType( Task::OncePerProc );
 
+  sched_TimeVars( t, level, d_lb->lastCompTimeLabel, false );
+    
   // only compute task on 1 patch in this proc
-  const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
+  const PatchSet* perProcPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
 
-  sched->addTask( t, perProcPatches, d_matl_set, m_TG_computeIndex );
+  sched->addTask( t, perProcPatches, d_matl_set );
 }
 
 //______________________________________________________________________
@@ -867,9 +872,14 @@ void planeAverage::sumOverAllProcs(const ProcessorGroup * pg,
   if( patches->empty() ){
     return;
   }
-
-  const LevelP level = getLevelP( patches );
-  const int L_indx = level->getIndex();
+  
+  const Level * level = getLevel( patches );
+  const int L_indx    = level->getIndex();
+  
+  // is it time to execute
+  if( isItTime( old_dw, level, d_lb->lastCompTimeLabel) == false){
+    return;
+  }
 
   // Has this rank performed the reduction
   if( d_progressVar[SUM][L_indx] == true){
@@ -896,54 +906,6 @@ void planeAverage::sumOverAllProcs(const ProcessorGroup * pg,
 }
 
 //______________________________________________________________________
-//
-void planeAverage::sched_updateTimeVar( SchedulerP   & sched,
-                                        const LevelP & level )
-{
-  printSchedule(level,dbg_OTF_PA, d_className + "::updateTimeVar");
-
-  Task* t = scinew Task( "planeAverage::updateTimeVar",
-                    this,&planeAverage::updateTimeVar );
-
-  t->setType( Task::OncePerProc );
-  t->requires( Task::OldDW, d_lb->lastCompTimeLabel );
-  t->computes( d_lb->lastCompTimeLabel );
-
-  // only compute task on 1 patch in this proc
-  const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
-
-  sched->addTask( t, perProcPatches, d_matl_set );
-}
-
-//______________________________________________________________________
-//
-void planeAverage::updateTimeVar(const ProcessorGroup* ,
-                                 const PatchSubset   * patches,
-                                 const MaterialSubset* ,
-                                 DataWarehouse       * old_dw,
-                                 DataWarehouse       * new_dw )
-{
-  printTask( patches, dbg_OTF_PA,"Doing " + d_className + "::updateTimeVar" );
-
-  max_vartype writeTime;
-  simTime_vartype simTimeVar;
-
-  old_dw->get( writeTime,  d_lb->lastCompTimeLabel );
-  old_dw->get( simTimeVar, m_simulationTimeLabel );
-
-  double lastWriteTime = writeTime;
-  double nextWriteTime = lastWriteTime + 1.0/m_analysisFreq;
-  double now = simTimeVar;
-
-  if(now < d_startTime || now > d_stopTime || now < nextWriteTime ){
-    new_dw->put( max_vartype( lastWriteTime ), d_lb->lastCompTimeLabel );
-  }
-  else {
-    new_dw->put( max_vartype( nextWriteTime ), d_lb->lastCompTimeLabel );
-  }
-}
-
-//______________________________________________________________________
 //  This task writes out the plane average of each VarLabel to a separate file.
 
 void planeAverage::sched_writeToFiles(SchedulerP   &    sched,
@@ -959,8 +921,8 @@ void planeAverage::sched_writeToFiles(SchedulerP   &    sched,
                      this,&planeAverage::writeToFiles,
                      dirName );
 
-  t->requires( Task::OldDW, m_simulationTimeLabel );
-  t->requires( Task::OldDW, d_lb->lastCompTimeLabel );
+  sched_TimeVars( t, level, d_lb->lastCompTimeLabel, true );
+    
   t->requires( Task::OldDW, d_lb->fileVarsStructLabel, d_zero_matl, Ghost::None, 0 );
   t->computes( d_lb->fileVarsStructLabel, d_zero_matl );
 
@@ -970,7 +932,7 @@ void planeAverage::sched_writeToFiles(SchedulerP   &    sched,
   zeroPatch->add(p);
   zeroPatch->addReference();
 
-  sched->addTask( t, zeroPatch , d_matl_set, m_TG_computeIndex );
+  sched->addTask( t, zeroPatch , d_matl_set );
 
   if (zeroPatch && zeroPatch->removeReference()) {
     delete zeroPatch;
@@ -986,13 +948,18 @@ void planeAverage::writeToFiles(const ProcessorGroup* pg,
                                 DataWarehouse       * new_dw,
                                 const std::string     dirName )
 {
-  const LevelP level = getLevelP( patches );
+  //const LevelP level = getLevelP( patches );
+  const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
 
-  simTime_vartype simTimeVar;
-  old_dw->get( simTimeVar, m_simulationTimeLabel );
-  double now = simTimeVar;
-
+  timeVars tv;  
+  getTimeVars( old_dw, level, d_lb->lastCompTimeLabel, tv );
+  putTimeVars( new_dw, d_lb->lastCompTimeLabel, tv );
+  
+  if( tv.isItTime == false ){
+    return;
+  }
+  
   //__________________________________
   //
   for(int p=0;p<patches->size();p++){                  // IS THIS LOOP NEEDED?? Todd
@@ -1076,7 +1043,7 @@ void planeAverage::writeToFiles(const ProcessorGroup* pg,
 
         //__________________________________
         //  Write to the file
-        planarVars[i]->printAverage( fp, L_indx, now );
+        planarVars[i]->printAverage( fp, L_indx, tv.now );
 
         fflush(fp);
       }  // planarVars loop
@@ -1117,7 +1084,7 @@ void planeAverage::sched_resetProgressVar( SchedulerP   & sched,
   // only compute task on 1 patch in this proc
   const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
 
-  sched->addTask( t, perProcPatches, d_matl_set, m_TG_computeIndex );
+  sched->addTask( t, perProcPatches, d_matl_set );
 }
 
 //______________________________________________________________________
@@ -1141,42 +1108,6 @@ void planeAverage::resetProgressVar(const ProcessorGroup * ,
 
   for (unsigned int i =0 ; i < d_progressVar.size(); i++) {
     d_progressVar[i][L_indx] = false;
-  }
-}
-
-//______________________________________________________________________
-//
-void planeAverage::sched_computeTaskGraphIndex( SchedulerP& sched,
-                                                const LevelP& level)
-{
-  printSchedule(level,dbg_OTF_PA, d_className + "::sched_computeTaskGraphIndex");
-
-  Task* t = scinew Task( "planeAverage::computeTaskGraphIndex",
-                     this,&planeAverage::computeTaskGraphIndex );
-
-  t->setType( Task::OncePerProc );
-  t->requires( Task::OldDW, m_simulationTimeLabel );
-  t->requires( Task::OldDW, d_lb->lastCompTimeLabel );
-
-  // only compute task on 1 patch in this proc
-  const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
-
-  sched->addTask( t, perProcPatches, d_matl_set );
-}
-//______________________________________________________________________
-
-void planeAverage::computeTaskGraphIndex(const ProcessorGroup * ,
-                                         const PatchSubset    * patches,
-                                         const MaterialSubset *,
-                                         DataWarehouse        * old_dw,
-                                         DataWarehouse        *)
-{
-  printTask( patches, dbg_OTF_PA,"Doing " + d_className + "::computeTaskGraphIndex" );
-
-  if( isItTime( old_dw ) == true ){
-    cout << " planeAverage::computeTaskGraphIndex: tg_index: " << m_TG_computeIndex <<endl;
-    
-    m_application->setTaskGraphIndex ( m_TG_computeIndex );
   }
 }
 
@@ -1269,27 +1200,6 @@ planeAverage::createDirectory( mode_t mode,
   }
   return 0;
 }
-
-//______________________________________________________________________
-//
-bool planeAverage::isItTime( DataWarehouse * old_dw)
-{
-  max_vartype writeTime;
-  simTime_vartype simTimeVar;
-
-  old_dw->get( writeTime,  d_lb->lastCompTimeLabel );
-  old_dw->get( simTimeVar, m_simulationTimeLabel );
-
-  double lastWriteTime = writeTime;
-  double nextWriteTime = lastWriteTime + 1.0/m_analysisFreq;
-  double now = simTimeVar;
-
-  if(now < d_startTime || now > d_stopTime || now < nextWriteTime ){
-    return false;
-  }
-  return true;
-}
-
 
 //______________________________________________________________________
 // k is the plane

@@ -214,7 +214,7 @@ void particleExtract::initialize(const ProcessorGroup *,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing particleExtract::initialize");
      
-    double tminus = -1.0/m_analysisFreq;
+    double tminus = d_startTime - 1.0/m_analysisFreq;
     new_dw->put( max_vartype( tminus ), ps_lb->lastWriteTimeLabel );
     
     ParticleVariable<FILE*> myFiles;
@@ -373,7 +373,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
   
   timeVars tv;
     
-  getTimeVars( old_dw, ps_lb->lastWriteTimeLabel, tv );
+  getTimeVars( old_dw, level, ps_lb->lastWriteTimeLabel, tv );
   putTimeVars( new_dw, ps_lb->lastWriteTimeLabel, tv );
   
   if( tv.isItTime == false ){

@@ -95,9 +95,6 @@ ______________________________________________________________________*/
 
     virtual void scheduleDoAnalysis_preReloc(SchedulerP   & sched,
                                              const LevelP & level) {};
-                                             
-    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
-                                              const LevelP& level );
 
     enum weightingType { NCELLS, MASS, NONE };
 
@@ -492,9 +489,6 @@ ______________________________________________________________________*/
     void sched_resetProgressVar( SchedulerP   & sched,
                                  const LevelP & level );
 
-    void sched_updateTimeVar( SchedulerP   & sched,
-                              const LevelP & level );
-
     void createMPICommunicator(const PatchSet* perProcPatches);
 
 
@@ -531,9 +525,22 @@ ______________________________________________________________________*/
       d_allLevels_planarVars.at(L_indx) = pv;
     }
     
+
     //__________________________________
     //     PUBLIC:  VARIABLES
     MaterialSet*  d_matl_set;
+    
+        // general labels
+    class planeAverageLabel {
+    public:
+      std::string lastCompTimeName;
+      std::string fileVarsStructName;
+      VarLabel* lastCompTimeLabel   {nullptr};
+      VarLabel* fileVarsStructLabel {nullptr};
+      VarLabel* weightLabel         {nullptr};
+    };
+
+    planeAverageLabel* d_lb;
     
   //______________________________________________________________________
   //
@@ -613,25 +620,7 @@ ______________________________________________________________________*/
                          const std::string & rootPath,
                          std::string       & path );
 
-    bool isItTime( DataWarehouse * old_dw);
 
-    void  computeTaskGraphIndex(const ProcessorGroup * ,
-                                const PatchSubset    * patches,
-                                const MaterialSubset *,
-                                DataWarehouse        * old_dw,
-                                DataWarehouse        *);
-
-    // general labels
-    class planeAverageLabel {
-    public:
-      std::string lastCompTimeName;
-      std::string fileVarsStructName;
-      VarLabel* lastCompTimeLabel   {nullptr};
-      VarLabel* fileVarsStructLabel {nullptr};
-      VarLabel* weightLabel         {nullptr};
-    };
-
-    planeAverageLabel* d_lb;
 
     //__________________________________
     // global constants always begin with "d_"

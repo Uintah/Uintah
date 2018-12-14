@@ -360,7 +360,7 @@ void MinMax::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing MinMax::initialize");
     
-    double tminus = -1.0/m_analysisFreq;
+    double tminus = d_startTime - 1.0/m_analysisFreq;
     new_dw->put(max_vartype(tminus), d_lb->lastCompTimeLabel );
 
     //__________________________________
@@ -396,15 +396,16 @@ void MinMax::scheduleRestartInitialize(SchedulerP   & sched,
 
 //______________________________________________________________________
 void MinMax::scheduleDoAnalysis(SchedulerP   & sched,
-                                const LevelP & level)
+                                const LevelP & levelP)
 {
-  printSchedule(level,cout_doing,"MinMax::scheduleDoAnalysis");
+  printSchedule(levelP,cout_doing,"MinMax::scheduleDoAnalysis");
    
   // Tell the scheduler to not copy this variable to a new AMR grid and 
   // do not checkpoint it.
   sched->overrideVariableBehavior("FileInfo_minMax", false, false, false, true, true); 
    
   Ghost::GhostType gn = Ghost::None;
+  const Level* level = levelP.get_rep();
   const int L_indx = level->getIndex();
   
   //__________________________________
@@ -412,7 +413,7 @@ void MinMax::scheduleDoAnalysis(SchedulerP   & sched,
   Task* t0 = scinew Task( "MinMax::computeMinMax", 
                           this,&MinMax::computeMinMax );
 
-  sched_TimeVars( t0, level, d_lb->lastCompTimeLabel, false );
+  sched_TimeVars( t0, levelP, d_lb->lastCompTimeLabel, false );
      
   for ( unsigned int i =0 ; i < d_analyzeVars.size(); i++ ) {
     VarLabel* label   = d_analyzeVars[i].label;
@@ -434,8 +435,8 @@ void MinMax::scheduleDoAnalysis(SchedulerP   & sched,
 
       t0->requires( Task::NewDW, label, matSubSet, gn, 0 );
      
-      t0->computes( d_analyzeVars[i].reductionMinLabel, level.get_rep(), matSubSet );
-      t0->computes( d_analyzeVars[i].reductionMaxLabel, level.get_rep(), matSubSet );
+      t0->computes( d_analyzeVars[i].reductionMinLabel, level, matSubSet );
+      t0->computes( d_analyzeVars[i].reductionMaxLabel, level, matSubSet );
 
       if(matSubSet && matSubSet->removeReference()){
         delete matSubSet;
@@ -452,7 +453,7 @@ void MinMax::scheduleDoAnalysis(SchedulerP   & sched,
   Task* t1 = scinew Task( "MinMax::doAnalysis", 
                           this,&MinMax::doAnalysis );      
                             
-  sched_TimeVars( t1, level, d_lb->lastCompTimeLabel, true );
+  sched_TimeVars( t1, levelP, d_lb->lastCompTimeLabel, true );
   
   t1->requires( Task::OldDW, d_lb->fileVarsStructLabel, d_zero_matl, gn, 0 );
   
@@ -465,8 +466,8 @@ void MinMax::scheduleDoAnalysis(SchedulerP   & sched,
       matSubSet->add( d_analyzeVars[i].matl );
       matSubSet->addReference();
 
-      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMinLabel, level.get_rep(), matSubSet );
-      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMaxLabel, level.get_rep(), matSubSet );
+      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMinLabel, level, matSubSet );
+      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMaxLabel, level, matSubSet );
     }
   }
 
@@ -492,12 +493,14 @@ void MinMax::computeMinMax(const ProcessorGroup * pg,
 { 
   //__________________________________
   // compute min/max if it's time to write
-  if( isItTime( old_dw, d_lb->lastCompTimeLabel) == false ){
+  const Level* level = getLevel(patches);
+  const int L_indx   = level->getIndex();
+   
+  if( isItTime( old_dw, level, d_lb->lastCompTimeLabel) == false ){
     return;
   }
 
-  const LevelP level = getLevelP(patches);
-  const int L_indx = level->getIndex();
+
 
   /*  Loop over patches  */
   for(int p=0;p<patches->size();p++){
@@ -597,12 +600,11 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
                         DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
-  const LevelP levelP = getLevelP(patches);
   int L_indx = level->getIndex();
 
   timeVars tv;
     
-  getTimeVars( old_dw, d_lb->lastCompTimeLabel, tv );
+  getTimeVars( old_dw, level, d_lb->lastCompTimeLabel, tv );
   putTimeVars( new_dw, d_lb->lastCompTimeLabel, tv );
   
   if( tv.isItTime == false ){
@@ -655,7 +657,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
         // Are we on the right level for this variable?
         const int myLevel = d_analyzeVars[i].level;
         
-        if ( !isRightLevel( myLevel, L_indx, levelP ) ){
+        if ( !isRightLevel( myLevel, L_indx, level ) ){
           continue;
         }
 
@@ -848,7 +850,7 @@ MinMax::createDirectory(string& dirName)
 //
 bool MinMax::isRightLevel( const int myLevel, 
                            const int L_indx, 
-                           const LevelP& level)
+                           const Level* level)
 {
   if( myLevel == ALL_LEVELS || myLevel == L_indx )
     return true;

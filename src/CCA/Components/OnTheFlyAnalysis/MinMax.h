@@ -89,14 +89,11 @@ GENERAL INFORMATION
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) {};
 
-    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
-                                              const LevelP& level){};
-
   private:
   
     bool isRightLevel( const int myLevel, 
                        const int L_indx, 
-                       const LevelP& level);
+                       const Level * level);
 
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,

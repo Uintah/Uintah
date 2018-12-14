@@ -66,6 +66,7 @@ meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
   d_planeAve_1 = scinew planeAverage( myworld, materialManager, module_spec, true,  true, 0);
   d_planeAve_2 = scinew planeAverage( myworld, materialManager, module_spec, false, true,  1);
 
+  d_lastCompTimeLabel = d_planeAve_1->d_lb->lastCompTimeLabel;
   d_velVar = make_shared< velocityVar >();
 }
 
@@ -310,9 +311,6 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
   d_planeAve_1->sched_writeToFiles(     sched, level, "planeAve" );
   
   d_planeAve_1->sched_resetProgressVar( sched, level );
-  
-  d_planeAve_1->sched_updateTimeVar(    sched, level );
-
 
   //__________________________________
   //  compute u', v', w', Q'
@@ -339,8 +337,6 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
   d_planeAve_2->sched_writeToFiles(     sched, level, "planeAve_TurbFluxes" );
   
   d_planeAve_2->sched_resetProgressVar( sched, level );
-  
-  d_planeAve_2->sched_updateTimeVar(    sched, level ); 
 }
 
 //______________________________________________________________________
@@ -368,6 +364,8 @@ void meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
                     this,&meanTurbFluxes::calc_TurbFluctuations );
 
   printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::sched_TurbFluctuations");
+  
+  sched_TimeVars( t, level, d_lastCompTimeLabel, false );
 
   // u,v,w -> u',v',w'
   t->requires( Task::NewDW, d_velVar->label, d_velVar->matSubSet, Ghost::None, 0 );
@@ -380,9 +378,7 @@ void meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
     t->computes ( Q->primeLabel );
   }
   
-  const int TG_indx = d_planeAve_1->getTaskGraphIndex();
-  
-  sched->addTask( t, level->eachPatch() , d_matl_set, TG_indx );
+  sched->addTask( t, level->eachPatch() , d_matl_set );
 }
 
 //______________________________________________________________________
@@ -390,9 +386,15 @@ void meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
 void meanTurbFluxes::calc_TurbFluctuations(const ProcessorGroup  * ,
                                            const PatchSubset    * patches,
                                            const MaterialSubset * ,
-                                           DataWarehouse        * ,
+                                           DataWarehouse        * old_dw,
                                            DataWarehouse        * new_dw)
 {
+  const Level* level = getLevel(patches);
+  if( d_planeAve_1->isItTime( old_dw, level, d_lastCompTimeLabel) == false ){
+    return;
+  }
+  
+ //__________________________________
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::calc_TurbFluctuations");
@@ -477,6 +479,9 @@ void meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
 
   printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::sched_TurbFluxes");
 
+
+  sched_TimeVars( t, level, d_lastCompTimeLabel, false );
+    
   Ghost::GhostType gn  = Ghost::None;
   //__________________________________
   //  scalars
@@ -492,8 +497,7 @@ void meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
   t->computes ( d_velVar->normalTurbStrssLabel );
   t->computes ( d_velVar->shearTurbStrssLabel );
 
-  const int TG_indx = d_planeAve_1->getTaskGraphIndex();
-  sched->addTask( t, level->eachPatch() , d_matl_set, TG_indx );
+  sched->addTask( t, level->eachPatch() , d_matl_set );
 }
 
 
@@ -502,10 +506,15 @@ void meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
 void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
                                      const PatchSubset    * patches,
                                      const MaterialSubset * ,
-                                     DataWarehouse        * ,
+                                     DataWarehouse        * old_dw,
                                      DataWarehouse        * new_dw)
 {
-  int L_indx = getLevelP( patches )->getIndex();
+  const Level* level = getLevel(patches);
+  int L_indx = level->getIndex();
+  
+  if( d_planeAve_1->isItTime( old_dw, level, d_lastCompTimeLabel) == false ){
+    return;
+  }
   
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
@@ -571,12 +580,4 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
       }
     }
   }
-}
-
-//______________________________________________________________________
-//
-void meanTurbFluxes::sched_computeTaskGraphIndex( SchedulerP& sched,
-                                                  const LevelP& level)
-{
-  d_planeAve_1->sched_computeTaskGraphIndex( sched, level );
 }
