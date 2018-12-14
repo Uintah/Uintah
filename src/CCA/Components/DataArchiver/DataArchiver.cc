@@ -498,6 +498,10 @@ DataArchiver::outputProblemSpec( ProblemSpecP & root_ps )
     dbg << "Doing outputProblemSpec \t\t\t\tDataArchiver\n";
   }
 
+  // When running in situ the user can modify start variables. These
+  // varibales and values are recorded in the index.xml BUT are NOT
+  // incorporated into the checkpoint input.xml file. The user must
+  // merge them by hand. This flag reminds them to perform this step.
   if( m_application->haveModifiedVars() ) {
 
     ProblemSpecP root = root_ps->getRootNode();
@@ -1305,13 +1309,13 @@ DataArchiver::setCheckpointTimeStep( bool val, const GridP& grid )
 void
 DataArchiver::beginOutputTimeStep( const GridP& grid )
 {
-  const int timeStep = m_application->getTimeStep();
-  const double simTime = m_application->getSimTime();
-  const double delT = m_application->getDelT();
-
   if (dbg.active()) {
     dbg << "    beginOutputTimeStep\n";
   }
+
+  const int    timeStep = m_application->getTimeStep();
+  const double simTime  = m_application->getSimTime();
+  const double delT     = m_application->getDelT();
 
   m_isOutputTimeStep = false;
   m_isCheckpointTimeStep = false;
@@ -1375,7 +1379,7 @@ DataArchiver::makeTimeStepDirs(       Dir                            & baseDir,
                                       string                         * pTimeStepDir /* passed back */ )
 {
   int numLevels = grid->numLevels();
-  
+
   int dir_timestep = getTimeStepTopLevel();
 
   if (dbg.active()) {
@@ -1383,7 +1387,7 @@ DataArchiver::makeTimeStepDirs(       Dir                            & baseDir,
         << m_application->getTimeStep()
         << " dir_timestep: " << dir_timestep<< "\n";
   }
-  
+
   ostringstream tname;
   tname << "t" << setw(5) << setfill('0') << dir_timestep;
   *pTimeStepDir = baseDir.getName() + "/" + tname.str();
@@ -1408,46 +1412,6 @@ DataArchiver::makeTimeStepDirs(       Dir                            & baseDir,
   }
 }
 
-
-//______________________________________________________________________
-//
-void
-DataArchiver::reevaluate_OutputCheckPointTimeStep( const double simTime,
-                                                   const double delT )
-{
-  if (dbg.active()) {
-    dbg << "  reevaluate_OutputCheckPointTimeStep() begin\n";
-  }
-
-  // Call this on a time step recompute. If lowering the delt goes
-  // beneath the threshold, cancel the output and/or checkpoint
-  // timestep
-
-  if (m_isOutputTimeStep && m_outputInterval > 0.0 ) {
-    if (simTime+delT < m_nextOutputTime)
-      m_isOutputTimeStep = false;
-  }
-  
-  if (m_isCheckpointTimeStep && m_checkpointInterval > 0.0) {
-    if (simTime+delT < m_nextCheckpointTime) {
-      m_isCheckpointTimeStep = false;    
-      m_checkpointTimeStepDirs.pop_back();
-    }
-  }
-
-#if SCI_ASSERTION_LEVEL >= 2
-  m_outputCalled.clear();
-  m_outputCalled.resize(m_numLevelsInOutput, false);
-  m_checkpointCalled.clear();
-  m_checkpointCalled.resize(m_numLevelsInOutput, false);
-  m_checkpointGlobalCalled = false;
-#endif
-
-  if (dbg.active()) {
-    dbg << "  reevaluate_OutputCheckPointTimeStep() end\n";
-  }
-}
-
 //______________________________________________________________________
 //
 void
@@ -1458,10 +1422,10 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     dbg << "  findNext_OutputCheckPoint_TimeStep() begin\n";
   }
 
-  const int timeStep = m_application->getTimeStep();
-  const double simTime = m_application->getSimTime();
+  const int    timeStep = m_application->getTimeStep();
+  const double simTime  = m_application->getSimTime();
 #ifdef HAVE_PIDX
-  const double delT = m_application->getNextDelT();
+  const double delT     = m_application->getNextDelT();
 #endif
   
   if( restart )
@@ -1658,6 +1622,45 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
 
 } // end findNext_OutputCheckPoint_TimeStep()
 
+//______________________________________________________________________
+//
+void
+DataArchiver::recompute_OutputCheckPointTimeStep()
+{
+  if (dbg.active()) {
+    dbg << "  recompute_OutputCheckPointTimeStep() begin\n";
+  }
+
+  const double simTime = m_application->getSimTime();
+  const double delT    = m_application->getDelT();
+  
+  // Called after a time step recompute. If the new delta t goes
+  // beneath the threshold, cancel the output and/or checkpoint
+  // timestep.
+  if (m_isOutputTimeStep && m_outputInterval > 0.0 ) {
+    if (simTime+delT < m_nextOutputTime)
+      m_isOutputTimeStep = false;
+  }
+  
+  if (m_isCheckpointTimeStep && m_checkpointInterval > 0.0) {
+    if (simTime+delT < m_nextCheckpointTime) {
+      m_isCheckpointTimeStep = false;    
+      m_checkpointTimeStepDirs.pop_back();
+    }
+  }
+
+#if SCI_ASSERTION_LEVEL >= 2
+  m_outputCalled.clear();
+  m_outputCalled.resize(m_numLevelsInOutput, false);
+  m_checkpointCalled.clear();
+  m_checkpointCalled.resize(m_numLevelsInOutput, false);
+  m_checkpointGlobalCalled = false;
+#endif
+
+  if (dbg.active()) {
+    dbg << "  reevaluate_OutputCheckPointTimeStep() end\n";
+  }
+}
 
 //______________________________________________________________________
 //  Update the xml files: index.xml, timestep.xml.
@@ -1667,13 +1670,13 @@ DataArchiver::writeto_xml_files( const GridP& grid )
 {
   if( !m_isCheckpointTimeStep && !m_isOutputTimeStep ) {
     if (dbg.active()) {
-      dbg << "   This is not an output (or checkpoint) timestep, so just returning...\n";
+      dbg << "   Not an output or checkpoint timestep, returning...\n";
     }
     return;
   }
   
   double simTime = m_application->getSimTime();
-  double delT = m_application->getDelT();
+  double delT    = m_application->getDelT();
 
   if( m_outputPreviousTimeStep || m_checkpointPreviousTimeStep )
   {
@@ -2692,6 +2695,8 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
                                       DataWarehouse  * old_dw,
                                       DataWarehouse  * new_dw )
 {
+  // When recomputing a time step outputing global vars is scheduled
+  // but should be skipped.
   if( m_application->getReductionVariable( recomputeTimeStep_name ) ||
       m_saveGlobalLabels.empty() ) {
     return;
@@ -4333,7 +4338,7 @@ int
 DataArchiver::getTimeStepTopLevel()
 {
   const int timeStep =
-    m_application->getTimeStep() - int(m_outputPreviousTimeStep||m_checkpointPreviousTimeStep);
+    m_application->getTimeStep() - int(m_outputPreviousTimeStep || m_checkpointPreviousTimeStep);
 
   // If using PostProcessUda then use its mapping for the restart time steps.
   if ( m_doPostProcessUda ) {

@@ -140,15 +140,14 @@ class LoadBalancer;
                                        SchedulerP & /* scheduler */,
                                        bool         recompile = false );
                                       
-    //! Call this after a time step recompute where delt is adjusted to
-    //! make sure there still will be output and/or checkpoint time step
-    virtual void reevaluate_OutputCheckPointTimeStep(const double simTime,
-                                                     const double delT);
-
     //! Call this after the time step has been executed to find the
     //! next time step to output
     virtual void findNext_OutputCheckPointTimeStep( const bool restart,
                                                     const GridP& grid );
+
+    //! Called after a time step recompute where delta t is adjusted
+    //! to make sure an output and/or checkpoint time step is needed.
+    virtual void recompute_OutputCheckPointTimeStep();
 
     //! write meta data to xml files 
     //! Call after time step has completed.
