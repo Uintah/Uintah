@@ -451,22 +451,22 @@ protected:
 
   template <unsigned int ArchesTaskType 
            , typename ArchesTaskObject
-           , typename ES1, typename MS1
-           , typename ES2, typename MS2
-           , typename ES3, typename MS3
+           , typename ExecSpace1, typename MemSpace1
+           , typename ExecSpace2, typename MemSpace2
+           , typename ExecSpace3, typename MemSpace3
            >
   TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject* taskPtr
                                                          , void ( ArchesTaskObject::*afp1 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES1, MS1> & execObj
+                                                                                           ,       ExecutionObject<ExecSpace1, MemSpace1> & execObj
                                                                                            )
                                                          , void ( ArchesTaskObject::*afp2 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES2, MS2> & execObj
+                                                                                           ,       ExecutionObject<ExecSpace2, MemSpace2> & execObj
                                                                                            )
                                                          , void ( ArchesTaskObject::*afp3 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES3, MS3> & execObj
+                                                                                           ,       ExecutionObject<ExecSpace3, MemSpace3> & execObj
                                                                                            )
                                                          )
   {
@@ -477,16 +477,16 @@ protected:
     // GPU tasks take top priority
     if (Uintah::Parallel::usingDevice()) {
 
-      if ( std::is_same< Kokkos::Cuda , ES1 >::value || std::is_same< Kokkos::Cuda , ES2 >::value || std::is_same< Kokkos::Cuda , ES3 >::value ) {
+      if ( std::is_same< Kokkos::Cuda , ExecSpace1 >::value || std::is_same< Kokkos::Cuda , ExecSpace2 >::value || std::is_same< Kokkos::Cuda , ExecSpace3 >::value ) {
 
-        if (std::is_same< Kokkos::Cuda , ES1 >::value) {          // Task supports Kokkos::Cuda builds
-            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
+        if (std::is_same< Kokkos::Cuda , ExecSpace1 >::value) {          // Task supports Kokkos::Cuda builds
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr);
         }
-        else if (std::is_same< Kokkos::Cuda , ES2 >::value) {     // Task supports Kokkos::Cuda builds
-            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
+        else if (std::is_same< Kokkos::Cuda , ExecSpace2 >::value) {     // Task supports Kokkos::Cuda builds
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ExecSpace2, MemSpace2> >(afp2), taskPtr);
         }
-        else if (std::is_same< Kokkos::Cuda , ES3 >::value) {     // Task supports Kokkos::Cuda builds
-            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES3, MS3> >(afp3), taskPtr);
+        else if (std::is_same< Kokkos::Cuda , ExecSpace3 >::value) {     // Task supports Kokkos::Cuda builds
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ExecSpace3, MemSpace3> >(afp3), taskPtr);
 
         }
         assignedTag = KOKKOS_CUDA;
@@ -495,29 +495,29 @@ protected:
 
     if (assignedTag == TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE) {
 
-      if ( std::is_same< Kokkos::OpenMP , ES1 >::value || std::is_same< Kokkos::OpenMP , ES2 >::value || std::is_same< Kokkos::OpenMP , ES3 >::value ) {
+      if ( std::is_same< Kokkos::OpenMP , ExecSpace1 >::value || std::is_same< Kokkos::OpenMP , ExecSpace2 >::value || std::is_same< Kokkos::OpenMP , ExecSpace3 >::value ) {
 
-        if (std::is_same< Kokkos::OpenMP , ES1 >::value) {        // Task supports Kokkos::OpenMP builds
-            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
+        if (std::is_same< Kokkos::OpenMP , ExecSpace1 >::value) {        // Task supports Kokkos::OpenMP builds
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr);
         }
-        else if (std::is_same< Kokkos::OpenMP , ES2 >::value) {   // Task supports Kokkos::OpenMP builds
-            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
+        else if (std::is_same< Kokkos::OpenMP , ExecSpace2 >::value) {   // Task supports Kokkos::OpenMP builds
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ExecSpace2, MemSpace2> >(afp2), taskPtr);
         }
-        else if (std::is_same< Kokkos::OpenMP , ES3 >::value) {   // Task supports Kokkos::OpenMP builds
-            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES3, MS3> >(afp3), taskPtr);
+        else if (std::is_same< Kokkos::OpenMP , ExecSpace3 >::value) {   // Task supports Kokkos::OpenMP builds
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ExecSpace3, MemSpace3> >(afp3), taskPtr);
         }
         assignedTag = KOKKOS_OPENMP;
       }
-      else if ( std::is_same< UintahSpaces::CPU , ES1 >::value || std::is_same< UintahSpaces::CPU , ES2 >::value || std::is_same< UintahSpaces::CPU , ES3 >::value ) {
+      else if ( std::is_same< UintahSpaces::CPU , ExecSpace1 >::value || std::is_same< UintahSpaces::CPU , ExecSpace2 >::value || std::is_same< UintahSpaces::CPU , ExecSpace3 >::value ) {
 
-        if (std::is_same< UintahSpaces::CPU , ES1 >::value) { // Task supports non-Kokkos builds
-            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
+        if (std::is_same< UintahSpaces::CPU , ExecSpace1 >::value) { // Task supports non-Kokkos builds
+            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr);
         }
-        else if (std::is_same< UintahSpaces::CPU , ES2 >::value) { // Task supports non-Kokkos builds
-            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
+        else if (std::is_same< UintahSpaces::CPU , ExecSpace2 >::value) { // Task supports non-Kokkos builds
+            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ExecSpace2, MemSpace2> >(afp2), taskPtr);
         }
-        else if (std::is_same< UintahSpaces::CPU , ES3 >::value) { // Task supports non-Kokkos builds
-            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES3, MS3> >(afp3), taskPtr);
+        else if (std::is_same< UintahSpaces::CPU , ExecSpace3 >::value) { // Task supports non-Kokkos builds
+            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ExecSpace3, MemSpace3> >(afp3), taskPtr);
         }
         assignedTag = UINTAH_CPU;
       }
@@ -528,17 +528,17 @@ protected:
   // The two tag overloaded version of create_portable_arches_tasks()
   template <unsigned int ArchesTaskType 
            , typename ArchesTaskObject
-           , typename ES1, typename MS1
-           , typename ES2, typename MS2
+           , typename ExecSpace1, typename MemSpace1
+           , typename ExecSpace2, typename MemSpace2
            >
   TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject * taskPtr
                                                          , void ( ArchesTaskObject::*afp1 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES1, MS1> & execObj
+                                                                                           ,       ExecutionObject<ExecSpace1, MemSpace1> & execObj
                                                                                            )
                                                          , void ( ArchesTaskObject::*afp2 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES2, MS2> & execObj
+                                                                                           ,       ExecutionObject<ExecSpace2, MemSpace2> & execObj
                                                                                            )
                                                          )
   {
@@ -549,13 +549,13 @@ protected:
     // GPU tasks take top priority
     if (Uintah::Parallel::usingDevice()) {
 
-      if ( std::is_same< Kokkos::Cuda , ES1 >::value || std::is_same< Kokkos::Cuda , ES2 >::value ) {
+      if ( std::is_same< Kokkos::Cuda , ExecSpace1 >::value || std::is_same< Kokkos::Cuda , ExecSpace2 >::value ) {
 
-        if ( std::is_same< Kokkos::Cuda , ES1 >::value ) {        // Task supports Kokkos::Cuda builds
-          helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
+        if ( std::is_same< Kokkos::Cuda , ExecSpace1 >::value ) {        // Task supports Kokkos::Cuda builds
+          helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr);
         }
-        else if (std::is_same< Kokkos::Cuda , ES2 >::value) {     // Task supports Kokkos::Cuda builds
-          helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
+        else if (std::is_same< Kokkos::Cuda , ExecSpace2 >::value) {     // Task supports Kokkos::Cuda builds
+          helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ExecSpace2, MemSpace2> >(afp2), taskPtr);
         }
         assignedTag = KOKKOS_CUDA;
       }
@@ -563,23 +563,23 @@ protected:
 
     if (assignedTag == TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE) {
 
-      if ( std::is_same< Kokkos::OpenMP , ES1 >::value || std::is_same< Kokkos::OpenMP , ES2 >::value) {
+      if ( std::is_same< Kokkos::OpenMP , ExecSpace1 >::value || std::is_same< Kokkos::OpenMP , ExecSpace2 >::value) {
 
-        if (std::is_same< Kokkos::OpenMP , ES1 >::value) {        // Task supports Kokkos::OpenMP builds
-            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
+        if (std::is_same< Kokkos::OpenMP , ExecSpace1 >::value) {        // Task supports Kokkos::OpenMP builds
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr);
         }
-        else if ( std::is_same< Kokkos::OpenMP , ES2 >::value ) {  // Task supports Kokkos::OpenMP builds
-            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
+        else if ( std::is_same< Kokkos::OpenMP , ExecSpace2 >::value ) {  // Task supports Kokkos::OpenMP builds
+            helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ExecSpace2, MemSpace2> >(afp2), taskPtr);
         }
         assignedTag = KOKKOS_OPENMP;
       }
-      else if ( std::is_same< UintahSpaces::CPU , ES1 >::value || std::is_same< UintahSpaces::CPU , ES2 >::value ) {
+      else if ( std::is_same< UintahSpaces::CPU , ExecSpace1 >::value || std::is_same< UintahSpaces::CPU , ExecSpace2 >::value ) {
 
-        if ( std::is_same< UintahSpaces::CPU , ES1 >::value ) {   // Task supports non-Kokkos builds
-            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
+        if ( std::is_same< UintahSpaces::CPU , ExecSpace1 >::value ) {   // Task supports non-Kokkos builds
+            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr);
         }
-        else if ( std::is_same< UintahSpaces::CPU , ES2 >::value ) {  // Task supports non-Kokkos builds
-            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES2, MS2> >(afp2), taskPtr);
+        else if ( std::is_same< UintahSpaces::CPU , ExecSpace2 >::value ) {  // Task supports non-Kokkos builds
+            helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ExecSpace2, MemSpace2> >(afp2), taskPtr);
         }
         assignedTag = UINTAH_CPU;
       }
@@ -590,12 +590,12 @@ protected:
   // The one tag overloaded version of create_portable_arches_tasks()
   template <unsigned int ArchesTaskType 
            , typename ArchesTaskObject
-           , typename ES1, typename MS1
+           , typename ExecSpace1, typename MemSpace1
            >
   TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject * taskPtr
                                                          , void ( ArchesTaskObject::*afp1 )( const Patch                     * patch
                                                                                            ,       ArchesTaskInfoManager     * tsk_info_mngr
-                                                                                           ,       ExecutionObject<ES1, MS1> & execObj
+                                                                                           ,       ExecutionObject<ExecSpace1, MemSpace1> & execObj
                                                                                            )
                               )
   {
@@ -606,20 +606,20 @@ protected:
     // GPU tasks take top priority
     if ( Uintah::Parallel::usingDevice() ) {
 
-      if ( std::is_same< Kokkos::Cuda , ES1 >::value) {         // Task supports Kokkos::Cuda builds
-        helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
+      if ( std::is_same< Kokkos::Cuda , ExecSpace1 >::value) {         // Task supports Kokkos::Cuda builds
+        helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr);
         assignedTag = KOKKOS_CUDA;
       }
     }
 
     if ( assignedTag == TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE ) {
 
-      if ( std::is_same< Kokkos::OpenMP , ES1 >::value ) {      // Task supports Kokkos::OpenMP builds
-        helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
+      if ( std::is_same< Kokkos::OpenMP , ExecSpace1 >::value ) {      // Task supports Kokkos::OpenMP builds
+        helpMe.addFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr);
         assignedTag = KOKKOS_OPENMP;
       }
-      else if ( std::is_same< UintahSpaces::CPU , ES1 >::value ) {  // Task supports non-Kokkos builds
-        helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ES1, MS1> >(afp1), taskPtr);
+      else if ( std::is_same< UintahSpaces::CPU , ExecSpace1 >::value ) {  // Task supports non-Kokkos builds
+        helpMe.addFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr);
         assignedTag = UINTAH_CPU;
       }
     }

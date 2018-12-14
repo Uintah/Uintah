@@ -53,9 +53,9 @@
 namespace Uintah {
 
 template <typename TaskFunctor, typename TaskObject,
-          typename ES1, typename MS1,
-          typename ES2, typename MS2,
-          typename ES3, typename MS3,
+          typename ExecSpace1, typename MemSpace1,
+          typename ExecSpace2, typename MemSpace2,
+          typename ExecSpace3, typename MemSpace3,
           typename... Args>
 void create_portable_tasks(TaskFunctor taskFunctor,
                            TaskObject* ptr,
@@ -66,7 +66,7 @@ void create_portable_tasks(TaskFunctor taskFunctor,
                                OnDemandDataWarehouse* old_dw,
                                OnDemandDataWarehouse* new_dw,
                                UintahParams& uintahParams,
-                               ExecutionObject<ES1, MS1>& execObj,
+                               ExecutionObject<ExecSpace1, MemSpace1>& execObj,
                                Args... args),
                            void (TaskObject::*pmf2)(
                                const PatchSubset* patches,
@@ -74,7 +74,7 @@ void create_portable_tasks(TaskFunctor taskFunctor,
                                OnDemandDataWarehouse* old_dw,
                                OnDemandDataWarehouse* new_dw,
                                UintahParams& uintahParams,
-                               ExecutionObject<ES2, MS2>& execObj,
+                               ExecutionObject<ExecSpace2, MemSpace2>& execObj,
                                Args... args),
                            void (TaskObject::*pmf3)(
                                const PatchSubset* patches,
@@ -82,7 +82,7 @@ void create_portable_tasks(TaskFunctor taskFunctor,
                                OnDemandDataWarehouse* old_dw,
                                OnDemandDataWarehouse* new_dw,
                                UintahParams& uintahParams,
-                               ExecutionObject<ES3, MS3>& execObj,
+                               ExecutionObject<ExecSpace3, MemSpace3>& execObj,
                                Args... args),
                            SchedulerP & sched,
                            const PatchSet    * patches,
@@ -95,14 +95,14 @@ void create_portable_tasks(TaskFunctor taskFunctor,
   //See if there are any Cuda Tasks
   if (Uintah::Parallel::usingDevice()) {
     // GPU tasks take top priority
-    if ( std::is_same< Kokkos::Cuda , ES1 >::value
-        || std::is_same< Kokkos::Cuda , ES2 >::value
-        || std::is_same< Kokkos::Cuda , ES3 >::value ) {
-      if (std::is_same< Kokkos::Cuda , ES1 >::value) {
+    if ( std::is_same< Kokkos::Cuda , ExecSpace1 >::value
+        || std::is_same< Kokkos::Cuda , ExecSpace2 >::value
+        || std::is_same< Kokkos::Cuda , ExecSpace3 >::value ) {
+      if (std::is_same< Kokkos::Cuda , ExecSpace1 >::value) {
         task = scinew Task(taskName, ptr, pmf1, std::forward<Args>(args)...);
-      } else if (std::is_same< Kokkos::Cuda , ES2 >::value) {
+      } else if (std::is_same< Kokkos::Cuda , ExecSpace2 >::value) {
          task = scinew Task(taskName, ptr, pmf2, std::forward<Args>(args)...);
-      } else if (std::is_same< Kokkos::Cuda , ES3 >::value) {
+      } else if (std::is_same< Kokkos::Cuda , ExecSpace3 >::value) {
          task = scinew Task(taskName, ptr, pmf3, std::forward<Args>(args)...);
       }
 
@@ -116,25 +116,25 @@ void create_portable_tasks(TaskFunctor taskFunctor,
   }
   //If a GPU task didn't get loaded, then check for CPU task options.
   if (!task) {
-    if ( std::is_same< Kokkos::OpenMP , ES1 >::value
-        || std::is_same< Kokkos::OpenMP , ES2 >::value
-        || std::is_same< Kokkos::OpenMP , ES3 >::value ) {
-      if (std::is_same< Kokkos::OpenMP , ES1 >::value) {
+    if ( std::is_same< Kokkos::OpenMP , ExecSpace1 >::value
+        || std::is_same< Kokkos::OpenMP , ExecSpace2 >::value
+        || std::is_same< Kokkos::OpenMP , ExecSpace3 >::value ) {
+      if (std::is_same< Kokkos::OpenMP , ExecSpace1 >::value) {
         task = scinew Task(taskName, ptr, pmf1, std::forward<Args>(args)...);
-      } else if (std::is_same< Kokkos::OpenMP , ES2 >::value) {
+      } else if (std::is_same< Kokkos::OpenMP , ExecSpace2 >::value) {
          task = scinew Task(taskName, ptr, pmf2, std::forward<Args>(args)...);
-      } else if (std::is_same< Kokkos::OpenMP , ES3 >::value) {
+      } else if (std::is_same< Kokkos::OpenMP , ExecSpace3 >::value) {
          task = scinew Task(taskName, ptr, pmf3, std::forward<Args>(args)...);
       }
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOSTSPACE );
-    } else if ( std::is_same< UintahSpaces::CPU , ES1 >::value
-        || std::is_same< UintahSpaces::CPU , ES2 >::value
-        || std::is_same< UintahSpaces::CPU , ES3 >::value ) {
-      if (std::is_same< UintahSpaces::CPU , ES1 >::value) {
+    } else if ( std::is_same< UintahSpaces::CPU , ExecSpace1 >::value
+        || std::is_same< UintahSpaces::CPU , ExecSpace2 >::value
+        || std::is_same< UintahSpaces::CPU , ExecSpace3 >::value ) {
+      if (std::is_same< UintahSpaces::CPU , ExecSpace1 >::value) {
         task = scinew Task(taskName, ptr, pmf1, std::forward<Args>(args)...);
-      } else if (std::is_same< UintahSpaces::CPU , ES2 >::value) {
+      } else if (std::is_same< UintahSpaces::CPU , ExecSpace2 >::value) {
          task = scinew Task(taskName, ptr, pmf2, std::forward<Args>(args)...);
-      } else if (std::is_same< UintahSpaces::CPU , ES3 >::value) {
+      } else if (std::is_same< UintahSpaces::CPU , ExecSpace3 >::value) {
          task = scinew Task(taskName, ptr, pmf3, std::forward<Args>(args)...);
       }
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOSTSPACE );
@@ -153,8 +153,8 @@ void create_portable_tasks(TaskFunctor taskFunctor,
 
 // The 2 function pointer verison
 template <typename TaskFunctor, typename TaskObject,
-          typename ES1, typename MS1,
-          typename ES2, typename MS2,
+          typename ExecSpace1, typename MemSpace1,
+          typename ExecSpace2, typename MemSpace2,
           typename... Args>
 void create_portable_tasks(TaskFunctor taskFunctor,
                            TaskObject* ptr,
@@ -165,7 +165,7 @@ void create_portable_tasks(TaskFunctor taskFunctor,
                                OnDemandDataWarehouse* old_dw,
                                OnDemandDataWarehouse* new_dw,
                                UintahParams& uintahParams,
-                               ExecutionObject<ES1, MS1>& execObj,
+                               ExecutionObject<ExecSpace1, MemSpace1>& execObj,
                                Args... args),
                            void (TaskObject::*pmf2)(
                                const PatchSubset* patches,
@@ -173,7 +173,7 @@ void create_portable_tasks(TaskFunctor taskFunctor,
                                OnDemandDataWarehouse* old_dw,
                                OnDemandDataWarehouse* new_dw,
                                UintahParams& uintahParams,
-                               ExecutionObject<ES2, MS2>& execObj,
+                               ExecutionObject<ExecSpace2, MemSpace2>& execObj,
                                Args... args),
                            SchedulerP & sched,
                            const PatchSet    * patches,
@@ -186,11 +186,11 @@ void create_portable_tasks(TaskFunctor taskFunctor,
   //See if there are any Cuda Tasks
   if (Uintah::Parallel::usingDevice()) {
     // GPU tasks take top priority
-    if ( std::is_same< Kokkos::Cuda , ES1 >::value
-        || std::is_same< Kokkos::Cuda , ES2 >::value ) {
-      if (std::is_same< Kokkos::Cuda , ES1 >::value) {
+    if ( std::is_same< Kokkos::Cuda , ExecSpace1 >::value
+        || std::is_same< Kokkos::Cuda , ExecSpace2 >::value ) {
+      if (std::is_same< Kokkos::Cuda , ExecSpace1 >::value) {
         task = scinew Task(taskName, ptr, pmf1, std::forward<Args>(args)...);
-      } else if (std::is_same< Kokkos::Cuda , ES2 >::value) {
+      } else if (std::is_same< Kokkos::Cuda , ExecSpace2 >::value) {
          task = scinew Task(taskName, ptr, pmf2, std::forward<Args>(args)...);
       }
 
@@ -205,19 +205,19 @@ void create_portable_tasks(TaskFunctor taskFunctor,
 
   //If a GPU task didn't get loaded, then check for CPU task options.
   if (!task) {
-    if ( std::is_same< Kokkos::OpenMP , ES1 >::value
-        || std::is_same< Kokkos::OpenMP , ES2 >::value) {
-      if (std::is_same< Kokkos::OpenMP , ES1 >::value) {
+    if ( std::is_same< Kokkos::OpenMP , ExecSpace1 >::value
+        || std::is_same< Kokkos::OpenMP , ExecSpace2 >::value) {
+      if (std::is_same< Kokkos::OpenMP , ExecSpace1 >::value) {
         task = scinew Task(taskName, ptr, pmf1, std::forward<Args>(args)...);
-      } else if (std::is_same< Kokkos::OpenMP , ES2 >::value) {
+      } else if (std::is_same< Kokkos::OpenMP , ExecSpace2 >::value) {
          task = scinew Task(taskName, ptr, pmf2, std::forward<Args>(args)...);
       }
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOSTSPACE );
-    } else if ( std::is_same< UintahSpaces::CPU , ES1 >::value
-        || std::is_same< UintahSpaces::CPU , ES2 >::value ) {
-      if (std::is_same< UintahSpaces::CPU , ES1 >::value) {
+    } else if ( std::is_same< UintahSpaces::CPU , ExecSpace1 >::value
+        || std::is_same< UintahSpaces::CPU , ExecSpace2 >::value ) {
+      if (std::is_same< UintahSpaces::CPU , ExecSpace1 >::value) {
         task = scinew Task(taskName, ptr, pmf1, std::forward<Args>(args)...);
-      } else if (std::is_same< UintahSpaces::CPU , ES2 >::value) {
+      } else if (std::is_same< UintahSpaces::CPU , ExecSpace2 >::value) {
          task = scinew Task(taskName, ptr, pmf2, std::forward<Args>(args)...);
       }
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOSTSPACE );
@@ -237,7 +237,7 @@ void create_portable_tasks(TaskFunctor taskFunctor,
 
 // The 1 function pointer version
 template <typename TaskFunctor, typename TaskObject,
-          typename ES1, typename MS1,
+          typename ExecSpace1, typename MemSpace1,
           typename... Args>
 void create_portable_tasks(TaskFunctor taskFunctor,
                            TaskObject* ptr,
@@ -248,7 +248,7 @@ void create_portable_tasks(TaskFunctor taskFunctor,
                                OnDemandDataWarehouse* old_dw,
                                OnDemandDataWarehouse* new_dw,
                                UintahParams& uintahParams,
-                               ExecutionObject<ES1, MS1>& execObj,
+                               ExecutionObject<ExecSpace1, MemSpace1>& execObj,
                                Args... args),
                            SchedulerP & sched,
                            const PatchSet    * patches,
@@ -261,7 +261,7 @@ void create_portable_tasks(TaskFunctor taskFunctor,
   //See if there are any Cuda Tasks
   if (Uintah::Parallel::usingDevice()) {
     // GPU tasks take top priority
-    if ( std::is_same< Kokkos::Cuda , ES1 >::value ) {
+    if ( std::is_same< Kokkos::Cuda , ExecSpace1 >::value ) {
 
       task = scinew Task(taskName, ptr, pmf1, std::forward<Args>(args)...);
 
@@ -275,10 +275,10 @@ void create_portable_tasks(TaskFunctor taskFunctor,
   }
   //If a GPU task didn't get loaded, then check for CPU task options.
   if (!task) {
-    if ( std::is_same< Kokkos::OpenMP , ES1 >::value ) {
+    if ( std::is_same< Kokkos::OpenMP , ExecSpace1 >::value ) {
       task = scinew Task(taskName, ptr, pmf1, std::forward<Args>(args)...);
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOSTSPACE );
-    } else if ( std::is_same< UintahSpaces::CPU , ES1 >::value ) {
+    } else if ( std::is_same< UintahSpaces::CPU , ExecSpace1 >::value ) {
       task = scinew Task(taskName, ptr, pmf1, std::forward<Args>(args)...);
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOSTSPACE );
     }
