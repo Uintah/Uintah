@@ -51,7 +51,7 @@ class PatchInfo {
 public:
 
   // GridType
-  enum GridType { UNKNOWN=-1, CC, NC, SFCX, SFCY, SFCZ, NEIGHBORS };
+  enum GridType { UNKNOWN=-1, CC, NC, SFCX, SFCY, SFCZ, NEIGHBORS, PATCH };
 
   // str2GridType
   static GridType str2GridType(const std::string &type)
@@ -62,7 +62,7 @@ public:
     if (type.find("CC")        != std::string::npos) return CC;
     if (type.find("NC")        != std::string::npos) return NC;
     if (type.find("NEIGHBORS") != std::string::npos) return NEIGHBORS;
-    if (type.find("PerPatch")  != std::string::npos) return CC;
+    if (type.find("Patch")     != std::string::npos) return PATCH;
     return UNKNOWN;
   }
 
@@ -116,6 +116,12 @@ public:
       low[2] = neighbors_low[2];
       break;
 
+    case PATCH:
+      low[0] = patch_id;
+      low[1] = 0;
+      low[2] = 0;
+      break;
+
     default:
       low[0] = low[1] = low[2] = -1000000;
     }
@@ -160,6 +166,12 @@ public:
       high[0] = neighbors_high[0];
       high[1] = neighbors_high[1];
       high[2] = neighbors_high[2];
+      break;
+
+    case PATCH:
+      high[0] = patch_id + 1;
+      high[1] = 0;
+      high[2] = 0;
       break;
 
     default:

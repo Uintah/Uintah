@@ -26,13 +26,14 @@
 #define Packages_Uintah_CCA_Ports_AnalysisModule_h
 
 #include <Core/Parallel/UintahParallelComponent.h>
-
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/SchedulerP.h>
 
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
@@ -47,11 +48,11 @@ namespace Uintah {
 
   class AnalysisModule : public UintahParallelComponent {
   public:
-    
+
     AnalysisModule(const ProcessorGroup* myworld,
                    const MaterialManagerP materialManager,
                    const ProblemSpecP& module_spec);
-    
+
     virtual ~AnalysisModule();
 
     // Methods for managing the components attached via the ports.
@@ -67,34 +68,63 @@ namespace Uintah {
                               std::vector<std::vector<const VarLabel* > > &PState_preReloc) = 0;
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
-                                                            
-                              
+
+
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level) = 0;
-                                    
+
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level) = 0;
-    
+
     virtual void restartInitialize() = 0;
-    
+
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level) = 0;
-    
+
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                              const LevelP& level) = 0;
-                                             
+
     virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
                                               const LevelP& level) = 0;
-                                              
+
     static void setTaskGraphIndex( std::vector<AnalysisModule*> &  modules);
-    
+
     int getTaskGraphIndex() const { return m_TG_computeIndex;}
-                                         
+
+
+
     //__________________________________
-    //  Variables                            
+    //  time related
+    struct timeVars{
+        double prevAnlysTime {-9e9};
+        double nextAnlysTime {-9e9};
+        double now           {-9e9};
+        bool isItTime {false};
+    };
+
+    void sched_TimeVars( Task * t,
+                         const LevelP   & level,
+                         const VarLabel * prev_AnlysTimeLabel,
+                         const bool addComputes );
+                                                                       
+    bool getTimeVars( DataWarehouse  * old_dw,
+                      const VarLabel * prev_AnlysTime,
+                      timeVars       & tv );
+                   
+    void putTimeVars( DataWarehouse  * new_dw,
+                      const VarLabel * prev_AnlysTimeLabel,
+                      timeVars tv);
+
+    bool isItTime( DataWarehouse  * old_dw,
+                   const VarLabel * prev_AnlysTime );
+
+
+
+    //__________________________________
+    //  Variables
   protected:
     enum GRAPH_INDX { TG_SKIP =0 };
-  
+
     ApplicationInterface*  m_application {nullptr};
     Output*                m_output      {nullptr};
     Scheduler*             m_scheduler   {nullptr};
@@ -105,10 +135,12 @@ namespace Uintah {
     const VarLabel* m_timeStepLabel       {nullptr};
     const VarLabel* m_simulationTimeLabel {nullptr};
     const VarLabel* m_delTLabel           {nullptr};
-    
+
     static int m_NUM_GRAPHS;                 // number of task graphs
     int        m_TG_computeIndex;            // task graph index for this module
     double     m_analysisFreq;               // analysis frequency: units 1/sec
+    double     d_startTime{0.0};
+    double     d_stopTime{DBL_MAX};
   };
 }
 

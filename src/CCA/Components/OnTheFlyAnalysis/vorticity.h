@@ -84,12 +84,12 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps){};
                                   
     virtual void scheduleInitialize(SchedulerP& sched,
-                                    const LevelP& level);
+                                    const LevelP& level){};
 
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level){};
                                     
-    virtual void restartInitialize();
+    virtual void restartInitialize(){};
                                     
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
@@ -101,12 +101,6 @@ WARNING
                                           const LevelP& level){};
                                       
   private:
-
-    void initialize(const ProcessorGroup*, 
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse*,
-                    DataWarehouse* new_dw);
                     
     void doAnalysis(const ProcessorGroup* pg,
                     const PatchSubset* patches,

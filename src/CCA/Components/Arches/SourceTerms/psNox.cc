@@ -55,12 +55,58 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
   }
 
 
-  db->getWithDefault("devol_to_HCN",        _beta2,          0.8);
-  db->getWithDefault("devol_to_NH3",        _beta3,          0.2);
-  db->getWithDefault("charOxy_to_HCN",      _gamma2,         0.8);
-  db->getWithDefault("charOxy_to_NH3",      _gamma3,         0.2);
   db->getWithDefault("Tar_to_HCN",          _alpha2,         0.8);
   db->getWithDefault("Tar_to_NH3",          _alpha3,         0.2);
+  
+  if  (_alpha2+_alpha3>1.0 || _alpha2+_alpha3<0.0){
+    throw ProblemSetupException("Tar_to_HCN + Tar_to_NH3 must be greater than 0 and less than 1.0.", __FILE__, __LINE__);
+  }
+  tarFrac = coal_helper.get_coal_db().Tar_fraction;
+  std::string coal_rank = coal_helper.get_coal_db().coal_rank;
+  double volFrac=std::max(1e-20,1.0-tarFrac);
+  double F_v_hcn = 0.8; // values used if coal rank is unknown.
+  double F_v_nh3 = 0.2;
+  if (coal_rank=="lignite"){
+    double y_HCN=0.1;
+    double y_NH3=0.9;
+    F_v_hcn=std::max(0.0,(y_HCN-tarFrac*_alpha2)/volFrac);
+    F_v_nh3=std::max(0.0,(y_NH3-tarFrac*_alpha3)/volFrac);
+    //std::cout << "coal_rank " << coal_rank << std::endl;
+    //std::cout << "tarFrac " << tarFrac << std::endl;
+    //std::cout << "_alpha2 " << _alpha2 << std::endl;
+    //std::cout << "_alpha3 " << _alpha3 << std::endl;
+    //std::cout << "volFrac " << volFrac << std::endl;
+    //std::cout << "y_HCN " << y_HCN << std::endl;
+    //std::cout << "y_NH3 " << y_NH3 << std::endl;
+    //std::cout << "tarFrac*_alpha2 " << tarFrac*_alpha2 << std::endl;
+    //std::cout << "tarFrac*_alpha3 " << tarFrac*_alpha3 << std::endl;
+    //std::cout << "F_v_hcn " << F_v_hcn << std::endl;
+    //std::cout << "F_v_nh3 " << F_v_nh3 << std::endl;
+    if  (y_NH3-tarFrac*_alpha3<0.0 || y_HCN-tarFrac*_alpha2<0.0){
+      proc0cout << "Warning!! devol_to_HCN or devol_to_NH3 is being set to zero because the specified tar fraction yields more HCN or NH3 than possible given the target fraction." << endl;
+    }
+  } else if (coal_rank=="high_volatile_bituminous"){
+    double y_HCN=0.45;
+    double y_NH3=0.4;
+    F_v_hcn=std::max(0.0,(y_HCN-tarFrac*_alpha2)/volFrac);
+    F_v_nh3=std::max(0.0,(y_NH3-tarFrac*_alpha3)/volFrac);
+    if  (y_NH3-tarFrac*_alpha3<0.0 || y_HCN-tarFrac*_alpha2<0.0){
+      proc0cout << "Warning!! devol_to_HCN or devol_to_NH3 is being set to zero because the specified tar fraction yields more HCN or NH3 than possible given the target fraction." << endl;
+    }
+  } else if (coal_rank=="subbituminous"){
+    double y_HCN=0.2;
+    double y_NH3=0.77;
+    F_v_hcn=std::max(0.0,(y_HCN-tarFrac*_alpha2)/volFrac);
+    F_v_nh3=std::max(0.0,(y_NH3-tarFrac*_alpha3)/volFrac);
+    if  (y_NH3-tarFrac*_alpha3<0.0 || y_HCN-tarFrac*_alpha2<0.0){
+      proc0cout << "Warning!! devol_to_HCN or devol_to_NH3 is being set to zero because the specified tar fraction yields more HCN or NH3 than possible given the target fraction." << endl;
+    }
+  }
+  
+  db->getWithDefault("devol_to_HCN",        _beta2,          F_v_hcn);
+  db->getWithDefault("devol_to_NH3",        _beta3,          F_v_nh3);
+  db->getWithDefault("charOxy_to_HCN",      _gamma2,         0.8);
+  db->getWithDefault("charOxy_to_NH3",      _gamma3,         0.2);
 
 
    _beta1=1.0-_beta2-_beta3;     // devol
@@ -92,7 +138,6 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("NH3_label",            NH3_name,             "NH3_zz");
 
   db->getWithDefault("Tar_src_label",        tar_src_name,    "eta_source3");
-  tarFrac = coal_helper.get_coal_db().Tar_fraction;
 
   //read devol. & oxi. rate from coal particles
   ProblemSpecP db_source = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");

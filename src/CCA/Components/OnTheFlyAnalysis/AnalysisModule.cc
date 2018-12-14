@@ -28,9 +28,6 @@
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
 
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/VarTypes.h>
-
 using namespace Uintah;
 
 
@@ -47,12 +44,10 @@ AnalysisModule::AnalysisModule( const ProcessorGroup* myworld,
   m_module_spec = module_spec;
 
   // Time Step
-  m_timeStepLabel =
-    VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+  m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
   
   // Simulation Time
-  m_simulationTimeLabel =
-    VarLabel::create(simTime_name, simTime_vartype::getTypeDescription() );
+  m_simulationTimeLabel = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription() );
 
   // Delta t
   VarLabel* nonconstDelT =
@@ -187,4 +182,70 @@ AnalysisModule::setTaskGraphIndex( std::vector<AnalysisModule*> &  modules)
   m_NUM_GRAPHS = offset + n_UniqueTG;
   std::cout << " OnTheFly AnalysisModule: num TaskGraphs: " << m_NUM_GRAPHS << std::endl;
   
+}
+
+//______________________________________________________________________
+//
+void AnalysisModule::sched_TimeVars( Task* t,
+                                     const LevelP   & level,
+                                     const VarLabel * prev_AnlysTimeLabel,
+                                     const bool addComputes )
+{
+  t->requires( Task::OldDW, m_simulationTimeLabel );
+  t->requires( Task::OldDW, prev_AnlysTimeLabel );
+  t->requires( Task::OldDW, m_delTLabel, level.get_rep() );
+  
+  if( addComputes ){
+    t->computes( prev_AnlysTimeLabel );
+  }
+}
+
+//______________________________________________________________________
+//
+bool AnalysisModule::getTimeVars( DataWarehouse  * old_dw,
+                               const VarLabel * prev_AnlysTimeLabel,
+                               timeVars       & tv)
+{
+  max_vartype     prevTime;
+  simTime_vartype simTime;
+  delt_vartype    delT;
+
+  old_dw->get( prevTime, prev_AnlysTimeLabel );
+  old_dw->get( simTime,  m_simulationTimeLabel );
+  old_dw->get( delT,     m_delTLabel );
+
+  tv.prevAnlysTime = prevTime;
+  tv.nextAnlysTime = prevTime + 1.0/m_analysisFreq;
+  tv.now           = simTime + delT;
+
+  if( tv.now < d_startTime || tv.now > d_stopTime || tv.now < tv.nextAnlysTime ){
+    tv.isItTime = false;
+    return false;
+  } else {
+    tv.isItTime = true;
+  }
+
+  return tv.isItTime;  
+}
+//______________________________________________________________________
+//
+void AnalysisModule::putTimeVars( DataWarehouse  * new_dw,
+                                  const VarLabel * prev_AnlysTimeLabel,
+                                  timeVars tv)
+{
+  if( tv.isItTime ){
+    new_dw->put(max_vartype( tv.nextAnlysTime ), prev_AnlysTimeLabel);
+  } 
+  else {
+    new_dw->put(max_vartype( tv.prevAnlysTime ), prev_AnlysTimeLabel);
+  }
+}
+
+//______________________________________________________________________
+//
+bool AnalysisModule::isItTime( DataWarehouse * old_dw,
+                              const VarLabel * prev_AnlysTimeLabel)
+{
+  timeVars tv;
+  return getTimeVars( old_dw, prev_AnlysTimeLabel, tv);
 }

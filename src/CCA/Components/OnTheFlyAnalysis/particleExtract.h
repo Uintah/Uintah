@@ -88,9 +88,9 @@ WARNING
                                     const LevelP& level);
                                     
     virtual void scheduleRestartInitialize(SchedulerP& sched,
-                                           const LevelP& level){};
+                                           const LevelP& level);
                                     
-    virtual void restartInitialize();
+    virtual void restartInitialize(){};
                                     
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
@@ -141,8 +141,6 @@ WARNING
        
     //__________________________________
     // global constants
-    double d_startTime;
-    double d_stopTime;
     double d_colorThreshold;
     std::vector<VarLabel*> d_varLabels;
 

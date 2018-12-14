@@ -378,12 +378,12 @@ void planeExtract::initialize(const ProcessorGroup*,
   }  
 }
 
-void planeExtract::restartInitialize()
+//______________________________________________________________________
+void planeExtract::scheduleRestartInitialize(SchedulerP   & sched,
+                                             const LevelP & level)
 {
-// need to do something here
-//  new_dw->put(max_vartype(0.0), d_lb->lastWriteTimeLabel);
+  scheduleInitialize( sched, level);
 }
-
 //______________________________________________________________________
 void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
                                       const LevelP& level)

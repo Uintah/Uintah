@@ -905,7 +905,7 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
                              patch->getBox().lower().y(),
                              patch->getBox().lower().z());
 
-    ret = PIDX_variable_read_particle_data_layout( varDesc, physical_local_offset, physical_local_size, (void**)&(data->buffer), &(data->size), PIDX_row_major );
+    ret = PIDX_variable_read_particle_data_layout( varDesc, physical_local_offset, physical_local_size, (void**)&(data->buffer), (uint64_t*)&(data->size), PIDX_row_major );
     PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDX() - PIDX_variable_read_particle_data_layout failure", __FILE__, __LINE__ );
   }
   else {

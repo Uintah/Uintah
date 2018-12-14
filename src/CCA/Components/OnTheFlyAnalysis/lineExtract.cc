@@ -126,11 +126,13 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
   //  <materialIndex> 1 </materialIndex>
   if(m_module_spec->findBlock("material") ){
     d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
-  } else if (m_module_spec->findBlock("materialIndex") ){
+  } 
+  else if (m_module_spec->findBlock("materialIndex") ){
     int indx;
     m_module_spec->get("materialIndex", indx);
     d_matl = m_materialManager->getMaterial(indx);
-  } else {
+  } 
+  else {
     d_matl = m_materialManager->getMaterial(0);
   }
   
@@ -326,8 +328,8 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
 }
 
 //______________________________________________________________________
-void lineExtract::scheduleInitialize(SchedulerP& sched,
-                                     const LevelP& level)
+void lineExtract::scheduleInitialize(SchedulerP   & sched,
+                                     const LevelP & level)
 {
   cout_doing << "lineExtract::scheduleInitialize " << endl;
   Task* t = scinew Task("lineExtract::initialize", 
@@ -338,11 +340,11 @@ void lineExtract::scheduleInitialize(SchedulerP& sched,
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
-void lineExtract::initialize(const ProcessorGroup*, 
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse*,
-                             DataWarehouse* new_dw)
+void lineExtract::initialize(const ProcessorGroup *, 
+                             const PatchSubset    * patches,
+                             const MaterialSubset *,
+                             DataWarehouse        *,
+                             DataWarehouse        * new_dw)
 {
   cout_doing << "Doing Initialize \t\t\t\t\tlineExtract" << endl;
   for(int p=0;p<patches->size();p++){
@@ -374,15 +376,16 @@ void lineExtract::initialize(const ProcessorGroup*,
   }  
 }
 
-void lineExtract::restartInitialize()
+//______________________________________________________________________
+void lineExtract::scheduleRestartInitialize(SchedulerP   & sched,
+                                            const LevelP & level)
 {
-// need to do something here
-//  new_dw->put(max_vartype(0.0), ps_lb->lastWriteTimeLabel);
+  scheduleInitialize( sched, level);
 }
 
 //______________________________________________________________________
-void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
-                                     const LevelP& level)
+void lineExtract::scheduleDoAnalysis(SchedulerP   & sched,
+                                     const LevelP & level)
 {
   cout_doing << "lineExtract::scheduleDoAnalysis " << endl;
   Task* t = scinew Task("lineExtract::doAnalysis", 
@@ -392,20 +395,20 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
   // do not checkpoint it.
   sched->overrideVariableBehavior("FileInfo_lineExtract", false, false, false, true, true); 
                      
-  t->requires(Task::OldDW, m_simulationTimeLabel);
-  t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
+
+  sched_TimeVars( t, level, ps_lb->lastWriteTimeLabel, true );
+    
   t->requires(Task::OldDW, ps_lb->fileVarsStructLabel, d_zero_matl, Ghost::None, 0);
     
   Ghost::GhostType gac = Ghost::AroundCells;
   
-
-  
+  //__________________________________
+  //
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
     if(d_varLabels[i] == nullptr){
       string name = d_varLabels[i]->getName();
-      throw InternalError("lineExtract: scheduleDoAnalysis label not found: " 
-                          + name , __FILE__, __LINE__);
+      throw InternalError("lineExtract: scheduleDoAnalysis label not found: " + name , __FILE__, __LINE__);
     }
     
     MaterialSubset* matSubSet = scinew MaterialSubset();
@@ -418,43 +421,29 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
       delete matSubSet;
     }
   }
-  
-  t->computes(ps_lb->lastWriteTimeLabel);
+
   t->computes(ps_lb->fileVarsStructLabel, d_zero_matl);
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
-
 }
 
 //______________________________________________________________________
-void lineExtract::doAnalysis(const ProcessorGroup* pg,
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+void lineExtract::doAnalysis(const ProcessorGroup * pg,
+                             const PatchSubset    * patches,
+                             const MaterialSubset *,
+                             DataWarehouse        * old_dw,
+                             DataWarehouse        * new_dw)
 {   
   const Level* level = getLevel(patches);
   
-  // the user may want to restart from an uda that wasn't using the DA module
-  // This logic allows that.
-  max_vartype writeTime;
-  double lastWriteTime = 0;
-  if( old_dw->exists( ps_lb->lastWriteTimeLabel ) ){
-    old_dw->get(writeTime, ps_lb->lastWriteTimeLabel);
-    lastWriteTime = writeTime;
-  }
-
-  // double now = m_materialManager->getElapsedSimTime();
+  timeVars tv;
+    
+  getTimeVars( old_dw, ps_lb->lastWriteTimeLabel, tv );
+  putTimeVars( new_dw, ps_lb->lastWriteTimeLabel, tv );
   
-  simTime_vartype simTimeVar;
-  old_dw->get(simTimeVar, m_simulationTimeLabel);
-  double now = simTimeVar;
-
-  if(now < d_startTime || now > d_stopTime){
+  if( tv.isItTime == false ){
     return;
   }
-  
-  double nextWriteTime = lastWriteTime + 1.0/m_analysisFreq;
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -483,7 +472,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
     //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write
-    if( proc == pg->myRank() && now >= nextWriteTime){
+    if( proc == pg->myRank() ){
     
      cout_doing << pg->myRank() << " " 
                 << "Doing doAnalysis (lineExtract)\t\t\t\tL-"
@@ -571,14 +560,14 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
       for (unsigned int l =0 ; l < d_lines.size(); l++) {
       
         // create the directory structure
-        string udaDir = m_output->getOutputLocation();
-        string dirName = d_lines[l]->name;
+        string udaDir   = m_output->getOutputLocation();
+        string dirName  = d_lines[l]->name;
         string linePath = udaDir + "/" + dirName;
         
         ostringstream li;
         li<<"L-"<<level->getIndex();
         string levelIndex = li.str();
-        string path = linePath + "/" + levelIndex;
+        string path       = linePath + "/" + levelIndex;
         
         if( d_isDirCreated.count(path) == 0){
           createDirectory(linePath, levelIndex);
@@ -591,9 +580,9 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
         Point end_pt   = d_lines[l]->endPt;
         
         double stepSize(d_lines[l]->stepSize);
-        Vector dx = patch->dCell();
+        Vector dx    = patch->dCell();
         double dxDir = dx[d_lines[l]->loopDir];
-        double tmp = stepSize/dxDir;
+        double tmp   = stepSize/dxDir;
         
         int step = RoundUp(tmp);
         step = Max(step, 1);
@@ -649,7 +638,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
 
           // write cell position and time
           Point here = patch->cellPosition(c);
-          fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), now);
+          fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), tv.now);
                   
            // WARNING If you change the order that these are written
            // out you must also change the order that the header is
@@ -687,7 +676,6 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
           fflush(fp);
         }  // loop over points
       }  // loop over lines 
-      lastWriteTime = now;     
     }  // time to write data
     
     // put the file pointers into the DataWarehouse
@@ -696,7 +684,6 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
     fileInfo.get().get_rep()->files = myFiles;
 
     new_dw->put(fileInfo,                   ps_lb->fileVarsStructLabel, 0, patch);
-    new_dw->put(max_vartype(lastWriteTime), ps_lb->lastWriteTimeLabel); 
   }  // patches
 }
 //______________________________________________________________________
