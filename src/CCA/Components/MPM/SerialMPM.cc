@@ -697,7 +697,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleFindSurfaceParticles(           sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
-//  scheduleFindGrainCollisions(            sched, patches, matls);
+  if(flags->d_changeGrainMaterials){
+    scheduleFindGrainCollisions(          sched, patches, matls);
+  }
   if(flags->d_computeNormals){
     scheduleComputeNormals(               sched, patches, matls);
   }
@@ -739,7 +741,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   if(flags->d_computeScaleFactor){
     scheduleComputeParticleScaleFactor(   sched, patches, matls);
   }
-//  scheduleChangeGrainMaterials(           sched, patches, matls);
+  if(flags->d_changeGrainMaterials){
+    scheduleChangeGrainMaterials(         sched, patches, matls);
+  }
   scheduleFinalParticleUpdate(            sched, patches, matls);
   if(flags->d_useTracers){
     scheduleUpdateTracers(                sched, patches, mpm_matls_sub,
@@ -5985,12 +5989,10 @@ void SerialMPM::scheduleFindGrainCollisions(SchedulerP   & sched,
   Task* t = scinew Task("MPM::findGrainCollisions", this, 
                         &SerialMPM::findGrainCollisions);
 
-  Ghost::GhostType gp;
-  int ngc_p;
-  getParticleGhostLayer(gp, ngc_p);
   Ghost::GhostType gnone = Ghost::None;
 
-  t->requires(Task::OldDW, lb->timeStepLabel);
+  //t->requires(Task::OldDW, lb->timeStepLabel);
+  t->requires(Task::OldDW, lb->ChangedGrainMaterialsLabel );
   t->requires(Task::OldDW, lb->pXLabel,                  gnone);
   t->requires(Task::OldDW, lb->pSurfLabel,               gnone);
   t->requires(Task::OldDW, lb->pColorLabel,              gnone);
@@ -6008,6 +6010,7 @@ void SerialMPM::scheduleFindGrainCollisions(SchedulerP   & sched,
 
 //  t2->setType( Task::OncePerProc );
 
+  t2->requires(Task::OldDW, lb->ChangedGrainMaterialsLabel );
   t2->requires(Task::NewDW, lb->TotalLocalizedParticleLabel);
   sched->addTask(t2, patches, matls);
 #endif
@@ -6029,14 +6032,17 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
 //  int interval=INT_MAX;
 
 //  int doit=timestep%interval;
+  sum_vartype ChangedGrainMaterials;
+  old_dw->get(ChangedGrainMaterials,   lb->ChangedGrainMaterialsLabel);
 
-   for(int p=0;p<patches->size();p++){
+  for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int patchID =  patch->getID();
 
     printTask(patches,patch,cout_doing,
               "Doing SerialMPM::findGrainCollisions");
 
+   if(ChangedGrainMaterials<1.0){
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -6100,7 +6106,7 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
       }
 #endif
     }
-#if 1
+
     ostringstream pnum; pnum << patchID;
     string filename = "collideColors." + pnum.str();
     ofstream colout(filename.c_str());
@@ -6114,9 +6120,10 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
       colout << *it1 << endl;
     }
     colout.close();
-#endif
-    new_dw->put(sum_vartype(1),     lb->TotalLocalizedParticleLabel);
-   }
+
+   } // If this stuff hasn't already been done.
+   new_dw->put(sum_vartype(1),     lb->TotalLocalizedParticleLabel);
+  }
 }
 
 void SerialMPM::communicateGrainCollisions(const ProcessorGroup * pg,
@@ -6135,29 +6142,32 @@ void SerialMPM::communicateGrainCollisions(const ProcessorGroup * pg,
      printTask(patches,patch,cout_doing,
                "Doing SerialMPM::communicateGrainCollisions");
    }
+   sum_vartype CGM;
+   old_dw->get(CGM,   lb->ChangedGrainMaterialsLabel);
 
-   for(int p=0;p<numPatches;p++){
-
-    ostringstream pnum; pnum << p;
-    string filename = "collideColors." + pnum.str();
-    ifstream colin(filename.c_str());
-    if(!colin){
+   if(((double) CGM)<1.0){
+    for(int p=0;p<numPatches;p++){
+     ostringstream pnum; pnum << p;
+     string filename = "collideColors." + pnum.str();
+     ifstream colin(filename.c_str());
+      if(!colin){
       cerr << "file not opened:  " << filename << endl;
-      cerr << "exiting" << endl;
-      exit(1);
+       cerr << "exiting" << endl;
+       exit(1);
+     }
+
+     double cc;
+     while(colin >> cc){
+       d_collideColors.insert(cc); 
+     }
+     colin.close();
     }
 
-    double cc;
-    while(colin >> cc){
-      d_collideColors.insert(cc); 
-    }
-    colin.close();
-
-   }
-   for (set<double>::iterator it1 = d_collideColors.begin(); 
+    for (set<double>::iterator it1 = d_collideColors.begin(); 
                               it1!= d_collideColors.end();  it1++){
      cout << "Color " << *it1 << " collides " << endl;
-   }
+    }
+   } // If haven't already done this
 
 //   cout << "In Communicate Grain Collisions" << endl;
 //   int rank = pg->myRank();
@@ -6210,12 +6220,14 @@ void SerialMPM::scheduleChangeGrainMaterials(SchedulerP& sched,
   }
   t->modifies(lb->pVelGradLabel_preReloc);
 
+#if 0
   unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
   for(unsigned int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addSplitParticlesComputesAndRequires(t, mpm_matl, patches);
   }
+#endif
 
   sched->addTask(t, patches, matls);
 }
@@ -6226,16 +6238,15 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
-  sum_vartype ChangedGrainMaterials;
-  old_dw->get(ChangedGrainMaterials,   lb->ChangedGrainMaterialsLabel);
-
-  new_dw->put(sum_vartype(ChangedGrainMaterials),lb->ChangedGrainMaterialsLabel);
+  sum_vartype CGM;
+  old_dw->get(CGM,   lb->ChangedGrainMaterialsLabel);
+  new_dw->put(CGM,   lb->ChangedGrainMaterialsLabel);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing changeGrainMaterials");
 
-   if(flags->d_changeGrainMaterials && ChangedGrainMaterials<1.0){
+   if(CGM<1.0){
     cout << "Doing changeGrainMaterials" << endl;
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
@@ -6250,7 +6261,7 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
                    (MPMMaterial*) m_materialManager->getMaterial( "MPM", aMI );
     int dw_ami = ami_matl->getDWIndex();
     ParticleSubset* pset_ami = old_dw->getParticleSubset(dw_ami, patch);
-    ConstitutiveModel* cm_ami = ami_matl->getConstitutiveModel();
+    //ConstitutiveModel* cm_ami = ami_matl->getConstitutiveModel();
 
     unsigned int numNewPartNeeded = 0;
     for(unsigned int m = 0; m < numMPMMatls; m++){
@@ -6324,12 +6335,11 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
      if(m!=aMI){
-
       MPMMaterial* mpm_matl =
                      (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset  = old_dw->getParticleSubset(dwi, patch);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+      //ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 
       ParticleVariable<Point> px;
       ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad,pscalefac;
@@ -6426,6 +6436,7 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
     new_dw->put(pxtmp,    lb->pXLabel_preReloc,                    true);
     new_dw->put(pvoltmp,  lb->pVolumeLabel_preReloc,               true);
     new_dw->put(pveltmp,  lb->pVelocityLabel_preReloc,             true);
+    new_dw->put(pdTdttmp, lb->pdTdtLabel,                          true);
     if(flags->d_computeScaleFactor){
       new_dw->put(pSFtmp, lb->pScaleFactorLabel_preReloc,          true);
     }
