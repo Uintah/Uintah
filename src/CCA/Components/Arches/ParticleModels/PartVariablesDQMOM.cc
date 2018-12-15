@@ -106,8 +106,8 @@ PartVariablesDQMOM::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   computeSurfaceAreaFraction( patch, tsk_info );
 
@@ -140,8 +140,8 @@ PartVariablesDQMOM::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   computeSurfaceAreaFraction( patch, tsk_info );
 

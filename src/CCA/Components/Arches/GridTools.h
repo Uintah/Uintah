@@ -398,9 +398,9 @@ namespace Uintah{ namespace ArchesCore{
   };
 
 
-  template<typename ExecutionSpace, typename MemSpace,  typename grid_T, typename grid_CT> 
+  template <typename ExecSpace, typename MemSpace,  typename grid_T, typename grid_CT> 
   void
-  doInterpolation( ExecutionObject<ExecutionSpace, MemSpace> execObj, Uintah::BlockRange& range,  grid_T& i_u_interpolated, grid_CT& i_u, const int &ioff, 
+  doInterpolation( ExecutionObject<ExecSpace, MemSpace> execObj, Uintah::BlockRange& range,  grid_T& i_u_interpolated, grid_CT& i_u, const int &ioff, 
                   const int &joff, const int &koff , unsigned int interpMode ){ // we need this wrapper, because we are supporting CCVariable data types
     if (interpMode ==FOURTHCENTRAL){
         Uintah::parallel_for(execObj, range,  KOKKOS_LAMBDA (int i, int j, int k) {

@@ -857,14 +857,14 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
 
 //______________________________________________________________________
 //
-template <typename ES, typename MS>
+template <typename ExecSpace, typename MemSpace>
 void
 RMCRTCommon::carryForward_FineLevelLabels( const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            OnDemandDataWarehouse* old_dw,
                                            OnDemandDataWarehouse* new_dw,
                                            UintahParams& uintahParams,
-                                           ExecutionObject<ES, MS>& execObj)
+                                           ExecutionObject<ExecSpace, MemSpace>& execObj)
 {
   printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_FineLevelLabels" );
 
@@ -896,14 +896,14 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
 }
 
 //______________________________________________________________________
-template <typename ES, typename MS>
+template <typename ExecSpace, typename MemSpace>
 void
 RMCRTCommon::carryForward_Var ( const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 OnDemandDataWarehouse* old_dw,
                                 OnDemandDataWarehouse* new_dw,
                                 UintahParams& uintahParams,
-                                ExecutionObject<ES, MS>& execObj,
+                                ExecutionObject<ExecSpace, MemSpace>& execObj,
                                 const VarLabel* variable )
 {
   new_dw->transferFrom(old_dw, variable, patches, matls, execObj, true, nullptr);

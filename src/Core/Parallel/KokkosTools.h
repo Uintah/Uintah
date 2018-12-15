@@ -109,8 +109,8 @@ void cleanupKokkosTools() {
 
 // Don't create any pool until a user first requests one.  Once one is requested, reuse it.
 #if defined(KOKKOS_ENABLE_OPENMP)
-template <typename ExecutionSpace>
-inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >>::type
+template <typename ExecSpace>
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >>::type
 GetKokkosRandom1024Pool() {
   {
     std::lock_guard<Uintah::MasterLock> rand_init_mutex_guard(rand_init_mutex);
@@ -125,8 +125,8 @@ GetKokkosRandom1024Pool() {
 
 
 #if defined(KOKKOS_ENABLE_CUDA)
-template <typename ExecutionSpace>
-inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >>::type
+template <typename ExecSpace>
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >>::type
 GetKokkosRandom1024Pool() {
   {
     std::lock_guard<Uintah::MasterLock> rand_init_mutex_guard(rand_init_mutex);

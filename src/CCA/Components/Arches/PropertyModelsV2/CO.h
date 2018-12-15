@@ -39,13 +39,13 @@ public:
 
     void register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){}
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
 
     /** @details This model computes carbon monoxide as a sum of the equilibrum CO and a defect CO.
     CO = CO_equil + defect
@@ -97,8 +97,8 @@ public:
       Step 4: update d to time t+1
       Step 5: update y to time t+1
     **/
-    template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     void create_local_labels();
 

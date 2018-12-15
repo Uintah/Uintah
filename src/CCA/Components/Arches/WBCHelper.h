@@ -370,14 +370,14 @@ public:
                                   const LevelP& level,
                                   const MaterialSet* matls );
 
-template <typename ExecutionSpace, typename MemSpace> void
+template <typename ExecSpace, typename MemSpace> void
       computeBCAreaHelper( 
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           OnDemandDataWarehouse        * old_dw,
                           OnDemandDataWarehouse        * new_dw,
                           UintahParams& uintahParams,
-                          ExecutionObject<ExecutionSpace,MemSpace>& execObj ,
+                          ExecutionObject<ExecSpace, MemSpace>& execObj ,
                           const IntVector lo,
                           const IntVector hi );
 

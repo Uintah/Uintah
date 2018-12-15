@@ -925,14 +925,14 @@ void WBCHelper::sched_computeBCAreaHelper( SchedulerP& sched,
                           sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT, lo, hi);
 }
 
-template <typename ExecutionSpace, typename MemSpace> void
+template <typename ExecSpace, typename MemSpace> void
 WBCHelper::computeBCAreaHelper( 
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           OnDemandDataWarehouse        * old_dw,
                           OnDemandDataWarehouse        * new_dw,
                           UintahParams& uintahParams,
-                          ExecutionObject<ExecutionSpace,MemSpace>& execObj ,
+                          ExecutionObject<ExecSpace, MemSpace>& execObj ,
                           const IntVector lo,
                           const IntVector hi ){
   for (int p = 0; p < patches->size(); p++) {

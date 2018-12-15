@@ -176,8 +176,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemSpace>
-  void MultifractalSGS::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void MultifractalSGS::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
       // Subgrid stress
       SFCXVariable<double>& ucell_xSgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress"));
       SFCXVariable<double>& ucell_ySgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_ySgsStress"));
@@ -215,8 +215,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-    template<typename ExecutionSpace, typename MemSpace> void
-    MultifractalSGS::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+    template <typename ExecSpace, typename MemSpace> void
+    MultifractalSGS::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
       // Unused - creating a compiler warning
       // SFCXVariable<double>& ucell_xSgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress"));
@@ -262,8 +262,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemSpace>
-  void MultifractalSGS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void MultifractalSGS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
       Vector Dx=patch->dCell();
       double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();
 

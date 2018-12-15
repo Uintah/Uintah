@@ -119,8 +119,8 @@ InitLagrangianParticleVelocity::register_initialize( std::vector<ArchesFieldCont
 
 }
 
-template<typename ExecutionSpace, typename MemSpace>
-void InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   ParticleTuple pu_tup = tsk_info->get_uintah_particle_field(_pu_label);
   ParticleTuple pv_tup = tsk_info->get_uintah_particle_field(_pv_label);
@@ -178,8 +178,8 @@ void
 InitLagrangianParticleVelocity::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 }
 
-template<typename ExecutionSpace, typename MemSpace> void
-InitLagrangianParticleVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){}
+template <typename ExecSpace, typename MemSpace> void
+InitLagrangianParticleVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
 
 //
@@ -194,7 +194,7 @@ InitLagrangianParticleVelocity::register_timestep_eval( std::vector<ArchesFieldC
 }
 
 //This is the work for the task.  First, get the variables. Second, do the work!
-template<typename ExecutionSpace, typename MemSpace>
-void InitLagrangianParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){}
+template <typename ExecSpace, typename MemSpace>
+void InitLagrangianParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
 } // namespace Uintah

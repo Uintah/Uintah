@@ -141,11 +141,11 @@ DensityRK::register_initialize( std::vector<ArchesFieldContainer::VariableInform
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void DensityRK::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void DensityRK::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto rhoRK = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_label_densityRK );
-  auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double, MemSpace>( m_label_density );
+  auto rhoRK = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( m_label_densityRK );
+  auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>( m_label_density );
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -168,12 +168,12 @@ DensityRK::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInf
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void DensityRK::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void DensityRK::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace  >( m_label_density,ArchesFieldContainer::OLDDW);
-  auto rho = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace  >( m_label_density );
-  auto rhoRK = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace  >( m_label_densityRK );
+  auto old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>( m_label_density,ArchesFieldContainer::OLDDW);
+  auto rho = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( m_label_density );
+  auto rhoRK = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( m_label_densityRK );
 
   const int time_substep = tsk_info->get_time_substep();
 

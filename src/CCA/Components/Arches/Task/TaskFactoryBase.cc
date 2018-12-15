@@ -501,13 +501,13 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void TaskFactoryBase::do_task ( const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 OnDemandDataWarehouse* old_dw,
                                 OnDemandDataWarehouse* new_dw,
                                 UintahParams& uintahParams,
-                                ExecutionObject<ExecutionSpace, MemSpace>& execObj,
+                                ExecutionObject<ExecSpace, MemSpace>& execObj,
                                 std::vector<ArchesFieldContainer::VariableInformation> variable_registry,
                                 std::vector<TaskInterface*> arches_tasks,
                                 TaskInterface::TASK_TYPE type,
@@ -551,7 +551,7 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
       switch( type ){
         case (TaskInterface::INITIALIZE):
           {
-            (*i_task)->initialize<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, execObj );
+            (*i_task)->initialize<ExecSpace, MemSpace>( patch, tsk_info_mngr, execObj );
           }
           break;
         case (TaskInterface::RESTART_INITIALIZE):
@@ -567,17 +567,17 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
           break;
         case (TaskInterface::TIMESTEP_EVAL):
           {
-            (*i_task)->eval<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, execObj );
+            (*i_task)->eval<ExecSpace, MemSpace>( patch, tsk_info_mngr, execObj );
           }
           break;
         case (TaskInterface::BC):
           {
-            (*i_task)->compute_bcs<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, execObj );
+            (*i_task)->compute_bcs<ExecSpace, MemSpace>( patch, tsk_info_mngr, execObj );
           }
           break;
         case (TaskInterface::ATOMIC):
           {
-            (*i_task)->eval<ExecutionSpace, MemSpace>( patch, tsk_info_mngr, execObj );
+            (*i_task)->eval<ExecSpace, MemSpace>( patch, tsk_info_mngr, execObj );
           }
           break;
         default:

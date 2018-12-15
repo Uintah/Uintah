@@ -44,16 +44,16 @@ public:
 
     };
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& execObj){}
+    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj){}
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
 protected:
 
@@ -217,15 +217,15 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template<typename ExecutionSpace, typename MemSpace>
-  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     for (int ieqn = 0; ieqn < int(m_eqn_names.size()); ieqn++ ){
 
       if ( m_do_diff[ieqn] ){
-        auto x_flux = tsk_info->get_uintah_field_add<FXT,double,MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
-        auto y_flux = tsk_info->get_uintah_field_add<FYT,double,MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
-        auto z_flux = tsk_info->get_uintah_field_add<FZT,double,MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
+        auto x_flux = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
+        auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
+        auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
         parallel_initialize(execObj, 0.0, x_flux,y_flux,z_flux);
       }
     }
@@ -258,8 +258,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template<typename ExecutionSpace, typename MemSpace>
-  void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     auto eps = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eps_name);
 
@@ -269,11 +269,11 @@ private:
 
       if ( m_do_diff[ieqn] ){
 
-        auto x_flux = tsk_info->get_uintah_field_add<FXT,double,MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
-        auto y_flux = tsk_info->get_uintah_field_add<FYT,double,MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
-        auto z_flux = tsk_info->get_uintah_field_add<FZT,double,MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
+        auto x_flux = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
+        auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
+        auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
 
-        auto phi = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(m_eqn_names[ieqn]);
+        auto phi = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eqn_names[ieqn]);
 
         parallel_initialize(execObj,0.0, x_flux,y_flux,z_flux);
 
@@ -330,8 +330,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template<typename ExecutionSpace, typename MemSpace>
-  void Diffusion<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void Diffusion<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   }
 

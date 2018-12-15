@@ -84,13 +84,13 @@ private:
                            SchedulerP& sched,
                            MixingRxnModel* model );
 
-   template <typename ExecutionSpace, typename MemSpace> void 
+   template <typename ExecSpace, typename MemSpace> void 
    setDependBCs(const PatchSubset* patches,
                 const MaterialSubset* matls,
                 OnDemandDataWarehouse* old_dw,
                 OnDemandDataWarehouse* new_dw,
                 UintahParams& uintahParams,
-                ExecutionObject<ExecutionSpace,MemSpace>& execObj ,
+                ExecutionObject<ExecSpace, MemSpace>& execObj ,
                 MixingRxnModel* model );
 
   std::map<std::string, MixingRxnModel*> m_tables;        ///< The lookup interface

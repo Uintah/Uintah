@@ -8,15 +8,15 @@
 namespace Uintah {
 
 
-template <typename T, typename MemorySpace>
-using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemorySpace , Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+template <typename T, typename MemSpace>
+using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
 
 //For the default memory space
-template <typename T, typename MemorySpace>
+template <typename T, typename MemSpace>
 struct KokkosView3
 {
-  using view_type = Kokkos::View<T***, Kokkos::LayoutStride, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
+  using view_type = Kokkos::View<T***, Kokkos::LayoutStride, MemSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
 
   using reference_type = typename view_type::reference_type;
 
@@ -39,20 +39,20 @@ struct KokkosView3
 
   KokkosView3() = default;
 
-  template <typename U, typename MemorySpaceSource,
+  template <typename U, typename MemSpaceSource,
             typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value >,
-            typename = std::enable_if< std::is_same<MemorySpaceSource, MemorySpace>::value > >
-  KokkosView3( const KokkosView3<U, MemorySpaceSource> & v)
+            typename = std::enable_if< std::is_same<MemSpaceSource, MemSpace>::value > >
+  KokkosView3( const KokkosView3<U, MemSpaceSource> & v)
     : m_view(v.m_view)
     , m_i(v.m_i)
     , m_j(v.m_j)
     , m_k(v.m_k)
   {}
 
-  template <typename U, typename MemorySpaceSource,
+  template <typename U, typename MemSpaceSource,
             typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value >,
-            typename = std::enable_if< std::is_same<MemorySpaceSource, MemorySpace>::value > >
-  KokkosView3 & operator=( const KokkosView3<U, MemorySpaceSource> & v)
+            typename = std::enable_if< std::is_same<MemSpaceSource, MemSpace>::value > >
+  KokkosView3 & operator=( const KokkosView3<U, MemSpaceSource> & v)
   {
     m_view = v.m_view;
     m_i = v.m_i;
@@ -66,10 +66,10 @@ struct KokkosView3
   int       m_j{0};
   int       m_k{0};
 
-    template <typename ExecutionSpace>
+    template <typename ExecSpace>
     inline  void
     initialize( T init_val){
-      Uintah::parallel_for<ExecutionSpace>(*this,init_val );
+      Uintah::parallel_for<ExecSpace>(*this,init_val );
     }
 
 };

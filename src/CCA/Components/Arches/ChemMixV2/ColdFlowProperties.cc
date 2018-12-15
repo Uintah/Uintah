@@ -111,11 +111,11 @@ void ColdFlowProperties::register_initialize( VIVec& variable_registry , const b
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    auto var = tsk_info->get_uintah_field_add<CCVariable<double>,double, MemSpace >( i->first );
+    auto var = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( i->first );
     parallel_initialize(execObj, 0.0, var);
   }
 
@@ -134,12 +134,12 @@ void ColdFlowProperties::register_timestep_init( VIVec& variable_registry , cons
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void ColdFlowProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    auto old_var = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >( i->first );
-    auto var = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( i->first );
+    auto old_var = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>( i->first );
+    auto var = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( i->first );
     parallel_for(execObj, BlockRange(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex()) , KOKKOS_LAMBDA (int i,int j,int k){
       var(i,j,k) = old_var(i,j,k);
     });
@@ -156,8 +156,8 @@ void ColdFlowProperties::register_restart_initialize( VIVec& variable_registry ,
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void ColdFlowProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   get_properties(execObj, patch, tsk_info );
 
@@ -174,8 +174,8 @@ void ColdFlowProperties::register_timestep_eval( VIVec& variable_registry, const
 
 }
 
-template<typename ExecutionSpace, typename MemSpace>
-void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   get_properties(execObj, patch, tsk_info );
 
@@ -192,10 +192,10 @@ void ColdFlowProperties::register_compute_bcs( VIVec& variable_registry, const i
 
 }
 
-template<typename ExecutionSpace, typename MemSpace>
-void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto f = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >( m_mixfrac_label );
+  auto f = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>( m_mixfrac_label );
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -211,7 +211,7 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 
     for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
 
-      auto prop = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( i->first );
+      auto prop = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( i->first );
       const SpeciesInfo info = i->second;
       const bool volumetric = info.volumetric;
       const double stream_1 = info.stream_1;
@@ -235,15 +235,15 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
   }
 }
 
-template<typename ExecutionSpace, typename MemSpace>
-void ColdFlowProperties::get_properties( ExecutionObject<ExecutionSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::get_properties( ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   auto f =
-    tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >( m_mixfrac_label );
+    tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>( m_mixfrac_label );
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
 
-    auto prop = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( i->first );
+    auto prop = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( i->first );
     const SpeciesInfo info = i->second;
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );

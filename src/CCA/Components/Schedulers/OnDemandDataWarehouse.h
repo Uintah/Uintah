@@ -461,12 +461,12 @@ public:
                            , const PatchSubset    * newPatches
                            );
 
-  template <typename ExecutionSpace, typename MemSpace>
+  template <typename ExecSpace, typename MemSpace>
           void transferFrom(       DataWarehouse                             * from
                            , const VarLabel                                  * label
                            , const PatchSubset                               * patches
                            , const MaterialSubset                            * matls
-                           ,       ExecutionObject<ExecutionSpace, MemSpace> & execObj
+                           ,       ExecutionObject<ExecSpace, MemSpace> & execObj
                            ,       bool                                        replace
                            , const PatchSubset                               * newPatches
                            );

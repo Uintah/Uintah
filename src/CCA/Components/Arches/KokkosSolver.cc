@@ -304,14 +304,14 @@ KokkosSolver::computeTimestep( const LevelP     & level
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     OnDemandDataWarehouse* old_dw,
                                     OnDemandDataWarehouse* new_dw,
                                     UintahParams& uintahParams,
-                                    ExecutionObject<ExecutionSpace, MemSpace>& execObj)
+                                    ExecutionObject<ExecSpace, MemSpace>& execObj)
 {
 
   const Level* level = getLevel(patches);
@@ -326,11 +326,11 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
 
     Vector Dx = patch->dCell();
 
-    auto u   = new_dw->getConstGridVariable<constSFCXVariable<double>, double , MemSpace>(  m_uLabel    ,  indx, patch, Ghost::None, 0 );
-    auto v   = new_dw->getConstGridVariable<constSFCYVariable<double>, double , MemSpace>(  m_vLabel    ,  indx, patch, Ghost::None, 0 );
-    auto w   = new_dw->getConstGridVariable<constSFCZVariable<double>, double , MemSpace>(  m_wLabel    ,  indx, patch, Ghost::None, 0 );
-    auto rho = new_dw->getConstGridVariable<constCCVariable<double>  , double , MemSpace>(  m_rhoLabel  ,  indx, patch, Ghost::None, 0 );
-    auto mu  = new_dw->getConstGridVariable<constCCVariable<double>  , double , MemSpace>(  m_tot_muLabel, indx, patch, Ghost::None, 0 );
+    auto u   = new_dw->getConstGridVariable<constSFCXVariable<double>, double, MemSpace>(  m_uLabel    ,  indx, patch, Ghost::None, 0 );
+    auto v   = new_dw->getConstGridVariable<constSFCYVariable<double>, double, MemSpace>(  m_vLabel    ,  indx, patch, Ghost::None, 0 );
+    auto w   = new_dw->getConstGridVariable<constSFCZVariable<double>, double, MemSpace>(  m_wLabel    ,  indx, patch, Ghost::None, 0 );
+    auto rho = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace>(  m_rhoLabel  ,  indx, patch, Ghost::None, 0 );
+    auto mu  = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace>(  m_tot_muLabel, indx, patch, Ghost::None, 0 );
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -356,14 +356,14 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 KokkosSolver::setTimeStep(const PatchSubset* patches,
                           const MaterialSubset* matls,
                           OnDemandDataWarehouse* old_dw,
                           OnDemandDataWarehouse* new_dw,
                           UintahParams& uintahParams,
-                          ExecutionObject<ExecutionSpace, MemSpace>& execObj)
+                          ExecutionObject<ExecSpace, MemSpace>& execObj)
 {
   const Level* level = getLevel(patches);
   for (int p = 0; p < patches->size(); p++) {

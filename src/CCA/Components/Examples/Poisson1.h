@@ -86,13 +86,13 @@ WARNING
     virtual void scheduleTimeAdvance( const LevelP& level, 
                                           SchedulerP&);
 
-    template <typename ES, typename MS>
+    template <typename ExecSpace, typename MemSpace>
     void timeAdvance( const PatchSubset* patches,
                       const MaterialSubset* matls,
                       OnDemandDataWarehouse* old_dw,
                       OnDemandDataWarehouse* new_dw,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS>& execObj );
+                      ExecutionObject<ExecSpace, MemSpace>& execObj );
 
   private:
     void initialize(const ProcessorGroup*,

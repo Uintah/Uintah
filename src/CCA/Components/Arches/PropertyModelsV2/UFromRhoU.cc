@@ -99,8 +99,8 @@ void UFromRhoU::register_initialize( AVarInfo& variable_registry , const bool pa
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   compute_velocities( patch, tsk_info );
 
@@ -122,8 +122,8 @@ void UFromRhoU::register_timestep_init( AVarInfo& variable_registry , const bool
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace> void
-UFromRhoU::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace> void
+UFromRhoU::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
   constSFCXVariable<double>& old_u = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
@@ -156,8 +156,8 @@ void UFromRhoU::register_timestep_eval( VIVec& variable_registry, const int time
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   compute_velocities( patch, tsk_info );
 

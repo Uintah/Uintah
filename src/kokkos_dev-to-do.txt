@@ -12,6 +12,7 @@ Update build_kokkos.sh to pull the latest Kokkos release and apply Brad's latest
 Remove code not needed to bring minimal support for running with Kokkos::Cuda into trunk
 - e.g. work-in-progress OnDemandDataWarehouse changes, slim RMCRT implementations
 - Code will be preserved in a separate branch
+- Legacy CUDA support?
 
 Cleanup loop statement options in LoopExecution.hpp
 - e.g. parallel_for_cpu_only
@@ -19,7 +20,6 @@ Cleanup loop statement options in LoopExecution.hpp
 
 Cleanup newly added headers
 - Consolidate includes in src/include/sci_defs/kokkos_defs.h and/or src/Core/Parallel/KokkosTools.h?
-- Remove UintahMemorySpaces.h
 
 Cleanup and standardize newly added macros
 - UINTAH_ENABLE_KOKKOS necessary?
@@ -27,7 +27,6 @@ Cleanup and standardize newly added macros
 - Keep HAVE_CUDA?
 
 Standardize boiler plate code added for Kokkos throughout Arches tasks
-- e.g. execution space and memory space template typenames
 
 Replace mentions of partitions with task executors
 

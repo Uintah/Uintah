@@ -3218,13 +3218,13 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
 //transferFrom() will perform a deep copy on the data if it's in the CPU or GPU.
 //GPU transferFrom is not yet supported for GPU PerPatch variables.
 //See the GPU's transferFrom() method for many more more details.
-template <typename ES, typename MS>
+template <typename ExecSpace, typename MemSpace>
 void
 OnDemandDataWarehouse::transferFrom(       DataWarehouse           * from
                                    , const VarLabel                * label
                                    , const PatchSubset             * patches
                                    , const MaterialSubset          * matls
-                                   ,       ExecutionObject<ES, MS> & execObj
+                                   ,       ExecutionObject<ExecSpace, MemSpace> & execObj
                                    ,       bool                      replace
                                    , const PatchSubset             * newPatches
                                    )

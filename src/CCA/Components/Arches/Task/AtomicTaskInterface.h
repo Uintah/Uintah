@@ -87,12 +87,12 @@ public:
       std::vector<AFC::VariableInformation>& variable_registry, const bool packed_tasks ){}
     void register_timestep_init( std::vector<AFC::VariableInformation>& variable_registry,
                                          const bool pack_tasks ){}
-    template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){}
-    template <typename ExecutionSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){}
-    template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){}
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
 protected:
 
@@ -100,8 +100,8 @@ protected:
     typedef std::map<std::string, constVariableBase<GridVariableBase>* > ConstUintahVarMap;
 
     /** @brief The actual work done within the derived class **/
-    template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     std::vector<const VarLabel*> m_local_labels;
     WBCHelper* m_bcHelper {nullptr};

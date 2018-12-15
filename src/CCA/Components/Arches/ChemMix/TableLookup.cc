@@ -155,14 +155,14 @@ TableLookup::sched_setDependBCs( const LevelP& level,
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecutionSpace, typename MemSpace> void
+template <typename ExecSpace, typename MemSpace> void
 TableLookup::setDependBCs( 
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
                            OnDemandDataWarehouse* old_dw,
                            OnDemandDataWarehouse* new_dw,
                            UintahParams& uintahParams,
-                           ExecutionObject<ExecutionSpace,MemSpace>& execObj ,
+                           ExecutionObject<ExecSpace, MemSpace>& execObj ,
                            MixingRxnModel* model )
 {
   for (int p=0; p < patches->size(); p++){

@@ -82,16 +82,16 @@ void AddPressGradient::register_timestep_eval( std::vector<AFC::VariableInformat
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   const double dt = tsk_info->get_dt();
   Vector DX = patch->dCell();
-  auto xmom = tsk_info->get_uintah_field_add<SFCXVariable<double>,double, MemSpace >( m_xmom );
-  auto ymom = tsk_info->get_uintah_field_add<SFCYVariable<double>,double, MemSpace >( m_ymom );
-  auto zmom = tsk_info->get_uintah_field_add<SFCZVariable<double>,double, MemSpace >( m_zmom );
-  auto p = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_press);
-  auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_eps_name);
+  auto xmom = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>( m_xmom );
+  auto ymom = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>( m_ymom );
+  auto zmom = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>( m_zmom );
+  auto p = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_press);
+  auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_eps_name);
 
   // because the hypre solve required a positive diagonal
   // so we -1 * ( Ax = b ) requiring that we change the sign

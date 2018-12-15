@@ -295,8 +295,8 @@ void VariableStats::register_initialize( VIVec& variable_registry , const bool p
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   auto i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
@@ -388,8 +388,8 @@ void VariableStats::register_restart_initialize( VIVec& variable_registry , cons
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace> 
-void VariableStats::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace> 
+void VariableStats::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   typedef std::vector<std::string> StrVec;
 
@@ -464,8 +464,8 @@ void VariableStats::register_timestep_init( VIVec& variable_registry , const boo
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace> void
-VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace> void
+VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   auto i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
@@ -636,8 +636,8 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   const double dt = tsk_info->get_dt();
 

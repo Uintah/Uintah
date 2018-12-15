@@ -110,8 +110,8 @@ WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableI
 
 }
 
-template<typename ExecutionSpace, typename MemSpace>
-void WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
   CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
@@ -148,8 +148,8 @@ WallHFVariable::register_restart_initialize( std::vector<ArchesFieldContainer::V
 
 }
 
-template<typename ExecutionSpace, typename MemSpace> void 
-WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj  ){
+template <typename ExecSpace, typename MemSpace> void 
+WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj  ){
 
   CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
   CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
@@ -202,8 +202,8 @@ WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 
 }
 
-template<typename ExecutionSpace, typename MemSpace>
-void WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   double sigma=5.67e-8;  //  w / m^2 k^4
 

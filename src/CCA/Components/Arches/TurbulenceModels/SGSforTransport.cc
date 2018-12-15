@@ -119,8 +119,8 @@ namespace Uintah{
     }
 
   //--------------------------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemSpace>
-  void SGSforTransport::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void SGSforTransport::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
       SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
       SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
       SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
@@ -140,9 +140,9 @@ namespace Uintah{
     }
 
   //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
   void
-    SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+    SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
       // Unused - creating a compiler warning
       // SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
@@ -166,8 +166,8 @@ template<typename ExecutionSpace, typename MemSpace>
     }
 
   //--------------------------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemSpace>
-  void SGSforTransport::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void SGSforTransport::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
       Vector Dx=patch->dCell();
       //  double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();
       // double vol = Dx.x()*Dx.y()*Dx.z();

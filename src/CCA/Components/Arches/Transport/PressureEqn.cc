@@ -155,18 +155,18 @@ PressureEqn::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();
   const double area_NS = DX.x()*DX.z();
   const double area_TB = DX.x()*DX.y();
 
-  auto Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace >("A_press");
-  auto b = tsk_info->get_uintah_field_add<CCVariable<double>,double , MemSpace>("b_press");
-  auto x = tsk_info->get_uintah_field_add<CCVariable<double>,double , MemSpace>(m_pressure_name);
-  auto guess = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >("guess_press");
+  auto Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
+  auto b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("b_press");
+  auto x = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_pressure_name);
+  auto guess = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("guess_press");
 
   //const double dt = tsk_info->get_dt();
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -255,14 +255,14 @@ PressureEqn::register_timestep_init(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace> void
-PressureEqn::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace> void
+PressureEqn::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
- auto  Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace >("A_press");
- auto  old_Apress = tsk_info->get_const_uintah_field_add<constCCVariable<Stencil7>, const Stencil7, MemSpace >("A_press");
- auto  b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >("b_press");
- auto  x = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_pressure_name);
- auto  guess = tsk_info->get_uintah_field_add<CCVariable<double>,double,MemSpace >("guess_press");
+ auto  Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
+ auto  old_Apress = tsk_info->get_const_uintah_field_add<constCCVariable<Stencil7>, const Stencil7, MemSpace>("A_press");
+ auto  b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("b_press");
+ auto  x = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_pressure_name);
+ auto  guess = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("guess_press");
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   parallel_for(execObj,range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -290,8 +290,8 @@ PressureEqn::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();
@@ -299,12 +299,12 @@ void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
   const double area_TB = DX.x()*DX.y();
   const double V       = DX.x()*DX.y()*DX.z();
 
-  auto b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >("b_press");
-  auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_eps_name);
-  auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>,const double, MemSpace >("x-mom");
-  auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >("y-mom");
-  auto zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace  >("z-mom");
-  auto drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace  >(m_drhodt_name);
+  auto b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("b_press");
+  auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_eps_name);
+  auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>("x-mom");
+  auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>("y-mom");
+  auto zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>("z-mom");
+  auto drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_drhodt_name);
 
   const double dt = tsk_info->get_dt();
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -333,13 +333,13 @@ PressureEqn::register_compute_bcs(
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   //This only applies BCs to A. Boundary conditions to the RHS are handled upstream in RhoUHatBC
-  auto A = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace >("A_press");
-  auto b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >("b_press");
-  auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_eps_name);
+  auto A = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
+  auto b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("b_press");
+  auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_eps_name);
 
   //const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   //for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -771,32 +771,32 @@ for (int rb_iter=0; rb_iter < total_rb_switch; rb_iter++){
    }
   
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 PressureEqn::blindGuessToLinearSystem(const PatchSubset* patches,
                            const MaterialSubset* matls,
                            OnDemandDataWarehouse* old_dw,
                            OnDemandDataWarehouse* new_dw,
                            UintahParams& uintahParams,
-                           ExecutionObject<ExecutionSpace, MemSpace>& execObj){
+                           ExecutionObject<ExecSpace, MemSpace>& execObj){
 
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
 
-      auto x_values   = new_dw->getGridVariable<CCVariable<double>, double , MemSpace>(  xLabel    , indx , patch, Ghost::None, 0 );
+      auto x_values   = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>(  xLabel    , indx , patch, Ghost::None, 0 );
     parallel_initialize(execObj,0.0,x_values);
   }
 }
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 PressureEqn::cg_init1(const PatchSubset* patches,
                            const MaterialSubset* matls,
                            OnDemandDataWarehouse* old_dw,
                            OnDemandDataWarehouse* new_dw,
                            UintahParams& uintahParams,
-                           ExecutionObject<ExecutionSpace, MemSpace>& execObj, int rk_step){
+                           ExecutionObject<ExecSpace, MemSpace>& execObj, int rk_step){
 /////////////////////////////////// TASK 1 //////////////////////////////////////
 //          Compute the correction factor requires ghosts on "p"        /////////
 //          correction factor requires a reduction                     //////////
@@ -808,13 +808,13 @@ PressureEqn::cg_init1(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-    auto A_m   = new_dw->getConstGridVariable<constCCVariable<Stencil7> , Stencil7 , MemSpace>( ALabel , indx , patch, Ghost::AroundCells, 1 );
-    auto g_v   = new_dw->getConstGridVariable<constCCVariable<double> , double , MemSpace>    (  guess , indx , patch, Ghost::AroundCells, 1 );
-    auto b_v   = new_dw->getConstGridVariable<constCCVariable<double> , double , MemSpace>    (  bLabel, indx , patch, Ghost::None, 0 );
-    auto x_v   = new_dw->getGridVariable<CCVariable<double> , double , MemSpace>    (  xLabel, indx , patch, Ghost::AroundCells, 1 , getModifiable);
-    auto residual = new_dw->getGridVariable<CCVariable<double> , double , MemSpace>    ( d_residualLabel, indx , patch, Ghost::AroundCells, cg_ghost );
+    auto A_m   = new_dw->getConstGridVariable<constCCVariable<Stencil7>, Stencil7, MemSpace>( ALabel , indx , patch, Ghost::AroundCells, 1 );
+    auto g_v   = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace>    (  guess , indx , patch, Ghost::AroundCells, 1 );
+    auto b_v   = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace>    (  bLabel, indx , patch, Ghost::None, 0 );
+    auto x_v   = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>    (  xLabel, indx , patch, Ghost::AroundCells, 1 , getModifiable);
+    auto residual = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>    ( d_residualLabel, indx , patch, Ghost::AroundCells, cg_ghost );
 
-    auto BJmat=createContainer<CCVariable<double>, double,num_prec_elem, MemSpace>(num_prec_elem); 
+    auto BJmat=createContainer<CCVariable<double>, double, num_prec_elem, MemSpace>(num_prec_elem); 
     for (unsigned int i=0;i<d_precMLabel.size();i++){
         new_dw->assignGridVariable<CCVariable<double>, double, MemSpace>(BJmat[i],d_precMLabel[i],matl,patch,Ghost::AroundCells, cg_ghost+1); // not supported long term , but padds data(avoids copy)
     }
@@ -904,14 +904,14 @@ PressureEqn::cg_init1(const PatchSubset* patches,
 } // end patch loop
 }
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 PressureEqn::cg_init2(const PatchSubset* patches,
                            const MaterialSubset* matls,
                            OnDemandDataWarehouse* old_dw,
                            OnDemandDataWarehouse* new_dw,
                            UintahParams& uintahParams,
-                           ExecutionObject<ExecutionSpace, MemSpace>& execObj,int iter,  int rk_step){
+                           ExecutionObject<ExecSpace, MemSpace>& execObj,int iter,  int rk_step){
 /////////////////////////////////// TASK 1 //////////////////////////////////////
 //          Compute the correction factor requires ghosts on "p"        /////////
 //          correction factor requires a reduction                     //////////
@@ -969,9 +969,9 @@ PressureEqn::cg_init2(const PatchSubset* patches,
 
 }
 
-template <typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT>
+template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
 void
-PressureEqn::precondition_relax(ExecutionObject<ExecutionSpace, MemSpace>& execObj,
+PressureEqn::precondition_relax(ExecutionObject<ExecSpace, MemSpace>& execObj,
                                 struct1DArray<grid_CT,num_prec_elem>& precMatrix,
                                 grid_CT& residual, grid_T& bigZ,const IntVector &idxLo,const IntVector &idxHi, int rb_switch,const Patch* patch ){
        // precMatrix is the inverted precondition matrix or the A matrix.  Depending on the relaxation type. 
@@ -1030,14 +1030,14 @@ PressureEqn::precondition_relax(ExecutionObject<ExecutionSpace, MemSpace>& execO
   }
 }
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 PressureEqn::cg_task1(const PatchSubset* patches,
                            const MaterialSubset* matls,
                            OnDemandDataWarehouse* old_dw,
                            OnDemandDataWarehouse* new_dw,
                            UintahParams& uintahParams,
-                           ExecutionObject<ExecutionSpace, MemSpace>& execObj,int iter){
+                           ExecutionObject<ExecSpace, MemSpace>& execObj,int iter){
 /////////////////////////////////// TASK 1 //////////////////////////////////////
 //          Compute the correction factor requires ghosts on "p"        /////////
 //          correction factor requires a reduction                     //////////
@@ -1047,9 +1047,9 @@ PressureEqn::cg_task1(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
  
-    auto A_m   = new_dw->getConstGridVariable<constCCVariable<Stencil7> , Stencil7 , MemSpace>( ALabel , indx , patch, Ghost::None, 0 );
-    auto smallP   = new_dw->getConstGridVariable<constCCVariable<double> , double , MemSpace> (d_smallPLabel , indx , patch, Ghost::AroundCells, 1 );
-    auto littleQ   = new_dw->getGridVariable<CCVariable<double> , double , MemSpace>  (d_littleQLabel, indx , patch, Ghost::AroundCells, 1 );
+    auto A_m   = new_dw->getConstGridVariable<constCCVariable<Stencil7>, Stencil7, MemSpace>( ALabel , indx , patch, Ghost::None, 0 );
+    auto smallP   = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace> (d_smallPLabel , indx , patch, Ghost::AroundCells, 1 );
+    auto littleQ   = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>  (d_littleQLabel, indx , patch, Ghost::AroundCells, 1 );
 
     Uintah::parallel_reduce_sum(execObj, range,   KOKKOS_LAMBDA (int i, int j, int k, double& sum){  //compute correction, GHOST CELLS REQUIRED
 
@@ -1081,14 +1081,14 @@ PressureEqn::cg_task1(const PatchSubset* patches,
   
 }
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 PressureEqn::cg_task2(const PatchSubset* patches,
                            const MaterialSubset* matls,
                            OnDemandDataWarehouse* old_dw,
                            OnDemandDataWarehouse* new_dw,
                            UintahParams& uintahParams,
-                           ExecutionObject<ExecutionSpace, MemSpace>& execObj,int iter){
+                           ExecutionObject<ExecSpace, MemSpace>& execObj,int iter){
 /////////////////////////////////// TASK 2 ///////////////////////////////
 ///////   apply correction to x_v as well as the residual vector"   //////
 //////////////////////////////////////////////////////////////////////////
@@ -1105,10 +1105,10 @@ PressureEqn::cg_task2(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-    auto residual = new_dw->getGridVariable<CCVariable<double> , double , MemSpace>    ( d_residualLabel, indx , patch, Ghost::AroundCells, max(cg_ghost,1),getModifiable );
-    auto x_v   = new_dw->getGridVariable<CCVariable<double> , double , MemSpace>    (  xLabel, indx , patch, Ghost::AroundCells, 1 , getModifiable);
-    auto smallP   = new_dw->getConstGridVariable<constCCVariable<double> , double , MemSpace>(d_smallPLabel , indx , patch, Ghost::None, 0 );
-    auto littleQ   = new_dw->getConstGridVariable<constCCVariable<double> , double , MemSpace>(d_littleQLabel , indx , patch, Ghost::None, 0 );
+    auto residual = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>    ( d_residualLabel, indx , patch, Ghost::AroundCells, max(cg_ghost,1),getModifiable );
+    auto x_v   = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>    (  xLabel, indx , patch, Ghost::AroundCells, 1 , getModifiable);
+    auto smallP   = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace>(d_smallPLabel , indx , patch, Ghost::None, 0 );
+    auto littleQ   = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace>(d_littleQLabel , indx , patch, Ghost::None, 0 );
 
     Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k){  //compute correction, GHOST CELLS REQUIRED
                                x_v(i,j,k)=x_v(i,j,k)+correction_factor*smallP(i,j,k);
@@ -1117,14 +1117,14 @@ PressureEqn::cg_task2(const PatchSubset* patches,
   } // patch loop
 }
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 PressureEqn::cg_task3(const PatchSubset* patches,
                            const MaterialSubset* matls,
                            OnDemandDataWarehouse* old_dw,
                            OnDemandDataWarehouse* new_dw,
                            UintahParams& uintahParams,
-                           ExecutionObject<ExecutionSpace, MemSpace>& execObj,int iter){
+                           ExecutionObject<ExecSpace, MemSpace>& execObj,int iter){
   int matl = indx;  
   double  R_squared=0.0;
   double max_residual=0.0;
@@ -1161,14 +1161,14 @@ PressureEqn::cg_task3(const PatchSubset* patches,
 
 }
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 PressureEqn::cg_task4(const PatchSubset* patches,
                            const MaterialSubset* matls,
                            OnDemandDataWarehouse* old_dw,
                            OnDemandDataWarehouse* new_dw,
                            UintahParams& uintahParams,
-                           ExecutionObject<ExecutionSpace, MemSpace>& execObj,int iter){
+                           ExecutionObject<ExecSpace, MemSpace>& execObj,int iter){
 
 /////////////////////////////////// TASK 4 ////////////////////////////////
 //          apply preconditioner to residual vector           ////////////

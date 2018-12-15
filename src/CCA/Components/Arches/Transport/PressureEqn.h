@@ -35,16 +35,16 @@ public:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     void create_local_labels();
 
@@ -114,14 +114,14 @@ private:
                 ,       int               time_substep 
                 );
 
- template <typename ExecutionSpace, typename MemSpace>
+ template <typename ExecSpace, typename MemSpace>
  void
  blindGuessToLinearSystem(const PatchSubset* patches,
               const MaterialSubset* matls,
               OnDemandDataWarehouse* old_dw,
               OnDemandDataWarehouse* new_dw,
               UintahParams& uintahParams,
-              ExecutionObject<ExecutionSpace, MemSpace>& execObj);
+              ExecutionObject<ExecSpace, MemSpace>& execObj);
  int indx{0};
  int cg_ghost{3};   /// number of ghost cells required due to reducing tasks
  int cg_n_iter{30};  /// number of cg iterations
@@ -151,19 +151,19 @@ int  d_custom_relax_type;
 
 public:
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 dummyTask(const PatchSubset* patches,
          const MaterialSubset* matls,
          OnDemandDataWarehouse* old_dw,
          OnDemandDataWarehouse* new_dw,
          UintahParams& uintahParams,
-         ExecutionObject<ExecutionSpace, MemSpace>& execObj,int iter){ // use to force scheduler copies
+         ExecutionObject<ExecSpace, MemSpace>& execObj,int iter){ // use to force scheduler copies
                                                                    }
 
-template <typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT>
+template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
 void
-precondition_relax(ExecutionObject<ExecutionSpace, MemSpace>& execObj,
+precondition_relax(ExecutionObject<ExecSpace, MemSpace>& execObj,
                    struct1DArray<grid_CT,num_prec_elem>& precMatrix,
                    grid_CT& residual, 
                    grid_T& bigZ,
@@ -172,59 +172,59 @@ precondition_relax(ExecutionObject<ExecutionSpace, MemSpace>& execObj,
                    int rb_switch,
                    const Patch* patch );
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 cg_init1(const PatchSubset* patches,
          const MaterialSubset* matls,
          OnDemandDataWarehouse* old_dw,
          OnDemandDataWarehouse* new_dw,
          UintahParams& uintahParams,
-         ExecutionObject<ExecutionSpace, MemSpace>& execObj, int rk_step);
+         ExecutionObject<ExecSpace, MemSpace>& execObj, int rk_step);
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 cg_init2(const PatchSubset* patches,
          const MaterialSubset* matls,
          OnDemandDataWarehouse* old_dw,
          OnDemandDataWarehouse* new_dw,
          UintahParams& uintahParams,
-         ExecutionObject<ExecutionSpace, MemSpace>& execObj, int iter,  int rk_step);
+         ExecutionObject<ExecSpace, MemSpace>& execObj, int iter,  int rk_step);
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 cg_task1(const PatchSubset* patches,
          const MaterialSubset* matls,
          OnDemandDataWarehouse* old_dw,
          OnDemandDataWarehouse* new_dw,
          UintahParams& uintahParams,
-         ExecutionObject<ExecutionSpace, MemSpace>& execObj,int iter);
+         ExecutionObject<ExecSpace, MemSpace>& execObj,int iter);
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 cg_task2(const PatchSubset* patches,
          const MaterialSubset* matls,
          OnDemandDataWarehouse* old_dw,
          OnDemandDataWarehouse* new_dw,
          UintahParams& uintahParams,
-         ExecutionObject<ExecutionSpace, MemSpace>& execObj,int iter);
+         ExecutionObject<ExecSpace, MemSpace>& execObj,int iter);
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 cg_task3(const PatchSubset* patches,
          const MaterialSubset* matls,
          OnDemandDataWarehouse* old_dw,
          OnDemandDataWarehouse* new_dw,
          UintahParams& uintahParams,
-         ExecutionObject<ExecutionSpace, MemSpace>& execObj,int iter);
+         ExecutionObject<ExecSpace, MemSpace>& execObj,int iter);
 
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void
 cg_task4(const PatchSubset* patches,
          const MaterialSubset* matls,
          OnDemandDataWarehouse* old_dw,
          OnDemandDataWarehouse* new_dw,
          UintahParams& uintahParams,
-         ExecutionObject<ExecutionSpace, MemSpace>& execObj,int iter);
+         ExecutionObject<ExecSpace, MemSpace>& execObj,int iter);
 
 };
 }

@@ -86,11 +86,11 @@ void ConsScalarDiffusion::register_initialize( AVarInfo& variable_registry , con
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
-  auto gamma = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_gamma_name);
+  auto gamma = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_gamma_name);
   //constCCVariable<double>& mu_t    = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_turb_viscosity_name);
   //constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_density_name);
 
@@ -109,8 +109,8 @@ void ConsScalarDiffusion::register_timestep_init( AVarInfo& variable_registry , 
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace> void
-ConsScalarDiffusion::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace> void
+ConsScalarDiffusion::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
 }
@@ -127,12 +127,12 @@ void ConsScalarDiffusion::register_timestep_eval( VIVec& variable_registry, cons
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void ConsScalarDiffusion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void ConsScalarDiffusion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto gamma = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >(m_gamma_name);
-  auto  mu_t    = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double , MemSpace >(m_turb_viscosity_name);
-  auto  density = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double , MemSpace >(m_density_name);
+  auto gamma = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_gamma_name);
+  auto  mu_t    = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double , MemSpace>(m_turb_viscosity_name);
+  auto  density = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double , MemSpace>(m_density_name);
 
   parallel_initialize(execObj, 0.0, gamma);
   const double  PrNo= m_Pr;

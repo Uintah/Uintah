@@ -148,8 +148,8 @@ MMS_scalar::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& f_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_label));
   CCVariable<double>& s_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_label));
@@ -217,8 +217,8 @@ MMS_scalar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& f_mms      = tsk_info->get_uintah_field_add<CCVariable<double> >(m_MMS_label);
   CCVariable<double>& s_mms      = tsk_info->get_uintah_field_add<CCVariable<double> >(m_MMS_source_label);

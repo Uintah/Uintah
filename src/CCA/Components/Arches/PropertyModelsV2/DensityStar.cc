@@ -89,11 +89,11 @@ DensityStar::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_label_densityStar );
-  auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double, MemSpace>( m_label_density );
+  auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( m_label_densityStar );
+  auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>( m_label_density );
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -113,11 +113,11 @@ DensityStar::register_timestep_init( std::vector<ArchesFieldContainer::VariableI
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace> void
-DensityStar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace> void
+DensityStar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_label_densityStar );
-  auto old_rhoStar = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >( m_label_densityStar );
+  auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( m_label_densityStar );
+  auto old_rhoStar = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>( m_label_densityStar );
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for(execObj,range, KOKKOS_LAMBDA(int i, int j, int k){
@@ -143,15 +143,15 @@ DensityStar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >("x-mom");
-  auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >("y-mom");
-  auto zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace >("z-mom");
+  auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>("x-mom");
+  auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>("y-mom");
+  auto zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>("z-mom");
 
-  auto rho = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace  >( m_label_density );
-  auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace  >( m_label_densityStar );
+  auto rho = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( m_label_density );
+  auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( m_label_densityStar );
 
   const double dt = tsk_info->get_dt();
 

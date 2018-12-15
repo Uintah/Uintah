@@ -70,16 +70,16 @@ public:
     void register_compute_bcs( ArchesVIVector& variable_registry,
                                const int time_substep , const bool packed_tasks);
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     void create_local_labels();
 
@@ -162,10 +162,10 @@ private:
 
 enum cartSpace {x_direc,y_direc,z_direc};
 
-template<typename ExecutionSpace, typename MemSpace, unsigned int Cscheme > 
+template <typename ExecSpace, typename MemSpace, unsigned int Cscheme>
 inline
 typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, void>::type
-doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
+doConvection(ExecutionObject<ExecSpace, MemSpace> &execObj,
              Uintah::BlockRange& range_conv,
              const Array3<double>& phi,
              const Array3<double>& rho_phi ,
@@ -173,52 +173,52 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
              Array3<double>& xyzFlux,
              const Array3<double>& eps, unsigned int xyzDir, int& ieqn ){
              if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { 
-               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,Array3<double>,const Array3<double>, Cscheme >  partiallySpecializedTemplatedStruct;
+               Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace, Array3<double>, const Array3<double>, Cscheme>  partiallySpecializedTemplatedStruct;
                partiallySpecializedTemplatedStruct.get_flux( execObj,range_conv,rho_phi, xyzVel, xyzFlux, eps, xyzDir );                
              } else {                                                    
-               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,Array3<double>,const Array3<double>, Cscheme >  partiallySpecializedTemplatedStruct;
+               Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace, Array3<double>, const Array3<double>, Cscheme>  partiallySpecializedTemplatedStruct;
                partiallySpecializedTemplatedStruct.get_flux( execObj, range_conv,   phi,xyzVel, xyzFlux, eps, xyzDir);               
              }
           }
 
 #if defined(UINTAH_ENABLE_KOKKOS)
 
-template<typename ExecutionSpace, typename MemSpace, unsigned int Cscheme > 
+template <typename ExecSpace, typename MemSpace, unsigned int Cscheme>
 inline
 typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, void>::type
-doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
+doConvection(ExecutionObject<ExecSpace, MemSpace> &execObj,
              Uintah::BlockRange& range_conv,
              KokkosView3<const double, Kokkos::HostSpace> phi,
              KokkosView3<const double, Kokkos::HostSpace> rho_phi ,
              KokkosView3<const double, Kokkos::HostSpace> xyzVel,
-             KokkosView3<double,Kokkos::HostSpace> xyzFlux,
+             KokkosView3<double, Kokkos::HostSpace> xyzFlux,
              KokkosView3<const double, Kokkos::HostSpace> eps, unsigned int xyzDir, int& ieqn ){
              if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { 
-               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,KokkosView3<double, Kokkos::HostSpace>,KokkosView3<const double, Kokkos::HostSpace>, Cscheme >  partiallySpecializedTemplatedStruct;
+               Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace, KokkosView3<double, Kokkos::HostSpace>, KokkosView3<const double, Kokkos::HostSpace>, Cscheme>  partiallySpecializedTemplatedStruct;
                partiallySpecializedTemplatedStruct.get_flux(execObj, range_conv, rho_phi, xyzVel, xyzFlux, eps, xyzDir );                
              } else {                                                    
-               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,KokkosView3<double, Kokkos::HostSpace>,KokkosView3<const double, Kokkos::HostSpace>, Cscheme >  partiallySpecializedTemplatedStruct;
+               Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace, KokkosView3<double, Kokkos::HostSpace>, KokkosView3<const double, Kokkos::HostSpace>, Cscheme>  partiallySpecializedTemplatedStruct;
                partiallySpecializedTemplatedStruct.get_flux(execObj, range_conv, phi, xyzVel, xyzFlux, eps, xyzDir);               
              }
           }
 
 #if defined(HAVE_CUDA)
 
-template<typename ExecutionSpace, typename MemSpace, unsigned int Cscheme > 
+template <typename ExecSpace, typename MemSpace, unsigned int Cscheme>
 inline
 typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, void>::type
-doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
+doConvection(ExecutionObject<ExecSpace, MemSpace> &execObj,
              Uintah::BlockRange& range_conv,
              KokkosView3<const double, Kokkos::CudaSpace> phi,
              KokkosView3<const double, Kokkos::CudaSpace> rho_phi ,
              KokkosView3<const double, Kokkos::CudaSpace> xyzVel,
-             KokkosView3<double,Kokkos::CudaSpace> xyzFlux,
+             KokkosView3<double, Kokkos::CudaSpace> xyzFlux,
              KokkosView3<const double, Kokkos::CudaSpace> eps, unsigned int xyzDir, int& ieqn ){
              if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { 
-               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,KokkosView3<double, Kokkos::CudaSpace>,KokkosView3<const double, Kokkos::CudaSpace>, Cscheme >  partiallySpecializedTemplatedStruct;
+               Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace,KokkosView3<double, Kokkos::CudaSpace>,KokkosView3<const double, Kokkos::CudaSpace>, Cscheme >  partiallySpecializedTemplatedStruct;
                  partiallySpecializedTemplatedStruct.get_flux(execObj, range_conv, rho_phi, xyzVel, xyzFlux, eps, xyzDir );                
              } else {                                                    
-               Uintah::ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,KokkosView3<double, Kokkos::CudaSpace>,KokkosView3<const double, Kokkos::CudaSpace>, Cscheme >  partiallySpecializedTemplatedStruct;
+               Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace,KokkosView3<double, Kokkos::CudaSpace>,KokkosView3<const double, Kokkos::CudaSpace>, Cscheme >  partiallySpecializedTemplatedStruct;
                  partiallySpecializedTemplatedStruct.get_flux(execObj, range_conv, phi, xyzVel, xyzFlux, eps, xyzDir);               
              }
           }
@@ -549,11 +549,11 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT>
-  template<typename ExecutionSpace, typename MemSpace>
-  void KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     auto eps =
-    tsk_info->get_const_uintah_field_add<CT,const double, MemSpace >(m_eps_name);
+    tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -571,7 +571,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
       auto  z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
        
-      auto rho_phi = createContainer<T,double, imax,MemSpace>(m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ?  1 : 0);
+      auto rho_phi = createContainer<T, double, imax, MemSpace>(m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ?  1 : 0);
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
          tsk_info->get_unmanaged_uintah_field<T, double, MemSpace>(m_transported_eqn_names[ieqn],rho_phi[0] );
       }
@@ -628,31 +628,31 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT>
-  template<typename ExecutionSpace, typename MemSpace> void
-  KScalarRHS<T, PT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace> void
+  KScalarRHS<T, PT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     const int istart = 0;
     const int iend = m_eqn_names.size();
 
-    auto rho_phi = createContainer<T,double, IMAX_SIZE,MemSpace>(iend);
-    auto old_rho_phi = createConstContainer<CT,const double, IMAX_SIZE,MemSpace>(iend);
+    auto rho_phi = createContainer<T,double, IMAX_SIZE, MemSpace>(iend);
+    auto old_rho_phi = createConstContainer<CT,const double, IMAX_SIZE, MemSpace>(iend);
 
-    auto phi = createContainer<T,double, IMAX_SIZE,MemSpace>(iend);
-    auto rhs = createContainer<T,double, IMAX_SIZE,MemSpace>(iend);
-    auto old_phi = createConstContainer<CT,const double, IMAX_SIZE,MemSpace>(iend);
+    auto phi = createContainer<T,double, IMAX_SIZE, MemSpace>(iend);
+    auto rhs = createContainer<T,double, IMAX_SIZE, MemSpace>(iend);
+    auto old_phi = createConstContainer<CT,const double, IMAX_SIZE, MemSpace>(iend);
 
-    auto x_flux = createContainer<FXT,double, IMAX_SIZE,MemSpace>(iend);
-    auto y_flux = createContainer<FYT,double, IMAX_SIZE,MemSpace>(iend);
-    auto z_flux = createContainer<FZT,double, IMAX_SIZE,MemSpace>(iend);
+    auto x_flux = createContainer<FXT,double, IMAX_SIZE, MemSpace>(iend);
+    auto y_flux = createContainer<FYT,double, IMAX_SIZE, MemSpace>(iend);
+    auto z_flux = createContainer<FZT,double, IMAX_SIZE, MemSpace>(iend);
 
     int icount=0;
 
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      tsk_info->get_unmanaged_uintah_field<T,double, MemSpace>( m_eqn_names[ieqn], phi[ieqn] );
-      tsk_info->get_unmanaged_uintah_field<T,double, MemSpace>( m_transported_eqn_names[ieqn]+"_RHS",rhs[ieqn] );
-      old_phi[ieqn] = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>( m_eqn_names[ieqn] );
+      tsk_info->get_unmanaged_uintah_field<T, double, MemSpace>( m_eqn_names[ieqn], phi[ieqn] );
+      tsk_info->get_unmanaged_uintah_field<T, double, MemSpace>( m_transported_eqn_names[ieqn]+"_RHS",rhs[ieqn] );
+      old_phi[ieqn] = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_eqn_names[ieqn] );
 
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
         old_rho_phi[icount] = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_transported_eqn_names[ieqn] );
@@ -660,9 +660,9 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
         icount++;
       }
 
-      tsk_info->get_unmanaged_uintah_field<FXT,double,MemSpace>(m_eqn_names[ieqn]+"_x_flux",x_flux[ieqn]);
-      tsk_info->get_unmanaged_uintah_field<FYT,double,MemSpace>(m_eqn_names[ieqn]+"_y_flux",y_flux[ieqn]);
-      tsk_info->get_unmanaged_uintah_field<FZT,double,MemSpace>(m_eqn_names[ieqn]+"_z_flux",z_flux[ieqn]);
+      tsk_info->get_unmanaged_uintah_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux",x_flux[ieqn]);
+      tsk_info->get_unmanaged_uintah_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux",y_flux[ieqn]);
+      tsk_info->get_unmanaged_uintah_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux",z_flux[ieqn]);
 
     } //equation loop
 
@@ -720,8 +720,8 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT>
-  template<typename ExecutionSpace, typename MemSpace>
-  void KScalarRHS<T, PT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void KScalarRHS<T, PT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     Vector Dx = patch->dCell();
     double ax = Dx.y() * Dx.z();
@@ -729,23 +729,23 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
     double az = Dx.x() * Dx.y();
     const double V = Dx.x()*Dx.y()*Dx.z();
 
-    auto uVel = tsk_info->get_const_uintah_field_add<CFXT,const double,MemSpace>(m_x_velocity_name);
-    auto vVel = tsk_info->get_const_uintah_field_add<CFYT,const double,MemSpace>(m_y_velocity_name);
-    auto wVel = tsk_info->get_const_uintah_field_add<CFZT,const double,MemSpace>(m_z_velocity_name);
+    auto uVel = tsk_info->get_const_uintah_field_add<CFXT,const double, MemSpace>(m_x_velocity_name);
+    auto vVel = tsk_info->get_const_uintah_field_add<CFYT,const double, MemSpace>(m_y_velocity_name);
+    auto wVel = tsk_info->get_const_uintah_field_add<CFZT,const double, MemSpace>(m_z_velocity_name);
 
-    auto eps = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(m_eps_name);
+    auto eps = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
 
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      auto rho_phi=createConstContainer<CT,const double,1,MemSpace>(1);
+      auto rho_phi=createConstContainer<CT,const double,1, MemSpace>(1);
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ){
-        rho_phi[0] = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace >(m_transported_eqn_names[ieqn]);
+        rho_phi[0] = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_transported_eqn_names[ieqn]);
       }
 
-      auto  phi     = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace >(m_eqn_names[ieqn]);
+      auto  phi     = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eqn_names[ieqn]);
       auto  rhs      = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_transported_eqn_names[ieqn]+"_RHS");
 
       //Timers::Simple timer;
@@ -770,9 +770,9 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
         //Convection:
-        auto x_flux = tsk_info->get_uintah_field_add<FXT,double,MemSpace>(m_eqn_names[ieqn]+"_x_flux");
-        auto y_flux = tsk_info->get_uintah_field_add<FYT,double,MemSpace>(m_eqn_names[ieqn]+"_y_flux");
-        auto z_flux = tsk_info->get_uintah_field_add<FZT,double,MemSpace>(m_eqn_names[ieqn]+"_z_flux");
+        auto x_flux = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
+        auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
+        auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
         //IntVector low  = patch->getCellLowIndex();
         //IntVector high = patch->getExtraCellHighIndex();
@@ -801,7 +801,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
           high[0] = low[0] + 1 ;
           Uintah::BlockRange range( low, high);
 
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
         }
 
         if ( patch->getBCType(Patch::xplus)  != Patch::Neighbor ) {
@@ -811,9 +811,9 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
           low[0] = high[0] - boundary_buffer_x -1 ;
           Uintah::BlockRange range( low, high);
 
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         }
 
@@ -824,7 +824,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
           high[1] = low[1] + 1 ;
           Uintah::BlockRange range( low, high);
 
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
 
         }
 
@@ -834,9 +834,9 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
           low[1] = high[1] - boundary_buffer_y -1 ;
           Uintah::BlockRange range( low, high);
 
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         }
 
@@ -848,7 +848,7 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
           high[2] = low[2] +  1 ;
           Uintah::BlockRange range( low, high);
 
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         }
 
@@ -858,9 +858,9 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
           low[2] = high[2] - boundary_buffer_z -1 ;
           Uintah::BlockRange range( low, high);
 
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         }
 
@@ -872,41 +872,41 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
 
           //timer.reset(false);
           //timer.start();
-          doConvection<ExecutionSpace, MemSpace,UpwindConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,UpwindConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,UpwindConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, UpwindConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, UpwindConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, UpwindConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
           //timer.stop();
           //std::cout << "CONVECTION Time: " << m_eqn_names[ieqn]<<": " <<timer().seconds() << std::endl;
 
         } else if ( m_conv_scheme[ieqn] == CENTRAL ){
 
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,CentralConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         } else if ( m_conv_scheme[ieqn] == SUPERBEE ){
 
-          doConvection<ExecutionSpace, MemSpace,SuperBeeConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,SuperBeeConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,SuperBeeConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, SuperBeeConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, SuperBeeConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, SuperBeeConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         } else if ( m_conv_scheme[ieqn] == VANLEER ){
 
-          doConvection<ExecutionSpace, MemSpace,VanLeerConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,VanLeerConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,VanLeerConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, VanLeerConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, VanLeerConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, VanLeerConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         } else if ( m_conv_scheme[ieqn] == ROE ){
 
-          doConvection<ExecutionSpace, MemSpace,RoeConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,RoeConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,RoeConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, RoeConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, RoeConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, RoeConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         } else if ( m_conv_scheme[ieqn] == FOURTH ){
 
-          doConvection<ExecutionSpace, MemSpace,FourthConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,FourthConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
-          doConvection<ExecutionSpace, MemSpace,FourthConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, FourthConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, FourthConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
+          doConvection<ExecSpace, MemSpace, FourthConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         } else {
 
@@ -979,8 +979,8 @@ doConvection(ExecutionObject<ExecutionSpace,MemSpace> &execObj,
 
 //--------------------------------------------------------------------------------------------------
   template <typename T, typename PT>
-  template<typename ExecutionSpace, typename MemSpace>
-  void KScalarRHS<T, PT>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void KScalarRHS<T, PT>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
     m_boundary_functors->apply_bc( m_eqn_names_BC, m_bcHelper, tsk_info, patch ,execObj);
   }
 }

@@ -81,16 +81,16 @@ public:
 
     };
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){}
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& execObj){}
+    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj){}
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
 protected:
 
@@ -364,8 +364,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template<typename ExecutionSpace, typename MemSpace>
-  void TimeAve<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void TimeAve<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     //const double dt = tsk_info->get_dt();
     //Vector DX = patch->dCell();
@@ -425,10 +425,10 @@ private:
 
       std::string varname = ieqn->first;
       Scaling_info info = ieqn->second;
-      auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(m_volFraction_name);
+      auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
 
-      auto phi = tsk_info->get_uintah_field_add<T,double, MemSpace>(varname);
-      auto phi_unscaled = tsk_info->get_uintah_field_add<T,double,MemSpace>(info.unscaled_var);
+      auto phi = tsk_info->get_uintah_field_add<T, double, MemSpace>(varname);
+      auto phi_unscaled = tsk_info->get_uintah_field_add<T, double, MemSpace>(info.unscaled_var);
 
       Uintah::BlockRange range3( patch->getCellLowIndex(), patch->getCellHighIndex() );
       const double ScalingConstant=info.constant  ;
@@ -455,13 +455,13 @@ private:
   }
 //--------------------------------------------------------------------------------------------------
   template <typename T >
-  template<typename ExecutionSpace, typename MemSpace>
-  void TimeAve<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void TimeAve<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-  auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_volFraction_name);
+  auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
   
 
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){

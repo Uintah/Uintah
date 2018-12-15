@@ -202,8 +202,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemSpace>
-  void FractalUD::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void FractalUD::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
       // CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
       //mu_sgc.initialize(0.0);
@@ -268,9 +268,9 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
   void
-    FractalUD::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+    FractalUD::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
     }
 
   //---------------------------------------------------------------------------------
@@ -298,8 +298,8 @@ template<typename ExecutionSpace, typename MemSpace>
     }
 
   //---------------------------------------------------------------------------------
-  template<typename ExecutionSpace, typename MemSpace>
-  void FractalUD::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void FractalUD::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
       constSFCXVariable<double>& uFaceX =tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(Ux_face_name);
       constSFCXVariable<double>& uFaceY =tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(Uy_face_name);

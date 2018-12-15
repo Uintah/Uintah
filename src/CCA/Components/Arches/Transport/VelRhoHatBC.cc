@@ -92,8 +92,8 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
 }
 
 // wrapper templated function to deal with different types
-template<typename ExecutionSpace, typename MemSpace, typename grid_T, typename Cgrid_T>
-void VelRhoHatBC::set_mom_bc( ExecutionObject<ExecutionSpace,MemSpace> &execObj,grid_T& var, const Cgrid_T& old_var, IntVector& iDir,  const double &possmall , const int sign, ListOfCellsIterator& cell_iter){
+template <typename ExecSpace, typename MemSpace, typename grid_T, typename Cgrid_T>
+void VelRhoHatBC::set_mom_bc( ExecutionObject<ExecSpace, MemSpace> &execObj,grid_T& var, const Cgrid_T& old_var, IntVector& iDir,  const double &possmall , const int sign, ListOfCellsIterator& cell_iter){
      int move_to_face_value = ( (iDir[0]+iDir[1]+iDir[2]) < 1 ) ? 1 : 0;
 
      IntVector move_to_face(std::abs(iDir[0])*move_to_face_value,
@@ -126,16 +126,16 @@ void VelRhoHatBC::set_mom_bc( ExecutionObject<ExecutionSpace,MemSpace> &execObj,
       });
   }
 
-template<typename ExecutionSpace, typename MemSpace>
-void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto xmom = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace >( m_xmom );
-  auto ymom = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace >( m_ymom );
-  auto zmom = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace >( m_zmom );
+  auto xmom = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>( m_xmom );
+  auto ymom = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>( m_ymom );
+  auto zmom = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>( m_zmom );
 
-  auto old_uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >( m_uVel );
-  auto old_vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >( m_vVel );
-  auto old_wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace >( m_wVel );
+  auto old_uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>( m_uVel );
+  auto old_vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>( m_vVel );
+  auto old_wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>( m_wVel );
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   const double possmall = 1e-16;

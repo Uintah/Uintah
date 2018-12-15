@@ -33,16 +33,16 @@ public:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){}
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){}
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template<typename ExecutionSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace,MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
 
-    template <typename ExecutionSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     void create_local_labels();
 
@@ -199,8 +199,8 @@ DSmaMMMLv2<TT>::register_initialize( std::vector<ArchesFieldContainer::VariableI
 //--------------------------------------------------------------------------------------------------
 
 template<typename TT>
-template<typename ExecutionSpace, typename MemSpace>
-void DSmaMMMLv2<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void DSmaMMMLv2<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 }
 //--------------------------------------------------------------------------------------------------
@@ -212,8 +212,8 @@ DSmaMMMLv2<TT>::register_timestep_init( std::vector<ArchesFieldContainer::Variab
 
 //--------------------------------------------------------------------------------------------------
 template<typename TT> 
-template<typename ExecutionSpace, typename MemSpace> void
-DSmaMMMLv2<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace> void
+DSmaMMMLv2<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 }
 
@@ -295,8 +295,8 @@ DSmaMMMLv2<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 
 //--------------------------------------------------------------------------------------------------
 template<typename TT>
-template<typename ExecutionSpace, typename MemSpace>
-void DSmaMMMLv2<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void DSmaMMMLv2<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   const Vector Dx = patch->dCell(); //
   double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);

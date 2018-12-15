@@ -52,8 +52,8 @@ namespace Uintah { namespace ArchesCore {
       }
     }
 
-    template<typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT>
-    void apply_zero_neumann( ExecutionObject<ExecutionSpace,MemSpace>& execObj, const Patch* patch, grid_T& var,
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
+    void apply_zero_neumann( ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, grid_T& var,
                              grid_CT& vol_fraction ){
 
       std::vector<Patch::FaceType> bf;
@@ -138,8 +138,8 @@ namespace Uintah { namespace ArchesCore {
       }
     }
 
-    template<typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT, typename VarHelper>
-    void apply_zero_neumann(ExecutionObject<ExecutionSpace,MemSpace>& execObj, const Patch* patch, grid_T& var,
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT, typename VarHelper>
+    void apply_zero_neumann(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, grid_T& var,
                              grid_CT& vol_fraction, VarHelper& var_help  ){ // NOT USED??
 
       std::vector<Patch::FaceType> bf;

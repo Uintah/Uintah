@@ -167,8 +167,8 @@ struct ClassicTableInfo {
              }
 
 // WORKING!!!!!!!!!!!!!!!!!!!
-  template<typename ExecutionSpace,typename MemSpace ,class TYPE_1 , class TYPE_2  >
-  void getState(ExecutionObject<ExecutionSpace, MemSpace>& execObj, TYPE_1 &indep_storage,
+  template <typename ExecSpace,typename MemSpace ,class TYPE_1 , class TYPE_2  >
+  void getState(ExecutionObject<ExecSpace, MemSpace>& execObj, TYPE_1 &indep_storage,
               TYPE_2 &dep_storage,
               const Patch* patch, const struct1DArray<int, max_dep_var>  depVar_indices=struct1DArray<int,max_dep_var>(0) ){
 
@@ -202,7 +202,7 @@ struct ClassicTableInfo {
       const int nDim_withSwitch=nDim+1-oneD_switch;   //  nDim-1 except for 1D
     // Go through the patch and populate the requested state variables
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-    Uintah::parallel_for<ExecutionSpace>(execObj,range, KOKKOS_LAMBDA ( int i,  int j, int k){
+    Uintah::parallel_for<ExecSpace>(execObj,range, KOKKOS_LAMBDA ( int i,  int j, int k){
 
         struct1DArray<double,MAX_TABLE_DIMENSION> iv(indep_storage.runTime_size);
         // fill independent variables

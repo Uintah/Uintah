@@ -172,9 +172,9 @@ namespace Uintah {
              when not using temporary variables. However, since temporary variables can ONLY
              be non-const, one should use CT=grid_T in that case.
   **/
-    template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT , unsigned int Cscheme>
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT , unsigned int Cscheme>
     struct ComputeConvectiveFlux1D{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
+ void get_flux(ExecutionObject<ExecSpace, MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -185,9 +185,9 @@ namespace Uintah {
       }
   };
     // UPWIND STRUCT
-    template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
-    struct ComputeConvectiveFlux1D<ExecutionSpace, MemSpace,grid_T,grid_CT,UpwindConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT >
+    struct ComputeConvectiveFlux1D<ExecSpace, MemSpace,grid_T,grid_CT,UpwindConvection>{
+ void get_flux(ExecutionObject<ExecSpace, MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -203,9 +203,9 @@ namespace Uintah {
     };
 
     // CENTRAL STRUCT
-    template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
-    struct ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,grid_T,grid_CT,CentralConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT >
+    struct ComputeConvectiveFlux1D<ExecSpace, MemSpace,grid_T,grid_CT,CentralConvection>{
+ void get_flux(ExecutionObject<ExecSpace, MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -220,9 +220,9 @@ namespace Uintah {
   };
 
     // SUPERBEE STRUCT
-    template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
-    struct ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,grid_T,grid_CT,SuperBeeConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT >
+    struct ComputeConvectiveFlux1D<ExecSpace, MemSpace,grid_T,grid_CT,SuperBeeConvection>{
+ void get_flux(ExecutionObject<ExecSpace, MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -254,9 +254,9 @@ namespace Uintah {
   };
 
     // VanLeer STRUCT
-    template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
-    struct ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,grid_T,grid_CT,VanLeerConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT >
+    struct ComputeConvectiveFlux1D<ExecSpace, MemSpace,grid_T,grid_CT,VanLeerConvection>{
+ void get_flux(ExecutionObject<ExecSpace, MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -287,9 +287,9 @@ namespace Uintah {
   };
 
     // ROEMINMODSTRUCT
-    template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
-    struct ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,grid_T,grid_CT,RoeConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT >
+    struct ComputeConvectiveFlux1D<ExecSpace, MemSpace,grid_T,grid_CT,RoeConvection>{
+ void get_flux(ExecutionObject<ExecSpace, MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -320,9 +320,9 @@ namespace Uintah {
   };
 
     // FOURTH TRUCT
-    template< typename ExecutionSpace, typename MemSpace, typename grid_T, typename grid_CT >
-    struct ComputeConvectiveFlux1D<ExecutionSpace,MemSpace,grid_T,grid_CT,FourthConvection>{
- void get_flux(ExecutionObject<ExecutionSpace,MemSpace> execObj, BlockRange& range,
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT >
+    struct ComputeConvectiveFlux1D<ExecSpace, MemSpace,grid_T,grid_CT,FourthConvection>{
+ void get_flux(ExecutionObject<ExecSpace, MemSpace> execObj, BlockRange& range,
           grid_CT &phi,
           grid_CT &u,
           grid_T  &flux,
@@ -825,10 +825,10 @@ namespace Uintah {
   };
 
  // --------------------CODE DUPLICATION WARNING!!!!!!!---------------//
-  template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT , unsigned int Cscheme>
+  template <typename ExecSpace, typename MemSpace,  typename grid_T , typename grid_CT , unsigned int Cscheme>
   struct ComputeConvectiveFlux3D{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -843,10 +843,10 @@ namespace Uintah {
 
 
     // ------------------------------UPWIND -------------------------//
-  template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
-  struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,UpwindConvection>{
+  template <typename ExecSpace, typename MemSpace,  typename grid_T , typename grid_CT >
+  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T,grid_CT,UpwindConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -882,10 +882,10 @@ namespace Uintah {
 
 
     // ------------------------------CENTRAL-------------------------//
-  template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
-  struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,CentralConvection>{
+  template <typename ExecSpace, typename MemSpace,  typename grid_T , typename grid_CT >
+  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T,grid_CT,CentralConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -920,10 +920,10 @@ namespace Uintah {
   };
 
     // ------------------------------SUPER---------------------------//
-  template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
-  struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,SuperBeeConvection>{
+  template <typename ExecSpace, typename MemSpace,  typename grid_T , typename grid_CT >
+  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T,grid_CT,SuperBeeConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -1005,10 +1005,10 @@ namespace Uintah {
   };
 
     // ------------------------------VanLEER-------------------------//
-  template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
-  struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,VanLeerConvection>{
+  template <typename ExecSpace, typename MemSpace,  typename grid_T , typename grid_CT >
+  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T,grid_CT,VanLeerConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -1090,10 +1090,10 @@ namespace Uintah {
   };
 
     // ------------------------------ROEconvection-------------------//
-  template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
-  struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,RoeConvection>{
+  template <typename ExecSpace, typename MemSpace,  typename grid_T , typename grid_CT >
+  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T,grid_CT,RoeConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,
@@ -1175,10 +1175,10 @@ namespace Uintah {
   };
 
     // ------------------------------FOURTH--------------------------//
-  template<typename ExecutionSpace, typename MemSpace,  typename grid_T , typename grid_CT >
-  struct ComputeConvectiveFlux3D<ExecutionSpace, MemSpace, grid_T,grid_CT,FourthConvection>{
+  template <typename ExecSpace, typename MemSpace,  typename grid_T , typename grid_CT >
+  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T,grid_CT,FourthConvection>{
 
-    void get_flux(ExecutionObject <ExecutionSpace, MemSpace>& execObj , BlockRange& range,
+    void get_flux(ExecutionObject <ExecSpace, MemSpace>& execObj , BlockRange& range,
               const grid_CT& phi,
               const grid_CT& u, const grid_CT& v,
               const grid_CT& w,

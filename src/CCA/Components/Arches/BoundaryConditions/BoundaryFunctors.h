@@ -96,9 +96,9 @@ namespace Uintah { namespace ArchesCore{
                           std::vector<std::string>& mod );
 
 
-    template <typename ExecutionSpace, typename MemSpace>
+    template <typename ExecSpace, typename MemSpace>
     void apply_bc( std::vector<std::string> varnames, WBCHelper* bc_helper,
-                   ArchesTaskInfoManager* tsk_info, const Patch* patch, ExecutionObject<ExecutionSpace,MemSpace>& execObj );
+                   ArchesTaskInfoManager* tsk_info, const Patch* patch, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
   private:
 
@@ -343,8 +343,8 @@ public:
              proper execution of the boundary condition. This may be a nullptr op. **/
   virtual void add_mod( std::vector<std::string>& master_mod ) = 0;
   /** @brief Actually evaluate the boundary condition **/
-    template <typename ExecutionSpace, typename MemSpace>
-    void eval_bc( ExecutionObject<ExecutionSpace,MemSpace> execObj,
+    template <typename ExecSpace, typename MemSpace>
+    void eval_bc( ExecutionObject<ExecSpace, MemSpace> execObj,
     std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
     const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter ) {
     if (BCFunctors<T>::Dirichlet*             child   = dynamic_cast<BCFunctors<T>::Dirichlet*           >(this)){
@@ -409,12 +409,12 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-  template <typename ES, typename MemSpace>
-  void eval_bc( ExecutionObject<ES,MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+  template <typename ExecSpace, typename MemSpace>
+  void eval_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter ){
 
     VariableHelper<T> var_help;
-    auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
+    auto var =  tsk_info->get_uintah_field_add<T, double, MemSpace>(var_name);
     const IntVector iDir = patch->faceDirection( bnd->face );
     const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
@@ -474,12 +474,12 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MemSpace>
-  void eval_bc( ExecutionObject<ES,MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
-    auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
+    auto var =  tsk_info->get_uintah_field_add<T, double, MemSpace>(var_name);
     const IntVector iDir = patch->faceDirection( bnd->face );
     const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
     const Vector Dx = patch->dCell();
@@ -559,12 +559,12 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MemSpace>
-  void eval_bc( ExecutionObject<ES,MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
-    auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
-    auto rho =  tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double,MemSpace >(m_density_name);
+    auto var =  tsk_info->get_uintah_field_add<T, double, MemSpace>(var_name);
+    auto rho =  tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_density_name);
 
     VariableHelper<T> var_help;
     const IntVector iDir = patch->faceDirection( bnd->face );
@@ -628,18 +628,18 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MemSpace>
-  void eval_bc( ExecutionObject<ES,MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     const double m_two_pi = 2.0*acos(-1.0);
     const double m_amp = 1.0;
 
-    auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
+    auto var =  tsk_info->get_uintah_field_add<T, double, MemSpace>(var_name);
 
-    auto x =  tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double,MemSpace >(m_x_name);
+    auto x =  tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_x_name);
 
-    auto y =  tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double,MemSpace >(m_y_name);
+    auto y =  tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_y_name);
 
     VariableHelper<T> var_help;
     const IntVector iDir = patch->faceDirection( bnd->face );
@@ -749,8 +749,8 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MemSpace>
-  void eval_bc( ExecutionObject<ES,MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     //const double m_two_pi = 2.0*acos(-1.0);
@@ -768,9 +768,9 @@ template <typename ES, typename MemSpace>
     time_d = time_d + factor*dt;
 
 
-    auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
+    auto var =  tsk_info->get_uintah_field_add<T, double, MemSpace>(var_name);
 
-    auto x =  tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double,MemSpace >(m_x_name);
+    auto x =  tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_x_name);
 
     VariableHelper<T> var_help;
     //IntVector iDir = patch->faceDirection( bnd->face );
@@ -818,15 +818,15 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MemSpace>
-  void eval_bc(ExecutionObject<ES,MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc(ExecutionObject<ExecSpace, MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
     typedef typename VariableHelper<T>::ConstType CT;
-    auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
+    auto var =  tsk_info->get_uintah_field_add<T, double, MemSpace>(var_name);
     const IntVector iDir = patch->faceDirection( bnd->face );
-    auto sec_var =tsk_info->get_const_uintah_field_add<CT,const double,MemSpace>( m_sec_var_name);
+    auto sec_var =tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_sec_var_name);
 
     const int_3 iDir_p(iDir[0],iDir[1],iDir[2]);
 
@@ -869,8 +869,8 @@ public:
   void add_mod( std::vector<std::string>& master_mod ){}
 
 
-template <typename ES, typename MemSpace>
-  void eval_bc(ExecutionObject<ES,MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc(ExecutionObject<ExecSpace, MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     // There is an issue with register variable for old_var. This BC is being applied in VelRhoHatBC.cc
@@ -962,14 +962,14 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MemSpace>
-  void eval_bc(ExecutionObject<ES,MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc(ExecutionObject<ExecSpace, MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
     //typedef typename VariableHelper<T>::ConstType CT;
-    auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
-    auto rho =  tsk_info->get_const_uintah_field_add<constCCVariable<double> ,const double,MemSpace >(m_density_name);
+    auto var =  tsk_info->get_uintah_field_add<T, double, MemSpace>(var_name);
+    auto rho =  tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_density_name);
 
     const IntVector iDir = patch->faceDirection( bnd->face );
 
@@ -1108,14 +1108,14 @@ public:
 
   }
 
-template <typename ES, typename MemSpace>
-  void eval_bc(ExecutionObject<ES,MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc(ExecutionObject<ExecSpace, MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
-    auto var =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(var_name);
+    auto var =  tsk_info->get_uintah_field_add<T, double, MemSpace>(var_name);
 
-    auto rhs =  tsk_info->get_uintah_field_add<T ,double,MemSpace >(m_phi_name+"_rhs");
+    auto rhs =  tsk_info->get_uintah_field_add<T, double, MemSpace>(m_phi_name+"_rhs");
 
     const IntVector iDir = patch->faceDirection( bnd->face );
 
@@ -1237,9 +1237,9 @@ void BCFunctors<T>::get_bc_modifies( std::vector<std::string>& varnames, WBCHelp
 
 // This function actually applies the BC to the variable(s)
 template <typename T>
-template <typename ExecutionSpace, typename MemSpace>
+template <typename ExecSpace, typename MemSpace>
 void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_helper,
-                              ArchesTaskInfoManager* tsk_info, const Patch* patch, ExecutionObject<ExecutionSpace,MemSpace>& execObj ){
+                              ArchesTaskInfoManager* tsk_info, const Patch* patch, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   const BndMapT& bc_info = bc_helper->get_boundary_information();
 

@@ -397,26 +397,26 @@ namespace Uintah{
     // Kokkos tasks can't use vectors (not allowed for CUDA).  Further, the containers must be of Kokkos views of
     // an internal data type.  For portability, both kinds of types are passed in, and only one of the two is used
     // depending on the portability mode.
-    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace >
+    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
     typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, struct1DArray<T,MaxCapacity> >::type
     createContainer(int num=MaxCapacity){
       return struct1DArray<T,MaxCapacity>(num); // perform deep copy   (should be ok since it is an empty CCVariable?)
     }
 
-    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace >
+    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
     typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, struct1DArray<T,MaxCapacity> >::type
     createConstContainer(int num=MaxCapacity){
       return struct1DArray<T,MaxCapacity>(num); // perform deep copy   (should be ok since it is an empty CCVariable?)
     }
 
 #if defined(KOKKOS_ENABLE_OPENMP)
-    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace >
+    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
     typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
     createContainer(int num=MaxCapacity){
       return struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity>(num);
     }
 
-    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace >
+    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
     typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
     createConstContainer(int num=MaxCapacity){
       return struct1DArray<KokkosView3<const elemType, MemSpace>, MaxCapacity>(num);
@@ -424,13 +424,13 @@ namespace Uintah{
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
-    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace >
+    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
     typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
     createContainer(int num=MaxCapacity){
       return struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity>(num);
     }
 
-    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace >
+    template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
     typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
     createConstContainer(int num=MaxCapacity){
       return struct1DArray<KokkosView3<const elemType, MemSpace>, MaxCapacity>(num);

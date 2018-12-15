@@ -329,8 +329,8 @@ partRadProperties::register_initialize( VIVec& variable_registry , const bool pa
 
 }
 
-template<typename ExecutionSpace, typename MemSpace>
-void partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
   CCVariable<double>& abskp = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskp_name));
@@ -356,8 +356,8 @@ void partRadProperties::register_timestep_init( VIVec& variable_registry , const
 }
 
 
-template<typename ExecutionSpace, typename MemSpace> void
-partRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace> void
+partRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 }
 
@@ -392,48 +392,48 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 
 }
 
-template<typename ExecutionSpace, typename MemSpace>
-void partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
-  auto abskp = createContainer<CCVariable<double>, double, 1 , MemSpace>(1);
-  auto scatkt =  createContainer<CCVariable<double>, double, 1 , MemSpace>(_scatteringOn ? 1 :0);
-  auto asymm   =  createContainer<CCVariable<double>, double, 1 , MemSpace>(_scatteringOn ? 1 :0);
+template <typename ExecSpace, typename MemSpace>
+void partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  auto abskp = createContainer<CCVariable<double>, double, 1, MemSpace>(1);
+  auto scatkt =  createContainer<CCVariable<double>, double, 1, MemSpace>(_scatteringOn ? 1 :0);
+  auto asymm   =  createContainer<CCVariable<double>, double, 1, MemSpace>(_scatteringOn ? 1 :0);
   const int TSS = tsk_info->get_time_substep();
-  tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(abskp[0] ,_abskp_name,patch->getID(),m_matl_index,1);
+  tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double, MemSpace>(abskp[0] ,_abskp_name,patch->getID(),m_matl_index,1);
   if (_scatteringOn){
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(scatkt[0],_scatkt_name,patch->getID(),m_matl_index,TSS);
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(asymm[0],_asymmetryParam_name,patch->getID(),m_matl_index,TSS);
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double, MemSpace>(scatkt[0],_scatkt_name,patch->getID(),m_matl_index,TSS);
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double, MemSpace>(asymm[0],_asymmetryParam_name,patch->getID(),m_matl_index,TSS);
   }
 
-  auto vol_fraction   = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace>("volFraction");
+  auto vol_fraction   = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>("volFraction");
 
-  auto RC_mass =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemSpace>(_nQn_part);
-  auto Char_mass =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemSpace>(_nQn_part);
-  auto weightQuad =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemSpace>(_nQn_part);
-  auto sizeQuad =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemSpace>(_nQn_part);
-  auto temperatureQuad =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemSpace>(_nQn_part);
+  auto RC_mass =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV, MemSpace>(_nQn_part);
+  auto Char_mass =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV, MemSpace>(_nQn_part);
+  auto weightQuad =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV, MemSpace>(_nQn_part);
+  auto sizeQuad =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV, MemSpace>(_nQn_part);
+  auto temperatureQuad =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV, MemSpace>(_nQn_part);
 
   for (int ix=0; ix< _nQn_part ; ix++){
     if (_isCoal){
-      RC_mass[ix]  =tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(_RC_name_v[ix]  );
-      Char_mass[ix]=tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(_Char_name_v[ix]);
+      RC_mass[ix]  =tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_RC_name_v[ix]  );
+      Char_mass[ix]=tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_Char_name_v[ix]);
     }
-      weightQuad[ix]  = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(_weight_name_v[ix]);
-      temperatureQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(_temperature_name_v[ix]);
-      sizeQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemSpace>(_size_name_v[ix]);
+      weightQuad[ix]  = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_weight_name_v[ix]);
+      temperatureQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_temperature_name_v[ix]);
+      sizeQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_size_name_v[ix]);
   }
 
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-  auto abskpQuad =  createContainer<CCVariable<double>, double, MAX_DQMOM_ENV , MemSpace>(_nQn_part);
+  auto abskpQuad =  createContainer<CCVariable<double>, double, MAX_DQMOM_ENV, MemSpace>(_nQn_part);
   for (int i=0; i< _nQn_part ; i++){
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(abskpQuad[i],_abskp_name_vector[i],patch->getID(),m_matl_index,1);
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double, MemSpace>(abskpQuad[i],_abskp_name_vector[i],patch->getID(),m_matl_index,1);
   }
 
 
   parallel_initialize(execObj,0.0,abskp[0],scatkt,asymm,abskpQuad);
-  auto abs_scat_coeff =  createContainer<CCVariable<double>, double,DEP_VAR_SIZE, MemSpace>(_nDVs); // no need to initialize;
+  auto abs_scat_coeff =  createContainer<CCVariable<double>, double, DEP_VAR_SIZE, MemSpace>(_nDVs); // no need to initialize;
   for (int i=0; i<_nDVs; i++){
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemSpace >(abs_scat_coeff[i],"partRadProps_temporary_"+std::to_string(i),patch->getID(),m_matl_index,1);
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double, MemSpace>(abs_scat_coeff[i],"partRadProps_temporary_"+std::to_string(i),patch->getID(),m_matl_index,1);
   } 
 
   const double  portable_absorption_modifier =_absorption_modifier;
@@ -477,8 +477,8 @@ void partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_inf
         enum independentVariables{ en_size, en_temp};
         enum DependentVariables{ abs_coef, sca_coef};
         auto IV =  createContainer<constCCVariable<double>, const double, IND_VAR_SIZE , MemSpace>(_nIVs);
-        IV[en_size]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(_size_name_v[ix]);
-        IV[en_temp]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(_temperature_name_v[ix]);
+        IV[en_size]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_size_name_v[ix]);
+        IV[en_temp]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_temperature_name_v[ix]);
         parallel_initialize(execObj,0.0,abs_scat_coeff);
         myTable->getState(execObj,IV, abs_scat_coeff, patch); // indepvar)names diameter, size
         Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {

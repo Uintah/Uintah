@@ -188,8 +188,8 @@ void MassFlowRate::register_initialize( std::vector<ArchesFieldContainer::Variab
   register_massFlowRate( variable_registry, packed_tasks );
 }
 
-template<typename ExecutionSpace, typename MemSpace>
-void MassFlowRate::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void MassFlowRate::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   eval_massFlowRate( patch, tsk_info, execObj );
 }
@@ -237,8 +237,8 @@ void MassFlowRate::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 
 }
 
-template<typename ExecutionSpace, typename MemSpace>
-void MassFlowRate::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void MassFlowRate::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   eval_massFlowRate( patch, tsk_info , execObj );
 }
@@ -249,8 +249,8 @@ void MassFlowRate::register_massFlowRate( std::vector<ArchesFieldContainer::Vari
 }
 
 // -----------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace> execObj ){
+template <typename ExecSpace, typename MemSpace>
+void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace> execObj ){
 
   constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("density");
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);

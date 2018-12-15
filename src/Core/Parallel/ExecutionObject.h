@@ -51,7 +51,7 @@ namespace Uintah {
 
 class UintahParams;
 
-template <typename ExecutionSpace, typename MemorySpace>
+template <typename ExecSpace, typename MemSpace>
 class ExecutionObject {
 public:
 

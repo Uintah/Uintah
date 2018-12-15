@@ -217,13 +217,13 @@ void Poisson1::initialize( const ProcessorGroup *
 
 //______________________________________________________________________
 //
-template <typename ES, typename MS>
+template <typename ExecSpace, typename MemSpace>
 void Poisson1::timeAdvance( const PatchSubset* patches,
                             const MaterialSubset* matls,
                             OnDemandDataWarehouse* old_dw,
                             OnDemandDataWarehouse* new_dw,
                             UintahParams& uintahParams,
-                            ExecutionObject<ES, MS>& execObj )
+                            ExecutionObject<ExecSpace, MemSpace>& execObj )
 {
 
   int matl = 0;
@@ -245,11 +245,11 @@ void Poisson1::timeAdvance( const PatchSubset* patches,
                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
     Uintah::BlockRange range( l, h );
-    auto phi = old_dw->getConstNCVariable<double, MS> (phi_label, matl, patch, Ghost::AroundNodes, 1);
-    auto newphi = new_dw->getNCVariable<double, MS> (phi_label, matl, patch);
+    auto phi = old_dw->getConstNCVariable<double, MemSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
+    auto newphi = new_dw->getNCVariable<double, MemSpace> (phi_label, matl, patch);
 
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
-    //Uintah::parallel_for<ExecutionSpace, LaunchBounds< 640,1 > >( execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+    //Uintah::parallel_for<ExecSpace, LaunchBounds< 640,1 > >( execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
     Uintah::parallel_for(execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
         newphi(i, j, k) = phi(i,j,k);
     });

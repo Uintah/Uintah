@@ -165,7 +165,7 @@ protected: // class Task
   };  // end CPU Action class
 
   // Kokkos enabled task portable Action constructor
-  template<typename T, typename ES, typename MS, typename... Args>
+  template<typename T, typename ExecSpace, typename MemSpace, typename... Args>
   class ActionPortable : public ActionBase {
 
     T * ptr;
@@ -174,7 +174,7 @@ protected: // class Task
                   ,       OnDemandDataWarehouse * fromDW
                   ,       OnDemandDataWarehouse * toDW
                   ,       UintahParams          & uintahParams
-                  ,       ExecutionObject<ES, MS> & execObj
+                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
                   ,       Args...               args
                   );
     std::tuple<Args...> m_args;
@@ -188,7 +188,7 @@ protected: // class Task
                                 ,       OnDemandDataWarehouse  * fromDW
                                 ,       OnDemandDataWarehouse  * toDW
                                 ,       UintahParams   & uintahParams
-                                ,       ExecutionObject<ES, MS>& execObj
+                                ,       ExecutionObject<ExecSpace, MemSpace>& execObj
                                 ,       Args...          args
                                 )
                , Args... args
@@ -207,7 +207,7 @@ protected: // class Task
                      ,       UintahParams   & uintahParams
                      )
     {
-      ExecutionObject<ES, MS> execObj;
+      ExecutionObject<ExecSpace, MemSpace> execObj;
       execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
       execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
       const int numStreams = uintahParams.getNumStreams();
@@ -225,7 +225,7 @@ protected: // class Task
                   ,       DataWarehouse  * fromDW
                   ,       DataWarehouse  * toDW
                   ,       UintahParams   & uintahParams
-                  ,       ExecutionObject<ES, MS>& execObj
+                  ,       ExecutionObject<ExecSpace, MemSpace>& execObj
                   ,       Tuple::seq<S...>
                   )
       {
@@ -520,7 +520,7 @@ private:
   // ------------------------------------------------------------------------
 
   // begin Portable Action constructors
-  template<class T, typename ES, typename MS>
+  template<class T, typename ExecSpace, typename MemSpace>
   class ActionPortable : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
@@ -528,7 +528,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject<ES, MS> & execObj);
+                     ExecutionObject<ExecSpace, MemSpace> & execObj);
     public:
       // class ActionPortable
       ActionPortable( T * ptr,
@@ -537,7 +537,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject<ES, MS> & execObj) ) :
+                                   ExecutionObject<ExecSpace, MemSpace> & execObj) ) :
         ptr(ptr), pmf(pmf)
       {
       }
@@ -553,7 +553,7 @@ private:
                         DataWarehouse* toDW,
                         UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> execObj;
+        ExecutionObject<ExecSpace, MemSpace> execObj;
         execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
         execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
@@ -564,7 +564,7 @@ private:
       }
   };  // end class ActionPortable
 
-  template<class T, typename ES, typename MS, class Arg1>
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1>
   class ActionPortable1 : public ActionBase {
       T* ptr;
       void (T::*pmf)( const PatchSubset* patches,
@@ -572,7 +572,7 @@ private:
                             OnDemandDataWarehouse* fromDW,
                             OnDemandDataWarehouse* toDW,
                             UintahParams& uintahParams,
-                            ExecutionObject<ES, MS> & execObj,
+                            ExecutionObject<ExecSpace, MemSpace> & execObj,
                             Arg1 arg1);
       Arg1 arg1;
     public:
@@ -583,7 +583,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject<ES, MS> & execObj,
+                                   ExecutionObject<ExecSpace, MemSpace> & execObj,
                                    Arg1 arg1),
                     Arg1 arg1)
           : ptr(ptr), pmf(pmf), arg1(arg1)
@@ -601,7 +601,7 @@ private:
                         DataWarehouse* toDW,
                         UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> execObj;
+        ExecutionObject<ExecSpace, MemSpace> execObj;
         execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
         execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
@@ -612,7 +612,7 @@ private:
       }
   };  // end class ActionPortable1
 
-  template<class T, typename ES, typename MS, class Arg1, class Arg2>
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2>
   class ActionPortable2 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
@@ -620,7 +620,7 @@ private:
                            OnDemandDataWarehouse* fromDW,
                            OnDemandDataWarehouse* toDW,
                            UintahParams& uintahParams,
-                           ExecutionObject<ES, MS> & execObj,
+                           ExecutionObject<ExecSpace, MemSpace> & execObj,
                            Arg1 arg1,
                            Arg2 arg2);
       Arg1 arg1;
@@ -633,7 +633,7 @@ private:
                                          OnDemandDataWarehouse* fromDW,
                                          OnDemandDataWarehouse* toDW,
                                          UintahParams& uintahParams,
-                                         ExecutionObject<ES, MS> & execObj,
+                                         ExecutionObject<ExecSpace, MemSpace> & execObj,
                                          Arg1 arg1,
                                          Arg2 arg2),
                     Arg1 arg1,
@@ -653,7 +653,7 @@ private:
                         DataWarehouse* toDW,
                         UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> execObj;
+        ExecutionObject<ExecSpace, MemSpace> execObj;
         execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
         execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
@@ -664,7 +664,7 @@ private:
       }
   };  // end class ActionPortable2
 
-  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3>
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3>
   class ActionPortable3 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
@@ -672,7 +672,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject<ES, MS> & execObj,
+                     ExecutionObject<ExecSpace, MemSpace> & execObj,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3);
@@ -688,7 +688,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject<ES, MS> & execObj,
+                                   ExecutionObject<ExecSpace, MemSpace> & execObj,
                                    Arg1 arg1,
                                    Arg2 arg2,
                                    Arg3 arg3),
@@ -710,7 +710,7 @@ private:
                                DataWarehouse  * toDW,
                                UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> execObj;
+        ExecutionObject<ExecSpace, MemSpace> execObj;
         execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
         execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
@@ -721,7 +721,7 @@ private:
       }
   };  // end class ActionPortable3
 
-  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3, class Arg4>
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3, class Arg4>
   class ActionPortable4 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
@@ -729,7 +729,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject<ES, MS> & execObj,
+                     ExecutionObject<ExecSpace, MemSpace> & execObj,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3,
@@ -746,7 +746,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject<ES, MS> & execObj,
+                                   ExecutionObject<ExecSpace, MemSpace> & execObj,
                                    Arg1 arg1,
                                    Arg2 arg2,
                                    Arg3 arg3,
@@ -770,7 +770,7 @@ private:
                               DataWarehouse* toDW,
                               UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> execObj;
+        ExecutionObject<ExecSpace, MemSpace> execObj;
         execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
         execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
@@ -781,7 +781,7 @@ private:
       }
   };  // end class ActionPortable4
 
-  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
   class ActionPortable5 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
@@ -789,7 +789,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject<ES, MS> & execObj,
+                     ExecutionObject<ExecSpace, MemSpace> & execObj,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3,
@@ -808,7 +808,7 @@ private:
                                     OnDemandDataWarehouse * fromDW,
                                     OnDemandDataWarehouse * toDW,
                                     UintahParams& uintahParams,
-                                    ExecutionObject<ES, MS> & execObj,
+                                    ExecutionObject<ExecSpace, MemSpace> & execObj,
                                     Arg1 arg1,
                                     Arg2 arg2,
                                     Arg3 arg3,
@@ -834,7 +834,7 @@ private:
                         DataWarehouse* toDW,
                         UintahParams& uintahParams)
       {
-        ExecutionObject<ES, MS> execObj;
+        ExecutionObject<ExecSpace, MemSpace> execObj;
         execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
         execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
         const int numStreams = uintahParams.getNumStreams();
@@ -910,7 +910,7 @@ public: // class Task
   }
 
   // Portable Task constructor
-  template<typename T, typename ES, typename MS, typename... Args>
+  template<typename T, typename ExecSpace, typename MemSpace, typename... Args>
   Task( const std::string & taskName
       , T * ptr
       , void (T::*pmf)( const PatchSubset    * patches
@@ -918,13 +918,13 @@ public: // class Task
                       ,       OnDemandDataWarehouse  * fromDW
                       ,       OnDemandDataWarehouse  * toDW
                       ,       UintahParams& uintahParams
-                      ,       ExecutionObject<ES, MS>& execObj
+                      ,       ExecutionObject<ExecSpace, MemSpace>& execObj
                       ,       Args...          args
                       )
       , Args... args
       )
       : m_task_name(taskName)
-      , m_action(scinew ActionPortable<T, ES, MS, Args...>(ptr, pmf, std::forward<Args>(args)...))
+      , m_action(scinew ActionPortable<T, ExecSpace, MemSpace, Args...>(ptr, pmf, std::forward<Args>(args)...))
   {
     initialize();
     d_tasktype = Normal;
@@ -1057,7 +1057,7 @@ public: // class Task
 
 
   // begin Portable Task constructors
-  template<class T, typename ES, typename MS>
+  template<class T, typename ExecSpace, typename MemSpace>
   Task(
        const std::string& taskName,
        T* ptr,
@@ -1066,16 +1066,16 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & execObj))
+                      ExecutionObject<ExecSpace, MemSpace> & execObj))
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable<T, ES, MS>(ptr, pmf))
+          m_action(scinew ActionPortable<T, ExecSpace, MemSpace>(ptr, pmf))
   {
     initialize();
     d_tasktype = Normal;
   }
 
-  template<class T, typename ES, typename MS, class Arg1>
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1>
   Task(
        const std::string& taskName,
        T* ptr,
@@ -1084,18 +1084,18 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & execObj,
+                      ExecutionObject<ExecSpace, MemSpace> & execObj,
                       Arg1 arg1),
        Arg1 arg1)
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable1<T, ES, MS, Arg1>(ptr, pmf, arg1))
+          m_action(scinew ActionPortable1<T, ExecSpace, MemSpace, Arg1>(ptr, pmf, arg1))
   {
     initialize();
     d_tasktype = Normal;
   }
 
-  template<class T, typename ES, typename MS, class Arg1, class Arg2>
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2>
   Task(const std::string& taskName,
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
@@ -1103,20 +1103,20 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & execObj,
+                      ExecutionObject<ExecSpace, MemSpace> & execObj,
                       Arg1 arg1,
                       Arg2 arg2),
        Arg1 arg1,
        Arg2 arg2)
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable2<T, ES, MS, Arg1, Arg2>(ptr, pmf, arg1, arg2))
+          m_action(scinew ActionPortable2<T, ExecSpace, MemSpace, Arg1, Arg2>(ptr, pmf, arg1, arg2))
   {
     initialize();
     d_tasktype = Normal;
   }
 
-  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3>
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3>
   Task(const std::string& taskName,
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
@@ -1124,7 +1124,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & execObj,
+                      ExecutionObject<ExecSpace, MemSpace> & execObj,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3),
@@ -1133,13 +1133,13 @@ public: // class Task
        Arg3 arg3)
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable3<T, ES, MS, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
+          m_action(scinew ActionPortable3<T, ExecSpace, MemSpace, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
   {
     initialize();
     d_tasktype = Normal;
   }
 
-  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3, class Arg4>
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3, class Arg4>
   Task(const std::string& taskName,
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
@@ -1147,7 +1147,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & execObj,
+                      ExecutionObject<ExecSpace, MemSpace> & execObj,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3,
@@ -1158,13 +1158,13 @@ public: // class Task
        Arg4 arg4)
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable4<T, ES, MS, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
+          m_action(scinew ActionPortable4<T, ExecSpace, MemSpace, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
   {
     initialize();
     d_tasktype = Normal;
   }
 
-  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
   Task(const std::string& taskName,
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
@@ -1172,7 +1172,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject<ES, MS> & execObj,
+                      ExecutionObject<ExecSpace, MemSpace> & execObj,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3,
@@ -1185,7 +1185,7 @@ public: // class Task
        Arg5 arg5)
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable5<T, ES, MS, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
+          m_action(scinew ActionPortable5<T, ExecSpace, MemSpace, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
   {
     initialize();
     d_tasktype = Normal;

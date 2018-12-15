@@ -129,8 +129,8 @@ void CCVel::register_initialize( AVarInfo& variable_registry , const bool pack_t
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   compute_velocities(execObj, patch, tsk_info );
 
@@ -152,12 +152,12 @@ void CCVel::register_timestep_init( AVarInfo& variable_registry , const bool pac
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace> void
-CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace> void
+CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto old_u_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_u_vel_name_cc);
-  auto old_v_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_v_vel_name_cc);
-  auto old_w_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace >(m_w_vel_name_cc);
+  auto old_u_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_u_vel_name_cc);
+  auto old_v_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_v_vel_name_cc);
+  auto old_w_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_w_vel_name_cc);
 
   auto u_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_u_vel_name_cc);
   auto v_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_v_vel_name_cc);
@@ -188,20 +188,20 @@ void CCVel::register_timestep_eval( VIVec& variable_registry, const int time_sub
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   compute_velocities(execObj, patch, tsk_info );
 
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename ExecutionSpace, typename MemSpace>
-void CCVel::compute_velocities(ExecutionObject<ExecutionSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void CCVel::compute_velocities(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto u = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace >(m_u_vel_name);
-  auto v = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace >(m_v_vel_name);
-  auto w = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace >(m_w_vel_name);
+  auto u = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
+  auto v = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
+  auto w = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
   auto u_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_u_vel_name_cc);
   auto v_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_v_vel_name_cc);
   auto w_cc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);

@@ -627,14 +627,14 @@ struct rayTrace_solveDivQFunctor {
 //---------------------------------------------------------------------------
 // Method: The actual work of the ray tracer
 //---------------------------------------------------------------------------
-template< class T , typename ExecutionSpace, typename MemSpace>
+template <class T, typename ExecSpace, typename MemSpace>
 void
 Ray::rayTrace( const PatchSubset* patches,
                const MaterialSubset* matls,
                OnDemandDataWarehouse* old_dw,
                OnDemandDataWarehouse* new_dw,
                UintahParams& uintahParams,
-               ExecutionObject<ExecutionSpace, MemSpace>& execObj,
+               ExecutionObject<ExecSpace, MemSpace>& execObj,
                bool modifies_divQ,
                Task::WhichDW which_abskg_dw,
                Task::WhichDW which_sigmaT4_dw,
@@ -1646,14 +1646,14 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 //---------------------------------------------------------------------------
 // Ray tracer using the multilevel "data onion" scheme
 //---------------------------------------------------------------------------
-template< typename T, typename ExecutionSpace, typename MemSpace>
-inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
+template <typename T, typename ExecSpace, typename MemSpace>
+inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          const MaterialSubset* matls,
                          OnDemandDataWarehouse* old_dw,
                          OnDemandDataWarehouse* new_dw,
                          UintahParams& uintahParams,
-                         ExecutionObject<ExecutionSpace, MemSpace>& execObj,
+                         ExecutionObject<ExecSpace, MemSpace>& execObj,
                          bool modifies_divQ,
                          Task::WhichDW notUsed,
                          Task::WhichDW which_sigmaT4_dw,
@@ -1663,14 +1663,14 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 }
 
 //The Kokkos verison (e.g. NOT the same as UintahSpaces::CPU)
-template< typename T, typename ExecutionSpace, typename MemSpace>
-inline typename std::enable_if<!std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
+template <typename T, typename ExecSpace, typename MemSpace>
+inline typename std::enable_if<!std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          const MaterialSubset* matls,
                          OnDemandDataWarehouse* old_dw,
                          OnDemandDataWarehouse* new_dw,
                          UintahParams& uintahParams,
-                         ExecutionObject<ExecutionSpace, MemSpace>& execObj,
+                         ExecutionObject<ExecSpace, MemSpace>& execObj,
                          bool modifies_divQ,
                          Task::WhichDW notUsed,
                          Task::WhichDW which_sigmaT4_dw,
@@ -1681,23 +1681,23 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
   int maxLevels = fineLevel->getGrid()->numLevels();
   if (maxLevels == 2) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<2, T, ExecutionSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
+    this->rayTrace_dataOnionLevels<2, T, ExecSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 3) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<3, T, ExecutionSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
+    this->rayTrace_dataOnionLevels<3, T, ExecSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 4) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<4, T, ExecutionSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
+    this->rayTrace_dataOnionLevels<4, T, ExecSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 5) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<5, T, ExecutionSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
+    this->rayTrace_dataOnionLevels<5, T, ExecSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 6) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<7, T, ExecutionSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
+    this->rayTrace_dataOnionLevels<7, T, ExecSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else {
     std::cerr << "Requested RMCRT Data Onion max level amount of " << maxLevels << " not yet supported.  Edit the code file to supply more possible levels." << std::endl;
@@ -1709,14 +1709,14 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 //---------------------------------------------------------------------------
 // Ray tracer using the multilevel "data onion" scheme
 //---------------------------------------------------------------------------
-template< int numLevels, typename T, typename ExecutionSpace, typename MemSpace>
+template <int numLevels, typename T, typename ExecSpace, typename MemSpace>
 void
 Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
                                const MaterialSubset* matls,
                                OnDemandDataWarehouse* old_dw,
                                OnDemandDataWarehouse* new_dw,
                                UintahParams& uintahParams,
-                               ExecutionObject<ExecutionSpace, MemSpace>& execObj,
+                               ExecutionObject<ExecSpace, MemSpace>& execObj,
                                bool modifies_divQ,
                                Task::WhichDW notUsed,
                                Task::WhichDW which_sigmaT4_dw,
@@ -1823,7 +1823,7 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
 
 #if defined(HAVE_CUDA)
     // Get the GPU vars
-    if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
+    if ( std::is_same<Kokkos::Cuda , ExecSpace>::value ) {
       // The upcoming Kokkos views
 
       KokkosView3<const double, Kokkos::CudaSpace> abskgSigmaT4CellType_view[numLevels];
@@ -1894,11 +1894,11 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
         Uintah::parallel_reduce_sum( execObj, range, functor, size );
       }
 
-    } // end if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value )
+    } // end if ( std::is_same< Kokkos::Cuda , ExecSpace >::value )
 #endif //#if defined(HAVE_CUDA)
 #if defined (KOKKOS_ENABLE_OPENMP)
     // Get the CPU vars
-    if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
+    if ( std::is_same< Kokkos::OpenMP , ExecSpace >::value ) {
       // Get all the coarse level variables (e.g. as long as it has a finer level)
 
       //if (d_algorithm == dataOnionSlim) {
