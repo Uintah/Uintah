@@ -87,8 +87,6 @@ extern Uintah::MasterLock cerrLock;
 
 #define SET_CFI_BC 0
 
-//#define HACK 1
-
 using namespace std;
 using namespace Uintah;
 using namespace ExchangeModels;
@@ -550,8 +548,6 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
       am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
       am->problemSetup(prob_spec, restart_prob_spec, grid, dummy, dummy);
     }
-    
-    AnalysisModule::setTaskGraphIndex( d_analysisModules );
   }  // mpm
   
 #ifdef HAVE_VISIT
@@ -1015,7 +1011,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
                                                           all_matls,
                                                           "afterAdvection");
-#ifdef HACK                                                          
+#if 0                                                          
   scheduleComputeTaskGraphIndex(          sched, level );
 #endif
 }
@@ -2025,11 +2021,6 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeTaskGraphIndex(SchedulerP& sched,
                                         const LevelP& level )
 {
-  vector<AnalysisModule*>::iterator iter;
-  for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
-    AnalysisModule* am = *iter;
-    am->sched_computeTaskGraphIndex( sched, level );
-  }
 }
 
 /* _____________________________________________________________________
@@ -4706,12 +4697,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
   const Level* level = getLevel(patches);
   
   // the advection calculations care about the position of the old dw subcycle
-
-#ifdef HACK
-  double AMR_subCycleProgressVar = 0;
-#else
   double AMR_subCycleProgressVar = getSubCycleProgress(old_dw);
-#endif
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

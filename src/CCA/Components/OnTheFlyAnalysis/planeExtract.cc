@@ -59,6 +59,7 @@ planeExtract::planeExtract(const ProcessorGroup* myworld,
   d_matl_set = 0;
   d_zero_matl = 0;
   d_lb = scinew planeExtractLabel();
+  d_lb->lastWriteTimeLabel = VarLabel::create( "lastWriteTime_planeExtrct", max_vartype::getTypeDescription() );
 }
 
 //__________________________________
@@ -239,11 +240,7 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
     Point start, end;
     plane_spec->require("startingPt", start);
     plane_spec->require("endingPt",   end);
-    
-    double p_startTime = d_startTime;
-    double p_stopTime  = d_stopTime;
-    plane_spec->get( "timeStart",p_startTime ); 
-    plane_spec->get( "timeStop",p_stopTime );
+
     //__________________________________
     // bullet proofing
     // -every plane must have a name
@@ -305,28 +302,15 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
     
     
     // Start time < stop time
-    if(d_startTime > d_stopTime || p_startTime > p_stopTime ){
+    if(d_startTime > d_stopTime ){
       throw ProblemSetupException("\n ERROR:planeExtract: startTime > stopTime. \n", __FILE__, __LINE__);
     }
 
-    if( p_startTime < d_startTime ){
-      ostringstream warn;
-      warn << "\n ERROR:planeExtract: Plane ("<< name<< ") startTime:"<< p_startTime <<" < master startTime:"<< d_startTime <<". \n";
-      throw ProblemSetupException( warn.str(), __FILE__, __LINE__);
-    }
-    
-    if( p_stopTime > d_stopTime ){
-      ostringstream warn;
-      warn << "\n ERROR:planeExtract: Plane ("<< name<< ") stopTime:"<< p_stopTime <<" > master stopTime:"<< d_stopTime <<". \n";
-      throw ProblemSetupException( warn.str(), __FILE__, __LINE__);
-    }
     // put input variables into the global struct
     plane* p = scinew plane;
     p->name      = name;
     p->startPt   = start;
     p->endPt     = end;
-    p->startTime = p_startTime;
-    p->stopTime  = p_stopTime;
     p->planeType = planeType;
     d_planes.push_back(p);
   }
@@ -340,10 +324,7 @@ void planeExtract::scheduleInitialize(SchedulerP& sched,
   
   Task* t = scinew Task("planeExtract::initialize", 
                   this, &planeExtract::initialize);
-                  
-  // TG-0 = ignore 
-  sched->setNumTaskGraphs( m_NUM_GRAPHS );
-  
+
   t->computes(d_lb->lastWriteTimeLabel);
  
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -359,7 +340,7 @@ void planeExtract::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask( patch, dbg_OTF_PE,"Doing  planeExtract::initialize" );
      
-    double tminus = -1.0/m_analysisFreq;
+    double tminus = d_startTime - 1.0/m_analysisFreq;
     new_dw->put(max_vartype(tminus), d_lb->lastWriteTimeLabel);
 
     
@@ -394,8 +375,8 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
                    this,&planeExtract::doAnalysis);
                         
   t->requires( Task::OldDW, m_timeStepLabel);
-  t->requires( Task::OldDW, m_simulationTimeLabel );
-  
+  sched_TimeVars( t, level, d_lb->lastWriteTimeLabel, true );
+    
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
     if(d_varLabels[i] == nullptr){
@@ -415,7 +396,7 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
     }
   }
   
-  sched->addTask(t, level->eachPatch(), d_matl_set, m_TG_computeIndex );
+  sched->addTask(t, level->eachPatch(), d_matl_set );
 
 }
 
@@ -425,12 +406,15 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
                               const MaterialSubset*,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw)
-{   
+{
   const Level* level = getLevel(patches);
+  timeVars tv;
+  getTimeVars( old_dw, level, d_lb->lastWriteTimeLabel, tv );
+  putTimeVars( new_dw,        d_lb->lastWriteTimeLabel, tv );
   
-  simTime_vartype simTimeVar;
-  old_dw->get(simTimeVar, m_simulationTimeLabel);
-  double now = simTimeVar;
+  if( tv.isItTime == false ){
+    return;
+  }
   
   //__________________________________
   //
@@ -450,11 +434,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
       //__________________________________
       // loop over each plane 
       for (unsigned int p =0 ; p < d_planes.size(); p++) {
-      
-        if(now < d_planes[p]->startTime || now > d_planes[p]->stopTime){
-          continue;
-        }
-        
+
         // create the directory structure
         string udaDir = m_output->getOutputLocation();
         string dirName = d_planes[p]->name;
@@ -474,7 +454,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
         string path = planePath + "/" + timestep + "/" + levelIndex;
         
         if( d_isDirCreated.count(path) == 0 ){
-          createDirectory( planePath, timestep, now, levelIndex );
+          createDirectory( planePath, timestep, tv.now, levelIndex );
           d_isDirCreated.insert( path );
         }
         
@@ -666,59 +646,6 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
     }  // time to write data
   }  // patches
 }
-
-
-//______________________________________________________________________
-//
-void planeExtract::sched_computeTaskGraphIndex( SchedulerP& sched,
-                                                const LevelP& level)
-{
-  printSchedule(level,dbg_OTF_PE, "planeExtract::sched_computeTaskGraphIndex");
-
-  Task* t = scinew Task( "planeExtract::computeTaskGraphIndex",
-                     this,&planeExtract::computeTaskGraphIndex );
-
-  t->setType( Task::OncePerProc );
-  t->requires( Task::OldDW, m_simulationTimeLabel );
-  t->requires( Task::OldDW, d_lb->lastWriteTimeLabel );
-
-  t->computes(d_lb->lastWriteTimeLabel);
-  // only compute task on 1 patch in this proc
-  const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
-
-  sched->addTask( t, perProcPatches, d_matl_set );
-}
-//______________________________________________________________________
-
-void planeExtract::computeTaskGraphIndex(const ProcessorGroup * ,
-                                         const PatchSubset    * patches,
-                                         const MaterialSubset *,
-                                         DataWarehouse        * old_dw,
-                                         DataWarehouse        * new_dw)
-{
-  printTask( patches, dbg_OTF_PE,"Doing planeExtract::computeTaskGraphIndex" );
-  
-  max_vartype writeTime;
-  simTime_vartype simTimeVar;
-
-  old_dw->get( writeTime,  d_lb->lastWriteTimeLabel );
-  old_dw->get( simTimeVar, m_simulationTimeLabel );
-
-  double lastWriteTime = writeTime;
-  double nextWriteTime = lastWriteTime + 1.0/m_analysisFreq;
-  double now = simTimeVar;
-  
-  
-  if( ( now > d_startTime && now < d_stopTime ) && now > nextWriteTime ){
-    cout << " planeExtract::computeTaskGraphIndex: tg_index: " << m_TG_computeIndex <<endl;
-    m_application->setTaskGraphIndex ( m_TG_computeIndex );
-    new_dw->put( max_vartype( nextWriteTime ), d_lb->lastWriteTimeLabel );
-  }
-  else{
-    new_dw->put( max_vartype( lastWriteTime ), d_lb->lastWriteTimeLabel );
-  }
-}
-
 
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header

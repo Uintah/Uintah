@@ -720,8 +720,8 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
 //    proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
     allocateAndZeroStats<T>( new_dw, patch, Q);
     carryForwardSums( old_dw, new_dw, patches, Q );
-
-  }else {
+  }
+  else {
 //    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
 
     computeStats< T >(old_dw, new_dw, patch, Q);

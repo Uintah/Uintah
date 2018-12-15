@@ -98,9 +98,6 @@ WARNING
    
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) {};
-
-    virtual void sched_computeTaskGraphIndex( SchedulerP& sched,
-                                              const LevelP& level);
                                       
   private:
   
@@ -117,12 +114,6 @@ WARNING
                      const MaterialSubset*,
                      DataWarehouse*,
                      DataWarehouse* new_dw );
-                     
-    void  computeTaskGraphIndex(const ProcessorGroup * ,
-                                const PatchSubset    * patches,
-                                const MaterialSubset *,
-                                DataWarehouse        * old_dw,
-                                DataWarehouse        *);
                     
     void createFile( const std::string& filename,
                      const VarLabel* varLabel,
@@ -193,8 +184,6 @@ WARNING
       std::string  name;
       Point   startPt;
       Point   endPt;
-      double  startTime;
-      double  stopTime;
       PlaneType planeType;
       
     };

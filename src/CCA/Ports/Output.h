@@ -125,17 +125,16 @@ WARNING
                                              bool         recompile = false ) = 0;
 
     //////////
-    // Call this after a time step restart where delt is adjusted to
-    // make sure there still will be output and/or checkpoint time step
-    virtual void reevaluate_OutputCheckPointTimeStep( const double simTime,
-                                                      const double delT ) = 0;
-
-    //////////
     // Call this after the time step has been executed to find the
     // next time step to output
     virtual void findNext_OutputCheckPointTimeStep( const bool    restart,
                                                     const GridP & grid ) = 0;
     
+    //////////
+    //! Called after a time step recompute where delta t is adjusted
+    //! to make sure an output and/or checkpoint time step is needed.
+    virtual void recompute_OutputCheckPointTimeStep() = 0;
+
     //////////
     // update or write to the xml files
     virtual void writeto_xml_files( const GridP& grid ) = 0;
