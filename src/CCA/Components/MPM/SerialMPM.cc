@@ -697,9 +697,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleFindSurfaceParticles(           sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
-  if(flags->d_changeGrainMaterials){
-    scheduleFindGrainCollisions(          sched, patches, matls);
-  }
+  scheduleFindGrainCollisions(            sched, patches, matls);
   if(flags->d_computeNormals){
     scheduleComputeNormals(               sched, patches, matls);
   }
@@ -741,9 +739,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   if(flags->d_computeScaleFactor){
     scheduleComputeParticleScaleFactor(   sched, patches, matls);
   }
-  if(flags->d_changeGrainMaterials){
-    scheduleChangeGrainMaterials(         sched, patches, matls);
-  }
+  scheduleChangeGrainMaterials(           sched, patches, matls);
   scheduleFinalParticleUpdate(            sched, patches, matls);
   if(flags->d_useTracers){
     scheduleUpdateTracers(                sched, patches, mpm_matls_sub,
@@ -6005,7 +6001,6 @@ void SerialMPM::scheduleFindGrainCollisions(SchedulerP   & sched,
 
   sched->addTask(t, patches, matls);
 
-#if 1
   Task* t2 = scinew Task("MPM::communicateGrainCollisions", this, 
                          &SerialMPM::communicateGrainCollisions);
 
@@ -6014,7 +6009,6 @@ void SerialMPM::scheduleFindGrainCollisions(SchedulerP   & sched,
   t2->requires(Task::OldDW, lb->ChangedGrainMaterialsLabel );
   t2->requires(Task::NewDW, lb->TotalLocalizedParticleLabel);
   sched->addTask(t2, patches, matls);
-#endif
 
 }
 
@@ -6043,8 +6037,8 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
     printTask(patches,patch,cout_doing,
               "Doing SerialMPM::findGrainCollisions");
 
-   if(ChangedGrainMaterials<1.0){
-    cout << "looking for collisions" << endl;
+   if(flags->d_changeGrainMaterials && ChangedGrainMaterials<1.0){
+    proc0cout << "looking for collisions" << endl;
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -6144,10 +6138,10 @@ void SerialMPM::communicateGrainCollisions(const ProcessorGroup * pg,
      printTask(patches,patch,cout_doing,
                "Doing SerialMPM::communicateGrainCollisions");
    }
-   sum_vartype CGM;
-   old_dw->get(CGM,   lb->ChangedGrainMaterialsLabel);
+   sum_vartype ChangedGrainMaterials;
+   old_dw->get(ChangedGrainMaterials,   lb->ChangedGrainMaterialsLabel);
 
-   if(((double) CGM)<1.0){
+   if(flags->d_changeGrainMaterials && ChangedGrainMaterials<1.0){
     for(int p=0;p<numPatches;p++){
      ostringstream pnum; pnum << p;
      string filename = "collideColors." + pnum.str();
@@ -6187,7 +6181,8 @@ void SerialMPM::scheduleChangeGrainMaterials(SchedulerP& sched,
 
   printSchedule( patches, cout_doing, "MPM::scheduleChangeGrainMaterials" );
 
-  Task * t = scinew Task("MPM::changeGrainMaterials", this, &SerialMPM::changeGrainMaterials);
+  Task * t = scinew Task("MPM::changeGrainMaterials", this, 
+                   &SerialMPM::changeGrainMaterials);
 
   t->requires(Task::OldDW, lb->ChangedGrainMaterialsLabel );
   t->computes(lb->ChangedGrainMaterialsLabel);
@@ -6240,15 +6235,15 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
-  sum_vartype CGM;
-  old_dw->get(CGM,   lb->ChangedGrainMaterialsLabel);
-  new_dw->put(CGM,   lb->ChangedGrainMaterialsLabel);
+  sum_vartype ChangedGrainMaterials;
+  old_dw->get(ChangedGrainMaterials,   lb->ChangedGrainMaterialsLabel);
+  new_dw->put(ChangedGrainMaterials,   lb->ChangedGrainMaterialsLabel);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing changeGrainMaterials");
 
-   if(CGM<1.0){
+   if(flags->d_changeGrainMaterials && ChangedGrainMaterials<1.0){
     cout << "Doing changeGrainMaterials" << endl;
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
