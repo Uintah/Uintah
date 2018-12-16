@@ -348,23 +348,23 @@ public:
     std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
     const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter ) {
     if (BCFunctors<T>::Dirichlet*             child   = dynamic_cast<BCFunctors<T>::Dirichlet*           >(this)){
-      child->eval_bc(execObj,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::Neumann*               child   = dynamic_cast<BCFunctors<T>::Neumann*             >(this)){
-      child->eval_bc(execObj,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::MassFlow*              child   = dynamic_cast<BCFunctors<T>::MassFlow*            >(this)){
-      child->eval_bc(execObj,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::MMSalmgren*            child   = dynamic_cast<BCFunctors<T>::MMSalmgren*          >(this)){
-      child->eval_bc(execObj,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::MMSshunn*              child   = dynamic_cast<BCFunctors<T>::MMSshunn*            >(this)){
-      child->eval_bc(execObj,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::SecondaryVariableBC*   child   = dynamic_cast<BCFunctors<T>::SecondaryVariableBC* >(this)){
-      child->eval_bc(execObj,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::VelocityBC*            child   = dynamic_cast<BCFunctors<T>::VelocityBC*          >(this)){
-      child->eval_bc(execObj,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::PressureOutletBC*      child   = dynamic_cast<BCFunctors<T>::PressureOutletBC*          >(this)){
-      child->eval_bc(execObj,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::SubGridInjector*       chile   = dynamic_cast<BCFunctors<T>::SubGridInjector*     >(this)){
-      child->eval_bc(execObj,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else {
           throw InvalidValue("Portable Boundary condition not properly included in source code.",__FILE__,__LINE__);
    }

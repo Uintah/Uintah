@@ -7,7 +7,6 @@
 // includes for Arches
 
 #include <Core/Parallel/Portability.h>
-#include <Core/Parallel/LoopExecution.hpp>
 
 #define MAX_DQMOM_ENV 3
 

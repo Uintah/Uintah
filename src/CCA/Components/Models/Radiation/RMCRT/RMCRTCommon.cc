@@ -25,11 +25,13 @@
 //______________________________________________________________________
 //
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
+
 #include <Core/Parallel/Portability.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
 #include <Core/Util/DOUT.hpp>
+
 #include <fstream>
 #include <cmath>
 
