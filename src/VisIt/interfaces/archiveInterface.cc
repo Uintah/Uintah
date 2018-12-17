@@ -197,6 +197,15 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
     }
   }
 
+  const std::string meshTypes[5] = { "NC_MESH", "CC_MESH", 
+                                     "SFCX_MESH", "SFCY_MESH", "SFCZ_MESH" };
+  
+  const Patch::VariableBasis basis[5] = { Patch::NodeBased,
+                                          Patch::CellBased,
+                                          Patch::XFaceBased,
+                                          Patch::YFaceBased,
+                                          Patch::ZFaceBased };
+  
   // Get level information
   for (int l=0; l<numLevels; ++l)
   {
@@ -217,71 +226,47 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
       const Patch* patch = level->getPatch(p);
       PatchInfo &patchInfo = levelInfo.patchInfo[p];
 
-      // If the user wants to see extra cells, just include them and
-      // let VisIt believe they are part of the original data. This is
-      // accomplished by setting <meshtype>_low and <meshtype>_high to
-      // the extra cell boundaries so that VisIt is none the wiser.
-      if (loadExtraElements == NONE)
+      for( unsigned int j=0; j<5; ++j )
       {
-        patchInfo.setBounds(&patch->getCellLowIndex()[0],
-                            &patch->getCellHighIndex()[0], "CC_Mesh");
-        patchInfo.setBounds(&patch->getNodeLowIndex()[0],
-                            &patch->getNodeHighIndex()[0], "NC_Mesh");
-        patchInfo.setBounds(&patch->getSFCXLowIndex()[0],
-                            &patch->getSFCXHighIndex()[0], "SFCX_Mesh");
-        patchInfo.setBounds(&patch->getSFCYLowIndex()[0],
-                            &patch->getSFCYHighIndex()[0], "SFCY_Mesh");
-        patchInfo.setBounds(&patch->getSFCZLowIndex()[0],
-                            &patch->getSFCZHighIndex()[0], "SFCZ_Mesh");
-      }
-      else if (loadExtraElements == CELLS)
-      {
-        patchInfo.setBounds(&patch->getExtraCellLowIndex()[0],
-                            &patch->getExtraCellHighIndex()[0], "CC_Mesh");
-        patchInfo.setBounds(&patch->getExtraNodeLowIndex()[0],
-                            &patch->getExtraNodeHighIndex()[0], "NC_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCXLowIndex()[0],
-                            &patch->getExtraSFCXHighIndex()[0], "SFCX_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCYLowIndex()[0],
-                            &patch->getExtraSFCYHighIndex()[0], "SFCY_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCZLowIndex()[0],
-                            &patch->getExtraSFCZHighIndex()[0], "SFCZ_Mesh");
-      }
-      else if (loadExtraElements == PATCHES)
-      {
-        IntVector ilow(patch->getCellLowIndex()[0],
-                       patch->getCellLowIndex()[1],
-                       patch->getCellLowIndex()[2]);
+        IntVector iLow, iHigh, iExtraLow, iExtraHigh;
 
-        IntVector ihigh(patch->getCellHighIndex()[0],
-                        patch->getCellHighIndex()[1],
-                        patch->getCellHighIndex()[2]);
-
-        // Test code to extend the patch when extra cells are
-        // present. In this case if extra cells are present instead of
-        // just adding the extra cell add in additional cells to make
-        // up a complete patch.
-        for (int i=0; i<3; ++i) {
-
-          // Check for extra cells.
-          if( patch->getExtraCellLowIndex()[i] != patch->getCellLowIndex()[i] )
-            ilow[i] -= level->getRefinementRatio()[i];
-
-          if( patch->getExtraCellHighIndex()[i] != patch->getCellHighIndex()[i] )
-            ihigh[i] -= level->getRefinementRatio()[i];
+        // If the user wants to see extra cells, just include them and
+        // let VisIt believe they are part of the original data. This is
+        // accomplished by setting <meshtype>_low and <meshtype>_high to
+        // the extra cell boundaries so that VisIt is none the wiser.
+        if (loadExtraElements == NONE)
+        {
+          iLow  = patch->getLowIndex (basis[j]);
+          iHigh = patch->getHighIndex(basis[j]);
         }
-        
-        patchInfo.setBounds(&ilow[0], &ihigh[0], "CC_Mesh");
+        else if (loadExtraElements == CELLS)
+        {
+          iLow  = patch->getExtraLowIndex (basis[j], IntVector(0,0,0));
+          iHigh = patch->getExtraHighIndex(basis[j], IntVector(0,0,0));
+        }
+        else if (loadExtraElements == PATCHES)
+        {
+          iLow  = patch->getLowIndex (basis[j]);
+          iHigh = patch->getHighIndex(basis[j]);
 
-        // Test code not implemented for these meshes.
-        patchInfo.setBounds(&patch->getExtraNodeLowIndex()[0],
-                            &patch->getExtraNodeHighIndex()[0], "NC_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCXLowIndex()[0],
-                            &patch->getExtraSFCXHighIndex()[0], "SFCX_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCYLowIndex()[0],
-                            &patch->getExtraSFCYHighIndex()[0], "SFCY_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCZLowIndex()[0],
-                            &patch->getExtraSFCZHighIndex()[0], "SFCZ_Mesh");
+          iExtraLow  = patch->getExtraLowIndex (basis[j], IntVector(0,0,0));
+          iExtraHigh = patch->getExtraHighIndex(basis[j], IntVector(0,0,0));
+
+          // Extend the patch when extra elements are present. In this
+          // case if extra elements are present instead of just adding
+          // the extra element add in additional elements to make up a
+          // complete patch.
+          for (int i=0; i<3; ++i) {
+            
+            if( iLow[i] != iExtraLow[i] )
+              iLow[i] -= level->getRefinementRatio()[i];
+            
+            if( iHigh[i] != iExtraHigh[i] )
+              iHigh[i] += level->getRefinementRatio()[i];
+          }
+        }
+
+        patchInfo.setBounds(&iLow[0], &iHigh[0], meshTypes[j]);
       }
 
       patchInfo.setBounds(&patch->neighborsLow()[0],
@@ -358,63 +343,93 @@ static GridDataRaw* readGridData(DataArchive *archive,
     //                      level.get_rep(), timestep, ilow, ihigh);
 
     // This queries the entire patch, including extra cells and
-    // boundary cells which is smaller than the requeste region.
+    // boundary cells which is smaller than the requested region.
     archive->query(var, variable_name, material, patch, timestep);
   }
   
   T *p = var.getPointer();
 
-  IntVector tmplow;
-  IntVector tmphigh;
-  IntVector size;
-    
-  var.getSizes(tmplow, tmphigh, size);
-    
-  // Fail safe option if the data returned does match the data requested.
-  if(  low[0] !=  tmplow[0] ||  low[1] !=  tmplow[1] ||  low[2] !=  tmplow[2] ||
-       high[0] != tmphigh[0] || high[1] != tmphigh[1] || high[2] != tmphigh[2] )
-  {
-    // std::cerr << __LINE__ << "  " << variable_name << "  "
-    //           << dims[0] << "  " << dims[1] << "  " << dims[2] << "     "
-    //           << size[0] << "  " << size[1] << "  " << size[2] << "     "
-      
-    //           << low[0] << "  " << tmplow[0] << "  "
-    //           << low[1] << "  " << tmplow[1] << "  "
-    //           << low[2] << "  " << tmplow[2] << "    "
-      
-    //           << high[0] << "  " << tmphigh[0] << "  "
-    //           << high[1] << "  " << tmphigh[1] << "  "
-    //           << high[2] << "  " << tmphigh[2] << "  "
-    //           << std::endl;
+  IntVector varlow = var.getLowIndex();
+  IntVector varhigh = var.getHighIndex();
+  IntVector vardims;
 
-    for (int i=0; i<gd->num*gd->components; ++i)
-      gd->data[i] = 0;
+  for (int i=0; i<3; ++i) {
+    vardims[i] = varhigh[i] - varlow[i];
+  }
 
-    int kd = 0, jd = 0, id;
-    int ks = 0, js = 0, is;
-    
+  // Fail safe option if the data returned does match the data
+  // requested. This option is used when rendering with extra
+  // patches.
+  if(  low[0] !=  varlow[0] ||  low[1] !=  varlow[1] ||  low[2] !=  varlow[2] ||
+       high[0] != varhigh[0] || high[1] != varhigh[1] || high[2] != varhigh[2] )
+  {      
+    // for (int i=0; i<gd->num*gd->components; ++i)
+    //   gd->data[i] = 0;
+      
+    int kd = 0, jd = 0, id;  // data requested
+    int kv = 0, jv = 0, iv;  // variable
+      
     for (int k=low[2]; k<high[2]; ++k)
     {
-      if( tmplow[2] <= k && k < tmphigh[2] )
+      // if( varlow[2] <= k && k < varhigh[2] )
       {
-        kd = (k-   low[2]) * dims[1] * dims[0];
-        ks = (k-tmplow[2]) * size[1] * size[0];
+        // When extra cells are use and the value for k is outside
+        // of the bounds use the smallest/largest possible
+        // value. This step will assure a valid value. Further, when
+        // extra patches are used it will replicate the value from
+        // the nest coarsest level.       
+        int kvar;
+        if( k < varlow[2] )
+          kvar = varlow[2];
+        else if( varhigh[2] <= k)
+          kvar = varhigh[2] - 1;
+        else
+          kvar = k;
+        
+        kd = (k   -   low[2]) *    dims[1] *    dims[0];
+        kv = (kvar-varlow[2]) * vardims[1] * vardims[0];
         
         for (int j=low[1]; j<high[1]; ++j)
         {
-          if( tmplow[1] <= j && j < tmphigh[1] )
-          {
-            jd = kd + (j-   low[1]) * dims[0];
-            js = ks + (j-tmplow[1]) * size[0];
+          // When extra cells are use and the value for j is outside
+          // of the bounds use the smallest/largest possible
+          // value. This step will assure a valid value. Further, when
+          // extra patches are used it will replicate the value from
+          // the nest coarsest level.     
+          int jvar;
+          if( j < varlow[1] )
+            jvar = varlow[1];
+          else if( varhigh[1] <= j)
+            jvar = varhigh[1] - 1;
+          else
+            jvar = j;
             
+          // if( varlow[1] <= j && j < varhigh[1] )
+          {
+            jd = kd + (j   -   low[1]) *    dims[0];
+            jv = kv + (jvar-varlow[1]) * vardims[0];
+          
             for (int i=low[0]; i<high[0]; ++i)
             {
-              if( tmplow[0] <= i && i < tmphigh[0] )
+              // if( varlow[0] <= i && i < varhigh[0] )
               {
-                id = jd + (i-   low[0]);
-                is = js + (i-tmplow[0]);
+                // When extra cells are use and the value for i is outside
+                // of the bounds use the smallest/largest possible
+                // value. This step will assure a valid value. Further, when
+                // extra patches are used it will replicate the value from
+                // the nest coarsest level.       
+                int ivar;
+                if( i < varlow[0] )
+                  ivar = varlow[0];
+                else if( varhigh[0] <= i)
+                  ivar = varhigh[0] - 1;
+                else
+                  ivar = i;
+
+                id = jd + (i   -   low[0]);
+                iv = jv + (ivar-varlow[0]);
             
-                copyComponents<T>(&gd->data[id*gd->components], p[is]);
+                copyComponents<T>(&gd->data[id*gd->components], p[iv]);
               }
             }
           }
