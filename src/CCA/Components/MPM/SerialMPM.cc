@@ -4326,6 +4326,10 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
       } // particles
       new_dw->deleteParticles(delset);
     } // materials
+    // These is only used for moving particles to other materials, but I need
+    // a place to reset them out when I'm done with them.
+    d_collideColors.clear();
+    flags->d_changeGrainMaterials = false;
   } // patches
 }
 
@@ -6229,7 +6233,6 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
 
    if(flags->d_changeGrainMaterials){
     proc0cout << "Doing changeGrainMaterials" << endl;
-    flags->d_changeGrainMaterials = false;
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     unsigned int numAcceptorMaterials = flags->d_acceptorMaterialIndex.size();
@@ -6249,10 +6252,9 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
         d_CCIndex++;
       }
 
-      cout << "acceptor Material Index = " << aMI_index << endl;
-      for(unsigned int i=0;i<donorColors.size();i++){
-        cout << "donorColor = " << donorColors[i] << endl;
-      }
+//      for(unsigned int i=0;i<donorColors.size();i++){
+//        cout << "donorColor = " << donorColors[i] << endl;
+//      }
 
       // Loop over all materials, except for acceptor, look for particles with
       // color = donorColor. If found, copy particle data into acceptor matl and
@@ -6266,8 +6268,17 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
 
       unsigned int numNewPartNeeded = 0;
       for(unsigned int m = 0; m < numMPMMatls; m++){
-       if(m!=aMI){
-  
+//       if(m!=aMI){
+       bool notAcceptorMatl = true;
+       for(unsigned int index = 0; 
+                        index < numAcceptorMaterials; 
+                        index++){
+         if(m==flags->d_acceptorMaterialIndex[index]){
+           notAcceptorMatl = false;
+         }
+       }
+
+       if(notAcceptorMatl){
         MPMMaterial* mpm_matl =
                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
         int dwi = mpm_matl->getDWIndex();
@@ -6288,8 +6299,8 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
 
       const unsigned int oldNumPar = pset_ami->addParticles(numNewPartNeeded);
 
-//    cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
-//    cout << "oldNumPar = " << oldNumPar << endl;
+      cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
+      cout << "oldNumPar = " << oldNumPar << endl;
 
       ParticleVariable<Point>  pxtmp;
       ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp,pvgradtmp,pSFtmp;
@@ -6336,7 +6347,15 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
       unsigned int pp = 0;
 
       for(unsigned int m = 0; m < numMPMMatls; m++){
-       if(m!=aMI){
+       bool notAcceptorMatl = true;
+       for(unsigned int index = 0; 
+                        index < numAcceptorMaterials; 
+                        index++){
+         if(m==flags->d_acceptorMaterialIndex[index]){
+           notAcceptorMatl = false;
+         }
+       }
+       if(notAcceptorMatl){
         MPMMaterial* mpm_matl =
                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
         int dwi = mpm_matl->getDWIndex();
@@ -6367,7 +6386,7 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
         if(flags->d_computeScaleFactor){
           new_dw->getModifiable(pscalefac,lb->pScaleFactorLabel_preReloc,pset);
         }
-          new_dw->getModifiable(pextforce,lb->pExtForceLabel_preReloc,     pset);
+        new_dw->getModifiable(pextforce,lb->pExtForceLabel_preReloc,     pset);
         new_dw->getModifiable(ptemp,    lb->pTemperatureLabel_preReloc,  pset);
         new_dw->getModifiable(ptempgrad,lb->pTemperatureGradientLabel_preReloc,
                                                                          pset);
