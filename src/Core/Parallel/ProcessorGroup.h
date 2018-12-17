@@ -69,14 +69,13 @@ public:
 
   ~ProcessorGroup();
 
-  std::string myProcName() const { return std::string(m_proc_name); }
+  std::string myNodeName() const;
 
-  int getNodeFromRank( int rank ) const;
+  // Returns the total number of MPI nodes in this MPI session.
+  int nNodes() const { return m_all_proc_names.size(); }
+  int myNode() const { return m_all_proc_indexs[m_rank]; }
 
-  // Returns the total number of nodes this MPI session is running on.
-  int nNodes() const { return m_nNodes; }
-  int myNode() const { return m_node; }
-
+  // Returns the total number of MPI rank in the node MPI session.
   int myNode_nRanks() const { return m_node_nRanks; }
   int myNode_myRank() const { return m_node_rank; }
   
@@ -84,6 +83,7 @@ public:
   int nRanks() const { return m_nRanks; }
   int myRank() const { return m_rank; }
 
+  // Communicators
   MPI_Comm getComm() const { return m_comm; }
   MPI_Comm getNodeComm() const { return m_node_comm; }
 
@@ -97,6 +97,11 @@ public:
   }
 
   void setGlobalComm( int num_comms ) const;
+
+  // Utilities for getting node based information.
+  int         getNodeIndexFromRank( int rank ) const;
+  std::string getNodeNameFromRank( int rank ) const;
+  std::string getNodeName( int node ) const;
 
 private:
 
@@ -124,27 +129,23 @@ private:
   MPI_Comm                        m_node_comm{0};
   mutable std::vector<MPI_Comm>   m_global_comms;
 
+  int m_node_rank{-1};  // MPI rank of this process relative to the node.
+  int m_node_nRanks{0}; // Total number of MPI Ranks relative to the node.
+
   // Rank, node, thread, and name details.
   int m_rank{-1};   // MPI rank of this process.
   int m_nRanks{0};  // Total number of MPI Ranks.
 
-  int m_node{-1};   // Index of the node this rank is executing on.
-  int m_nNodes{0};  // Total number of nodes this MPI session is running on.
-
-  int m_node_rank{-1};  // MPI rank of this process relative to the node.
-  int m_node_nRanks{0}; // Total number of MPI Ranks relative to the node.
-
   int m_threads{0};
 
-  std::string m_proc_name{""};
-  
   // For storing all the processor names so to provide a mapping from
   // the name to an index from any rank.
   typedef char procName_t[MPI_MAX_PROCESSOR_NAME+1];
 
-  procName_t * m_all_proc_names{nullptr};
-
-  std::map< std::string, unsigned int > m_proc_name_map;
+  // For each rank store an index to it's node.
+  std::vector< unsigned int > m_all_proc_indexs;
+  // For each node store it's processor name.
+  std::vector< std::string > m_all_proc_names;
 };
 
 }  // namespace Uintah
