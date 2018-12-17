@@ -6037,6 +6037,8 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
     printTask(patches,patch,cout_doing,
               "Doing SerialMPM::findGrainCollisions");
 
+   proc0cout << "ChangedGrainMaterial = " << ChangedGrainMaterials << endl;
+
    if(flags->d_changeGrainMaterials && ChangedGrainMaterials<1.0){
     proc0cout << "looking for collisions" << endl;
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
@@ -6060,7 +6062,6 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
       constParticleVariable<Matrix3> psize, pFOld;
       constNCVariable<double>        gColor;
 
-//      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
 
@@ -6071,6 +6072,7 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
 
       new_dw->get(gColor,       lb->gColorLabel,      dwi, patch, gnone, 0);
 
+      cout.precision(15);
       for (ParticleSubset::iterator iter = pset->begin();
            iter != pset->end();
            iter++){
@@ -6111,6 +6113,7 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
       cerr << "exiting" << endl;
       exit(1);
     }
+    colout.precision(12);
     for (set<double>::iterator it1 = collideColors.begin(); 
                                it1!= collideColors.end();  it1++){
       colout << *it1 << endl;
@@ -6161,7 +6164,7 @@ void SerialMPM::communicateGrainCollisions(const ProcessorGroup * pg,
 
     for (set<double>::iterator it1 = d_collideColors.begin(); 
                                it1!= d_collideColors.end();  it1++){
-     cout << "Color " << *it1 << " collides " << endl;
+     proc0cout << "Color " << *it1 << " collides " << endl;
     }
    } // If haven't already done this
 
@@ -6243,8 +6246,8 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing changeGrainMaterials");
 
-   if(flags->d_changeGrainMaterials && ChangedGrainMaterials<1.0){
-    cout << "Doing changeGrainMaterials" << endl;
+   if(flags->d_changeGrainMaterials  && ChangedGrainMaterials<1.0){
+    proc0cout << "Doing changeGrainMaterials" << endl;
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     unsigned int aMI = flags->d_acceptorMaterialIndex;
@@ -6301,8 +6304,8 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
 
     const unsigned int oldNumPar = pset_ami->addParticles(numNewPartNeeded);
 
-    cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
-    cout << "oldNumPar = " << oldNumPar << endl;
+//    cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
+//    cout << "oldNumPar = " << oldNumPar << endl;
 
     ParticleVariable<Point>  pxtmp;
     ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp,pvgradtmp,pSFtmp;
