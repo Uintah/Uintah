@@ -555,9 +555,6 @@ MPMLabel::MPMLabel()
   AddedParticlesLabel = VarLabel::create("AddedParticles",
                                  sum_vartype::getTypeDescription());
 
-  ChangedGrainMaterialsLabel = VarLabel::create("ChangedGrainMaterials",
-                                 sum_vartype::getTypeDescription());
-
   for(int iside=0;iside<6;iside++) {
       string label_name = Patch::getFaceName( (Patch::FaceType) iside ); // FIXME: assumes face indices
       
@@ -1064,7 +1061,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(StrainEnergyLabel);
   VarLabel::destroy(KineticEnergyLabel);
   VarLabel::destroy(AddedParticlesLabel);
-  VarLabel::destroy(ChangedGrainMaterialsLabel);
   VarLabel::destroy(ThermalEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
   VarLabel::destroy(TotalVolumeDeformedLabel);

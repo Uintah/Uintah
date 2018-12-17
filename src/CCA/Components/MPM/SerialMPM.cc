@@ -439,7 +439,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->AddedParticlesLabel);
-  t->computes(lb->ChangedGrainMaterialsLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -2140,7 +2139,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   }
   new_dw->put(sum_vartype(0.0), lb->KineticEnergyLabel);
   new_dw->put(sum_vartype(0.0), lb->AddedParticlesLabel);
-  new_dw->put(sum_vartype(0.0), lb->ChangedGrainMaterialsLabel);
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 
@@ -5988,8 +5986,6 @@ void SerialMPM::scheduleFindGrainCollisions(SchedulerP   & sched,
   Ghost::GhostType gnone = Ghost::None;
   Ghost::GhostType gan   = Ghost::AroundNodes;
 
-  //t->requires(Task::OldDW, lb->timeStepLabel);
-  t->requires(Task::OldDW, lb->ChangedGrainMaterialsLabel );
   t->requires(Task::OldDW, lb->pXLabel,                  gan, NGP);
   t->requires(Task::OldDW, lb->pSurfLabel,               gan, NGP);
   t->requires(Task::OldDW, lb->pColorLabel,              gan, NGP);
@@ -6006,7 +6002,6 @@ void SerialMPM::scheduleFindGrainCollisions(SchedulerP   & sched,
 
 //  t2->setType( Task::OncePerProc );
 
-  t2->requires(Task::OldDW, lb->ChangedGrainMaterialsLabel );
   t2->requires(Task::NewDW, lb->TotalLocalizedParticleLabel);
   sched->addTask(t2, patches, matls);
 
@@ -6027,8 +6022,6 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
 //  int interval=INT_MAX;
 
 //  int doit=timestep%interval;
-  sum_vartype ChangedGrainMaterials;
-  old_dw->get(ChangedGrainMaterials,   lb->ChangedGrainMaterialsLabel);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -6037,9 +6030,7 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
     printTask(patches,patch,cout_doing,
               "Doing SerialMPM::findGrainCollisions");
 
-   proc0cout << "ChangedGrainMaterial = " << ChangedGrainMaterials << endl;
-
-   if(flags->d_changeGrainMaterials && ChangedGrainMaterials<1.0){
+   if(flags->d_changeGrainMaterials){
     proc0cout << "looking for collisions" << endl;
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
@@ -6053,7 +6044,7 @@ void SerialMPM::findGrainCollisions(const ProcessorGroup *,
     set<double> collideColors;
 
     for(unsigned int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl=(MPMMaterial*) m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
 
       // Create arrays for the particle data
@@ -6141,10 +6132,7 @@ void SerialMPM::communicateGrainCollisions(const ProcessorGroup * pg,
      printTask(patches,patch,cout_doing,
                "Doing SerialMPM::communicateGrainCollisions");
    }
-   sum_vartype ChangedGrainMaterials;
-   old_dw->get(ChangedGrainMaterials,   lb->ChangedGrainMaterialsLabel);
-
-   if(flags->d_changeGrainMaterials && ChangedGrainMaterials<1.0){
+   if(flags->d_changeGrainMaterials){
     for(int p=0;p<numPatches;p++){
      ostringstream pnum; pnum << p;
      string filename = "collideColors." + pnum.str();
@@ -6166,7 +6154,7 @@ void SerialMPM::communicateGrainCollisions(const ProcessorGroup * pg,
                                it1!= d_collideColors.end();  it1++){
      proc0cout << "Color " << *it1 << " collides " << endl;
     }
-   } // If haven't already done this
+   } // If I'm doing this
 
 //   cout << "In Communicate Grain Collisions" << endl;
 //   int rank = pg->myRank();
@@ -6186,9 +6174,6 @@ void SerialMPM::scheduleChangeGrainMaterials(SchedulerP& sched,
 
   Task * t = scinew Task("MPM::changeGrainMaterials", this, 
                    &SerialMPM::changeGrainMaterials);
-
-  t->requires(Task::OldDW, lb->ChangedGrainMaterialsLabel );
-  t->computes(lb->ChangedGrainMaterialsLabel);
 
   t->modifies(lb->pParticleIDLabel_preReloc);
   t->modifies(lb->pModalIDLabel_preReloc);
@@ -6238,256 +6223,249 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
-  sum_vartype ChangedGrainMaterials;
-  old_dw->get(ChangedGrainMaterials,   lb->ChangedGrainMaterialsLabel);
-  new_dw->put(ChangedGrainMaterials,   lb->ChangedGrainMaterialsLabel);
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing changeGrainMaterials");
 
-   if(flags->d_changeGrainMaterials  && ChangedGrainMaterials<1.0){
+   if(flags->d_changeGrainMaterials){
     proc0cout << "Doing changeGrainMaterials" << endl;
+    flags->d_changeGrainMaterials = false;
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
-    unsigned int aMI = flags->d_acceptorMaterialIndex[0];
+    unsigned int numAcceptorMaterials = flags->d_acceptorMaterialIndex.size();
+    for(unsigned int aMI_index = 0; 
+                     aMI_index < numAcceptorMaterials; 
+                     aMI_index++){
+      unsigned int aMI = flags->d_acceptorMaterialIndex[aMI_index];
 
-    vector<double> donorColors;
-    for (set<double>::iterator it1 = d_collideColors.begin(); 
-                               it1!= d_collideColors.end();  it1++){
-      bool baseColorExists=false;
-      for(unsigned int i=0;i<donorColors.size();i++){
-        if(*it1-donorColors[i] < 1.0){
-          baseColorExists = true;
+      vector<double> donorColors;
+      donorColors.clear();
+      int d_CCIndex=0;
+      for (set<double>::iterator it1 = d_collideColors.begin(); 
+                                 it1!= d_collideColors.end();  it1++){
+        if(d_CCIndex%(numAcceptorMaterials+1)==aMI_index){
+         donorColors.push_back(*it1);
         }
+        d_CCIndex++;
       }
-      if(!baseColorExists){
-       donorColors.push_back(*it1);
+
+      cout << "acceptor Material Index = " << aMI_index << endl;
+      for(unsigned int i=0;i<donorColors.size();i++){
+        cout << "donorColor = " << donorColors[i] << endl;
       }
-    }
 
-//    for(unsigned int i=0;i<donorColors.size();i++){
-//      cout << "donorColor = " << donorColors[i] << endl;
-//    }
+      // Loop over all materials, except for acceptor, look for particles with
+      // color = donorColor. If found, copy particle data into acceptor matl and
+      // then set pLocalized to -999 so that finalizeParticles will remove it.
 
-    // Loop over all materials, except for acceptor, look for particles with
-    // color = donorColor.  If found, copy particle data into acceptor matl and
-    // then set pLocalized to -999 so that finalizeParticles will remove it.
+      MPMMaterial* ami_matl =
+                     (MPMMaterial*) m_materialManager->getMaterial( "MPM", aMI);
+      int dw_ami = ami_matl->getDWIndex();
+      ParticleSubset* pset_ami = old_dw->getParticleSubset(dw_ami, patch);
+      //ConstitutiveModel* cm_ami = ami_matl->getConstitutiveModel();
 
-    MPMMaterial* ami_matl =
-                   (MPMMaterial*) m_materialManager->getMaterial( "MPM", aMI );
-    int dw_ami = ami_matl->getDWIndex();
-    ParticleSubset* pset_ami = old_dw->getParticleSubset(dw_ami, patch);
-    //ConstitutiveModel* cm_ami = ami_matl->getConstitutiveModel();
-
-    unsigned int numNewPartNeeded = 0;
-    for(unsigned int m = 0; m < numMPMMatls; m++){
-     if(m!=aMI){
-
-      MPMMaterial* mpm_matl =
-                     (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
-      int dwi = mpm_matl->getDWIndex();
-      ParticleSubset* pset  = old_dw->getParticleSubset(dwi, patch);
-      ParticleVariable<double> pcolor;
-      new_dw->getModifiable(pcolor, lb->pColorLabel_preReloc,        pset);
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        for(unsigned int i=0;i<donorColors.size();i++){
-          if(pcolor[idx]==donorColors[i]){
-            numNewPartNeeded++;
+      unsigned int numNewPartNeeded = 0;
+      for(unsigned int m = 0; m < numMPMMatls; m++){
+       if(m!=aMI){
+  
+        MPMMaterial* mpm_matl =
+                       (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
+        int dwi = mpm_matl->getDWIndex();
+        ParticleSubset* pset  = old_dw->getParticleSubset(dwi, patch);
+        ParticleVariable<double> pcolor;
+        new_dw->getModifiable(pcolor, lb->pColorLabel_preReloc,        pset);
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          for(unsigned int i=0;i<donorColors.size();i++){
+            if(pcolor[idx]==donorColors[i]){
+              numNewPartNeeded++;
+            }
           }
         }
+       }
       }
-     }
-    }
 
-    const unsigned int oldNumPar = pset_ami->addParticles(numNewPartNeeded);
+      const unsigned int oldNumPar = pset_ami->addParticles(numNewPartNeeded);
 
 //    cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
 //    cout << "oldNumPar = " << oldNumPar << endl;
 
-    ParticleVariable<Point>  pxtmp;
-    ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp,pvgradtmp,pSFtmp;
-    ParticleVariable<Matrix3> belbartmp;
-    ParticleVariable<double> pYStmp, pPStmp;
-    ParticleVariable<long64> pidstmp;
-    ParticleVariable<double> psurftmp, pdTdttmp;
-    ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pcolortmp;
-    ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp,ptempgtmp;
-    ParticleVariable<int> preftmp,ploctmp,pMIDtmp;
-    ParticleVariable<IntVector> pLoadCIDtmp;
-    new_dw->allocateTemporary(pidstmp,  pset_ami);
-    new_dw->allocateTemporary(pMIDtmp,  pset_ami);
-    new_dw->allocateTemporary(pxtmp,    pset_ami);
-    new_dw->allocateTemporary(pvoltmp,  pset_ami);
-    new_dw->allocateTemporary(pveltmp,  pset_ami);
-    new_dw->allocateTemporary(psurftmp, pset_ami);
-    new_dw->allocateTemporary(pdTdttmp, pset_ami);
-    if(flags->d_computeScaleFactor){
-      new_dw->allocateTemporary(pSFtmp, pset_ami);
-    }
-    new_dw->allocateTemporary(pextFtmp, pset_ami);
-    new_dw->allocateTemporary(ptemptmp, pset_ami);
-    new_dw->allocateTemporary(ptempgtmp,pset_ami);
-    new_dw->allocateTemporary(ptempPtmp,pset_ami);
-    new_dw->allocateTemporary(pFtmp,    pset_ami);
-    new_dw->allocateTemporary(psizetmp, pset_ami);
-    new_dw->allocateTemporary(pdisptmp, pset_ami);
-    new_dw->allocateTemporary(pstrstmp, pset_ami);
-    new_dw->allocateTemporary(pmasstmp, pset_ami);
-    new_dw->allocateTemporary(ploctmp,  pset_ami);
-    new_dw->allocateTemporary(pvgradtmp,pset_ami);
-    if (flags->d_with_color) {
-      new_dw->allocateTemporary(pcolortmp,pset_ami);
-    }
-
-    if (flags->d_useLoadCurves) {
-      new_dw->allocateTemporary(pLoadCIDtmp,  pset_ami);
-    }
-    new_dw->allocateTemporary(belbartmp,   pset_ami);
-    new_dw->allocateTemporary(pYStmp,      pset_ami);
-    new_dw->allocateTemporary(pPStmp,      pset_ami);
-
-    unsigned int pp = 0;
-
-    for(unsigned int m = 0; m < numMPMMatls; m++){
-     if(m!=aMI){
-      MPMMaterial* mpm_matl =
-                     (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
-      int dwi = mpm_matl->getDWIndex();
-      ParticleSubset* pset  = old_dw->getParticleSubset(dwi, patch);
-      //ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-
-      ParticleVariable<Point> px;
-      ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad,pscalefac;
-      ParticleVariable<Matrix3> belbar;
-      ParticleVariable<double> pYS, pPS;
-      ParticleVariable<long64> pids;
-      ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor;
-      ParticleVariable<double> pSurf, pdTdt;
-      ParticleVariable<Vector> pvelocity,pextforce,pdisp,ptempgrad;
-      ParticleVariable<int> pref,ploc,prefOld,pModID;
-      ParticleVariable<IntVector> pLoadCID;
-      new_dw->getModifiable(px,       lb->pXLabel_preReloc,            pset);
-      new_dw->getModifiable(pids,     lb->pParticleIDLabel_preReloc,   pset);
-      new_dw->getModifiable(pModID,   lb->pModalIDLabel_preReloc,      pset);
-      new_dw->getModifiable(pmass,    lb->pMassLabel_preReloc,         pset);
-      new_dw->getModifiable(pSize,    lb->pSizeLabel_preReloc,         pset);
-      new_dw->getModifiable(pSurf,    lb->pSurfLabel_preReloc,         pset);
-      new_dw->getModifiable(pdTdt,    lb->pdTdtLabel,                  pset);
-      new_dw->getModifiable(pdisp,    lb->pDispLabel_preReloc,         pset);
-      new_dw->getModifiable(pstress,  lb->pStressLabel_preReloc,       pset);
-      new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,       pset);
-      new_dw->getModifiable(pvelocity,lb->pVelocityLabel_preReloc,     pset);
+      ParticleVariable<Point>  pxtmp;
+      ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp,pvgradtmp,pSFtmp;
+      ParticleVariable<Matrix3> belbartmp;
+      ParticleVariable<double> pYStmp, pPStmp;
+      ParticleVariable<long64> pidstmp;
+      ParticleVariable<double> psurftmp, pdTdttmp;
+      ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pcolortmp;
+      ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp,ptempgtmp;
+      ParticleVariable<int> preftmp,ploctmp,pMIDtmp;
+      ParticleVariable<IntVector> pLoadCIDtmp;
+      new_dw->allocateTemporary(pidstmp,  pset_ami);
+      new_dw->allocateTemporary(pMIDtmp,  pset_ami);
+      new_dw->allocateTemporary(pxtmp,    pset_ami);
+      new_dw->allocateTemporary(pvoltmp,  pset_ami);
+      new_dw->allocateTemporary(pveltmp,  pset_ami);
+      new_dw->allocateTemporary(psurftmp, pset_ami);
+      new_dw->allocateTemporary(pdTdttmp, pset_ami);
       if(flags->d_computeScaleFactor){
-        new_dw->getModifiable(pscalefac,lb->pScaleFactorLabel_preReloc,pset);
+        new_dw->allocateTemporary(pSFtmp, pset_ami);
       }
-      new_dw->getModifiable(pextforce,lb->pExtForceLabel_preReloc,     pset);
-      new_dw->getModifiable(ptemp,    lb->pTemperatureLabel_preReloc,  pset);
-      new_dw->getModifiable(ptempgrad,lb->pTemperatureGradientLabel_preReloc,
-                                                                       pset);
-      new_dw->getModifiable(ptempP,   lb->pTempPreviousLabel_preReloc, pset);
-      new_dw->getModifiable(ploc,     lb->pLocalizedMPMLabel_preReloc, pset);
-      new_dw->getModifiable(pvelgrad, lb->pVelGradLabel_preReloc,      pset);
-      new_dw->getModifiable(belbar,   lb->bElBarLabel_preReloc,        pset);
-      new_dw->getModifiable(pYS,      lb->pYieldStressLabel_preReloc,  pset);
-      new_dw->getModifiable(pPS,      lb->pPlasticStrainLabel_preReloc,pset);
-      new_dw->getModifiable(pF,  lb->pDeformationMeasureLabel_preReloc,pset);
+      new_dw->allocateTemporary(pextFtmp, pset_ami);
+      new_dw->allocateTemporary(ptemptmp, pset_ami);
+      new_dw->allocateTemporary(ptempgtmp,pset_ami);
+      new_dw->allocateTemporary(ptempPtmp,pset_ami);
+      new_dw->allocateTemporary(pFtmp,    pset_ami);
+      new_dw->allocateTemporary(psizetmp, pset_ami);
+      new_dw->allocateTemporary(pdisptmp, pset_ami);
+      new_dw->allocateTemporary(pstrstmp, pset_ami);
+      new_dw->allocateTemporary(pmasstmp, pset_ami);
+      new_dw->allocateTemporary(ploctmp,  pset_ami);
+      new_dw->allocateTemporary(pvgradtmp,pset_ami);
       if (flags->d_with_color) {
-        new_dw->getModifiable(pcolor, lb->pColorLabel_preReloc,        pset);
+        new_dw->allocateTemporary(pcolortmp,pset_ami);
       }
+  
       if (flags->d_useLoadCurves) {
-        new_dw->getModifiable(pLoadCID,lb->pLoadCurveIDLabel_preReloc, pset);
+        new_dw->allocateTemporary(pLoadCIDtmp,  pset_ami);
       }
+      new_dw->allocateTemporary(belbartmp,   pset_ami);
+      new_dw->allocateTemporary(pYStmp,      pset_ami);
+      new_dw->allocateTemporary(pPStmp,      pset_ami);
+  
+      unsigned int pp = 0;
 
-//      bool doCopy = false;
-//      if(dwi==dw_ami){
-//        doCopy=true;
-//      }
+      for(unsigned int m = 0; m < numMPMMatls; m++){
+       if(m!=aMI){
+        MPMMaterial* mpm_matl =
+                       (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
+        int dwi = mpm_matl->getDWIndex();
+        ParticleSubset* pset  = old_dw->getParticleSubset(dwi, patch);
+        //ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+  
+        ParticleVariable<Point> px;
+        ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad,pscalefac;
+        ParticleVariable<Matrix3> belbar;
+        ParticleVariable<double> pYS, pPS;
+        ParticleVariable<long64> pids;
+        ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor;
+        ParticleVariable<double> pSurf, pdTdt;
+        ParticleVariable<Vector> pvelocity,pextforce,pdisp,ptempgrad;
+        ParticleVariable<int> pref,ploc,prefOld,pModID;
+        ParticleVariable<IntVector> pLoadCID;
+        new_dw->getModifiable(px,       lb->pXLabel_preReloc,            pset);
+        new_dw->getModifiable(pids,     lb->pParticleIDLabel_preReloc,   pset);
+        new_dw->getModifiable(pModID,   lb->pModalIDLabel_preReloc,      pset);
+        new_dw->getModifiable(pmass,    lb->pMassLabel_preReloc,         pset);
+        new_dw->getModifiable(pSize,    lb->pSizeLabel_preReloc,         pset);
+        new_dw->getModifiable(pSurf,    lb->pSurfLabel_preReloc,         pset);
+        new_dw->getModifiable(pdTdt,    lb->pdTdtLabel,                  pset);
+        new_dw->getModifiable(pdisp,    lb->pDispLabel_preReloc,         pset);
+        new_dw->getModifiable(pstress,  lb->pStressLabel_preReloc,       pset);
+        new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,       pset);
+        new_dw->getModifiable(pvelocity,lb->pVelocityLabel_preReloc,     pset);
+        if(flags->d_computeScaleFactor){
+          new_dw->getModifiable(pscalefac,lb->pScaleFactorLabel_preReloc,pset);
+        }
+          new_dw->getModifiable(pextforce,lb->pExtForceLabel_preReloc,     pset);
+        new_dw->getModifiable(ptemp,    lb->pTemperatureLabel_preReloc,  pset);
+        new_dw->getModifiable(ptempgrad,lb->pTemperatureGradientLabel_preReloc,
+                                                                         pset);
+        new_dw->getModifiable(ptempP,   lb->pTempPreviousLabel_preReloc, pset);
+        new_dw->getModifiable(ploc,     lb->pLocalizedMPMLabel_preReloc, pset);
+        new_dw->getModifiable(pvelgrad, lb->pVelGradLabel_preReloc,      pset);
+        new_dw->getModifiable(belbar,   lb->bElBarLabel_preReloc,        pset);
+        new_dw->getModifiable(pYS,      lb->pYieldStressLabel_preReloc,  pset);
+        new_dw->getModifiable(pPS,      lb->pPlasticStrainLabel_preReloc,pset);
+        new_dw->getModifiable(pF,  lb->pDeformationMeasureLabel_preReloc,pset);
+        if (flags->d_with_color) {
+          new_dw->getModifiable(pcolor, lb->pColorLabel_preReloc,        pset);
+        }
+        if (flags->d_useLoadCurves) {
+          new_dw->getModifiable(pLoadCID,lb->pLoadCurveIDLabel_preReloc, pset);
+        }
 
-      // copy data from old variables for particle IDs and the position vector
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-         for(unsigned int i=0;i<donorColors.size();i++){
-          if(pcolor[idx]==donorColors[i]){
-           pidstmp[pp]  = pids[idx];
-           pMIDtmp[pp]  = pModID[idx];
-           pxtmp[pp]    = px[idx];
-           psurftmp[pp] = pSurf[idx];
-           pdTdttmp[pp] = pdTdt[idx];
-           pvoltmp[pp]  = pvolume[idx];
-           pveltmp[pp]  = pvelocity[idx];
-           pextFtmp[pp] = pextforce[idx];
-           ptemptmp[pp] = ptemp[idx];
-           ptempgtmp[pp]= ptempgrad[idx];
-           ptempPtmp[pp]= ptempP[idx];
-           pFtmp[pp]    = pF[idx];
-           psizetmp[pp] = pSize[idx];
-           pdisptmp[pp] = pdisp[idx];
-           pstrstmp[pp] = pstress[idx];
-           if(flags->d_computeScaleFactor){
-             pSFtmp[pp]   = pscalefac[idx];
-           }
-           if (flags->d_with_color) {
-             pcolortmp[pp]= pcolor[idx];
-           }
-           if (flags->d_useLoadCurves) {
-             pLoadCIDtmp[pp]= pLoadCID[idx];
-           }
-           pmasstmp[pp] = pmass[idx];
-           ploctmp[pp]  = ploc[idx];
-           ploc[idx]  = -999;
-           pvgradtmp[pp]= pvelgrad[idx];
-           belbartmp[pp]= belbar[idx];
-           pYStmp[pp]= pYS[idx];
-           pPStmp[pp]= pPS[idx];
-           pp++;
-         } // Color == donorColor
-        } // Loop over donorColors
-      } // Loop over particles
+        // copy data from old variables for particle IDs and the position vector
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+           for(unsigned int i=0;i<donorColors.size();i++){
+            if(pcolor[idx]==donorColors[i]){
+             pidstmp[pp]  = pids[idx];
+             pMIDtmp[pp]  = pModID[idx];
+             pxtmp[pp]    = px[idx];
+             psurftmp[pp] = pSurf[idx];
+             pdTdttmp[pp] = pdTdt[idx];
+             pvoltmp[pp]  = pvolume[idx];
+             pveltmp[pp]  = pvelocity[idx];
+             pextFtmp[pp] = pextforce[idx];
+             ptemptmp[pp] = ptemp[idx];
+             ptempgtmp[pp]= ptempgrad[idx];
+             ptempPtmp[pp]= ptempP[idx];
+             pFtmp[pp]    = pF[idx];
+             psizetmp[pp] = pSize[idx];
+             pdisptmp[pp] = pdisp[idx];
+             pstrstmp[pp] = pstress[idx];
+             if(flags->d_computeScaleFactor){
+               pSFtmp[pp]   = pscalefac[idx];
+             }
+             if (flags->d_with_color) {
+               pcolortmp[pp]= pcolor[idx];
+             }
+             if (flags->d_useLoadCurves) {
+               pLoadCIDtmp[pp]= pLoadCID[idx];
+             }
+             pmasstmp[pp] = pmass[idx];
+             ploctmp[pp]  = ploc[idx];
+             ploc[idx]  = -999;
+             pvgradtmp[pp]= pvelgrad[idx];
+             belbartmp[pp]= belbar[idx];
+             pYStmp[pp]= pYS[idx];
+             pPStmp[pp]= pPS[idx];
+             pp++;
+           } // Color == donorColor
+          } // Loop over donorColors
+        } // Loop over particles
 //      TODO
 //      cm->changeCMSpecificParticleData(patch, dwi, 8,
 //                                      oldNumPar, numNewPartNeeded,
 //                                      old_dw, new_dw);
 
-     }  //  if material is not acceptor material
-    }  // for matls
-    // put back temporary data
-    new_dw->put(pidstmp,  lb->pParticleIDLabel_preReloc,           true);
-    new_dw->put(pMIDtmp,  lb->pModalIDLabel_preReloc,              true);
-    new_dw->put(pxtmp,    lb->pXLabel_preReloc,                    true);
-    new_dw->put(pvoltmp,  lb->pVolumeLabel_preReloc,               true);
-    new_dw->put(pveltmp,  lb->pVelocityLabel_preReloc,             true);
-    new_dw->put(pdTdttmp, lb->pdTdtLabel,                          true);
-    if(flags->d_computeScaleFactor){
-      new_dw->put(pSFtmp, lb->pScaleFactorLabel_preReloc,          true);
-    }
-    new_dw->put(pextFtmp, lb->pExtForceLabel_preReloc,             true);
-    new_dw->put(pmasstmp, lb->pMassLabel_preReloc,                 true);
-    new_dw->put(ptemptmp, lb->pTemperatureLabel_preReloc,          true);
-    new_dw->put(ptempgtmp,lb->pTemperatureGradientLabel_preReloc,  true);
-    new_dw->put(ptempPtmp,lb->pTempPreviousLabel_preReloc,         true);
-    new_dw->put(psizetmp, lb->pSizeLabel_preReloc,                 true);
-    new_dw->put(psurftmp, lb->pSurfLabel_preReloc,                 true);
-    new_dw->put(pdisptmp, lb->pDispLabel_preReloc,                 true);
-    new_dw->put(pstrstmp, lb->pStressLabel_preReloc,               true);
-    if (flags->d_with_color) {
-      new_dw->put(pcolortmp,lb->pColorLabel_preReloc,              true);
-    }
-
-    if (flags->d_useLoadCurves) {
-      new_dw->put(pLoadCIDtmp,lb->pLoadCurveIDLabel_preReloc,      true);
-    }
-    new_dw->put(pFtmp,    lb->pDeformationMeasureLabel_preReloc,   true);
-    new_dw->put(ploctmp,  lb->pLocalizedMPMLabel_preReloc,         true);
-    new_dw->put(pvgradtmp,lb->pVelGradLabel_preReloc,              true);
-    new_dw->put(belbartmp,lb->bElBarLabel_preReloc,                true);
-    new_dw->put(pYStmp,   lb->pYieldStressLabel_preReloc,          true);
-    new_dw->put(pPStmp,   lb->pPlasticStrainLabel_preReloc,        true);
-    new_dw->put(sum_vartype(1.0),      lb->ChangedGrainMaterialsLabel);
-   }    // if d_changeGrainMaterial && ChangedGrainMaterials<1.0....
+       }  //  if material is not acceptor material
+      }  // for matls
+      // put back temporary data
+      new_dw->put(pidstmp,  lb->pParticleIDLabel_preReloc,           true);
+      new_dw->put(pMIDtmp,  lb->pModalIDLabel_preReloc,              true);
+      new_dw->put(pxtmp,    lb->pXLabel_preReloc,                    true);
+      new_dw->put(pvoltmp,  lb->pVolumeLabel_preReloc,               true);
+      new_dw->put(pveltmp,  lb->pVelocityLabel_preReloc,             true);
+      new_dw->put(pdTdttmp, lb->pdTdtLabel,                          true);
+      if(flags->d_computeScaleFactor){
+        new_dw->put(pSFtmp, lb->pScaleFactorLabel_preReloc,          true);
+      }
+      new_dw->put(pextFtmp, lb->pExtForceLabel_preReloc,             true);
+      new_dw->put(pmasstmp, lb->pMassLabel_preReloc,                 true);
+      new_dw->put(ptemptmp, lb->pTemperatureLabel_preReloc,          true);
+      new_dw->put(ptempgtmp,lb->pTemperatureGradientLabel_preReloc,  true);
+      new_dw->put(ptempPtmp,lb->pTempPreviousLabel_preReloc,         true);
+      new_dw->put(psizetmp, lb->pSizeLabel_preReloc,                 true);
+      new_dw->put(psurftmp, lb->pSurfLabel_preReloc,                 true);
+      new_dw->put(pdisptmp, lb->pDispLabel_preReloc,                 true);
+      new_dw->put(pstrstmp, lb->pStressLabel_preReloc,               true);
+      if (flags->d_with_color) {
+        new_dw->put(pcolortmp,lb->pColorLabel_preReloc,              true);
+      }
+  
+      if (flags->d_useLoadCurves) {
+        new_dw->put(pLoadCIDtmp,lb->pLoadCurveIDLabel_preReloc,      true);
+      }
+      new_dw->put(pFtmp,    lb->pDeformationMeasureLabel_preReloc,   true);
+      new_dw->put(ploctmp,  lb->pLocalizedMPMLabel_preReloc,         true);
+      new_dw->put(pvgradtmp,lb->pVelGradLabel_preReloc,              true);
+      new_dw->put(belbartmp,lb->bElBarLabel_preReloc,                true);
+      new_dw->put(pYStmp,   lb->pYieldStressLabel_preReloc,          true);
+      new_dw->put(pPStmp,   lb->pPlasticStrainLabel_preReloc,        true);
+    }  // Loop over acceptor materials
+   }    // if d_changeGrainMaterial
   }   // for patches
-//   flags->d_changeGrainMaterial = false;
 }
