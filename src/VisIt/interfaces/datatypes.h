@@ -179,18 +179,6 @@ public:
     }
   }
 
-  // getNumNodes
-  int getNumNodes() const
-  {
-    return num_nodes;
-  }
-
-  // setNumNodes
-  void setNumNodes(const int new_num_nodes)
-  {
-    num_nodes = new_num_nodes;
-  }
-
   // getProcId
   int getProcId() const
   {
