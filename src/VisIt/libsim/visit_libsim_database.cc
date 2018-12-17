@@ -1044,6 +1044,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     float* yPts = nullptr;
     // float* zPts = nullptr;
 
+    // Create a quad for each rank on a node.
     if( global )
     {    
       // Total size of the layout - add one to have gap between nodes.
@@ -1117,6 +1118,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       }
     }
 
+    // Create a quad for the rank (domain).
     else if( local )
     {
       // Total size of the layout one core per domain;
@@ -1166,6 +1168,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       connections[nConnections++] = (+0) * xMax + (+1);
     }
 
+    // For each rank create a quad for it's patches.
     else if( patch )
     {
       const PatchSubset* myPatches =
@@ -1242,7 +1245,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     unsigned int nCells = nConnections / nQuadVals;
 
     visit_handle meshH = VISIT_INVALID_HANDLE;
- 
+
+    // Do not pass the Z coordinate as there is a bug for quads.
     if(VisIt_UnstructuredMesh_alloc(&meshH) != VISIT_ERROR)
     {
       visit_handle xH ,yH; //, zH;
@@ -2224,7 +2228,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         CheckNaNs(gd->data, gd->num*gd->components, varname, level, local_patch);
       }
     }
-
     
     if( gd )
     {
