@@ -672,7 +672,6 @@ public:
   }
 
 #if defined(UINTAH_ENABLE_KOKKOS)
-
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
   getNCVariable( const VarLabel         * label
@@ -732,9 +731,7 @@ public:
     }
     return constVar.getKokkosView();
   }
-
-#if defined(HAVE_CUDA)
-
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
   getNCVariable( const VarLabel         * label
@@ -791,10 +788,8 @@ public:
       return KokkosView3<const T, Kokkos::CudaSpace>();
     }
   }
-
-#endif //HAVE_CUDA
-
-#endif //UINTAH_ENABLE_KOKKOS
+#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
+#endif // end UINTAH_ENABLE_KOKKOS
 
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, grid_T >::type
@@ -854,7 +849,6 @@ public:
   }
 
 #if defined(UINTAH_ENABLE_KOKKOS)
-
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
   getGridVariable( const VarLabel         * label
@@ -913,9 +907,7 @@ public:
     }
     return constVar.getKokkosView();
   }
-
-#if defined(HAVE_CUDA)
-
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
   template <typename grid_CT,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
   getConstGridVariable( const VarLabel         * label
@@ -966,10 +958,8 @@ public:
       var = KokkosView3<T, Kokkos::CudaSpace>();
     }
   }
-
-#endif //HAVE_CUDA
-
-#endif //UINTAH_ENABLE_KOKKOS
+#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
+#endif // end UINTAH_ENABLE_KOKKOS
 
   ScrubMode getScrubMode() const { return m_scrub_mode; }
 

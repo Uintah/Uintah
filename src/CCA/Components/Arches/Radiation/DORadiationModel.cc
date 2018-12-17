@@ -612,6 +612,7 @@ struct computeAMatrix{
  }
 
   private:
+
        double omu;
        double oeta;
        double oxi;
@@ -621,11 +622,8 @@ struct computeAMatrix{
        double vol;
        int    intFlow;
 
-
-
-
-#if defined( KOKKOS_ENABLE_OPENMP )
-       KokkosView3<const int, Kokkos::HostSpace> cellType;
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+       KokkosView3<const int,    Kokkos::HostSpace> cellType;
        KokkosView3<const double, Kokkos::HostSpace> wallTemp;
        KokkosView3<const double, Kokkos::HostSpace> abskt;
 
@@ -654,13 +652,12 @@ struct computeAMatrix{
        CCVariable<double>   &fluxX;
        CCVariable<double>   &fluxY;
        CCVariable<double>   &fluxZ;
-#endif //UINTAH_ENABLE_KOKKOS
+#endif
 
        double SB;
        int    dirX;
        int    dirY;
        int    dirZ;
-
 
 };
 
@@ -713,7 +710,7 @@ struct compute4Flux{
        double  oxi;    ///< z-directional component
        double  wt;     ///< ordinate weight
 
-#if defined( KOKKOS_ENABLE_OPENMP )
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
        KokkosView3<constDouble_or_double, Kokkos::HostSpace> intensity; ///< intensity solution from linear solve
        KokkosView3<double, Kokkos::HostSpace> fluxX;   ///< x-directional flux ( positive or negative direction)
        KokkosView3<double, Kokkos::HostSpace> fluxY;   ///< y-directional flux ( positive or negative direction)
@@ -725,7 +722,8 @@ struct compute4Flux{
        CCVariable<double>& fluxY;  ///< y-directional flux ( positive or negative direction)
        CCVariable<double>& fluxZ;  ///< z-directional flux ( positive or negative direction)
        CCVariable<double>& volQ;   ///< Incident radiation
-#endif //UINTAH_ENABLE_KOKKOS
+#endif
+
 };
 
 //***************************************************************************
@@ -1517,7 +1515,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     const int jEnd=_plusY[cdirecn] ? idxHi.y() : -idxLo.y();
     const int iEnd=_plusX[cdirecn] ? idxHi.x() : -idxLo.x();
 
-#if defined ( KOKKOS_ENABLE_OPENMP )
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     KokkosView3<const int, Kokkos::HostSpace>    kv_cellType    = cellType.getKokkosView() ;
     KokkosView3<const double, Kokkos::HostSpace> kv_emissSrc    = emissSrc.getKokkosView();
     KokkosView3<const double, Kokkos::HostSpace> kv_abskt       = abskt.getKokkosView() ;
@@ -1549,7 +1547,6 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
            },_plusX[cdirecn] ,_plusY[cdirecn] , _plusZ[cdirecn], n_thread_partitions);
     }
 #else
-
    //--------------------------------------------------------//
     //definition of abskt -> abskg_soot + abskg + sum(abskp_i) + scatkt
     //definition of abskt(spectral)-> abskg_soot +  sum(abskp_i) + scatkt
@@ -1594,13 +1591,10 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
         } // end j loop
       } // end k loop
     }
-#endif
+#endif // end _OPENMP && KOKKOS_ENABLE_OPENMP
   } // end band loop
   return;
 }
-
-
-
 
 //-----------------------------------------------------------------//
 // This function computes the source for radiation transport.  It

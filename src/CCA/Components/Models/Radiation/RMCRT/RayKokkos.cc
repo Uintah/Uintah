@@ -1821,7 +1821,7 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
     double domain_BB_Lo[3] = { domain_BB.min().x(), domain_BB.min().y(), domain_BB.min().z() };
     double domain_BB_Hi[3] = { domain_BB.max().x(), domain_BB.max().y(), domain_BB.max().z() };
 
-#if defined(HAVE_CUDA)
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
     // Get the GPU vars
     if ( std::is_same<Kokkos::Cuda , ExecSpace>::value ) {
       // The upcoming Kokkos views
@@ -1895,8 +1895,9 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
       }
 
     } // end if ( std::is_same< Kokkos::Cuda , ExecSpace >::value )
-#endif //#if defined(HAVE_CUDA)
-#if defined (KOKKOS_ENABLE_OPENMP)
+#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     // Get the CPU vars
     if ( std::is_same< Kokkos::OpenMP , ExecSpace >::value ) {
       // Get all the coarse level variables (e.g. as long as it has a finer level)
@@ -2024,8 +2025,8 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
              << " steps per sec" << endl
              << endl;
       }
-    } //end of Kokkos OpenMP
-#endif //if defined(KOKKOS_ENABLE_OPENMP)
+    } //end if ( std::is_same< Kokkos::OpenMP , ExecSpace >::value )
+#endif // end _OPENMP && KOKKOS_ENABLE_OPENMP
 
 #ifdef USE_TIMER
     PerPatch< double > ppTimer = timer().seconds();

@@ -99,8 +99,7 @@ namespace Uintah{
           return *(_field_container->get_const_field<T>(name, which_dw));
         }
 
-#if defined(KOKKOS_ENABLE_OPENMP)
-
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
         template <typename T, typename ElemType, typename MemSpace> inline
         typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<ElemType, Kokkos::HostSpace> >::type
         get_const_uintah_field_add( const std::string& name,
@@ -109,8 +108,7 @@ namespace Uintah{
         }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
-
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
         template <typename T, typename ElemType, typename MemSpace> inline
         typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<ElemType, Kokkos::CudaSpace> >::type
         get_const_uintah_field_add( const std::string& name,
@@ -130,7 +128,7 @@ namespace Uintah{
           return T();
         }
 
-#if defined(KOKKOS_ENABLE_OPENMP)
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<ElemType, Kokkos::HostSpace> >::type
         get_empty_const_uintah_field_add( ){
@@ -139,7 +137,7 @@ namespace Uintah{
         }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<ElemType, Kokkos::CudaSpace> >::type
         get_empty_const_uintah_field_add( ){
@@ -155,7 +153,7 @@ namespace Uintah{
           _field_container->get_unmanaged_field<T>( name, field );
         }
 
-#if defined(KOKKOS_ENABLE_OPENMP)
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
         template < typename T, typename ElemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, void >::type
         get_unmanaged_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx, const int DW_index ){
@@ -163,7 +161,7 @@ namespace Uintah{
         }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
         template < typename T, typename ElemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, void >::type
         get_unmanaged_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx, const int DW_index){
@@ -178,7 +176,7 @@ namespace Uintah{
           field = get_uintah_field_add<T>( name);
         }
 
-#if defined(KOKKOS_ENABLE_OPENMP)
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
         template < typename T, typename elemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, void >::type
         get_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx,  const int DW_index){
@@ -186,7 +184,7 @@ namespace Uintah{
         }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
         template < typename T, typename elemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, void >::type
         get_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx, const int DW_index){
@@ -201,7 +199,7 @@ namespace Uintah{
           field = get_const_uintah_field_add<T>( name);
         }
 
-#if defined(KOKKOS_ENABLE_OPENMP)
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
         template < typename T, typename ElemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, void >::type
         get_const_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx, const int DW_index ){
@@ -209,7 +207,7 @@ namespace Uintah{
         }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
         template < typename T, typename ElemType, typename MemSpace, typename FIELD_TYPE>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, void >::type
         get_const_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx, const int DW_index ){
@@ -302,7 +300,7 @@ namespace Uintah{
           _field_container->get_unmanaged_field( name, field );
         }
 
-#if defined(KOKKOS_ENABLE_OPENMP)
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<ElemType, Kokkos::HostSpace> >::type
         get_const_uintah_field_add( const std::string& name ){
@@ -323,7 +321,7 @@ namespace Uintah{
         }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
         template <typename T, typename ElemType, typename MemSpace>
         inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<ElemType, Kokkos::CudaSpace> >::type
         get_uintah_field_add( const std::string& name ){
@@ -409,7 +407,7 @@ namespace Uintah{
       return struct1DArray<T,MaxCapacity>(num); // perform deep copy   (should be ok since it is an empty CCVariable?)
     }
 
-#if defined(KOKKOS_ENABLE_OPENMP)
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
     typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
     createContainer(int num=MaxCapacity){
@@ -423,7 +421,7 @@ namespace Uintah{
     }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
     template < typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
     typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
     createContainer(int num=MaxCapacity){

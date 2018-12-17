@@ -129,7 +129,7 @@ struct ClassicTableInfo {
                   const ClassicTableInfo &cti )
       : table2(table), d_allIndepVarNo(IndepVarNo), indep(indepin), ind_1(ind_1in), tableInfo(cti)
     {
-#if defined( HAVE_CUDA )
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
            int numDim=d_allIndepVarNo.size();
            int max_size=0;
            int size=d_allIndepVarNo(0); // size of a single dep variable
@@ -392,8 +392,7 @@ struct ClassicTableInfo {
     ) const {
        find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
     }
-
-#if defined( HAVE_CUDA )
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
     template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION 
     typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, void >::type
@@ -406,9 +405,8 @@ struct ClassicTableInfo {
       //printf("GPU table reading is being done incorrectly by the Arches Developers; Use CPU for this application.\n");
     find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
     }
-#endif
-#endif
-
+#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
+#endif // end UINTAH_ENABLE_KOKKOS
 
     template< typename MemSpace, unsigned int numOfDep>
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -445,8 +443,7 @@ struct ClassicTableInfo {
     find_val_wrapper( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues){
        find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,table2,d_allIndepVarNo,indep,ind_1);
     }
-
-#if defined( HAVE_CUDA )
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
     template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION 
     typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, void >::type
@@ -454,9 +451,8 @@ struct ClassicTableInfo {
       //printf("GPU table reading is being done incorrectly by the Arches Developers; Use CPU for this application.\n");
     find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,g_table2,g_d_allIndepVarNo,g_indep,g_ind_1);
     }
-#endif
-#endif
-
+#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
+#endif // end UINTAH_ENABLE_KOKKOS
 
     template< typename MemSpace, unsigned int numOfDep>
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -740,8 +736,7 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, tableC
   }
 #endif
 
-
-#if defined( HAVE_CUDA )
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
   getTable(){
@@ -754,47 +749,45 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, intCon
     return g_d_allIndepVarNo;
   }
 
-
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
   getSecondaryVar(){
     return g_indep;
   }
 
-
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
   getPrimaryVar(){
     return g_ind_1;
   }
-
 #endif
 
-
   protected:
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
-    tableContainer<Kokkos::HostSpace>  table2;  // All dependent variables
-    intContainer<Kokkos::HostSpace>    d_allIndepVarNo; // size of independent variable array, for all independent variables
-    tableContainer<Kokkos::HostSpace>  indep;  // independent variables 1 to N-1
-    tableContainer<Kokkos::HostSpace>  ind_1; // independent variable N
+
+#ifdef UINTAH_ENABLE_KOKKOS // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+    tableContainer<Kokkos::HostSpace> table2;          // All dependent variables
+    intContainer<Kokkos::HostSpace>   d_allIndepVarNo; // size of independent variable array, for all independent variables
+    tableContainer<Kokkos::HostSpace> indep;           // independent variables 1 to N-1
+    tableContainer<Kokkos::HostSpace> ind_1;           // independent variable N
 #else
-    tableContainer  table2;  // All dependent variables
-    intContainer    d_allIndepVarNo; // size of independent variable array, for all independent variables
-    tableContainer  indep;  // independent variables 1 to N-1
-    tableContainer  ind_1; // independent variable N
+    tableContainer table2;          // All dependent variables
+    intContainer   d_allIndepVarNo; // size of independent variable array, for all independent variables
+    tableContainer indep;           // independent variables 1 to N-1
+    tableContainer ind_1;           // independent variable N
 #endif
 
   public:   // avoids re-order warning
+
     const ClassicTableInfo tableInfo; // variable names, units, and table keys
 
-
-#if defined( HAVE_CUDA )
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
   protected:
-    tableContainer<Kokkos::CudaSpace>  g_table2;  // All dependent variables
-    intContainer<Kokkos::CudaSpace>  g_d_allIndepVarNo; // size of independent variable array, for all independent variables
-    tableContainer<Kokkos::CudaSpace> g_indep;  // independent variables 1 to N-1
-    tableContainer<Kokkos::CudaSpace>  g_ind_1; // independent variable N
+    tableContainer<Kokkos::CudaSpace> g_table2;          // All dependent variables
+    intContainer<Kokkos::CudaSpace>   g_d_allIndepVarNo; // size of independent variable array, for all independent variables
+    tableContainer<Kokkos::CudaSpace> g_indep;           // independent variables 1 to N-1
+    tableContainer<Kokkos::CudaSpace> g_ind_1;           // independent variable N
 #endif
+
   };
 }
 #endif

@@ -168,7 +168,8 @@ struct sumHeatGasDestSource{
   }
 
   private:
-#if defined( KOKKOS_ENABLE_OPENMP )
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
    KokkosView3<const double, Kokkos::HostSpace> qn_gas_dest;
    KokkosView3<const double, Kokkos::HostSpace> pT;
    KokkosView3<const double, Kokkos::HostSpace> pE;
@@ -179,10 +180,12 @@ struct sumHeatGasDestSource{
    constCCVariable<double>& pE;
    CCVariable<double>& enthalpySrc;
 #endif
+
   double enthalpy_scaling_constant;
   double w_scaling_constant;
   double Ha0;
   double mass_ash;
+
 };
 struct sumEnthalpyGasSource{
        sumEnthalpyGasSource(constCCVariable<double>& _qn_gas_enthalpy,
@@ -201,13 +204,15 @@ struct sumEnthalpyGasSource{
   }
 
   private:
-#if defined( KOKKOS_ENABLE_OPENMP )
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
    KokkosView3<const double, Kokkos::HostSpace> qn_gas_enthalpy;
    KokkosView3<double, Kokkos::HostSpace>  enthalpySrc;
 #else
    constCCVariable<double>& qn_gas_enthalpy;
    CCVariable<double>& enthalpySrc;
 #endif
+
 };
 
 

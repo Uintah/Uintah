@@ -209,10 +209,7 @@ public:
     return d_window;
   }
 
-
-
-
-#if defined( UINTAH_ENABLE_KOKKOS ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
   inline KokkosView3<T, Kokkos::HostSpace> getKokkosView() const
   {
     return m_view;

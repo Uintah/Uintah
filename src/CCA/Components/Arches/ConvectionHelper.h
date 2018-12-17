@@ -88,8 +88,8 @@ namespace Uintah {
 
     private:
 
-#if defined ( KOKKOS_ENABLE_OPENMP )
-    KokkosView3<double, Kokkos::HostSpace> rhs;
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+    KokkosView3<double,       Kokkos::HostSpace> rhs;
     KokkosView3<const double, Kokkos::HostSpace> flux_x;
     KokkosView3<const double, Kokkos::HostSpace> flux_y;
     KokkosView3<const double, Kokkos::HostSpace> flux_z;
@@ -99,6 +99,7 @@ namespace Uintah {
     CFYT& flux_y;
     CFZT& flux_z;
 #endif
+
     const Vector& Dx;
 
   };

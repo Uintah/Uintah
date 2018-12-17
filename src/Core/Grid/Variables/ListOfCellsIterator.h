@@ -79,64 +79,42 @@ namespace Uintah {
     public:
 
 #if defined( UINTAH_ENABLE_KOKKOS )
-    ListOfCellsIterator(int size) : mySize(0), index_(0), listOfCells_("primary_ListIterator_BCview",size+1) { listOfCells_( mySize ) = int_3( INT_MAX, INT_MAX, INT_MAX ); }
+    ListOfCellsIterator(int size) : mySize(0), index_(0), listOfCells_("primary_ListIterator_BCview", size+1)
+    {
+      listOfCells_(mySize) = int_3(INT_MAX, INT_MAX, INT_MAX);
+    }
 #else
-    ListOfCellsIterator(int size) : mySize(0), index_(0), listOfCells_(size+1) { listOfCells_[mySize] = int_3( INT_MAX, INT_MAX, INT_MAX ); }
+    ListOfCellsIterator(int size) : mySize(0), index_(0), listOfCells_(size+1)
+    {
+      listOfCells_[mySize] = int_3(INT_MAX, INT_MAX, INT_MAX);
+    }
 #endif
 
-    ListOfCellsIterator(const ListOfCellsIterator &copy) :
-                                                           mySize(copy.mySize), 
-                                                           index_(0),
-                                                            listOfCells_(copy.listOfCells_)
-                                                                   {   reset(); }
-    ListOfCellsIterator(Iterator &copy) :
-                                              mySize(0),
-                                              index_(0),
+    ListOfCellsIterator(const ListOfCellsIterator &copy) : mySize(copy.mySize), index_(0), listOfCells_(copy.listOfCells_)
+    {
+      reset();
+    }
+
+    ListOfCellsIterator(Iterator &copy) : mySize(0)
+                                        , index_(0)
 #if defined( UINTAH_ENABLE_KOKKOS )
-                                              listOfCells_("iterator_copy_ListIterator_BCview",copy.size()+1) 
+                                        , listOfCells_("iterator_copy_ListIterator_BCview", copy.size()+1)
 #else
-                                              listOfCells_(copy.size()+1)
+                                        , listOfCells_(copy.size()+1)
 #endif
-                                                      {  
-                                              int i=0;
-                                              for ( copy.reset(); !copy.done(); copy++ ){
-                                                listOfCells_[i]=int_3((*copy)[0],(*copy)[1],(*copy)[2]);
-                                                i++;
-                                                 }
-                                              mySize=i;
-                                              listOfCells_[i]=int_3(INT_MAX,INT_MAX,INT_MAX);
-                                              reset();
-                                            }
-    //ListOfCellsIterator(const ListOfCellsIterator &copy) :
-                                                           //mySize(copy.mySize),
-                                                           //index_(0){
+    {
+      int i = 0;
 
-//#if defined( UINTAH_ENABLE_KOKKOS )
-    //listOfCells_= Kokkos::View<IntVector*, Kokkos::HostSpace>("listofCells_copy_constructor",copy.listOfCells_.size());
-//#else
-    //listOfCells_= std::vector<IntVector>(copy.listOfCells_.size());
-//#endif
+      for ( copy.reset(); !copy.done(); copy++ ) {
+        listOfCells_[i] = int_3((*copy)[0], (*copy)[1], (*copy)[2]);
+        i++;
+      }
 
-    //for ( int i=0; i<copy.listOfCells_.size() ;i++){ // copy cells over, but make for sure there are not duplicates
-//#if defined( UINTAH_ENABLE_KOKKOS )
-      //listOfCells_(i)=copy.listOfCells_(i);
-//#else
-      //listOfCells_[i]=copy.listOfCells_[i];
-//#endif
-    //}
-    //reset();
-  //}
+      mySize = i;
+      listOfCells_[i] = int_3(INT_MAX, INT_MAX, INT_MAX);
 
-  //ListOfCellsIterator(const Iterator &copy){
-
-    //int i=0;
-    //for ( copy.reset(); !copy.done(); copy++){ // copy cells over, but make for sure there are not duplicates
-      //listOfCells_[i]=*copy;
-      //i++;
-    //}
-    //mySize=i;
-    //reset();
-  //}
+      reset();
+    }
 
     /**
      * prefix operator to move the iterator forward
@@ -208,40 +186,39 @@ namespace Uintah {
      */
     inline void reset() { index_ = 0; }
 
-#if defined( UINTAH_ENABLE_KOKKOS )
-  #if defined ( KOKKOS_ENABLE_OPENMP )
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     template<typename MemSpace>
-    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, Kokkos::View<int_3*,Kokkos::HostSpace> >::type
+    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
     get_ref_to_iterator(){ return listOfCells_; }
-    template<typename MemSpace>
-    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,  Kokkos::View<int_3*,Kokkos::HostSpace>>::type
-    get_ref_to_iterator(){ return listOfCells_; }
-  #else
-    template<typename MemSpace>
-    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<int_3*,Kokkos::HostSpace> >::type
-    get_ref_to_iterator(){ return listOfCells_; }
-  #endif
-#else
-    template<typename MemSpace>
-    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,  std::vector<int_3>&>::type
-    get_ref_to_iterator(){ return listOfCells_; }
-#endif
 
-#if defined( UINTAH_ENABLE_KOKKOS ) && defined( HAVE_CUDA )
+    // TODO: Is this possible? Tags are set to Kokkos::HostSpace when KOKKOS_ENABLE_OPENMP is defined
     template<typename MemSpace>
-    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos::View<int_3*,Kokkos::CudaSpace> >::type
-    get_ref_to_iterator()
-    {
+    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
+    get_ref_to_iterator(){ return listOfCells_; }
+#elif defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+    // Special handling for Kokkos::Cuda builds
+    // Mixing of Kokkos::Cuda and Kokkos::OpenMP not yet supported
+    template<typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
+    get_ref_to_iterator(){ return listOfCells_; }
+
+    template<typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos::View<int_3*, Kokkos::CudaSpace> >::type
+    get_ref_to_iterator() {
       if ( copied_to_gpu ) {
         return listOfCells_gpu;
       }
       else {
-        listOfCells_gpu = Kokkos::View<int_3*,Kokkos::CudaSpace>( "gpu_listOfCellsIterator", listOfCells_.size() );
+        listOfCells_gpu = Kokkos::View<int_3*, Kokkos::CudaSpace>( "gpu_listOfCellsIterator", listOfCells_.size() );
         Kokkos::deep_copy( listOfCells_gpu, listOfCells_ );
         copied_to_gpu = true;
         return listOfCells_gpu;
       }
     }
+#else
+    template<typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,  std::vector<int_3>&>::type
+    get_ref_to_iterator(){ return listOfCells_; }
 #endif
 
     protected:
@@ -269,33 +246,37 @@ namespace Uintah {
     }
 
     unsigned int mySize{0};
-    //index into the iterator
-    unsigned int index_{0};
+    unsigned int index_{0}; //index into the iterator
 
-#if defined( UINTAH_ENABLE_KOKKOS )
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     Kokkos::View<int_3*, Kokkos::HostSpace> listOfCells_;
-  #if defined( HAVE_CUDA )
+#elif defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+    Kokkos::View<int_3*, Kokkos::HostSpace> listOfCells_;
     Kokkos::View<int_3*, Kokkos::CudaSpace> listOfCells_gpu;
-    bool copied_to_gpu{false}; 
-  #endif
+    bool copied_to_gpu{false};
 #else
     std::vector<int_3> listOfCells_{};
 #endif
 
     private:
 
-     // This old constructor has a static size for portability reasons.  It should be avoided since .
+    // This old constructor has a static size for portability reasons. It should be avoided since.
 #if defined( UINTAH_ENABLE_KOKKOS )
-  ListOfCellsIterator() : mySize(0), index_(0), listOfCells_("priv_ListIterator_BCview",1000) { listOfCells_(mySize)=int_3(INT_MAX,INT_MAX,INT_MAX);
-            std::cout<< "Unsupported constructor, use at your own risk, in Core/Grid/Variables/ListOfCellsIterator.h \n";
-         }
+    ListOfCellsIterator() : mySize(0), index_(0), listOfCells_("priv_ListIterator_BCview", 1000)
+    {
+      listOfCells_(mySize) = int_3(INT_MAX, INT_MAX, INT_MAX);
+      std::cout<< "Unsupported constructor, use at your own risk, in Core/Grid/Variables/ListOfCellsIterator.h \n";
+    }
 #else
-  ListOfCellsIterator() : mySize(0), index_(0), listOfCells_(1000) { listOfCells_[mySize]=int_3(INT_MAX,INT_MAX,INT_MAX);
-            std::cout<< "Unsupported constructor, use at your own risk, in Core/Grid/Variables/ListOfCellsIterator.h \n";
-         }
+    ListOfCellsIterator() : mySize(0), index_(0), listOfCells_(1000)
+    {
+      listOfCells_[mySize] = int_3(INT_MAX, INT_MAX, INT_MAX);
+      std::cout<< "Unsupported constructor, use at your own risk, in Core/Grid/Variables/ListOfCellsIterator.h \n";
+    }
 #endif
 
   }; // end class ListOfCellsIterator
-} // End namespace Uintah
-  
+
+} // end namespace Uintah
+
 #endif

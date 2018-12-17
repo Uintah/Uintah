@@ -362,43 +362,46 @@ public:
 
   };
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
   //methods for Kokkos
   template <typename T>
-  __host__ inline KokkosView3<T, Kokkos::CudaSpace> getKokkosView(char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx) {
-
+  __host__ inline KokkosView3<T, Kokkos::CudaSpace> getKokkosView(char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx)
+  {
     // host code
     int3 var_offset{0,0,0};
     int3 var_size{0,0,0};
     T* data_ptr{nullptr};
 
     varLock->lock();
-    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-    if (varPointers->find(lpml) != varPointers->end()) {
+    labelPatchMatlLevel lpml( label, patchID, matlIndx, levelIndx );
+
+    if ( varPointers->find(lpml) != varPointers->end() ) {
       allVarPointersInfo vp = varPointers->at(lpml);
       var_offset = vp.var->device_offset;
       var_size = vp.var->device_size;
       data_ptr = reinterpret_cast<T*>(vp.var->device_ptr);
     }
     else {
-      printf("Error in getKokkosView() - I'm GPUDW with name: \"%s\" at %p \n", _internalName, this);
-      printf("Couldn't find an entry for label %s patch %d matl %d level %d\n", label, patchID, matlIndx, levelIndx);
+      printf( "Error in getKokkosView() - I'm GPUDW with name: \"%s\" at %p \n", _internalName, this );
+      printf( "Couldn't find an entry for label %s patch %d matl %d level %d\n", label, patchID, matlIndx, levelIndx );
       exit(-1);
       //printGetError("GPUDataWarehouse::getKokkosView(...)", label, -1, patchID, matlIndx);
     }
+
     varLock->unlock();
 
-    return KokkosView3<T, Kokkos::CudaSpace>(  Kokkos::subview(  KokkosData<T, Kokkos::CudaSpace>(data_ptr, var_size.x, var_size.y, var_size.z)
-                               , Kokkos::pair<int,int>( 0, var_size.x )
-                               , Kokkos::pair<int,int>( 0, var_size.y )
-                               , Kokkos::pair<int,int>( 0, var_size.z ) )
-                            , var_offset.x
-                            , var_offset.y
-                            , var_offset.z
-                           );
+    return KokkosView3<T, Kokkos::CudaSpace>( Kokkos::subview( KokkosData<T, Kokkos::CudaSpace>( data_ptr, var_size.x, var_size.y, var_size.z )
+                                                             , Kokkos::pair<int,int>( 0, var_size.x )
+                                                             , Kokkos::pair<int,int>( 0, var_size.y )
+                                                             , Kokkos::pair<int,int>( 0, var_size.z )
+                                                             )
+                                            , var_offset.x
+                                            , var_offset.y
+                                            , var_offset.z
+                                            );
 
   }
-#endif //UINTAH_ENABLE_KOKKOS
+#endif
 
   //______________________________________________________________________
   // GPU GridVariable methods
