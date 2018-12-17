@@ -100,15 +100,12 @@ WARNING
    Tracer* getTracer();
    std::string getTracerFilename() const;
 
-   int getAssociatedMaterial() const;
-
  private:
 
    MPMLabel* d_lb;
    Tracer* d_tracer;
 
    std::string d_tracer_filename;
-   int d_associated_material;
 
    // Prevent copying of this class
    // copy constructor
