@@ -52,7 +52,7 @@
       <DoAuthigenesis                     spec="OPTIONAL BOOLEAN" /> 
       <AuthigenesisBaseFilename           spec="OPTIONAL STRING" />
       <ChangeGrainMaterials               spec="OPTIONAL BOOLEAN" /> 
-      <AcceptorMaterialIndex              spec="OPTIONAL INTEGER" /> 
+      <AcceptorMaterialIndex              spec="OPTIONAL MULTIPLE_INTEGERS" /> 
       <InsertParticles                    spec="OPTIONAL BOOLEAN" /> 
       <InsertParticlesFile                spec="OPTIONAL STRING" /> 
       <withColor                          spec="OPTIONAL BOOLEAN" />

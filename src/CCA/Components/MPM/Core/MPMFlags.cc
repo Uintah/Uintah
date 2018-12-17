@@ -96,7 +96,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_exactDeformation                   =  false;
   d_doAuthigenesis                     =  false;
   d_changeGrainMaterials               =  false;
-  d_acceptorMaterialIndex              =  -999;
   d_authigenesisBaseFilename           =  "";
   d_insertParticles                    =  false;
   d_doGridReset                        =  true;
@@ -261,7 +260,15 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("DoAuthigenesis",     d_doAuthigenesis);
   mpm_flag_ps->get("AuthigenesisBaseFilename",d_authigenesisBaseFilename);
   mpm_flag_ps->get("ChangeGrainMaterials",    d_changeGrainMaterials);
-  mpm_flag_ps->get("AcceptorMaterialIndex",   d_acceptorMaterialIndex);
+  if(mpm_flag_ps->get("AcceptorMaterialIndex", d_acceptorMaterialIndex)) {
+    for(vector<int>::const_iterator mit(d_acceptorMaterialIndex.begin());
+        mit!=d_acceptorMaterialIndex.end();mit++) {
+      if(*mit<0){
+        throw ProblemSetupException("Invalid material index in contact block",
+                                     __FILE__, __LINE__);
+      }
+    }
+  }
 
   //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);

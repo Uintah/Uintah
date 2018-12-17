@@ -6250,7 +6250,7 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
     proc0cout << "Doing changeGrainMaterials" << endl;
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
-    unsigned int aMI = flags->d_acceptorMaterialIndex;
+    unsigned int aMI = flags->d_acceptorMaterialIndex[0];
 
     vector<double> donorColors;
     for (set<double>::iterator it1 = d_collideColors.begin(); 

@@ -126,7 +126,7 @@ class Output;
 
     bool        d_doAuthigenesis;
     bool        d_changeGrainMaterials;
-    int         d_acceptorMaterialIndex;
+    std::vector<int> d_acceptorMaterialIndex;
     std::string d_authigenesisBaseFilename;                      // File containing overgrowth points
     bool        d_with_ice;
     bool        d_with_arches;
