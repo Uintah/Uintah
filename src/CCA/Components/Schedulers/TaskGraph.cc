@@ -538,50 +538,47 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
         for (int ps_index = 0; ps_index < ps_size; ps_index++) {
           const PatchSubset* pss = ps->getSubset(ps_index);
 
-          // Make tasks in our neighborhood.  If there are multiple levels involved in the reqs of
-          // a task, then the levelID should be the fine level
-          DOUT(g_proc_neighborhood_dbg, "For task: " << task->getName() << " looking for max ghost cells for level: " << levelID);
+          if( pss->size() > 0 ) {
+            
+            // Make tasks in our neighborhood.  If there are multiple levels involved in the reqs of
+            // a task, then the levelID should be the fine level
+            DOUT(g_proc_neighborhood_dbg, "For task: " << task->getName() << " looking for max ghost cells for level: " << levelID);
 
-          // Still make sure we have an entry for this task on this level.
-          // Some tasks can go into the task graph without any requires, modifies, or computes.
-          bool search_distal_requires = false;
+            // Still make sure we have an entry for this task on this level. Some tasks can go into
+            // the task graph without any requires, modifies, or computes.
+            bool search_distal_requires = false;
 
-          for (auto kv : task->m_max_ghost_cells) {
-            int levelIDTemp = kv.first;
+            for (const auto kv : task->m_max_ghost_cells) {
+              int levelIDTemp = kv.first;
 
-            // NOTE THE MAP::AT METHOD NEEDS TO BE SAFEGUARDED. Is it
-            // reasonable to set search_distal_requires = false when
-            // it fails??
+              search_distal_requires = (kv.second >= MAX_HALO_DEPTH);
+            
+              DOUT(g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " for: " << task->getName() << " on level: " << levelIDTemp
+                   << " with task max ghost cells: "<< kv.second << " Seeing if patch subset: "
+                   << *pss << " is in neighborhood with search_distal_requires: " << search_distal_requires);
 
-            // This looping should never fail as it is a loop through the map.
-            if(task->m_max_ghost_cells.find(levelIDTemp) != task->m_max_ghost_cells.end()) {
-              search_distal_requires = (task->m_max_ghost_cells.at(levelIDTemp) >= MAX_HALO_DEPTH);
-            } else {
-              search_distal_requires = false;
-
-              DOUTALL( true, "*********** Bad level ID " << levelIDTemp );
+              if (search_distal_requires) {
+                break;
+              }
             }
 
-            DOUT(g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " for: " << task->getName() << " on level: " << levelIDTemp
-                                                  << " with task max ghost cells: "<< task->m_max_ghost_cells.at(levelIDTemp) << " Seeing if patch subset: "
-                                                  << *pss << " is in neighborhood with search_distal_requires: " << search_distal_requires);
-
-            if (search_distal_requires) {
-              break;
+            if (m_load_balancer->inNeighborhood(pss, search_distal_requires)) {
+              DOUT(g_proc_neighborhood_dbg, "Yes, it was in the neighborhood");
+              for (int m = 0; m < ms->size(); m++) {
+                const MaterialSubset* mss = ms->getSubset(m);
+                createDetailedTask(task, pss, mss);
+                ++num_detailed_tasks;
+                ++tot_normal_tasks;
+              }
             }
           }
-
-          if (pss->size() > 0 && m_load_balancer->inNeighborhood(pss, search_distal_requires)) {
-            DOUT(g_proc_neighborhood_dbg, "Yes, it was in the neighborhood");
-            for (int m = 0; m < ms->size(); m++) {
-              const MaterialSubset* mss = ms->getSubset(m);
-              createDetailedTask(task, pss, mss);
-              ++num_detailed_tasks;
-              ++tot_normal_tasks;
-            }
+          else {
+            DOUT(g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " for: " << task->getName()
+                 << " SKipping patch subset: " << *pss << " because it has no patches");
           }
         }
-        DOUT( g_detailed_task_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_detailed_tasks << " (" << task->getType()  << ") DetailedTasks for: " << task->getName() << " on level: " << levelID);
+        DOUT( g_detailed_task_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_detailed_tasks << " (" << task->getType()
+              << ") DetailedTasks for: " << task->getName() << " on level: " << levelID);
       }
     } // end valid patch and matl sets
 
@@ -926,11 +923,11 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
     if (patches && !patches->empty() && matls && !matls->empty()) {
 
-      // ARS - Treat sole vars the same as reduction vars??
-      if (vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable) {
+      // Skip reduction and sole vars as they are not patch based.
+      if (vartype == TypeDescription::ReductionVariable ||
+          vartype == TypeDescription::SoleVariable) {
         continue;
       }
-
 
       //------------------------------------------------------------------------
       //           for all patches - find & store valid neighbors
@@ -1022,8 +1019,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
             search_distal_reqs = false;
 
             DOUTALL( true, "*********** Bad true level " << trueLevel 
-		     << " levelID " << levelID
-		     << " levelOffset " << levelOffset );
+                     << " levelID " << levelID
+                     << " levelOffset " << levelOffset );
           }
 
           if (!m_load_balancer->inNeighborhood(neighbor->getRealPatch(), search_distal_reqs)) {
@@ -1079,9 +1076,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
             } else {
               search_distal_requires = false;
 
-	      DOUTALL( true, "*********** Bad true level " << trueLevel 
-		       << " levelID " << levelID
-		       << " levelOffset " << levelOffset );
+              DOUTALL( true, "*********** Bad true level " << trueLevel 
+                       << " levelID " << levelID
+                       << " levelOffset " << levelOffset );
             }
 
             if (!m_load_balancer->inNeighborhood(fromNeighbor, search_distal_requires)) {
