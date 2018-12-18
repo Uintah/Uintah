@@ -292,7 +292,6 @@
       <TurbulenceModels>
 	      <model label="DS" type="dynamic_smagorinsky">
 	        <filter type="three_points"/>
-	        <epsilon>3.0</epsilon>
 	      </model>
        <!--model label="Cwale" type="wale">
         <Cs>0.5</Cs>
