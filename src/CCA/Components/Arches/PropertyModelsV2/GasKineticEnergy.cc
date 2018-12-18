@@ -116,18 +116,19 @@ GasKineticEnergy::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 template <typename ExecSpace, typename MemSpace>
 void GasKineticEnergy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
   // cc gas velocities 
-  constCCVariable<double>& u = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name);
-  constCCVariable<double>& v = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name);
-  constCCVariable<double>& w = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name);
+  auto u = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
+  auto v = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
+  auto w = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
 
-  CCVariable<double>& ke = *(tsk_info->get_uintah_field<CCVariable<double> >( m_kinetic_energy ));
-  ke.initialize(0.0);
+  auto ke = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_kinetic_energy );
+  parallel_initialize(execObj,0.0,ke);
   double ke_p = 0;
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  //Uintah::parallel_reduce_min(execObj, range, KOKKOS_LAMBDA (const int i, const int j, const int k, double & m_dt ){
+  Uintah::parallel_reduce_sum(execObj, range, KOKKOS_LAMBDA (const int i, const int j, const int k, double& ke_sum){
     ke(i,j,k) = 0.5*(u(i,j,k)*u(i,j,k) + v(i,j,k)*v(i,j,k) +w(i,j,k)*w(i,j,k)); 
-    ke_p += ke(i,j,k);
-  });
+    ke_sum += ke(i,j,k);
+  }, ke_p);
   // check if ke is diverging in this patch 
   if ( ke_p > m_max_ke )
     throw InvalidValue("Error: KE is diverging.",__FILE__,__LINE__);

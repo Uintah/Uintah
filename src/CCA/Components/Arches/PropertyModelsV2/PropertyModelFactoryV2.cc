@@ -26,7 +26,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 #include <CCA/Components/Arches/PropertyModelsV2/UnweightVariable.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ConsScalarDiffusion.h>
-//#include <CCA/Components/Arches/PropertyModelsV2/GasKineticEnergy.h>
+#include <CCA/Components/Arches/PropertyModelsV2/GasKineticEnergy.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -151,11 +151,11 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 );
         register_task( name, tsk );
 
-//      } else if ( type == "gas_kinetic_energy" ) {
+      } else if ( type == "gas_kinetic_energy" ) {
 
-//        TaskInterface::TaskBuilder* tsk = scinew GasKineticEnergy::Builder( name, 0 );
-//        register_task( name, tsk );
-//        _post_update_property_tasks.push_back( name );
+        TaskInterface::TaskBuilder* tsk = scinew GasKineticEnergy::Builder( name, 0 );
+        register_task( name, tsk );
+        _post_update_property_tasks.push_back( name );
 
       } else if ( type == "one_d_wallht" ) {
 
