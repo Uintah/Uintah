@@ -27,6 +27,7 @@
 
 #include <CCA/Components/Application/ApplicationCommon.h>
 #include <CCA/Components/ElectroChem/ECLabel.h>
+#include <CCA/Components/ElectroChem/FluxModels/BasicFlux.h>
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -34,11 +35,15 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
+using namespace ElectroChem;
+ 
 namespace Uintah {
   class Diffusion : public ApplicationCommon {
-    ECLabel d_eclabel;
+    ECLabel        d_eclabel;
+    MaterialSet    d_one_mat_set;
+    MaterialSubset d_one_mat_subset;
+
     double  d_delt;
-    double  d_diff_coeff;
 
     public:
       Diffusion(const ProcessorGroup* myworld,
@@ -75,11 +80,23 @@ namespace Uintah {
                                                DataWarehouse*  old_dw,
                                                DataWarehouse*  new_dw);
   
-      virtual void timeAdvance(const ProcessorGroup* pg,
+      virtual void scheduleComputeFlux(const PatchSet* patches,
+                                             SchedulerP& sched);
+
+      virtual void computeFlux(const ProcessorGroup* pg,
                                const PatchSubset*    patches,
                                const MaterialSubset* matls,
                                      DataWarehouse*  old_dw,
                                      DataWarehouse*  new_dw);
+
+      virtual void scheduleForwardEuler(const PatchSet*   patches,
+                                              SchedulerP& sched);
+
+      virtual void forwardEuler(const ProcessorGroup* pg,
+                                const PatchSubset*    patches,
+                                const MaterialSubset* matls,
+                                      DataWarehouse*  old_dw,
+                                      DataWarehouse*  new_dw);
   
   
   

@@ -25,29 +25,39 @@
 #ifndef CCA_COMPONENTS_ELECTROCHEM_ECLABEL_H
 #define CCA_COMPONENTS_ELECTROCHEM_ECLABEL_H
 
+#include <CCA/Components/ElectroChem/ECMaterial.h>
+
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 
-namespace Uintah {
+using namespace Uintah;
+
+namespace ElectroChem {
   struct ECLabel {
     ECLabel() {
       cc_matid         = VarLabel::create("cc.MatId",
-                                           CCVariable<int>::getTypeDescription());
+                                CCVariable<int>::getTypeDescription());
       cc_concentration = VarLabel::create("cc.Concentration",
-                                           CCVariable<double>::getTypeDescription());
+                                CCVariable<double>::getTypeDescription());
+      cc_pos_conc      = VarLabel::create("cc.PosConcentration",
+                                CCVariable<double>::getTypeDescription());
+      cc_neg_conc      = VarLabel::create("cc.NegConcentration",
+                                CCVariable<double>::getTypeDescription());
       fcx_flux         = VarLabel::create("fcx.Flux",
-                                           SFCXVariable<double>::getTypeDescription());
+                                SFCXVariable<double>::getTypeDescription());
       fcy_flux         = VarLabel::create("fcy.Flux",
-                                           SFCYVariable<double>::getTypeDescription());
+                                SFCYVariable<double>::getTypeDescription());
       fcz_flux         = VarLabel::create("fcz.Flux",
-                                           SFCZVariable<double>::getTypeDescription());
+                                SFCZVariable<double>::getTypeDescription());
     }
     ~ECLabel() {
       VarLabel::destroy(cc_matid);
       VarLabel::destroy(cc_concentration);
+      VarLabel::destroy(cc_pos_conc);
+      VarLabel::destroy(cc_neg_conc);
       VarLabel::destroy(fcx_flux);
       VarLabel::destroy(fcy_flux);
       VarLabel::destroy(fcz_flux);
@@ -55,6 +65,8 @@ namespace Uintah {
 
     const VarLabel* cc_matid;
     const VarLabel* cc_concentration;
+    const VarLabel* cc_pos_conc;
+    const VarLabel* cc_neg_conc;
     const VarLabel* fcx_flux;
     const VarLabel* fcy_flux;
     const VarLabel* fcz_flux;

@@ -8,13 +8,13 @@
   <SimulationComponent type="ec_diffusion" />
 
   <ElectroChem>
-    <delt>       1.0 </delt>
+    <delt> .001 </delt>
   </ElectroChem>
 
   <Time>
-    <maxTime>10.</maxTime>
+    <maxTime>1.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.01</delt_min>
+    <delt_min>0.001</delt_min>
     <delt_max>1.</delt_max>
     <timestep_multiplier>1.</timestep_multiplier>
   </Time>
@@ -22,20 +22,17 @@
   <MaterialProperties>
     <ElectroChem>
       <material>
-        <material_models>
-        </material_models>
+        <diffusion_coeff> 1.0 </diffusion_coeff>
         <geom_object>
           <sphere label="material0">
             <origin> [ 0.0,  0.0, 0.0 ] </origin>
             <radius> 4.0 </radius>
           </sphere>
-          <concentrations> 0.0 </concentrations>
+          <concentration> 0.0 </concentration>
         </geom_object>
       </material>
       <material>
-        <flux_model type="basic_flux">
-          <diff_coeff> 1.0 </diff_coeff>
-        </flux_model>
+        <diffusion_coeff> 1.0 </diffusion_coeff>
         <geom_object>
           <difference label="material1">
             <box label="whole_domain">
@@ -56,7 +53,7 @@
         <lower>[  0., 0., 0.]</lower>
         <upper>[ 20., 20., 20.]</upper>
         <patches>[1,1,1]</patches>
-        <resolution> [100, 100, 100] </resolution>
+        <resolution> [200, 200, 200] </resolution>
       </Box>
     </Level>
     <BoundaryConditions>
@@ -84,8 +81,8 @@
   </Grid>
 
     <DataArchiver>
-        <filebase>diffusion1.uda</filebase>
-        <outputTimestepInterval>1</outputTimestepInterval>
+        <filebase>diffusion1_sphere.uda</filebase>
+        <outputTimestepInterval>10</outputTimestepInterval>
         <save label="cc.Concentration" />
         <save label="cc.MatId" />
     </DataArchiver>

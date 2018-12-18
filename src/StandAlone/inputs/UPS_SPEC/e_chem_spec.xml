@@ -4,15 +4,15 @@
   <Uintah_specification> 
     <ElectroChem           spec="OPTIONAL NO_DATA">
       <delt                spec="REQUIRED DOUBLE 'positive'" />
-      <diff_coeff          spec="OPTIONAL DOUBLE"/>
-      <include href="solver_spec.xml" section="Parameters" />
     </ElectroChem>
   </Uintah_specification>
 
   <MaterialProperties>
-    <ElectroChem       spec="OPTIONAL NO_DATA">
-      <material        spec="MULTIPLE NO_DATA" attribute1="name OPTIONAL STRING" >
-        <geom_object   spec="MULTIPLE" />
+    <ElectroChem         spec="OPTIONAL NO_DATA">
+      <material          spec="MULTIPLE NO_DATA" attribute1="name OPTIONAL STRING" >
+        <diffusion_coeff spec="OPTIONAL DOUBLE"/>
+        <mobility        spec="OPTIONAL DOUBLE"/>
+        <geom_object     spec="MULTIPLE" />
       </material>
     </ElectroChem>
   </MaterialProperties>
