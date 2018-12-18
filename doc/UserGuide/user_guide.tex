@@ -1,16 +1,24 @@
 \documentclass[12pt]{report}
-\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algorithmic}
 \usepackage{amsmath}
-\usepackage[pdftex]{graphicx}
-\usepackage{fancyvrb}
+\usepackage{amssymb}
+\usepackage[toc,page,title,titletoc]{appendix}
 \usepackage{chapterbib}
+\usepackage[usenames]{color}
+\usepackage{esint}
+\usepackage{fancyvrb}
+\usepackage[top=1.9cm,bottom=1.9cm,left=1.9cm,right=1.9cm]{geometry}
+\usepackage[pdftex]{graphicx}
 \usepackage{hyperref}
 \usepackage{longtable}
 \usepackage{listings}
-\usepackage[top=1.9cm,bottom=1.9cm,left=1.9cm,right=1.9cm]{geometry}
+\usepackage{subfig}
+\usepackage{wrapfig}
 
+\iffalse
 \lstset{
-  backgroundcolor=\color{codegray},
+ % backgroundcolor=\color{codegray},
   captionpos=b,
   numberstyle={\tiny \sffamily},
   frame=lines,
@@ -21,20 +29,11 @@
   stringstyle=\color[rgb]{0.627,0.126,0.941},
   breaklines=true,
 }
-
-\usepackage{wrapfig}
-\usepackage{subfig}
-\usepackage{algorithm}
-\usepackage{algorithmic}
-\usepackage{esint}
-\usepackage{amssymb}
-\usepackage[usenames]{color}
-\usepackage[toc,page,title,titletoc]{appendix}
-
+\fi
 \pdfcompresslevel=9
 \DeclareGraphicsExtensions{{.png},{.pdf},{.jpg},{jpeg}}
 \graphicspath{ {../figures/}}
-\usepackage{color}
+
 %__________________________________
 % new commands for all sections
 \newcommand{\comment}[1]{ \marginpar{{\scriptsize \color{red} #1 }}}
@@ -135,7 +134,8 @@
 %%
 \include{overview}
 \include{ucf}
-\include{uda}
+\include{manageUda}
+\include{postProcessUda}
 \include{arches}
 \include{ice}
 \include{mpm}
