@@ -38,10 +38,21 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////
 //              J I M 1   O P T I O N
-// This currently pulls out particle position, velocity and ID
-// and prints that on one line for each particle.  This is useful
-// for postprocessing of particle data for particles which move
-// across patches.
+// This currently sums up the number of particles in the column of cells
+// in each cell in the x-y plane.
+// With gnuplot, one can plot the results to see how well the particles are
+// distributed using:
+
+// gnuplot> set dgrid hix-1, hiy-1
+// gnuplot> set hidden3d
+// gnuplot> splot "partout0000" using 1:2:3 w lines
+
+// In the above, hix and hiy are the x and y components, respectively, of
+// the "hi" value reported when you run this script.
+// Usage, when run from inside an uda, looks like, e.g.; >puda -jim1 -matl 33 .
+// where the -matl flag indicates the maximum material number you want included
+// in your sum (i.e. one may wish to exclude piston materials).  That is,
+// sum up the particles for materials m, where: 0 < m < matl.
 
 void
 Uintah::jim1( DataArchive * da, CommandLineFlags & clf )
@@ -52,9 +63,10 @@ Uintah::jim1( DataArchive * da, CommandLineFlags & clf )
   da->queryVariables( vars, num_matls, types );
   ASSERTEQ(vars.size(), types.size());
   cout << "#There are " << vars.size() << " variables:\n";
-  for(int i=0;i<(int)vars.size();i++)
+  for(int i=0;i<(int)vars.size();i++){
     cout << vars[i] << ": " << types[i]->getName() << endl;
-      
+  }
+
   vector<int> index;
   vector<double> times;
   da->queryTimesteps(index, times);
@@ -64,63 +76,59 @@ Uintah::jim1( DataArchive * da, CommandLineFlags & clf )
 //    cout << index[i] << ": " << times[i] << endl;
 //  }
       
-  findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
+  findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, 
+                           clf.time_step_lower, clf.time_step_upper);
       
-  for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
+  for(unsigned long t= clf.time_step_lower;
+                    t<=clf.time_step_upper;
+                    t+=clf.time_step_inc){
     // double time = times[t];
     //cout << "time = " << time << endl;
     GridP grid = da->queryGrid(t);
+    LevelP level = grid->getLevel(0);
+    IntVector low, hi;
+    level->findNodeIndexRange(low, hi);
+    cout << "low = " << low << endl;
+    cout << "hi = " << hi << endl;
     ostringstream fnum;
     string filename;
     fnum << setw(4) << setfill('0') << t/clf.time_step_inc;
     string partroot("partout");
     filename = partroot+ fnum.str();
     ofstream partfile(filename.c_str());
+    // I know the following is suspect, if it starts acting funny,
+    // use STL vectors
+    int cell_bins[hi.x()-1][hi.y()-1];
+    for(int j=0;j<hi.y()-1;j++){
+      for(int i=0;i<hi.x()-1;i++){
+        cell_bins[i][j]=0;
+      }
+    }
 
-    for(int l=0;l<grid->numLevels();l++){
-      LevelP level = grid->getLevel(l);
-      cout << "Level: " <<  endl;
+    for(int matl=0; matl < clf.matl; matl++){
+     cout << "matl = " << matl << endl;
       for(Level::const_patch_iterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
-        int matl = clf.matl;
         //__________________________________
         //   P A R T I C L E   V A R I A B L E
-        ParticleVariable<long64> value_pID;
-        ParticleVariable<Point> value_pos;
-        ParticleVariable<Vector> value_vel;
-        ParticleVariable<double> value_vol, value_mas, value_tmp;
-        ParticleVariable<Matrix3> value_strs;
-        da->query(value_pID, "p.particleID", matl, patch, t);
-        da->query(value_pos, "p.x",          matl, patch, t);
-        da->query(value_vel, "p.velocity",   matl, patch, t);
-        da->query(value_vol, "p.volume",     matl, patch, t);
-        da->query(value_mas, "p.mass",       matl, patch, t);
-        da->query(value_tmp, "p.temperature",matl, patch, t);
-        da->query(value_strs,"p.stress",     matl, patch, t);
-        ParticleSubset* pset = value_pos.getParticleSubset();
+        ParticleVariable<Point> px;
+        da->query(px, "p.x",          matl, patch, t);
+        ParticleSubset* pset = px.getParticleSubset();
         if(pset->numParticles() > 0){
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
-            partfile << value_pos[*iter].x() << " "
-                     << value_vel[*iter].x() << " "
-                     << value_mas[*iter]/value_vol[*iter] << " "
-                     << value_strs[*iter](0,0) << " "
-                     << value_tmp[*iter] << endl;
+            IntVector cI;
+            patch->findCell(px[*iter],cI);
+            cell_bins[cI.x()][cI.y()]++;
           } // for
-#if 0
-          for(;iter != pset->end(); iter++){
-            partfile << value_pos[*iter].x() << " " <<
-              value_pos[*iter].y() << " " <<
-              value_pos[*iter].z() << " "; 
-            partfile << value_vel[*iter].x() << " " <<
-              value_vel[*iter].y() << " " <<
-              value_vel[*iter].z() << " "; 
-            partfile << value_pID[*iter] <<  endl;
-          } // for
-#endif
         }  //if
       }  // for patches
-    }   // for levels
+    }   // for materials
+    for(int j=0;j<hi.y()-1;j++){
+      for(int i=0;i<hi.x()-1;i++){
+        partfile << i << " " << j << " " << cell_bins[i][j] << endl;
+      }
+    }
   }
 } // end jim1()
