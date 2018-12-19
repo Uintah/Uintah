@@ -24,6 +24,7 @@
 
 #include <CCA/Components/ElectroChem/Diffusion.h>
 #include <CCA/Components/ElectroChem/ECMaterial.h>
+#include <CCA/Components/ElectroChem/FluxModels.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -88,19 +89,30 @@ void Diffusion::problemSetup(const ProblemSpecP& ps,
 void Diffusion::scheduleInitialize(const LevelP&     level,
                                          SchedulerP& sched){
 
-  Task* t = scinew Task("Diffusion::initialize", this,
-                        &Diffusion::initialize);
+  Task* t1 = scinew Task("Diffusion::initializeMaterialId", this,
+                         &Diffusion::initializeMaterialId);
 
-  t->computes(d_eclabel.cc_concentration);
-  t->computes(d_eclabel.cc_matid);
-  sched->addTask(t, level->eachPatch(), &d_one_mat_set);
+  Task* t2 = scinew Task("Diffusion::initializeFluxModel", this,
+                         &Diffusion::initializeFluxModel);
+
+  t1->computes(d_eclabel.cc_concentration);
+  t1->computes(d_eclabel.cc_matid);
+
+  t2->computes(d_eclabel.fcx_flux_model);
+  t2->computes(d_eclabel.fcy_flux_model);
+  t2->computes(d_eclabel.fcz_flux_model);
+
+  t2->requires(Task::NewDW, d_eclabel.cc_matid, Ghost::AroundCells, 1);
+
+  sched->addTask(t1, level->eachPatch(), &d_one_mat_set);
+  //sched->addTask(t2, level->eachPatch(), &d_one_mat_set);
 }
 
-void Diffusion::initialize(const ProcessorGroup* pg,
-                           const PatchSubset*    patches,
-                           const MaterialSubset* matls,
-                                 DataWarehouse*  old_dw,
-                                 DataWarehouse*  new_dw){
+void Diffusion::initializeMaterialId(const ProcessorGroup* pg,
+                                     const PatchSubset*    patches,
+                                     const MaterialSubset* matls,
+                                           DataWarehouse*  old_dw,
+                                           DataWarehouse*  new_dw){
 
   std::cout << "***** Begin Initialize. " << std::endl;
   int num_matls = m_materialManager->getNumMatls( "ElectroChem" );
@@ -134,6 +146,13 @@ void Diffusion::initialize(const ProcessorGroup* pg,
     } // end for loop - matls
   } // end for loop - patches
   std::cout << "***** End Initialize. " << std::endl;
+}
+
+void Diffusion::initializeFluxModel(const ProcessorGroup* pg,
+                                    const PatchSubset*    patches,
+                                    const MaterialSubset* matls,
+                                          DataWarehouse*  old_dw,
+                                          DataWarehouse*  new_dw){
 }
 
 void Diffusion::scheduleRestartInitialize(const LevelP&     level,

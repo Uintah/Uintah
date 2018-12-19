@@ -26,6 +26,7 @@
 #define CCA_COMPONENTS_ELECTROCHEM_ECLABEL_H
 
 #include <CCA/Components/ElectroChem/ECMaterial.h>
+#include <CCA/Components/ElectroChem/FluxModels.h>
 
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -52,6 +53,12 @@ namespace ElectroChem {
                                 SFCYVariable<double>::getTypeDescription());
       fcz_flux         = VarLabel::create("fcz.Flux",
                                 SFCZVariable<double>::getTypeDescription());
+      fcx_flux_model   = VarLabel::create("fcx.FluxModel",
+                                SFCXVariable<int>::getTypeDescription());
+      fcy_flux_model   = VarLabel::create("fcy.FluxModel",
+                                SFCYVariable<int>::getTypeDescription());
+      fcz_flux_model   = VarLabel::create("fcz.FluxModel",
+                                SFCZVariable<int>::getTypeDescription());
     }
     ~ECLabel() {
       VarLabel::destroy(cc_matid);
@@ -61,6 +68,9 @@ namespace ElectroChem {
       VarLabel::destroy(fcx_flux);
       VarLabel::destroy(fcy_flux);
       VarLabel::destroy(fcz_flux);
+      VarLabel::destroy(fcx_flux_model);
+      VarLabel::destroy(fcy_flux_model);
+      VarLabel::destroy(fcz_flux_model);
     }
 
     const VarLabel* cc_matid;
@@ -70,6 +80,9 @@ namespace ElectroChem {
     const VarLabel* fcx_flux;
     const VarLabel* fcy_flux;
     const VarLabel* fcz_flux;
+    const VarLabel* fcx_flux_model;
+    const VarLabel* fcy_flux_model;
+    const VarLabel* fcz_flux_model;
   };
 } // End Uintah namespace
 

@@ -22,26 +22,22 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ElectroChem/FluxModels/NullFlux.h>
+#ifndef CCA_COMPONENTS_ELECTROCHEM_FLUXMODELS_H
+#define CCA_COMPONENTS_ELECTROCHEM_FLUXMODELS_H
+
+#include <CCA/Components/ElectroChem/ECLabel.h>
+
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 
 using namespace Uintah;
 
 namespace ElectroChem {
-  NullFlux::NullFlux(ProblemSpecP& ps){
-
-  }
-
-  NullFlux::~NullFlux() {
-
-  }
-
-  void NullFlux::AddComputesAndRequires(const PatchSet* patches,
-                                              Task*     task) {
-  }
-
-  void NullFlux::ComputeFlux(const PatchSubset* patches,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw) {
-  }
-
-} // End namespace ElectroChem
+  enum FluxModel{
+    Basic,
+    PNP,
+    InteriorBC
+  };
+  
+} // End namspace ElectroChem
+#endif // End CCA_COMPONENTS_ELECTROCHEM_LUXMODELS_FLUXMODEL_H

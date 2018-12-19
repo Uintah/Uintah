@@ -27,7 +27,6 @@
 
 #include <CCA/Components/Application/ApplicationCommon.h>
 #include <CCA/Components/ElectroChem/ECLabel.h>
-#include <CCA/Components/ElectroChem/FluxModels/BasicFlux.h>
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -68,11 +67,17 @@ namespace Uintah {
                                              SchedulerP& sched);
 
     private:
-      virtual void initialize(const ProcessorGroup* pg,
-                              const PatchSubset*    patches,
-                              const MaterialSubset* matls,
-                                    DataWarehouse*  old_dw,
-                                    DataWarehouse*  new_dw);
+      virtual void initializeMaterialId(const ProcessorGroup* pg,
+                                        const PatchSubset*    patches,
+                                        const MaterialSubset* matls,
+                                              DataWarehouse*  old_dw,
+                                              DataWarehouse*  new_dw);
+
+      virtual void initializeFluxModel(const ProcessorGroup* pg,
+                                       const PatchSubset*    patches,
+                                       const MaterialSubset* matls,
+                                             DataWarehouse*  old_dw,
+                                             DataWarehouse*  new_dw);
   
       virtual void computeStableTimeStep(const ProcessorGroup* pg,
                                          const PatchSubset*    patches,

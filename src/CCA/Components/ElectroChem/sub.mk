@@ -35,7 +35,6 @@ SRCS   += $(SRCDIR)/Diffusion.cc \
           $(SRCDIR)/ECMaterial.cc 
 
 PSELIBS := \
-       $(SRCDIR)/FluxModels            \
        CCA/Components/Application      \
        CCA/Ports                       \
        Core/Disclosure                 \
@@ -54,6 +53,6 @@ LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-SUBDIRS := $(SRCDIR)/FluxModels
+#SUBDIRS := $(SRCDIR)/FluxModels
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+#include $(SCIRUN_SCRIPTS)/recurse.mk
