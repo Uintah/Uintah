@@ -699,9 +699,9 @@ AMRSimulationController::executeTimeStep( int totalFine )
       // Recompute the delta T.
       m_application->recomputeDelT();
 
-      // As the delta T, re-evaluate the outputting and checkpointing.
-      m_output->reevaluate_OutputCheckPointTimeStep(m_application->getSimTime(),
-                                                    m_application->getDelT());
+      // Use the recomputed DelT and check the need for performing an
+      // output and checkpoint time step.
+      m_output->recompute_OutputCheckPointTimeStep();
 
       success = false;
     }
@@ -838,7 +838,8 @@ AMRSimulationController::compileTaskGraph( int totalFine )
 
   taskGraphTimer.start();
 
-  proc0cout << "Compiling taskgraph..." << std::endl;
+  std::string plural = ( (m_scheduler->getNumTaskGraphs() == 1) ? "" : "s" );
+  proc0cout << "Compiling taskgraph" << plural << "..." << std::endl;
 
   m_output->recompile( m_current_gridP );
   

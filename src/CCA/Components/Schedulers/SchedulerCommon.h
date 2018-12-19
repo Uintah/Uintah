@@ -131,7 +131,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     /// For more complicated models
     virtual void addTaskGraph( tgType type, int index /* == -1 */ );
 
-    virtual int getNumTaskGraphs() { return m_task_graphs.size(); }
+    virtual int getNumTaskGraphs() { return m_num_task_graphs; }
 
     virtual void setNumTaskGraphs( const int num_task_graphs ) {
       ASSERT( num_task_graphs  >= 1 );
@@ -224,7 +224,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                            , const VarLabelList & new_labels
                                            , const VarLabel     * particleIDLabel
                                            , const MaterialSet  * matls
-                                           ,       int which
+                                           ,       int            which
                                            );
 
     virtual void scheduleParticleRelocation( const LevelP       & coarsestLevelwithParticles
@@ -248,11 +248,12 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual void scheduleTaskMonitoring( const PatchSet* patches );
 
     // Record the task monitoring attribute values.
-    virtual void recordTaskMonitoring(const ProcessorGroup*,  
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* /*matls*/,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw);
+    virtual void recordTaskMonitoring( const ProcessorGroup * /*   */
+                                     , const PatchSubset    * patches
+                                     , const MaterialSubset * /*matls*/
+                                     ,       DataWarehouse  * old_dw
+                                     ,       DataWarehouse  * new_dw
+                                     );
   
     //! override default behavior of copying, scrubbing, and such
     virtual void overrideVariableBehavior( const std::string & var
@@ -281,8 +282,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     bool isCopyDataTimestep() { return m_is_copy_data_timestep; }
       
-    bool copyTimestep() { return (m_is_copy_data_timestep ||
-                                  m_is_init_timestep); }
+    bool copyTimestep() { return (m_is_copy_data_timestep || m_is_init_timestep); }
 
     void setInitTimestep( bool isInitTimestep ) { m_is_init_timestep = isInitTimestep; }
 
@@ -366,7 +366,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     std::map<std::string, std::map<int, double> > m_monitoring_values[2];
 
     // Method for summing up the task contributions.
-    void sumTaskMonitoringValues(DetailedTask * dtask);
+    void sumTaskMonitoringValues( DetailedTask * dtask );
 
     // so we can manually copy vars between AMR levels
     std::set<std::string> m_copy_data_vars;
@@ -388,10 +388,10 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
   private:
 
     // helper method for primary addTask()
-    void addTask(       std::shared_ptr<Task>
-                , const PatchSet    * patches
-                , const MaterialSet * matls
-                , const int           tg_num
+    void addTask(       std::shared_ptr<Task>   task
+                , const PatchSet              * patches
+                , const MaterialSet           * matls
+                , const int                     tg_num
                 );
 
     // eliminate copy, assignment and move

@@ -49,6 +49,7 @@ void MassFlowRate::problemSetup( ProblemSpecP& db ){
   m_g_vVel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
   m_g_wVel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
 
+  m_volFraction_name = "volFraction";
   particleMethod_bool = check_for_particle_method( db, DQMOM_METHOD );
 
   const ProblemSpecP db_root = db->getRootNode();
@@ -63,8 +64,8 @@ void MassFlowRate::problemSetup( ProblemSpecP& db ){
       m_RC_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);   // RawCoal
       m_CH_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_CHAR);      // Char
       m_p_uVel_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_XVEL);  // uVel
-      m_p_vVel_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_XVEL);  // vVel
-      m_p_wVel_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_XVEL);  // wVel
+      m_p_vVel_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_YVEL);  // vVel
+      m_p_wVel_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_ZVEL);  // wVel
 
       for ( int qn = 0; qn < m_Nenv; qn++ ){
 
@@ -86,6 +87,30 @@ void MassFlowRate::problemSetup( ProblemSpecP& db ){
       }
     }
   }
+  // Get name of inlets 
+  ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions");
+  for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ) {
+    std::string Type;
+    db_face->getAttribute("type", Type );
+    if (Type =="Inlet" ) {
+      std::string faceName;
+      db_face->getAttribute("name",faceName);
+      MFInfo info_g ;
+      info_g.name = "m_dot_g_" + faceName;
+      info_g.face_name = faceName;
+      info_g.value = 0;
+      m_m_gas_info.push_back(info_g);
+
+      MFInfo info_p ;
+      info_p.name = "m_dot_p_" + faceName;
+      info_p.face_name = faceName;
+      info_p.value = 0;
+      m_m_p_info.push_back(info_p);
+      
+    }
+  }
+
+
 }
 
 // Declaration -----------------------------------------------------------------
@@ -94,6 +119,18 @@ MassFlowRate::create_local_labels(){
 
   register_new_variable<sum_vartype> ("m_dot_g");  // Gas phase mass flow rate
   register_new_variable<sum_vartype> ("m_dot_p");  // Particle phase mass flow rate
+  
+  for (auto iface = m_m_gas_info.begin(); iface != m_m_gas_info.end(); iface++){
+    MFInfo info = *iface;
+    register_new_variable<sum_vartype> (info.name);  
+  }
+
+  for (auto iface = m_m_p_info.begin(); iface != m_m_p_info.end(); iface++){
+    MFInfo info = *iface;
+    register_new_variable<sum_vartype> (info.name);  
+  }
+
+
 
 }
 
@@ -111,6 +148,42 @@ void MassFlowRate::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_in
 // Timestep Eval ---------------------------------------------------------------
 void MassFlowRate::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
+  typedef ArchesFieldContainer AFC;
+
+  register_variable( "m_dot_g"    , AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "m_dot_p"    , AFC::COMPUTES, variable_registry, m_task_name );
+
+  for (auto iface = m_m_gas_info.begin(); iface != m_m_gas_info.end(); iface++){
+    MFInfo info = *iface;
+    register_variable( info.name    , AFC::COMPUTES, variable_registry, m_task_name );
+  }
+
+  for (auto iface = m_m_p_info.begin(); iface != m_m_p_info.end(); iface++){
+    MFInfo info = *iface;
+    register_variable( info.name    , AFC::COMPUTES, variable_registry, m_task_name );
+  }
+
+  register_variable( "density"       , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+
+  register_variable( m_g_uVel_name   , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_g_vVel_name   , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_g_wVel_name   , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+
+  register_variable( m_volFraction_name, AFC::REQUIRES, 1, AFC::OLDDW, variable_registry, time_substep, m_task_name );
+  if(particleMethod_bool){
+
+    for ( int qn = 0; qn < m_Nenv; qn++ ){
+
+      register_variable( m_w_names[qn] , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_RC_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_CH_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+
+      register_variable( m_p_uVel_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_p_vVel_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_p_wVel_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+
+    }
+  }
   register_massFlowRate( variable_registry, packed_tasks );
 
 }
@@ -123,37 +196,13 @@ void MassFlowRate::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 // Definitions -----------------------------------------------------------------
 void MassFlowRate::register_massFlowRate( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks ){
 
-  typedef ArchesFieldContainer AFC;
-
-  register_variable( "m_dot_g"    , AFC::COMPUTES, variable_registry, m_task_name );
-  register_variable( "m_dot_p"    , AFC::COMPUTES, variable_registry, m_task_name );
-
-  register_variable( "density"       , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-
-  register_variable( m_g_uVel_name   , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( m_g_vVel_name   , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( m_g_wVel_name   , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-
-  if(particleMethod_bool){
-
-    for ( int qn = 0; qn < m_Nenv; qn++ ){
-
-      register_variable( m_w_names[qn] , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-      register_variable( m_RC_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-      register_variable( m_CH_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-
-      register_variable( m_p_uVel_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-      register_variable( m_p_vVel_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-      register_variable( m_p_wVel_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-
-    }
-  }
 }
 
 // -----------------------------------------------------------------------------
 void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("density");
+  constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
   DataWarehouse* new_dw = tsk_info->getNewDW();
 
@@ -165,147 +214,165 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
   // Get the  helper information about boundaries (global) per patch :
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
 
+
   double m_dot_gas  = 0.0;
   double m_dot_coal = 0.0;
 
+  // Gas phase
+  constSFCXVariable<double>& uvel_g  = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_g_uVel_name);
+  constSFCYVariable<double>& vvel_g  = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_g_vVel_name);
+  constSFCZVariable<double>& wvel_g  = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_g_wVel_name);
+
   if(particleMethod_bool){
 
-    for ( int i = 0; i < m_Nenv; i++ ){
+    //const int istart = 0;
+    //int iend = m_m_p_info.size();
+    //for (int i = istart; i < iend; i++ ){
+    //    m_m_p_info[i].value = 0;
+    //}
 
-      // Gas phase
-      constSFCXVariable<double>& uvel_g  = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_g_uVel_name);
-      constSFCYVariable<double>& vvel_g  = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_g_vVel_name);
-      constSFCZVariable<double>& wvel_g  = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_g_wVel_name);
+    for ( int qn = 0; qn < m_Nenv; qn++ ){
 
       // Coal phase
-      constCCVariable<double>& wqn  = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_w_names[i]  ));
-      constCCVariable<double>& RCqn = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_RC_names[i] ));
-      constCCVariable<double>& CHqn = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_CH_names[i] ));
-
-      constCCVariable<double>& uvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_uVel_names[i] ));
-      constCCVariable<double>& vvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_vVel_names[i] ));
-      constCCVariable<double>& wvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_wVel_names[i] ));
-
+      constCCVariable<double>& wqn  = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_w_names[qn]  ));
+      constCCVariable<double>& RCqn = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_RC_names[qn] ));
+      constCCVariable<double>& CHqn = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_CH_names[qn] ));
+      
+      constCCVariable<double>& uvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_uVel_names[qn] ));
+      constCCVariable<double>& vvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_vVel_names[qn] ));
+      constCCVariable<double>& wvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_wVel_names[qn] ));
+      
       for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-
+      
         // Sweep through, for type == Inlet, then sweep through the specified cells
         if ( i_bc->second.type == INLET ){
-
+      
           // Get the cell iterator - range of cellID:
           Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-
+      
           // Get the face direction (this is the outward facing normal):
-          IntVector normal     = patch->faceDirection(i_bc->second.face);
-          IntVector normalFace = patch->faceDirection(i_bc->second.face);
-          if((i_bc->second.name == "x+") || (i_bc->second.name == "y+") || (i_bc->second.name == "z+")){
-            normalFace = IntVector(0,0,0);
-          }
-
+          const IntVector iDir     = patch->faceDirection(i_bc->second.face);
+      
           //Now loop through the cells:
-            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
-
-            const int ic = i - normal[0]; // interior cell index
-            const int jc = j - normal[1];
-            const int kc = k - normal[2];
-
-            const int iF = i - normalFace[0]; // interior FACE index
-            const int jF = j - normalFace[1];
-            const int kF = k - normalFace[2];
-
-
-            double rho_interp  = 0.5 * ( density(i,j,k) + density(ic,jc,kc) );
-
-            double RCqn_interp = 0.5 * ( RCqn(i,j,k)    + RCqn(ic,jc,kc) );
-            double CHqn_interp = 0.5 * ( CHqn(i,j,k)    + CHqn(ic,jc,kc) );
-            double wqn_interp  = 0.5 * ( wqn (i,j,k)    + wqn (ic,jc,kc) );
-
-            double uvel_p_interp  = 0.5 * ( uvel_p(i,j,k) + uvel_p(ic,jc,kc) );
-            double vvel_p_interp  = 0.5 * ( vvel_p(i,j,k) + vvel_p(ic,jc,kc) );
-            double wvel_p_interp  = 0.5 * ( wvel_p(i,j,k) + wvel_p(ic,jc,kc) );
-
-            double uvel_p_i = uvel_p_interp * m_p_uVel_scaling_constant[i] / wqn_interp ;
-            double vvel_p_i = vvel_p_interp * m_p_vVel_scaling_constant[i] / wqn_interp ;
-            double wvel_p_i = wvel_p_interp * m_p_wVel_scaling_constant[i] / wqn_interp ;
-
-            double RCi = RCqn_interp * m_RC_scaling_constant[i] * m_w_scaling_constant[i]; // kg of i / m3
-            double CHi = CHqn_interp * m_CH_scaling_constant[i] * m_w_scaling_constant[i];
-
-            if(i_bc->second.face == Patch::xminus || i_bc->second.face == Patch::xplus ){
-
-              m_dot_gas += (i==0) ? rho_interp * std::abs(uvel_g(iF,jF,kF)) * area_x : 0.0; // gas is only computed once
-              m_dot_coal += ( RCi + CHi ) * std::abs(uvel_p_i) * area_x;
-            }
-            else if(i_bc->second.face == Patch::yminus || i_bc->second.face == Patch::yplus ){
-              m_dot_gas += (i==0) ? rho_interp * std::abs(vvel_g(iF,jF,kF)) * area_y : 0.0;
-              m_dot_coal += ( RCi + CHi ) * std::abs(vvel_p_i) * area_y;
-            }
-            // i_bc->second.name == "z-" || i_bc->second.name == "z+"
-            else{
-              m_dot_gas += (i==0) ? rho_interp * std::abs(wvel_g(iF,jF,kF)) * area_z : 0.0;
-              m_dot_coal += ( RCi + CHi ) * std::abs(wvel_p_i) * area_z;
-            }
+          double value_m_dot = 0;
+          parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+      
+          const int ic = i - iDir[0]; // interior cell index
+          const int jc = j - iDir[1];
+          const int kc = k - iDir[2];
+      
+          const double eps_interp  =  eps(i,j,k)*eps(ic,jc,kc);
+      
+          const double RCqn_interp = 0.5 * ( RCqn(i,j,k) + RCqn(ic,jc,kc) );
+          const double CHqn_interp = 0.5 * ( CHqn(i,j,k) + CHqn(ic,jc,kc) );
+          const double wqn_interp  = 0.5 * ( wqn (i,j,k) + wqn (ic,jc,kc) );
+      
+          const double uvel_p_interp  = 0.5 * ( uvel_p(i,j,k) + uvel_p(ic,jc,kc) );
+          const double vvel_p_interp  = 0.5 * ( vvel_p(i,j,k) + vvel_p(ic,jc,kc) );
+          const double wvel_p_interp  = 0.5 * ( wvel_p(i,j,k) + wvel_p(ic,jc,kc) );
+      
+          const double uvel_p_i = uvel_p_interp * m_p_uVel_scaling_constant[qn] / wqn_interp ;
+          const double vvel_p_i = vvel_p_interp * m_p_vVel_scaling_constant[qn] / wqn_interp ;
+          const double wvel_p_i = wvel_p_interp * m_p_wVel_scaling_constant[qn] / wqn_interp ;
+      
+          const double RCi = RCqn_interp * m_RC_scaling_constant[qn] / wqn_interp; // kg of i / m3
+          const double CHi = CHqn_interp * m_CH_scaling_constant[qn] / wqn_interp;
+          
+          const double wi =  wqn_interp * m_w_scaling_constant[qn];
+ 
+          value_m_dot += -( RCi + CHi ) * uvel_p_i * area_x * wi * eps_interp * iDir[0]
+                         -( RCi + CHi ) * vvel_p_i * area_y * wi * eps_interp * iDir[1]
+                         -( RCi + CHi ) * wvel_p_i * area_z * wi * eps_interp * iDir[2];
+      
           });
+
+          m_dot_coal += value_m_dot;
+          
+          new_dw->put(sum_vartype(value_m_dot), VarLabel::find("m_dot_p_"+i_bc->second.name));
+          proc0cout << "\n Particle flow gas  : " << i_bc->second.name << " = "  << value_m_dot << " [kg/s]\n" << std::endl;
+          //const int istart = 0;
+          //int iend = m_m_p_info.size();
+          //for (int i = istart; i < iend; i++ ){
+          //  if (m_m_p_info[i].face_name == i_bc->second.name){
+          //    m_m_p_info[i].value += value_m_dot;
+          //  }
+          //}
         }
       }
-    }
+      }
 
-    new_dw->put(sum_vartype(m_dot_gas ), VarLabel::find("m_dot_g"));
     new_dw->put(sum_vartype(m_dot_coal), VarLabel::find("m_dot_p"));
     // ----------------------------------------------------------------------
+    //for (int i = istart; i < iend; i++ ){
+    //  new_dw->put(sum_vartype(m_m_p_info[i].value), VarLabel::find(m_m_p_info[i].name));
+    //  proc0cout << "\n Particle flow gas  : " << m_m_p_info[i].face_name  << " = "  << m_m_p_info[i].value << " [kg/s]\n" << std::endl;
+    //}
 
-    proc0cout << "\n Mass flow Gas  : Inlet face = " << m_dot_gas << " [kg/s]" << std::endl;
-    proc0cout << " Mass flow Coal : Inlet face = " << m_dot_coal << " [kg/s]\n" << std::endl;
+    proc0cout << "\n Total particle Mass flow  : Inlet face = " << m_dot_coal << " [kg/s]" << std::endl;
   }
-  else{
 
-    constSFCXVariable<double>& uvel_g  = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >( m_g_uVel_name );
-    constSFCYVariable<double>& vvel_g  = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >( m_g_vVel_name );
-    constSFCZVariable<double>& wvel_g  = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >( m_g_wVel_name );
+  //const int istart = 0;
+  //int iend = m_m_gas_info.size();
+  //for (int i = istart; i < iend; i++ ){
+  //    m_m_gas_info[i].value = 0;
+  //}
 
-    for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-      // Sweep through, for type == Inlet, then sweep through the specified cells
+  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+    // Sweep through, for type == Inlet, then sweep through the specified cells
 
-      if ( i_bc->second.type == INLET ){
+    if ( i_bc->second.type == INLET ){
 
-        // Get the cell iterator - range of cellID:
-        Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+      // Get the cell iterator - range of cellID:
+      Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-        // Get the face direction (this is the outward facing normal):
-        IntVector normal     = patch->faceDirection(i_bc->second.face);
-        IntVector normalFace = patch->faceDirection(i_bc->second.face);
-        if((i_bc->second.name == "x+") || (i_bc->second.name == "y+") || (i_bc->second.name == "z+")){
-          normalFace = IntVector(0,0,0);
-        }
+      // Get the face direction (this is the outward facing normal):
+      const IntVector iDir     = patch->faceDirection(i_bc->second.face);
 
-        //Now loop through the cells:
-        parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+      //Now loop through the cells:
+      double value_m_dot = 0;
+      parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+      
+        const int im = i - iDir[0]; // interior cell index
+        const int jm = j - iDir[1];
+        const int km = k - iDir[2];
+      
+        const double rho_interp  = 0.5 * ( density(i,j,k) + density(im,jm,km) );
+        const double eps_interp  =  eps(i,j,k)*eps(im,jm,km);
 
-          const int ic = i - normal[0]; // interior cell index
-          const int jc = j - normal[1];
-          const int kc = k - normal[2];
+        // x- => (-1,0,0)  x+ => (1,0,0) 
+        // y- => (0,-1,0)  y+ => (0,1,0) 
+        // z- => (0,0,-1)  z+ => (0,0,1) 
 
-          const int iF = i - normalFace[0]; // interior FACE index
-          const int jF = j - normalFace[1];
-          const int kF = k - normalFace[2];
+        value_m_dot += -rho_interp * uvel_g(i,j,k) * area_x * eps_interp * iDir[0] 
+                       -rho_interp * vvel_g(i,j,k) * area_y * eps_interp * iDir[1]
+                       -rho_interp * wvel_g(i,j,k) * area_z * eps_interp * iDir[2];
 
-          double rho_interp  = 0.5 * ( density(i,j,k) + density(ic,jc,kc) );
 
-          if(i_bc->second.face == Patch::xminus || i_bc->second.face == Patch::xplus ){
-            m_dot_gas += rho_interp * std::abs(uvel_g(iF,jF,kF)) * area_x;
-          }
-          else if(i_bc->second.face == Patch::yminus || i_bc->second.face == Patch::yplus ){
-            m_dot_gas += rho_interp * std::abs(vvel_g(iF,jF,kF)) * area_y;
-          }
-          // i_bc->second.name == "z-" || i_bc->second.name == "z+"
-          else{
-            m_dot_gas += rho_interp * std::abs(wvel_g(iF,jF,kF)) * area_z;
-          }
-        });
-      }
+      });
+      // total mass flow
+      m_dot_gas += value_m_dot;
+
+      new_dw->put(sum_vartype(value_m_dot), VarLabel::find("m_dot_g_"+i_bc->second.name));
+      proc0cout << "\n Mass flow gas  : " << i_bc->second.name  << " = "  << value_m_dot << " [kg/s]\n" << std::endl;
+      //const int istart = 0;
+      //int iend = m_m_gas_info.size();
+      //for (int i = istart; i < iend; i++ ){
+      //  if (m_m_gas_info[i].face_name == i_bc->second.name){
+          //m_m_gas_info[i].value += value_m_dot;
+      //  }
+      // }
+
+
+    }
     }
     new_dw->put(sum_vartype(m_dot_gas), VarLabel::find("m_dot_g"));
+
+    //for (int i = istart; i < iend; i++ ){
+    //  new_dw->put(sum_vartype(m_m_gas_info[i].value), VarLabel::find(m_m_gas_info[i].name));
+    //  proc0cout << "\n Mass flow gas  : " << m_m_gas_info[i].face_name  << " = "  << m_m_gas_info[i].value << " [kg/s]\n" << std::endl;
+    //}
     // ----------------------------------------------------------------------
 
-    proc0cout << "\n Mass flow Gas  : Inlet face = " << m_dot_gas << " [kg/s]\n" << std::endl;
-  }
+    proc0cout << "\n Total mass flow Gas  = " << m_dot_gas << " [kg/s]\n" << std::endl;
+  //}
 }

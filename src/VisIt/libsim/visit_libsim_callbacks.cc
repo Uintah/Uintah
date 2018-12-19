@@ -273,9 +273,6 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  ApplicationInterface* appInterface =
-    sim->simController->getApplicationInterface();
-
   if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
     sim->runMode = VISIT_SIMMODE_STOPPED;
@@ -351,7 +348,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       sim->runMode = VISIT_SIMMODE_RUNNING;
   }
   else if(strcmp(cmd, "Terminate") == 0 ||
-	  strcmp(cmd, "Abort") == 0)
+          strcmp(cmd, "Abort") == 0)
   {
     sim->runMode = VISIT_SIMMODE_RUNNING;
     sim->simMode = VISIT_SIMMODE_TERMINATED;
@@ -599,8 +596,6 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
-
-  DataWarehouse *dw = sim->simController->getSchedulerP()->getLastDW();
 
   unsigned int row, column;
   double oldValue, newValue;

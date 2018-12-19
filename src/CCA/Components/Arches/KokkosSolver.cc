@@ -225,11 +225,11 @@ KokkosSolver::computeTimestep( const LevelP     & level
   using namespace ArchesCore;
 
   std::vector<std::string> var_names;
-  std::string uname = parse_ups_for_role( UVELOCITY, m_arches_spec, "NotFound" );
+  std::string uname = parse_ups_for_role( UVELOCITY, m_arches_spec, ArchesCore::default_uVel_name );
   var_names.push_back(uname);
-  std::string vname = parse_ups_for_role( VVELOCITY, m_arches_spec, "NotFound" );
+  std::string vname = parse_ups_for_role( VVELOCITY, m_arches_spec, ArchesCore::default_vVel_name );
   var_names.push_back(vname);
-  std::string wname = parse_ups_for_role( WVELOCITY, m_arches_spec, "NotFound" );
+  std::string wname = parse_ups_for_role( WVELOCITY, m_arches_spec, ArchesCore::default_wVel_name );
   var_names.push_back(wname);
   std::string muname = parse_ups_for_role( TOTAL_VISCOSITY, m_arches_spec, "NotFound" );
   var_names.push_back(muname);

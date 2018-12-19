@@ -629,6 +629,8 @@ public: // class Task
 
   inline const MaterialSet * getMaterialSet() const { return m_matl_set; }
 
+  bool hasDistalRequires() const;         // determines if this Task has any "distal" ghost cell requirements
+
   int m_phase{-1};                        // synchronized phase id, for dynamic task scheduling
   int m_comm{-1};                         // task communicator id, for threaded task scheduling
   std::map<int,int> m_max_ghost_cells;    // max ghost cells of this task

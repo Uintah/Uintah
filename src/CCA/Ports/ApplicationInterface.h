@@ -114,6 +114,7 @@ WARNING
     
     friend void visit_SetTimeValues( visit_simulation_data *sim );
     friend void visit_SetDeltaTValues( visit_simulation_data *sim );
+    friend void visit_SetApplicationStats( visit_simulation_data *sim );
     friend void visit_SimTimeMaxCallback(char *val, void *cbdata);
     friend void visit_DeltaTVariableCallback(char *val, void *cbdata);
 #endif

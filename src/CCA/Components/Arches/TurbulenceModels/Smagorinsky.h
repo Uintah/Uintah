@@ -63,7 +63,10 @@ private:
     std::string m_cc_w_vel_name;
     double m_Cs; //Smagorinsky constant
     double m_molecular_visc;
-    std::string m_t_vis_name;
+    std::string m_total_vis_name;
+    std::string m_density_name; 
+
+    bool m_using_production{false};
 
     int Nghost_cells;
 

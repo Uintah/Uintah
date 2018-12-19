@@ -23,14 +23,14 @@
  */
 
 #include <Core/Grid/Variables/ReductionVariable.h>
-
+#include <Core/Disclosure/TypeUtils.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Grid/Variables/Reductions.h>
 #include <Core/Util/FancyAssert.h>
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
 #include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD_OR_LATER
 
-#include <Core/Disclosure/TypeUtils.h>
 
 using namespace Uintah;
 using namespace std;
@@ -58,7 +58,7 @@ ReductionVariable<double, Reductions::Min<double> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr = value;
+  *ptr = *(value.get());
   index += sizeof(double);
 }
 
@@ -72,7 +72,7 @@ ReductionVariable<long long, Reductions::Min<long long> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long long)));
   long long* ptr = reinterpret_cast<long long*>(&data[index]);
-  *ptr = value;
+  *ptr = *(value.get());
   index += sizeof(long long);
 }
 
@@ -85,7 +85,7 @@ ReductionVariable<long long, Reductions::Sum<long long> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long long)));
   long long* ptr = reinterpret_cast<long long*>(&data[index]);
-  *ptr = value;
+  *ptr = *(value.get());
   index += sizeof(long long);
 }
 #endif
@@ -99,7 +99,7 @@ ReductionVariable<double, Reductions::Min<double> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  value = *ptr;
+  value = std::make_shared<double>(*ptr);
   index += sizeof(double);
 }
 
@@ -126,7 +126,7 @@ ReductionVariable<double, Reductions::Max<double> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr = value;
+  *ptr = *(value.get());
   index += sizeof(double);
 }
 
@@ -139,7 +139,7 @@ ReductionVariable<double, Reductions::Max<double> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  value = *ptr;
+  value = std::make_shared<double>(*ptr);
   index += sizeof(double);
 }
 
@@ -178,7 +178,7 @@ ReductionVariable<double, Reductions::Sum<double> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr = value;
+  *ptr = *(value.get());
   index += sizeof(double);
 }
 
@@ -192,7 +192,7 @@ ReductionVariable<double, Reductions::Sum<double> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  value = *ptr;
+  value = std::make_shared<double>(*ptr);
   index += sizeof(double);
 }
 
@@ -219,7 +219,7 @@ ReductionVariable<bool, Reductions::And<bool> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
   char* ptr = reinterpret_cast<char*>(&data[index]);
-  *ptr = value;
+  *ptr = *(value.get());
   index += sizeof(char);
 }
 
@@ -232,7 +232,7 @@ ReductionVariable<bool, Reductions::And<bool> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
   char* ptr = reinterpret_cast<char*>(&data[index]);
-  value = *ptr;
+  value = std::make_shared<bool>(*ptr);
   index += sizeof(char);
 }
 
@@ -259,7 +259,7 @@ ReductionVariable<bool, Reductions::Or<bool> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
   char* ptr = reinterpret_cast<char*>(&data[index]);
-  *ptr = value;
+  *ptr = *(value.get());
   index += sizeof(char);
 }
 
@@ -273,7 +273,7 @@ ReductionVariable<bool, Reductions::Or<bool> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
   char* ptr = reinterpret_cast<char*>(&data[index]);
-  value = *ptr;
+  value = std::make_shared<bool>(*ptr);
   index += sizeof(char);
 }
 
@@ -301,7 +301,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long)));
   long* ptr = reinterpret_cast<long*>(&data[index]);
-  *ptr = value;
+  *ptr = *(value.get());
   index += sizeof(long);
 }
 #endif
@@ -315,7 +315,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long)));
   long* ptr = reinterpret_cast<long*>(&data[index]);
-  value = *ptr;
+  value = std::make_shared<long64>(*ptr);
   index += sizeof(long);
 }
 
@@ -330,7 +330,7 @@ ReductionVariable<long long, Reductions::Sum<long long> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long long)));
   long long* ptr = reinterpret_cast<long long*>(&data[index]);
-  value = *ptr;
+  value = std::make_shared<long long>(*ptr);
   index += sizeof(long long);
 }
 #  endif
@@ -357,9 +357,9 @@ ReductionVariable<Vector, Reductions::Sum<Vector> >
 {       
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr++ = value.x();
-  *ptr++ = value.y();
-  *ptr++ = value.z();
+  *ptr++ = value.get()->x();
+  *ptr++ = value.get()->y();
+  *ptr++ = value.get()->z();
 }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -372,9 +372,9 @@ ReductionVariable<Vector, Reductions::Sum<Vector> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  value.x(*ptr++);
-  value.y(*ptr++);
-  value.z(*ptr++);
+  value.get()->x(*ptr++);
+  value.get()->y(*ptr++);
+  value.get()->z(*ptr++);
 }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -398,9 +398,9 @@ ReductionVariable<Vector, Reductions::Min<Vector> >
 {       
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr++ = value.x();
-  *ptr++ = value.y();
-  *ptr++ = value.z();
+  *ptr++ = value.get()->x();
+  *ptr++ = value.get()->y();
+  *ptr++ = value.get()->z();
 }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -413,9 +413,9 @@ ReductionVariable<Vector, Reductions::Min<Vector> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  value.x(*ptr++);
-  value.y(*ptr++);
-  value.z(*ptr++);
+  value.get()->x(*ptr++);
+  value.get()->y(*ptr++);
+  value.get()->z(*ptr++);
 }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -439,9 +439,9 @@ ReductionVariable<Vector, Reductions::Max<Vector> >
 {       
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr++ = value.x();
-  *ptr++ = value.y();
-  *ptr++ = value.z();
+  *ptr++ = value.get()->x();
+  *ptr++ = value.get()->y();
+  *ptr++ = value.get()->z();
 }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -454,9 +454,9 @@ ReductionVariable<Vector, Reductions::Max<Vector> >
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
-  value.x(*ptr++);
-  value.y(*ptr++);
-  value.z(*ptr++);
+  value.get()->x(*ptr++);
+  value.get()->y(*ptr++);
+  value.get()->z(*ptr++);
 }
 
 } // end namespace Uintah

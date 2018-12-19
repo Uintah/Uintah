@@ -62,7 +62,6 @@ PSELIBS := \
 # ICE analysis modules
 ifeq ($(BUILD_ICE),yes)
   SRCS += \
-        $(SRCDIR)/containerExtract.cc \
         $(SRCDIR)/vorticity.cc
 
   PSELIBS += CCA/Components/ICE/Core \

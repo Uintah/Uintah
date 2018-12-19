@@ -44,42 +44,53 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
   , m_threads(threads)
 {
   // Get the processor name for this rank.
-  procName_t proc_name;
+  procName_t my_proc_name;
   int procNameLength;
 
-  MPI::Get_processor_name( proc_name, &procNameLength );
-  proc_name[procNameLength] = '\0';
+  MPI::Get_processor_name( my_proc_name, &procNameLength );
+  my_proc_name[procNameLength] = '\0';
 
-  m_proc_name = std::string(proc_name);
-  
-  m_all_proc_names = new procName_t[m_nRanks];
+  procName_t *all_proc_names = new procName_t[m_nRanks];
+
+  m_all_proc_indexs.resize(m_nRanks);
 
   // Gather all of the processor names in rank order.
-  MPI::Allgather(      proc_name,  MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR,
-                 m_all_proc_names, MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR,
-                 MPI_COMM_WORLD);
+  MPI::Allgather(  my_proc_name,  MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR,
+                  all_proc_names, MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR,
+                  MPI_COMM_WORLD);
+
+  std::map< std::string, unsigned int > proc_name_map;
 
   // Loop through each rank and map its processor name to a node index.
   for( int i=0; i<nRanks; ++i )
   {
+    std::string proc_name = std::string(all_proc_names[i]);
+
     // If the name is not found add it to the map.
-    if( m_proc_name_map.find( std::string(m_all_proc_names[i]) ) ==
-        m_proc_name_map.end() )
+    if( proc_name_map.find( proc_name ) == proc_name_map.end() )
     {
-      m_proc_name_map[ m_all_proc_names[i] ] = m_nNodes;
-      m_nNodes = m_proc_name_map.size();
+      int nNodes = proc_name_map.size();
+
+      // Add the name to map so to track unique processor names.
+      proc_name_map[ proc_name ] = nNodes;
+
+      // Store the processor name for later look up by node index.
+      m_all_proc_names.push_back( proc_name );
     }
+
+    // For each rank save it's node index. This index can be
+    // used to get the node name.
+    m_all_proc_indexs[i] = proc_name_map[ proc_name ];
   }
 
-  // Get the index for this processor name.
-  m_node = m_proc_name_map[ m_proc_name ];
+  delete [] all_proc_names;  
 
   // More than one node so create a node based communicator.
-  if( m_nNodes > 1 )
+  if( proc_name_map.size() > 1 )
   {
     // The node index becomes the "color" while using the world rank
     // which is unique for the ordering.
-    MPI::Comm_split(m_comm, m_node, m_rank, &m_node_comm);
+    MPI::Comm_split(m_comm, m_all_proc_indexs[m_rank], m_rank, &m_node_comm);
     
     // Get the number of ranks for this node and the rank on this node.
     MPI::Comm_size(m_node_comm, &m_node_nRanks);
@@ -96,10 +107,9 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
 
 ProcessorGroup::~ProcessorGroup() 
 {
-  // if( m_nNodes > 1 )
+  // This free call causes a hard crash.
+  // if( m_all_proc_names.size() > 1 )
   // MPI::Comm_free( &m_node_comm );
-
-  delete [] m_all_proc_names;  
 };
 
 
@@ -123,24 +133,38 @@ void ProcessorGroup::setGlobalComm(int num_comms) const
   }
 }
 
-// From any rank get the node index.
-int ProcessorGroup::getNodeFromRank( int rank ) const
+// For this rank get the node name.
+std::string ProcessorGroup::myNodeName() const
+{
+  return m_all_proc_names[ m_all_proc_indexs[ m_rank ] ];
+}
+
+// For any rank get the node index.
+int ProcessorGroup::getNodeIndexFromRank( int rank ) const
 {
   // Make sure the rank is valid.
-  if( 0 <= rank && rank < m_nRanks )
-  {
-    // First get the process name for this rank
-    std::string proc_name = m_all_proc_names[rank];
-
-    // Make sure the name exists in the map.
-    if( m_proc_name_map.find(proc_name) != m_proc_name_map.end() )
-    {
-      // Return the index.
-      return m_proc_name_map.at(proc_name);
-    }
-    else
-      return -1;
-  }
+  if( 0 <= rank && rank < m_all_proc_indexs.size() )
+    return m_all_proc_indexs[ rank ];
   else
     return -1;
+}
+
+// For any rank get the node name.
+std::string ProcessorGroup::getNodeNameFromRank( int rank ) const
+{
+  // Make sure the rank is valid.
+  if( 0 <= rank && rank < m_all_proc_indexs.size() )
+    return m_all_proc_names[ m_all_proc_indexs[ rank ] ];
+  else
+    return std::string( "" );
+}
+
+// For any node get the node name.
+std::string ProcessorGroup::getNodeName( int node ) const
+{
+  // Make sure the node is valid.
+  if( 0 <= node && node < m_all_proc_names.size() )
+    return m_all_proc_names[ node ];
+  else
+    return std::string( "" );
 }

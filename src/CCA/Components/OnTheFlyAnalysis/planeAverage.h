@@ -88,7 +88,7 @@ ______________________________________________________________________*/
     virtual void scheduleRestartInitialize(SchedulerP   & sched,
                                            const LevelP & level);
 
-    virtual void restartInitialize();
+    virtual void restartInitialize(){};
 
     virtual void scheduleDoAnalysis(SchedulerP   & sched,
                                     const LevelP & level);
@@ -251,6 +251,7 @@ ______________________________________________________________________*/
         void reserve()
         {
           CC_pos.resize(nPlanes, Point(-DBL_MAX,-DBL_MAX,-DBL_MAX) );
+          ave.resize(   nPlanes, 0.);
           sum.resize(   nPlanes, 0.);
           weight.resize(nPlanes, 0.);
           nCells.resize(nPlanes, 0 );
@@ -283,6 +284,7 @@ ______________________________________________________________________*/
         {
           for(unsigned i=0; i<sum.size(); i++ ){
             CC_pos[i] = Point( -DBL_MAX,-DBL_MAX,-DBL_MAX );
+            ave[i]    = 0.0;
             sum[i]    = 0.0;
             weight[i] = 0.0;
             nCells[i] = 0;
@@ -373,6 +375,7 @@ ______________________________________________________________________*/
         {
           Vector zero(0.);
           CC_pos.resize( nPlanes, Point(-DBL_MAX,-DBL_MAX,-DBL_MAX) );
+          ave.resize(    nPlanes, Vector(0,0,0) );
           sum.resize(    nPlanes, Vector(0,0,0) );
           weight.resize( nPlanes, 0 );
           nCells.resize( nPlanes, 0 );
@@ -404,6 +407,7 @@ ______________________________________________________________________*/
         {
           for(unsigned i=0; i<sum.size(); i++ ){
             CC_pos[i] = Point( -DBL_MAX,-DBL_MAX,-DBL_MAX );
+            ave[i]    = Vector(0,0,0);
             sum[i]    = Vector(0,0,0);
             weight[i] = 0;
             nCells[i] = 0;
@@ -473,7 +477,7 @@ ______________________________________________________________________*/
     std::vector<  std::vector< std::shared_ptr< planarVarBase > > > d_allLevels_planarVars;
 
     //______________________________________________________________________
-    //
+    //          public TASKS AND METHODS
   public:
     void sched_computePlanarAve( SchedulerP   & sched,
                                  const LevelP & level );
@@ -484,9 +488,6 @@ ______________________________________________________________________*/
 
     void sched_resetProgressVar( SchedulerP   & sched,
                                  const LevelP & level );
-
-    void sched_updateTimeVar( SchedulerP   & sched,
-                              const LevelP & level );
 
     void createMPICommunicator(const PatchSet* perProcPatches);
 
@@ -523,6 +524,24 @@ ______________________________________________________________________*/
     {
       d_allLevels_planarVars.at(L_indx) = pv;
     }
+    
+
+    //__________________________________
+    //     PUBLIC:  VARIABLES
+    MaterialSet*  d_matl_set;
+    
+        // general labels
+    class planeAverageLabel {
+    public:
+      std::string lastCompTimeName;
+      std::string fileVarsStructName;
+      VarLabel* lastCompTimeLabel   {nullptr};
+      VarLabel* fileVarsStructLabel {nullptr};
+      VarLabel* weightLabel         {nullptr};
+    };
+
+    planeAverageLabel* d_lb;
+    
   //______________________________________________________________________
   //
   private:
@@ -603,36 +622,17 @@ ______________________________________________________________________*/
 
 
 
-    bool isItTime( DataWarehouse * old_dw);
-
-    bool isRightLevel( const int myLevel,
-                       const int L_indx,
-                       const LevelP& level);
-
-    // general labels
-    class planeAverageLabel {
-    public:
-      VarLabel* lastCompTimeLabel;
-      VarLabel* fileVarsStructLabel;
-      VarLabel* weightLabel = {nullptr};
-    };
-
-    planeAverageLabel* d_lb;
-
     //__________________________________
     // global constants always begin with "d_"
     std::string d_className;                   // identifier for each instantiation of this class
-    double d_writeFreq;
-    double d_startTime;
-    double d_stopTime;
     bool   d_parse_ups_variables;              // parse ups file to define d_allLevels_planarVars
                                                // this switch is needed for meanTurbFluxes module
     bool   d_writeOutput;
 
     const Material*  d_matl;
-    MaterialSet*     d_matl_set;
+    
     std::set<std::string> d_isDirCreated;
-    MaterialSubset*  d_zero_matl;
+    MaterialSubset*       d_zero_matl;
 
     const int d_MAXLEVELS {5};               // HARDCODED
 
@@ -642,7 +642,6 @@ ______________________________________________________________________*/
 
     enum orientation { XY, XZ, YZ };        // plane orientation
     orientation d_planeOrientation;
-
   };
 }
 

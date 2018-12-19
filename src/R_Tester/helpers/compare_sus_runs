@@ -24,6 +24,10 @@ compareUda_function()
   abs_tol=$4          # Absolute tolerance passed to compare_uda()
   rel_tol=$5          # Relative tolerance passed to compare_uda()
 
+  msg_comp_dats="No comparison made"
+  msg_comp_uda="PASSED"
+  msg_comp_ckpt="PASSED"
+
   compare_flags="-as_warnings -concise -abs_tolerance $abs_tol -rel_tolerance $rel_tol"
 
   inputs_differ=0
@@ -59,13 +63,24 @@ compareUda_function()
   echo "compare_dats $test_uda_dir $gs_uda_dir $abs_tol $rel_tol"
 
   compare_dats $test_uda_dir $gs_uda_dir $abs_tol $rel_tol
+  
   compare_dats_retval=$?
-  if [ $compare_dats_retval = "1" ]; then
+  
+  if [ $compare_dats_retval = "-1" ]; then
+    failed="-1"
+    msg_comp_dats="No dat files to compare"
+  
+  elif [ $compare_dats_retval = "0" ]; then
+    msg_comp_dats="PASSED"
+    
+  elif [ $compare_dats_retval = "1" ]; then
     echo
     echo "*** dat comparison tests failed ***"
     failed="1"
-  elif [ $compare_dats_retval = "-1" ]; then
-    failed="-1"
+    msg_comp_dats="FAILED"
+    
+  elif [ $compare_dats_retval = "2" ]; then
+    msg_comp_dats="ERROR"
   fi
 
   echo
@@ -86,10 +101,10 @@ compareUda_function()
   fi
 
   if [ $uda_retval != "0" ]; then
-
+    
     if [ $uda_retval == "2" ]; then
       echo
-      echo "*** uda comparison tests failed:  tolerances exceeded ***"
+      echo "*** uda comparison tests failed:  tolerances exceeded ***"  
     fi
 
     echo
@@ -98,6 +113,7 @@ compareUda_function()
     $sus_dir/tools/compute_Lnorm_udas $test_uda_dir $gs_uda_dir
 
     failed="1"
+    msg_comp_uda="FAILED"
   fi
 
 
@@ -127,15 +143,25 @@ compareUda_function()
       echo
       echo "*** checkpoint comparison tests failed ***"
       failed="1"
+      msg_comp_ckpt="FAILED"
     fi
 
   else
     echo "       WARNING: The checkpoint directory was not present in either the goldstandard or the test"
     echo "                No comparison performed"
+    msg_comp_ckpt="ERROR"
   fi
   #______________________________________________________________________
   #  all of the uda comparisons have been made
 
+  echo
+  echo "Summary:"
+  echo "======================================"
+  echo "  dat file comparsions:      " $msg_comp_dats
+  echo "  uda comparisons:           " $msg_comp_uda
+  echo "  checkpoint comparisons:    " $msg_comp_ckpt
+  echo "======================================"
+  
   if [ $failed != "0" ]; then
     exit $failed
   fi

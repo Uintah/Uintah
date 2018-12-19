@@ -77,8 +77,9 @@ _____________________________________________________________________*/
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
 
-    void scheduleDoAnalysis_preReloc(SchedulerP& sched,
-                                    const LevelP& level) {};
+    virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
+                                             const LevelP& level) {};
+
   //______________________________________________________________________
 
   private:

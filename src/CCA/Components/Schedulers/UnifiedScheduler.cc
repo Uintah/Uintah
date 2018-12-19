@@ -54,39 +54,42 @@
 #include <thread>
 
 
-#define USE_PACKING
-
-
 using namespace Uintah;
 
 //______________________________________________________________________
 //
 namespace Uintah {
+
   extern Dout g_task_dbg;
   extern Dout g_task_run;
   extern Dout g_task_order;
   extern Dout g_exec_out;
+
 }
 
+
 namespace {
+
   Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "general debugging info for UnifiedScheduler"  , false );
   Dout g_queuelength( "Unified_QueueLength", "UnifiedScheduler", "report task queue length for UnifiedScheduler", false );
 
   Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
   Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
   Uintah::MasterLock g_lb_mutex{};                  // load balancer lock
+
 } // namespace
+
 
 #ifdef HAVE_CUDA
 
 extern Uintah::MasterLock cerrLock;
 
 namespace Uintah {
-  DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "detailed GPU statistics on H2D and D2H data movement", false );
-  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "UnifiedScheduler", "simulate multiple GPUs, when using only one", false );
+  DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "detailed GPU statistics on H2D and D2H data movement"                  , false );
+  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "UnifiedScheduler", "simulate multiple GPUs, when using only one"                           , false );
   DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
 
-  Dout gpu_ids( "GPUIDs", "UnifiedScheduler", "detailed information to identify GPU(s) used when using multiple per node", false );
+  Dout gpu_ids( "GPUIDs", "UnifiedScheduler", "detailed information to identify GPU(s) used when using multiple per node"                                  , false );
 }
 
 namespace {
@@ -94,6 +97,7 @@ namespace {
 }
 
 #endif
+
 
 //______________________________________________________________________
 //
@@ -838,7 +842,7 @@ UnifiedScheduler::runTasks( int thread_id )
   while( m_num_tasks_done < m_num_tasks ) {
 
     DetailedTask* readyTask = nullptr;
-    DetailedTask* initTask = nullptr;
+    DetailedTask* initTask  = nullptr;
 
     bool havework = false;
 

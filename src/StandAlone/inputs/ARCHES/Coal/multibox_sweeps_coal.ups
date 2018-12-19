@@ -1602,6 +1602,7 @@
           <ASH>0.064800</ASH>
           <H2O>0.15000</H2O>
         </ultimate_analysis> <!--C+H+O+N+S+char+ash+moisture = 1 [wt fractions] -->
+        <daf_volatiles_fraction>.45</daf_volatiles_fraction>  <!--dray ash free volatiles content - computed from black thunder proximate analysis -->
          <raw_coal_enthalpy>-2247724.62188</raw_coal_enthalpy>
         <char_enthalpy>0.0</char_enthalpy><!-- char enthalpy (at inlet conditions) [J/kg] -->
         <ash_enthalpy>-9.5686e7</ash_enthalpy><!-- ash enthalpy (at inlet conditions) [J/kg] -->

@@ -34,115 +34,152 @@
 namespace Uintah {
 
 
-    /**************************************
-      
-      struct
-        VarLabelMatl
-      
-        VarLabel, Material, and Domain
-        
-      
-      GENERAL INFORMATION
-      
-        VarLabelMatl.h
-      
-        Wayne Witzel
-        Department of Computer Science
-        University of Utah
-      
-        Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-      
-      KEYWORDS
-        VarLabel, Material, Patch
-      
-      DESCRIPTION
+/**************************************
 
-        Specifies a VarLabel on a specific material and a specific
-        patch or level and optionally with another domain (data
-        warehouse) with an operator< defined so this can be used as a
-        key in a map.
-      
-      WARNING
-      
-      ****************************************/
-template<class DomainType0, class DomainType1 = void> struct VarLabelMatl
+  struct
+    VarLabelMatl
+
+    VarLabel, Material, and Domain
+
+
+  GENERAL INFORMATION
+
+    VarLabelMatl.h
+
+    Wayne Witzel
+    Department of Computer Science
+    University of Utah
+
+    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+
+
+  KEYWORDS
+    VarLabel, Material, Patch
+
+  DESCRIPTION
+
+    Specifies a VarLabel on a specific material and a specific
+    patch or level and optionally with another domain (data
+    warehouse) with an operator< defined so this can be used as a
+    key in a map.
+
+
+****************************************/
+
+template<class DomainType0, class DomainType1 = void>
+struct VarLabelMatl
 {
-  VarLabelMatl(const VarLabel* label, int matlIndex, const DomainType0* domain0, const DomainType1* domain1)
-    : label_(label), matlIndex_(matlIndex), domain0_(domain0), domain1_(domain1) {}
-  VarLabelMatl(const VarLabelMatl<DomainType0, DomainType1>& copy)
-    : label_(copy.label_), matlIndex_(copy.matlIndex_), domain0_(copy.domain0_), domain1_(copy.domain1_)
+
+  VarLabelMatl( const VarLabel    * label
+              ,       int           matlIndex
+              , const DomainType0 * domain0
+              , const DomainType1 * domain1
+              )
+    : m_label{label}
+    , m_matl_index{matlIndex}
+    , m_domain_0{domain0}
+    , m_domain_1{domain1}
   {}
-  VarLabelMatl<DomainType0, DomainType1>& operator=(const VarLabelMatl<DomainType0, DomainType1>& copy)
+
+  VarLabelMatl( const VarLabelMatl<DomainType0, DomainType1> & copy )
+    : m_label{copy.m_label}
+    , m_matl_index{copy.m_matl_index}
+    , m_domain_0{copy.m_domain_0}
+    , m_domain_1{copy.m_domain_1}
+  {}
+
+  VarLabelMatl<DomainType0, DomainType1>& operator=( const VarLabelMatl<DomainType0, DomainType1>& copy )
   {
-    label_=copy.label_; matlIndex_=copy.matlIndex_; domain0_=copy.domain0_; domain1_=copy.domain1_;
+    m_label     = copy.m_label;
+    m_matl_index= copy.m_matl_index;
+    m_domain_0  = copy.m_domain_0;
+    m_domain_1  = copy.m_domain_1;
+
     return *this;
   }
   
-  bool operator<(const VarLabelMatl<DomainType0, DomainType1>& other) const
+  bool operator<( const VarLabelMatl<DomainType0, DomainType1>& other ) const
   {
-    if (label_->equals(other.label_)) {
-      if (matlIndex_ == other.matlIndex_)
-        if ( domain0_ == other.domain0_)
-          return domain1_ < other.domain1_;
-        else
-          return domain0_ < other.domain0_;
-      else
-        return matlIndex_ < other.matlIndex_;
+    if (m_label->equals(other.m_label)) {
+      if (m_matl_index == other.m_matl_index) {
+        if (m_domain_0 == other.m_domain_0) {
+          return m_domain_1 < other.m_domain_1;
+        }
+        else {
+          return m_domain_0 < other.m_domain_0;
+        }
+      }
+      else {
+        return m_matl_index < other.m_matl_index;
+      }
     }
     else {
       VarLabel::Compare comp;
-      return comp(label_, other.label_);
+      return comp(m_label, other.m_label);
     }
   }
   
-  bool operator==(const VarLabelMatl<DomainType0, DomainType1>& other) const
+  bool operator==( const VarLabelMatl<DomainType0, DomainType1>& other ) const
   {
-    return ((label_->equals(other.label_)) && (matlIndex_ == other.matlIndex_) && (domain0_ == other.domain0_) && (domain1_ == other.domain1_));
+    return ((m_label->equals(other.m_label)) && (m_matl_index == other.m_matl_index) && (m_domain_0 == other.m_domain_0) && (m_domain_1 == other.m_domain_1));
   }
 
-  const VarLabel* label_;
-  int matlIndex_;
-  const DomainType0* domain0_;
-  const DomainType1* domain1_;
+  const VarLabel    * m_label{nullptr};
+        int           m_matl_index{};
+  const DomainType0 * m_domain_0{nullptr};
+  const DomainType1 * m_domain_1{nullptr};
 };  
 
 
-template<class DomainType> struct VarLabelMatl<DomainType, void>
+template<class DomainType>
+struct VarLabelMatl<DomainType, void>
 {
-  VarLabelMatl(const VarLabel* label, int matlIndex, const DomainType* domain)
-    : label_(label), matlIndex_(matlIndex), domain_(domain) {}
-  VarLabelMatl(const VarLabelMatl<DomainType>& copy)
-    : label_(copy.label_), matlIndex_(copy.matlIndex_), domain_(copy.domain_)
+
+  VarLabelMatl( const VarLabel   * label
+              ,       int          matlIndex
+              , const DomainType * domain
+              )
+    : m_label{label}
+    , m_matl_index{matlIndex}
+    , m_domain{domain}
   {}
-  VarLabelMatl<DomainType>& operator=(const VarLabelMatl<DomainType>& copy)
+
+  VarLabelMatl( const VarLabelMatl<DomainType>& copy )
+    : m_label(copy.m_label), m_matl_index(copy.m_matl_index), m_domain(copy.m_domain)
+  {}
+
+  VarLabelMatl<DomainType>& operator=( const VarLabelMatl<DomainType>& copy )
   {
-    label_=copy.label_; matlIndex_=copy.matlIndex_; domain_=copy.domain_;
+    m_label      = copy.m_label;
+    m_matl_index = copy.m_matl_index;
+    m_domain     = copy.m_domain;
     return *this;
   }
   
-  bool operator<(const VarLabelMatl<DomainType>& other) const
+  bool operator<( const VarLabelMatl<DomainType>& other ) const
   {
-    if (label_->equals(other.label_)) {
-      if (matlIndex_ == other.matlIndex_)
-        return domain_ < other.domain_;
-      else
-        return matlIndex_ < other.matlIndex_;
+    if (m_label->equals(other.m_label)) {
+      if (m_matl_index == other.m_matl_index) {
+        return m_domain < other.m_domain;
+      }
+      else {
+        return m_matl_index < other.m_matl_index;
+      }
     }
     else {
       VarLabel::Compare comp;
-      return comp(label_, other.label_);
+      return comp(m_label, other.m_label);
     }
   }
   
-  bool operator==(const VarLabelMatl<DomainType>& other) const
+  bool operator==( const VarLabelMatl<DomainType>& other ) const
   {
-    return ((label_->equals(other.label_)) && (matlIndex_ == other.matlIndex_) && (domain_ == other.domain_));
+    return ((m_label->equals(other.m_label)) && (m_matl_index == other.m_matl_index) && (m_domain == other.m_domain));
   }
 
-  const VarLabel* label_;
-  int matlIndex_;
-  const DomainType* domain_;
+  const VarLabel   * m_label{nullptr};
+        int          m_matl_index{};
+  const DomainType * m_domain{nullptr};
 };  
 
 

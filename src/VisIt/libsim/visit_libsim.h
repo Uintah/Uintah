@@ -54,6 +54,8 @@ WARNING
 #include "Core/Grid/Grid.h"
 #include "Core/Parallel/ProcessorGroup.h"
 
+#include <VisIt/interfaces/datatypes.h>
+
 #include <map>
 #include <string>
 #include <utility>
@@ -79,42 +81,42 @@ typedef struct visit_simulation_data
   const ProcessorGroup* myworld;
 
   // Uintah data members
-  SimulationController *simController;
-  GridP gridP;
+  SimulationController *simController {nullptr};
+  GridP gridP {nullptr};
   
-  TimeStepInfo* stepInfo;
+  TimeStepInfo* stepInfo {nullptr};
 
-  int    cycle;
-  double time;
+  int    cycle {0};
+  double time  {0};
 
   // UDA archive variables.
-  int  loadExtraElements;
-  bool forceMeshReload;
+  int  loadExtraElements {NONE};
+  bool forceMeshReload   {true};
   std::string mesh_for_patch_data;
   
-  int blocking;
+  int blocking {0};
 
   // Simulation control members
-  int  runMode;  // What the libsim is doing.
-  int  simMode;  // What the simulation is doing.
+  int  runMode {VISIT_SIMMODE_RUNNING};  // What the libsim is doing.
+  int  simMode {VISIT_SIMMODE_RUNNING};  // What the simulation is doing.
 
-  bool isProc0;
+  bool isProc0 {0};
 
-  bool first;
+  bool first {0};
   
-  bool timeRange;
-  int timeStart;
-  int timeStep;
-  int timeStop;
+  bool timeRange {0};
+  int timeStart  {0};
+  int timeStep   {1};
+  int timeStop   {0};
   
-  bool imageGenerate;
-  std::string imageFilename;
-  int imageHeight;
-  int imageWidth;
-  int imageFormat;
+  bool imageGenerate {false};
+  std::string imageFilename {"NoFileName"};
+  int imageHeight {640};
+  int imageWidth  {480};
+  int imageFormat {2};
 
-  int  stopAtTimeStep;
-  bool stopAtLastTimeStep;
+  int  stopAtTimeStep     {false};
+  bool stopAtLastTimeStep {false};
 
   // The first row is the strip chart name.
   std::string stripChartNames[5][5];
@@ -135,15 +137,16 @@ typedef struct visit_simulation_data
   std::vector< std::vector< unsigned int > > switchNodeList;
 
   // A table of nodes and the number of cores and memory.
-  std::vector< unsigned int > nodeStart;
-  std::vector< unsigned int > nodeStop;
-  std::vector< unsigned int > nodeCores;
-  std::vector< unsigned int > nodeMemory;
+  std::vector< unsigned int > nodeStart  {0};
+  std::vector< unsigned int > nodeStop   {0};
+  std::vector< unsigned int > nodeCores  {0};
+  std::vector< unsigned int > nodeMemory {0};
 
   unsigned int maxNodes, maxCores, xNode, yNode;
 
   // The index of the switch and node for this core.
-  unsigned int switchIndex, nodeIndex;
+  unsigned int switchIndex {static_cast<unsigned int>(-1)};
+  unsigned int   nodeIndex {static_cast<unsigned int>(-1)};
   
 } visit_simulation_data;
 

@@ -78,7 +78,7 @@
     <save label="ucellX"/>
     <save label="vcellY"/>
     <save label="wcellZ"/>
-    <checkpoint cycle="2" interval=".3"/>
+    <checkpoint cycle="2" interval=".0007"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
@@ -292,7 +292,6 @@
       <TurbulenceModels>
 	      <model label="DS" type="dynamic_smagorinsky">
 	        <filter type="three_points"/>
-	        <epsilon>3.0</epsilon>
 	      </model>
        <!--model label="Cwale" type="wale">
         <Cs>0.5</Cs>

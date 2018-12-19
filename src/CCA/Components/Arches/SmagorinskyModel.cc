@@ -57,7 +57,7 @@ using namespace Uintah;
 //****************************************************************************
 // Default constructor for SmagorinkyModel
 //****************************************************************************
-SmagorinskyModel::SmagorinskyModel(const ArchesLabel* label, 
+SmagorinskyModel::SmagorinskyModel(const ArchesLabel* label,
                                    const MPMArchesLabel* MAlb,
                                    PhysicalConstants* phyConsts,
                                    BoundaryCondition* bndry_cond):
@@ -75,17 +75,17 @@ SmagorinskyModel::~SmagorinskyModel()
 }
 
 //****************************************************************************
-//  Get the molecular viscosity from the Physical Constants object 
+//  Get the molecular viscosity from the Physical Constants object
 //****************************************************************************
-double 
+double
 SmagorinskyModel::getMolecularViscosity() const {
   return d_physicalConsts->getMolecularViscosity();
 }
 
 //****************************************************************************
-// Problem Setup 
+// Problem Setup
 //****************************************************************************
-void 
+void
 SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Turbulence");
@@ -93,7 +93,7 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
   db->require("fac_mesh", d_factorMesh);
   db->require("filterl", d_filterl);
 
-  problemSetupCommon( params ); 
+  problemSetupCommon( params );
 
   // actually, Shmidt number, not Prandtl number
   d_turbPrNo = 0.0;
@@ -103,10 +103,10 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 }
 
 //****************************************************************************
-// Schedule recomputation of the turbulence sub model 
+// Schedule recomputation of the turbulence sub model
 //****************************************************************************
-void 
-SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched, 
+void
+SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
                                               const LevelP& level,
                                               const MaterialSet* matls,
                                               const TimeIntegratorLabel* timelabels)
@@ -120,8 +120,8 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   // Requires
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
-  Ghost::GhostType  gn = Ghost::None; 
-   
+  Ghost::GhostType  gn = Ghost::None;
+
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gaf, 1);
@@ -138,7 +138,7 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
   else if( sched->get_dw(1) )
     tsk->requires(Task::NewDW, d_lab->d_simulationTimeLabel);
-  
+
   tsk->modifies(d_lab->d_viscosityCTSLabel);
   tsk->modifies(d_lab->d_turbViscosLabel);
 
@@ -147,9 +147,9 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
 
 //****************************************************************************
-// Actual recompute 
+// Actual recompute
 //****************************************************************************
-void 
+void
 SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
@@ -173,30 +173,30 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
-    
+
     constCCVariable<Vector> VelocityCC;
     constCCVariable<double> density;
-    
+
     CCVariable<double> viscosity;
-    CCVariable<double> turbViscosity; 
+    CCVariable<double> turbViscosity;
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
-    Ghost::GhostType  gn = Ghost::None; 
-     
-    
+    Ghost::GhostType  gn = Ghost::None;
+
+
     new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,indx, patch);
-    new_dw->getModifiable(turbViscosity,    d_lab->d_turbViscosLabel, indx, patch ); 
-                           
+    new_dw->getModifiable(turbViscosity,    d_lab->d_turbViscosLabel, indx, patch );
+
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
-                
+
     new_dw->get(density,     d_lab->d_densityCPLabel,      indx, patch, gn,  0);
     new_dw->get(VelocityCC, d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
-    
+
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch,gn, 0);
     }
@@ -205,35 +205,35 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     // get physical constants
     double mol_viscos; // molecular viscosity
     mol_viscos = d_physicalConsts->getMolecularViscosity();
-    
+
     // Get the patch and variable details
     // compatible with fortran index
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
     double CF = d_CF;
 #if 0
-    if (simTime < 2.0 ) 
+    if (simTime < 2.0 )
       CF *= (simTime+ 0.0001)*0.5;
-#endif      
+#endif
 
-    Vector Dx = patch->dCell(); 
-    double dmesh = Dx.x()*Dx.y()*Dx.z(); 
+    Vector Dx = patch->dCell();
+    double dmesh = Dx.x()*Dx.y()*Dx.z();
     dmesh = pow(dmesh,1.0/3.0);
 
     double pmixl = CF * max(d_filterl, d_factorMesh*dmesh); 
 
-    for ( CellIterator iter=patch->getCellIterator(); !iter.done(); ++iter ){ 
+    for ( CellIterator iter=patch->getCellIterator(); !iter.done(); ++iter ){
 
-      IntVector c = *iter; 
+      IntVector c = *iter;
 
-      viscosity[c] = compute_smag_viscos( uVelocity, vVelocity, wVelocity, 
-          VelocityCC, density, pmixl, Dx, c ); 
+      viscosity[c] = compute_smag_viscos( uVelocity, vVelocity, wVelocity,
+          VelocityCC, density, pmixl, Dx, c );
 
-      turbViscosity[c] = viscosity[c]; 
+      turbViscosity[c] = viscosity[c];
 
-      viscosity[c] += mol_viscos; 
+      viscosity[c] += mol_viscos;
 
-    } 
+    }
 
 
     //__________________________________
@@ -244,14 +244,14 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
-    
+
     int wall_celltypeval = d_boundaryCondition->wallCellType();
     if (xminus) {         // xminus
       int colX = idxLo.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
           IntVector currCell(colX-1, colY, colZ);
-          
+
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
@@ -266,7 +266,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
           IntVector currCell(colX+1, colY, colZ);
-          
+
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
@@ -281,7 +281,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
           IntVector currCell(colX, colY-1, colZ);
-          
+
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
@@ -295,7 +295,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       int colY = idxHi.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
+
           IntVector currCell(colX, colY+1, colZ);
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -311,7 +311,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
           IntVector currCell(colX, colY, colZ-1);
-          
+
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
@@ -326,7 +326,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
           IntVector currCell(colX, colY, colZ+1);
-          
+
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];

@@ -100,7 +100,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
       //Generate a psi function for each scalar and fe updates:
       std::string update_task_name = "scalar_fe_update_"+group_name;
       std::string diffusion_task_name = "diffusion_"+group_name;
-      // 
+      //
       std::string rk_time_ave_task_name = "rk_time_avg_"+group_name;
       std::string scalar_up_task_name = "scalar_update_"+group_name;
 
@@ -115,12 +115,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         register_task( diffusion_task_name, diff_tsk );
 
         //split KFEUpate in two task for scalar
-        // rk time average 
+        // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<CCVariable<double> >::Builder( rk_time_ave_task_name, 0 );
         register_task( rk_time_ave_task_name, rk_ta_tsk );
 
-        // scalar updated 
+        // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
         scinew SUpdate<CCVariable<double> >::Builder( scalar_up_task_name, 0 );
         register_task( scalar_up_task_name, sup_tsk );
@@ -137,12 +137,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         register_task( diffusion_task_name, diff_tsk );
 
         //split KFEUpate in two task for scalar
-        // rk time average 
+        // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCXVariable<double> >::Builder( rk_time_ave_task_name, 0 );
         register_task( rk_time_ave_task_name, rk_ta_tsk );
 
-        // scalar updated 
+        // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
         scinew SUpdate<SFCXVariable<double> >::Builder( scalar_up_task_name, 0 );
         register_task( scalar_up_task_name, sup_tsk );
@@ -159,12 +159,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         register_task( diffusion_task_name, diff_tsk );
 
         //split KFEUpate in two task for scalar
-        // rk time average 
+        // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCYVariable<double> >::Builder( rk_time_ave_task_name, 0 );
         register_task( rk_time_ave_task_name, rk_ta_tsk );
 
-        // scalar updated 
+        // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
         scinew SUpdate<SFCYVariable<double> >::Builder( scalar_up_task_name, 0 );
         register_task( scalar_up_task_name, sup_tsk );
@@ -180,12 +180,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         register_task( diffusion_task_name, diff_tsk );
 
         //split KFEUpate in two task for scalar
-        // rk time average 
+        // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCZVariable<double> >::Builder( rk_time_ave_task_name, 0 );
         register_task( rk_time_ave_task_name, rk_ta_tsk );
 
-        // scalar updated 
+        // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
         scinew SUpdate<SFCZVariable<double> >::Builder( scalar_up_task_name, 0 );
         register_task( scalar_up_task_name, sup_tsk );
@@ -474,13 +474,14 @@ void TransportFactory::register_DQMOM( ProblemSpecP db_dqmom ){
       scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name, 0 );
       register_task( update_task_name, update_tsk );
 
-      std::string weight_task_name =  "dqmom_ic_from_w_ic_"+group_name;
+      std::string unweight_task_name =  "dqmom_ic_from_w_ic_"+group_name;
       TaskInterface::TaskBuilder* weight_var_tsk =
-      scinew UnweightVariable<CCVariable<double>>::Builder( weight_task_name , 0  );
-      register_task( weight_task_name, weight_var_tsk );
+      scinew UnweightVariable<CCVariable<double>>::Builder( "NULL", unweight_task_name,
+                                                            ArchesCore::DQMOM, 0 );
+      register_task( unweight_task_name, weight_var_tsk );
 
       _dqmom_fe_update.push_back( update_task_name );
-      _ic_from_w_ic.push_back(weight_task_name);
+      _ic_from_w_ic.push_back( unweight_task_name );
 
       if ( db_dqmom->findBlock("diffusion") ) {
         std::string diffusion_task_name = "dqmom_diffusion_"+group_name;
@@ -516,7 +517,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
   }
 
   unsigned int nQn = ArchesCore::get_num_env( db_dqmom, ArchesCore::DQMOM_METHOD );
-  std::vector<std::string> gruops_dqmom_names;
+  std::vector<std::string> group_dqmom_names;
 
   for ( int i = 0; i < int(nQn); i++ ){
 
@@ -524,8 +525,9 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     dqmom_eqn_grp_env << m_dqmom_grp_name << "_" << i;
     std::string grp_name = dqmom_eqn_grp_env.str() + "_w";
 
-    gruops_dqmom_names.push_back(grp_name);
-  //Create weights
+    group_dqmom_names.push_back(grp_name);
+
+    //Create weights
     ProblemSpecP db_eqn_group = db_transport->appendChild("eqn_group");
     db_eqn_group->setAttribute("label", grp_name);
     db_eqn_group->setAttribute("type", "CC");
@@ -553,13 +555,12 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
 
     ProblemSpecP db_weight = db_dqmom->findBlock("Weights");
 
-
     if ( !db_weight ){
       throw ProblemSetupException("Error: No <Weights> spec found in <DQMOM>.",__FILE__,__LINE__);
     }
 
-
     if ( db_dqmom->findBlock("velocity") ){
+
       //This sets one velocity for the distribution
       std::string xvel_label;
       std::string yvel_label;
@@ -571,14 +572,16 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       conv_vel->setAttribute("xlabel", xvel_label);
       conv_vel->setAttribute("ylabel", yvel_label);
       conv_vel->setAttribute("zlabel", zvel_label);
+
     } else {
+
       //This uses the internal coordinates of velocity for the distribution
       ProblemSpecP conv_vel = db_eqn_group->appendChild("velocity");
       conv_vel->setAttribute("xlabel", "face_pvel_x_" + this_qn.str());
       conv_vel->setAttribute("ylabel", "face_pvel_y_" + this_qn.str());
       conv_vel->setAttribute("zlabel", "face_pvel_z_" + this_qn.str());
-    }
 
+    }
 
     ProblemSpecP denominator = db_eqn_group->appendChild("weight_factor");
     denominator->setAttribute("label", "w_qn" + this_qn.str());
@@ -591,7 +594,6 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     //eqn_db->setAttribute("label", "w_"+this_qn.str());
     ProblemSpecP do_not_division = eqn_db->appendChild("no_weight_factor");
 
-
     if ( do_convection ){
       ProblemSpecP conv_db = eqn_db->appendChild("convection");
       conv_db->setAttribute("scheme", conv_scheme );
@@ -601,70 +603,116 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       diff_db->setAttribute("scheme", diff_scheme );
     }
 
-    //link the models with the Weight:
-    //if ( db_weight->findBlock("model") ){
-      //for ( ProblemSpecP db_model = db_weight->findBlock("model"); db_model != nullptr;
-            //db_model = db_model->findNextBlock("model") ){
-
-        //std::string label;
-        //db_model->getAttribute("label", label);
-
-        //ProblemSpecP src_db = eqn_db->appendChild("src");
-        //src_db->setAttribute( "label", label );
-
-      //}
-    //}
-
     ProblemSpecP src_db = eqn_db->appendChild("src");
     src_db->setAttribute("label", "w_qn"+this_qn.str()+"_src");
 
     ProblemSpecP db_init = db_weight->findBlock("initialization");
+
     if ( db_init != nullptr ){
 
       std::string type;
       db_init->getAttribute("type", type);
       if ( type != "env_constant" ){
-        throw ProblemSetupException("Error: Only env_constant is allowed for DQMOM. Use the <Initialize> tag instead.", __FILE__, __LINE__);
+        throw ProblemSetupException("Error: Only env_constant is allowed for DQMOM. Use <ARCHES><Initialize> instead.", __FILE__, __LINE__);
       }
 
-    ProblemSpecP db_scal = db_weight->findBlock("scaling_const");
-    std::vector<double> scaling_constants2;
-    if ( db_scal ){
-      std::vector<std::string> scaling_constants;
-      db_weight->require("scaling_const", scaling_constants);
-      db_weight->require("scaling_const", scaling_constants2);
+      ProblemSpecP db_scal = db_weight->findBlock("scaling_const");
+      std::vector<double> scaling_constants_dbl;
+      std::vector<std::string> scaling_constants_str;
 
-      if ( scaling_constants.size() != nQn ){
-        throw ProblemSetupException("Error: number of scaling constants != number quadrature nodes.", __FILE__, __LINE__);
+      if ( db_scal ){
+
+        db_weight->require("scaling_const", scaling_constants_str);
+        db_weight->require("scaling_const", scaling_constants_dbl);
+
+        if ( scaling_constants_str.size() != nQn ){
+          throw ProblemSetupException("Error: number of scaling constants != number quadrature nodes.", __FILE__, __LINE__);
+        }
+
+        eqn_db->appendChild("scaling")->setAttribute("value", scaling_constants_str[i]);
+
+      } else {
+
+        //assume scaling constants of 1.
+        for ( unsigned int ii = 0; ii < nQn; ii++ ){
+          scaling_constants_dbl.push_back(1.0);
+          scaling_constants_str.push_back("1.0");
+        }
+
+        eqn_db->appendChild("scaling")->setAttribute("value", scaling_constants_str[i]);
+
       }
 
-      eqn_db->appendChild("scaling")->setAttribute("value", scaling_constants[i]);
+      if ( db_init->findBlock("env_constant") ){
+        for ( ProblemSpecP db_env = db_init->findBlock("env_constant"); db_env != nullptr;
+                db_env = db_env->findNextBlock("env_constant") ){
 
-    }
-    for ( ProblemSpecP db_env = db_init->findBlock("env_constant"); db_env != nullptr;
-            db_env = db_env->findNextBlock("env_constant") ){
+          int this_qn;
+          db_env->getAttribute("qn", this_qn );
 
-        int this_qn;
-        db_env->getAttribute("qn", this_qn );
+          if ( this_qn == i ){
+              //std::string value;
+            double value;
+              //ups file: intial value for unscaled variable
+            db_env->getAttribute("value", value );
+            ProblemSpecP db_new_init = eqn_db->appendChild("initialize");
+            value /= scaling_constants_dbl[i];
+            std::stringstream value_s;
+            value_s << value;
+            db_new_init->setAttribute("value", value_s.str());
+          }
+        }
+      }
 
-        if ( this_qn == i ){
-          //std::string value;
-          double value;
-          //ups file: intial value for unscaled variable
-          db_env->getAttribute("value", value );
+    } else {
+
+      std::string type = "env_constant";
+
+      ProblemSpecP db_scal = db_weight->findBlock("scaling_const");
+      std::vector<double> scaling_constants_dbl;
+      std::vector<std::string> scaling_constants_str;
+
+      if ( db_scal ){
+
+        db_weight->require("scaling_const", scaling_constants_str);
+        db_weight->require("scaling_const", scaling_constants_dbl);
+
+        if ( scaling_constants_str.size() != nQn ){
+          throw ProblemSetupException("Error: number of scaling constants != number quadrature nodes.", __FILE__, __LINE__);
+        }
+
+        eqn_db->appendChild("scaling")->setAttribute("value", scaling_constants_str[i]);
+
+      } else {
+
+        //assume scaling constants of 1.
+        for ( unsigned int ii = 0; ii < nQn; ii++ ){
+          scaling_constants_str.push_back("1.0");
+          scaling_constants_dbl.push_back(1.0);
+        }
+
+        eqn_db->appendChild("scaling")->setAttribute("value", scaling_constants_str[i]);
+
+      }
+
+      for ( unsigned int ii = 0; ii < nQn; ii++ ){
+
+        unsigned int this_qn = i;
+        if ( this_qn == ii ){
+          double value = 0.0;
           ProblemSpecP db_new_init = eqn_db->appendChild("initialize");
-          value /= scaling_constants2[i];
+          value /= scaling_constants_dbl[i];
           std::stringstream value_s;
           value_s << value;
           db_new_init->setAttribute("value", value_s.str());
         }
       }
-    }
 
+    }
 
     // RHSs
     std::string group_name = grp_name ;
-    //std::string group_name = dqmom_eqn_grp_env.str();
+
     TaskInterface* tsk = retrieve_task(group_name);
     print_task_setup_info( group_name, "DQMOM rhs construction.");
     tsk->problemSetup(db_eqn_group);
@@ -683,7 +731,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     fe_tsk->problemSetup( db_eqn_group );
     fe_tsk->create_local_labels();
 
- // compute ic from w*ic
+    // compute ic from w*ic
     TaskInterface* ic_tsk = retrieve_task("dqmom_ic_from_w_ic_"+group_name);
     print_task_setup_info( "dqmom_ic_from_w*ic_"+group_name, "DQMOM compute ic from w*ic");
     ic_tsk->problemSetup( db_eqn_group );
@@ -697,7 +745,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       //std::stringstream dqmom_eqn_grp_env;
       //dqmom_eqn_grp_env << m_dqmom_grp_name << "_" << i;
       grp_name = dqmom_eqn_grp_env.str() + "_" + ic_label;
-      gruops_dqmom_names.push_back(grp_name);
+      group_dqmom_names.push_back(grp_name);
 
       ProblemSpecP db_eqn_group_ic = db_transport->appendChild("eqn_group");
       db_eqn_group_ic->setAttribute("label", grp_name);
@@ -755,34 +803,21 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
         diff_db->setAttribute("scheme", diff_scheme );
       }
 
-        //link the models with the Ic:
-        //if ( db_ic->findBlock("model") ){
-          //for ( ProblemSpecP db_model = db_ic->findBlock("model"); db_model != nullptr;
-                //db_model = db_model->findNextBlock("model") ){
-
-            //std::string label;
-            //db_model->getAttribute("label", label);
-
-            //ProblemSpecP src_db = eqn_db->appendChild("src");
-            //src_db->setAttribute( "label", label+"_"+this_qn.str() );
-
-          //}
-        //}
       ProblemSpecP src_db = eqn_db->appendChild("src");
       src_db->setAttribute("label", ic_label+"_qn"+this_qn.str()+"_src");
 
       ProblemSpecP db_scal = db_ic->findBlock("scaling_const");
-      std::vector<double> scaling_constants2;
+      std::vector<double> scaling_constants_dbl;
       if ( db_scal ){
-        std::vector<std::string> scaling_constants;
-        db_ic->require("scaling_const", scaling_constants);
-        db_ic->require("scaling_const", scaling_constants2);
+        std::vector<std::string> scaling_constants_str;
+        db_ic->require("scaling_const", scaling_constants_str);
+        db_ic->require("scaling_const", scaling_constants_dbl);
 
-        if ( scaling_constants.size() != nQn ){
+        if ( scaling_constants_str.size() != nQn ){
           throw ProblemSetupException("Error: number of scaling constants != number quadrature nodes.", __FILE__, __LINE__);
         }
 
-        eqn_db->appendChild("scaling")->setAttribute("value", scaling_constants[i]);
+        eqn_db->appendChild("scaling")->setAttribute("value", scaling_constants_str[i]);
 
       }
 
@@ -813,7 +848,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       }
 
       // RHSs
-      group_name = grp_name ;
+      group_name = grp_name;
       //std::string group_name = dqmom_eqn_grp_env.str();
       TaskInterface* tsk = retrieve_task(group_name);
       print_task_setup_info( group_name, "DQMOM rhs construction.");
@@ -822,9 +857,9 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
 
       // Diffusion
       if ( do_diffusion ){
-	TaskInterface* diff_tsk = retrieve_task("dqmom_diffusion_"+group_name);
-	diff_tsk->problemSetup( db_eqn_group_ic );
-	diff_tsk->create_local_labels();
+        TaskInterface* diff_tsk = retrieve_task("dqmom_diffusion_"+group_name);
+        diff_tsk->problemSetup( db_eqn_group_ic );
+        diff_tsk->create_local_labels();
       }
 
       // FE update
@@ -848,7 +883,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
 
   //Going to remove the input that I just created so that restarts work.
   //Otherwise, the input isn't parsed properly for restart.
-  for ( auto i = gruops_dqmom_names.begin(); i != gruops_dqmom_names.end(); i++ ){
+  for ( auto i = group_dqmom_names.begin(); i != group_dqmom_names.end(); i++ ){
     ProblemSpecP db_grp = db_transport->findBlockWithAttributeValue("eqn_group","label",*i);
     if (db_grp != nullptr) {
       db_transport->removeChild(db_grp);

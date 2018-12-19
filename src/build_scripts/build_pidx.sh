@@ -8,7 +8,7 @@
 #
 
 # Note: Change PIDX_TAG to "master" if you want to grab the latest trunk.
-PIDX_TAG="v0.9"
+PIDX_TAG="v0.9.2"
 
 PIDX_DIR=$1
 

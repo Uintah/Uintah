@@ -87,14 +87,15 @@
 
            <Cs                          spec="OPTIONAL DOUBLE"
                                         need_applies_to="type sigma, wale, wall_constant_smagorinsky,constant_smagorinsky, multifractal"/> <!-- default for sigma is 1.35
-                                                                                                        default for wale is 0.5 default for wall_constant_smagorinsky is 0.17-->
-         <filter                        spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'three_points, simpson, box'"
-                                        need_applies_to="type dynamic_smagorinsky" />
-         <epsilon                       spec="OPTIONAL DOUBLE"
-                                         need_applies_to="type dynamic_smagorinsky"/>
-         <standoff                       spec="OPTIONAL INTEGER"
-                                         need_applies_to="type wall_constant_smagorinsky"/>
+                                                                                                                                                default for wale is 0.5 default for 
+                                                                                                                                                wall_constant_smagorinsky is 0.17-->
+           <filter                        spec="REQUIRED NO_DATA"
+                                          attribute1="type REQUIRED STRING 'three_points, simpson, box'"
+                                          need_applies_to="type dynamic_smagorinsky" />
+           <standoff                      spec="OPTIONAL INTEGER"
+                                          need_applies_to="type wall_constant_smagorinsky"/> <!-- Allows the user to use tangential velocities at a standoff distance from the wall -->
+           <momentum_closure_model        spec="REQUIRED NO_DATA"
+                                          need_applies_to="type wall_constant_smagorinsky"/>  <!-- Must input the label name from the momentum closure model to match the strainRateMag. -->
          </model>
       </TurbulenceModels>
 
@@ -576,6 +577,8 @@
                                           need_applies_to="type coal"/><!-- Enthalpy of formation for ash at 298.15 K -->
           <ash_enthalpy                   spec="REQUIRED DOUBLE"
                                           need_applies_to="type coal"/><!-- Enthalpy of formation for ash at 298.15 K -->
+          <daf_volatiles_fraction         spec="REQUIRED DOUBLE"
+                                          need_applies_to="type coal"/><!-- fraction of coal that is considered volatiles (on a dry and ash free basis) -->
 
           <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES"
                                                need_applies_to="type coal"/>
@@ -646,6 +649,23 @@
             </reaction>
           </SmithChar2016>
 
+          <SmithChar2018                     spec="OPTIONAL NO_DATA"
+                                         need_applies_to="type coal">
+            <Sg0                         spec="OPTIONAL DOUBLE"/> <!-- //UNCERTAIN initial specific surface area [m^2/kg], range [1e3,1e6] default is 9.35e5-->
+            <char_MW                     spec="OPTIONAL DOUBLE"/> <!-- [kg char / kmoles char] default is 12.0-->
+            <surface_area_mult_factor    spec="OPTIONAL DOUBLE"/> <!-- [multiplication factor for area, default is 1.0. area = X * pi * D ^ 2-->
+            <species                     spec="MULTIPLE STRING"/> <!-- species names (from table) to be used in diffusion coefficient calculation. -->
+            <reaction                    spec="MULTIPLE NO_DATA"> <!-- a reaction section is specified for each reaction equation -->
+              <oxidizer_name             spec="REQUIRED STRING"/> <!-- name of oxidizer (used to populate oxidizer vector) -->
+              <oxidizer_MW               spec="REQUIRED DOUBLE"/> <!-- [kg oxidizer / kmoles oxidizer] -->
+              <pre_exponential_factor    spec="REQUIRED DOUBLE"/> <!-- [g/(cm^2 s atm O2)] (see pg 87-89 of "Coal Combustion and Gasification" by Smoot and Smith for coal specific parameters) -->
+              <activation_energy         spec="REQUIRED DOUBLE"/> <!-- [cal/gmole] (see pg 87-89 of "Coal Combustion and Gasification" by Smoot and Smith for coal specific parameters) -->
+              <stoich_coeff_ratio        spec="REQUIRED DOUBLE"/> <!-- [kmoles char / kmoles oxidizer] from stoichiometric coefficients. Default is 1.0-->
+              <use_co2co                 spec="OPTIONAL BOOLEAN"/> <!--default is false. If true than overides stoich_coeff_ratio with (CO2onCO + 1)/(CO2onCO + 0.5) model. -->
+              <heat_of_reaction_constant spec="REQUIRED DOUBLE"/> <!-- [J / mole] if use_co2co then it uses (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) -->
+            </reaction>
+          </SmithChar2018>
+
           <optics                       spec="OPTIONAL NO_DATA"
                                             need_applies_to="type coal">
             <RawCoal_real            spec="REQUIRED DOUBLE 'positive'"/> <!-- Real part of the complex index of refraction -->
@@ -669,9 +689,12 @@
                                                                            smagorinsky, none'" >
 
         <!--smagorinsky -->
-        <cf                             spec="OPTIONAL DOUBLE 'positive'" />
-        <fac_mesh                       spec="OPTIONAL DOUBLE 'positive'" />
-        <filterl                        spec="OPTIONAL DOUBLE 'positive'" />
+        <cf                             spec="REQUIRED DOUBLE 'positive'" 
+                                        need_applies_to="model smagorinsky"/> <!-- Constant -->
+        <fac_mesh                       spec="REQUIRED DOUBLE 'positive'" 
+                                        need_applies_to="model smagorinsky"/> <!-- Scale the delta by this factor -->
+        <filterl                        spec="REQUIRED DOUBLE 'positive'" 
+                                        need_applies_to="model smagorinsky"/> <!-- Filter length, set independently of the delta computed based on mesh resolution. The max value is retained -->
 
         <!--dyn. smagorinsky -->
         <filter_cs_squared              spec="OPTIONAL BOOLEAN" /> <!-- filter the dynamic Cs constant -->
@@ -1543,6 +1566,7 @@
                                       attribute1="label REQUIRED STRING"
                                       attribute2="type REQUIRED STRING 'simple_rate,
                                                                         drag,
+                                                                        wdrag,
                                                                         gravity,
                                                                         constant,
                                                                         coal_density,
@@ -1560,11 +1584,21 @@
                                                                         shaddix_enthalpy,
                                                                         particle_face_velocity'">
 
+            <!-- MODEL NOTES -->
+            <!-- PARTICLE_FACE_VELOCITY: Computes the face velocity representation 
+                                         needed for DQMOM transport. If using the environment
+                                         velocity, specify the grid dependent type to be CC 
+                                         since all DQMOM transported variables are CC. Note 
+                                         that this model must be specified for DQMOM 
+            -->
+
             <!-- The grid parameter is used for templated properties -->
+            <!-- particle_face_velocity only requires a dependent_type attribute -->
             <grid                       spec="REQUIRED NO_DATA"
-                                        attribute1="dependent_type REQUIRED STRING 'CC, svol'"
-                                        attribute2="independent_type REQUIRED STRING 'CC, svol'"
-                                        need_applies_to="type drag, gravity, constant"/>
+                                        attribute1="dependent_type REQUIRED STRING 'CC'"
+                                        attribute2="independent_type OPTIONAL STRING 'CC'"
+                                        need_applies_to="type drag, gravity, constant, 
+                                                         particle_face_velocity"/>
 
             <IC                         spec="OPTIONAL STRING" />      <!-- base label for which internal coordiante this model affects -->
 
@@ -1602,15 +1636,15 @@
             
             <!-- char oxidation ps  -->
             <devol_model_name          spec="REQUIRED STRING" 
-                                        need_applies_to="type char_oxidation_ps"  /> <!-- label of devol model -->
+                                       need_applies_to="type char_oxidation_ps"  /> <!-- label of devol model -->
 
             <!-- drag model -->
-            <direction                  spec="REQUIRED STRING 'x,y,z,X,Y,Z'"
-                                        need_applies_to="type drag, gravity"/>     <!-- apply this source to which direction -->
+            <direction                 spec="REQUIRED STRING 'x,y,z,X,Y,Z'"
+                                       need_applies_to="type drag, wdrag, gravity"/>  <!-- apply drag model to this velocity direction -->
 
             <!-- constant property model: set a constant/environment -->
-            <constant                   spec="REQUIRED MULTIPLE_DOUBLES"
-                                        need_applies_to="type constant"/>
+            <constant                  spec="REQUIRED MULTIPLE_DOUBLES"
+                                       need_applies_to="type constant"/>
 
             <!-- constant property model: set a constant/environment -->
             <const_size                 spec="OPTIONAL BOOLEAN"
@@ -2172,9 +2206,13 @@
                                       attribute1="scheme REQUIRED STRING 'central'"
                                       attribute2="D_label REQUIRED STRING"/>
 
-        <!-- Overrides the default velocities used to transport the NDF -->
-        <!-- Default velocities are the velocity IC's -->
-        <!-- These velocity labels are used for all environments -->
+        <!--
+            ** Overrides the default velocities used to transport the NDF **
+              - Default velocities are the velocity IC's 
+              - These velocity labels are used for all environments 
+              - Note (Kokkos) that if not specified, the velocity face model must 
+                be explicitly specified in the <ParticleModel> section.
+        -->
         <velocity                     spec="OPTIONAL NO_DATA"
                                       attribute1="xlabel REQUIRED STRING"
                                       attribute2="ylabel REQUIRED STRING"
@@ -2273,6 +2311,7 @@
                                                                           CharOxidationShaddix,
                                                                           CharOxidationSmith,
                                                                           CharOxidationSmith2016,
+                                                                          CharOxidationSmith2018,
                                                                           Deposition,
                                                                           BirthDeath'">
 

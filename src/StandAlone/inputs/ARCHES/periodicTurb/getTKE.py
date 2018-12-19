@@ -77,6 +77,8 @@ parser.add_argument('-cleanup',help='Performs an rm -rf'+
 parser.add_argument('-hardcleanup',help='USE WITH CAUTION: Performs an rm -rf'+
                     ' *.uda* - DELETES ALL UDAs in the directory(no prompt).', 
                     action='store_true')                    
+parser.add_argument('-vel_base_name',help='Allows the user to specify a [base name] such '+
+                   'that the velocities will be *[base name].')
                     
 args = parser.parse_args()
 
@@ -169,14 +171,19 @@ count = 1
 this_dir = 'TKE_data_'+datetime.datetime.now().strftime("%y%m%d_%H%M%S")
 os.system('mkdir '+this_dir)
 
+velbase = 'VelocitySPBC'
+
+if args.vel_base_name is not None:
+    velbase = args.vel_base_name
+
 for element in TS: 
 
     #EXTRACT THE VELOCITIES                
-    the_command = './lineextract -v uVelocitySPBC -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o uvelTKE.'+str(count)+' -uda '+uda_name              
+    the_command = './lineextract -v u'+velbase+'  -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o uvelTKE.'+str(count)+' -uda '+uda_name              
     os.system(the_command)
-    the_command = './lineextract -v vVelocitySPBC -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o vvelTKE.'+str(count)+' -uda '+uda_name              
+    the_command = './lineextract -v v'+velbase+'  -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o vvelTKE.'+str(count)+' -uda '+uda_name              
     os.system(the_command)
-    the_command = './lineextract -v wVelocitySPBC -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o wvelTKE.'+str(count)+' -uda '+uda_name              
+    the_command = './lineextract -v w'+velbase+'  -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o wvelTKE.'+str(count)+' -uda '+uda_name              
     os.system(the_command)
     
     os.system('mv uvelTKE.* '+this_dir+'/.')

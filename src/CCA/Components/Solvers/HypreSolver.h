@@ -230,7 +230,7 @@ namespace Uintah {
     if (swapBytes)
       Uintah::swapbytes(val);
     
-    value = val;
+    value = std::make_shared<hypre_solver_structP>(val);
   }
   
   //______________________________________________________________________

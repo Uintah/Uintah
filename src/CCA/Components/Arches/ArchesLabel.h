@@ -150,6 +150,15 @@ namespace Uintah {
       // W-Velocity Labels
       const VarLabel* d_wVelocitySPBCLabel;
 
+      // Duplicate Labels to get Kokkos Arches to work.
+      // These are just copies of uVelocitySPBC, etc.
+      // U-Velocity Labels
+      const VarLabel* d_uVelocityLabel;
+      // V-Velocity Labels
+      const VarLabel* d_vVelocityLabel;
+      // W-Velocity Labels
+      const VarLabel* d_wVelocityLabel;
+
       // UMom Labels
       const VarLabel* d_uMomLabel;
       // VMom Labels

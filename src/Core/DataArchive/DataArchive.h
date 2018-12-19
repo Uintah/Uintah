@@ -446,7 +446,7 @@ private:
   enum FileFormatType { UDA, PIDX, NOT_SPECIFIED };
   FileFormatType d_fileFormat; 
       
-  enum VarType { BLANK, REDUCTION_VAR, PATCH_VAR };
+  enum VarType { BLANK, GLOBAL_VAR, PATCH_VAR };
  
   bool isPIDXEnabled(){
 #if HAVE_PIDX
@@ -769,4 +769,3 @@ private:
 } // end namespace Uintah
 
 #endif
-

@@ -51,7 +51,7 @@ class PatchInfo {
 public:
 
   // GridType
-  enum GridType { UNKNOWN=-1, CC, NC, SFCX, SFCY, SFCZ, NEIGHBORS };
+  enum GridType { UNKNOWN=-1, CC, NC, SFCX, SFCY, SFCZ, NEIGHBORS, PATCH };
 
   // str2GridType
   static GridType str2GridType(const std::string &type)
@@ -62,7 +62,7 @@ public:
     if (type.find("CC")        != std::string::npos) return CC;
     if (type.find("NC")        != std::string::npos) return NC;
     if (type.find("NEIGHBORS") != std::string::npos) return NEIGHBORS;
-    if (type.find("PerPatch")  != std::string::npos) return CC;
+    if (type.find("Patch")     != std::string::npos) return PATCH;
     return UNKNOWN;
   }
 
@@ -116,6 +116,12 @@ public:
       low[2] = neighbors_low[2];
       break;
 
+    case PATCH:
+      low[0] = patch_id;
+      low[1] = 0;
+      low[2] = 0;
+      break;
+
     default:
       low[0] = low[1] = low[2] = -1000000;
     }
@@ -162,21 +168,15 @@ public:
       high[2] = neighbors_high[2];
       break;
 
+    case PATCH:
+      high[0] = patch_id + 1;
+      high[1] = 0;
+      high[2] = 0;
+      break;
+
     default:
       high[0] = high[1] = high[2] = -1000000;
     }
-  }
-
-  // getNumNodes
-  int getNumNodes() const
-  {
-    return num_nodes;
-  }
-
-  // setNumNodes
-  void setNumNodes(const int new_num_nodes)
-  {
-    num_nodes = new_num_nodes;
   }
 
   // getProcId
@@ -333,18 +333,18 @@ public:
   double anchor[3];
   int periodic[3];
 
-  // extents are the same for all meshes
+  // The extents are the same for all meshes
   void getExtents(double box_min[3], double box_max[3]) const
   {
     int low[3], high[3];
     getBounds(low, high, "CC_Mesh");
     
     box_min[0] = anchor[0] + low[0] * spacing[0];
-    box_min[0] = anchor[1] + low[1] * spacing[1];
-    box_min[0] = anchor[2] + low[2] * spacing[2];
+    box_min[1] = anchor[1] + low[1] * spacing[1];
+    box_min[2] = anchor[2] + low[2] * spacing[2];
     box_max[0] = anchor[0] + high[0] * spacing[0];
-    box_max[0] = anchor[1] + high[1] * spacing[1];
-    box_max[0] = anchor[2] + high[2] * spacing[2];
+    box_max[1] = anchor[1] + high[1] * spacing[1];
+    box_max[2] = anchor[2] + high[2] * spacing[2];
   }
 
   // Get the bounds for a specific patch of a given mesh. If the

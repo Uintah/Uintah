@@ -132,15 +132,15 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
 
   m_runtime_stats.insert( XMLIOTime,                 std::string("XMLIO"),                 timeStr );
   m_runtime_stats.insert( OutputIOTime,              std::string("OutputIO"),              timeStr );
-  m_runtime_stats.insert( ReductionIOTime,           std::string("ReductionIO"),           timeStr );
+  m_runtime_stats.insert( OutputGlobalIOTime,        std::string("OutputGlobalIO"),        timeStr );
   m_runtime_stats.insert( CheckpointIOTime,          std::string("CheckpointIO"),          timeStr );
-  m_runtime_stats.insert( CheckpointReductionIOTime, std::string("CheckpointReductionIO"), timeStr );
+  m_runtime_stats.insert( CheckpointGlobalIOTime,    std::string("CheckpointGlobalIO"),    timeStr );
   m_runtime_stats.insert( TotalIOTime,               std::string("TotalIO"),               timeStr );
 
-  m_runtime_stats.insert( OutputIORate,              std::string("OutputIORate"),     "MBytes/sec" );
-  m_runtime_stats.insert( ReductionIORate,           std::string("ReductionIORate"),  "MBytes/sec" );
-  m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"), "MBytes/sec" );
-  m_runtime_stats.insert( CheckpointReductionIORate, std::string("CheckpointReductionIORate"), "MBytes/sec" );
+  m_runtime_stats.insert( OutputIORate,              std::string("OutputIORate"),           "MBytes/sec" );
+  m_runtime_stats.insert( OutputGlobalIORate,        std::string("OutputGlobalIORate"),     "MBytes/sec" );
+  m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"),       "MBytes/sec" );
+  m_runtime_stats.insert( CheckpointGlobalIORate,    std::string("CheckpointGlobalIORate"), "MBytes/sec" );
 
   m_runtime_stats.insert( NumTasks,                  std::string("NumberOfTasks"),     "tasks" );
   m_runtime_stats.insert( NumPatches,                std::string("NumberOfPatches"),   "patches" );
@@ -879,27 +879,28 @@ SimulationController::ReportStats(const ProcessorGroup*,
     
     std::ostringstream message;
 
-    for (unsigned int i = 0; i < m_application->getApplicationStats().size(); ++i) {
-
-      if (message.str().size()) {
-        message << std::endl;
-      }
-
-      message << "  " << std::left << std::setw(24) << m_application->getApplicationStats().getName(i) << "[" << std::setw(15)
-              << m_application->getApplicationStats().getUnits(i) << "]";
-      if (m_application->getApplicationStats().calculateMinimum()) {
-        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMinimum(i) << " : " << std::setw(9)
-                << m_application->getApplicationStats().getRankForMinimum(i);
-      }
-      if (m_application->getApplicationStats().calculateAverage()) {
-        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankAverage(i);
-      }
-      if (m_application->getApplicationStats().calculateStdDev()) {
-        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankStdDev(i);
-      }
-      if (m_application->getApplicationStats().calculateMaximum()) {
-        message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMaximum(i) << " : " << std::setw(9)
-                << m_application->getApplicationStats().getRankForMaximum(i);
+    for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
+      if( m_application->getApplicationStats().getRankMaximum(i) != 0.0 )
+      {
+	if (message.str().size()) {
+	  message << std::endl;
+	}
+	message << "  " << std::left << std::setw(24) << m_application->getApplicationStats().getName(i) << "[" << std::setw(15)
+		<< m_application->getApplicationStats().getUnits(i) << "]";
+	if (m_application->getApplicationStats().calculateMinimum()) {
+	  message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMinimum(i) << " : " << std::setw(9)
+		  << m_application->getApplicationStats().getRankForMinimum(i);
+	}
+	if (m_application->getApplicationStats().calculateAverage()) {
+	  message << " : " << std::setw(15) << m_application->getApplicationStats().getRankAverage(i);
+	}
+	if (m_application->getApplicationStats().calculateStdDev()) {
+	  message << " : " << std::setw(15) << m_application->getApplicationStats().getRankStdDev(i);
+	}
+	if (m_application->getApplicationStats().calculateMaximum()) {
+	  message << " : " << std::setw(15) << m_application->getApplicationStats().getRankMaximum(i) << " : " << std::setw(9)
+		  << m_application->getApplicationStats().getRankForMaximum(i);
+	}
       }
     }
 

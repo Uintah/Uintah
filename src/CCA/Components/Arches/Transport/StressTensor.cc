@@ -26,9 +26,9 @@ void StressTensor::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-    m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-    m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-    m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+    m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
+    m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
+    m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
     m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db );
 //
   /* It is going to use central scheme as default   */
@@ -197,7 +197,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::BlockRange range3(lowNz, highNz);
   Uintah::parallel_for( range3, [&](int i, int j, int k){
     const double mu33 = D(i,j,k-1);  // it does not need interpolation
-    const double dwdz  = eps_y(i,j,k)*eps_y(i,j,k-1) * (wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
+    const double dwdz  = eps_z(i,j,k)*eps_z(i,j,k-1) * (wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
     sigma33(i,j,k) = mu33 * 2.0*dwdz;
 
   });

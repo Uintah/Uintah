@@ -9,7 +9,7 @@ namespace Uintah{
 
 public:
 
-    WallConstSmag( std::string task_name, int matl_index );
+    WallConstSmag( std::string task_name, int matl_index, const ProblemSpecP db_turb_parent );
     ~WallConstSmag();
 
     void problemSetup( ProblemSpecP& db );
@@ -36,17 +36,21 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index, const ProblemSpecP db_turb_parent )
+        : m_task_name(task_name), m_matl_index(matl_index), m_db_turb_parent(db_turb_parent){}
       ~Builder(){}
 
       WallConstSmag* build()
-      { return scinew WallConstSmag( _task_name, _matl_index ); }
+      { return scinew WallConstSmag( m_task_name, m_matl_index, m_db_turb_parent ); }
 
       private:
-      
 
-      std::string _task_name;
-      int _matl_index;
+
+      std::string m_task_name;
+      int m_matl_index;
+
+      const ProblemSpecP m_db_turb_parent;
+
     };
 
 private:
@@ -64,6 +68,8 @@ private:
     std::vector<std::string> m_sigma_t_names;
 
     int Nghost_cells;
+
+    const ProblemSpecP m_db_turb_parent; 
 
   };
 }

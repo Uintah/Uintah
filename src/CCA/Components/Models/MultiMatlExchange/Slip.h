@@ -44,7 +44,8 @@ namespace ExchangeModels{
 
   public:
     SlipExch(const ProblemSpecP     & prob_spec,
-             const MaterialManagerP & materialManager );
+             const MaterialManagerP & materialManager,
+             const bool with_mpm );
 
     virtual ~SlipExch();
 
@@ -142,9 +143,6 @@ namespace ExchangeModels{
     //__________________________________
     //  variables local to SlipExch
     ExchangeCoefficients* d_exchCoeff;
-
-    MPMLabel* Mlb;
-    ICELabel* Ilb;
 
     const VarLabel* d_vel_CCTransLabel;
     const VarLabel* d_meanFreePathLabel;

@@ -228,7 +228,7 @@
                <temperature>   300.0                    </temperature>
            </geom_object>
          </material>
-         <material>
+         <material name = "air">
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
@@ -252,7 +252,11 @@
         </exchange_properties> 
     </MaterialProperties>           
     <!--____________________________________________________________________-->
+
+  <!--
     <DataAnalysis>
+    
+  
        <Module name="lineExtract">
        
         <material>Atmosphere</material>
@@ -280,7 +284,7 @@
           </line>
         </lines>
       </Module>
-      <!--__________________________________-->
+      
       <Module name="planeExtract">
        
         <material>Atmosphere</material>
@@ -304,5 +308,26 @@
           </plane>
         </planes>
       </Module>
-    </DataAnalysis>        
+
+      
+      <Module name="planeAverage">
+       
+        <material>Atmosphere</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>         0.00 </timeStart>
+        <timeStop>          100  </timeStop>
+       
+        <planeOrientation>  XY   </planeOrientation>
+        <weight label= "mass_adv"/>
+        
+        <Variables>
+          <analyze label="press_CC" matl="0" weighting="nCells"/> 
+          <analyze label="rho_CC"            weighting="mass"/>
+          <analyze label="mass_adv"          weighting="mass"/>
+          <analyze label="mom_adv"           weighting="mass"/>
+        </Variables>
+
+      </Module>
+    </DataAnalysis>  
+-->      
 </Uintah_specification>
