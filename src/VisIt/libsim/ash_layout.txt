@@ -1,7 +1,7 @@
-Nodes 001 to 251    Cores 12    Memory   24 GB
-Nodes 416 to 417    Cores 12    Memory   24 GB
-Nodes 252 to 415    Cores 20    Memory   64 GB
-Nodes 418 to 465    Cores 24    Memory  128 GB
+Nodes 001 to 251   Digits 3    Cores 12    Memory   24 GB
+Nodes 416 to 417   Digits 3    Cores 12    Memory   24 GB
+Nodes 252 to 415   Digits 3    Cores 20    Memory   64 GB
+Nodes 418 to 465   Digits 3    Cores 24    Memory  128 GB
 
 
 vendid=0x8f1
