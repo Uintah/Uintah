@@ -44,8 +44,6 @@
 
 #include <sci_defs/visit_defs.h>
 
-#include <VisIt/interfaces/datatypes.h>
-
 #include <fstream>
 #include <dlfcn.h>
 
@@ -136,7 +134,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // initializing.
   sim->simMode = VISIT_SIMMODE_RUNNING;
 
-  sim->loadExtraElements = CELLS;
+  sim->loadExtraElements = NONE;
   sim->forceMeshReload = true;
   sim->mesh_for_patch_data = "";
 
@@ -246,45 +244,22 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->switchIndex = -1;
   sim->nodeIndex = -1;
 
+  // Get the host name without any digits and the host node without
+  // any characters. This assumes the machine name contains no numbers
+  // and node numbers contain no letters.
   std::string hostName = sim->myworld->myNodeName();
   std::string hostNode = sim->myworld->myNodeName();
-  
+
   hostName.erase(std::remove_if(hostName.begin(), hostName.end(), (int(*)(int))std::isdigit), hostName.end());
   hostNode.erase(std::remove_if(hostNode.begin(), hostNode.end(), (int(*)(int))std::isalpha), hostNode.end());
 
-  // Possible machine file names.
-  const unsigned int nMachines = 1;
-  std::string hostNames[ nMachines ] = { "ash" };
-  unsigned int hostNodes[ nMachines ] = { 3 }; // Number of digits expected.
-
-  // Check for a machine layout file for this processor and that it is
-  // a compute node (opposed to a head node). Compute nodes will have
-  // three digits whereas a head will be have one digit.
-  for( unsigned int i=0; i<nMachines; ++i )
-  {
-    if( sim->myworld->myNodeName().find( hostNames[i] ) == 0 )
-    {
-      sim->hostName = hostNames[i];
-
-      // Remove the hostname leaving only the node number.
-      std::string nodeStr =
-        sim->myworld->myNodeName().substr(sim->hostName.size());
-    
-      // Nodes with three digits are compute nodes.
-      // Compute node (i.e. node001) vs head node (i.e. node1)
-      if( nodeStr.size() == hostNodes[i] )
-      {
-        sim->hostNode = nodeStr;
-
-        break;
-      }
-    }
-  }
-
-  // A machine layout file should exist for this machine.
+  sim->hostName = hostName;
+  sim->hostNode = hostNode;
+  
+  // A machine layout file could exist for this machine.
   if( sim->hostName.size() && sim->hostNode.size() )
   {
-    // The machine layout files are in the  in-situ source dir
+    // The machine layout files are in the in situ source dir
     std::string path = std::string( sci_getenv("SCIRUN_OBJDIR") ) +
       std::string("/../src/VisIt/libsim/");
 
@@ -296,7 +271,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
     {
       // Read the text file line by line.
       std::string line;
-      while (std::getline(infile, line))
+      while( std::getline(infile, line) )
       {
         // Skip empty lines
         if( line.empty() )
@@ -305,23 +280,36 @@ void visit_InitLibSim( visit_simulation_data *sim )
         // This is part of the node table.
         else if( line.find("Nodes") == 0 )
         {
-          // Get the node details (number of cores and memory).
-          std::string tmpNode, tmpTo, tmpCores, tmpMemory, tmpGB;
-          unsigned int start, stop, cores, memory;
+          // Get the node details (number of cores and memory). The
+          // number of digits is the number of digits that would be
+          // present for a node number (machine001). Versus a head
+          // node(machine1).
+          std::string tmpNode, tmpDigits, tmpTo, tmpCores, tmpMemory, tmpGB;
+          unsigned int nDigits, start, stop, nCores, memory;
 
           std::istringstream iss(line);
 
-          if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpCores >> cores >> tmpMemory >> memory >> tmpGB))
+          if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpDigits >> nDigits >> tmpCores >> nCores >> tmpMemory >> memory >> tmpGB))
             break; // error
 
+          // If on a head node skip the rest and bail out.
+          if( sim->hostNode.size() != nDigits )
+          {
+            infile.close();
+
+            sim->hostName = sim->myworld->myNodeName();
+            sim->hostNode = "";
+            return;
+          }
+          
           sim->nodeStart.push_back( start );
           sim->nodeStop.push_back( stop );
-          sim->nodeCores.push_back( cores );
+          sim->nodeCores.push_back( nCores );
           sim->nodeMemory.push_back( memory );
 
           // Get the maximum number of cores.
-          if( sim->maxCores < cores )
-            sim->maxCores = cores;
+          if( sim->maxCores < nCores )
+            sim->maxCores = nCores;
         }
         // Skip these lines that are part of the call to ibnetdiscover
         else if( line.find("--") == 0 ||
@@ -351,7 +339,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
             found = nodeStr.find(" ");
             nodeStr = nodeStr.substr(0, found);
 
-            // Nodes with three digits are compute nodes.
+            // Nodes with n digits are compute nodes.
             // Compute node node001 vs head node node1
             if( nodeStr.size() == sim->hostNode.size() )
             {
@@ -386,6 +374,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
           VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
         }
       }
+
       
       if( sim->switchNodeList.size() &&
           ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) )
