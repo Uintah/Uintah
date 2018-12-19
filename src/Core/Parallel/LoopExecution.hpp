@@ -208,30 +208,32 @@ private:
 // If you require a runtime/variable sized array, that requires a different mechanism involving pools and deep copies,
 // and as of yet hasn't been implemented (Brad P.)
 template <typename T, unsigned int CAPACITY>
-struct struct1DArray {
+struct struct1DArray
+{
   unsigned short int runTime_size{CAPACITY};
   T arr[CAPACITY];
   struct1DArray(){}
 
   // This constructor copies elements from one container into here.
   template <typename Container>
-  struct1DArray(const Container& container,unsigned int runTimeSize) : runTime_size(runTimeSize)  {
+  struct1DArray(const Container& container, unsigned int runTimeSize) : runTime_size(runTimeSize) {
 #ifndef NDEBUG
     if(runTime_size > CAPACITY){
       throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (std::vector constructor).", __FILE__, __LINE__);
     }
-#endif      
+#endif
     for (unsigned int i = 0; i < runTime_size; i++) {
       arr[i] = container[i];
     }
   }
+
 // This constructor supports the initialization list interface
   struct1DArray(  std::initializer_list<T> const myList) : runTime_size(myList.size()) {
 #ifndef NDEBUG
     if(runTime_size > CAPACITY){
       throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (initializer_list constructor).", __FILE__, __LINE__);
     }
-#endif      
+#endif
     std::copy(myList.begin(), myList.begin()+runTime_size,arr);
   }
 
@@ -241,12 +243,13 @@ struct struct1DArray {
     if(runTime_size > CAPACITY){
       throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (int constructor).", __FILE__, __LINE__);
     }
-#endif      
+#endif
   }
 
   inline T& operator[](unsigned int index) {
     return arr[index];
   }
+
   inline const T& operator[](unsigned int index) const {
     return arr[index];
   }
@@ -255,18 +258,17 @@ struct struct1DArray {
     return CAPACITY;
   }
 
-};
-
-
-
+}; // end struct struct1DArray
 
 template <typename T, unsigned int CAPACITY_FIRST_DIMENSION, unsigned int CAPACITY_SECOND_DIMENSION>
-struct struct2DArray {
+struct struct2DArray
+{
   struct1DArray<T, CAPACITY_SECOND_DIMENSION> arr[CAPACITY_FIRST_DIMENSION];
 
   struct2DArray(){}
   unsigned short int i_runTime_size{CAPACITY_FIRST_DIMENSION};
   unsigned short int j_runTime_size{CAPACITY_SECOND_DIMENSION};
+
   // This constructor copies elements from one container into here.
   template <typename Container>
   struct2DArray(const Container& container, int first_dim_runtimeSize=CAPACITY_FIRST_DIMENSION, int second_dim_runtimeSize=CAPACITY_SECOND_DIMENSION) : i_runTime_size(first_dim_runtimeSize) ,  j_runTime_size(second_dim_runtimeSize) {
@@ -281,34 +283,34 @@ struct struct2DArray {
   inline struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) {
     return arr[index];
   }
+
   inline const struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) const {
     return arr[index];
   }
 
-};
+}; // end struct struct2DArray
 
-
-struct int_3{
+struct int_3
+{
   int dim[3]; // indices for x y z dimensions
 
-  int_3(  ) { }
+  int_3(){}
 
-  int_3(  const int i, const int j, const int k) {
-          dim[0]=i;
-          dim[1]=j;
-          dim[2]=k;
+  int_3( const int i, const int j, const int k ) {
+    dim[0]=i;
+    dim[1]=j;
+    dim[2]=k;
   }
-       
 
   inline const int& operator[]( unsigned int index) const {
     return dim[index];
   }
-};
+
+}; // end struct int_3
 
 //----------------------------------------------------------------------------
 // Start parallel loops
 //----------------------------------------------------------------------------
-
 
 // -------------------------------------  parallel_for loops  ---------------------------------------------
 #if defined(UINTAH_ENABLE_KOKKOS)
@@ -901,8 +903,6 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
 
 }
 
-
-
 // -------------------------------------  sweeping_parallel_for loops  ---------------------------------------------
 #if defined(UINTAH_ENABLE_KOKKOS)
 template <typename ExecSpace, typename MemSpace, typename Functor>
@@ -929,16 +929,12 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
   const int  rdy=dy-sdy*nPartitionsy;
   const int  rdz=dz-sdz*nPartitionsz;
 
-
-
   const int nphase=nPartitionsx+nPartitionsy+nPartitionsz-2;
   int tpp=0; //  Total parallel processes/blocks
 
   int concurrentBlocksArray[nphase/2+1]; // +1 needed for odd values, use symmetry
 
   for (int iphase=0; iphase <nphase; iphase++ ){
-
-
     if  ((nphase-iphase -1)>= iphase){
       tpp=(iphase+2)*(iphase+1)/2;
 
@@ -951,11 +947,9 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
       tpp=concurrentBlocksArray[nphase-iphase-1];
     }
 
-    Kokkos::View<int*,  Kokkos::HostSpace> xblock("xblock",tpp) ;
-    Kokkos::View<int*,  Kokkos::HostSpace> yblock("yblock",tpp) ;
-    Kokkos::View<int*,  Kokkos::HostSpace> zblock("zblock",tpp) ;
-
-
+    Kokkos::View<int*, Kokkos::HostSpace> xblock("xblock",tpp) ;
+    Kokkos::View<int*, Kokkos::HostSpace> yblock("yblock",tpp) ;
+    Kokkos::View<int*, Kokkos::HostSpace> zblock("zblock",tpp) ;
 
     int icount = 0 ;
     for (int k=0;  k< min(iphase+1,nPartitionsz);  k++ ){ // attempts to iterate over k j i , despite  spatial dependencies
@@ -973,35 +967,36 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
     const int   idir= plusX ? 1 : -1; 
     const int   jdir= plusY ? 1 : -1; 
     const int   kdir= plusZ ? 1 : -1; 
+
     Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, tpp).set_chunk_size(2), [=](int iblock) {
+      const int  xiBlock = plusX ? xblock(iblock) : nPartitionsx-xblock(iblock)-1;
+      const int  yiBlock = plusY ? yblock(iblock) : nPartitionsx-yblock(iblock)-1;
+      const int  ziBlock = plusZ ? zblock(iblock) : nPartitionsx-zblock(iblock)-1;
 
+      const int blockx_start=ib+xiBlock *sdx;
+      const int blocky_start=jb+yiBlock *sdy;
+      const int blockz_start=kb+ziBlock *sdz;
 
-    const int  xiBlock = plusX ? xblock(iblock) : nPartitionsx-xblock(iblock)-1;
-    const int  yiBlock = plusY ? yblock(iblock) : nPartitionsx-yblock(iblock)-1;
-    const int  ziBlock = plusZ ? zblock(iblock) : nPartitionsx-zblock(iblock)-1;
+      const int blockx_end= ib+ (xiBlock+1)*sdx +(xiBlock+1 ==nPartitionsx ?  rdx:0 );
+      const int blocky_end= jb+ (yiBlock+1)*sdy +(yiBlock+1 ==nPartitionsy ?  rdy:0 );
+      const int blockz_end= kb+ (ziBlock+1)*sdz +(ziBlock+1 ==nPartitionsz ?  rdz:0 );
 
-    const int blockx_start=ib+xiBlock *sdx;
-    const int blocky_start=jb+yiBlock *sdy;
-    const int blockz_start=kb+ziBlock *sdz;
+      const int blockx_end_dir= plusX ? blockx_end :-blockx_start+1 ;
+      const int blocky_end_dir= plusY ? blocky_end :-blocky_start+1 ;
+      const int blockz_end_dir= plusZ ? blockz_end :-blockz_start+1 ;
 
-    const int blockx_end= ib+ (xiBlock+1)*sdx +(xiBlock+1 ==nPartitionsx ?  rdx:0 );
-    const int blocky_end= jb+ (yiBlock+1)*sdy +(yiBlock+1 ==nPartitionsy ?  rdy:0 );
-    const int blockz_end= kb+ (ziBlock+1)*sdz +(ziBlock+1 ==nPartitionsz ?  rdz:0 );
-
-    const int blockx_end_dir= plusX ? blockx_end :-blockx_start+1 ;
-    const int blocky_end_dir= plusY ? blocky_end :-blocky_start+1 ;
-    const int blockz_end_dir= plusZ ? blockz_end :-blockz_start+1 ;
-
-
-    for (int k=plusZ? blockz_start : blockz_end-1; k*kdir<blockz_end_dir; k=k+kdir) {
-      for (int j=plusY? blocky_start : blocky_end-1; j*jdir<blocky_end_dir; j=j+jdir) {
-        for (int i=plusX? blockx_start : blockx_end-1; i*idir<blockx_end_dir; i=i+idir) {
-          functor(i,j,k);
-        }}}
-    });
-  }
+      for (int k=plusZ? blockz_start : blockz_end-1; k*kdir<blockz_end_dir; k=k+kdir) {
+        for (int j=plusY? blocky_start : blocky_end-1; j*jdir<blocky_end_dir; j=j+jdir) {
+          for (int i=plusX? blockx_start : blockx_end-1; i*idir<blockx_end_dir; i=i+idir) {
+            functor(i,j,k);
+          }
+        }
+      }
+    }); // end Kokkos::parallel_for
+  } // end for ( int iphase = 0; iphase < nphase; iphase++ )
 }
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
 #if defined(UINTAH_ENABLE_KOKKOS)
 #if defined(HAVE_CUDA)
 template <typename ExecSpace, typename MemSpace, typename Functor>
@@ -1103,7 +1098,6 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, T2 KV3, const T3 ini
 #endif  //defined(HAVE_CUDA)
 #endif  //defined(UINTAH_ENABLE_KOKKOS)
 
-
 // ------------------------------  parallel_initialize loops and its helper functions  ------------------------------
 // Initialization API that takes both KokkosView3 arguments and View<KokkosView3> arguments.
 // If compiling w/o kokkos it takes CC NC SFCX SFCY SFCZ arguments and std::vector<T> arguments
@@ -1135,7 +1129,6 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
   });
 }
 
-
 //template <typename ExecSpace, typename MemSpace, typename T2, typename T3>
 //typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 //parallel_initialize_single(ExecutionObject& execObj, T2 KKV3, const T3 init_val ){
@@ -1150,7 +1143,6 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
 template <class TTT> // Needed for the casting inside of the Variadic template, also allows for nested templating
 using Alias = TTT;
-
 
 #if defined(UINTAH_ENABLE_KOKKOS)
 
@@ -1217,12 +1209,12 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
       }
     });
   });
+
 #if defined(NO_STREAM)
   cudaDeviceSynchronize();
 #endif
 }
 #endif //HAVE_CUDA
-
 
 //For array of Views
 template<typename T, typename MemSpace, unsigned int Capacity>
@@ -1242,7 +1234,6 @@ inline void setValueAndReturnView(struct1DArray<T, Capacity1>* V,  const struct1
   index += extra_i;
   return;
 }
-
 
 template <typename T, typename MemSpace>
 inline void sumViewSize(const T& x, int &index){
@@ -1344,29 +1335,10 @@ parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
       ,0)...,0}; //second part of magic unpacker
 }
 
-
-
 // --------------------------------------  Other loops that should get cleaned up ------------------------------
 
 template <typename Functor>
 void serial_for( BlockRange const & r, const Functor & functor )
-{
-  const int ib = r.begin(0); const int ie = r.end(0);
-  const int jb = r.begin(1); const int je = r.end(1);
-  const int kb = r.begin(2); const int ke = r.end(2);
-
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
-  for (int i=ib; i<ie; ++i) {
-    functor(i,j,k);
-  }}}
-}
-
-//Runtime code has already started using parallel_for constructs.  These should NOT be executed on
-//a GPU.  This function allows a developer to ensure the task only runs on CPU code.  Further, we
-//will just run this without the use of Kokkos (this is so GPU builds don't require OpenMP as well).
-template <typename Functor>
-void parallel_for_cpu_only( BlockRange const & r, const Functor & functor )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -1451,7 +1423,6 @@ struct FunctorBuilderReduce {
 };
 #endif //defined(HAVE_CUDA)
 #endif //if defined( UINTAH_ENABLE_KOKKOS )
-
 
 } // namespace Uintah
 
