@@ -53,11 +53,11 @@ namespace ElectroChem {
                                 SFCYVariable<double>::getTypeDescription());
       fcz_flux         = VarLabel::create("fcz.Flux",
                                 SFCZVariable<double>::getTypeDescription());
-      fcx_flux_model   = VarLabel::create("fcx.FluxModel",
+      fcx_fluxmodel   = VarLabel::create("fcx.FluxModel",
                                 SFCXVariable<int>::getTypeDescription());
-      fcy_flux_model   = VarLabel::create("fcy.FluxModel",
+      fcy_fluxmodel   = VarLabel::create("fcy.FluxModel",
                                 SFCYVariable<int>::getTypeDescription());
-      fcz_flux_model   = VarLabel::create("fcz.FluxModel",
+      fcz_fluxmodel   = VarLabel::create("fcz.FluxModel",
                                 SFCZVariable<int>::getTypeDescription());
     }
     ~ECLabel() {
@@ -68,9 +68,9 @@ namespace ElectroChem {
       VarLabel::destroy(fcx_flux);
       VarLabel::destroy(fcy_flux);
       VarLabel::destroy(fcz_flux);
-      VarLabel::destroy(fcx_flux_model);
-      VarLabel::destroy(fcy_flux_model);
-      VarLabel::destroy(fcz_flux_model);
+      VarLabel::destroy(fcx_fluxmodel);
+      VarLabel::destroy(fcy_fluxmodel);
+      VarLabel::destroy(fcz_fluxmodel);
     }
 
     const VarLabel* cc_matid;
@@ -80,9 +80,9 @@ namespace ElectroChem {
     const VarLabel* fcx_flux;
     const VarLabel* fcy_flux;
     const VarLabel* fcz_flux;
-    const VarLabel* fcx_flux_model;
-    const VarLabel* fcy_flux_model;
-    const VarLabel* fcz_flux_model;
+    const VarLabel* fcx_fluxmodel;
+    const VarLabel* fcy_fluxmodel;
+    const VarLabel* fcz_fluxmodel;
   };
 } // End Uintah namespace
 

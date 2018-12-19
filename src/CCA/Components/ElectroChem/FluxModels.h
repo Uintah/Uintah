@@ -36,7 +36,8 @@ namespace ElectroChem {
   enum FluxModel{
     Basic,
     PNP,
-    InteriorBC
+    InteriorBC,
+    BC
   };
   
 } // End namspace ElectroChem

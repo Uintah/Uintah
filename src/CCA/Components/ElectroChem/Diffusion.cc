@@ -98,9 +98,9 @@ void Diffusion::scheduleInitialize(const LevelP&     level,
   t1->computes(d_eclabel.cc_concentration);
   t1->computes(d_eclabel.cc_matid);
 
-  t2->computes(d_eclabel.fcx_flux_model);
-  t2->computes(d_eclabel.fcy_flux_model);
-  t2->computes(d_eclabel.fcz_flux_model);
+  t2->computes(d_eclabel.fcx_fluxmodel);
+  t2->computes(d_eclabel.fcy_fluxmodel);
+  t2->computes(d_eclabel.fcz_fluxmodel);
 
   t2->requires(Task::NewDW, d_eclabel.cc_matid, Ghost::AroundCells, 1);
 
@@ -152,7 +152,60 @@ void Diffusion::initializeFluxModel(const ProcessorGroup* pg,
                                     const PatchSubset*    patches,
                                     const MaterialSubset* matls,
                                           DataWarehouse*  old_dw,
-                                          DataWarehouse*  new_dw){
+                                           DataWarehouse*  new_dw){
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    IntVector lower_idx = patch->getCellLowIndex();
+    Vector dx = patch->dCell();
+
+    int lower_bnd[] {0,0,0};
+    if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
+      lower_bnd[0] = 1;
+    }
+
+    if(patch->getBCType(Patch::yminus) != Patch::Neighbor){
+      lower_bnd[1] = 1;
+    }
+
+    if(patch->getBCType(Patch::zminus) != Patch::Neighbor){
+      lower_bnd[2] = 1;
+    }
+
+    constCCVariable<int>    matid;
+
+    SFCXVariable<int> fcx_fluxmodel;
+    SFCYVariable<int> fcy_fluxmodel;
+    SFCZVariable<int> fcz_fluxmodel;
+
+    new_dw->get(matid, d_eclabel.cc_matid, 0, patch, Ghost::AroundCells, 1);
+
+    new_dw->allocateAndPut(fcx_fluxmodel, d_eclabel.fcx_fluxmodel, 0, patch);
+    new_dw->allocateAndPut(fcy_fluxmodel, d_eclabel.fcy_fluxmodel, 0, patch);
+    new_dw->allocateAndPut(fcz_fluxmodel, d_eclabel.fcz_fluxmodel, 0, patch);
+
+    FluxModel fmodel;
+    for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+      IntVector c = *iter;
+      for(int i = 0; i < 3; ++i){
+        if(c[i] == lower_idx[i]){
+          if(lower_bnd[i]){
+            fmodel = BC;
+          }else{
+            if(matid[c] == matid[c-offsets[i]]){ fmodel = InteriorBC; }
+            else{ fmodel = Basic; }
+          }
+        }else{
+          if(matid[c] == matid[c-offsets[i]]){ fmodel = InteriorBC; }
+          else{ fmodel = Basic; }
+        }
+        if(i == 0){ fcx_fluxmodel[c] = fmodel; }
+        else if(i == 1){ fcy_fluxmodel[c] = fmodel; }
+        else if(i == 2){ fcz_fluxmodel[c] = fmodel; }
+      }
+    }
+
+  } // end of for patch loop
 }
 
 void Diffusion::scheduleRestartInitialize(const LevelP&     level,
