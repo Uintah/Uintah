@@ -85,5 +85,8 @@
         <outputTimestepInterval>10</outputTimestepInterval>
         <save label="cc.Concentration" />
         <save label="cc.MatId" />
+        <save label="fcx.FluxModel" />
+        <save label="fcy.FluxModel" />
+        <save label="fcz.FluxModel" />
     </DataArchiver>
 </Uintah_specification>

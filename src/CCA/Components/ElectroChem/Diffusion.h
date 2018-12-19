@@ -42,7 +42,9 @@ namespace Uintah {
     MaterialSet    d_one_mat_set;
     MaterialSubset d_one_mat_subset;
 
-    double  d_delt;
+    IntVector offsets[3];
+
+    double  d_delt {0};
 
     public:
       Diffusion(const ProcessorGroup* myworld,

@@ -36,13 +36,15 @@ Diffusion::Diffusion(const ProcessorGroup* myworld,
                      const MaterialManagerP materialManager)
     : ApplicationCommon(myworld, materialManager) {
 
-  d_delt       = 0.0;
-
   d_one_mat_set.add(0);
   d_one_mat_set.addReference();
 
   d_one_mat_subset.add(0);
   d_one_mat_subset.addReference();
+
+  offsets[0].x(1.0); offsets[0].y(0.0); offsets[0].z(0.0);
+  offsets[1].x(0.0); offsets[1].y(1.0); offsets[1].z(0.0);
+  offsets[2].x(0.0); offsets[2].y(0.0); offsets[2].z(1.0);
 
   std::cout << "**** Constructor." << std::endl;
 }
@@ -105,7 +107,7 @@ void Diffusion::scheduleInitialize(const LevelP&     level,
   t2->requires(Task::NewDW, d_eclabel.cc_matid, Ghost::AroundCells, 1);
 
   sched->addTask(t1, level->eachPatch(), &d_one_mat_set);
-  //sched->addTask(t2, level->eachPatch(), &d_one_mat_set);
+  sched->addTask(t2, level->eachPatch(), &d_one_mat_set);
 }
 
 void Diffusion::initializeMaterialId(const ProcessorGroup* pg,
@@ -243,10 +245,16 @@ void Diffusion::scheduleComputeFlux(const PatchSet* patches, SchedulerP& sched){
 
   t->requires(Task::OldDW, d_eclabel.cc_concentration, Ghost::AroundCells,  1);
   t->requires(Task::OldDW, d_eclabel.cc_matid,         Ghost::AroundCells,  1);
+  t->requires(Task::OldDW, d_eclabel.fcx_fluxmodel,    Ghost::AroundFacesX, 0);
+  t->requires(Task::OldDW, d_eclabel.fcy_fluxmodel,    Ghost::AroundFacesY, 0);
+  t->requires(Task::OldDW, d_eclabel.fcz_fluxmodel,    Ghost::AroundFacesZ, 0);
 
   t->computes(d_eclabel.fcx_flux);
   t->computes(d_eclabel.fcy_flux);
   t->computes(d_eclabel.fcz_flux);
+  t->computes(d_eclabel.fcx_fluxmodel);
+  t->computes(d_eclabel.fcy_fluxmodel);
+  t->computes(d_eclabel.fcz_fluxmodel);
 
   sched->addTask(t, patches, &d_one_mat_set);
 }
@@ -256,12 +264,6 @@ void Diffusion::computeFlux(const ProcessorGroup* pg,
                             const MaterialSubset* matls,
                                   DataWarehouse*  old_dw,
                                   DataWarehouse*  new_dw) {
-
-  IntVector offsets[3];
-
-  offsets[0].x(1.0); offsets[0].y(0.0); offsets[0].z(0.0);
-  offsets[1].x(0.0); offsets[1].y(1.0); offsets[1].z(0.0);
-  offsets[2].x(0.0); offsets[2].y(0.0); offsets[2].z(1.0);
 
   int num_matls = m_materialManager->getNumMatls( "ElectroChem" );
 
@@ -295,18 +297,36 @@ void Diffusion::computeFlux(const ProcessorGroup* pg,
     constCCVariable<double> conc;
     constCCVariable<int>    matid;
 
+    constSFCXVariable<int> fcx_fluxmodel_old;
+    constSFCYVariable<int> fcy_fluxmodel_old;
+    constSFCZVariable<int> fcz_fluxmodel_old;
+
     SFCXVariable<double> fcx_flux;
     SFCYVariable<double> fcy_flux;
     SFCZVariable<double> fcz_flux;
+
+    SFCXVariable<int> fcx_fluxmodel;
+    SFCYVariable<int> fcy_fluxmodel;
+    SFCZVariable<int> fcz_fluxmodel;
 
     old_dw->get(conc,  d_eclabel.cc_concentration, 0, patch,
                 Ghost::AroundCells, 1);
     old_dw->get(matid, d_eclabel.cc_matid,         0, patch,
                 Ghost::AroundCells, 1);
+    old_dw->get(fcx_fluxmodel_old, d_eclabel.fcx_fluxmodel, 0, patch,
+                Ghost::AroundFacesX, 1);
+    old_dw->get(fcy_fluxmodel_old, d_eclabel.fcy_fluxmodel, 0, patch,
+                Ghost::AroundFacesY, 1);
+    old_dw->get(fcz_fluxmodel_old, d_eclabel.fcz_fluxmodel, 0, patch,
+                Ghost::AroundFacesZ, 1);
 
     new_dw->allocateAndPut(fcx_flux, d_eclabel.fcx_flux, 0, patch);
     new_dw->allocateAndPut(fcy_flux, d_eclabel.fcy_flux, 0, patch);
     new_dw->allocateAndPut(fcz_flux, d_eclabel.fcz_flux, 0, patch);
+
+    new_dw->allocateAndPut(fcx_fluxmodel, d_eclabel.fcx_fluxmodel, 0, patch);
+    new_dw->allocateAndPut(fcy_fluxmodel, d_eclabel.fcy_fluxmodel, 0, patch);
+    new_dw->allocateAndPut(fcz_fluxmodel, d_eclabel.fcz_fluxmodel, 0, patch);
 
     double flux;
     double dc;
@@ -328,6 +348,9 @@ void Diffusion::computeFlux(const ProcessorGroup* pg,
         else if(i == 1){ fcy_flux[c] = flux; }
         else if(i == 2){ fcz_flux[c] = flux; }
       }
+      fcx_fluxmodel[c] = fcx_fluxmodel_old[c];
+      fcy_fluxmodel[c] = fcy_fluxmodel_old[c];
+      fcz_fluxmodel[c] = fcz_fluxmodel_old[c];
     }
 
   } // end of for patch loop
@@ -348,6 +371,7 @@ void Diffusion::scheduleForwardEuler(const PatchSet* patches, SchedulerP& sched)
 
   t->computes(d_eclabel.cc_concentration);
   t->computes(d_eclabel.cc_matid);
+
   sched->addTask(t, patches, &d_one_mat_set);
 }
 
