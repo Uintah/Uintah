@@ -24,7 +24,7 @@
     <save label="volFraction"/>
     <save label="drhodt"/>
     <save label="m_dot_g"/>
-    <!--save label="gas_kinetic_energy"/-->
+    <save label="gas_kinetic_energy"/>
     <save label="x-mom_RHS"/>
     <save label="x-mom_x_flux"/>
     <save label="x-mom_y_flux"/>
@@ -258,7 +258,7 @@
           <D_mol>0</D_mol>
           <turbulentPrandtlNumber>0.5</turbulentPrandtlNumber>
         </model>
-        <!--model label="t_gas_kinetic_energy" type="gas_kinetic_energy"/-->
+        <model label="t_gas_kinetic_energy" type="gas_kinetic_energy"/>
       </PropertyModelsV2>
       <SourceV2>
         <src label="gravity" type="gravity">
