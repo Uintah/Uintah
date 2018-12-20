@@ -40,6 +40,7 @@
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/DataArchive/DataArchive.h>
+#include <Core/Grid/AMR.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatchVars.h>
 #include <Core/Grid/Variables/PerPatch.h>
@@ -178,7 +179,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
 
     // Query each level for material info until materials are found.
     for (int l=0; l<numLevels; l++) {
-      LevelP level = (*grid)->getLevel(l);
+      const LevelP &level = (*grid)->getLevel(l);
       const Patch* patch = *(level->patchesBegin());
 
       ConsecutiveRangeSet matls =
@@ -210,7 +211,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
   for (int l=0; l<numLevels; ++l)
   {
     LevelInfo &levelInfo = stepInfo->levelInfo[l];
-    LevelP level = (*grid)->getLevel(l);
+    const LevelP &level = (*grid)->getLevel(l);
 
     copyIntVector(levelInfo.refinementRatio, level->getRefinementRatio());
     copyVector(   levelInfo.spacing,         level->dCell());
@@ -226,7 +227,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
       const Patch* patch = level->getPatch(p);
       PatchInfo &patchInfo = levelInfo.patchInfo[p];
 
-      for( unsigned int j=0; j<5; ++j )
+      for( unsigned int m=0; m<5; ++m )
       {
         IntVector iLow, iHigh, iExtraLow, iExtraHigh;
 
@@ -236,21 +237,21 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
         // the extra cell boundaries so that VisIt is none the wiser.
         if (loadExtraElements == NONE)
         {
-          iLow  = patch->getLowIndex (basis[j]);
-          iHigh = patch->getHighIndex(basis[j]);
+          iLow  = patch->getLowIndex (basis[m]);
+          iHigh = patch->getHighIndex(basis[m]);
         }
         else if (loadExtraElements == CELLS)
         {
-          iLow  = patch->getExtraLowIndex (basis[j], IntVector(0,0,0));
-          iHigh = patch->getExtraHighIndex(basis[j], IntVector(0,0,0));
+          iLow  = patch->getExtraLowIndex (basis[m], IntVector(0,0,0));
+          iHigh = patch->getExtraHighIndex(basis[m], IntVector(0,0,0));
         }
         else if (loadExtraElements == PATCHES)
         {
-          iLow  = patch->getLowIndex (basis[j]);
-          iHigh = patch->getHighIndex(basis[j]);
+          iLow  = patch->getLowIndex (basis[m]);
+          iHigh = patch->getHighIndex(basis[m]);
 
-          iExtraLow  = patch->getExtraLowIndex (basis[j], IntVector(0,0,0));
-          iExtraHigh = patch->getExtraHighIndex(basis[j], IntVector(0,0,0));
+          iExtraLow  = patch->getExtraLowIndex (basis[m], IntVector(0,0,0));
+          iExtraHigh = patch->getExtraHighIndex(basis[m], IntVector(0,0,0));
 
           // Extend the patch when extra elements are present. In this
           // case if extra elements are present instead of just adding
@@ -264,9 +265,26 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
             if( iHigh[i] != iExtraHigh[i] )
               iHigh[i] += level->getRefinementRatio()[i];
           }
-        }
 
-        patchInfo.setBounds(&iLow[0], &iHigh[0], meshTypes[j]);
+          // // Clamp: don't exceed the limits
+          // IntVector lLow, lHigh;
+        
+          // if( basis[m] == Patch::NodeBased ) {         
+          //   level->findNodeIndexRange( lLow, lHigh );
+          // }
+          // else if( basis[m] == Patch::CellBased ) {
+          //   level->findCellIndexRange( lLow, lHigh );
+          // }
+          // else {
+          //   lLow  = iLow;
+          //   lHigh = iHigh;
+          // }
+        
+          // iLow  = Uintah::Max(lLow,  iLow);
+          // iHigh = Uintah::Min(lHigh, iHigh);
+        }
+        
+        patchInfo.setBounds(&iLow[0], &iHigh[0], meshTypes[m]);
       }
 
       patchInfo.setBounds(&patch->neighborsLow()[0],
@@ -290,7 +308,6 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
 template<template <typename> class VAR, typename T>
 static GridDataRaw* readGridData(DataArchive *archive,
                                  const Patch *patch,
-                                 const LevelP level,
                                  std::string variable_name,
                                  int material,
                                  int timestep,
@@ -303,144 +320,199 @@ static GridDataRaw* readGridData(DataArchive *archive,
   
   GridDataRaw *gd = new GridDataRaw;
   gd->components = numComponents<T>();
-    
-  int dims[3];
+  
+  IntVector ilow(  low[0],  low[1],  low[2]);
+  IntVector ihigh(high[0], high[1], high[2]);
+  IntVector dims = ihigh - ilow;
+  
   for (int i=0; i<3; ++i) {
     gd->low[i]  =  low[i];
     gd->high[i] = high[i];
-      
-    dims[i] = high[i] - low[i];
   }
-
+  
   gd->num = dims[0] * dims[1] * dims[2];
   gd->data = new double[gd->num*gd->components];
-    
-  VAR<T> var;
     
   // This queries just the patch
   if( loadExtraElements == NONE )
   {
-    IntVector ilow(low[0], low[1], low[2]);
-    IntVector ihigh(high[0], high[1], high[2]);
+    const Level *level = patch->getLevel();
     
+    VAR<T> var;
     archive->queryRegion(var, variable_name, material,
-                         level.get_rep(), timestep, ilow, ihigh);
+                         level, timestep, ilow, ihigh);
+    const T *p = var.getPointer();
+
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], p[i]);
   }
   // This queries the entire patch, including extra cells and boundary cells
   else if( loadExtraElements == CELLS )
   {
+    VAR<T> var;
     archive->query(var, variable_name, material, patch, timestep);
+    const T *p = var.getPointer();
+
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], p[i]);
   }
   else if( loadExtraElements == PATCHES )
   {
-    // This call does not work properly as it will return garbage
-    // where the cells do not exists.
-      
-    // IntVector ilow(low[0], low[1], low[2]);
-    // IntVector ihigh(high[0], high[1], high[2]);
-      
-    // archive->queryRegion(var, variable_name, material,
-    //                      level.get_rep(), timestep, ilow, ihigh);
+    for (int i=0; i<gd->num*gd->components; ++i)
+      gd->data[i] = 0;
 
     // This queries the entire patch, including extra cells and
-    // boundary cells which is smaller than the requested region.
+    // boundary cells which may be smaller than the requested
+    // region. But the missing cells will get filled in below.
+    VAR<T> var;
     archive->query(var, variable_name, material, patch, timestep);
-  }
-  
-  T *p = var.getPointer();
+    const T *p = var.getPointer();
 
-  IntVector varlow = var.getLowIndex();
-  IntVector varhigh = var.getHighIndex();
-  IntVector vardims;
+    IntVector varlow  = var.getLowIndex();
+    IntVector varhigh = var.getHighIndex();
+    IntVector vardims = varhigh - varlow;
 
-  for (int i=0; i<3; ++i) {
-    vardims[i] = varhigh[i] - varlow[i];
-  }
-
-  // Fail safe option if the data returned does match the data
-  // requested. This option is used when rendering with extra
-  // patches.
-  if(  low[0] !=  varlow[0] ||  low[1] !=  varlow[1] ||  low[2] !=  varlow[2] ||
-       high[0] != varhigh[0] || high[1] != varhigh[1] || high[2] != varhigh[2] )
-  {      
-    // for (int i=0; i<gd->num*gd->components; ++i)
-    //   gd->data[i] = 0;
+    // If cells are missing get the values from the coarser level
+    // if( varlow != ilow || varhigh != ihigh )
+    // {
+      const Level *level = patch->getLevel();
+      const Level *coarserLevel = level->getCoarserLevel().get_rep();
       
-    int kd = 0, jd = 0, id;  // data requested
-    int kv = 0, jv = 0, iv;  // variable
+      IntVector clow  = level->mapCellToCoarser( ilow );
+      IntVector chigh = level->mapCellToCoarser( ihigh );
+
+      // Clamp: don't exceed coarse level limits
+      IntVector lLow, lHigh;
+      coarserLevel->findCellIndexRange( lLow, lHigh );
       
+      clow  = Uintah::Max(lLow,  clow);
+      chigh = Uintah::Min(lHigh, chigh); 
+
+      // Get the data from the coarser level.
+      VAR<T> cvar;
+      const T *cp;
+      IntVector cvardims;
+
+      if( varlow != ilow || varhigh != ihigh ) {
+        archive->queryRegion(cvar, variable_name, material,
+                             coarserLevel, timestep, clow, chigh);
+        cp = cvar.getPointer();
+        
+        cvardims = cvar.getHighIndex() - cvar.getLowIndex();
+      }
+      
+      // Copy the coarse level data to all points on the fine level.
+      // if( varlow != ilow || varhigh != ihigh )
+      // for (int k=low[2]; k<high[2]; ++k) {
+
+      //   int kd = (k-low[2]) * dims[1] * dims[0];
+      
+      //   for (int j=low[1]; j<high[1]; ++j) {
+
+      //     int jd = kd + (j-low[1]) * dims[0];
+            
+      //     for (int i=low[0]; i<high[0]; ++i) {
+
+      //       int id = jd + (i-low[0]);
+
+      //       IntVector tmp = level->mapCellToCoarser( IntVector( i, j, k ) );
+
+      //       int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
+      //       int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
+      //       int iv = jv + (tmp[0]-clow[0]);
+            
+      //       if( clow <= tmp && tmp < chigh )
+      //         copyComponents<T>(&gd->data[id*gd->components], cp[iv]);
+      //     }
+      //   }
+      // }
+
+    // }
+
+    // Copy the coarse and fine level data
     for (int k=low[2]; k<high[2]; ++k)
     {
-      // if( varlow[2] <= k && k < varhigh[2] )
+      int kd = (k-low[2]) * dims[1] * dims[0];
+      
+      if( varlow[2] <= k && k < varhigh[2] )
       {
-        // When extra cells are use and the value for k is outside
-        // of the bounds use the smallest/largest possible
-        // value. This step will assure a valid value. Further, when
-        // extra patches are used it will replicate the value from
-        // the nest coarsest level.       
-        int kvar;
-        if( k < varlow[2] )
-          kvar = varlow[2];
-        else if( varhigh[2] <= k)
-          kvar = varhigh[2] - 1;
-        else
-          kvar = k;
-        
-        kd = (k   -   low[2]) *    dims[1] *    dims[0];
-        kv = (kvar-varlow[2]) * vardims[1] * vardims[0];
+        int kv = (k-varlow[2]) * vardims[1] * vardims[0];
         
         for (int j=low[1]; j<high[1]; ++j)
         {
-          // When extra cells are use and the value for j is outside
-          // of the bounds use the smallest/largest possible
-          // value. This step will assure a valid value. Further, when
-          // extra patches are used it will replicate the value from
-          // the nest coarsest level.     
-          int jvar;
-          if( j < varlow[1] )
-            jvar = varlow[1];
-          else if( varhigh[1] <= j)
-            jvar = varhigh[1] - 1;
-          else
-            jvar = j;
-            
-          // if( varlow[1] <= j && j < varhigh[1] )
-          {
-            jd = kd + (j   -   low[1]) *    dims[0];
-            jv = kv + (jvar-varlow[1]) * vardims[0];
+          int jd = kd + (j-low[1]) * dims[0];
           
+          if( varlow[1] <= j && j < varhigh[1] )
+          {
+            int jv = kv + (j-varlow[1]) * vardims[0];
+            
             for (int i=low[0]; i<high[0]; ++i)
             {
-              // if( varlow[0] <= i && i < varhigh[0] )
+              int id = jd + (i-low[0]);
+              
+              // Copy the fine level data to a point on the fine level.
+              if( varlow[0] <= i && i < varhigh[0] )
               {
-                // When extra cells are use and the value for i is outside
-                // of the bounds use the smallest/largest possible
-                // value. This step will assure a valid value. Further, when
-                // extra patches are used it will replicate the value from
-                // the nest coarsest level.       
-                int ivar;
-                if( i < varlow[0] )
-                  ivar = varlow[0];
-                else if( varhigh[0] <= i)
-                  ivar = varhigh[0] - 1;
-                else
-                  ivar = i;
-
-                id = jd + (i   -   low[0]);
-                iv = jv + (ivar-varlow[0]);
+                int iv = jv + (i-varlow[0]);
             
                 copyComponents<T>(&gd->data[id*gd->components], p[iv]);
               }
+              // Copy the coarse level data to a point on the fine level.
+              else
+              {
+                IntVector tmp = level->mapCellToCoarser( IntVector( i, j, k ) );
+
+                int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
+                int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
+                int iv = jv + (tmp[0]-clow[0]);
+            
+                if( clow <= tmp && tmp < chigh )
+                  copyComponents<T>(&gd->data[id*gd->components], cp[iv]);
+              }
+            }
+          }
+          // Copy the coarse level data to each point on the fine level.
+          else
+          {
+            for (int i=low[0]; i<high[0]; ++i)
+            {
+              int id = jd + (i-low[0]);
+
+              IntVector tmp = level->mapCellToCoarser( IntVector( i, j, k ) );
+
+              int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
+              int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
+              int iv = jv + (tmp[0]-clow[0]);
+            
+              if( clow <= tmp && tmp < chigh )
+                copyComponents<T>(&gd->data[id*gd->components], cp[iv]);
             }
           }
         }
       }
+      // Copy the coarse level data to each point on the fine level.
+      else
+      {
+        for (int j=low[1]; j<high[1]; ++j) {
+
+          int jd = kd + (j-low[1]) * dims[0];
+            
+          for (int i=low[0]; i<high[0]; ++i) {
+
+            int id = jd + (i-low[0]);
+
+            IntVector tmp = level->mapCellToCoarser( IntVector( i, j, k ) );
+
+            int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
+            int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
+            int iv = jv + (tmp[0]-clow[0]);
+            
+            if( clow <= tmp && tmp < chigh )
+              copyComponents<T>(&gd->data[id*gd->components], cp[iv]);
+          }
+        }
+      }
     }
-  }
-  else
-  {
-    for (int i=0; i<gd->num; ++i)
-      copyComponents<T>(&gd->data[i*gd->components], p[i]);
   }
   
   return gd;
@@ -453,7 +525,6 @@ static GridDataRaw* readGridData(DataArchive *archive,
 template<template <typename> class VAR, typename T>
 static GridDataRaw* readPatchData(DataArchive *archive,
                                   const Patch *patch,
-                                  const LevelP level,
                                   std::string variable_name,
                                   int material,
                                   int timestep)
@@ -510,7 +581,6 @@ static GridDataRaw* readPatchData(DataArchive *archive,
 template<template<typename> class VAR>
 GridDataRaw* getGridDataMainType(DataArchive *archive,
                                  const Patch *patch,
-                                 const LevelP level,
                                  std::string variable_name,
                                  int material,
                                  int timestep,
@@ -521,25 +591,25 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
 {
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
-    return readGridData<VAR, double>(archive, patch, level, variable_name,
+    return readGridData<VAR, double>(archive, patch, variable_name,
                                      material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::float_type:
-    return readGridData<VAR, float>(archive, patch, level, variable_name,
+    return readGridData<VAR, float>(archive, patch, variable_name,
                                     material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::int_type:
-    return readGridData<VAR, int>(archive, patch, level, variable_name,
+    return readGridData<VAR, int>(archive, patch, variable_name,
                                   material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::Vector:
-    return readGridData<VAR, Vector>(archive, patch, level, variable_name,
+    return readGridData<VAR, Vector>(archive, patch, variable_name,
                                      material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::Stencil7:
-    return readGridData<VAR, Stencil7>(archive, patch, level, variable_name,
+    return readGridData<VAR, Stencil7>(archive, patch, variable_name,
                                        material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::Stencil4:
-    return readGridData<VAR, Stencil4>(archive, patch, level, variable_name,
+    return readGridData<VAR, Stencil4>(archive, patch, variable_name,
                                        material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::Matrix3:
-    return readGridData<VAR, Matrix3>(archive, patch, level, variable_name,
+    return readGridData<VAR, Matrix3>(archive, patch, variable_name,
                                       material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::bool_type:
   case Uintah::TypeDescription::short_int_type:
@@ -564,7 +634,6 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
 template<template<typename> class VAR>
 GridDataRaw* getPatchDataMainType(DataArchive *archive,
                                   const Patch *patch,
-                                  const LevelP level,
                                   std::string variable_name,
                                   int material,
                                   int timestep,
@@ -573,13 +642,13 @@ GridDataRaw* getPatchDataMainType(DataArchive *archive,
   switch (subtype->getType())
   {
   case Uintah::TypeDescription::double_type:
-    return readPatchData<VAR, double>(archive, patch, level, variable_name,
+    return readPatchData<VAR, double>(archive, patch, variable_name,
                                       material, timestep);
   case Uintah::TypeDescription::float_type:
-    return readPatchData<VAR, float>(archive, patch, level, variable_name,
+    return readPatchData<VAR, float>(archive, patch, variable_name,
                                      material, timestep);
   case Uintah::TypeDescription::int_type:
-    return readPatchData<VAR, int>(archive, patch, level, variable_name,
+    return readPatchData<VAR, int>(archive, patch, variable_name,
                                    material, timestep);
   case Uintah::TypeDescription::Vector:
   case Uintah::TypeDescription::Stencil7:
@@ -617,7 +686,7 @@ GridDataRaw* getGridData(DataArchive *archive,
                          int high[3],
                          LoadExtra loadExtraElements)
 {
-  LevelP level = (*grid)->getLevel(level_i);
+  const LevelP &level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
   
   // Get variable type from the archive.
@@ -652,27 +721,27 @@ GridDataRaw* getGridData(DataArchive *archive,
   switch(maintype->getType())
   {
   case Uintah::TypeDescription::CCVariable:
-    return getGridDataMainType<CCVariable>(archive, patch, level,
+    return getGridDataMainType<CCVariable>(archive, patch,
                                            variable_name, material, timestep,
                                            low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::NCVariable:
-    return getGridDataMainType<NCVariable>(archive, patch, level,
+    return getGridDataMainType<NCVariable>(archive, patch,
                                            variable_name, material, timestep,
                                            low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::SFCXVariable:
-    return getGridDataMainType<SFCXVariable>(archive, patch, level,
+    return getGridDataMainType<SFCXVariable>(archive, patch,
                                              variable_name, material, timestep,
                                              low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::SFCYVariable:
-    return getGridDataMainType<SFCYVariable>(archive, patch, level,
+    return getGridDataMainType<SFCYVariable>(archive, patch,
                                              variable_name, material, timestep,
                                              low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::SFCZVariable:
-    return getGridDataMainType<SFCZVariable>(archive, patch, level,
+    return getGridDataMainType<SFCZVariable>(archive, patch,
                                              variable_name, material, timestep,
                                              low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::PerPatch:
-    return getPatchDataMainType<PerPatch>(archive, patch, level,
+    return getPatchDataMainType<PerPatch>(archive, patch,
                                           variable_name, material, timestep, subtype);
   default:
     std::cerr << "Uintah::archiveUtils::getGridData :"
@@ -723,7 +792,7 @@ unsigned int getNumberParticles(DataArchive *archive,
                                 int material,
                                 int timestep)
 {
-  LevelP level = (*grid)->getLevel(level_i);
+  const LevelP &level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
   const std::string &variable_name =
@@ -859,7 +928,7 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
                                  int material,
                                  int timestep)
 {
-  LevelP level = (*grid)->getLevel(level_i);
+  const LevelP &level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
   // figure out what the type of the variable we're querying is
@@ -962,17 +1031,21 @@ void allocateTemporary( GridVariableBase& var,
  Function~  setFineLevelPatchExtraCells-- 
 _____________________________________________________________________*/
 template<template<typename> class VAR, typename T>
-void setFineLevelPatchExtraCells(const Patch* finePatch, 
-                                 const Level* fineLevel,          
-                                 const Level* coarseLevel,        
-                                 varType& Q_fineLevel,          
-                                 std::string Q_name,           
-                                 int matl)                        
+void setFineLevelPatchExtraCells(DataArchive *archive,
+                                 const Patch* finePatch,
+                                 VAR<T>& Q_fineLevel,          
+                                 std::string variable_name,
+                                 int material,
+                                 int timestep)                        
 {
-  cout_dbg << *finePatch << " ";
-  finePatch->printPatchBCs(cout_dbg);
+  const Level* fineLevel = finePatch->getLevel();
+  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+
+  // cout_dbg << *finePatch << " ";
+  // finePatch->printPatchBCs(cout_dbg);
+
   IntVector refineRatio = fineLevel->getRefinementRatio();
-  int order_CFI_Interpolation = 0
+  int order_CFI_Interpolation = 0;
   
   //__________________________________
   // Iterate over coarsefine interface faces
@@ -984,10 +1057,7 @@ void setFineLevelPatchExtraCells(const Patch* finePatch,
     Patch::FaceType face = *iter;
 
     //__________________________________
-    // Get fine level hi & lo cell iter limits
-    //  and coarselevel hi and low index
-
-
+    // Get fine level hi & lo cell iter limits and coarselevel hi and low index
     IntVector cl, ch, fl, fh;
     getCoarseFineFaceRange(finePatch, coarseLevel, face, Patch::ExtraPlusEdgeCells, 
                            order_CFI_Interpolation, cl, ch, fl, fh);
@@ -996,7 +1066,7 @@ void setFineLevelPatchExtraCells(const Patch* finePatch,
     // enlarge the finelevel foot print by refineRatio (R)
     // x-           x+        y-       y+       z-        z+
     // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
-    IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
+    IntVector dir = finePatch->getFaceAxes(face);        // face axes
     int pDir      = dir[0];  // principal direction
 
     if( face == Patch::xminus || face == Patch::yminus || face == Patch::zminus) {
@@ -1006,12 +1076,12 @@ void setFineLevelPatchExtraCells(const Patch* finePatch,
       fh[ pDir ] += refineRatio[ pDir ] - 1;
     } 
     
-    // clamp: don't exceed fine level limits
-    IntVector fL_l, fL_h;
-    fineLevel->findCellIndexRange( fL_l, fL_h );
+    // Clamp: don't exceed coarse level limits
+    IntVector cL_l, cL_h;
+    fineLevel->findCellIndexRange( cL_l, cL_h );
     
-    fl = Uintah::Max(fl, fL_l);
-    fh = Uintah::Min(fh, fL_h); 
+    cl = Uintah::Max(cl, cL_l);
+    ch = Uintah::Min(ch, cL_h); 
     
     // DOUT(dbgOut, " face " << face << " refineRatio "<< refineRatio
     //     << " BC type " << finePatch->getBCType(face)
@@ -1021,7 +1091,8 @@ void setFineLevelPatchExtraCells(const Patch* finePatch,
     //__________________________________
     // Pull coarse level data from archive
     VAR<T> Q_CL;
-    archive->queryRegion(Q_CL, Q_name, matl, coarseLevel.get_rep(), timestep, cl, ch);
+    archive->queryRegion(Q_CL, variable_name, material,
+                         coarseLevel, timestep, cl, ch);
 
     //__________________________________
     // populate fine level cells with coarse level data
@@ -1030,7 +1101,7 @@ void setFineLevelPatchExtraCells(const Patch* finePatch,
       IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
       Q_fineLevel[f_cell] = Q_CL[c_cell];
     }
-                           
+
     //____ B U L L E T   P R O O F I N G_______ 
     // All values must be initialized at this point
     // Note only check patches that aren't on the edge of the domain
