@@ -309,9 +309,9 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
 
         patchInfo.setBounds(&iLow[0], &iHigh[0], meshTypes[m]);
 
-        if( m == 1 & l == 0 && p == 0 )
-          for( const auto & extraPatch : extraPatches )
-            std::cerr << extraPatch.second.first << "  " << extraPatch.second.second << std::endl;
+        // if( m == 1 && l == 0 && p == 0 )
+        //   for( const auto & extraPatch : extraPatches )
+        //     std::cerr << extraPatch.second.first << "  " << extraPatch.second.second << std::endl;
       }
 
       patchInfo.setBounds(&patch->neighborsLow()[0],
