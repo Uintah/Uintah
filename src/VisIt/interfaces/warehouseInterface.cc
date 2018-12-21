@@ -383,6 +383,30 @@ int GetGlobalDomainNumber(TimeStepInfo* stepInfo,
   return g;
 }
 
+// ****************************************************************************
+//  Method: mapIndexToCoarser
+//
+//  Purpose: Map a cell from the current mesh to the coarse mesh
+//      
+//  
+// ****************************************************************************
+IntVector
+mapIndexToCoarser( const IntVector & idx, const IntVector & refinementRatio )
+{
+  // If the fine cell index is negative it must be made positive first,
+  // then an offset must be subtracted to get the right coarse cell.
+  IntVector index = idx;;
+  IntVector offset(0, 0, 0);
+
+  for( unsigned int i=0; i<3; ++i ) {
+    while( index[i] < 0 ) {
+      index[i] += refinementRatio[i];
+      ++offset[i];
+    }
+  }
+
+  return index / refinementRatio - offset;
+}
 
 // ****************************************************************************
 //  Method: CheckNaNs
@@ -522,14 +546,15 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
     IntVector clow, chigh, cvardims;
 
     const Level *level = patch->getLevel();
+    const IntVector rRatio = level->getRefinementRatio();
     
     // If cells are missing get the values from the coarser level
     if( varlow != ilow || varhigh != ihigh )
     {
       const Level *coarserLevel = level->getCoarserLevel().get_rep();
       
-      clow  = level->mapCellToCoarser( ilow );
-      chigh = level->mapCellToCoarser( ihigh );
+      clow  = mapIndexToCoarser( ilow,  rRatio );
+      chigh = mapIndexToCoarser( ihigh, rRatio );
 
       // Clamp: don't exceed coarse level limits
       IntVector lLow, lHigh;
@@ -558,7 +583,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
 
       //       int id = jd + (i-low[0]);
 
-      //       IntVector tmp = level->mapCellToCoarser( IntVector( i, j, k ) );
+      //       IntVector tmp = mapIndexToCoarser( IntVector( i, j, k ), rRatio );
 
       //       int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
       //       int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
@@ -603,7 +628,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
               // Copy the coarse level data to a point on the fine level.
               else
               {
-                IntVector tmp = level->mapCellToCoarser( IntVector( i, j, k ) );
+                IntVector tmp = mapIndexToCoarser( IntVector( i, j, k ), rRatio );
 
                 int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
                 int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
@@ -621,7 +646,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
             {
               int id = jd + (i-low[0]);
 
-              IntVector tmp = level->mapCellToCoarser( IntVector( i, j, k ) );
+              IntVector tmp = mapIndexToCoarser( IntVector( i, j, k ), rRatio );
 
               int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
               int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
@@ -644,7 +669,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
 
             int id = jd + (i-low[0]);
 
-            IntVector tmp = level->mapCellToCoarser( IntVector( i, j, k ) );
+            IntVector tmp = mapIndexToCoarser( IntVector( i, j, k ), rRatio );
 
             int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
             int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
