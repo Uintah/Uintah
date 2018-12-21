@@ -23,7 +23,8 @@
  */
 
 /*
- *  archiveUtils.cc: Provides an interface between the Uintah archive and VisIt.
+ *  archiveUtils.cc: Provides an interface between Uintah's data
+ *                   archiver and VisIt's database reader.
  *
  *  Written by:
  *   Scientific Computing and Imaging Institute
@@ -40,7 +41,6 @@
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/DataArchive/DataArchive.h>
-#include <Core/Grid/AMR.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatchVars.h>
 #include <Core/Grid/Variables/PerPatch.h>
@@ -336,11 +336,9 @@ static GridDataRaw* readGridData(DataArchive *archive,
   // This queries just the patch
   if( loadExtraElements == NONE )
   {
-    const Level *level = patch->getLevel();
-    
     VAR<T> var;
     archive->queryRegion(var, variable_name, material,
-                         level, timestep, ilow, ihigh);
+                         patch->getLevel(), timestep, ilow, ihigh);
     const T *p = var.getPointer();
 
     for (int i=0; i<gd->num; ++i)
@@ -372,14 +370,19 @@ static GridDataRaw* readGridData(DataArchive *archive,
     IntVector varhigh = var.getHighIndex();
     IntVector vardims = varhigh - varlow;
 
+    VAR<T> cvar;
+    const T *cp = nullptr;
+    IntVector clow, chigh, cvardims;
+
+    const Level *level = patch->getLevel();
+    
     // If cells are missing get the values from the coarser level
-    // if( varlow != ilow || varhigh != ihigh )
-    // {
-      const Level *level = patch->getLevel();
+    if( varlow != ilow || varhigh != ihigh )
+    {
       const Level *coarserLevel = level->getCoarserLevel().get_rep();
       
-      IntVector clow  = level->mapCellToCoarser( ilow );
-      IntVector chigh = level->mapCellToCoarser( ihigh );
+      clow  = level->mapCellToCoarser( ilow );
+      chigh = level->mapCellToCoarser( ihigh );
 
       // Clamp: don't exceed coarse level limits
       IntVector lLow, lHigh;
@@ -389,20 +392,13 @@ static GridDataRaw* readGridData(DataArchive *archive,
       chigh = Uintah::Min(lHigh, chigh); 
 
       // Get the data from the coarser level.
-      VAR<T> cvar;
-      const T *cp;
-      IntVector cvardims;
-
-      if( varlow != ilow || varhigh != ihigh ) {
-        archive->queryRegion(cvar, variable_name, material,
-                             coarserLevel, timestep, clow, chigh);
-        cp = cvar.getPointer();
-        
-        cvardims = cvar.getHighIndex() - cvar.getLowIndex();
-      }
+      archive->queryRegion(cvar, variable_name, material,
+                           coarserLevel, timestep, clow, chigh);
+      cp = cvar.getPointer();
+      
+      cvardims = cvar.getHighIndex() - cvar.getLowIndex();
       
       // Copy the coarse level data to all points on the fine level.
-      // if( varlow != ilow || varhigh != ihigh )
       // for (int k=low[2]; k<high[2]; ++k) {
 
       //   int kd = (k-low[2]) * dims[1] * dims[0];
@@ -427,7 +423,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
       //   }
       // }
 
-    // }
+    }
 
     // Copy the coarse and fine level data
     for (int k=low[2]; k<high[2]; ++k)
@@ -1009,6 +1005,7 @@ std::string getParticlePositionName(DataArchive *archive)
 
 
 #if 0
+#include <Core/Grid/AMR.h>
 //______________________________________________________________________
 //
 void allocateTemporary( GridVariableBase& var,

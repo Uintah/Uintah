@@ -23,8 +23,8 @@
  */
 
 /*
- *  insituUtils.cc: Provides an interface between the Uintah data warehouse 
- *                  and VisIt's libsim in situ interface.
+ *  warehouseInterface.cc: Provides an interface between Uintah's data
+ *                         warehouse and VisIt's libsim in situ interface.
  *
  *  Written by:
  *   Scientific Computing and Imaging Institute
@@ -484,10 +484,8 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
   // This queries just the patch
   if( loadExtraElements == NONE )
   {
-    const Level *level = patch->getLevel();
-
     VAR<T> var;  
-    dw->getRegion( var, varLabel, material, level, ilow, ihigh );
+    dw->getRegion( var, varLabel, material, patch->getLevel(), ilow, ihigh );
     const T *p = var.getPointer();
     
     for (int i=0; i<gd->num; ++i)
@@ -519,14 +517,19 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
     IntVector varhigh = var.getHighIndex();
     IntVector vardims = varhigh - varlow;
 
-    // If cells are missing get the values from the coarser level
-    // if( varlow != ilow || varhigh != ihigh )
-    // {
-      const Level *level = patch->getLevel();
-      const Level *coarserLevel = level->getCoarserLevel().get_rep();
+    VAR<T> cvar;
+    const T *cp = nullptr;
+    IntVector clow, chigh, cvardims;
 
-      IntVector clow  = level->mapCellToCoarser( ilow );
-      IntVector chigh = level->mapCellToCoarser( ihigh );
+    const Level *level = patch->getLevel();
+    
+    // If cells are missing get the values from the coarser level
+    if( varlow != ilow || varhigh != ihigh )
+    {
+      const Level *coarserLevel = level->getCoarserLevel().get_rep();
+      
+      clow  = level->mapCellToCoarser( ilow );
+      chigh = level->mapCellToCoarser( ihigh );
 
       // Clamp: don't exceed coarse level limits
       IntVector lLow, lHigh;
@@ -536,20 +539,13 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
       chigh = Uintah::Min(lHigh, chigh); 
 
       // Get the data from the coarser level.
-      VAR<T> cvar;
-      const T *cp;
-      IntVector cvardims;
-      
-      if( varlow != ilow || varhigh != ihigh ) {
-        dw->getRegion( cvar, varLabel, material, coarserLevel,
-                       clow, chigh, true );
-        cp = cvar.getPointer();
+      dw->getRegion( cvar, varLabel, material, coarserLevel,
+                     clow, chigh, true );
+      cp = cvar.getPointer();
         
-        cvardims = cvar.getHighIndex() - cvar.getLowIndex();
-      }
+      cvardims = cvar.getHighIndex() - cvar.getLowIndex();
       
       // Copy the coarse level data to all points on the fine level.
-      // if( varlow != ilow || varhigh != ihigh )
       // for (int k=low[2]; k<high[2]; ++k) {
 
       //   int kd = (k-low[2]) * dims[1] * dims[0];
@@ -574,7 +570,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
       //   }
       // }
 
-    // }
+    }
 
     // Copy the coarse and fine level data
     for (int k=low[2]; k<high[2]; ++k)
