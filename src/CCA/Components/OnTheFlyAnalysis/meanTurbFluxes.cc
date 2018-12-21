@@ -39,6 +39,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <iostream>
+#include <fstream>
 
 #define ALL_LEVELS 99
 
@@ -68,19 +69,25 @@ meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
 
   d_lastCompTimeLabel = d_planeAve_1->d_lb->lastCompTimeLabel;
   d_velVar = make_shared< velocityVar >();
+
+  d_verifyScalarLabel=VarLabel::create( "verifyScalar", CCVariable<double>::getTypeDescription() );
+  d_verifyVectorLabel=VarLabel::create( "verifyVector", CCVariable<Vector>::getTypeDescription() );
 }
 
 //__________________________________
 meanTurbFluxes::~meanTurbFluxes()
 {
   DOUT(dbg_OTF_MTF, " Doing: destorying meanTurbFluxes" );
-  
+
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
 
   delete d_planeAve_1;
   delete d_planeAve_2;
+  VarLabel::destroy( d_lastCompTimeLabel );
+  VarLabel::destroy( d_verifyVectorLabel );
+  VarLabel::destroy( d_verifyScalarLabel );
 }
 
 
@@ -136,8 +143,8 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
   int defaultMatl = matl->getDWIndex();
 
   d_matl_set = d_planeAve_1->d_matl_set;
-  
-  
+
+
   //__________________________________
   //  velocity label
   map<string,string> attribute;
@@ -159,7 +166,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
 
   const TypeDescription * td_V     = CCVariable<Vector>::getTypeDescription();
   d_velVar->primeLabel            = VarLabel::create( labelName + "_prime",         td_V);  // u', v', w'
-  d_velVar->normalTurbStrssLabel  = VarLabel::create( d_velVar->normalTurbStrssName, td_V); // u'u', v'v', w'w' 
+  d_velVar->normalTurbStrssLabel  = VarLabel::create( d_velVar->normalTurbStrssName, td_V); // u'u', v'v', w'w'
   d_velVar->shearTurbStrssLabel   = VarLabel::create( d_velVar->shearTurbStrssName,  td_V); // u'v', v'w', w'u'
 
   typedef planeAverage PA;
@@ -250,7 +257,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     me->primeLabel    = primeLabel;
     me->turbFluxLabel = turbFluxLabel;
     d_Qvars.push_back( move(me) );
-    
+
     // planarAve specs
     auto pv        = make_unique< PA::planarVar_Vector >();
     pv->label      = turbFluxLabel;          // u'Q'(y), v'Q'(y), w'Q'(y)
@@ -262,7 +269,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
 
     planarVars.push_back( move(pv) );
   }
-  
+
   d_planeAve_2->setAllLevels_planarVars( 0, planarVars );
 }
 
@@ -272,7 +279,7 @@ void meanTurbFluxes::scheduleInitialize(SchedulerP   & sched,
                                         const LevelP & level)
 {
   d_planeAve_1->scheduleInitialize( sched, level);
-  
+
   d_planeAve_2->scheduleInitialize( sched, level);
 }
 
@@ -286,7 +293,7 @@ void meanTurbFluxes::scheduleRestartInitialize(SchedulerP   & sched,
   printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::scheduleRestartInitialize");
 
   d_planeAve_1->scheduleRestartInitialize( sched, level);
-  
+
   d_planeAve_2->scheduleRestartInitialize( sched, level);
 }
 
@@ -298,45 +305,155 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 {
   printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::scheduleDoAnalysis");
 
+
+  sched_populateVerifyLabels( sched, level );
+
   //__________________________________
   // This instantiation of planarAve computes the planar averages of:
   //
   // {u}^bar(y), {v}^bar(y), {w}^bar(y)
-  // {Q}^bar(y)   Q = P, T, scalar.....etc  
+  // {Q}^bar(y)   Q = P, T, scalar.....etc
   const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
   d_planeAve_1->createMPICommunicator( perProcPatches );
-  
+
   d_planeAve_1->sched_computePlanarAve( sched, level );
 
   d_planeAve_1->sched_writeToFiles(     sched, level, "planeAve" );
-  
+
   d_planeAve_1->sched_resetProgressVar( sched, level );
 
   //__________________________________
   //  compute u', v', w', Q'
   sched_TurbFluctuations( sched, level );
-  
-  
+
+
   //__________________________________
   //  compute u'u', v'v', w'w'
   //          u'v', v'w', w'u'
   //          u'Q', v'Q', w'Q'
   sched_TurbFluxes(       sched, level );
-  
-  
+
+
   //__________________________________
   // This instantiation of planarAve computes:
   //
   // {u'u'}^bar(y), {v'v'}^bar(y), {w'w'}^bar(y)      => normalTurbStrss
   // {u'v'}^bar(y), {v'w'}^bar(y), {w'u'}^bar(y)      => shearTurbStrss
-  // {u'Q'}^bar(y), {v'Q'}^bar(y), {w'Q'}^bar(y)   
+  // {u'Q'}^bar(y), {v'Q'}^bar(y), {w'Q'}^bar(y)
   d_planeAve_2->createMPICommunicator( perProcPatches );
-  
+
   d_planeAve_2->sched_computePlanarAve( sched, level );
-  
+
   d_planeAve_2->sched_writeToFiles(     sched, level, "planeAve_TurbFluxes" );
-  
+
   d_planeAve_2->sched_resetProgressVar( sched, level );
+}
+
+//______________________________________________________________________
+//
+void meanTurbFluxes::sched_populateVerifyLabels( SchedulerP   & sched,
+                                                 const LevelP & level )
+{
+  Task* t = scinew Task( "meanTurbFluxes::populateVerifyLabels",
+                    this,&meanTurbFluxes::populateVerifyLabels );
+
+  t->computes ( d_verifyVectorLabel );
+  t->computes ( d_verifyScalarLabel );
+  sched->addTask( t, level->eachPatch() , d_matl_set );
+}
+//______________________________________________________________________
+//
+void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * ,
+                                          const PatchSubset    * patches,
+                                          const MaterialSubset * ,
+                                          DataWarehouse        * ,
+                                          DataWarehouse        * new_dw)
+{
+  for( auto p=0;p<patches->size();p++ ){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::verification");
+
+    int matl = d_velVar->matl;
+    CCVariable< Vector > velocity;
+    new_dw->allocateAndPut( velocity, d_verifyVectorLabel, matl, patch );
+
+    CCVariable< double > scalar;
+    new_dw->allocateAndPut( scalar,  d_verifyScalarLabel, matl, patch );
+
+    //__________________________________
+    // Open the file
+    string filename = "test.out";
+    ifstream ifs;
+
+    ifs.open ( filename, ifstream::in );
+    if ( !ifs.good() ){
+      string warn = "ERROR opening verification file " + filename;
+      throw InternalError( warn, __FILE__, __LINE__ );
+    }
+
+    string line;    // row from the file
+    int fpos;       // file fposition
+
+    //__________________________________
+    //  ignore header
+    while ( getline( ifs, line ) ){
+      if ( line[0] != '#'){
+        break;
+      }
+      fpos= ifs.tellg();
+    }
+
+    // rewind one line
+    ifs.seekg( fpos );
+
+    //__________________________________
+    //  bulletproofing
+    int numLines = 0;
+
+    while ( getline(ifs, line, '\n') ){
+      ++numLines;
+    }
+
+    int numCells = patch->getNumCells();
+
+    if( numLines != numCells ){
+      ostringstream warn;
+      warn<< " The number of lines ("<< numLines << ") in the verification file ("<< filename
+          << ") does not equal the number of cells in the patch (" << numCells << "). ";
+      throw InternalError( warn.str(), __FILE__, __LINE__ );
+    }
+
+    //__________________________________
+    // populate the variables with values from the file
+    ifs.clear();        // rewind file fposition
+    ifs.seekg( fpos );
+
+    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+
+      // load row into a stringstream
+      getline( ifs, line );
+      stringstream ss;
+      ss << line;
+
+      // Load each value of the row into num_str
+      std::vector<std::string> num_str;
+
+      for (int i = 0; i < 4; i++){
+        std::string str;
+        getline(ss, str, ',');
+        num_str.push_back( str );
+      }
+
+      // convert from str -> double
+      double u = stod( num_str[0] );
+      double v = stod( num_str[1] );
+      double w = stod( num_str[2] );
+      double s = stod( num_str[3] );
+
+      printf( "%15.16e,%15.16e,%15.16e,%15.16e\n",u,v,w,s );
+    }
+  }
 }
 
 //______________________________________________________________________
@@ -364,20 +481,20 @@ void meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
                     this,&meanTurbFluxes::calc_TurbFluctuations );
 
   printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::sched_TurbFluctuations");
-  
+
   sched_TimeVars( t, level, d_lastCompTimeLabel, false );
 
   // u,v,w -> u',v',w'
   t->requires( Task::NewDW, d_velVar->label, d_velVar->matSubSet, Ghost::None, 0 );
   t->computes ( d_velVar->primeLabel );
-  
+
   // Q -> Q'
   for ( size_t i =0 ; i < d_Qvars.size(); i++ ) {
     shared_ptr< Qvar > Q = d_Qvars[i];
     t->requires( Task::NewDW, Q->label, Q->matSubSet, Ghost::None, 0 );
     t->computes ( Q->primeLabel );
   }
-  
+
   sched->addTask( t, level->eachPatch() , d_matl_set );
 }
 
@@ -393,7 +510,7 @@ void meanTurbFluxes::calc_TurbFluctuations(const ProcessorGroup  * ,
   if( d_planeAve_1->isItTime( old_dw, level, d_lastCompTimeLabel) == false ){
     return;
   }
-  
+
  //__________________________________
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
@@ -427,9 +544,9 @@ void meanTurbFluxes::calc_Q_prime( DataWarehouse * new_dw,
   const Level* level = patch->getLevel();
   const int L_indx   = level->getIndex();
   std::vector< T > Qbar;
-  
+
   d_planeAve_1->getPlanarAve< T >( L_indx, Q->label, Qbar );
-  
+
   IntVector lo;
   IntVector hi;
   GridIterator iter=patch->getCellIterator();
@@ -438,18 +555,18 @@ void meanTurbFluxes::calc_Q_prime( DataWarehouse * new_dw,
   for ( auto z = lo.z(); z<hi.z(); z++ ) {          // This is the loop over all planes for this patch
     for ( auto y = lo.y(); y<hi.y(); y++ ) {        // cells in the plane
       for ( auto x = lo.x(); x<hi.x(); x++ ) {
-      
+
         IntVector c(x,y,z);
-      
+
         c = d_planeAve_1->transformCellIndex(x, y, z);
-      
+
         Qprime[c] = Qlocal[c] - Qbar[z];
-        
+
         //__________________________________
         //  debugging
         if ( c == d_monitorCell && dbg_OTF_MTF.active() ){
           cout << "  calc_Q_prime:  L-"<< L_indx << " " << d_monitorCell <<  setw(10)<< Q->label->getName()
-               << setw(10) << "\t Qprime: "  << Qprime[c] 
+               << setw(10) << "\t Qprime: "  << Qprime[c]
                << setw(10) << " Qlocal: " << Qlocal[c] << setw(10) << "Q_bar: " << Qbar[z] << endl;
         }
       }
@@ -460,7 +577,7 @@ void meanTurbFluxes::calc_Q_prime( DataWarehouse * new_dw,
 //______________________________________________________________________
 /*
     iterate over all cells{
-      u'u', v'v', w'w'      => CCVariable< Vector > mormalTurbStrss      
+      u'u', v'v', w'w'      => CCVariable< Vector > mormalTurbStrss
       u'v', v'w', w'u'      => CCVariable< Vector > shearTurbStrss
 
       // scalar
@@ -481,7 +598,7 @@ void meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
 
 
   sched_TimeVars( t, level, d_lastCompTimeLabel, false );
-    
+
   Ghost::GhostType gn  = Ghost::None;
   //__________________________________
   //  scalars
@@ -511,11 +628,11 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
 {
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
-  
+
   if( d_planeAve_1->isItTime( old_dw, level, d_lastCompTimeLabel) == false ){
     return;
   }
-  
+
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::calc_TurbFluxes");
@@ -571,7 +688,7 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
       offdiag[c] = Vector( vel.x() * vel.y(),     // u'v'
                            vel.y() * vel.w(),     // v'w'
                            vel.z() * vel.z() );   // w'u'
-                           
+
       //__________________________________
       //  debugging
       if ( c == d_monitorCell && dbg_OTF_MTF.active() ){
