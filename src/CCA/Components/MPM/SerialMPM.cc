@@ -5805,6 +5805,11 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
 
   int doit=timestep%interval;
 
+  const Level* level = getLevel(patches);
+  IntVector low, hi;
+  IntVector periodic=level->getPeriodicBoundaries();
+  level->findNodeIndexRange(low, hi);
+
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
@@ -5857,7 +5862,42 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
              iter != psetOP->end();
              iter++){
           particleIndex idx = *iter;
-          if(pSurfOld[idx]>0.99){
+          // Determine if particle is in a domain boundary cell
+          bool onBoundary = false;
+          IntVector cI = patch->findCell(px[idx],cI);
+          if(periodic.x()==1){
+            if(cI.x()==low.x() || cI.x()==hi.x()){
+              onBoundary=true;
+            }
+          } else {
+            if(cI.x()==low.x()+1 || cI.x()==hi.x()- 3){
+              onBoundary=true;
+            }
+          }
+          if(flags->d_ndim>1){
+            if(periodic.y()==1){
+              if(cI.y()==low.y() || cI.y()==hi.y()){
+                onBoundary=true;
+              }
+            } else {
+              if(cI.y()==low.y()+1 || cI.y()==hi.y()- 3){
+                onBoundary=true;
+              }
+            }
+            if(flags->d_ndim>2){
+             if(periodic.z()==1){
+              if(cI.z()==low.z() || cI.z()==hi.z()){
+                onBoundary=true;
+              }
+             } else {
+              if(cI.z()==low.z()+1 || cI.z()==hi.z()- 3){
+                onBoundary=true;
+              }
+             }
+            }
+          }
+
+          if(pSurfOld[idx]>0.99 || onBoundary){
            pSurf[idx]=pSurfOld[idx];
           } else {
           vector<particleIndex> close(nclose);
@@ -6251,10 +6291,6 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
         }
         d_CCIndex++;
       }
-
-//      for(unsigned int i=0;i<donorColors.size();i++){
-//        cout << "donorColor = " << donorColors[i] << endl;
-//      }
 
       // Loop over all materials, except for acceptor, look for particles with
       // color = donorColor. If found, copy particle data into acceptor matl and
