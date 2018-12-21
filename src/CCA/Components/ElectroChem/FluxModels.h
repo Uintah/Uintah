@@ -33,12 +33,13 @@
 using namespace Uintah;
 
 namespace ElectroChem {
-  enum FluxModel{
-    Basic,
-    PNP,
-    InteriorBC,
-    BC
-  };
-  
+  namespace FluxModels {
+    enum FluxModel{
+      Basic = 4,
+      PNP = 6,
+      InteriorBC = 8,
+      BC = 10
+    };
+  } // End namespace FluxModels 
 } // End namspace ElectroChem
 #endif // End CCA_COMPONENTS_ELECTROCHEM_LUXMODELS_FLUXMODEL_H

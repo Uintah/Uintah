@@ -12,7 +12,7 @@
   </ElectroChem>
 
   <Time>
-    <maxTime>10.</maxTime>
+    <maxTime>1.</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.01</delt_min>
     <delt_max>1.</delt_max>
@@ -22,28 +22,22 @@
   <MaterialProperties>
     <ElectroChem>
       <material>
-        <material_models>
-        </material_models>
+        <diffusion_coeff> 1.0 </diffusion_coeff>
         <geom_object>
-          <sphere label="material0">
-            <origin> [ 0.0,  0.0, 0.0 ] </origin>
-            <radius> 4.0 </radius>
-          </sphere>
-          <concentrations> 0.0 </concentrations>
+          <box label="domain1">
+            <min> [ 0.0, 0.0, 0.0 ] </min>
+            <max> [ 5.0, 1.0, 1.0 ] </max>
+          </box>
+          <concentration> 0.0 </concentration>
         </geom_object>
       </material>
       <material>
-        <flux_model type="basic_flux">
-          <diff_coeff> 1.0 </diff_coeff>
-        </flux_model>
+        <diffusion_coeff> 1.0 </diffusion_coeff>
         <geom_object>
-          <difference label="material1">
-            <box label="whole_domain">
-              <min> [ 0.0,   0.0,  0.0 ] </min>
-              <max> [ 20.0, 20.0, 20.0 ] </max>
-            </box>
-            <sphere label="material0"> </sphere>
-          </difference>
+          <box label="domain2">
+            <min> [  5.0, 0.0, 0.0 ] </min>
+            <max> [ 10.0, 1.0, 1.0 ] </max>
+          </box>
           <concentration> 1.0 </concentration>
         </geom_object>
       </material>
@@ -54,9 +48,9 @@
     <Level>
       <Box label="1">
         <lower>[  0., 0., 0.]</lower>
-        <upper>[ 20., 20., 20.]</upper>
+        <upper>[ 10., 1., 1.]</upper>
         <patches>[1,1,1]</patches>
-        <resolution> [100, 100, 100] </resolution>
+        <resolution> [10, 1, 1] </resolution>
       </Box>
     </Level>
     <BoundaryConditions>
@@ -88,5 +82,8 @@
         <outputTimestepInterval>1</outputTimestepInterval>
         <save label="cc.Concentration" />
         <save label="cc.MatId" />
+        <save label="fcx.FluxModel" />
+        <save label="fcy.FluxModel" />
+        <save label="fcz.FluxModel" />
     </DataArchiver>
 </Uintah_specification>

@@ -162,16 +162,29 @@ void Diffusion::initializeFluxModel(const ProcessorGroup* pg,
     Vector dx = patch->dCell();
 
     int lower_bnd[] {0,0,0};
+    int upper_bnd[] {0,0,0};
     if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
       lower_bnd[0] = 1;
+    }
+
+    if(patch->getBCType(Patch::xplus) != Patch::Neighbor){
+      upper_bnd[0] = 1;
     }
 
     if(patch->getBCType(Patch::yminus) != Patch::Neighbor){
       lower_bnd[1] = 1;
     }
 
+    if(patch->getBCType(Patch::yplus) != Patch::Neighbor){
+      upper_bnd[1] = 1;
+    }
+
     if(patch->getBCType(Patch::zminus) != Patch::Neighbor){
       lower_bnd[2] = 1;
+    }
+
+    if(patch->getBCType(Patch::zplus) != Patch::Neighbor){
+      upper_bnd[2] = 1;
     }
 
     constCCVariable<int>    matid;
@@ -186,20 +199,21 @@ void Diffusion::initializeFluxModel(const ProcessorGroup* pg,
     new_dw->allocateAndPut(fcy_fluxmodel, d_eclabel.fcy_fluxmodel, 0, patch);
     new_dw->allocateAndPut(fcz_fluxmodel, d_eclabel.fcz_fluxmodel, 0, patch);
 
-    FluxModel fmodel;
+    FluxModels::FluxModel fmodel;
     for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
       IntVector c = *iter;
+      fmodel = FluxModels::PNP;
       for(int i = 0; i < 3; ++i){
         if(c[i] == lower_idx[i]){
           if(lower_bnd[i]){
-            fmodel = BC;
+            fmodel = FluxModels::BC;
           }else{
-            if(matid[c] == matid[c-offsets[i]]){ fmodel = InteriorBC; }
-            else{ fmodel = Basic; }
+            if(matid[c] != matid[c-offsets[i]]){ fmodel = FluxModels::InteriorBC; }
+            else{ fmodel = FluxModels::Basic; }
           }
         }else{
-          if(matid[c] == matid[c-offsets[i]]){ fmodel = InteriorBC; }
-          else{ fmodel = Basic; }
+          if(matid[c] != matid[c-offsets[i]]){ fmodel = FluxModels::InteriorBC; }
+          else{ fmodel = FluxModels::Basic; }
         }
         if(i == 0){ fcx_fluxmodel[c] = fmodel; }
         else if(i == 1){ fcy_fluxmodel[c] = fmodel; }
