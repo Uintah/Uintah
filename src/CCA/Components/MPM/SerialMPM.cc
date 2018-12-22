@@ -5865,35 +5865,29 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
           // Determine if particle is in a domain boundary cell
           bool onBoundary = false;
           IntVector cI = patch->findCell(px[idx],cI);
-          if(periodic.x()==1){
-            if(cI.x()==low.x() || cI.x()==hi.x()){
-              onBoundary=true;
-            }
-          } else {
-            if(cI.x()==low.x()+1 || cI.x()==hi.x()- 3){
-              onBoundary=true;
-            }
+          int lowx=low.x(); int hix=hi.x();
+          int lowy=low.y(); int hiy=hi.y();
+          int lowz=low.z(); int hiz=hi.z();
+          if(periodic.x()==0){
+             lowx++; hix-=3;
+          }
+          if(periodic.y()==0){
+             lowy++; hiy-=3;
+          }
+          if(periodic.z()==0){
+             lowz++; hiz-=3;
+          }
+          if(cI.x()==lowx || cI.x()==hix){
+            onBoundary=true;
           }
           if(flags->d_ndim>1){
-            if(periodic.y()==1){
-              if(cI.y()==low.y() || cI.y()==hi.y()){
-                onBoundary=true;
-              }
-            } else {
-              if(cI.y()==low.y()+1 || cI.y()==hi.y()- 3){
-                onBoundary=true;
-              }
+            if(cI.y()==lowy || cI.y()==hiy){
+              onBoundary=true;
             }
             if(flags->d_ndim>2){
-             if(periodic.z()==1){
-              if(cI.z()==low.z() || cI.z()==hi.z()){
+              if(cI.z()==lowz || cI.z()==hiz){
                 onBoundary=true;
               }
-             } else {
-              if(cI.z()==low.z()+1 || cI.z()==hi.z()- 3){
-                onBoundary=true;
-              }
-             }
             }
           }
 
