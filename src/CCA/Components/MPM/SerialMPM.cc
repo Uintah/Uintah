@@ -753,6 +753,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleAddParticles(                 sched, patches, matls);
   }
 
+  scheduleManageChangeGrainMaterials(     level, sched);
+
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
     for( iter  = d_analysisModules.begin();
@@ -4328,8 +4330,6 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
     } // materials
     // These is only used for moving particles to other materials, but I need
     // a place to reset them out when I'm done with them.
-    d_collideColors.clear();
-    flags->d_changeGrainMaterials = false;
   } // patches
 }
 
@@ -6210,7 +6210,8 @@ void SerialMPM::scheduleChangeGrainMaterials(SchedulerP& sched,
                                              const MaterialSet* matls)
 
 {
-  if( !flags->doMPMOnLevel( getLevel(patches)->getIndex(), getLevel(patches)->getGrid()->numLevels() ) ) {
+  if( !flags->doMPMOnLevel( getLevel(patches)->getIndex(), 
+      getLevel(patches)->getGrid()->numLevels() ) ) {
     return;
   }
 
@@ -6523,4 +6524,43 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
     }  // Loop over acceptor materials
    }    // if d_changeGrainMaterial
   }   // for patches
+}
+
+//
+void SerialMPM::scheduleManageChangeGrainMaterials(const LevelP& level,
+                                                   SchedulerP& sched)
+{
+
+  Task* t = scinew Task("MPM::manageChangeGrainMaterials", this, 
+                        &SerialMPM::manageChangeGrainMaterials);
+
+  t->setType( Task::OncePerProc );
+
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
+                    m_materialManager->allMaterials( "MPM" ));
+}
+
+//______________________________________________________________________
+//
+void SerialMPM::manageChangeGrainMaterials(const ProcessorGroup* pg,
+                                           const PatchSubset*,
+                                           const MaterialSubset*,
+                                           DataWarehouse*,
+                                           DataWarehouse* new_dw)
+{
+  if(flags->d_changeGrainMaterials){
+#if 0
+   flags->d_acceptorMaterialIndex.erase(flags->d_acceptorMaterialIndex.begin());
+   unsigned int numAcceptorMaterials = flags->d_acceptorMaterialIndex.size();
+   for(unsigned int aMI_index = 0; 
+                    aMI_index < numAcceptorMaterials; 
+                    aMI_index++){
+     unsigned int aMI = flags->d_acceptorMaterialIndex[aMI_index];
+
+     cout << "aMI = " << aMI << endl;
+   }
+#endif
+   d_collideColors.clear();
+   flags->d_changeGrainMaterials = false;
+  }
 }
