@@ -33,12 +33,13 @@
 // Usage looks like the following, assuming that one is already inside of
 // the uda from which data is to be extracted:
 
-// > /path/to/puda -contactStress -matl M -m_all MA -timesteplow TL -timestephigh TH .
+// > /path/to/puda -contactStress -matl M -sepfac X.YZ -timesteplow TL -timestephigh TH .
 
 // where TL and TH are the low and high output timesteps to be analyzed,
-// M is the maximum material number with which contacts will be sought, and
-// MA is the index of the "all in one" material.  MA will be 1 greater than the
-// largest material index (including tracers, if present).
+// M is the maximum material number with which contacts will be sought, 
+// sepfac should be the same value used in the friction contact specification,
+// e.g., <separation_factor>0.85</separation_factor>.  So, in the above,
+// X.YZ = 0.85
 
 // Output from this will be a series of files of the format contactsWGroupN.YYY
 // where N is the material number with which other materials will contact,
@@ -48,6 +49,12 @@
 
 // %outputting for time[1] = 1.00025460e+00
 // %material_1  material_2 nodePos_x nodePos_y nodePos_z nodeIdxI nodeIdxJ nodeIdxK mass_1 mass_2 color_1 color_2 volume_1 volume_2 gIF1x gIF1y gIF1z gIF2x gIF2y gIF2z
+
+// In addition, the data in that file is consolidated by contact pairs, and is
+// placed in files named contactPairs.X.YYY.  There again, according to the
+// file header the columns in those files are:
+
+// GrainPair grain1 grain2 ContactArea ContactTraction
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -144,20 +151,12 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
         NCVariable<double>  massthis, colorthis, volumethis; //, mass_all;
         NCVariable<Point>   posthis;
         NCVariable<Vector>  normthis, IFthis;
-//      NCVariable<Matrix3> stressthis, stress_all;
-//      NCVariable<double>  NC_CCweight;
         da->query(massthis,   "g.mass",        mthis, patch, t);
         da->query(colorthis,  "g.color",       mthis, patch, t);
         da->query(volumethis, "g.volume",      mthis, patch, t);
         da->query(normthis,   "g.surfnorm",    mthis, patch, t);
         da->query(posthis,    "g.position",    mthis, patch, t);
         da->query(IFthis,     "g.internalforce",mthis,patch, t);
-//      da->query(stressthis, "g.stressFS",    mthis, patch, t);
-//      da->query(NC_CCweight,"NC_CCweight",   0,     patch, t);
-
-        // Read in data for the all-in-one material
-//      da->query(stress_all, "g.stressFS",    m_all, patch, t);
-//      da->query(mass_all,   "g.mass",        m_all, patch, t);
 
         // Read in data for the other materials
         vector<NCVariable<double> >  massother(maxMatl+1);
@@ -170,7 +169,6 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
             da->query(massother[mother],   "g.mass",          mother, patch, t);
             da->query(colorother[mother],  "g.color",         mother, patch, t);
             da->query(volumeother[mother], "g.volume",        mother, patch, t);
-//          da->query(stressother[mother], "g.stressFS",      mother, patch, t);
             da->query(normother[mother],   "g.surfnorm",      mother, patch, t);
             da->query(IFother[mother],     "g.internalforce", mother, patch, t);
             da->query(posother[mother],    "g.position",      mother, patch, t);
@@ -204,39 +202,12 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
                double sepvecL2 = sepvec2.length();
 
                if((sepvecL1/sepDis <= 1.0 && sepvecL2/sepDis <= 1.0)){
-//               Matrix3 sig1=stressthis[c];
-//               Matrix3 sig2=stressother[mat2][c];
-//               Matrix3 sigN=stress_all[c];
-//               Vector trac1 = stressthis[c]*normthis[c];
-//               Vector trac2 = stressother[mat2][c]*(-1.0*normother[mat2][c]);
                  double col1 = colorthis[c];
                  double col2 = colorother[mat2][c];
                  double vol1 = volumethis[c];
                  double vol2 = volumeother[mat2][c];
                  Vector gIF1 = IFthis[c];
                  Vector gIF2 = IFother[mat2][c];
-#if 0
-                 double p1 = (-1.0/3.0)*sig1.Trace();
-                 double p2 = (-1.0/3.0)*sig2.Trace();
-                 double pN = (-1.0/3.0)*sigN.Trace();
-                 Point gpos1 = posthis[c];
-                 Point gpos2 = posother[mat2][c];
-                 double eqStr1=sqrt(0.5*((sig1(0,0)-sig1(1,1))*(sig1(0,0)-sig1(1,1))
-                                +        (sig1(1,1)-sig1(2,2))*(sig1(1,1)-sig1(2,2))
-                                +        (sig1(2,2)-sig1(0,0))*(sig1(2,2)-sig1(0,0))
-                                +    6.0*(sig1(0,1)*sig1(0,1) + sig1(1,2)*sig1(1,2)
-                                        + sig1(2,0)*sig1(2,0))));
-                 double eqStr2=sqrt(0.5*((sig2(0,0)-sig2(1,1))*(sig2(0,0)-sig2(1,1))
-                                +        (sig2(1,1)-sig2(2,2))*(sig2(1,1)-sig2(2,2))
-                                +        (sig2(2,2)-sig2(0,0))*(sig2(2,2)-sig2(0,0))
-                                +    6.0*(sig2(0,1)*sig2(0,1) + sig2(1,2)*sig2(1,2)
-                                        + sig2(2,0)*sig2(2,0))));
-                 double eqStrN=sqrt(0.5*((sigN(0,0)-sigN(1,1))*(sigN(0,0)-sigN(1,1))
-                                +        (sigN(1,1)-sigN(2,2))*(sigN(1,1)-sigN(2,2))
-                                +        (sigN(2,2)-sigN(0,0))*(sigN(2,2)-sigN(0,0))
-                                +    6.0*(sigN(0,1)*sigN(0,1) + sigN(1,2)*sigN(1,2)
-                                        + sigN(2,0)*sigN(2,0))));
-#endif
                  out << mthis <<     " " << mat2 << " "
                      << point.x() << " " << point.y() << " " << point.z() << " "
                      << c.x()     << " " << c.y()     << " " << c.z() << " "
@@ -308,12 +279,17 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
         grainPair.second=cl2[0];
         grainPairs.push_back(grainPair);
 
+        set<pair<double, double> > grainPairSet;
+        grainPairSet.insert(grainPair);
+
         for(int i=1;i<numLines;i++){
           bool alreadyHaveIt=false;
           grainPair.first =cl1[i];
           grainPair.second=cl2[i];
+          grainPairSet.insert(grainPair);
           for(unsigned int j = 0;j<grainPairs.size();j++){
-            if(grainPair==grainPairs[j]){
+            if(fabs(grainPair.first - grainPairs[j].first) < 1.e-12 && 
+               fabs(grainPair.second- grainPairs[j].second) < 1.e-12){
               alreadyHaveIt=true;
             }
           }
@@ -351,9 +327,8 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
            pair <double, double> grainPair;
            grainPair.first =cl1[i];
            grainPair.second=cl2[i];
-           if(grainPair==grainPairs[j]){
-//           int m1=(int) grainPair.first;
-//           int m2=(int) grainPair.second;
+           if(fabs(grainPair.first - grainPairs[j].first) < 1.e-12 && 
+              fabs(grainPair.second- grainPairs[j].second) < 1.e-12){
              numNodesThisPair++;
              meanT1x[j]+=gIFx1[i];
              meanT1y[j]+=gIFy1[i];
