@@ -3121,7 +3121,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
 
-#if 1
+#if 0
         double delX = dxCell.x();
         if (flags->d_doingDissolution) {
           if(velocity_star[c].length()*delT > 0.4*delX && c.z() >= 0){
