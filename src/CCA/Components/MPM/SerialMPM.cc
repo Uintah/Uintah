@@ -2665,21 +2665,11 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
 
         double totMassTop = 0.;
         double totMassBot = 0.;
-//        double sumSTop = 0.;
-//        double sumSBot = 0.;
 
         for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
           totMassTop += S[k]*gmass[TopMat][node];
           totMassBot += S[k]*gmass[BotMat][node];
-#if 0
-          if(gmass[TopMat][node]>d_SMALL_NUM_MPM){
-            sumSTop     += S[k];
-          }
-          if(gmass[BotMat][node]>d_SMALL_NUM_MPM){
-            sumSBot     += S[k];
-          }
-#endif
         }
 
         // This currently contains three methods for distributing the CZ force
@@ -2716,33 +2706,6 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
           }
         }
       }
-#if 0
-      // This is debugging output which is being left in for now (5/10/18)
-      // as it may be helpful in generating figures for reports and papers.
-      Vector sumForceTop = Vector(0.);
-      Vector sumForceBot = Vector(0.);
-      for(NodeIterator iter=patch->getExtraNodeIterator();
-                       !iter.done();iter++){
-        IntVector c = *iter;
-        if(gext_force[1][c].length() > 1.e-100){
-           cout << "gEF_BM[" << c << "] = " << gext_force[1][c] 
-                << ", " << gext_force[1][c]/gmass[1][c] << endl;
-           sumForceBot += gext_force[1][c];
-        }
-        if(gext_force[2][c].length() > 1.e-100){
-           cout << "gEF_BM[" << c << "] = " << gext_force[2][c]
-                << ", " << gext_force[2][c]/gmass[2][c] << endl;
-           sumForceTop += gext_force[2][c];
-        }
-        if(gext_force[1][c].length() > 1.e-100 &&
-           gext_force[2][c].length() > 1.e-100){
-           cout << "ratio = " << (gext_force[1][c].x()/gmass[1][c])/
-                                 (gext_force[2][c].x()/gmass[2][c]) << endl;
-        }
-      }
-      cout << "SFB = " << sumForceBot << endl;
-      cout << "SFT = " << sumForceTop << endl;
-#endif
     }
     delete interpolator;
   }
@@ -3119,6 +3082,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
+    Vector dxCell = patch->dCell();
 
     for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = 
@@ -3157,19 +3121,19 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
 
-#if 0
+#if 1
         double delX = dxCell.x();
         if (flags->d_doingDissolution) {
           if(velocity_star[c].length()*delT > 0.4*delX && c.z() >= 0){
            double rat = velocity_star[c].length()*delT/delX;
-           if(rat>100.){
-            cout << "n = " << c << endl;
-            cout << "mas = " << mass[c] << endl;
-            cout << "mat = " << m << endl;
-            cout << "rat = " << rat << endl;
-            cout << "vel = " << velocity[c] << endl;
-            cout << "vstar = " << velocity_star[c] << endl;
-            cout << "acc = " << acceleration[c] << endl << endl;
+           if(rat>10.){
+//            cout << "n = " << c << endl;
+//            cout << "mas = " << mass[c] << endl;
+//            cout << "mat = " << m << endl;
+//            cout << "rat = " << rat << endl;
+//            cout << "vel = " << velocity[c] << endl;
+//            cout << "vstar = " << velocity_star[c] << endl;
+//            cout << "acc = " << acceleration[c] << endl << endl;
             velocity_star[c] = velocity[c];
            }
           }
@@ -4611,21 +4575,6 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         }
         velTop/=sumSTop;
         velBot/=sumSBot;
-
-#if 0
-        // I'm not sure what this was here for in the first place,
-        // but it is disabled for now
-        double mass_ratio = 0.0;
-        if (massBot > 0.0) {
-          mass_ratio = massTop/massBot;
-          mass_ratio = min(mass_ratio,1.0/mass_ratio);
-        }
-        else {
-          mass_ratio = 0.0;
-        }
-
-        double mass_correction_factor = mass_ratio;
-#endif
 
         // Update the cohesive zone's position and displacements
         czx_new[idx]         = czx[idx]       + .5*(velTop + velBot)*delT;
