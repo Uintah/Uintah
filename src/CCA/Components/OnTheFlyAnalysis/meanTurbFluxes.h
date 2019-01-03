@@ -142,6 +142,16 @@ ______________________________________________________________________*/
 
     //______________________________________________________________________
     //          TASKS AND FUNCTIONS
+
+    void sched_populateVerifyLabels( SchedulerP   & sched,
+                                     const LevelP & level );
+
+    void populateVerifyLabels(const ProcessorGroup * ,
+                              const PatchSubset    * patches,         
+                              const MaterialSubset * ,                
+                              DataWarehouse        * ,          
+                              DataWarehouse        * new_dw);
+
     void sched_TurbFluctuations(SchedulerP   & sched,
                                 const LevelP & level);
 
@@ -174,12 +184,15 @@ ______________________________________________________________________*/
     std::shared_ptr< velocityVar >          d_velVar;
 
     MaterialSet*  d_matl_set;
+    
+    VarLabel* d_lastCompTimeLabel {nullptr};
+    VarLabel* d_verifyScalarLabel {nullptr};  // labels for verification
+    VarLabel* d_verifyVectorLabel {nullptr};
 
     private:
       planeAverage * d_planeAve_1;
       planeAverage * d_planeAve_2;
       IntVector d_monitorCell;             // Monitor this cells.  Used for debugging
-      VarLabel* d_lastCompTimeLabel {nullptr};
   };
 }
 

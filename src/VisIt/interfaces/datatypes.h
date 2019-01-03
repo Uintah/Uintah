@@ -321,7 +321,6 @@ private:
 
   int patch_id;
   int proc_id;
-  unsigned int num_nodes;
 };
 
 
