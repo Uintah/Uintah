@@ -8,7 +8,7 @@
 
 #include <Core/Parallel/Portability.h>
 
-#define MAX_DQMOM_ENV 3
+#define MAX_DQMOM_ENV 4
 
 using namespace Uintah;
 
@@ -35,7 +35,7 @@ if (_particle_calculator_type == "coal"){
   delete _3Dpart_radprops;
 }
 #endif
-
+if (_particle_calculator_type=="tabulated")
  delete myTable;
 }
 
