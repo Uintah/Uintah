@@ -8,7 +8,7 @@
 
 #include <Core/Parallel/Portability.h>
 
-#define MAX_DQMOM_ENV 4
+#define MAX_DQMOM_ENV 5
 
 using namespace Uintah;
 
