@@ -96,6 +96,8 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
     filename = partroot + "." + fnum.str() + "." + mnum.str();
     ofstream partfile(filename.c_str());
 
+    partfile.precision(10);
+
     if(have_volume){
       partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress plasStrain volume" << endl;
     }else{
