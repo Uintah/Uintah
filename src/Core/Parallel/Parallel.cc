@@ -292,9 +292,7 @@ Parallel::initializeManager( int& argc , char**& argv )
     std::cout << "Parallel: MPI Level Required: " << required << ", provided: " << provided << "\n";
 #endif
   }
-
-    Uintah::MPI::Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
-
+//    Uintah::MPI::Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 }
 
   //_____________________________________________________________________________
