@@ -438,6 +438,12 @@ protected:
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
 
+  virtual void manageDoAuthigenesis(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
+
   //////////
   //////////
   // Add new particles to the simulation based on criteria TBD:
@@ -601,6 +607,9 @@ protected:
 
   virtual void scheduleManageChangeGrainMaterials(const LevelP& level,
                                                   SchedulerP& sched);
+
+  virtual void scheduleManageDoAuthigenesis(const LevelP& level,
+                                            SchedulerP& sched);
 
   void readPrescribedDeformations(std::string filename);
 

@@ -438,7 +438,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
   t->computes(lb->KineticEnergyLabel);
-  t->computes(lb->AddedParticlesLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -754,6 +753,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
   scheduleManageChangeGrainMaterials(     level, sched);
+  scheduleManageDoAuthigenesis(           level, sched);
 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
@@ -1576,12 +1576,10 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
   zeroth_matl->addReference();
   Ghost::GhostType  gan   = Ghost::AroundNodes;
 
-  t->requires(Task::OldDW, lb->AddedParticlesLabel );
   t->requires(Task::OldDW, lb->pXLabel,                  gan, NGP);
   t->requires(Task::OldDW, lb->pColorLabel,              gan, NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,               gan, NGP);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
-  t->computes(lb->AddedParticlesLabel);
   t->modifies(lb->pParticleIDLabel_preReloc);
   t->modifies(lb->pModalIDLabel_preReloc);
   t->modifies(lb->pXLabel_preReloc);
@@ -1636,7 +1634,6 @@ void SerialMPM::scheduleAddTracers(SchedulerP& sched,
 
   Task * t = scinew Task("MPM::addTracers", this, &SerialMPM::addTracers );
 
-  t->requires(Task::OldDW, lb->AddedParticlesLabel );
   t->modifies(lb->tracerIDLabel_preReloc, tracer_matls);
   t->modifies(lb->pXLabel_preReloc,       tracer_matls);
 
@@ -2140,7 +2137,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
   }
   new_dw->put(sum_vartype(0.0), lb->KineticEnergyLabel);
-  new_dw->put(sum_vartype(0.0), lb->AddedParticlesLabel);
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 
@@ -3082,7 +3078,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
-    Vector dxCell = patch->dCell();
+//    Vector dxCell = patch->dCell();
 
     for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = 
@@ -4729,11 +4725,6 @@ void SerialMPM::addParticles(const ProcessorGroup*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
-  sum_vartype AddedParticlesOld;
-  old_dw->get(AddedParticlesOld,   lb->AddedParticlesLabel);
-
-  new_dw->put(sum_vartype(AddedParticlesOld),      lb->AddedParticlesLabel);
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing addParticles");
@@ -4746,7 +4737,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
    new_dw->allocateAndPut(NAPID_new,lb->pCellNAPIDLabel,    0,patch);
    NAPID_new.copyData(NAPID);
 
-   if(flags->d_doAuthigenesis && AddedParticlesOld<1.0){
+   if(flags->d_doAuthigenesis){
     cout << "Doing addParticles" << endl;
 
     Vector dx = patch->dCell();
@@ -4898,12 +4889,12 @@ void SerialMPM::addParticles(const ProcessorGroup*,
         }  // x
        }  // CellIterator
 
-       cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
+       if(numNewPartNeeded > 0 ){
+         cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
+       }
 
 //       delete newGeomPiece.get_rep();
       }
-
-      double APN = (double) numNewPartNeeded;
 
       int fourOrEight=pow(PaPeCe,flags->d_ndim);
       double fourthOrEighth = 1./((double) fourOrEight);
@@ -5114,7 +5105,6 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->put(pFtmp,    lb->pDeformationMeasureLabel_preReloc,   true);
       new_dw->put(ploctmp,  lb->pLocalizedMPMLabel_preReloc,         true);
       new_dw->put(pvgradtmp,lb->pVelGradLabel_preReloc,              true);
-      new_dw->put(sum_vartype(APN),      lb->AddedParticlesLabel);
     }  // for matls
    }    // if doAuth && AddedNewParticles<1.0....
   }   // for patches
@@ -5127,14 +5117,11 @@ void SerialMPM::addTracers(const ProcessorGroup*,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw)
 {
-  sum_vartype AddedParticlesOld;
-  old_dw->get(AddedParticlesOld,   lb->AddedParticlesLabel);
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing addTracers");
 
-    if(flags->d_doAuthigenesis && AddedParticlesOld<1.0){
+    if(flags->d_doAuthigenesis){
       cout << "Doing addTracers" << endl;
 
       int tm = 0;  // Only one tracer material now
@@ -6483,6 +6470,20 @@ void SerialMPM::scheduleManageChangeGrainMaterials(const LevelP& level,
                     m_materialManager->allMaterials( "MPM" ));
 }
 
+//
+void SerialMPM::scheduleManageDoAuthigenesis(const LevelP& level,
+                                             SchedulerP& sched)
+{
+
+  Task* t = scinew Task("MPM::manageDoAuthigenesis", this, 
+                        &SerialMPM::manageDoAuthigenesis);
+
+  t->setType( Task::OncePerProc );
+
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
+                    m_materialManager->allMaterials( "MPM" ));
+}
+
 //______________________________________________________________________
 //
 void SerialMPM::manageChangeGrainMaterials(const ProcessorGroup* pg,
@@ -6505,5 +6506,19 @@ void SerialMPM::manageChangeGrainMaterials(const ProcessorGroup* pg,
 #endif
    d_collideColors.clear();
    flags->d_changeGrainMaterials = false;
+  }
+}
+
+//______________________________________________________________________
+//
+void SerialMPM::manageDoAuthigenesis(const ProcessorGroup* pg,
+                                     const PatchSubset*,
+                                     const MaterialSubset*,
+                                     DataWarehouse*,
+                                     DataWarehouse* new_dw)
+{
+  if(flags->d_canAddParticles){
+//   flags->d_canAddParticles = false;
+   flags->d_doAuthigenesis  = false;
   }
 }
