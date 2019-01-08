@@ -45,18 +45,16 @@ Diffusion::Diffusion(const ProcessorGroup* myworld,
   offsets[0].x(1.0); offsets[0].y(0.0); offsets[0].z(0.0);
   offsets[1].x(0.0); offsets[1].y(1.0); offsets[1].z(0.0);
   offsets[2].x(0.0); offsets[2].y(0.0); offsets[2].z(1.0);
-
-  std::cout << "**** Constructor." << std::endl;
 }
     
 Diffusion::~Diffusion(){
+  std::cout << "---here---" << std::endl;
 }
 
 void Diffusion::problemSetup(const ProblemSpecP& ps,
                              const ProblemSpecP& restart_ps,
                                    GridP&        grid){
 
-  std::cout << "***** Begin Problem Setup. " << std::endl;
   ProblemSpecP root_ps = 0;
   if (restart_ps){
     root_ps = restart_ps;
@@ -85,7 +83,6 @@ void Diffusion::problemSetup(const ProblemSpecP& ps,
 
     m_materialManager->registerMaterial( "ElectroChem", mat);
   }
-  std::cout << "***** End Problem Setup. " << std::endl;
 }
 
 void Diffusion::scheduleInitialize(const LevelP&     level,
@@ -159,9 +156,6 @@ void Diffusion::initializeFluxModel(const ProcessorGroup* pg,
     IntVector low_idx  = patch->getCellLowIndex();
     IntVector high_idx = patch->getCellHighIndex();
 
-    std::cout << "low: " << low_idx << std::endl;
-    std::cout << "high: " << high_idx << std::endl;
-
     int low_bnd[] {0,0,0};
     int high_bnd[] {0,0,0};
     if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
@@ -210,11 +204,11 @@ void Diffusion::initializeFluxModel(const ProcessorGroup* pg,
           if(low_bnd[i]){
             fmodel = FluxModels::BC;
           }else{
-            if(matid[c] != matid[c-offsets[i]]){ fmodel = FluxModels::InteriorBC; }
+            if(matid[c] != matid[c-offsets[i]]){ fmodel = FluxModels::MaterialInterface; }
             else{ fmodel = FluxModels::Basic; }
           }
         }else{
-          if(matid[c] != matid[c-offsets[i]]){ fmodel = FluxModels::InteriorBC; }
+          if(matid[c] != matid[c-offsets[i]]){ fmodel = FluxModels::MaterialInterface; }
           else{ fmodel = FluxModels::PNP; }
         }
         switch (i) {
@@ -239,7 +233,6 @@ void Diffusion::initializeFluxModel(const ProcessorGroup* pg,
       } // end i for loop
     } // end CellIterator
   } // end of for patch loop
-  std::cout << "Initialize Flux." << std::endl;
 }
 
 void Diffusion::scheduleRestartInitialize(const LevelP&     level,
@@ -277,9 +270,9 @@ void Diffusion::scheduleComputeFlux(const PatchSet* patches, SchedulerP& sched){
 
   t->requires(Task::OldDW, d_eclabel.cc_concentration, Ghost::AroundCells,  1);
   t->requires(Task::OldDW, d_eclabel.cc_matid,         Ghost::AroundCells,  1);
-  t->requires(Task::OldDW, d_eclabel.fcx_fluxmodel,    Ghost::AroundFacesX, 1);
-  t->requires(Task::OldDW, d_eclabel.fcy_fluxmodel,    Ghost::AroundFacesY, 1);
-  t->requires(Task::OldDW, d_eclabel.fcz_fluxmodel,    Ghost::AroundFacesZ, 1);
+  t->requires(Task::OldDW, d_eclabel.fcx_fluxmodel,    Ghost::AroundFacesX, 0);
+  t->requires(Task::OldDW, d_eclabel.fcy_fluxmodel,    Ghost::AroundFacesY, 0);
+  t->requires(Task::OldDW, d_eclabel.fcz_fluxmodel,    Ghost::AroundFacesZ, 0);
 
   t->computes(d_eclabel.fcx_flux);
   t->computes(d_eclabel.fcy_flux);
@@ -297,7 +290,6 @@ void Diffusion::computeFlux(const ProcessorGroup* pg,
                                   DataWarehouse*  old_dw,
                                   DataWarehouse*  new_dw) {
 
-  std::cout << "computeFlux, start" << std::endl;
   int num_matls = m_materialManager->getNumMatls( "ElectroChem" );
 
   double* diff_coeff = new double[num_matls];
@@ -348,11 +340,11 @@ void Diffusion::computeFlux(const ProcessorGroup* pg,
     old_dw->get(matid, d_eclabel.cc_matid,         0, patch,
                 Ghost::AroundCells, 1);
     old_dw->get(fcx_fluxmodel_old, d_eclabel.fcx_fluxmodel, 0, patch,
-                Ghost::AroundFacesX, 1);
+                Ghost::AroundFacesX, 0);
     old_dw->get(fcy_fluxmodel_old, d_eclabel.fcy_fluxmodel, 0, patch,
-                Ghost::AroundFacesY, 1);
+                Ghost::AroundFacesY, 0);
     old_dw->get(fcz_fluxmodel_old, d_eclabel.fcz_fluxmodel, 0, patch,
-                Ghost::AroundFacesZ, 1);
+                Ghost::AroundFacesZ, 0);
 
     new_dw->allocateAndPut(fcx_flux, d_eclabel.fcx_flux, 0, patch);
     new_dw->allocateAndPut(fcy_flux, d_eclabel.fcy_flux, 0, patch);
@@ -380,10 +372,27 @@ void Diffusion::computeFlux(const ProcessorGroup* pg,
           dc = .5*(diff_coeff[matid[c]] + diff_coeff[matid[c-offsets[i]]]);
           flux = -dc*(conc[c] - conc[c-offsets[i]])/dx[i];
         }
-        if(i == 0){ fcx_flux[c] = flux; }
-        else if(i == 1){ fcy_flux[c] = flux; }
-        else if(i == 2){ fcz_flux[c] = flux; }
       **/
+        flux = 0;
+        switch (i) {
+          case 0: fcx_flux[c] = flux;
+                  break;
+          case 1: fcy_flux[c] = flux;
+                  break;
+          case 2: fcz_flux[c] = flux;
+                  break;
+        }
+
+        if(c[i] == high_idx[i]-1 && high_bnd[i]){
+          switch (i) {
+            case 0: fcx_flux[c+offsets[0]] = flux;
+                    break;
+            case 1: fcy_flux[c+offsets[1]] = flux;
+                    break;
+            case 2: fcz_flux[c+offsets[2]] = flux;
+                    break;
+          }
+        }
       }
       fcx_fluxmodel[c] = fcx_fluxmodel_old[c];
       fcy_fluxmodel[c] = fcy_fluxmodel_old[c];
@@ -400,7 +409,6 @@ void Diffusion::computeFlux(const ProcessorGroup* pg,
       }
     }
   } // end of for patch loop
-  std::cout << "computeFlux, stop" << std::endl;
   
   delete[] diff_coeff;
 }
@@ -432,7 +440,6 @@ void Diffusion::forwardEuler(const ProcessorGroup* pg,
   IntVector yoffset(0,1,0);
   IntVector zoffset(0,0,1);
 
-  std::cout << "here" << std::endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();

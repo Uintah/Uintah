@@ -103,6 +103,11 @@ public:
     }
   }
 
+  inline bool operator<=( const IntVector & a ) const
+  {
+    return m_value[0] <= a.m_value[0] && m_value[1] <= a.m_value[1] && m_value[2] <= a.m_value[2];
+  }
+
   inline bool operator!=( const IntVector& a ) const
   {
     return m_value[0] != a.m_value[0] || m_value[1] != a.m_value[1] || m_value[2] != a.m_value[2];

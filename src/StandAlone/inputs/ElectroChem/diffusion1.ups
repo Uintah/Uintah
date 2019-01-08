@@ -8,11 +8,11 @@
   <SimulationComponent type="ec_diffusion" />
 
   <ElectroChem>
-    <delt>       1.0 </delt>
+    <delt> 1.0 </delt>
   </ElectroChem>
 
   <Time>
-    <maxTime>1.</maxTime>
+    <maxTime>2.</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.01</delt_min>
     <delt_max>1.</delt_max>
@@ -49,7 +49,7 @@
       <Box label="1">
         <lower>[  0.,  0., 0.]</lower>
         <upper>[ 10., 10., 1.]</upper>
-        <patches>[2,2,1]</patches>
+        <patches>[1,1,1]</patches>
         <resolution> [10, 10, 1] </resolution>
       </Box>
     </Level>
@@ -77,13 +77,13 @@
     </BoundaryConditions>
   </Grid>
 
-    <DataArchiver>
-        <filebase>diffusion1.uda</filebase>
-        <outputTimestepInterval>1</outputTimestepInterval>
-        <save label="cc.Concentration" />
-        <save label="cc.MatId" />
-        <save label="fcx.FluxModel" />
-        <save label="fcy.FluxModel" />
-        <save label="fcz.FluxModel" />
-    </DataArchiver>
+  <DataArchiver>
+    <filebase>diffusion1.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="cc.Concentration" />
+    <save label="cc.MatId" />
+    <save label="fcx.FluxModel" />
+    <save label="fcy.FluxModel" />
+    <save label="fcz.FluxModel" />
+  </DataArchiver>
 </Uintah_specification>

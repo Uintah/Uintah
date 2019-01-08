@@ -22,19 +22,14 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CCA_COMPONENTS_ELECTROCHEM_FLUXMODELS_H
-#define CCA_COMPONENTS_ELECTROCHEM_FLUXMODELS_H
+#ifndef CCA_COMPONENTS_ELECTROCHEM_MATERIALINTERFACES_H
+#define CCA_COMPONENTS_ELECTROCHEM_MATERIALINTERFACES_H
 
 using namespace Uintah;
 
 namespace ElectroChem {
-  namespace FluxModels {
-    enum FluxModel{
-      Basic,
-      PNP,
-      MaterialInterface,
-      BC
-    };
-  } // End namespace FluxModels 
+  namespace MaterialInterfaces {
+    double NullInterface() { return 0.0; }
+  } // End namespace MaterialInterfaces
 } // End namspace ElectroChem
-#endif // End CCA_COMPONENTS_ELECTROCHEM_LUXMODELS_FLUXMODEL_H
+#end // CCA_COMPONENTS_ELECTROCHEM_MATERIALINTERFACES_H

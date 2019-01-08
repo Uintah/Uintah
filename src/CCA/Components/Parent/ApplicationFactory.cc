@@ -178,7 +178,6 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   //----------------------------
 #ifndef NO_ELECTROCHEM
   if (sim_comp == "ec_diffusion") {
-    std::cout << "******Building Diffusion." << std::endl;
     return scinew Diffusion(myworld, materialManager);
   }
 #endif
