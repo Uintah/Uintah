@@ -25,8 +25,8 @@
         <diffusion_coeff> 1.0 </diffusion_coeff>
         <geom_object>
           <box label="domain1">
-            <min> [ 0.0, 0.0, 0.0 ] </min>
-            <max> [ 5.0, 1.0, 1.0 ] </max>
+            <min> [ 0.0,  0.0, 0.0 ] </min>
+            <max> [ 5.0, 10.0, 1.0 ] </max>
           </box>
           <concentration> 0.0 </concentration>
         </geom_object>
@@ -35,8 +35,8 @@
         <diffusion_coeff> 1.0 </diffusion_coeff>
         <geom_object>
           <box label="domain2">
-            <min> [  5.0, 0.0, 0.0 ] </min>
-            <max> [ 10.0, 1.0, 1.0 ] </max>
+            <min> [  5.0,  0.0, 0.0 ] </min>
+            <max> [ 10.0, 10.0, 1.0 ] </max>
           </box>
           <concentration> 1.0 </concentration>
         </geom_object>
@@ -47,10 +47,10 @@
   <Grid>
     <Level>
       <Box label="1">
-        <lower>[  0., 0., 0.]</lower>
-        <upper>[ 10., 1., 1.]</upper>
-        <patches>[1,1,1]</patches>
-        <resolution> [10, 1, 1] </resolution>
+        <lower>[  0.,  0., 0.]</lower>
+        <upper>[ 10., 10., 1.]</upper>
+        <patches>[2,2,1]</patches>
+        <resolution> [10, 10, 1] </resolution>
       </Box>
     </Level>
     <BoundaryConditions>

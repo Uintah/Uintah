@@ -35,10 +35,10 @@ using namespace Uintah;
 namespace ElectroChem {
   namespace FluxModels {
     enum FluxModel{
-      Basic = 4,
-      PNP = 6,
-      InteriorBC = 8,
-      BC = 10
+      Basic = 10,
+      PNP = 20,
+      InteriorBC = 30,
+      BC = 40
     };
   } // End namespace FluxModels 
 } // End namspace ElectroChem
