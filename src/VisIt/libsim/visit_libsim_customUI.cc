@@ -1081,7 +1081,7 @@ void visit_SetDouts( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDatabase( visit_simulation_data *sim )
 {
-  VisItUI_setValueI("LoadExtraElements", sim->loadExtraElements, 1);
+  VisItUI_setValueI("LoadExtraGeometry", sim->loadExtraGeometry, 1);
 }
 
 } // End namespace Uintah

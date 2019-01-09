@@ -134,7 +134,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // initializing.
   sim->simMode = VISIT_SIMMODE_RUNNING;
 
-  sim->loadExtraElements = NONE;
+  sim->loadExtraGeometry = NO_EXTRA_GEOMETRY;
   sim->forceMeshReload = true;
   sim->mesh_for_patch_data = "";
 
@@ -829,8 +829,8 @@ void visit_Initialize( visit_simulation_data *sim )
   VisItUI_cellChanged("DoutTable",
                       visit_DoutCallback,  (void*) sim);
 
-  VisItUI_valueChanged("LoadExtraElements",
-                       visit_LoadExtraElementsCallback, (void*) sim);        
+  VisItUI_valueChanged("LoadExtraGeometry",
+                       visit_LoadExtraGeometryCallback, (void*) sim);        
 }
   
 } // End namespace Uintah

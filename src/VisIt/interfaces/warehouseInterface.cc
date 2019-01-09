@@ -69,7 +69,7 @@ namespace Uintah {
 // This uses the scheduler for in-situ.
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP gridP,
-                              LoadExtra loadExtraElements)
+                              LoadExtraGeometry loadExtraGeometry)
 {
   DataWarehouse* dw = schedulerP->getLastDW();
   LoadBalancer * lb = schedulerP->getLoadBalancer();
@@ -187,17 +187,17 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
         // let VisIt believe they are part of the original data. This is
         // accomplished by setting <meshtype>_low and <meshtype>_high to
         // the extra cell boundaries so that VisIt is none the wiser.
-        if (loadExtraElements == NONE)
+        if (loadExtraGeometry == NO_EXTRA_GEOMETRY)
         {
           iLow  = patch->getLowIndex (basis[m]);
           iHigh = patch->getHighIndex(basis[m]);
         }
-        else if (loadExtraElements == CELLS)
+        else if (loadExtraGeometry == CELLS)
         {
           iLow  = patch->getExtraLowIndex (basis[m], IntVector(0,0,0));
           iHigh = patch->getExtraHighIndex(basis[m], IntVector(0,0,0));
         }
-        else if (loadExtraElements == PATCHES)
+        else if (loadExtraGeometry == PATCHES)
         {
           iLow  = patch->getLowIndex (basis[m]);
           iHigh = patch->getHighIndex(basis[m]);
@@ -485,7 +485,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
                                  int material,
                                  int low[3],
                                  int high[3],
-                                 LoadExtra loadExtraElements)
+                                 LoadExtraGeometry loadExtraGeometry)
 {
   if( !dw->exists( varLabel, material, patch ) )
     return nullptr;
@@ -506,7 +506,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
   gd->data = new double[gd->num*gd->components];
   
   // This queries just the patch
-  if( loadExtraElements == NONE )
+  if( loadExtraGeometry == NO_EXTRA_GEOMETRY )
   {
     VAR<T> var;  
     dw->getRegion( var, varLabel, material, patch->getLevel(), ilow, ihigh );
@@ -516,7 +516,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
       copyComponents<T>(&gd->data[i*gd->components], p[i]);
   }
   // This queries the entire patch, including extra cells and boundary cells
-  else if( loadExtraElements == CELLS )
+  else if( loadExtraGeometry == CELLS )
   {
     VAR<T> var;
     dw->get( var, varLabel, material, patch, Ghost::None, 0 );
@@ -525,7 +525,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
     for (int i=0; i<gd->num; ++i)
       copyComponents<T>(&gd->data[i*gd->components], p[i]);
   }
-  else if( loadExtraElements == PATCHES )
+  else if( loadExtraGeometry == PATCHES )
   {
     for (int i=0; i<gd->num*gd->components; ++i)
       gd->data[i] = 0;
@@ -756,32 +756,32 @@ GridDataRaw* getGridDataMainType(DataWarehouse *dw,
                                  int material,
                                  int low[3],
                                  int high[3],
-                                 LoadExtra loadExtraElements,
+                                 LoadExtraGeometry loadExtraGeometry,
                                  const TypeDescription *subtype)
 {  
   switch (subtype->getType())
   {
   case TypeDescription::double_type:
     return readGridData<VAR, double>(dw, patch, varLabel,
-                                     material, low, high, loadExtraElements);
+                                     material, low, high, loadExtraGeometry);
   case TypeDescription::float_type:
     return readGridData<VAR, float>(dw, patch, varLabel,
-                                    material, low, high, loadExtraElements);
+                                    material, low, high, loadExtraGeometry);
   case TypeDescription::int_type:
     return readGridData<VAR, int>(dw, patch, varLabel,
-                                  material, low, high, loadExtraElements);
+                                  material, low, high, loadExtraGeometry);
   case TypeDescription::Vector:
     return readGridData<VAR, Vector>(dw, patch, varLabel,
-                                     material, low, high, loadExtraElements);
+                                     material, low, high, loadExtraGeometry);
   case TypeDescription::Stencil7:
     return readGridData<VAR, Stencil7>(dw, patch, varLabel,
-                                       material, low, high, loadExtraElements);
+                                       material, low, high, loadExtraGeometry);
   case TypeDescription::Stencil4:
     return readGridData<VAR, Stencil4>(dw, patch, varLabel,
-                                       material, low, high, loadExtraElements);
+                                       material, low, high, loadExtraGeometry);
   case TypeDescription::Matrix3:
     return readGridData<VAR, Matrix3>(dw, patch, varLabel,
-                                      material, low, high, loadExtraElements);
+                                      material, low, high, loadExtraGeometry);
   case TypeDescription::bool_type:
   case TypeDescription::short_int_type:
   case TypeDescription::long_type:
@@ -848,7 +848,7 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                          int material,
                          int low[3],
                          int high[3],
-                         LoadExtra loadExtraElements)
+                         LoadExtraGeometry loadExtraGeometry)
 {
   DataWarehouse *dw = schedulerP->getLastDW();
   
@@ -898,19 +898,19 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
   {
   case TypeDescription::CCVariable:
     return getGridDataMainType<constCCVariable>(dw, patch, varLabel, material,
-                                                low, high, loadExtraElements, subtype);
+                                                low, high, loadExtraGeometry, subtype);
   case TypeDescription::NCVariable:
     return getGridDataMainType<constNCVariable>(dw, patch, varLabel, material,
-                                                low, high, loadExtraElements, subtype);
+                                                low, high, loadExtraGeometry, subtype);
   case TypeDescription::SFCXVariable:
     return getGridDataMainType<constSFCXVariable>(dw, patch, varLabel, material,
-                                                  low, high, loadExtraElements, subtype);
+                                                  low, high, loadExtraGeometry, subtype);
   case TypeDescription::SFCYVariable:
     return getGridDataMainType<constSFCYVariable>(dw, patch, varLabel, material,
-                                                  low, high, loadExtraElements, subtype);
+                                                  low, high, loadExtraGeometry, subtype);
   case TypeDescription::SFCZVariable:
     return getGridDataMainType<constSFCZVariable>(dw, patch, varLabel, material,
-                                                  low, high, loadExtraElements, subtype);
+                                                  low, high, loadExtraGeometry, subtype);
   case TypeDescription::PerPatch:
     return getPatchDataMainType<PerPatch>(dw, patch, varLabel, material, subtype);
   default:

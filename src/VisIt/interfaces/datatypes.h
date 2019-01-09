@@ -41,11 +41,11 @@
 #include <iostream>
 #include <climits>
 
-typedef enum loadExtra {
-    NONE    = 0,
-    CELLS   = 1,
-    PATCHES = 2,
-  } LoadExtra;
+typedef enum loadExtraGeometry {
+    NO_EXTRA_GEOMETRY = 0,
+    CELLS             = 1,
+    PATCHES           = 2,
+  } LoadExtraGeometry;
     
 class PatchInfo {
 public:

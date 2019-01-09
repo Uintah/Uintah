@@ -90,8 +90,8 @@ typedef struct visit_simulation_data
   double time  {0};
 
   // UDA archive variables.
-  int  loadExtraElements {NONE};
-  bool forceMeshReload   {true};
+  LoadExtraGeometry loadExtraGeometry {NO_EXTRA_GEOMETRY};
+  bool forceMeshReload {true};
   std::string mesh_for_patch_data;
   
   int blocking {0};

@@ -1433,14 +1433,14 @@ void visit_DoutCallback(char *val, void *cbdata)
 }
 
 //---------------------------------------------------------------------
-// LoadExtraElementsCallback
+// LoadExtraGeometryCallback
 //     Custom UI callback for a check box
 //---------------------------------------------------------------------
-void visit_LoadExtraElementsCallback(int val, void *cbdata)
+void visit_LoadExtraGeometryCallback(int val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->loadExtraElements = val;
+  sim->loadExtraGeometry = (LoadExtraGeometry) val;
 }
 
 

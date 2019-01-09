@@ -138,15 +138,10 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     return VISIT_INVALID_HANDLE;
   }
 
-  // int timeStep = sim->cycle;
-  
-  LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
-  // bool &forceMeshReload = sim->forceMeshReload;
-
   if( sim->stepInfo )
     delete sim->stepInfo;
   
-  sim->stepInfo = getTimeStepInfo(schedulerP, gridP, loadExtraElements);
+  sim->stepInfo = getTimeStepInfo(schedulerP, gridP, sim->loadExtraGeometry);
 
   unsigned int addMachineData = (sim->switchNodeList.size() &&
                                  (int) sim->switchIndex != -1 &&
@@ -742,9 +737,6 @@ visit_handle visit_SimGetDomainBoundaries(const char *name, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  // int timeStep = sim->cycle;  
-  // LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
-  // bool &forceMeshReload = sim->forceMeshReload;
   TimeStepInfo* &stepInfo = sim->stepInfo;
     
   const std::string meshname(name); 
@@ -836,9 +828,6 @@ visit_handle visit_SimGetDomainNesting(const char *name, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  // int timeStep = sim->cycle;  
-  // LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
-  // bool &forceMeshReload = sim->forceMeshReload;
   TimeStepInfo* &stepInfo = sim->stepInfo;
     
   const std::string meshname(name); 
@@ -1275,11 +1264,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     return meshH;
   }  
 
-  // LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
-  // bool &forceMeshReload = sim->forceMeshReload;
   TimeStepInfo* &stepInfo = sim->stepInfo;
-
-  // int timeStep = sim->cycle;
 
   visit_handle meshH = VISIT_INVALID_HANDLE;
 
@@ -1708,8 +1693,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   LoadBalancer * lb     = sim->simController->getLoadBalancer();
   GridP gridP           = sim->gridP;
 
-  LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
-  // bool &forceMeshReload = sim->forceMeshReload;
   TimeStepInfo* &stepInfo = sim->stepInfo;
 
   // int timeStep = sim->cycle;
@@ -2208,7 +2191,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
         GridDataRaw *tmp =
           getGridData(schedulerP, gridP, level, local_patch, varName,
-                      atoi(matl.c_str()), plow, phigh, (LoadExtra) 0 );
+                      atoi(matl.c_str()), plow, phigh, NO_EXTRA_GEOMETRY );
 
         gd->data[p] = tmp->data[0];
 
@@ -2221,7 +2204,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     {
       gd = getGridData(schedulerP, gridP, level, local_patch, varName,
                        atoi(matl.c_str()), plow, phigh,
-                       (LoadExtra) (nodeCentered ? 0 : loadExtraElements));
+                       (nodeCentered ? NO_EXTRA_GEOMETRY : sim->loadExtraGeometry));
 
       if( gd )
       {
