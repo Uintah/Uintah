@@ -174,8 +174,6 @@ void visit_SetReductionVariables( visit_simulation_data *sim )
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
-  Output * output       = sim->simController->getOutput();
-
   VisItUI_setTableValueS("ReductionVariableTable",
                          -1, -1, "CLEAR_TABLE", 0);
 
@@ -212,9 +210,6 @@ void visit_SetReductionVariables( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOutputIntervals( visit_simulation_data *sim )
 {
-  ApplicationInterface* appInterface =
-    sim->simController->getApplicationInterface();
-
   Output * output       = sim->simController->getOutput();
 
   VisItUI_setTableValueS("OutputIntervalVariableTable",
