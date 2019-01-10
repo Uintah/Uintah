@@ -223,7 +223,7 @@ int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
   // so revert to the regular cpdiInterpolator
   if(maxX-minX>1 || maxY-minY>1 || maxZ-minZ>1){
     ParticleInterpolator* interp;
-    interp = scinew cpdiInterpolator(d_patch);
+    interp = scinew cpdiInterpolator(d_patch,d_lcrit);
     int NN = interp->findCellAndWeights(pos, ni, S, size, defgrad);
     delete interp;
     return NN;
@@ -438,7 +438,7 @@ int fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   // so revert to the regular cpdiInterpolator
   if(maxX-minX>1 || maxY-minY>1 || maxZ-minZ>1){
     ParticleInterpolator* interp;
-    interp = scinew cpdiInterpolator(d_patch);
+    interp = scinew cpdiInterpolator(d_patch,d_lcrit);
     int NN = interp->findCellAndShapeDerivatives(pos, ni, d_S, size, defgrad);
     delete interp;
     return NN;
@@ -714,7 +714,7 @@ fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 
   if(maxX-minX>1 || maxY-minY>1 || maxZ-minZ>1){
     ParticleInterpolator* interp;
-    interp = scinew cpdiInterpolator(d_patch);
+    interp = scinew cpdiInterpolator(d_patch,d_lcrit);
     int NN = interp->findCellAndWeightsAndShapeDerivatives(pos, ni, S, d_S, 
                                                            size, defgrad);
     delete interp;
