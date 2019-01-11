@@ -33,6 +33,13 @@ if (nargin == 0)
 endif
 
 %__________________________________
+% add function directory to search path
+myPath   = which( mfilename )
+srcPath  = readlink( myPath )
+funcPath = strcat( fileparts (srcPath), "/functions" )
+addpath( funcPath )
+
+%__________________________________
 % default user inputs
 symbol   = {'+','*r','xg'}; 
 pDir        = 999;
@@ -41,7 +48,6 @@ makePlot    = true;
 ts          = 999;
 output_file = 'L2norm';
 L           = 0;
-BIGNUM      = 1e7;
 
 arg_list = argv ();
 for i = 1:2:nargin
@@ -63,46 +69,25 @@ for i = 1:2:nargin
   end                                      
 end
 
+%__________________________________
 %  HARDWIRED CONSTANTS
 viscosity      = 1e-4;
 vel_CC_initial = 10.0;
 rho_CC         = 1.1792946927374306;
-%________________________________
-% do the Uintah utilities exist
-[s0, r0]=unix('puda > /dev/null 2>&1');
-[s1, r1]=unix('lineextract > /dev/null 2>&1');
 
-if( s0 ~=0 || s1 ~= 0 )
-  disp('Cannot execute uintah utilites puda, lineextract');
-  disp('  a) make sure you are in the right directory, and');
-  disp('  b) the utilities (puda/lineextract) have been compiled');
-  quit(-1);
-end
+%__________________________________
+% extract time and grid info on this level
+tg_info = getTimeGridInfo( uda, ts, L );
 
-%________________________________
-%  extract the physical time
-c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" > tmp 2>&1',uda);
-[status0, result0]=unix(c0);
-physicalTime  = load('tmp');
-
-if(ts == 999)  % default
-  ts = length(physicalTime)
-endif
-%________________________________
-%  extract initial conditions and grid information from the uda file
-c0 = sprintf('puda -gridstats %s > tmp 2>&1',uda); unix(c0);
-
-[s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
-[s,r2] = unix('grep -m1 -w "Domain Length" tmp         |cut -d":" -f2 | tr -d "[]"');
-
-resolution   = str2num(r1);
-domainLength = str2num(r2);
+ts           = tg_info.ts
+resolution   = tg_info.resolution;
+domainLength = tg_info.domainLength;
+time         = tg_info.physicalTime;
 
 % find the x and y directions
-
 % for each axial direction different y directions are possible
 % these scripts were built for each of the following planes
-% when creating new new tests you may want to try to follow this convention
+% when creating new tests you may want to try to follow this convention
 
 if(pDir == 1)
   yDir = 2;
@@ -116,12 +101,11 @@ elseif(pDir == 3)
 end
 
 %__________________________________
-%compute the exact solution & L2Norm
+% compute the exact solution & L2Norm
 
-%grabbing the data
 xHalf = resolution(xDir)/2.0;
 
-%sets the start and end cells for the line extract, depending on the plane
+%sets the start and end cells for the line extract, depending axial direction
 if(pDir == 1)
   startEnd = sprintf('-istart %i 0 0 -iend %i %i 0',xHalf,xHalf,resolution(yDir) -1);
 elseif(pDir == 2)
@@ -133,6 +117,7 @@ end
 c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o vel.dat -m %i  -uda %s','vel_CC > /dev/null 2>&1',L,ts-1,startEnd,mat,uda);
 [s1, r1] = unix(c1);
 
+%__________________________________
 % import the data into arrays
 vel  = load('vel.dat'); 
 y_CC = vel(:,yDir);
@@ -144,15 +129,16 @@ y_CC_twk = y_CC;
 
 uvel = vel(:,3 + xDir);
 
+%__________________________________
 % computes exact solution
-time =physicalTime(ts);
-
 vel_ratio_sim = uvel/vel_CC_initial;
 nu = viscosity/rho_CC;
 
 vel_ratio_exact =( 1.0 - erf( y_CC_twk/(2.0 * sqrt(nu * time)) ) );
 vel_exact = vel_ratio_exact * vel_CC_initial;
 
+%__________________________________
+% compute L2norm
 clear d;
 d = 0;
 d = abs(vel_ratio_sim - vel_ratio_exact);
@@ -168,35 +154,35 @@ if (nargv > 0)
 end
 
 % cleanup 
-unix('/bin/rm vel.dat sim.dat tmp');
-
+c = sprintf('mv vel.dat %s ', uda);
+[s, r] = unix(c);
 
 %______________________________
 % Plot the results from each timestep
 % onto 2 plots
 if (strcmp(makePlot,"true"))
   h = figure(1)
-  subplot(2,1,1),plot(uvel, y_CC, 'b:o;computed;', vel_exact, y_CC_twk, 'r:+;exact;')
+  subplot(2,1,1),
+  plot(uvel, y_CC, 'b:o;computed;', vel_exact, y_CC_twk, 'r:+;exact;')
   xlabel('u velocity')
   ylabel('y')
-  %axis('manual',[0 ,1e-4])
-%  legend('computed');
   title('Rayleigh Problem');
   grid on;
 
-%   subplot(3,1,2),plot(vel_ratio_exact,eta, 'b', vel_ratio_sim,eta, 'r:+');
-%   hold on;
-%   xlabel('u/U0'); 
-%   ylabel('eta');
-%   %legend('exact', 'computed');
-%   grid on;
-  subplot(2,1,2),plot(d,y_CC, 'b:+');
+  subplot(2,1,2),
+  plot(d, y_CC, 'b:+');
   hold on;
   xlabel('u - u_exact'); 
   ylabel('y');
   grid on;
+  hold off;
+  pause(7);   
+  
   c1 = sprintf('%i_%i.jpg',resolution(yDir),yDir);
   %saves the plot to an output file
   %naming convention for the output file (resolution,yDir.jpg)
-  print (c1,'-djpg')
+  
+  print (c1,'-dpng', '-FTimes-Roman:14');
+  c = sprintf('mv %s %s ', c1, uda);
+  [s, r] = unix(c);
 end
