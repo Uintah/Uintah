@@ -5,7 +5,7 @@
 % Reference:  Incompressible Flow, by Panton pg 177
 %
 %  Example usage:
-%  compare_Rayleigh.m -pDir 1 -mat 0 -plot false -o out.400.cmp -uda rayleigh_400.uda
+%  compare_Rayleigh.m -aDir 1 -mat 0 -plot false -o out.400.cmp -uda rayleigh_400.uda
 %_________________________________
 
 clear all;
@@ -34,14 +34,13 @@ endif
 
 %__________________________________
 % add function directory to search path
-myPath   = which( mfilename )
-srcPath  = readlink( myPath )
-funcPath = strcat( fileparts (srcPath), "/functions" )
+myPath   = which( mfilename );
+srcPath  = readlink( myPath );
+funcPath = strcat( fileparts (srcPath), "/functions" );
 addpath( funcPath )
 
 %__________________________________
 % default user inputs
-symbol   = {'+','*r','xg'}; 
 pDir        = 999;
 mat         = 0;
 makePlot    = true;
@@ -79,7 +78,7 @@ rho_CC         = 1.1792946927374306;
 % extract time and grid info on this level
 tg_info = getTimeGridInfo( uda, ts, L );
 
-ts           = tg_info.ts
+ts           = tg_info.ts;
 resolution   = tg_info.resolution;
 domainLength = tg_info.domainLength;
 time         = tg_info.physicalTime;
@@ -107,11 +106,11 @@ xHalf = resolution(xDir)/2.0;
 
 %sets the start and end cells for the line extract, depending axial direction
 if(pDir == 1)
-  startEnd = sprintf('-istart %i 0 0 -iend %i %i 0',xHalf,xHalf,resolution(yDir) -1);
+  startEnd = sprintf('-istart %i 0 0 -iend %i %i 0',xHalf,xHalf, resolution(yDir)-1 );
 elseif(pDir == 2)
-  startEnd = sprintf('-istart 0 %i 0 -iend 0 %i %i',xHalf,xHalf,resolution(yDir)-1);
+  startEnd = sprintf('-istart 0 %i 0 -iend 0 %i %i',xHalf,xHalf, resolution(yDir)-1 );
 elseif(pDir == 3)
-  startEnd = sprintf('-istart 0 0 %i -iend %i 0 %i',xHalf,resolution(yDir)-1,xHalf);
+  startEnd = sprintf('-istart 0 0 %i -iend %i 0 %i',xHalf, resolution(yDir)-1 ,xHalf);
 end
 
 c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o vel.dat -m %i  -uda %s','vel_CC > /dev/null 2>&1',L,ts-1,startEnd,mat,uda);
@@ -120,12 +119,7 @@ c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o vel.dat -m 
 %__________________________________
 % import the data into arrays
 vel  = load('vel.dat'); 
-y_CC = vel(:,yDir);
-
-% Add an offset to y_CC to compensate for the poor vel_CC boundary  condition in ICE
-dy_2 = (y_CC(2) - y_CC(1) )/2;
-y_CC_twk = y_CC + dy_2;
-y_CC_twk = y_CC;
+y_CC = vel(:,yDir);s
 
 uvel = vel(:,3 + xDir);
 
@@ -134,7 +128,7 @@ uvel = vel(:,3 + xDir);
 vel_ratio_sim = uvel/vel_CC_initial;
 nu = viscosity/rho_CC;
 
-vel_ratio_exact =( 1.0 - erf( y_CC_twk/(2.0 * sqrt(nu * time)) ) );
+vel_ratio_exact =( 1.0 - erf( y_CC/(2.0 * sqrt(nu * time)) ) );
 vel_exact = vel_ratio_exact * vel_CC_initial;
 
 %__________________________________
@@ -143,7 +137,6 @@ clear d;
 d = 0;
 d = abs(vel_ratio_sim - vel_ratio_exact);
 L2_norm = sqrt( sum(d.^2)/length(y_CC) );
-length(y_CC);
 
 % write L2_norm to a file
 nargv = length(output_file);
@@ -158,12 +151,20 @@ c = sprintf('mv vel.dat %s ', uda);
 [s, r] = unix(c);
 
 %______________________________
-% Plot the results from each timestep
-% onto 2 plots
+% Plot the results 
 if (strcmp(makePlot,"true"))
-  h = figure(1)
+  graphics_toolkit('gnuplot')
+
+  h = figure();
+  set (h, "defaultaxesfontname", "Arial") 
+  set (h, "defaulttextfontname", "Arial")
+  
   subplot(2,1,1),
-  plot(uvel, y_CC, 'b:o;computed;', vel_exact, y_CC_twk, 'r:+;exact;')
+  plot(uvel, y_CC, 'b:o', vel_exact, y_CC, 'r:+')
+  
+  l = legend( 'uda', 'Analytical' );
+  set (l, "fontsize", 8)
+  
   xlabel('u velocity')
   ylabel('y')
   title('Rayleigh Problem');
@@ -171,18 +172,15 @@ if (strcmp(makePlot,"true"))
 
   subplot(2,1,2),
   plot(d, y_CC, 'b:+');
-  hold on;
-  xlabel('u - u_exact'); 
+  xlabel('|u - u_{exact}|'); 
   ylabel('y');
   grid on;
-  hold off;
-  pause(7);   
-  
-  c1 = sprintf('%i_%i.jpg',resolution(yDir),yDir);
+  pause(3);   
+
   %saves the plot to an output file
-  %naming convention for the output file (resolution,yDir.jpg)
-  
-  print (c1,'-dpng', '-FTimes-Roman:14');
+  c1 = sprintf( '%i.jpg',resolution(yDir) );
+
+  print ( h, c1,'-dpng');
   c = sprintf('mv %s %s ', c1, uda);
   [s, r] = unix(c);
 end
