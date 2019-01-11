@@ -29,6 +29,9 @@ using namespace Uintah;
 
 namespace ElectroChem {
   namespace MaterialInterfaces {
+    enum InterfaceType{
+      NULL
+    };
     double NullInterface() { return 0.0; }
   } // End namespace MaterialInterfaces
 } // End namspace ElectroChem

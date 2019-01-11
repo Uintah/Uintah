@@ -14,6 +14,10 @@
         <mobility        spec="OPTIONAL DOUBLE"/>
         <geom_object     spec="MULTIPLE" />
       </material>
+      <material_interface spec="REQUIRED NO_DATA"
+                          attribute1="type REQUIRED STRING 'null'"> 
+        <materials        spec="OPTIONAL MULTIPLE_INTEGERS" />
+      </material_interface>
     </ElectroChem>
   </MaterialProperties>
 

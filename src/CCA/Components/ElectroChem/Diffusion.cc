@@ -48,7 +48,8 @@ Diffusion::Diffusion(const ProcessorGroup* myworld,
 }
     
 Diffusion::~Diffusion(){
-  std::cout << "---here---" << std::endl;
+  d_one_mat_set.removeReference();
+  d_one_mat_subset.removeReference();
 }
 
 void Diffusion::problemSetup(const ProblemSpecP& ps,
@@ -244,8 +245,7 @@ void Diffusion::scheduleComputeStableTimeStep(const LevelP&     level,
   Task* task = scinew Task("Diffusion::computeStableTimeStep",this, 
                            &Diffusion::computeStableTimeStep);
   task->computes(getDelTLabel(),level.get_rep());
-  sched->addTask(task, level->eachPatch(),
-                 m_materialManager->allMaterials("ElectroChem"));
+  sched->addTask(task, level->eachPatch(), &d_one_mat_set);
 }
 
 void Diffusion::computeStableTimeStep(const ProcessorGroup* pg,

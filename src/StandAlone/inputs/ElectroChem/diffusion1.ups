@@ -41,6 +41,9 @@
           <concentration> 1.0 </concentration>
         </geom_object>
       </material>
+      <material_interface type="null">
+        <materials> [0,1] </materials>
+      </material_interface>
     </ElectroChem>
   </MaterialProperties>           
 
