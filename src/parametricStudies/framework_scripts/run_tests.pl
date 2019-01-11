@@ -201,7 +201,7 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
 
   if( $rc == 0 && length $postProc_cmd != 0){
   
-    my @cmd = ("analyze_results.pl","$tstFile", "$nTest");
+    my @cmd = ("analyze_results.pl","$tstFile", "$nTest", "$udaFilename");
     print $statsFile "postProcessCmd:  "."$postProc_cmd"."\n";
 
     if ( $exitOnCrash eq "TRUE" ) {
