@@ -42,14 +42,21 @@ Diffusion::Diffusion(const ProcessorGroup* myworld,
   d_one_mat_subset.add(0);
   d_one_mat_subset.addReference();
 
-  offsets[0].x(1.0); offsets[0].y(0.0); offsets[0].z(0.0);
-  offsets[1].x(0.0); offsets[1].y(1.0); offsets[1].z(0.0);
-  offsets[2].x(0.0); offsets[2].y(0.0); offsets[2].z(1.0);
+  d_offsets[0].x(1.0); d_offsets[0].y(0.0); d_offsets[0].z(0.0);
+  d_offsets[1].x(0.0); d_offsets[1].y(1.0); d_offsets[1].z(0.0);
+  d_offsets[2].x(0.0); d_offsets[2].y(0.0); d_offsets[2].z(1.0);
 }
     
 Diffusion::~Diffusion(){
   d_one_mat_set.removeReference();
   d_one_mat_subset.removeReference();
+
+  if(d_num_matls > 1){
+    for(int i = 0; i < d_num_matls; ++i){
+      delete[] d_interfaces[i];
+    }
+    delete[] d_interfaces;
+  }
 }
 
 void Diffusion::problemSetup(const ProblemSpecP& ps,
@@ -84,6 +91,14 @@ void Diffusion::problemSetup(const ProblemSpecP& ps,
 
     m_materialManager->registerMaterial( "ElectroChem", mat);
   }
+
+  d_num_matls = m_materialManager->getNumMatls("ElectroChem");
+  if(d_num_matls > 1){
+    d_interfaces = new MaterialInterfaces::InterfaceType*[d_num_matls];
+    for(int i = 0; i < d_num_matls; ++i){
+      d_interfaces[i] = new MaterialInterfaces::InterfaceType[d_num_matls-1];
+    }
+  }
 }
 
 void Diffusion::scheduleInitialize(const LevelP&     level,
@@ -114,8 +129,6 @@ void Diffusion::initializeMaterialId(const ProcessorGroup* pg,
                                            DataWarehouse*  old_dw,
                                            DataWarehouse*  new_dw){
 
-  int num_matls = m_materialManager->getNumMatls( "ElectroChem" );
-
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     CCVariable<double> concentration;
@@ -125,7 +138,7 @@ void Diffusion::initializeMaterialId(const ProcessorGroup* pg,
     concentration.initialize(0.0);
     matid.initialize(-1);
 
-    for(int m = 0; m < num_matls; m++){
+    for(int m = 0; m < d_num_matls; m++){
       ElectroChem::ECMaterial* ec_matl = (ElectroChem::ECMaterial* )
                                m_materialManager->getMaterial("ElectroChem", m);
 
@@ -205,11 +218,11 @@ void Diffusion::initializeFluxModel(const ProcessorGroup* pg,
           if(low_bnd[i]){
             fmodel = FluxModels::BC;
           }else{
-            if(matid[c] != matid[c-offsets[i]]){ fmodel = FluxModels::MaterialInterface; }
+            if(matid[c] != matid[c-d_offsets[i]]){ fmodel = FluxModels::MaterialInterface; }
             else{ fmodel = FluxModels::Basic; }
           }
         }else{
-          if(matid[c] != matid[c-offsets[i]]){ fmodel = FluxModels::MaterialInterface; }
+          if(matid[c] != matid[c-d_offsets[i]]){ fmodel = FluxModels::MaterialInterface; }
           else{ fmodel = FluxModels::PNP; }
         }
         switch (i) {
@@ -223,11 +236,11 @@ void Diffusion::initializeFluxModel(const ProcessorGroup* pg,
 
         if(c[i] == high_idx[i]-1 && high_bnd[i]){
           switch (i) {
-            case 0: fcx_fluxmodel[c+offsets[i]] = FluxModels::BC;
+            case 0: fcx_fluxmodel[c+d_offsets[i]] = FluxModels::BC;
                     break;
-            case 1: fcy_fluxmodel[c+offsets[i]] = FluxModels::BC;
+            case 1: fcy_fluxmodel[c+d_offsets[i]] = FluxModels::BC;
                     break;
-            case 2: fcz_fluxmodel[c+offsets[i]] = FluxModels::BC;
+            case 2: fcz_fluxmodel[c+d_offsets[i]] = FluxModels::BC;
                     break;
           }
         }
@@ -385,11 +398,11 @@ void Diffusion::computeFlux(const ProcessorGroup* pg,
 
         if(c[i] == high_idx[i]-1 && high_bnd[i]){
           switch (i) {
-            case 0: fcx_flux[c+offsets[0]] = flux;
+            case 0: fcx_flux[c+d_offsets[0]] = flux;
                     break;
-            case 1: fcy_flux[c+offsets[1]] = flux;
+            case 1: fcy_flux[c+d_offsets[1]] = flux;
                     break;
-            case 2: fcz_flux[c+offsets[2]] = flux;
+            case 2: fcz_flux[c+d_offsets[2]] = flux;
                     break;
           }
         }
@@ -399,13 +412,13 @@ void Diffusion::computeFlux(const ProcessorGroup* pg,
       fcz_fluxmodel[c] = fcz_fluxmodel_old[c];
 
       if(c[0] == high_idx[0]-1 && high_bnd[0]){
-        fcx_fluxmodel[c+offsets[0]] = fcx_fluxmodel_old[c+offsets[0]];
+        fcx_fluxmodel[c+d_offsets[0]] = fcx_fluxmodel_old[c+d_offsets[0]];
       }
       if(c[1] == high_idx[1]-1 && high_bnd[1]){
-        fcy_fluxmodel[c+offsets[1]] = fcy_fluxmodel_old[c+offsets[1]];
+        fcy_fluxmodel[c+d_offsets[1]] = fcy_fluxmodel_old[c+d_offsets[1]];
       }
       if(c[2] == high_idx[2]-1 && high_bnd[2]){
-        fcz_fluxmodel[c+offsets[2]] = fcz_fluxmodel_old[c+offsets[2]];
+        fcz_fluxmodel[c+d_offsets[2]] = fcz_fluxmodel_old[c+d_offsets[2]];
       }
     }
   } // end of for patch loop

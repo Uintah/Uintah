@@ -15,8 +15,9 @@
         <geom_object     spec="MULTIPLE" />
       </material>
       <material_interface spec="REQUIRED NO_DATA"
-                          attribute1="type REQUIRED STRING 'null'"> 
+                          attribute1="type REQUIRED STRING 'zero_flux, dirichlet'"> 
         <materials        spec="OPTIONAL MULTIPLE_INTEGERS" />
+        <value            spec="OPTIONAL DOUBLE" />
       </material_interface>
     </ElectroChem>
   </MaterialProperties>

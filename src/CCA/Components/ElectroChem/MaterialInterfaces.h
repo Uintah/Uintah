@@ -30,9 +30,10 @@ using namespace Uintah;
 namespace ElectroChem {
   namespace MaterialInterfaces {
     enum InterfaceType{
-      NULL
+      ZERO_FLUX,
+      DIRICHLET
     };
-    double NullInterface() { return 0.0; }
   } // End namespace MaterialInterfaces
 } // End namspace ElectroChem
-#end // CCA_COMPONENTS_ELECTROCHEM_MATERIALINTERFACES_H
+
+#endif // CCA_COMPONENTS_ELECTROCHEM_MATERIALINTERFACES_H

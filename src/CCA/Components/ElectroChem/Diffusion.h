@@ -27,6 +27,7 @@
 
 #include <CCA/Components/Application/ApplicationCommon.h>
 #include <CCA/Components/ElectroChem/ECLabel.h>
+#include <CCA/Components/ElectroChem/MaterialInterfaces.h>
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -42,7 +43,10 @@ namespace Uintah {
     MaterialSet    d_one_mat_set;
     MaterialSubset d_one_mat_subset;
 
-    IntVector offsets[3];
+    int d_num_matls {0};
+    MaterialInterfaces::InterfaceType** d_interfaces;
+
+    IntVector d_offsets[3];
 
     double  d_delt {0};
 
