@@ -919,7 +919,7 @@
        <property name="title">
         <string>Database</string>
        </property>
-       <widget class="QComboBox" name="LoadExtraElements">
+       <widget class="QComboBox" name="LoadExtraGeometry">
         <property name="geometry">
          <rect>
           <x>160</x>
@@ -944,7 +944,7 @@
          </property>
         </item>
        </widget>
-       <widget class="QLabel" name="LoadExtraElementsLabel">
+       <widget class="QLabel" name="LoadExtraGeometryLabel">
         <property name="geometry">
          <rect>
           <x>10</x>
@@ -954,7 +954,7 @@
          </rect>
         </property>
         <property name="text">
-         <string>Load extra elements</string>
+         <string>Load extra geometry</string>
         </property>
        </widget>
       </widget>
@@ -1040,7 +1040,7 @@
   <tabstop>ImageWidth</tabstop>
   <tabstop>ImageFormat</tabstop>
   <tabstop>StateVariableTable</tabstop>
-  <tabstop>LoadExtraElements</tabstop>
+  <tabstop>LoadExtraGeometry</tabstop>
   <tabstop>OutputIntervalVariableTable</tabstop>
   <tabstop>DoutTable</tabstop>
   <tabstop>DebugStreamTable</tabstop>

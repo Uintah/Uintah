@@ -27,6 +27,7 @@ use Utilities;
 
 my $tstFile = $ARGV[0];
 my $testNum = $ARGV[1];
+my $uda     = $ARGV[2];
 
 # read XML file into a dom tree
 my $doc = XML::LibXML->load_xml(location => $tstFile);
@@ -83,13 +84,14 @@ if ( ! defined $cmd ){
   die
 }
 
-system("ln -fs $cmd > /dev/null 2>&1");
+if ( ! -l $cmd){
+  system("ln -fs $cmd > /dev/null 2>&1");
+}
 
 #__________________________________
 # Run the comparison tests
 
 my $comp_output = "out.$X.cmp";
-my $uda         = $ups_basename."_$testTitle".".uda";
 
 print "\n\tLaunching: ($cmd_basename -o $comp_output -uda $uda)\n\n";
 `rm -f $comp_output`;
@@ -115,10 +117,14 @@ if ( length $gpData ) {
   my $title = $doc->findvalue( '/start/gnuplot/title' );
   my $xlabel= $doc->findvalue( '/start/gnuplot/xlabel' );
   my $ylabel= $doc->findvalue( '/start/gnuplot/ylabel' );
+  my $label = $doc->findvalue( '/start/gnuplot/label' );
+  
+  print " label ($label) \n";
 
-  system("sed", "-i", "s/#title/set title \"$title\"/g", "$gpFile");
+  system("sed", "-i", "s/#title/set title   \"$title\"/g",  "$gpFile");
   system("sed", "-i", "s/#xlabel/set xlabel \"$xlabel\"/g", "$gpFile");
   system("sed", "-i", "s/#ylabel/set ylabel \"$ylabel\"/g", "$gpFile");
+  system("sed", "-i", "s/#label/set label     $label/g",      "$gpFile");
 
   print "Now plotting using the modified gnuplot script ($gpFile) \n";
   system("gnuplot $gpFile > gp.out 2>&1");

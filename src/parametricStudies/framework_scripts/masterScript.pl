@@ -200,7 +200,8 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      }
 
      mkpath($testName) || die "ERROR:masterScript.pl:cannot mkpath($testName) $!";
-
+     unlink( $testNameOld );
+     symlink( $testName, $testNameOld  ) || die "ERROR:masterScript.pl:cannot create symlink $!";
 
      chdir($testName);
 

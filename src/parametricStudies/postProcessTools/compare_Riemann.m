@@ -27,6 +27,13 @@ if (nargin == 0)
 endif
 
 %__________________________________
+% add function directory to search path
+myPath   = which( mfilename );
+srcPath  = readlink( myPath );
+funcPath = strcat( fileparts (srcPath), "/functions" );
+addpath( funcPath )
+
+%__________________________________
 % default user inputs
 symbol   = {'b:+;computed;','*r','xg'}; 
 pDir        = 999;
@@ -60,50 +67,29 @@ for i = 1:2:nargin
   end                                      
 end
 
-%________________________________
-% do the Uintah utilities exist
-%unix('setenv LD_LIBRARY /usr/lib')
-[s0, r0]=unix('puda > /dev/null 2>&1');
-[s1, r1]=unix('lineextract > /dev/null 2>&1');
-[s2, r2]=unix('timeextract > /dev/null 2>&1');
-[s3, r3]=unix('which exactRiemann > /dev/null 2>&1');
-if( s0 ~=0 || s1 ~= 0 || s2 ~=0 || s3 ~=0)
-  disp('Cannot execute Riemann or the Uintah utilites puda, timeextract lineextract or exactRiemann');
-  disp('  a) make sure you are in the right directory, and');
-  disp('  b) the utilities (puda/lineextract) have been compiled');
-  quit(-1);
-end
-
-
 %______________________________
 % hardwired variables for 1 level problem
 level = 0;
 L = 1;
-maxLevel = 1;
 
 %________________________________
-% extract the physical time 
-c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" > tmp 2>&1',uda);
-[status0, result0]=unix(c0);
-physicalTime  = load('tmp');
+% does code for computing exact solution exist
+[s, r]=unix('which exactRiemann > /dev/null 2>&1');
+if( s ~=1)
+  disp('Cannot find the executable exactRiemann');
+  quit(-1);
+end
 
-if(ts == 999)  % default
-  ts = length(physicalTime)
-endif
+%__________________________________
+% extract time and grid info on this level
+tg_info = getTimeGridInfo( uda, ts, level );
 
-time = sprintf('%d sec',physicalTime(ts));
-t = physicalTime(ts);
+ts           = tg_info.ts;
+resolution   = tg_info.resolution;
+t            = tg_info.physicalTime;
+dx           = tg_info.dx;
 
-%________________________________
-%  extract initial conditions and grid information from the uda file
-c0 = sprintf('puda -gridstats %s > tmp 2>&1',uda); unix(c0);
-[s,r0] = unix('grep -m1 dx: tmp| tr -d "dx:[]"');
-[s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp | tr -d "[:alpha:]:[],"');
-[s,r2] = unix('grep -m1 -w "Domain Length" tmp         | tr -d "[:alpha:]:[],"');
-dx           = str2num(r0);
-resolution   = str2num(r1);         % this returns a vector
-domainLength = str2num(r2);
-
+time = sprintf('%d sec', t);
 
 %______________________________
 % compute the exact solution for each variable

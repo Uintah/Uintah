@@ -154,7 +154,7 @@ extern "C"
 TimeStepInfo* getTimeStepInfo(DataArchive *archive,
                               GridP *grid,
                               int timestep,
-                              LoadExtra loadExtraElements)
+                              LoadExtraGeometry loadExtraGeometry)
 {
   std::ostringstream msg;
   msg << std::left<< std::setw(50) << "getTimeStepInfo "<< std::right <<" timestep: " << timestep;
@@ -235,17 +235,17 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
         // let VisIt believe they are part of the original data. This is
         // accomplished by setting <meshtype>_low and <meshtype>_high to
         // the extra cell boundaries so that VisIt is none the wiser.
-        if (loadExtraElements == NONE)
+        if (loadExtraGeometry == NO_EXTRA_GEOMETRY)
         {
           iLow  = patch->getLowIndex (basis[m]);
           iHigh = patch->getHighIndex(basis[m]);
         }
-        else if (loadExtraElements == CELLS)
+        else if (loadExtraGeometry == CELLS)
         {
           iLow  = patch->getExtraLowIndex (basis[m], IntVector(0,0,0));
           iHigh = patch->getExtraHighIndex(basis[m], IntVector(0,0,0));
         }
-        else if (loadExtraElements == PATCHES)
+        else if (loadExtraGeometry == PATCHES)
         {
           iLow  = patch->getLowIndex (basis[m]);
           iHigh = patch->getHighIndex(basis[m]);
@@ -333,7 +333,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
                                  int timestep,
                                  int low[3],
                                  int high[3],
-                                 LoadExtra loadExtraElements)
+                                 LoadExtraGeometry loadExtraGeometry)
 {
   if( !archive->exists( variable_name, patch, timestep ) )
     return nullptr;
@@ -354,7 +354,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
   gd->data = new double[gd->num*gd->components];
     
   // This queries just the patch
-  if( loadExtraElements == NONE )
+  if( loadExtraGeometry == NO_EXTRA_GEOMETRY )
   {
     VAR<T> var;
     archive->queryRegion(var, variable_name, material,
@@ -365,7 +365,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
       copyComponents<T>(&gd->data[i*gd->components], p[i]);
   }
   // This queries the entire patch, including extra cells and boundary cells
-  else if( loadExtraElements == CELLS )
+  else if( loadExtraGeometry == CELLS )
   {
     VAR<T> var;
     archive->query(var, variable_name, material, patch, timestep);
@@ -374,7 +374,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
     for (int i=0; i<gd->num; ++i)
       copyComponents<T>(&gd->data[i*gd->components], p[i]);
   }
-  else if( loadExtraElements == PATCHES )
+  else if( loadExtraGeometry == PATCHES )
   {
     for (int i=0; i<gd->num*gd->components; ++i)
       gd->data[i] = 0;
@@ -603,31 +603,31 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
                                  int timestep,
                                  int low[3],
                                  int high[3],
-                                 LoadExtra loadExtraElements,
+                                 LoadExtraGeometry loadExtraGeometry,
                                  const Uintah::TypeDescription *subtype)
 {
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
     return readGridData<VAR, double>(archive, patch, variable_name,
-                                     material, timestep, low, high, loadExtraElements);
+                                     material, timestep, low, high, loadExtraGeometry);
   case Uintah::TypeDescription::float_type:
     return readGridData<VAR, float>(archive, patch, variable_name,
-                                    material, timestep, low, high, loadExtraElements);
+                                    material, timestep, low, high, loadExtraGeometry);
   case Uintah::TypeDescription::int_type:
     return readGridData<VAR, int>(archive, patch, variable_name,
-                                  material, timestep, low, high, loadExtraElements);
+                                  material, timestep, low, high, loadExtraGeometry);
   case Uintah::TypeDescription::Vector:
     return readGridData<VAR, Vector>(archive, patch, variable_name,
-                                     material, timestep, low, high, loadExtraElements);
+                                     material, timestep, low, high, loadExtraGeometry);
   case Uintah::TypeDescription::Stencil7:
     return readGridData<VAR, Stencil7>(archive, patch, variable_name,
-                                       material, timestep, low, high, loadExtraElements);
+                                       material, timestep, low, high, loadExtraGeometry);
   case Uintah::TypeDescription::Stencil4:
     return readGridData<VAR, Stencil4>(archive, patch, variable_name,
-                                       material, timestep, low, high, loadExtraElements);
+                                       material, timestep, low, high, loadExtraGeometry);
   case Uintah::TypeDescription::Matrix3:
     return readGridData<VAR, Matrix3>(archive, patch, variable_name,
-                                      material, timestep, low, high, loadExtraElements);
+                                      material, timestep, low, high, loadExtraGeometry);
   case Uintah::TypeDescription::bool_type:
   case Uintah::TypeDescription::short_int_type:
   case Uintah::TypeDescription::long_type:
@@ -701,7 +701,7 @@ GridDataRaw* getGridData(DataArchive *archive,
                          int timestep,
                          int low[3],
                          int high[3],
-                         LoadExtra loadExtraElements)
+                         LoadExtraGeometry loadExtraGeometry)
 {
   const LevelP &level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
@@ -740,23 +740,23 @@ GridDataRaw* getGridData(DataArchive *archive,
   case Uintah::TypeDescription::CCVariable:
     return getGridDataMainType<CCVariable>(archive, patch,
                                            variable_name, material, timestep,
-                                           low, high, loadExtraElements, subtype);
+                                           low, high, loadExtraGeometry, subtype);
   case Uintah::TypeDescription::NCVariable:
     return getGridDataMainType<NCVariable>(archive, patch,
                                            variable_name, material, timestep,
-                                           low, high, loadExtraElements, subtype);
+                                           low, high, loadExtraGeometry, subtype);
   case Uintah::TypeDescription::SFCXVariable:
     return getGridDataMainType<SFCXVariable>(archive, patch,
                                              variable_name, material, timestep,
-                                             low, high, loadExtraElements, subtype);
+                                             low, high, loadExtraGeometry, subtype);
   case Uintah::TypeDescription::SFCYVariable:
     return getGridDataMainType<SFCYVariable>(archive, patch,
                                              variable_name, material, timestep,
-                                             low, high, loadExtraElements, subtype);
+                                             low, high, loadExtraGeometry, subtype);
   case Uintah::TypeDescription::SFCZVariable:
     return getGridDataMainType<SFCZVariable>(archive, patch,
                                              variable_name, material, timestep,
-                                             low, high, loadExtraElements, subtype);
+                                             low, high, loadExtraGeometry, subtype);
   case Uintah::TypeDescription::PerPatch:
     return getPatchDataMainType<PerPatch>(archive, patch,
                                           variable_name, material, timestep, subtype);

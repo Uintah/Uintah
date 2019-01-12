@@ -6,7 +6,7 @@
 % Reference:  Viscous Fluid Flow, 2nd edition, Frank White, pg 118
 %
 %  Example usage:
-%  compare_Couette-Poiseuille.m -pDir 1 -mat 0 -plot false -o out.400.cmp -uda rayleigh_400.uda
+%  compare_Couette-Poiseuille.m -sliceDir 1 -mat 0 -plot false -o out.400.cmp -uda rayleigh_400.uda
 %_________________________________
 clear all;
 close all;
@@ -15,12 +15,14 @@ format short e;
 function Usage
   printf('compare_Couette-Poiseuille.m <options>\n')                                                                    
   printf('options:\n')                                                                                       
-  printf('  -uda  <udaFileName> - name of the uda file \n')                                                  
-  printf('  -pDir <1,2,3>       - principal direction \n')                                                   
-  printf('  -mat                - material index \n')                                                        
-  printf('  -plot <true, false> - produce a plot \n')                                                        
-  printf('  -ts                 - Timestep to compute L2 error, default is the last timestep\n') 
-  printf('  -o <fname>          - Dump the output (L2Error) to a file\n')    
+  printf('  -uda  <udaFileName>     - name of the uda file \n')  
+  printf('  -pDir <0,1,2>           - principal direction \n')           
+  printf('  -sliceDir <0,1,2>       - direction for slicing \n')                                                   
+  printf('  -mat                    - material index \n')          
+  printf('  -wallVel                - wall velocity \n' )                                              
+  printf('  -plot <true, false>     - produce a plot \n')                                                        
+  printf('  -ts                     - Timestep to compute L2 error, default is the last timestep\n') 
+  printf('  -o <fname>              - Dump the output (L2Error) to a file\n')    
   printf('----------------------------------------------------------\n')
   printf(' You must modify the hardcoded variables\n')
   printf(' wallVel:  \t wall velocity \n viscosity \n dpdx:  \t pressure gradient\n')     
@@ -37,15 +39,23 @@ if (nargin == 0)
 endif
 
 %__________________________________
+% add function directory to search path
+myPath   = which( mfilename );
+srcPath  = readlink( myPath );
+funcPath = strcat( fileparts (srcPath), "/functions" );
+addpath( funcPath )
+
+%__________________________________
 % USER DEFINED VARIABLE
 wallVel        = 0.0
 viscosity      = 1e-3
-dpdx           = (101325 - 101315)/(1.0)
+dpdx           = -(101325 - 101315)/(1.0)
 
 %__________________________________
 % defaults
 symbol   = {'+','*r','xg'}; 
 pDir        = 1;
+sliceDir    = 2;
 mat         = 0;
 makePlot    = "true";
 ts          = 999;
@@ -59,89 +69,66 @@ for i = 1:2:nargin
    opt_value = sprintf("%s",arg_list{++i});
 
   if ( strcmp(option,"-uda") )   
-    uda = opt_value;
+    uda      = opt_value;
+    
   elseif (strcmp(option,"-pDir") ) 
-    pDir = str2num(opt_value);
+    pDir     = str2num(opt_value) + 1;
+    
+  elseif (strcmp(option,"-sliceDir") ) 
+    sliceDir = str2num(opt_value) + 1;
+    
   elseif (strcmp(option,"-mat") )
-    mat = str2num(opt_value);
+    mat      = str2num(opt_value);
+ 
+  elseif (strcmp(option,"-wallVel") )
+    wallVel  = str2num(opt_value);
+        
   elseif (strcmp(option,"-plot") )
-    makePlot = opt_value; 
+    makePlot = opt_value;
+     
   elseif (strcmp(option,"-ts") )
-    ts = str2num(opt_value);                  
+    ts       = str2num(opt_value);
+                      
   elseif (strcmp(option,"-o") )  
     output_file = opt_value;    
   end                                      
 end
 
+%__________________________________
+% extract time and grid info on this level
+tg_info = getTimeGridInfo( uda, ts, L );
 
-%________________________________
-% do the Uintah utilities exist
-[s0, r0]=unix('puda > /dev/null 2>&1');
-[s1, r1]=unix('lineextract > /dev/null 2>&1');
+ts           = tg_info.ts;
+resolution   = tg_info.resolution;
+domainLength = tg_info.domainLength;
 
-if( s0 ~=1 || s1 ~= 1 )
-  disp('Cannot execute uintah utilites puda, lineextract');
-  disp('  a) make sure you are in the right directory, and');
-  disp('  b) the utilities (puda/lineextract) have been compiled');
-  quit(-1);
-end
-
-%________________________________
-%  extract the physical time
-c0 = sprintf('puda -timesteps %s | grep ''^[0-9]'' | awk ''{print $2}'' > tmp 2>&1 ',uda);
-[status0, result0]=unix(c0)
-physicalTime  = load('tmp');
-
-if(ts == 999)  % default
-  ts = length(physicalTime) -1
-endif
-
-%________________________________
-%  extract the grid information from the uda file
-c0 = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i > tmp 2>&1',uda,ts-1, ts);
-unix(c0);
-
-[s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
-[s,r2] = unix('grep -m1 -w "Domain Length" tmp         |cut -d":" -f2 | tr -d "[]"');
-
-resolution   = str2num(r1)
-domainLength = str2num(r2)
-
-
-% find the y direction
-if(pDir == 1)
-  yDir = 2;
-elseif(pDir != 1)
-  printf('\n\nWARNING: This script only works if the main axis of the problem is in the x direction\n\n');
-  exit
-end
-
-% CONSTANTS
-x_slice = resolution(pDir)-5;      % index where the data is extracted 
 
 %__________________________________
-% Extract the data from the uda
-if(pDir == 1)
-  startEnd = sprintf('-istart %i -1 0 -iend %i %i 0',x_slice,x_slice,resolution(yDir) );
-elseif(pDir == 2)
-%   to be filled in
-elseif(pDir == 3)
-%  to be filled in
-end
+% find lineextract limits
+
+lo  = zeros(3,1);
+hi  = zeros(3,1);
+lo(sliceDir) = -1;
+hi(sliceDir) = resolution(sliceDir);
+lo(pDir)     = resolution(pDir)/2;
+hi(pDir)     = lo(pDir);
+
+startEnd = sprintf('-istart %i %i %i -iend %i %i %i', lo(1), lo(2), lo(3), hi(1), hi(2), hi(3) );
 
 c1 = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel.dat -m %i  -uda %s  > /dev/null 2>&1',L, ts, startEnd, mat, uda);
 [s1, r1] = unix(c1);
 
+%__________________________________
 % import the velocity into array
 vel     = load('vel.dat'); 
-y_CC    = vel(:,yDir);
+y_CC    = vel(:,sliceDir);
 vel_sim = vel(:,3 + pDir);
 
 %______________________________
 % computes exact solution
 nu = viscosity;
 dy = y_CC(2) - y_CC(1)
-h  = (domainLength(yDir) + dy)/2.0
+h  = (domainLength(sliceDir) + dy)/2.0
 
 % you need to add dy because the velocity BC is set dy/2 from the edge of wall.
 
@@ -159,8 +146,6 @@ if (wallVel == 0.0 )
   umax            = -dpdx * ( h^2/(2.0 * nu) )
   vel_exact       = umax * (1 - y_CC.^2/h.^2);
 end
-y_ratio = y_CC/h;
-
 
 %______________________________
 % compute the L2 norm
@@ -177,14 +162,15 @@ if (nargv > 0)
   fclose(fid);
 end
 
-% cleanup 
-unix('/bin/rm vel.dat tmp');
+% cleanup
+c = sprintf('mv vel.dat %s ', uda);
+[s, r] = unix(c);
 
 %______________________________
 % Plot the results
 if (strcmp(makePlot,"true"))
   hf = figure();
-  set (hf, "visible", "off");
+%  set (hf, "visible", "off");
   
   subplot(2,1,1)
   plot( vel_sim, y_CC, 'b:o;computed;', vel_exact, y_CC, 'r:+;exact;')
@@ -192,7 +178,7 @@ if (strcmp(makePlot,"true"))
   ylabel('y')
   title('Combined Couette-Poiseuille Flow');
   grid on;
-  hold on;
+%  hold on;
   
   subplot(2,1,2)
   plot( d, y_CC, 'b:+');
@@ -201,9 +187,11 @@ if (strcmp(makePlot,"true"))
   grid on;
   hold off;
   
-  set (hf, "visible", "on");
-  pause
+% set (hf, "visible", "on");
+  pause(7)
   
-  unix('/bin/rm Couette-Poiseuille.ps');
-  print( hf, 'Couette-Poiseuille.ps','-dps', '-FTimes-Roman:14');
+  unix('/bin/rm Couette-Poiseuille.png > /dev/null 2>&1');
+  print( hf, 'Couette-Poiseuille.png','-dpng', '-FTimes-Roman:14');
+  c = sprintf('mv Couette-Poiseuille.png %s ', uda);
+  [s, r] = unix(c);
 end
