@@ -307,8 +307,15 @@ end
 nargin = length(argv);
 if (nargin == 0)
   Usage
-exit
+  exit
 endif
+
+%__________________________________
+% add function directory to search path
+myPath   = which( mfilename );
+srcPath  = readlink( myPath );
+funcPath = strcat( fileparts (srcPath), "/functions" );
+addpath( funcPath )
 
 %__________________________________
 % defaults
@@ -352,39 +359,15 @@ if( benchmark == -9 )
   exit
 end
 
-%________________________________
-% do the Uintah utilities exist
-[s0, r0]=unix('puda > /dev/null 2>&1');
-[s1, r1]=unix('lineextract > /dev/null 2>&1');
+%__________________________________
+% extract time and grid info on this level
+tg_info = getTimeGridInfo( uda, ts, L );
 
-if( s0 ~=0 || s1 ~= 0 )
-  disp('Cannot execute uintah utilites puda, lineextract');
-  disp(' a) make sure you are in the right directory, and');
-  disp(' b) the utilities (puda/lineextract) have been compiled');
-  quit(-1);
-end
+ts           = tg_info.ts;
+resolution   = tg_info.resolution;
+domainLength = tg_info.domainLength;
+time         = tg_info.physicalTime;
 
-%________________________________
-% extract the physical time
-c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" > tmp 2>&1',uda);
-[status0, result0]=unix(c0);
-physicalTime = load('tmp');
-
-if(ts == 999) % default
-  ts = length(physicalTime);
-end
-%________________________________
-% extract the grid information from the uda file
-% at the right level
-c0 = sprintf('puda -gridstats %s > tmp 2>&1',uda); unix(c0);
-c1 = sprintf('sed -n /"Level: index %i"/,/"Total Number of Cells"/{p} tmp > tmp.clean 2>&1',level);
-unix(c1);
-
-[s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp.clean |cut -d":" -f2 | tr -d "[]int"');
-[s,r2] = unix('grep -m1 -w "Domain Length" tmp |cut -d":" -f2 | tr -d "[]"');
-
-resolution = str2num(r1);
-domainLength = str2num(r2);
 
 %__________________________________
 % Extract the data from the uda

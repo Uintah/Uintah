@@ -119,7 +119,7 @@ c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o vel.dat -m 
 %__________________________________
 % import the data into arrays
 vel  = load('vel.dat'); 
-y_CC = vel(:,yDir);s
+y_CC = vel(:,yDir);
 
 uvel = vel(:,3 + xDir);
 
