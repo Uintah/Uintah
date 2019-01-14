@@ -353,9 +353,9 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
   proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
-  m_num_threads = Uintah::Parallel::getNumThreads() - 1;
+  int num_threads = Uintah::Parallel::getNumThreads() - 1;
 
-  if ( (m_num_threads < 1) &&  Uintah::Parallel::usingDevice() ) {
+  if ( (num_threads < 1) &&  Uintah::Parallel::usingDevice() ) {
     if (d_myworld->myRank() == 0) {
       std::cerr << "Error: no thread number specified for Unified Scheduler"
           << std::endl;
@@ -363,7 +363,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
           "This scheduler requires number of threads to be in the range [2, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
           __FILE__, __LINE__);
     }
-  } else if (m_num_threads > MAX_THREADS) {
+  } else if (num_threads > MAX_THREADS) {
     if (d_myworld->myRank() == 0) {
       std::cerr << "Error: Number of threads too large..." << std::endl;
       throw ProblemSetupException(
@@ -373,12 +373,12 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   }
 
   if (d_myworld->myRank() == 0) {
-    std::string plural = (m_num_threads == 1) ? " thread" : " threads";
+    std::string plural = (num_threads == 1) ? " thread" : " threads";
     std::cout
         << "\nWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
-        << "Creating " << m_num_threads << " additional "
+        << "Creating " << num_threads << " additional "
         << plural + " for task execution (total task execution threads = "
-        << m_num_threads + 1 << ").\n" << std::endl;
+        << num_threads + 1 << ").\n" << std::endl;
 
 #ifdef HAVE_CUDA
     if ( !gpu_ids && Uintah::Parallel::usingDevice() ) {
@@ -451,7 +451,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 #endif
 
   // this spawns threads, sets affinity, etc
-  init_threads(this, m_num_threads);
+  init_threads(this, num_threads);
 }
 
 //______________________________________________________________________
@@ -775,7 +775,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   if( d_runtimeStats ) {
 
     // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
-    for (int i = 1; i < m_num_threads; ++i) {
+    for (int i = 1; i < Impl::g_num_threads; ++i) {
       (*d_runtimeStats)[TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
     }
 

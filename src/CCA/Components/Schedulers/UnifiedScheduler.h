@@ -87,7 +87,7 @@ class UnifiedScheduler : public MPIScheduler  {
   public:
 
     UnifiedScheduler( const ProcessorGroup * myworld,
-		      UnifiedScheduler * parentScheduler = nullptr );
+                      UnifiedScheduler * parentScheduler = nullptr );
 
     virtual ~UnifiedScheduler();
     
@@ -142,7 +142,6 @@ class UnifiedScheduler : public MPIScheduler  {
     int      m_num_phases{0};
     bool     m_abort{false};
     int      m_abort_point{0};
-    int      m_num_threads{-1};
 
 #ifdef HAVE_CUDA
 
