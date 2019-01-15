@@ -5741,10 +5741,10 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
 
   int doit=timestep%interval;
 
-  const Level* level = getLevel(patches);
-  IntVector low, hi;
-  IntVector periodic=level->getPeriodicBoundaries();
-  level->findNodeIndexRange(low, hi);
+//  const Level* level = getLevel(patches);
+//  IntVector low, hi;
+//  IntVector periodic=level->getPeriodicBoundaries();
+//  level->findNodeIndexRange(low, hi);
 
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -5798,6 +5798,7 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
              iter != psetOP->end();
              iter++){
           particleIndex idx = *iter;
+#if 0
           // Determine if particle is in a domain boundary cell
           bool onBoundary = false;
           IntVector cI = patch->findCell(px[idx],cI);
@@ -5828,6 +5829,8 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
           }
 
           if(pSurfOld[idx]>0.99 || onBoundary){
+#endif
+          if(pSurfOld[idx]>0.99){
            pSurf[idx]=pSurfOld[idx];
           } else {
           vector<particleIndex> close(nclose);
