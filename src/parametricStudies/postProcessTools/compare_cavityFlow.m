@@ -35,7 +35,7 @@ endif
 
 %__________________________________
 % add function directory to search path
-myPath   = which( mfilename );
+myPath   = mfilename ("fullpathext");
 srcPath  = readlink( myPath );
 funcPath = strcat( fileparts (srcPath), "/functions" );
 addpath( funcPath )

@@ -30,11 +30,15 @@ if (nargin == 0)
 endif
 
 %__________________________________
-% add function directory to search path
-myPath   = which( mfilename );
-srcPath  = readlink( myPath );
-funcPath = strcat( fileparts (srcPath), "/functions" );
-addpath( funcPath )
+% update paths
+myPath   = readlink( mfilename ("fullpathext") );
+uintah   = textread( 'scriptPath', '%s','endofline', '\n' );
+path     = sprintf( '%s:%s/functions', uintah{:}, fileparts(myPath) );
+addpath( path )
+
+% path used by octave:unix command
+unixPath = sprintf( '%s:%s', EXEC_PATH(),  uintah{:} );
+EXEC_PATH ( unixPath )
 
 %__________________________________
 % default user inputs

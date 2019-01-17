@@ -227,7 +227,7 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      chdir($fw_path);
      system("cp -f $upsFile $tstFile $otherFiles $testing_path");
 
-     system("echo $here_path $postProcessCmd_path> $testing_path/scriptPath 2>&1");
+     system("echo '$here_path:$postProcessCmd_path'> $testing_path/scriptPath 2>&1");
 
      chdir($testing_path);
 

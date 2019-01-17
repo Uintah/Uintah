@@ -1,19 +1,47 @@
 <config>
-<postProcessCmd_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone/tools/compare_mms:/home/harman/working_on/parametricStudies/comparisonUtils</postProcessCmd_path>
+<postProcessCmd_path></postProcessCmd_path>
 
 <symbolicLinks>
-/usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs
 </symbolicLinks>
+
+<test>
+  <name>Couette-Poiseuille_XY</name>
+  <tst>Couette-Poiseuille/Couette-Poiseuille_XY.tst</tst>
+</test>
+
 
 <!--
 <test>
-  <name>Couette-Poiseuille</name>
-  <tst>Couette-Poiseuille_dx.tst</tst>
+  <name>Couette-Poiseuille_delT_diffusion_knob</name>
+  <tst>Couette-Poiseuille/Couette-Poiseuille_dt.tst</tst>
+</test>
+
+<test>
+  <name>Couette-Poiseuille_time</name>
+  <tst>Couette-Poiseuille/Couette-Poiseuille_time.tst</tst>
 </test>
 -->
 
 <!--__________________________________-->
+<!--
+<test>
+  <name>Rayleigh_dx</name>
+  <tst>rayleigh_dx.tst</tst>
+</test>
 
+<test>
+  <name>Rayleigh_dz_SultanModified</name>
+  <tst>rayleigh_dz.tst</tst>
+</test>
+
+<test>
+  <name>Rayleigh_dy</name>
+  <tst>rayleigh_dy.tst</tst>
+</test>
+-->
+
+<!--__________________________________-->
+<!--
 <test>
   <name>advect_X_FO</name>
   <tst>advectScalar1D_dx.tst</tst>
@@ -28,7 +56,7 @@
   <name>advect_Z_FO</name>
   <tst>advectScalar1D_dz.tst</tst>
 </test>
-
+-->
 <!--__________________________________-->
 <!--
 <test>

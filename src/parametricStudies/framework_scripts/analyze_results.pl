@@ -103,7 +103,7 @@ system("@args")==0 or die("ERROR(analyze_Analysis.pl):\tFailed running: (@args))
 my $L2norm = `cat $comp_output`;
 chomp($L2norm);
 `echo $X $L2norm >> L2norm.dat`;
-#system("rm $comp_output");
+`rm -f $comp_output`;
   
 
 #______________________________________________________________________
@@ -118,8 +118,6 @@ if ( length $gpData ) {
   my $xlabel= $doc->findvalue( '/start/gnuplot/xlabel' );
   my $ylabel= $doc->findvalue( '/start/gnuplot/ylabel' );
   my $label = $doc->findvalue( '/start/gnuplot/label' );
-  
-  print " label ($label) \n";
 
   system("sed", "-i", "s/#title/set title   \"$title\"/g",  "$gpFile");
   system("sed", "-i", "s/#xlabel/set xlabel \"$xlabel\"/g", "$gpFile");

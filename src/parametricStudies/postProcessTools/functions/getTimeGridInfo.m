@@ -23,24 +23,24 @@ function [TG] = getTimeGridInfo (uda, ts, level)
 
   %________________________________
   %  extract the physical time
-  c = sprintf('puda -timesteps %s | grep ''^[0-9]'' | awk ''{print $2}'' > tmp 2>&1 ',uda);
+  c = sprintf('puda -timesteps %s | grep ''^[0-9]'' | awk ''{print $2}'' > tmp 2>&1',uda);
   [s, r]=unix(c);
   physicalTime  = load('tmp');
-
+  
   if(ts == 999)  % default
     ts = length(physicalTime);
   endif
-  
+
   TG.ts = int8(ts);
   TG.physicalTime = physicalTime(ts);
 
   %________________________________
   %  extract the grid information on a level
   c = sprintf('puda -gridstats %s > tmp 2>&1',uda); 
-  unix(c);
+  [s,r] = unix(c);
   
   c1 = sprintf('sed -n /"Level: index %i"/,/"dx"/{p} tmp > tmp.clean 2>&1',level);
-  unix(c1);
+  [s,r] = unix(c1);
   
   [s,r0] = unix('grep -m1 dx: tmp.clean                  | tr -d "dx:[]"');
   [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp.clean |cut -d":" -f2 | tr -d "[]int"');
@@ -51,6 +51,5 @@ function [TG] = getTimeGridInfo (uda, ts, level)
   TG.domainLength = str2num(r2);
   
   %cleanup
-  unix('/bin/rm tmp tmp.clean');
-
+  [s,r] = unix('/bin/rm tmp tmp.clean');
 endfunction

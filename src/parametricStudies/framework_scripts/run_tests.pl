@@ -127,7 +127,7 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
   my $test_title  = cleanStr( $test_dom->findvalue('Title') );
   my $test_ups    = $ups_basename."_$test_title".".ups";
   my $test_output = "out.".$test_title;    
-  my $udaFilename = $ups_basename."_$test_title".".uda";
+  my $uda         = $ups_basename."_$test_title".".uda";
 
   #__________________________________
   # change the uda filename in each ups file
@@ -135,7 +135,7 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
   print "Now modifying $test_ups\n";
 
   system(" cp $upsFile $test_ups");
-  my $fn = "<filebase>".$udaFilename."</filebase>";
+  my $fn = "<filebase>".$uda."</filebase>";
   system("replace_XML_line", "$fn", "$test_ups")==0 ||  die("Error replace_XML_line $fn in file $test_ups \n $@");
   print "\treplace_XML_line $fn\n";
 
@@ -177,7 +177,7 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
 
   print $statsFile "Test Name :     "."$test_title"."\n";
   print $statsFile "(ups) :         "."$test_ups"."\n";
-  print $statsFile "(uda) :         "."$udaFilename"."\n";
+  print $statsFile "(uda) :         "."$uda"."\n";
   print $statsFile "output:         "."$test_output"."\n";
   print $statsFile "Command Used :  "."$sus_cmd_0 $test_ups"."\n";
 
@@ -201,8 +201,8 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
 
   if( $rc == 0 && length $postProc_cmd != 0){
   
-    my @cmd = ("analyze_results.pl","$tstFile", "$nTest", "$udaFilename");
-    print $statsFile "postProcessCmd:  "."$postProc_cmd"."\n";
+    my @cmd = ("analyze_results.pl","$tstFile", "$nTest", "$uda");
+    print $statsFile "postProcessCmd:  "."$postProc_cmd"." -uda ".$uda."\n";
 
     if ( $exitOnCrash eq "TRUE" ) {
       system("@cmd")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@cmd)\n");
