@@ -670,10 +670,10 @@ public:
   };
 
   //______________________________________________________________________
-  void reportSummmaryStats( const char* statsName,
-                            const int timeStep,
-                            const double simTime,
-                            bool calcImbalance )
+  void reportSummaryStats( const char* statsName,
+                           const int timeStep,
+                           const double simTime,
+                           bool calcImbalance )
   {
     unsigned int nStats = InfoMapper<E, T>::m_keys.size();
 
@@ -687,17 +687,17 @@ public:
              << "  " << std::left
              << std::setw(24) << "Description"
              << std::setw(18) << "Units";
-      if (InfoMapper<E, T>::calculateMinimum()) {
+      if (calculate_minimum) {
         header << std::setw(18) << "Minimum"
                << std::setw(12) << "Rank";
       }
-      if (InfoMapper<E, T>::calculateAverage()) {
+      if (calculate_average) {
         header << std::setw(18) << "Average";
       }
-      if (InfoMapper<E, T>::calculateStdDev()) {
+      if (calculate_std_dev) {
         header << std::setw(18) << "Std. Dev.";
       }
-      if (InfoMapper<E, T>::calculateMaximum()) {
+      if (calculate_maximum) {
         header << std::setw(18) << "Maximum"
                << std::setw(12) << "Rank";
       }
@@ -710,39 +710,40 @@ public:
       std::ostringstream message;
 
       for (unsigned int i=0; i<InfoMapper<E, T>::size(); ++i) {
-        if( InfoMapper<E, T>::getRankMaximum(i) != 0.0 )
+        if( getRankMaximum(i) != 0.0 )
         {
           if (message.str().size()) {
             message << std::endl;
           }
           
-          message << "  " << std::left << std::setw(24) << InfoMapper<E, T>::getName(i) << "[" << std::setw(15)
+          message << "  " << std::left << std::setw(24)
+		  << InfoMapper<E, T>::getName(i) << "[" << std::setw(15)
                   << InfoMapper<E, T>::getUnits(i) << "]";
           
-          if (InfoMapper<E, T>::calculateMinimum()) {
-            message << " : " << std::setw(15) << InfoMapper<E, T>::getRankMinimum(i) << " : " << std::setw(9)
-                    << InfoMapper<E, T>::getRankForMinimum(i);
+          if (calculate_minimum) {
+            message << " : " << std::setw(15) << getRankMinimum(i)
+		    << " : " << std::setw(9)  << getRankForMinimum(i);
           }
           
-          if (InfoMapper<E, T>::calculateAverage()) {
-            message << " : " << std::setw(15) << InfoMapper<E, T>::getRankAverage(i);
+          if (calculate_average) {
+            message << " : " << std::setw(15) << getRankAverage(i);
           }
           
-          if (InfoMapper<E, T>::calculateStdDev()) {
-            message << " : " << std::setw(15) << InfoMapper<E, T>::getRankStdDev(i);
+          if (calculate_std_dev) {
+            message << " : " << std::setw(15) << getRankStdDev(i);
           }
           
-          if (InfoMapper<E, T>::calculateMaximum()) {
-            message << " : " << std::setw(15) << InfoMapper<E, T>::getRankMaximum(i) << " : " << std::setw(9)
-                    << InfoMapper<E, T>::getRankForMaximum(i);
+          if (calculate_maximum) {
+            message << " : " << std::setw(15) << getRankMaximum(i)
+		    << " : " << std::setw(9)  << getRankForMaximum(i);
           }
           
           if( calcImbalance ) {
-            if( InfoMapper<E, T>::getRankMaximum(i) == 0.0 )
+            if( getRankMaximum(i) == 0.0 )
               message << "0";
             else
-              message << 100.0 * (1.0 - (InfoMapper<E, T>::getRankAverage(i) /
-                                         InfoMapper<E, T>::getRankMaximum(i)));
+              message << 100.0 * (1.0 - (getRankAverage(i) /
+                                         getRankMaximum(i)));
           }         
         }
       }
@@ -1150,12 +1151,13 @@ public:
             message << std::endl;
           }
           
-          message << "  " << std::left << std::setw(24) << m_vecInfoMapper[0].getName(i) << "[" << std::setw(15)
+          message << "  " << std::left << std::setw(24)
+		  << m_vecInfoMapper[0].getName(i) << "[" << std::setw(15)
                   << m_vecInfoMapper[0].getUnits(i) << "]";
           
           if (calculateMinimum()) {
-            message << " : " << std::setw(15) << getMinimum(i) << " : " << std::setw(9)
-                    << getIndexForMinimum(i);
+            message << " : " << std::setw(15) << getMinimum(i)
+		    << " : " << std::setw(9)  << getIndexForMinimum(i);
           }
           
           if (calculateAverage()) {
@@ -1167,8 +1169,8 @@ public:
           }
           
           if (calculateMaximum()) {
-            message << " : " << std::setw(15) << getMaximum(i) << " : " << std::setw(9)
-                    << getIndexForMaximum(i);
+            message << " : " << std::setw(15) << getMaximum(i)
+		    << " : " << std::setw(9)  << getIndexForMaximum(i);
           }
           
           if( calcImbalance ) {
