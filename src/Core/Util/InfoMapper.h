@@ -28,9 +28,11 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <sci_defs/visit_defs.h>
 
+#include <cfloat>
 #include <cmath>
 #include <iostream>
 #include <map>
@@ -50,6 +52,8 @@ struct double_int
 
 template<class E, class T>class InfoMapper
 {
+  template<class e, class t>
+    friend class VectorInfoMapper;
 
 public:
 
@@ -665,6 +669,128 @@ public:
     }
   };
 
+  //______________________________________________________________________
+  void reportSummmaryStats( const char* statsName,
+                            const int timeStep,
+                            const double simTime,
+                            bool calcImbalance )
+  {
+    unsigned int nStats = InfoMapper<E, T>::m_keys.size();
+
+    if( nStats )
+    {
+      std::ostringstream header;
+      header << statsName << " performance summary stats for "
+             << "time step " << timeStep
+             << " at time="  << simTime
+             << std::endl
+             << "  " << std::left
+             << std::setw(24) << "Description"
+             << std::setw(18) << "Units";
+      if (InfoMapper<E, T>::calculateMinimum()) {
+        header << std::setw(18) << "Minimum"
+               << std::setw(12) << "Rank";
+      }
+      if (InfoMapper<E, T>::calculateAverage()) {
+        header << std::setw(18) << "Average";
+      }
+      if (InfoMapper<E, T>::calculateStdDev()) {
+        header << std::setw(18) << "Std. Dev.";
+      }
+      if (InfoMapper<E, T>::calculateMaximum()) {
+        header << std::setw(18) << "Maximum"
+               << std::setw(12) << "Rank";
+      }
+      if( calcImbalance ) {
+        header << std::setw(12) << "100*(1-ave/max) '% load imbalance'";
+      }
+    
+      header << std::endl;
+    
+      std::ostringstream message;
+
+      for (unsigned int i=0; i<InfoMapper<E, T>::size(); ++i) {
+        if( InfoMapper<E, T>::getRankMaximum(i) != 0.0 )
+        {
+          if (message.str().size()) {
+            message << std::endl;
+          }
+          
+          message << "  " << std::left << std::setw(24) << InfoMapper<E, T>::getName(i) << "[" << std::setw(15)
+                  << InfoMapper<E, T>::getUnits(i) << "]";
+          
+          if (InfoMapper<E, T>::calculateMinimum()) {
+            message << " : " << std::setw(15) << InfoMapper<E, T>::getRankMinimum(i) << " : " << std::setw(9)
+                    << InfoMapper<E, T>::getRankForMinimum(i);
+          }
+          
+          if (InfoMapper<E, T>::calculateAverage()) {
+            message << " : " << std::setw(15) << InfoMapper<E, T>::getRankAverage(i);
+          }
+          
+          if (InfoMapper<E, T>::calculateStdDev()) {
+            message << " : " << std::setw(15) << InfoMapper<E, T>::getRankStdDev(i);
+          }
+          
+          if (InfoMapper<E, T>::calculateMaximum()) {
+            message << " : " << std::setw(15) << InfoMapper<E, T>::getRankMaximum(i) << " : " << std::setw(9)
+                    << InfoMapper<E, T>::getRankForMaximum(i);
+          }
+          
+          if( calcImbalance ) {
+            if( InfoMapper<E, T>::getRankMaximum(i) == 0.0 )
+              message << "0";
+            else
+              message << 100.0 * (1.0 - (InfoMapper<E, T>::getRankAverage(i) /
+                                         InfoMapper<E, T>::getRankMaximum(i)));
+          }         
+        }
+      }
+      
+      if( message.str().size() ) {
+        DOUT(true, header.str()+message.str());
+      }
+    }
+  }
+  
+  //______________________________________________________________________
+  void reportIndividualStats( const char* statsName,
+                              const int rank,
+                              const int timeStep,
+                              const double simTime )
+  {
+    std::ostringstream header;
+    header << "--" << std::left
+           << "Rank: " << std::setw(5) << rank << "  "
+           << statsName << " performance stats for "
+           << "time step " << timeStep
+           << " at time="  << simTime
+           << std::endl;
+    
+    std::ostringstream message;
+
+    unsigned int nStats = InfoMapper<E, T>::m_keys.size();
+    
+    for (unsigned int i=0; i<nStats; ++i) {
+      if (InfoMapper<E, T>::getRankValue(i) > 0) {
+        if (message.str().size()) {
+          message << std::endl;
+        }
+        message << "  " << std::left
+                << "Rank: " << std::setw(6) << rank
+                << std::left << std::setw(24) << InfoMapper<E, T>::getName(i)
+                << "["   << std::setw(15) << InfoMapper<E, T>::getUnits(i) << "]"
+                << " : " << std::setw(15) << InfoMapper<E, T>::getRankValue(i);
+        if( InfoMapper<E, T>::getCount(i) )
+          message << " ("  << std::setw( 4) << InfoMapper<E, T>::getCount(i) << ")";
+      }
+    }
+    
+    if (message.str().size()) {
+      DOUT(true, header.str() + message.str());
+    }
+  }
+  
 protected:
   bool calculate_average{true};
   bool calculate_minimum{false};
@@ -678,6 +804,440 @@ protected:
   std::vector< double_int > m_rank_minimum;      // Minimum over all ranks
   std::vector< double_int > m_rank_maximum;      // Maximum over all ranks
   std::vector< double >     m_rank_std_dev;      // Standard deviation over all ranks
+};
+
+template<class E, class T> class VectorInfoMapper
+{
+public:
+  VectorInfoMapper()
+  {
+    m_average.clear();
+    m_minimum.clear();
+    m_maximum.clear();
+    m_std_dev.clear();
+  };
+
+  virtual ~VectorInfoMapper() {};
+
+  virtual void calculateAverage( bool val ) { calculate_average = val; }
+  virtual void calculateMinimum( bool val ) { calculate_minimum = val; }
+  virtual void calculateMaximum( bool val ) { calculate_maximum = val; }
+  virtual void calculateStdDev ( bool val ) { calculate_std_dev = val; }
+  
+  virtual bool calculateAverage() { return calculate_average; }
+  virtual bool calculateMinimum() { return calculate_minimum; }
+  virtual bool calculateMaximum() { return calculate_maximum; }
+  virtual bool calculateStdDev () { return calculate_std_dev; }
+  
+        InfoMapper<E, T>& operator[](unsigned int index)       { return m_vecInfoMapper[index]; };
+  const InfoMapper<E, T>& operator[](unsigned int index) const { return m_vecInfoMapper[index]; };
+
+  virtual void clear()
+  {
+    m_vecInfoMapper.clear();
+
+    m_average.clear();
+    m_minimum.clear();
+    m_maximum.clear();
+    m_std_dev.clear();
+  };
+
+  virtual size_t size()
+  {
+    return m_vecInfoMapper.size();
+  }
+
+  virtual void resize( size_t n )
+  {
+    m_vecInfoMapper.resize(n);
+
+    m_average.clear();
+    m_minimum.clear();
+    m_maximum.clear();
+    m_std_dev.clear();
+  };
+
+  virtual void reset( const T val )
+  {
+    for( unsigned int i=0; i<m_vecInfoMapper.size(); ++i )
+      m_vecInfoMapper[i].reset( val );
+  };
+
+  virtual void insert( const E key, const std::string name,
+                       const std::string units )
+  {
+    for( unsigned int i=0; i<m_vecInfoMapper.size(); ++i )
+      m_vecInfoMapper[i].insert( key, name, units );
+     
+    m_average.push_back(0);
+    m_minimum.push_back(double_int(0,-1));
+    m_maximum.push_back(double_int(0,-1));
+    m_std_dev.push_back(0);
+  }
+
+  // Get average over all entries
+  virtual double getAverage( const E key )
+  {
+    m_vecInfoMapper[0].validKey( key );
+
+    return m_average[ m_vecInfoMapper[0].m_keys[key] ];
+  };
+
+  virtual double getAverage( const unsigned int index )
+  {
+    const E key = m_vecInfoMapper[0].getKey(index);
+
+    return getAverage( key );
+  };
+
+  virtual double getAverage( const std::string name )
+  {
+    const E key = m_vecInfoMapper[0].getKey(name);
+
+    return getAverage( key );
+  };
+
+  // Get minium over all entries
+  virtual double getMinimum( const E key )
+  {
+    m_vecInfoMapper[0].validKey( key );
+
+    return m_minimum[ m_vecInfoMapper[0].m_keys[key] ].val;
+  };
+
+  virtual double getMinimum( const unsigned int index )
+  {
+    const E key = m_vecInfoMapper[0].getKey(index);
+
+    return getMinimum( key );
+  };
+
+  virtual double getMinimum( const std::string name )
+  {
+    const E key = m_vecInfoMapper[0].getKey(name);
+
+    return getMinimum( key );
+  };
+
+  // Get index for the minimum entry
+  virtual unsigned int getIndexForMinimum( const E key )
+  {
+    m_vecInfoMapper[0].validKey( key );
+
+    return m_minimum[ m_vecInfoMapper[0].m_keys[key] ].rank;
+  };
+
+  virtual unsigned int getIndexForMinimum( const unsigned int index )
+  {
+    const E key = m_vecInfoMapper[0].getKey(index);
+
+    return getIndexForMinimum( key );
+  };
+
+  virtual unsigned int getIndexForMinimum( const std::string name )
+  {
+    const E key = m_vecInfoMapper[0].getKey(name);
+
+    return getIndexForMinimum( key );
+  };
+
+  // Get maximum over all entries
+  virtual double getMaximum( const E key )
+  {
+    m_vecInfoMapper[0].validKey( key );
+
+    return m_maximum[ m_vecInfoMapper[0].m_keys[key] ].val;
+  };
+
+  virtual double getMaximum( const unsigned int index )
+  {
+    const E key = m_vecInfoMapper[0].getKey(index);
+
+    return getMaximum( key );
+  };
+
+  virtual double getMaximum( const std::string name )
+  {
+    const E key = m_vecInfoMapper[0].getKey(name);
+
+    return getMaximum( key );
+  };
+
+  // Get index for the maximum entry
+  virtual unsigned int getIndexForMaximum( const E key )
+  {
+    m_vecInfoMapper[0].validKey( key );
+
+    return m_maximum[ m_vecInfoMapper[0].m_keys[key] ].rank;
+  };
+
+  virtual unsigned int getIndexForMaximum( const unsigned int index )
+  {
+    const E key = m_vecInfoMapper[0].getKey(index);
+
+    return getIndexForMaximum( key );
+  };
+
+  virtual unsigned int getIndexForMaximum( const std::string name )
+  {
+    const E key = m_vecInfoMapper[0].getKey(name);
+
+    return getIndexForMaximum( key );
+  };
+
+  // Get std dev over all entries
+  virtual double getStdDev( const E key )
+  {
+    m_vecInfoMapper[0].validKey( key );
+
+    return m_std_dev[ m_vecInfoMapper[0].m_keys[key] ];
+  };
+
+  virtual double getStdDev( const unsigned int index )
+  {
+    const E key = m_vecInfoMapper[0].getKey(index);
+
+    return getStdDev( key );
+  };
+
+  virtual double getStdDev( const std::string name )
+  {
+    const E key = m_vecInfoMapper[0].getKey(name);
+
+    return getStdDev( key );
+  };
+
+  // Reduce
+  virtual void reduce( bool skipFirst )
+  {
+    unsigned int nStats = m_vecInfoMapper[0].m_keys.size();
+
+    if (nStats == 0) {
+      return;
+    }
+
+    m_average.resize(nStats);
+    m_minimum.resize(nStats);
+    m_maximum.resize(nStats);
+    m_std_dev.resize(nStats);
+
+    if (m_vecInfoMapper.size() > 1) {
+
+      // Calculate each stat.
+      for (size_t i = 0; i < nStats; ++i) {
+
+        m_minimum[i] = double_int( DBL_MAX, -1);
+        m_maximum[i] = double_int(-DBL_MAX, -1);
+
+        // Calculate across all entries.
+        for (size_t j = int(skipFirst); j < m_vecInfoMapper.size(); ++j) {
+        
+          double val;
+          if( m_vecInfoMapper[j].m_counts[i] )
+            val = m_vecInfoMapper[j].m_values[i] / m_vecInfoMapper[j].m_counts[i];
+          else
+            val = m_vecInfoMapper[j].m_values[i];
+
+          // Sum across all entires.
+          if( calculate_average || calculate_std_dev )
+            m_average[i] += val;
+
+          // Min across all entries.
+          if( calculate_minimum ) {
+            if( val < m_minimum[i].val )
+               m_minimum[i] = double_int(val, j);
+          }
+
+          // Max across all entries.
+          if( calculate_maximum ) {
+            if( m_maximum[i].val < val )
+               m_maximum[i] = double_int(val, j);
+          }
+        }
+
+        // Sums across all entries.
+        if( calculate_average || calculate_std_dev )
+        {
+          // Calculate the average.
+          m_average[i] /= (m_vecInfoMapper.size() - int(skipFirst));
+          
+          if( calculate_std_dev )
+          {
+            //  Calculate the sum of squared differences
+            double sum = 0;
+            for (size_t j = int(skipFirst); j < m_vecInfoMapper.size(); ++j) {
+        
+              double val;
+              if( m_vecInfoMapper[j].m_counts[i] )
+                val = m_vecInfoMapper[j].m_values[i] / m_vecInfoMapper[j].m_counts[i];
+              else
+                val = m_vecInfoMapper[j].m_values[i];
+              
+              sum = (val - m_average[i]) * (val - m_average[i]);
+            }
+
+            m_std_dev[i] = std::sqrt(sum / (m_vecInfoMapper.size() - int(skipFirst) - 1) );  
+          }
+        }
+      }
+    }
+
+    // Single entry so just copy the values.
+    else {
+      for (size_t i = 0; i < nStats; ++i) {
+        double val;
+
+        if(m_vecInfoMapper[0].m_counts[i] )
+          val = m_vecInfoMapper[0].m_values[i] / m_vecInfoMapper[0].m_counts[i];
+        else
+          val = m_vecInfoMapper[0].m_values[i];
+
+        m_average[i] = val;
+        m_minimum[i] = double_int(val, 0);
+        m_maximum[i] = double_int(val, 0);
+        m_std_dev[i] = 0;
+      }
+    }
+  };
+
+  //______________________________________________________________________
+  //
+  void reportSummaryStats( const char* statsName,
+                           const int rank,
+                           const int timeStep,
+                           const double simTime,
+                           bool calcImbalance )
+  {
+    unsigned int nStats = m_vecInfoMapper[0].size();
+
+    if( nStats )
+    {
+      std::ostringstream header;
+      header << "Rank: " << std::setw(6) << rank << "  "
+             << statsName << " performance summary stats for "
+             << "time step " << timeStep
+             << " at time="  << simTime
+             << std::endl
+             << "  " << std::left
+             << std::setw(24) << "Description"
+             << std::setw(18) << "Units";
+      if (calculateMinimum()) {
+        header << std::setw(18) << "Minimum"
+               << std::setw(12) << "Thread";
+      }
+      if (calculateAverage()) {
+        header << std::setw(18) << "Average";
+      }
+      if (calculateStdDev()) {
+        header << std::setw(18) << "Std. Dev.";
+      }
+      if (calculateMaximum()) {
+        header << std::setw(18) << "Maximum"
+               << std::setw(12) << "Thread";
+      }
+      if( calcImbalance ) {
+        header << std::setw(12) << "100*(1-ave/max) '% load imbalance'";
+      }
+      
+      header << std::endl;
+      
+      std::ostringstream message;
+      
+      for (unsigned int i=0; i<nStats; ++i) {
+        if( getMaximum(i) != 0.0 )
+        {
+          if (message.str().size()) {
+            message << std::endl;
+          }
+          
+          message << "  " << std::left << std::setw(24) << m_vecInfoMapper[0].getName(i) << "[" << std::setw(15)
+                  << m_vecInfoMapper[0].getUnits(i) << "]";
+          
+          if (calculateMinimum()) {
+            message << " : " << std::setw(15) << getMinimum(i) << " : " << std::setw(9)
+                    << getIndexForMinimum(i);
+          }
+          
+          if (calculateAverage()) {
+            message << " : " << std::setw(15) << getAverage(i);
+          }
+          
+          if (calculateStdDev()) {
+            message << " : " << std::setw(15) << getStdDev(i);
+          }
+          
+          if (calculateMaximum()) {
+            message << " : " << std::setw(15) << getMaximum(i) << " : " << std::setw(9)
+                    << getIndexForMaximum(i);
+          }
+          
+          if( calcImbalance ) {
+            if( getMaximum(i) == 0.0 )
+              message << "0";
+            else
+              message << 100.0 * (1.0 - (getAverage(i) / getMaximum(i)));
+          }           
+        }
+      }
+      
+      if( message.str().size() ) {
+        DOUT(true, header.str()+message.str());
+      }
+    }
+  }
+
+  //______________________________________________________________________
+  //
+  void reportIndividualStats( const char* statsName,
+                              const int rank,
+                              const int timeStep,
+                              const double simTime )
+  {
+    std::ostringstream header;
+    header << "--" << std::left
+           << "Rank: " << std::setw(4) << rank << "  "
+           << statsName << " performance stats for "
+           << "time step " << timeStep
+           << " at time="  << simTime
+           << std::endl;
+  
+    std::ostringstream message;
+  
+    for (unsigned int j=0; j<m_vecInfoMapper.size(); ++j) {
+      for (unsigned int i=0; i<m_vecInfoMapper[j].size(); ++i) {
+        if (m_vecInfoMapper[j][i] > 0) {
+          if (message.str().size()) {
+            message << std::endl;
+          }
+          message << "  " << std::left
+                  << "Rank: " << std::setw(6) << rank
+                  << "Thread: " << std::setw(6) << j
+                  << std::left << std::setw(24) << m_vecInfoMapper[j].getName(i)
+                  << "["   << std::setw(15) << m_vecInfoMapper[j].getUnits(i) << "]"
+                  << " : " << std::setw(15) << m_vecInfoMapper[j].getRankValue(i);
+          if( m_vecInfoMapper[j].getCount(i) )
+            message << " ("  << std::setw( 4) << m_vecInfoMapper[j].getCount(i) << ")";
+        }
+      }
+    }
+  
+    if (message.str().size()) {
+      DOUT(true, header.str() + message.str());
+    }
+  }
+
+protected:
+  std::vector< InfoMapper<E, T> > m_vecInfoMapper;
+
+  bool calculate_average{true};
+  bool calculate_minimum{false};
+  bool calculate_maximum{true};
+  bool calculate_std_dev{false};
+  
+  std::vector< double >     m_average;      // Average over all entries
+  std::vector< double_int > m_minimum;      // Minimum over all entries
+  std::vector< double_int > m_maximum;      // Maximum over all 
+  std::vector< double >     m_std_dev;      // Standard deviation over all entries
 };
 
 } // End namespace Uintah
