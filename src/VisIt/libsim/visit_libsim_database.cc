@@ -30,6 +30,7 @@
 #include "visit_libsim_customUI.h"
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
+#include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/SchedulerP.h>
@@ -124,6 +125,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
+    (sim->simController->getSchedulerP().get_rep());
+      
+  UnifiedScheduler *unifiedScheduler = dynamic_cast<UnifiedScheduler*>
     (sim->simController->getSchedulerP().get_rep());
       
   ApplicationInterface* appInterface =
@@ -517,11 +521,14 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     // placed on the machine mesh.
     if( addMachineData )
     {
+      // Number of additioanl threads.
+      unsigned int addThreads = (Uintah::Parallel::getNumThreads() - 1 > 1);
+        
       // If there is a machine layout then there is a global, local,
       // and patch machine mesh. The global is all of the nodes and
       // cores. The local is the nodes and cores actually used. The
       // patch is patches on the each core.
-      for( unsigned int i=0; i<3; ++i )
+      for( unsigned int i=0; i<3+addThreads; ++i )
       {
         visit_handle mmd = VISIT_INVALID_HANDLE;
         
@@ -537,6 +544,8 @@ visit_handle visit_SimGetMetaData(void *cbdata)
             VisIt_MeshMetaData_setName(mmd, (meshName + "/Local").c_str());
           else if( i == 2 ) // Local patch mesh
             VisIt_MeshMetaData_setName(mmd, (meshName + "/Patch").c_str());
+          else if( i == 3 ) // Local thread mesh
+            VisIt_MeshMetaData_setName(mmd, (meshName + "/Thread").c_str());
 
           VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_UNSTRUCTURED);
           VisIt_MeshMetaData_setTopologicalDimension(mmd, 2);
@@ -609,17 +618,53 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
         {
           std::string var = std::string("Processor/Machine/") + vars[i];
-          
+
           VisIt_VariableMetaData_setName(vmd, var.c_str());
           VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
           VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
           VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
           VisIt_VariableMetaData_setNumComponents(vmd, 1);
+
           if( vars[i] ==  "NodeID" )
             VisIt_VariableMetaData_setUnits(vmd, sim->hostName.c_str());
           else
             VisIt_VariableMetaData_setUnits(vmd, "");
-              
+
+          // ARS - FIXME
+          // VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
+        }
+      }
+    }
+
+    // Additional threads.
+    if( unifiedScheduler && Uintah::Parallel::getNumThreads() - 1 > 1 )
+    {
+      std::string meshName = "Machine_" + sim->hostName + "/Thread";
+      
+      // Add in the unified thread runtime stats.
+      addVectorStats( md, unifiedScheduler->thread_info_,
+                      "Processor/Machine/Thread/", meshName );
+
+      const int nVars = 1;
+      std::string vars[nVars] = { "ThreadID" };
+
+      for( unsigned int i=0; i<nVars; ++i )
+      {
+        visit_handle vmd = VISIT_INVALID_HANDLE;
+        
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        {
+          std::string var = std::string("Processor/Machine/Thread/") + vars[i];
+            
+          VisIt_VariableMetaData_setName(vmd, var.c_str());
+          VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setUnits(vmd, "");
+            
           // ARS - FIXME
           // VisIt_VariableMetaData_setHasDataExtents(vmd, false);
           VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
@@ -1018,6 +1063,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     bool global = (std::string(meshname).find("/Global") != std::string::npos);
     bool local  = (std::string(meshname).find("/Local" ) != std::string::npos);
     bool patch  = (std::string(meshname).find("/Patch" ) != std::string::npos);
+    bool thread = (std::string(meshname).find("/Thread") != std::string::npos);
 
     // Only rank 0 return the global mesh.
     if( global && sim->myworld->myRank() != 0 )
@@ -1214,6 +1260,76 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       connections = new int[ nPatches * nQuadVals ];
 
       for (unsigned int  p = 0; p < nPatches; ++p) {
+
+        // Get an x y index based on the xMax size.
+        unsigned int px = p % (xMax-1);
+        unsigned int py = p / (xMax-1);
+
+        // All cells are quads
+        connections[nConnections++] = VISIT_CELL_QUAD;
+        
+        // Set the index based on a rectilinear grid.
+        connections[nConnections++] = (py+0) * xMax + (px+0);
+        connections[nConnections++] = (py+1) * xMax + (px+0);
+        connections[nConnections++] = (py+1) * xMax + (px+1);
+        connections[nConnections++] = (py+0) * xMax + (px+1);
+      }
+    }
+
+    // For each node create a quad for it's thread.
+    else if( thread )
+    {
+      const unsigned int nThreads = Uintah::Parallel::getNumThreads();
+
+      // Total size of the layout. Try to make rectangles.
+      unsigned int xMax = sqrt(nThreads);
+      unsigned int yMax = xMax;
+
+      // Make sure to cover all the thread - may be blank areas.
+      while( xMax * yMax < nThreads )
+        ++yMax;
+
+      // Add one to get the far boundary.
+      xMax += 1;
+      yMax += 1;
+
+      // Set all of the points as rectilinear grid.
+      nPts = xMax * yMax;
+
+      // Indexes for the switch, node, and core
+      unsigned int s = sim->switchIndex;
+      unsigned int n = sim->nodeIndex;
+      unsigned int c = sim->myworld->myNode_myRank();
+
+      // Get the node x y location based on the x/y node size.
+      unsigned int bx = s * (sim->xNode+1);
+      unsigned int by = n * (sim->yNode+1);
+          
+      // Get the core x y location based on the xNode size.
+      unsigned int lx = bx + c % sim->xNode;
+      unsigned int ly = by + c / sim->xNode;
+            
+      xPts = new float[nPts];
+      yPts = new float[nPts];
+      // zPts = new float[nPts];
+
+      float dx = 1.0 / (float) (xMax-1);
+      float dy = 1.0 / (float) (yMax-1);
+
+      for( unsigned int j=0; j<yMax; ++j)
+      {
+        for( unsigned int i=0; i<xMax; ++i)
+        {
+          xPts[j*xMax+i] = lx + i * dx;
+          yPts[j*xMax+i] = ly + j * dy;
+          // zPts[j*xMax+i] = 1;
+        }
+      }
+
+      // Connections are for quads so the type plus four points.
+      connections = new int[ nThreads * nQuadVals ];
+
+      for (unsigned int  p = 0; p < nThreads; ++p) {
 
         // Get an x y index based on the xMax size.
         unsigned int px = p % (xMax-1);
@@ -1593,21 +1709,25 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     // At the present time all vars are local.
     // bool global = (varName.find("Global") != std::string::npos);
     // bool local  = (varName.find("Local" ) != std::string::npos);
+    // bool thread = (varName.find("Thread") != std::string::npos);
 
-    // bool global = false;
-    // bool local  = true;
+    bool global = false;
+
+    bool local = (varName.find("Processor/Machine/NodeID") == 0 ||
+                  varName.find("Processor/Machine/MPI/Node") == 0 ||
+                  varName.find("Processor/Machine/MPI/Rank") == 0 ||
+                  varName.find("Processor/Machine/MPI/Comm/Rank") == 0);
+
+    bool thread = (varName.find("Processor/Machine/Thread") == 0 );
 
     // Only rank 0 return the whole of the mesh.
     // if( global && sim->myworld->myRank() != 0 )
     //   return VISIT_INVALID_HANDLE;
 
-    unsigned int totalCores = 0;
-    unsigned int nValues = 0;
-    int* values = nullptr;
-
-    // if( global )
-    // {
-    //   totalCores = sim->switchNodeList.size() * sim->maxNodes * sim->maxCores;
+    if( global )
+    {
+    //   unsigned int totalCores =
+    //     sim->switchNodeList.size() * sim->maxNodes * sim->maxCores;
 
     //   nValues = 0;
     //   values = new int[ totalCores ];
@@ -1647,45 +1767,118 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     //       }
     //     }
     //   }
-    // }
+    }
 
-    // else if( local )
+    else if( local )
     {
-      totalCores = 1;
+      unsigned int totalCores = 1;
 
-      nValues = 0;
-      values = new int[ totalCores ];
+      unsigned int nValues = totalCores;
+      int *values = new int[ nValues ];
 
-      for( unsigned int i=0; i<totalCores; ++i)
-        values[i] = 0;
-    
       // Indexes of the switch, node, and core.
       // unsigned int s = sim->switchIndex;
       // unsigned int n = sim->nodeIndex;
       // unsigned int c = sim->myworld->myNode_myRank();
 
       if( varName.find("Processor/Machine/NodeID") == 0 )
-        values[nValues++] = atoi(sim->hostNode.c_str());
+        values[0] = atoi(sim->hostNode.c_str());
       else if( varName.find("Processor/Machine/MPI/Node") == 0 )
-        values[nValues++] = sim->myworld->myNode();
+        values[0] = sim->myworld->myNode();
       else if( varName.find("Processor/Machine/MPI/Rank") == 0 )
-        values[nValues++] = sim->myworld->myRank();
+        values[0] = sim->myworld->myRank();
       else if( varName.find("Processor/Machine/MPI/Comm/Rank") == 0 )
-        values[nValues++] = sim->myworld->myNode_myRank();
+        values[0] = sim->myworld->myNode_myRank();
+
+      visit_handle varH = VISIT_INVALID_HANDLE;
+      
+      if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
+      {
+        VisIt_VariableData_setDataI(varH, VISIT_OWNER_VISIT, 1, nValues, values);
+        
+        // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
+        // owns the data (VISIT_OWNER_SIM - indicates the simulation
+        // owns the data).
+      }
+
+      return varH;
     }
 
-    visit_handle varH = VISIT_INVALID_HANDLE;
-    
-    if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
+    else if( thread )
     {
-      VisIt_VariableData_setDataI(varH, VISIT_OWNER_VISIT, 1, nValues, values);
+      const unsigned int nThreads = Uintah::Parallel::getNumThreads();
 
-      // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
-      // owns the data (VISIT_OWNER_SIM - indicates the simulation
-      // owns the data).
+      unsigned int nValues = nThreads;
+      double *values = new double[ nValues ];
+
+      // Indexes of the switch, node, and core.
+      // unsigned int s = sim->switchIndex;
+      // unsigned int n = sim->nodeIndex;
+      // unsigned int c = sim->myworld->myNode_myRank();
+
+      if( varName.find("Processor/Machine/Thread/ThreadID") == 0 ) {
+        for( unsigned int i=0; i<nThreads; ++i)
+          values[i] = i;
+      }
+      else if( varName.find("Processor/Machine/Thread/") == 0 ) {
+
+        UnifiedScheduler *unifiedScheduler = dynamic_cast<UnifiedScheduler*>
+          (sim->simController->getSchedulerP().get_rep());
+
+        std::string statName = varName;
+        size_t found = statName.find_last_of("/");
+        statName = statName.substr(found + 1);
+
+        values[0] = 0;
+
+        if( unifiedScheduler->thread_info_[0].exists(statName) )
+        {
+          for( unsigned int i=1; i<nThreads; ++i) {
+            if( unifiedScheduler->thread_info_[i].exists(statName) )
+              values[i] = unifiedScheduler->thread_info_[i].getRankValue(statName);
+            else
+              values[i] = 0;
+          }
+        }
+        else
+        {
+          for( unsigned int i=1; i<nThreads; ++i)
+            values[i] = 0;
+
+          std::stringstream msg;
+          msg << "Visit libsim - "
+              << "Uintah Processor/Machine/Thread variable \"" << statName << "\"  "
+              << "does not exist.";
+
+          VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
+        }
+      }
+      else
+      {
+        for( unsigned int i=1; i<nThreads; ++i)
+          values[i] = 0;
+
+        std::stringstream msg;
+        msg << "Visit libsim - "
+            << "Uintah variable \"" << varName << "\"  "
+            << "does not exist.";
+        
+        VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
+      }
+
+      visit_handle varH = VISIT_INVALID_HANDLE;
+      
+      if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
+      {
+        VisIt_VariableData_setDataD(varH, VISIT_OWNER_VISIT, 1, nValues, values);
+        
+        // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
+        // owns the data (VISIT_OWNER_SIM - indicates the simulation
+        // owns the data).
+      }
+
+      return varH;
     }
-
-    return varH;
   }
 
   // Variables that can be on the simulation mesh and the machine mesh.

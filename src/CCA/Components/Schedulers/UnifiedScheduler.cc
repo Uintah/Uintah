@@ -70,8 +70,11 @@ namespace Uintah {
 
 namespace {
 
-  Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "general debugging info for UnifiedScheduler"  , false );
-  Dout g_queuelength( "Unified_QueueLength", "UnifiedScheduler", "report task queue length for UnifiedScheduler", false );
+  Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "general debugging info for the UnifiedScheduler"  , false );
+  Dout g_queuelength( "Unified_QueueLength", "UnifiedScheduler", "report the task queue length for the UnifiedScheduler", false );
+
+  Dout g_thread_stats     ( "Unified_ThreadStats",    "UnifiedScheduler", "Aggregated MPI thread stats for the UnifiedScheduler", false );
+  Dout g_thread_indv_stats( "Unified_IndvThreadStats","UnifiedScheduler", "Individual MPI thread stats for the UnifiedScheduler", false );
 
   Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
   Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
@@ -353,9 +356,9 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
   proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
-  m_num_threads = Uintah::Parallel::getNumThreads() - 1;
+  int num_threads = Uintah::Parallel::getNumThreads() - 1;
 
-  if ( (m_num_threads < 0) &&  Uintah::Parallel::usingDevice() ) {
+  if ( (num_threads < 0) &&  Uintah::Parallel::usingDevice() ) {
     if (d_myworld->myRank() == 0) {
       std::cerr << "Error: no thread number specified for Unified Scheduler"
           << std::endl;
@@ -363,7 +366,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
           "This scheduler requires number of threads to be in the range [1, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
           __FILE__, __LINE__);
     }
-  } else if (m_num_threads > MAX_THREADS) {
+  } else if (num_threads > MAX_THREADS) {
     if (d_myworld->myRank() == 0) {
       std::cerr << "Error: Number of threads too large..." << std::endl;
       throw ProblemSetupException(
@@ -373,26 +376,24 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   }
 
   if (d_myworld->myRank() == 0) {
-    std::string plural = (m_num_threads == 1) ? " thread" : " threads";
+    std::string plural = (num_threads == 1) ? " thread" : " threads";
     std::cout
         << "\nWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
-        << "Creating " << m_num_threads << " additional "
+        << "Creating " << num_threads << " additional "
         << plural + " for task execution (total task execution threads = "
-        << m_num_threads + 1 << ").\n" << std::endl;
+        << num_threads + 1 << ").\n" << std::endl;
 
 #ifdef HAVE_CUDA
     if ( !gpu_ids && Uintah::Parallel::usingDevice() ) {
       cudaError_t retVal;
       int availableDevices;
-      retVal = cudaGetDeviceCount(&availableDevices);
-      CUDA_RT_SAFE_CALL(retVal);
+      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
       std::cout << "   Using " << m_num_devices << "/" << availableDevices
                 << " available GPU(s)" << std::endl;
 
       for (int device_id = 0; device_id < availableDevices; device_id++) {
         cudaDeviceProp device_prop;
-        retVal = cudaGetDeviceProperties(&device_prop, device_id);
-        CUDA_RT_SAFE_CALL(retVal);
+        CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&device_prop, device_id));
         printf("   GPU Device %d: \"%s\" with compute capability %d.%d\n",
                device_id, device_prop.name, device_prop.major, device_prop.minor);
       }
@@ -453,7 +454,18 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 #endif
 
   // this spawns threads, sets affinity, etc
-  init_threads(this, m_num_threads);
+  init_threads(this, num_threads);
+
+  // Setup the thread info mapper
+  if( g_thread_stats || g_thread_indv_stats ) {
+    thread_info_.resize( Impl::g_num_threads );
+    thread_info_.insert( WaitTime  , std::string("WaitTime")  , "seconds" );
+    thread_info_.insert( NumTasks  , std::string("NumTasks")  , "tasks"   );
+    thread_info_.insert( NumPatches, std::string("NumPatches"), "patches" );
+
+    thread_info_.calculateMinimum(true);
+    thread_info_.calculateStdDev (true);
+  }
 }
 
 //______________________________________________________________________
@@ -477,6 +489,14 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
   // end of per-thread wait time - how long has a thread waited before executing another task
   if (thread_id > 0) {
     Impl::g_runners[thread_id]->stopWaitTime();
+
+    if( g_thread_stats || g_thread_indv_stats ) {
+      thread_info_[thread_id][NumTasks] += 1;
+
+      const PatchSubset *patches = dtask->getPatches();
+      if (patches)
+        thread_info_[thread_id][NumPatches] += patches->size();
+    }
   }
 
   // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
@@ -598,8 +618,8 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
         m_parent_scheduler->mpi_info_[i] += mpi_info_[i];
       }
       mpi_info_.reset(0);
+      thread_info_.reset( 0 );
     }
-
   }
 
   // beginning of per-thread wait time... until executing another task
@@ -608,7 +628,6 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
   }
 
 }  // end runTask()
-
 
 //______________________________________________________________________
 //
@@ -665,6 +684,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   makeTaskGraphDoc(m_detailed_tasks, my_rank);
 
   mpi_info_.reset( 0 );
+  thread_info_.reset( 0 );
 
   m_num_tasks_done = 0;
   m_abort = false;
@@ -777,11 +797,33 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   if( d_runtimeStats ) {
 
     // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
-    for (int i = 1; i < m_num_threads; ++i) {
+    for (int i = 1; i < Impl::g_num_threads; ++i) {
       (*d_runtimeStats)[TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
+
+      if( g_thread_stats || g_thread_indv_stats )
+        thread_info_[i][WaitTime] = Impl::g_runners[i]->getWaitTime();
     }
 
     MPIScheduler::computeNetRuntimeStats();
+  }
+
+  // Thread average runtime performance stats.
+  if (g_thread_stats ) {
+    thread_info_.reduce( true ); // true == skip the first entry.
+
+    thread_info_.reportSummaryStats( "Thread",
+                                     d_myworld->myRank(),
+                                     m_application->getTimeStep(),
+                                     m_application->getSimTime(),
+                                     false );
+  }
+
+  // Per thread runtime performance stats
+  if (g_thread_indv_stats) {
+    thread_info_.reportIndividualStats( "Thread",
+                                        d_myworld->myRank(),
+                                        m_application->getTimeStep(),
+                                        m_application->getSimTime() );
   }
 
   // only do on toplevel scheduler
@@ -1593,8 +1635,7 @@ UnifiedScheduler::gpuInitialize( bool reset )
     m_num_devices = 3;
   } else {
     int numDevices = 0;
-    retVal = cudaGetDeviceCount(&numDevices);
-    CUDA_RT_SAFE_CALL(retVal);
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
     m_num_devices = numDevices;
   }
 
@@ -1608,18 +1649,17 @@ UnifiedScheduler::gpuInitialize( bool reset )
   } else {
     for (int i = 0; i < m_num_devices; i++) {
       if (reset) {
-        retVal = cudaSetDevice(i);
-        CUDA_RT_SAFE_CALL(retVal);
-        retVal = cudaDeviceReset();
-        CUDA_RT_SAFE_CALL(retVal);
+        CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
+        CUDA_RT_SAFE_CALL(retVal = cudaDeviceReset());
       }
     }
     // set it back to the 0th device
-    retVal = cudaSetDevice(0);
-    CUDA_RT_SAFE_CALL(retVal);
+    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
     m_current_device = 0;
   }
+
 }
+
 
 //______________________________________________________________________
 //
@@ -1951,6 +1991,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           //See if we get to be the lucky thread that processes all ghost cells for this simulation variable
           gatherGhostCells = gpudw->compareAndSwapAwaitingGhostDataOnGPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
         }
+
         if ( allocated && correctSize && ( copyingIn || validOnGPU )) {
           //This variable exists or soon will exist on the destination.  So the non-ghost cell part of this
           //variable doesn't need any more work.
@@ -2402,7 +2443,6 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
             std::cerr << "UnifiedScheduler::initiateH2D(), unsupported variable type for computes variable "
                       << curDependency->m_var->getName() << std::endl;
           }
-
         }
       } else if (curDependency->m_dep_type == Task::Computes) {
         // compute the amount of space the host needs to reserve on the GPU for this variable.
@@ -2467,6 +2507,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
 
   // gpu_stats << myRankThread() << " Calling prepareGhostCellsIntoTaskDW for " << dtask->getName() << std::endl;
   prepareGhostCellsIntoTaskDW(dtask);
+
 }
 
 
@@ -2798,6 +2839,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                   //}
 
                   CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
+
                   // Tell this task that we're managing the copies for this variable.
 
                   dtask->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw,
@@ -3197,8 +3239,6 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
   // Go through each var, see if it's valid or valid with ghosts.
   std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
   for (varIter = vars.begin(); varIter != vars.end(); ++varIter) {
-
-
     const Task::Dependency* curDependency = varIter->second;
     if (curDependency->m_var->typeDescription()->getType() == TypeDescription::SoleVariable) {
       continue; //TODO: We are ignoring SoleVariables for now. They should be managed.
@@ -4863,7 +4903,6 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
 }
 
 #endif
-
 
 //______________________________________________________________________
 //  generate string   <MPI_rank>.<Thread_ID>

@@ -15,7 +15,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            5.      </maxTime>
+       <maxTime>            1.      </maxTime>
        <initTime>           0.0     </initTime>
        <delt_min>           0.0     </delt_min>
        <delt_max>           1.0     </delt_max>
@@ -31,23 +31,22 @@
     <BoundaryConditions>
       <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                            <value> 101325. </value>
+                            <value> 101215. </value>
         </BCType>
         <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "0"
-                           label = "Temperature"  var = "Dirichlet">
-                            <value> 300.0 </value>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Density"      var = "Dirichlet">
-                              <value> 1.17929469273743 </value>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101315. </value>
-        </BCType>
+                           <value> 101325. </value>
+        </BCType>  
         <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
@@ -79,9 +78,10 @@
         <!--__________________________________________________-->
         <!-- The velocity the upper wall is defined here      -->
         <!-- Pure Poiseuille flow velocity = 0, 0, 0          -->
+        <!--  U = 13.781 P ~ -0.25 see reference             -->
         <!--__________________________________________________-->
         <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
-                              <value> [0,0.,0.] </value>
+                              <value> [13.781,0.,0.] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -101,12 +101,12 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,   0,-0.05]      </lower>
-              <upper>        [0.01,1, 0.05]      </upper>
+              <lower>        [0,   0,-0.025]      </lower>
+              <upper>        [0.01,1, 0.025]      </upper>
               <extraCells>   [1,1,1]             </extraCells>
               <patches>      [1,1,1]             </patches>
            </Box>
-           <spacing>         [0.01, 0.02, 0.002] </spacing>
+           <spacing>         [0.01, 0.02, 0.0025] </spacing>
        </Level>
     </Grid>
     <!--____________________________________________________________________-->
@@ -142,12 +142,13 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-       <cfl>0.2</cfl>
+       <cfl>0.4</cfl>
        <ICE>
         <advection type = "SecondOrder" />
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
-          <knob_for_speedSound>  0.000        </knob_for_speedSound>
+          <knob_for_speedSound>  0.0          </knob_for_speedSound>
+          <knob_for_diffusion>   0.6          </knob_for_diffusion>
         </TimeStepControl>
 
         <ImplicitSolver>
@@ -184,7 +185,7 @@
        <ICE>
          <material>
            <EOS type = "ideal_gas">                   </EOS>
-           <dynamic_viscosity>  1.e-3                 </dynamic_viscosity>
+           <dynamic_viscosity>  1.0e-2                 </dynamic_viscosity>
            <thermal_conductivity>0.0                  </thermal_conductivity>
            <specific_heat>      716.0                 </specific_heat>
            <gamma>              1.4                   </gamma>
