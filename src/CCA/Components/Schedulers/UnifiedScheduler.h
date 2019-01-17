@@ -110,10 +110,18 @@ class UnifiedScheduler : public MPIScheduler  {
                                            // CMAKE/configure step so that future programmers don't have to manually remember to
                                            // update this value if it ever changes.
 
+    // timing statistics for Uintah infrastructure overhead
+    enum ThreadStatEnum {
+        WaitTime
+      , NumTasks
+      , NumPatches
+    };
+    
+    VectorInfoMapper< ThreadStatEnum, double > thread_info_;
+
     static std::string myRankThread();
 
     friend class UnifiedSchedulerWorker;
-
 
   private:
 
