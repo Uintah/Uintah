@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -21,7 +21,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
 
 #ifndef UINTAH_HOMEBREW_VarLabelMatlMemspace_H
 #define UINTAH_HOMEBREW_VarLabelMatlMemspace_H
