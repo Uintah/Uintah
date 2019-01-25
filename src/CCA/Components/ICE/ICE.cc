@@ -113,27 +113,6 @@ ICE::ICE(const ProcessorGroup* myworld,
   hypre_solver_label = VarLabel::create("hypre_solver_label",
                                         SoleVariable<hypre_solver_structP>::getTypeDescription());
 #endif
-
-  d_doRefluxing           = false;
-  d_add_heat              = false;
-  d_impICE                = false;
-  d_useCompatibleFluxes   = true;
-  d_viscousFlow           = false;
-  d_applyHydrostaticPress = true;
-  
-  d_max_iter_equilibration  = 100;
-  d_delT_knob               = 1.0;
-  d_delT_diffusionKnob      = 1.0;
-  d_delT_scheme             = "aggressive";
-  d_surroundingMatl_indx    = -9;
-  d_dbgVar1                 = 0;     //inputs for debugging                 
-  d_dbgVar2                 = 0;                                    
-  d_EVIL_NUM                = -9.99e30;                                      
-  d_SMALL_NUM               = 1.0e-100;                                     
-  d_with_mpm                = false;
-  d_with_rigid_mpm          = false;
-  d_clampSpecificVolume     = false;
-  
   d_conservationTest         = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
 
@@ -144,9 +123,7 @@ ICE::ICE(const ProcessorGroup* myworld,
   d_BC_globalVars->mms      =  scinew mms_globalVars();                
   d_BC_globalVars->sine     =  scinew sine_globalVars();               
   d_BC_globalVars->inletVel =  scinew inletVel_globalVars();           
-  d_press_matl    = 0;
-  d_press_matlSet = 0;
-
+  
   activateReductionVariable( recomputeTimeStep_name, true);
   activateReductionVariable(     abortTimeStep_name, true);
 }
@@ -281,7 +258,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   // Pull out implicit solver parameters
   ProblemSpecP impSolver = cfd_ice_ps->findBlock("ImplicitSolver");
   if (impSolver) {
-    d_delT_knob = 0.5;      // default value when running implicit
+    d_delT_speedSoundKnob = 0.5;      // default value when running implicit
     m_solver->readParameters(impSolver, "implicitPressure");
     
     m_solver->getParameters()->setSolveOnExtraCells(false);
@@ -331,19 +308,30 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   ProblemSpecP tsc_ps = cfd_ice_ps->findBlock("TimeStepControl");
   if (tsc_ps ) {
     tsc_ps ->require("Scheme_for_delT_calc", d_delT_scheme);
-    tsc_ps ->require("knob_for_speedSound",  d_delT_knob);
+    tsc_ps ->require("knob_for_speedSound",  d_delT_speedSoundKnob);
     tsc_ps ->get("knob_for_diffusion",       d_delT_diffusionKnob);
     
     if (d_delT_scheme != "conservative" && d_delT_scheme != "aggressive") {
      string warn="ERROR:\n Scheme_for_delT_calc:  must specify either aggressive or conservative";
      throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
-    if (d_delT_knob< 0.0 || d_delT_knob > 1.0) {
+    if (d_delT_speedSoundKnob< 0.0 || d_delT_speedSoundKnob > 1.0) {
      string warn="ERROR:\n knob_for_speedSound:  must be between 0 and 1";
      throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
   } 
   
+  //__________________________________
+  //  User defined pressure gradient
+  ProblemSpecP fpg_ps = cfd_ice_ps->findBlock("fixedPressureGradient");
+  if ( fpg_ps ) {
+    double x, y, z;
+    fpg_ps ->getWithDefault( "x_dir", x, d_EVIL_NUM );
+    fpg_ps ->getWithDefault( "y_dir", y, d_EVIL_NUM );
+    fpg_ps ->getWithDefault( "z_dir", z, d_EVIL_NUM );
+    d_fixedPressGrad = Vector(x, y, z);
+  }
+
   //__________________________________
   // Pull out Initial Conditions
   ProblemSpecP mat_ps = 0;
@@ -2074,10 +2062,12 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       if (d_delT_scheme == "aggressive") {     //      A G G R E S S I V E
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
-          double Mod_speed_Sound = d_delT_knob * speedSound[c];
+          double Mod_speed_Sound = d_delT_speedSoundKnob * speedSound[c];
+          
           double A = d_CFL*delX/(Mod_speed_Sound + fabs(vel_CC[c].x())+d_SMALL_NUM);
           double B = d_CFL*delY/(Mod_speed_Sound + fabs(vel_CC[c].y())+d_SMALL_NUM);
           double C = d_CFL*delZ/(Mod_speed_Sound + fabs(vel_CC[c].z())+d_SMALL_NUM);
+          
           delt_CFL = std::min(A, delt_CFL);
           delt_CFL = std::min(B, delt_CFL);
           delt_CFL = std::min(C, delt_CFL);
@@ -2169,12 +2159,12 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
                                       /dx_length;
 
             double characteristicVel_R = vel_FC_R 
-                                       + d_delT_knob * speedSound 
+                                       + d_delT_speedSoundKnob * speedSound 
                                        + relative_vel
                                        + grav_vel
                                        + diffusion_vel; 
             double characteristicVel_L = vel_FC_L 
-                                       - d_delT_knob * speedSound 
+                                       - d_delT_speedSoundKnob * speedSound 
                                        - relative_vel
                                        - grav_vel
                                        - diffusion_vel;
@@ -2321,6 +2311,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     
     double p_ref = getRefPress();
     press_CC.initialize(p_ref);
+    
     for (unsigned int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
       int indx = ice_matl->getDWIndex();
@@ -4027,6 +4018,36 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         mom_source[c].x( -press_src_X * areaX ); 
         mom_source[c].y( -press_src_Y * areaY );    
         mom_source[c].z( -press_src_Z * areaZ );
+      }
+      
+      //__________________________________
+      //  Add user defined pressure gradient 
+      Vector evilNumV( d_EVIL_NUM );
+            
+      if( d_fixedPressGrad.length() != evilNumV.length() ) {
+        
+        Vector oneZero;  
+        oneZero.x(  ( d_fixedPressGrad.x() == d_EVIL_NUM) ? 1.0 : 0.0 );
+        oneZero.y(  ( d_fixedPressGrad.y() == d_EVIL_NUM) ? 1.0 : 0.0 );
+        oneZero.z(  ( d_fixedPressGrad.z() == d_EVIL_NUM) ? 1.0 : 0.0 );
+        
+        double src_X = -d_fixedPressGrad.x() * dx.x() * areaX ;
+        double src_Y = -d_fixedPressGrad.y() * dx.y() * areaY ;
+        double src_Z = -d_fixedPressGrad.z() * dx.z() * areaZ ;
+        Vector fixedPressSrc = Vector( src_X, src_Y, src_Z );
+        
+        Vector one(1.0,1.0,1.0);
+        cout.setf(ios::scientific,ios::floatfield);
+        cout.precision(15);
+        cout << " fixedPressSrc: " << fixedPressSrc << " oneZero: " << oneZero <<  " (one - oneZero): " << (one - oneZero) << endl;  
+          
+        for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+
+          fixedPressSrc *= vol_frac[c];
+          mom_source[c] = oneZero * mom_source[c] + (one - oneZero) * fixedPressSrc;          
+          
+        }
       }
       
       //__________________________________
