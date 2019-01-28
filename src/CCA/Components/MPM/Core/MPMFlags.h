@@ -114,6 +114,8 @@ class Output;
     bool        d_computeScaleFactor;                          // compute the scale factor for viz 
     bool        d_doGridReset;                                 // Default is true, standard MPM
     double      d_min_part_mass;                               // Minimum particle mass before deletion  
+    double      d_min_partVolToCellVolRatio;                   // Minimum particle volume divided by cell volume before deletion.  e.g., if a value of 0.01 is specified, any particle whose volume is less than 1% of the cell volume will be deleted.
+    double      d_maxVelStarToDx_DtRatio;                      // At the nodes, if g.velocity_star is greater than d_maxVelStarToDx_DtRatio*(delX/delT) set g.velocity_star = g.velocity.  This is only invoked during dissolution problems.  0.8 seems to be a good value.  Note that this is a band-aid that is masking some underlying, TBD, flaws in the algorithm.
     int         d_min_subcycles_for_F;                         // Minimum number of subcycles to use in computing the deformation gradient
     double      d_min_mass_for_acceleration;                   // Minimum mass to allow division by in computing acceleration
     double      d_max_vel;                                     // Maxmimum particle velocity before  deletion

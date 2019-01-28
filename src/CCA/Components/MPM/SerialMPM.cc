@@ -1446,6 +1446,7 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pdTdtLabel,                      gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
+  t->requires(Task::NewDW, lb->pVolumeLabel_preReloc,           gnone);
 
   t->modifies(lb->pTemperatureLabel_preReloc);
 
@@ -3078,7 +3079,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
-//    Vector dxCell = patch->dCell();
+    Vector dxCell = patch->dCell();
 
     for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = 
@@ -3117,12 +3118,10 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
 
-#if 0
-        double delX = dxCell.x();
         if (flags->d_doingDissolution) {
-          if(velocity_star[c].length()*delT > 0.4*delX && c.z() >= 0){
+           double delX = dxCell.x();
            double rat = velocity_star[c].length()*delT/delX;
-           if(rat>10.){
+           if(rat>flags->d_maxVelStarToDx_DtRatio && c.z()>=0){
 //            cout << "n = " << c << endl;
 //            cout << "mas = " << mass[c] << endl;
 //            cout << "mat = " << m << endl;
@@ -3130,11 +3129,14 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 //            cout << "vel = " << velocity[c] << endl;
 //            cout << "vstar = " << velocity_star[c] << endl;
 //            cout << "acc = " << acceleration[c] << endl << endl;
-            velocity_star[c] = velocity[c];
+             velocity_star[c] = (velocity[c].length()/velocity_star[c].length())
+                              * velocity_star[c];
+//            acceleration[c] = (velocity_star[c] - velocity[c])/delT;
+//            cout << "vstar_new = " << velocity_star[c] << endl;
+//            cout << "acc_new = " << acceleration[c] << endl << endl;
            }
-          }
+//          }
         } // if doing dissolution
-#endif
       }
     }    // matls
   }
@@ -4144,15 +4146,16 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
         }
 
         int imax=0, jmax=0;
-        if(pFNew[idx].MaxAbsElemComp(imax, jmax)>10){
+        if(pFNew[idx].MaxAbsElemComp(imax, jmax)>10 ||
+           !(pFNew[idx].Determinant()>0.1)){
           cerr << "Resetting F for particle " << pids[idx] 
                << " with F = " << pFNew[idx] << endl;
           cerr << "imax, jmax = " << imax << ", " << jmax << endl;
           cerr << "pmass = " << pmass[idx] << endl;
-//          pFNew[idx].set(imax,jmax,0.9*pFNew[idx](imax,jmax));
-//          pFNew[idx]=Identity;
-          pFNew[idx]=pFOld[idx];
+          cerr << "pvolume = " << pVolumeOld[idx] << endl;
           cerr << "F is now " << pFNew[idx] << endl;
+          cerr << "J = " << pFNew[idx].Determinant() << endl;
+          pFNew[idx]=pFOld[idx];
         }
 
         double J   =pFNew[idx].Determinant();
@@ -4247,6 +4250,8 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+    Vector dxCell = patch->dCell();
+    double cell_vol = dxCell.x()*dxCell.y()*dxCell.z();
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
@@ -4254,7 +4259,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<int> pLocalized;
-      constParticleVariable<double> pdTdt,pmassNew;
+      constParticleVariable<double> pdTdt,pmassNew,pVolNew;
       ParticleVariable<double> pTempNew;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -4262,6 +4267,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
 
       new_dw->get(pdTdt,        lb->pdTdtLabel,                      pset);
       new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
+      new_dw->get(pVolNew,      lb->pVolumeLabel_preReloc,           pset);
       new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc,     pset);
 
       new_dw->getModifiable(pTempNew, lb->pTemperatureLabel_preReloc,pset);
@@ -4276,7 +4282,8 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
         // whose pLocalized flag has been set to -999 or who have 
         // a negative temperature
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
-            (pLocalized[idx]==-999)){
+            (pLocalized[idx]==-999) || 
+             pVolNew[idx]<flags->d_min_partVolToCellVolRatio*cell_vol){
 //          cout << "Adding to delset, m = " << m << endl;
 //          cout << "pmassNew[idx] = " << pmassNew[idx] << endl;
 //          cout << "pTempNew[idx] = " << pTempNew[idx] << endl;
