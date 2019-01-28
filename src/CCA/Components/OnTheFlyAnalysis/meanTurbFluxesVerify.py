@@ -26,7 +26,7 @@ from argparse import ArgumentParser
 #______________________________________________________________________
 
 
-nCells        = np.array( [4, 8, 6])
+nCells        = np.array( [4, 8, 6])     # x, y, z
 nPatches      = 1
 nCellsPerPatch = np.divide( nCells, nPatches )
 numSamples     = np.prod( nCellsPerPatch )
@@ -34,12 +34,11 @@ numSamples     = np.prod( nCellsPerPatch )
 print ('nCellPerPatch %i' % numSamples)
 
 
-
-doPlot     = False              # switch for plotting
+doPlot     = True              # switch for plotting
 doOutput   = True               # switch for file output
-mean       = (10, 20 ,30, 0)    # mean values for u,v,w,s
+mean       = (10, 20 ,30, 0)    # mean values for u, v, w, scalar
 stdDev     = 1                  # stdDev for all variables
-filename   = 'test.out'
+filename   = 'testDistribution.txt'
 
 #______________________________________________________________________
 #  Create an array of random numbers centered around a mean with a 
@@ -83,9 +82,6 @@ print ('\n__________________________________\n'
         ' Copy the file ( %s ) to the directory sus is in' % filename)
 
 
-
-
-
 #__________________________________
 #  Output file
 if( doOutput ):
@@ -95,8 +91,12 @@ if( doOutput ):
   mesg += 'These labels are then processed by meanTurbFlux and the covariance for each plane should equal\n'
   mesg += 'the covariance computed by the script\n'
   mesg += '         u,                 v,                  w,                     scalar'
+  np.savetxt( filename, R, fmt='%16.15e', delimiter=', ', newline='\n' , header=mesg)
 
-  np.savetxt( filename, R, fmt='%16.15e', delimiter=',', newline='\n',header=mesg)
+  mesg =  'This file contains the covariance of a multivariate normal distribution and\n'
+  mesg += 'is used by OnTheFlyAnalysis:meanTurbFlux module for verification purposes.  \n'
+  mesg += 'There are 4 columns of --- to be filled in.\n'
+  np.savetxt ( 'covariance.txt', sigmaVerify, fmt='%16.15e', delimiter=', ', newline='\n', header=mesg )
   
 #__________________________________
 #  plotting
