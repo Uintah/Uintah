@@ -160,12 +160,16 @@ TriGeometryPiece::clone() const
 }
 
 bool
-TriGeometryPiece::insideNew(const Point &p,int& cross) const
+TriGeometryPiece::insideNewest(const Point &p,int& cross) const
 {
   // Count the number of times a ray from the point p
   // intersects the triangular surface.  If the number
   // of crossings is odd, the point is inside, else it
   // is outside.
+
+  // This version checks using three roughly orthogonal rays  that are
+  // nearly, but not exactly, cast in the 3 ordinal directions.
+  // It returns the answer that two or more of those tests agree upon
 
   // Check if Point p is outside the bounding box
   if (!(p == Max(p,d_box.lower()) && p == Min(p,d_box.upper())))
@@ -187,9 +191,30 @@ TriGeometryPiece::insideNew(const Point &p,int& cross) const
   }
 }
 
+bool
+TriGeometryPiece::insideNew(const Point &p,int& cross) const
+{
+  // Count the number of times a ray from the point p
+  // intersects the triangular surface.  If the number
+  // of crossings is odd, the point is inside, else it
+  // is outside.
+
+  // This version only tests by casting a ray in the x-direction
+
+  // Check if Point p is outside the bounding box
+  if (!(p == Max(p,d_box.lower()) && p == Min(p,d_box.upper())))
+    return false;
+
+  d_grid->countIntersections(p,cross);
+  //  cout << "Point " << p << " has " << cross << " crossings " << endl;
+  if (cross % 2)
+    return true;
+  else
+    return false;
+}
 
 bool
-TriGeometryPiece::inside(const Point &p) const
+TriGeometryPiece::inside(const Point &p,const bool useNewestVersion=false) const
 {
   // Count the number of times a ray from the point p
   // intersects the triangular surface.  If the number
@@ -206,7 +231,12 @@ TriGeometryPiece::inside(const Point &p) const
     return false;
 #if 1
   int cross_new = 0;
-  bool inside_new = insideNew(p,cross_new);
+  bool inside_new;
+  if(useNewestVersion){
+    inside_new = insideNewest(p,cross_new);
+  } else {
+    inside_new = insideNew(p,cross_new);
+  }
 
   return inside_new;
 #else
@@ -342,7 +372,6 @@ TriGeometryPiece::makePlanes()
     Plane plane(pt[0],pt[1],pt[2]);
     d_planes.push_back(plane);
   }
-
 }
 #endif
 

@@ -123,7 +123,7 @@ CylinderGeometryPiece::clone() const
 }
 
 bool
-CylinderGeometryPiece::inside(const Point &p) const
+CylinderGeometryPiece::inside(const Point &p, const bool defVal=false) const
 {
   Vector axis = d_top-d_bottom;  
   double height2 = axis.length2();

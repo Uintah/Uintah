@@ -106,7 +106,7 @@ WARNING
          
          //////////
          // Determines whether a point is inside the union Piece.
-         virtual bool inside(const Point &p) const;
+         virtual bool inside(const Point &p, const bool defVal) const;
          
          //////////
          // Returns the bounding box surrounding the union Piece.

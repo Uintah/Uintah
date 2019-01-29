@@ -61,7 +61,7 @@ NullGeometryPiece::clone() const
 }
 
 bool
-NullGeometryPiece::inside(const Point& /*p*/) const
+NullGeometryPiece::inside(const Point& /*p*/, const bool defVal=false) const
 {
   return true;
 }

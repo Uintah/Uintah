@@ -103,9 +103,9 @@ DifferenceGeometryPiece::clone() const
 }
 
 bool
-DifferenceGeometryPiece::inside(const Point &p) const 
+DifferenceGeometryPiece::inside(const Point &p, const bool defVal=false) const 
 {
-  return (left_->inside(p) && !right_->inside(p));
+  return (left_->inside(p,defVal) && !right_->inside(p,defVal));
 }
 
 Box

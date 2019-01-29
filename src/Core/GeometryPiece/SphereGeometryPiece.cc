@@ -80,7 +80,7 @@ SphereGeometryPiece::clone() const
 }
 
 bool
-SphereGeometryPiece::inside(const Point& p) const
+SphereGeometryPiece::inside(const Point& p, const bool defVal=false) const
 {
   Vector diff = p - d_origin;
 

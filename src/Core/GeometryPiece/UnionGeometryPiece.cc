@@ -90,10 +90,10 @@ UnionGeometryPiece::clone() const
 //------------------------------------------------------------------
 
 bool
-UnionGeometryPiece::inside(const Point &p) const 
+UnionGeometryPiece::inside(const Point &p, const bool defVal=false) const 
 {
   for (int i = 0; i < (int)child_.size(); i++) {
-    if (child_[i]->inside(p)) {
+    if (child_[i]->inside(p, defVal)) {
       return true;
     }
   }

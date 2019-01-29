@@ -112,7 +112,7 @@ TorusGeometryPiece::clone() const
 }
 
 bool
-TorusGeometryPiece::inside(const Point &p) const
+TorusGeometryPiece::inside(const Point &p, const bool defVal=false) const
 {
   double x = p.x() - d_center.x();
   double y = p.y() - d_center.y();

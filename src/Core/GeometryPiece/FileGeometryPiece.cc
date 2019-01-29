@@ -198,7 +198,7 @@ FileGeometryPiece::clone() const
 //______________________________________________________________________
 //
 bool
-FileGeometryPiece::inside(const Point& p) const
+FileGeometryPiece::inside(const Point& p, const bool defVal=false) const
 {
   //Check p with the lower coordinates
   if (p == Max(p,d_box.lower()) && p == Min(p,d_box.upper()) )

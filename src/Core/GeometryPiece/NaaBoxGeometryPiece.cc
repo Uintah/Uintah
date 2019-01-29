@@ -169,7 +169,7 @@ NaaBoxGeometryPiece::clone() const
 //  to see if the Pt is in the unit cube.
 //
 bool
-NaaBoxGeometryPiece::inside( const Point& pt ) const
+NaaBoxGeometryPiece::inside( const Point& pt, const bool defVal=false) const
 {
   Vector result = toUnitCube_ * (pt - p1_);
 

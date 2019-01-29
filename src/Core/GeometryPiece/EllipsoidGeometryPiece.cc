@@ -115,7 +115,7 @@ GeometryPieceP EllipsoidGeometryPiece::clone() const
   return scinew EllipsoidGeometryPiece(*this);
 }
 
-bool EllipsoidGeometryPiece::inside(const Point& p) const
+bool EllipsoidGeometryPiece::inside(const Point& p, const bool defVal=false) const
 {
   // This can be sped up, but this is simple.
   Vector pTransformed = p-d_origin;

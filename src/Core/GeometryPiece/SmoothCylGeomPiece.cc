@@ -142,7 +142,7 @@ SmoothCylGeomPiece::clone() const
 /*! Find if a point is inside the cylinder or end caps */
 /////////////////////////////////////////////////////////////////////////////
 bool 
-SmoothCylGeomPiece::inside(const Point& p) const
+SmoothCylGeomPiece::inside(const Point& p, const bool defVal=false) const
 {
   bool isInside = true;
 

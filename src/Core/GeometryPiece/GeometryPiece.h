@@ -94,7 +94,7 @@ public:
          
     //////////
     // Insert Documentation Here:
-  virtual bool inside(const Point &p) const = 0;         
+  virtual bool inside(const Point &p, const bool defVal=false) const = 0;         
 
   std::string getName() const {
     return name_;

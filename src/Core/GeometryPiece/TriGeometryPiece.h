@@ -98,8 +98,13 @@ WARNING
 
          //////////
          // Determins whether a point is inside the triangulated surface.
-         virtual bool inside(const Point &p) const;
+         virtual bool inside(const Point &p, const bool defaultValue) const;
          bool insideNew(const Point &p, int& cross) const;
+
+         // A relatively newer version of the inside test that uses three
+         // nearly orthogonal rays and counts intersections in each of those
+         // directions
+         bool insideNewest(const Point &p, int& cross) const;
 
          //////////
          // Returns the bounding box surrounding the triangulated surface.

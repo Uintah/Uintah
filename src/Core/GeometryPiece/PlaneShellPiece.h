@@ -86,7 +86,7 @@ namespace Uintah {
          
     //////////
     // Determines whether a point is inside the plane. 
-    virtual bool inside(const Point &p) const;
+    virtual bool inside(const Point &p, const bool defVal) const;
          
     //////////
     // Returns the bounding box surrounding the box.

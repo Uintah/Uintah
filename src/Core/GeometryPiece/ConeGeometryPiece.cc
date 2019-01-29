@@ -112,7 +112,7 @@ ConeGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 }
 
 bool 
-ConeGeometryPiece::inside(const Point &pt) const
+ConeGeometryPiece::inside(const Point &pt, const bool defVal=false) const
 {
   // Find the position vector of top wrt bottom
   Vector axis = d_top-d_bottom;  

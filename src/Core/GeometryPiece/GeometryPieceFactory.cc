@@ -128,7 +128,7 @@ GeometryPieceFactory::getInsidePoints(const std::string geomPieceName, const Uin
       {
         IntVector iCell = *iter;
         Point p = patch->getCellPosition(iCell);
-        const bool isInside = geomPiece->inside(p);
+        const bool isInside = geomPiece->inside(p, false);
         if ( isInside )
         {
           insidePoints.push_back(p);
@@ -146,7 +146,7 @@ GeometryPieceFactory::getInsidePoints(const std::string geomPieceName, const Uin
     {
       IntVector iCell = *iter;
       Point p = patch->getCellPosition(iCell);
-      const bool isInside = geomPiece->inside(p);
+      const bool isInside = geomPiece->inside(p,false);
       if ( isInside )
       {
         insidePoints.push_back(p);
@@ -185,7 +185,7 @@ GeometryPieceFactory::findInsidePoints(const Uintah::Patch* const patch)
     {
       IntVector iCell = *iter;
       Point p = patch->getCellPosition(iCell);
-      const bool isInside = geomPiece->inside(p);
+      const bool isInside = geomPiece->inside(p,false);
       if ( isInside )
       {
         insidePoints.push_back(p);
