@@ -422,6 +422,13 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
 
+  // Start - Should not be carried over to trunk, CG
+  t->computes(lb->gAccelerationLabel);
+  if (flags->d_doScalarDiffusion) {
+    t->computes(lb->diffusion->gConcentrationRate);
+  }
+  // End - Should not be carried over to trunk
+
   // Debugging Scalar
   if (flags->d_with_color) {
     t->computes(lb->pColorLabel);
@@ -1199,6 +1206,11 @@ void SerialMPM::scheduleComputeAndIntegrateDiffusion(       SchedulerP  & sched
   t->requires(Task::NewDW, d_sdInterfaceModel->getInterfaceFluxLabel(), Ghost::None);
   t->modifies(lb->diffusion->gConcentrationRate);
   t->computes(lb->diffusion->gConcentrationStar);
+  // Start - Should not be carried over to trunk, CG
+  t->requires(Task::OldDW, lb->diffusion->gConcentrationRate, Ghost::None);
+  t->computes(lb->gDotDcdtLabel); 
+  t->computes(lb->maxDotDcdtLabel);
+  // End - Should not be carried over to trunk
 
   sched->addTask(t, patches, matls);
 }
@@ -1281,10 +1293,16 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
 
   const MaterialSubset* mss = matls->getUnion();
   t->requires(Task::OldDW, lb->delTLabel );
+  t->requires(Task::OldDW, getTimeStepLabel());
 
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
   t->requires(Task::NewDW, lb->gVelocityLabel,   Ghost::None);
+  // Start - Should not be carried over to trunk, CG
+  t->requires(Task::OldDW, lb->gAccelerationLabel, Ghost::None);
+  t->computes(lb->gDotAccelLabel); 
+  t->computes(lb->maxDotAccelLabel);
+  // End - Should not be carried over to trunk
 
   sched->addTask(t, patches, matls);
 }
@@ -2055,6 +2073,16 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
         sdm->initializeTimeStep(patch, mpm_matl, new_dw);
         sdm->initializeSDMData( patch, mpm_matl, new_dw);
       }
+      // Start - Should not be carried over to trunk, CG
+      int dwi = mpm_matl->getDWIndex();
+      NCVariable<Vector> acceleration;
+      NCVariable<double> conc_rate;
+      new_dw->allocateAndPut(acceleration,  lb->gAccelerationLabel, dwi, patch);
+      new_dw->allocateAndPut(conc_rate,  lb->diffusion->gConcentrationRate, dwi, patch);
+      acceleration.initialize(Vector(0.,0.,0.));
+      conc_rate.initialize(0.0);
+
+      // End - Should not be carried over to trunk
     }
   } // patches
 
@@ -3141,6 +3169,8 @@ void SerialMPM::computeAndIntegrateDiffusion(const  ProcessorGroup  *
                                             ,       DataWarehouse   * old_dw
                                             ,       DataWarehouse   * new_dw  )
 {
+  double max_c_rate = 0;
+  double tmp_max_c_rate = 0;
   for (int p=0; p < patches->size(); ++p) {
     const Patch*  patch = patches->get(p);
     printTask(patches, patch, cout_doing, "Doing SerialMPM::computeAndIntegrateDiffusion");
@@ -3156,6 +3186,13 @@ void SerialMPM::computeAndIntegrateDiffusion(const  ProcessorGroup  *
       // Get required variables for this patch
       constNCVariable<double> mass;
       new_dw->get(mass,         lb->gMassLabel,          dwi, patch, gnone, 0);
+
+      // Start - Should not be carried over to trunk, CG
+      NCVariable<double> g_dot_dcdt;
+      constNCVariable<double> g_old_conc_rate;
+      old_dw->get(g_old_conc_rate, lb->diffusion->gConcentrationRate, dwi, patch, Ghost::None,0);
+      new_dw->allocateAndPut(g_dot_dcdt, lb->gDotDcdtLabel, dwi, patch);
+      // End - Should not be carried over to trunk
 
       // Scalar Diffusion Related Variables -- JBH
       constNCVariable<double> gSD_IF_FluxRate;
@@ -3194,9 +3231,16 @@ void SerialMPM::computeAndIntegrateDiffusion(const  ProcessorGroup  *
         IntVector node = *iter;
         gConcRate[node] = (gConcStar[node] - gConcNoBC[node]) / delT
                            + gExternalScalarFlux[node]/mass[node];
+        // Start - Should not be carried over to trunk, CG
+        g_dot_dcdt[node] = (gConcRate[node] - g_old_conc_rate[node])/delT;
+        tmp_max_c_rate = .5*delT*delT*fabs(g_dot_dcdt[node]);
+        if(tmp_max_c_rate > max_c_rate) {max_c_rate = tmp_max_c_rate; }
+        
+        // End - Should not be carried over to trunk
       }
     }
   }
+  new_dw->put(max_vartype(max_c_rate), lb->maxDotDcdtLabel);
 }
 
 void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
@@ -3300,6 +3344,9 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw)
 {
+  double max_dot_accel = 0;
+  double tmp_max_dot_accel = 0;
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
@@ -3309,6 +3356,11 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+
+    // Start - Should not be carried over to trunk, CG
+    timeStep_vartype timestep;
+    old_dw->get(timestep, getTimeStepLabel());
+    // End - Should not be carried over to trunk
 
     string interp_type = flags->d_interpolator_type;
     for(unsigned int m = 0; m < numMPMMatls; m++){
@@ -3322,6 +3374,13 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
       new_dw->get(gvelocity,               lb->gVelocityLabel,      dwi,patch,
                                                                  Ghost::None,0);
 
+      // Start - Should not be carried over to trunk, CG
+      NCVariable<Vector> g_dot_accel;
+      constNCVariable<Vector> g_old_acceleration;
+      old_dw->get(g_old_acceleration, lb->gAccelerationLabel, dwi, patch, Ghost::None,0);
+      new_dw->allocateAndPut(g_dot_accel, lb->gDotAccelLabel, dwi, patch);
+      // End - Should not be carried over to trunk
+
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
       MPMBoundCond bc;
@@ -3334,9 +3393,18 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
                                                                 iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
+        // Start - Should not be carried over to trunk, CG
+        g_dot_accel[c] = (gacceleration[c] - g_old_acceleration[c])/delT;
+
+        for(int i = 0; i < 3; ++i){
+          tmp_max_dot_accel = .5*delT*delT*fabs(g_dot_accel[c][i]);
+          if(tmp_max_dot_accel > max_dot_accel) { max_dot_accel = tmp_max_dot_accel; }
+        }
+        // End - Should not be carried over to trunk
       }
     } // matl loop
   }  // patch loop
+  new_dw->put(max_vartype(max_dot_accel), lb->maxDotAccelLabel);
 }
 
 void SerialMPM::setPrescribedMotion(const ProcessorGroup*,

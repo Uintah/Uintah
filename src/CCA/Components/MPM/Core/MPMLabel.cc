@@ -38,6 +38,16 @@ using namespace std;
 
 MPMLabel::MPMLabel()
 {
+  // Start - Should not be carried over to trunk, CG
+  gDotAccelLabel   = VarLabel::create( "g.dot_accel",
+                          NCVariable<Vector>::getTypeDescription() );
+  gDotDcdtLabel    = VarLabel::create( "g.dot_dcdt",
+                          NCVariable<double>::getTypeDescription() );
+  maxDotAccelLabel = VarLabel::create( "maxDotAccel",
+                          max_vartype::getTypeDescription() );
+  maxDotDcdtLabel  = VarLabel::create( "maxDotDcdt",
+                          max_vartype::getTypeDescription() );
+  // End - Should not be carried over to trunk
 
   // Time Step
   timeStepLabel =
@@ -854,6 +864,13 @@ MPMLabel::~MPMLabel()
   if (diffusion) {
     delete diffusion;
   }
+
+  // Start - Should not be carried over to trunk, CG
+  VarLabel::destroy(gDotAccelLabel);
+  VarLabel::destroy(gDotDcdtLabel);
+  VarLabel::destroy(maxDotAccelLabel);
+  VarLabel::destroy(maxDotDcdtLabel);
+  // End - Should not be carried over to trunk
 
   VarLabel::destroy(timeStepLabel);
   VarLabel::destroy(simulationTimeLabel);

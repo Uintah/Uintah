@@ -38,6 +38,13 @@ namespace Uintah {
       MPMLabel();
       ~MPMLabel();
 
+      // Start - Should not be carried over to trunk, CG
+      const VarLabel* gDotAccelLabel;
+      const VarLabel* gDotDcdtLabel;
+      const VarLabel* maxDotAccelLabel;
+      const VarLabel* maxDotDcdtLabel;
+      // End - Should not be carried over to trunk
+
       const VarLabel* timeStepLabel;
       const VarLabel* simulationTimeLabel;
       const VarLabel* delTLabel;
