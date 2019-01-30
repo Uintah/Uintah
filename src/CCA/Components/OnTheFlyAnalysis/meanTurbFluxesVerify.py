@@ -7,34 +7,25 @@ import matplotlib.pyplot as plt
 #
 #   This script computes the random samples from a multivariate normal distribution
 #   and either plots the results or writes them to a file.  Four columns of 
-#   numbers are written corresponding co 3 components of velocity (u,v,w) and a scalar 
+#   numbers are written corresponding co 3 components of velocity (u,v,w) and a scalar (s)
 #
 #   The output is used for verification of the OnTheFly:meanTurbFlux analysis module
 #
 #______________________________________________________________________
 
-from argparse import ArgumentParser
-
-#parser = ArgumentParser(description='Process some integers.')
-#parser.add_argument( "-f", "--file", dest="filename",
-#                    help="write report to FILE", metavar="FILE")
-#parser.add_argument( "-q", "--quiet",
-#                    action="store_false", dest="verbose", default=True,
-#                    help="don't print status messages to stdout" )
-
-#args = parser.parse_args()
 #______________________________________________________________________
 
 
-nCells        = np.array( [4, 8, 6])     # x, y, z
+nPlaneCells   = np.array( [100, 100, 1])     # x, y, z
+
 nPatches      = 1
-nCellsPerPatch = np.divide( nCells, nPatches )
+nCellsPerPatch = np.divide( nPlaneCells, nPatches )
 numSamples     = np.prod( nCellsPerPatch )
 
 print ('nCellPerPatch %i' % numSamples)
 
 
-doPlot     = True              # switch for plotting
+doPlot     = True               # switch for plotting
 doOutput   = True               # switch for file output
 mean       = (10, 20 ,30, 0)    # mean values for u, v, w, scalar
 stdDev     = 1                  # stdDev for all variables
@@ -53,52 +44,67 @@ data = np.array( [ np.random.normal( mean[0], stdDev, numSamples),
 
 # compute the mean for each column in the data array
 mu    = np.array( np.mean( data, axis=1 ) )
+print('mu\n')
+print(mu)
 
-# Covariance of the data array
-sigma = np.array( np.cov( data ) )
+# Population Covariance of the data array
+# see: https://en.wikipedia.org/wiki/Covariance#Calculating_the_sample_covarianc
+sigma = np.array( np.cov( data, rowvar=True, bias=True ) )
+
 
 # Compute random samples from a multivariate normal distribution 
 R = np.array( np.random.multivariate_normal(mu, sigma, numSamples) )
-
-print('R=\n')
+print('\nR=\n')
 print(R)
 
-
-# compute covariance of R it should be identical to 
-# sigma
-sigmaVerify = np.matrix( np.cov( data ) )
-
-
-# Verification
-diff = np.array( np.all( sigma - sigmaVerify ) );
-if np.all( diff ==0 ):
-  print ('Everything checks out\n covariance')
-  print (sigmaVerify)
-else:
-  print ('There is a problem')
+R2 = np.tile( R, (2,1))
+print('\nR2=\n')
+print(R2)
 
 
-print ('\n__________________________________\n'
-        ' Copy the file ( %s ) to the directory sus is in' % filename)
+# Population covariance of R 
+sigmaR = np.array( np.cov( R, rowvar=False, bias=True ) )
+print('\nsigmaR\n')
+print(sigmaR)
 
 
-#__________________________________
-#  Output file
+#______________________________________________________________________
+#  Output
 if( doOutput ):
-  mesg =  'This file contains 4 columns of random numbers from a multivariate normal distribution and\n'
-  mesg += 'is used by OnTheFlyAnalysis:meanTurbFlux module for verification purposes.  Each cell in the\n'
-  mesg += 'domain reads in one row from the file and populates a velocity (u,v,w) and a scalar label.\n'
-  mesg += 'These labels are then processed by meanTurbFlux and the covariance for each plane should equal\n'
-  mesg += 'the covariance computed by the script\n'
-  mesg += '         u,                 v,                  w,                     scalar'
-  np.savetxt( filename, R, fmt='%16.15e', delimiter=', ', newline='\n' , header=mesg)
 
-  mesg =  'This file contains the covariance of a multivariate normal distribution and\n'
-  mesg += 'is used by OnTheFlyAnalysis:meanTurbFlux module for verification purposes.  \n'
-  mesg += 'There are 4 columns of --- to be filled in.\n'
-  np.savetxt ( 'covariance.txt', sigmaVerify, fmt='%16.15e', delimiter=', ', newline='\n', header=mesg )
-  
-#__________________________________
+  print ('\n__________________________________\n'
+          ' The file ( %s ) contains the multivariate normal distribution' % filename)
+
+  hdr =  'This file contains 4 columns of random numbers from a multivariate normal distribution and\n'
+  hdr += 'is used by the OnTheFlyAnalysis:meanTurbFlux module for verification purposes.  Each cell in the\n'
+  hdr += 'domain reads in one row from the file and populates a velocity (u,v,w) and a scalar (s).\n'
+  hdr += 'These labels are then processed by meanTurbFlux and the covariance for each plane should equal\n'
+  hdr += 'the covariance computed by the script\n'
+  hdr += '         u,                 v,                  w,                     scalar'
+  np.savetxt( filename, R, fmt='%16.15e', delimiter=', ', newline='\n', header=hdr)
+
+  # covariance
+  print ('\n__________________________________\n'
+        ' The file ( covariance.txt ) contains the covariance')
+        
+  hdr =  'This file contains the population covariance of a multivariate normal distribution and\n'
+  hdr += 'is used by OnTheFlyAnalysis:meanTurbFlux module for verification purposes.\n'
+  hdr += ' See https://en.wikipedia.org/wiki/Covariance#Calculating_the_sample_covariance\n'  
+  desc = np.array([ ["u'u'^bar", "v'u'^bar", "w'u'^bar", "s'u'^bar" ],
+                   [ "u'v'^bar", "v'v'^bar", "w'v'^bar", "s'v'^bar" ],
+                   [ "u'w'^bar", "v'w'^bar", "w'w'^bar", "s'w'^bar" ],
+                   [ "u's'^bar", "v's'^bar", "w's'^bar", "s's'^bar" ] ])
+  print(desc)
+  print(sigmaR)
+
+  # glue desc and sigmaR together.
+  arry = np.zeros( desc.shape, dtype=[('var1', 'S8'), ('var2', float)])
+  arry['var1'] = desc
+  arry['var2'] = sigmaR
+  np.savetxt('covariance.txt', arry, fmt="%10s", header=hdr)
+
+
+#______________________________________________________________________
 #  plotting
 if( doPlot ):
   xs = R[:,0]
@@ -114,5 +120,3 @@ if( doPlot ):
   ax.set_zlabel('Z Label')
 
   plt.show()
-
-

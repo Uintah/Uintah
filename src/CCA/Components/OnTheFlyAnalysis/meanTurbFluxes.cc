@@ -180,13 +180,15 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
   pv->baseType   = td_V->getType();
   pv->subType    = TypeDescription::Vector;
   pv->weightType = PA::NCELLS;
+  pv->fileDesc   = "u'u'__________________v'v'______________w'w'";
 
   planarVars.push_back( pv );
 
   // create planarAverage variable: shear turbulent stress
   auto pv2    = make_unique< PA::planarVar_Vector >(*pv);
   pv2->label  = d_velVar->shearTurbStrssLabel;
-
+  pv2->fileDesc   = "u'v'__________________v'w'______________w'u'";
+  
   planarVars.push_back( move(pv2) );
 
 
@@ -266,7 +268,8 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     pv->baseType   = td_V->getType();
     pv->subType    = TypeDescription::Vector;
     pv->weightType = PA::NCELLS;
-
+    pv->fileDesc   = "______________ u'Q'_________________v'Q'__________________w'Q'";
+    
     planarVars.push_back( move(pv) );
   }
 
@@ -690,7 +693,7 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
 
       offdiag[c] = Vector( vel.x() * vel.y(),     // u'v'
                            vel.y() * vel.w(),     // v'w'
-                           vel.z() * vel.z() );   // w'u'
+                           vel.z() * vel.u() );   // w'u'
 
       //__________________________________
       //  debugging
