@@ -88,7 +88,7 @@ BoxGeometryPiece::clone() const
 }
 
 bool
-BoxGeometryPiece::inside(const Point& p) const
+BoxGeometryPiece::inside(const Point& p, const bool defVal=false) const
 {
   //Check p with the lower coordinates
 

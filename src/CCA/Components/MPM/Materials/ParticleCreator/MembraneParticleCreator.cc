@@ -156,7 +156,7 @@ MembraneParticleCreator::createParticles(MPMMaterial* matl,
               long64 cellID = ((long64)cell_idx.x() << 16) |
                 ((long64)cell_idx.y() << 32) |
                 ((long64)cell_idx.z() << 48);
-              if(piece->inside(p)){
+              if(piece->inside(p,false)){
                 pvars.position[start+count]=p;
                 pvars.pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
                 pvars.pvelocity[start+count]=(*obj)->getInitialData_Vector("velocity");

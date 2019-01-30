@@ -86,7 +86,7 @@ PlaneShellPiece::clone() const
 //////////
 /*! Find if a point is inside the cylinder */
 bool 
-PlaneShellPiece::inside(const Point& p) const
+PlaneShellPiece::inside(const Point& p, const bool defVal=false) const
 {
   double halfThick = 0.5*d_thickness;
   double height2 = d_thickness*d_thickness;

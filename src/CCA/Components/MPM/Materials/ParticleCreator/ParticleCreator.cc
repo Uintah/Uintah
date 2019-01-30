@@ -649,7 +649,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
             throw InternalError("Particle created outside of patch?",
                                  __FILE__, __LINE__);
           }
-          if (piece->inside(p)){ 
+          if (piece->inside(p,true)){ 
             Vector p1(p(0),p(1),p(2));
             p1=affineTrans_A*p1+affineTrans_b;
             p(0)=p1[0];
@@ -1111,6 +1111,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if(d_flags->d_SingleFieldMPM){
     particle_state.push_back(d_lb->pSurfLabel);
     particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
+
     particle_state.push_back(d_lb->pSurfGradLabel);
     particle_state_preReloc.push_back(d_lb->pSurfGradLabel_preReloc);
   }
@@ -1150,23 +1151,23 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   
   int ss = 0;
   // Check to the left (-x)
-  if(!piece->inside(p-Vector(dxpp.x(),0.,0.)))
+  if(!piece->inside(p-Vector(dxpp.x(),0.,0.),true))
     ss++;
   // Check to the right (+x)
-  if(!piece->inside(p+Vector(dxpp.x(),0.,0.)))
+  if(!piece->inside(p+Vector(dxpp.x(),0.,0.),true))
     ss++;
   // Check behind (-y)
-  if(!piece->inside(p-Vector(0.,dxpp.y(),0.)))
+  if(!piece->inside(p-Vector(0.,dxpp.y(),0.),true))
     ss++;
   // Check in front (+y)
-  if(!piece->inside(p+Vector(0.,dxpp.y(),0.)))
+  if(!piece->inside(p+Vector(0.,dxpp.y(),0.),true))
     ss++;
 #if 1
   // Check below (-z)
-  if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
+  if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
     ss++;
   // Check above (+z)
-  if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
+  if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
     ss++;
 #endif
 
@@ -1189,22 +1190,22 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
   
   int ss = 0;
   // Check to the left (-x)
-  if(!piece->inside(p-Vector(dxpp.x(),0.,0.)))
+  if(!piece->inside(p-Vector(dxpp.x(),0.,0.),true))
     ss++;
   // Check to the right (+x)
-  if(!piece->inside(p+Vector(dxpp.x(),0.,0.)))
+  if(!piece->inside(p+Vector(dxpp.x(),0.,0.),true))
     ss++;
   // Check behind (-y)
-  if(!piece->inside(p-Vector(0.,dxpp.y(),0.)))
+  if(!piece->inside(p-Vector(0.,dxpp.y(),0.),true))
     ss++;
   // Check in front (+y)
-  if(!piece->inside(p+Vector(0.,dxpp.y(),0.)))
+  if(!piece->inside(p+Vector(0.,dxpp.y(),0.),true))
     ss++;
   // Check below (-z)
-  if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
+  if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
     ss++;
   // Check above (+z)
-  if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
+  if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
     ss++;
 
   if(ss>0){
@@ -1212,48 +1213,47 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
   }
   else {
     // Check to the left (-x)
-    if(!piece->inside(p-Vector(2.0*dxpp.x(),0.,0.)))
+    if(!piece->inside(p-Vector(2.0*dxpp.x(),0.,0.),true))
       ss++;
     // Check to the right (+x)
-    if(!piece->inside(p+Vector(2.0*dxpp.x(),0.,0.)))
+    if(!piece->inside(p+Vector(2.0*dxpp.x(),0.,0.),true))
       ss++;
     // Check behind (-y)
-    if(!piece->inside(p-Vector(0.,2.0*dxpp.y(),0.)))
+    if(!piece->inside(p-Vector(0.,2.0*dxpp.y(),0.),true))
       ss++;
     // Check in front (+y)
-    if(!piece->inside(p+Vector(0.,2.0*dxpp.y(),0.)))
+    if(!piece->inside(p+Vector(0.,2.0*dxpp.y(),0.),true))
       ss++;
     // Check below (-z)
-    if(!piece->inside(p-Vector(0.,0.,2.0*dxpp.z())))
+    if(!piece->inside(p-Vector(0.,0.,2.0*dxpp.z()),true))
       ss++;
     // Check above (+z)
-    if(!piece->inside(p+Vector(0.,0.,2.0*dxpp.z())))
+    if(!piece->inside(p+Vector(0.,0.,2.0*dxpp.z()),true))
       ss++;
     // Check to the lower-left (-x,-y)
-    if(!piece->inside(p-Vector(dxpp.x(),dxpp.y(),0.)))
+    if(!piece->inside(p-Vector(dxpp.x(),dxpp.y(),0.),true))
       ss++;
     // Check to the upper-right (+x,+y)
-    if(!piece->inside(p+Vector(dxpp.x(),dxpp.y(),0.)))
+    if(!piece->inside(p+Vector(dxpp.x(),dxpp.y(),0.),true))
       ss++;
     // Check to the upper-left (-x,+z)
-    if(!piece->inside(p+Vector(-dxpp.x(),dxpp.y(),0.)))
+    if(!piece->inside(p+Vector(-dxpp.x(),dxpp.y(),0.),true))
       ss++;
     // Check to the lower-right (x,-z)
-    if(!piece->inside(p+Vector(dxpp.x(),-dxpp.y(),0.)))
+    if(!piece->inside(p+Vector(dxpp.x(),-dxpp.y(),0.),true))
       ss++;
     // Check to the lower-left (-x,-z)
-    if(!piece->inside(p-Vector(dxpp.x(),0.,dxpp.z())))
+    if(!piece->inside(p-Vector(dxpp.x(),0.,dxpp.z()),true))
       ss++;
     // Check to the upper-right (+x,+z)
-    if(!piece->inside(p+Vector(dxpp.x(),0.,dxpp.z())))
+    if(!piece->inside(p+Vector(dxpp.x(),0.,dxpp.z()),true))
       ss++;
     // Check to the upper-left (-x,+z)
-    if(!piece->inside(p+Vector(-dxpp.x(),0.,dxpp.z())))
+    if(!piece->inside(p+Vector(-dxpp.x(),0.,dxpp.z()),true))
       ss++;
     // Check to the lower-right (x,-z)
-    if(!piece->inside(p+Vector(dxpp.x(),0.,-dxpp.z())))
+    if(!piece->inside(p+Vector(dxpp.x(),0.,-dxpp.z()),true))
       ss++;
-
   }
   if(ss>0){
     return 0.0;

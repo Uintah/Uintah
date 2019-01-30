@@ -133,7 +133,8 @@ ______________________________________________________________________*/
         std::vector<double> weight;        // weighting to compute ave
         std::vector<int>    nCells;        // number of cells per plane.  Each plane could differ with AMR
         weightingType       weightType;
-
+        std::string         fileDesc;      // description of variable used in the file header
+          
         TypeDescription::Type baseType;
         TypeDescription::Type subType;
 
@@ -141,6 +142,10 @@ ______________________________________________________________________*/
         void set_nPlanes(const int in) { nPlanes = in; }
         int  get_nPlanes() { return nPlanes; }
 
+        //__________________________________
+        //
+        void set_fileDesc(const std::string in) { fileDesc = in; }
+        
         //__________________________________
         void getPlanarWeight( std::vector<double> & a,
                               std::vector<int>    & b )
@@ -239,8 +244,13 @@ ______________________________________________________________________*/
       private:
         std::vector<double> sum;
         std::vector<double> ave;
-      public:
 
+      public:
+        
+        planarVar_double(){
+          fileDesc = "ave";
+        }
+        
         //__________________________________
         // this makes a deep copy
         virtual std::shared_ptr<planarVarBase> clone() const {
@@ -310,7 +320,7 @@ ______________________________________________________________________*/
           fprintf( fp,"# Level: %i nCells per plane: %i\n", levelIndex, nCells[0] );
           fprintf( fp,"# Simulation time: %16.15E \n", simTime );
           fprintf( fp,"# Plane location x,y,z           Average\n" );
-          fprintf( fp,"#________CC_loc.x_______________CC_loc.y______________CC_loc.z_______________ave" );
+          fprintf( fp,"# ________CC_loc.x__________CC_loc.y______________CC_loc.z______________%s", fileDesc.c_str() );
           if( weightType == NCELLS ){
             fprintf( fp,"___________nCells\n" );
           }
@@ -365,11 +375,16 @@ ______________________________________________________________________*/
 
       public:
 
+        planarVar_Vector(){
+          fileDesc = "ave.x__________________ave.y______________ave.z"; 
+        }
+        
         //__________________________________
         // this makes a deep copy
         virtual std::shared_ptr<planarVarBase> clone() const {
           return std::make_shared<planarVar_Vector>(*this);
         }
+        
         //__________________________________
         void reserve()
         {
@@ -443,7 +458,8 @@ ______________________________________________________________________*/
           fprintf( fp,"# Level: %i nCells per plane: %i\n", levelIndex, nCells[0] );;
           fprintf( fp,"# Simulation time: %16.15E \n", simTime );
           fprintf( fp,"# Plane location (x,y,z)           Average\n" );
-          fprintf( fp,"# ________CC_loc.x_______________CC_loc.y______________CC_loc.z_____________ave.x__________________ave.y______________ave.z" );
+          fprintf( fp,"# ________CC_loc.x__________CC_loc.y______________CC_loc.z______________%s", fileDesc.c_str() );
+
           if( weightType == NCELLS ){
             fprintf( fp,"_______________nCells\n" );
           }

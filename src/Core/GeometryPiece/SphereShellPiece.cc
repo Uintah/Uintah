@@ -76,7 +76,7 @@ SphereShellPiece::clone() const
 }
 
 bool 
-SphereShellPiece::inside(const Point& p) const
+SphereShellPiece::inside(const Point& p, const bool defVal=false) const
 {
   Vector diff = p - d_origin;
   if (diff.length() > d_radius)

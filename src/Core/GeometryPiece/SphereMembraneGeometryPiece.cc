@@ -77,7 +77,7 @@ SphereMembraneGeometryPiece::clone() const
 }
 
 bool
-SphereMembraneGeometryPiece::inside(const Point& p) const
+SphereMembraneGeometryPiece::inside(const Point& p, const bool defVal=false) const
 {
   Vector diff = p - d_origin;
 

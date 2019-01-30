@@ -122,7 +122,7 @@ public:
 
   //////////
   // Determines whether a point is inside the box.
-  virtual bool inside( const Point & pt ) const;
+  virtual bool inside( const Point & pt, const bool defVal ) const;
 
   //////////
   //  Returns the bounding box surrounding the NaaBox

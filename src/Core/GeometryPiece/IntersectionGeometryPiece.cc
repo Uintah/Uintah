@@ -84,10 +84,10 @@ IntersectionGeometryPiece::clone() const
 }
 
 bool
-IntersectionGeometryPiece::inside(const Point &p) const 
+IntersectionGeometryPiece::inside(const Point &p, const bool defVal=false)const 
 {
   for( unsigned int i = 0; i < child_.size(); i++ ) {
-    if (!child_[i]->inside(p))
+    if (!child_[i]->inside(p, defVal))
       return false;
   }
   return true;

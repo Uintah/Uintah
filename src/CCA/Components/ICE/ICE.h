@@ -656,29 +656,30 @@ using namespace ExchangeModels;
       }
 
       // debugging variables
-      int d_dbgVar1;
-      int d_dbgVar2;
+      int d_dbgVar1                 = 0;     //inputs for debugging          
+      int d_dbgVar2                 = 0;
       std::vector<IntVector>d_dbgIndices;
 
       // flags
-      bool d_doRefluxing;
-      int  d_surroundingMatl_indx;
-      bool d_impICE;
-      bool d_with_mpm;
-      bool d_with_rigid_mpm;
-      bool d_viscousFlow;
-      bool d_applyHydrostaticPress;
+      bool d_doRefluxing           = false;
+      int  d_surroundingMatl_indx  = -9;
+      bool d_impICE                = false;
+      bool d_with_mpm              = false;
+      bool d_with_rigid_mpm        = false;
+      bool d_viscousFlow           = false;
+      bool d_applyHydrostaticPress = true;
 
-      int d_max_iter_equilibration;
+      int d_max_iter_equilibration  = 100;
       int d_max_iter_implicit;
       int d_iters_before_timestep_recompute;
       double d_outer_iter_tolerance;
 
       // ADD HEAT VARIABLES
+      bool           d_add_heat     = false;
       std::vector<int>    d_add_heat_matls;
       std::vector<double> d_add_heat_coeff;
-      double         d_add_heat_t_start, d_add_heat_t_final;
-      bool           d_add_heat;
+      double         d_add_heat_t_start; 
+      double        d_add_heat_t_final;
 
       double d_ref_press;
 
@@ -732,8 +733,8 @@ using namespace ExchangeModels;
     virtual void addRefineDependencies(Task* task, const VarLabel* var,
                                        int step, int nsteps);
 
-    MaterialSubset* d_press_matl;
-    MaterialSet*    d_press_matlSet;
+    MaterialSubset* d_press_matl    = 0;
+    MaterialSet*    d_press_matlSet = 0;
 
     private:
 #ifdef HAVE_HYPRE
@@ -746,14 +747,15 @@ using namespace ExchangeModels;
       ICELabel* lb;
       SchedulerP d_subsched;
 
+      std::string d_delT_scheme    = "aggressive";
       bool   d_recompileSubsched;
-      double d_EVIL_NUM;
-      double d_SMALL_NUM;
-      double d_CFL;
-      double d_delT_knob;
-      double d_delT_diffusionKnob;     // used to modify the diffusion constribution to delT calc.
+      double d_EVIL_NUM            = -9.99e30;
+      double d_SMALL_NUM           = 1.0e-100;
+      double d_CFL                 =  d_EVIL_NUM;
+      double d_delT_speedSoundKnob = 1.0;
+      double d_delT_diffusionKnob  = 1.0;     // used to modify the diffusion constribution to delT calc.
       Vector d_gravity;
-
+      Vector d_fixedPressGrad      = Vector( d_EVIL_NUM );
 
       //__________________________________
       // Misc
@@ -762,15 +764,13 @@ using namespace ExchangeModels;
 
       Advector* d_advector;
       int  d_OrderOfAdvection;
-      bool d_useCompatibleFluxes;
-      bool d_clampSpecificVolume;
+      bool d_useCompatibleFluxes   = true;
+      bool d_clampSpecificVolume   = false;
 
       Turbulence* d_turbulence;
       WallShearStress *d_WallShearStressModel;
 
       std::vector<AnalysisModule*> d_analysisModules;
-
-      std::string d_delT_scheme;
 
       // exchange Model
       ExchangeModel* d_exchModel;

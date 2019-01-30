@@ -100,7 +100,7 @@ GUVSphereShellPiece::clone() const
 }
 
 bool 
-GUVSphereShellPiece::inside(const Point& p) const
+GUVSphereShellPiece::inside(const Point& p, const bool defVal=false) const
 {
   Vector diff = p - d_origin;
   if (diff.length() > d_radius)

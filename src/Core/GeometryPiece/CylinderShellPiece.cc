@@ -88,7 +88,7 @@ CylinderShellPiece::clone() const
 ///////////
 // Point inside cylinder
 bool 
-CylinderShellPiece::inside(const Point& p) const
+CylinderShellPiece::inside(const Point& p, const bool defVal=false) const
 {
   Vector axis = d_top-d_bottom;  
   Vector tobot = p-d_bottom;

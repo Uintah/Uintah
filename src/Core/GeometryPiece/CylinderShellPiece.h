@@ -89,7 +89,7 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     /*! \brief Determines whether a point is inside the cylinder.  */
     //////////////////////////////////////////////////////////////////////
-    virtual bool inside(const Point &p) const;
+    virtual bool inside(const Point &p, const bool defVal) const;
          
     //////////////////////////////////////////////////////////////////////
     /*! \brief Returns the bounding box surrounding the box. */

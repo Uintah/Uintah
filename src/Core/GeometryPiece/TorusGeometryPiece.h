@@ -104,7 +104,7 @@ WARNING
     //////////
     // Determines whether a point is inside the cylinder.
     //
-    virtual bool inside(const Point &p) const;
+    virtual bool inside(const Point &p, const bool defVal) const;
     
     //////////
     // Returns the bounding box surrounding the cylinder.

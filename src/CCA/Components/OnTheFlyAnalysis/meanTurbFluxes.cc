@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2019 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -70,8 +70,8 @@ meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
   d_lastCompTimeLabel = d_planeAve_1->d_lb->lastCompTimeLabel;
   d_velVar = make_shared< velocityVar >();
 
-  d_verifyScalarLabel=VarLabel::create( "verifyScalar", CCVariable<double>::getTypeDescription() );
-  d_verifyVectorLabel=VarLabel::create( "verifyVector", CCVariable<Vector>::getTypeDescription() );
+  d_verifyScalarLabel=VarLabel::create( "verifyScalar",   CCVariable<double>::getTypeDescription() );
+  d_verifyVectorLabel=VarLabel::create( "verifyVelocity", CCVariable<Vector>::getTypeDescription() );
 }
 
 //__________________________________
@@ -180,13 +180,15 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
   pv->baseType   = td_V->getType();
   pv->subType    = TypeDescription::Vector;
   pv->weightType = PA::NCELLS;
+  pv->fileDesc   = "u'u'__________________v'v'______________w'w'";
 
   planarVars.push_back( pv );
 
   // create planarAverage variable: shear turbulent stress
   auto pv2    = make_unique< PA::planarVar_Vector >(*pv);
   pv2->label  = d_velVar->shearTurbStrssLabel;
-
+  pv2->fileDesc   = "u'v'__________________v'w'______________w'u'";
+  
   planarVars.push_back( move(pv2) );
 
 
@@ -266,7 +268,8 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     pv->baseType   = td_V->getType();
     pv->subType    = TypeDescription::Vector;
     pv->weightType = PA::NCELLS;
-
+    pv->fileDesc   = "______________ u'Q'_________________v'Q'__________________w'Q'";
+    
     planarVars.push_back( move(pv) );
   }
 
@@ -382,7 +385,7 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * ,
 
     //__________________________________
     // Open the file
-    string filename = "test.out";
+    string filename = "testDistribution.txt";
     ifstream ifs;
 
     ifs.open ( filename, ifstream::in );
@@ -414,6 +417,7 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * ,
       ++numLines;
     }
 
+    // interior cells
     int numCells = patch->getNumCells();
 
     if( numLines != numCells ){
@@ -450,8 +454,10 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * ,
       double v = stod( num_str[1] );
       double w = stod( num_str[2] );
       double s = stod( num_str[3] );
-
-      printf( "%15.16e,%15.16e,%15.16e,%15.16e\n",u,v,w,s );
+      velocity[c] = Vector( u, v, w );
+      scalar[c]   = s;
+      
+     // printf( "%15.16e,%15.16e,%15.16e,%15.16e\n",u,v,w,s );
     }
   }
 }
@@ -687,7 +693,7 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
 
       offdiag[c] = Vector( vel.x() * vel.y(),     // u'v'
                            vel.y() * vel.w(),     // v'w'
-                           vel.z() * vel.z() );   // w'u'
+                           vel.z() * vel.u() );   // w'u'
 
       //__________________________________
       //  debugging

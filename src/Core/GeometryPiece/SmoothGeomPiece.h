@@ -81,7 +81,7 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     /*! Determines whether a point is inside the geometry.              */
     //////////////////////////////////////////////////////////////////////
-    virtual bool inside(const Point &p) const = 0;
+    virtual bool inside(const Point &p, const bool defVal) const = 0;
          
     //////////////////////////////////////////////////////////////////////
     /*! Returns the bounding box surrounding the particle domain.       */

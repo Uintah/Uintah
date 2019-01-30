@@ -407,7 +407,7 @@ int main(int argc, char *argv[])
               x[2] = pt.z();
 
               //points outside the cylinder are ignored.
-              if (do_cylinder && !cylinder->inside(pt)) continue;
+              if (do_cylinder && !cylinder->inside(pt,true)) continue;
 
               // FIXME: should have way of specifying endiness
               if(binmode) {

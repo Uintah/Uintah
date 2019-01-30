@@ -94,7 +94,7 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     /*! \brief Determines whether a point is inside the shell */
     //////////////////////////////////////////////////////////////////////
-    virtual bool inside(const Point &p) const = 0;
+    virtual bool inside(const Point &p, const bool defVal) const = 0;
          
     //////////////////////////////////////////////////////////////////////
     /*! \brief Returns the number of particles associated with the shell */
