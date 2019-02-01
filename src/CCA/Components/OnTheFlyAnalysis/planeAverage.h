@@ -546,6 +546,10 @@ ______________________________________________________________________*/
     //     PUBLIC:  VARIABLES
     MaterialSet*  d_matl_set;
     
+    
+    enum orientation { XY, XZ, YZ };        // plane orientation
+    orientation d_planeOrientation;
+    
         // general labels
     class planeAverageLabel {
     public:
@@ -656,8 +660,6 @@ ______________________________________________________________________*/
     std::vector< std::vector< bool > > d_progressVar;
     enum taskNames { INITIALIZE=0, ZERO=1, SUM=2, N_TASKS=3 };
 
-    enum orientation { XY, XZ, YZ };        // plane orientation
-    orientation d_planeOrientation;
   };
 }
 

@@ -188,7 +188,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
   auto pv2    = make_unique< PA::planarVar_Vector >(*pv);
   pv2->label  = d_velVar->shearTurbStrssLabel;
   pv2->fileDesc   = "u'v'__________________v'w'______________w'u'";
-  
+
   planarVars.push_back( move(pv2) );
 
 
@@ -269,7 +269,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     pv->subType    = TypeDescription::Vector;
     pv->weightType = PA::NCELLS;
     pv->fileDesc   = "______________ u'Q'_________________v'Q'__________________w'Q'";
-    
+
     planarVars.push_back( move(pv) );
   }
 
@@ -353,7 +353,9 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 }
 
 //______________________________________________________________________
-//
+//  This task reads a file containing multivariant normal distribution
+//  and fills each plane with these values.  The values are duplicated
+//  on between planes.
 void meanTurbFluxes::sched_populateVerifyLabels( SchedulerP   & sched,
                                                  const LevelP & level )
 {
@@ -366,12 +368,15 @@ void meanTurbFluxes::sched_populateVerifyLabels( SchedulerP   & sched,
 }
 //______________________________________________________________________
 //
-void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * ,
+void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
                                           const PatchSubset    * patches,
                                           const MaterialSubset * ,
                                           DataWarehouse        * ,
                                           DataWarehouse        * new_dw)
 {
+
+
+
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::verification");
@@ -398,7 +403,7 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * ,
     int fpos;       // file fposition
 
     //__________________________________
-    //  ignore header
+    //  ignore header lines (#)
     while ( getline( ifs, line ) ){
       if ( line[0] != '#'){
         break;
@@ -410,57 +415,206 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * ,
     ifs.seekg( fpos );
 
     //__________________________________
+    //  find number of cells in the plane of interest on this patch
+    IntVector pLo;         // plane lo and hi
+    IntVector pHi;
+    GridIterator iter = patch->getCellIterator();
+    d_planeAve_1->planeIterator( iter, pLo, pHi );
+
+    int nPlaneCellsPerPatch = ( pHi.x() - pLo.x() ) * ( pHi.y() - pLo.y() );
+
+    int lineNum = findFilePositionOffset( patches,  patch, nPlaneCellsPerPatch, pLo, pHi);
+
+    //__________________________________
     //  bulletproofing
-    int numLines = 0;
+    int nFileLines = 0;
 
     while ( getline(ifs, line, '\n') ){
-      ++numLines;
+      ++nFileLines;
     }
 
-    // interior cells
-    int numCells = patch->getNumCells();
-
-    if( numLines != numCells ){
+    if( lineNum > nFileLines ){
       ostringstream warn;
-      warn<< " The number of lines ("<< numLines << ") in the verification file ("<< filename
-          << ") does not equal the number of cells in the patch (" << numCells << "). ";
+      warn << "\n\nERROR:  The filePosition ("<< lineNum << ") exceeds the length of the "
+           << " verification file ("<< filename << ":"<< nFileLines << ").\n"
+           << " Verify that the meanTurbFluxesVerify.py:nPlaneCells variable"
+           << " matches the ups resolution.\n";
       throw InternalError( warn.str(), __FILE__, __LINE__ );
     }
 
     //__________________________________
-    // populate the variables with values from the file
+    //  move file fpositon forward
     ifs.clear();        // rewind file fposition
     ifs.seekg( fpos );
 
-    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
+    int c = 0;
 
-      // load row into a stringstream
-      getline( ifs, line );
-      stringstream ss;
-      ss << line;
+    while (  c!= lineNum){
+      getline(ifs, line, '\n');
+      c++;
+    }
+    fpos= ifs.tellg();
+    DOUT( true, pg->myRank() << " patch: " << patch->getID() << " lineNum: " << lineNum << " line:"  << line);
 
-      // Load each value of the row into num_str
-      std::vector<std::string> num_str;
 
-      for (int i = 0; i < 4; i++){
-        std::string str;
-        getline(ss, str, ',');
-        num_str.push_back( str );
+    //__________________________________
+    //  Loop over the cells in first plane on this patch and read in the
+    //  entries from the file
+    //    #   u,    v,    w,   scalar
+    int zLo = pLo.z();                                  // loop over all cells in plane0
+    for ( auto y = pLo.y(); y<pHi.y(); y++ ) {
+      for ( auto x = pLo.x(); x<pHi.x(); x++ ) {
+
+        IntVector c;
+        c  = d_planeAve_1->transformCellIndex(x, y, zLo);
+
+        // load row into a stringstream
+        getline( ifs, line );
+        stringstream ss;
+        ss << line;
+
+        // Load each value of the row into num_str
+        std::vector<std::string> num_str;
+
+        for (int col = 0; col < 5; col++){
+          std::string str;
+          getline(ss, str, ',');
+          num_str.push_back( str );
+        }
+
+        // convert from str -> int/double
+        int l    = stoi( num_str[0] );
+        double u = stod( num_str[1] );
+        double v = stod( num_str[2] );
+        double w = stod( num_str[3] );
+        double s = stod( num_str[4] );
+
+        velocity[c] = Vector( u, v, w );
+        scalar[c]   = s;
+
+       // printf( "%i %i, %15.16e, %15.16e, %15.16e, %15.16e\n",pg->myRank(), l,u,v,w,s );
       }
+    }
 
-      // convert from str -> double
-      double u = stod( num_str[0] );
-      double v = stod( num_str[1] );
-      double w = stod( num_str[2] );
-      double s = stod( num_str[3] );
-      velocity[c] = Vector( u, v, w );
-      scalar[c]   = s;
-      
-     // printf( "%15.16e,%15.16e,%15.16e,%15.16e\n",u,v,w,s );
+    //__________________________________
+    //  copy the values from first plane on this patch to the
+    //  remaining planes.
+    for ( auto z = pLo.z()+1; z<pHi.z(); z++ ) {         // loop over the planes in this patch
+      int l = lineNum;
+
+      for ( auto y = pLo.y(); y<pHi.y(); y++ ) {
+        for ( auto x = pLo.x(); x<pHi.x(); x++ ) {
+          IntVector p0;
+          IntVector cur;
+          p0  = d_planeAve_1->transformCellIndex(x, y, zLo);
+          cur = d_planeAve_1->transformCellIndex(x, y, z);
+
+          velocity[cur] =  velocity[p0];
+          scalar[cur]   =  scalar[p0];
+        #if 0
+          printf( "%i, %i %15.16e, %15.16e, %15.16e, %15.16e\n",pg->myRank(),
+               l,
+               velocity[cur].x(),
+               velocity[cur].y(),
+               velocity[cur].z(),
+               scalar[cur] );
+          l++;
+        #endif
+        }
+      }
     }
   }
 }
+
+
+//______________________________________________________________________
+//  Return the number of lines after the header
+//
+//  This is tricky!
+//  
+//  Algorithm;
+//    1) Create a map that contains the patchID and file offset for
+//       all patches containing the 0th plane.  
+//
+//    2) For this patch find the equivalent patch that contains plane 0.
+//    
+//    3) Look in the map for the offset of the equivalent patch
+//  WARNING:  This could be slow on large core count simulations
+int
+meanTurbFluxes::findFilePositionOffset( const PatchSubset  * patches,
+                                        const Patch        * myPatch,
+                                        const int nPlaneCellPerPatch,
+                                        const IntVector      pLo,
+                                        const IntVector      pHi)
+{
+  map<int, int> fileOffsetMap;
+
+  const LevelP level = getLevelP( patches );
+
+  //__________________________________
+  // find patches that contain the 0th plane
+  // and store the patch ID in a map
+  bool is0th_planePatch = false;
+  int  nPlanePatch      = 0;
+
+  for(Level::const_patch_iterator iter=level->patchesBegin(); iter < level->patchesEnd(); iter++) {
+
+    const Patch* patch = *iter;
+    IntVector lo = patch->getCellLowIndex();
+
+    bool is0th_planePatch = false;
+
+    // Is the lo index for this plane == 0?
+    switch( d_planeAve_1->d_planeOrientation ){
+
+      case planeAverage::XY:{                 // z is constant
+        is0th_planePatch = ( lo.z() == 0 );
+        break;
+      }
+      case planeAverage::XZ:{                 // y is constant
+        is0th_planePatch = ( lo.y() == 0 );
+        break;
+      }
+      case planeAverage::YZ:{                 // x is constant
+        is0th_planePatch = ( lo.x() == 0 );
+        break;
+      }
+      default:
+        break;
+    }
+
+
+    //__________________________________
+    //  compute the file offset
+    if( is0th_planePatch ){
+      int offset = nPlanePatch * nPlaneCellPerPatch;
+      int id     = patch->getID();
+
+      DOUT( true, d_myworld->myRank() << " fileOffsetMap patch: " << id << " offset: " << offset );
+
+      fileOffsetMap[id] = offset;
+      nPlanePatch += 1;
+    }
+  }
+
+  //__________________________________
+  //  Find the equivalent patch containing plane0
+  IntVector plane0_cell     = d_planeAve_1->transformCellIndex( pLo.x(), pLo.y(), 0 );
+
+  const Patch* plane0_patch = level->getPatchFromIndex( plane0_cell, false );
+  int id_p0 = plane0_patch->getID();
+
+  DOUT( true, d_myworld->myRank() << " patch: " << myPatch->getID()
+                             << " plane0Cell: " << plane0_cell
+                           << " plane0_patch: " << plane0_patch->getID()
+                           << " offset: " << fileOffsetMap[id_p0] );
+
+  return fileOffsetMap[id_p0];
+}
+
+
+
+
 
 //______________________________________________________________________
 /*
