@@ -78,6 +78,7 @@ class Output;
     bool        d_useCPTI;                                     // Flag for using CPTI interpolator 
     bool        d_useCohesiveZones;                            // Flag for using cohesive zones
     bool        d_useTracers;                                  // Flag for using tracers
+    bool        d_outputDataOnLoadCurveChange;                 // Output Data whenever the load curve changes from one step to the next
     bool        d_doThermalExpansion;                          // Decide whether to do thermExp or not
     bool        d_with_color;                                  // to turn on the color variable
     bool        d_fracture;                                    // to turn on fracture

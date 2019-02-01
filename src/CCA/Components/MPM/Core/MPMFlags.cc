@@ -114,6 +114,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_containerRadius                    =  9.e99;
   d_KEMaterial                         = -999;
   d_useTracers                         =  false;
+  d_outputDataOnLoadCurveChange        =  true;
   
   d_reductionVars = scinew reductionVars();
   d_reductionVars->mass             = false;
@@ -260,6 +261,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("containerRadius",   d_containerRadius);
   mpm_flag_ps->get("KEMaterial",        d_KEMaterial);
   mpm_flag_ps->get("use_tracers",       d_useTracers);
+  mpm_flag_ps->get("OutputDataOnLoadCurveChange",       
+                                        d_outputDataOnLoadCurveChange);
 
   mpm_flag_ps->get("DoAuthigenesis",     d_doAuthigenesis);
   mpm_flag_ps->get("AuthigenesisBaseFilename",d_authigenesisBaseFilename);
@@ -433,6 +436,8 @@ else{
     dbg << " containerRadius             = " << d_containerRadius   << endl;
     dbg << " KEMaterial                  = " << d_KEMaterial << endl;
     dbg << " Use Tracers                 = " << d_useTracers << endl;
+    dbg << " OutputDataOnLoadCurveChange = " << d_outputDataOnLoadCurveChange 
+                                                             << endl;
     dbg << "---------------------------------------------------------\n";
   }
 }
@@ -503,6 +508,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("containerRadius",   d_containerRadius);
   ps->appendElement("KEMaterial",        d_KEMaterial);
   ps->appendElement("use_tracers",       d_useTracers);
+  ps->appendElement("OutputDataOnLoadCurveChange",
+                                         d_outputDataOnLoadCurveChange);
   ps->appendElement("DoAuthigenesis",    d_doAuthigenesis);
   ps->appendElement("AuthigenesisBaseFilename",d_authigenesisBaseFilename);
   ps->appendElement("ChangeGrainMaterials",    d_changeGrainMaterials);

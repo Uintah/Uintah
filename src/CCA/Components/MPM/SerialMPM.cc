@@ -1961,6 +1961,12 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
       for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
         string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
         if (bcs_type == "Pressure") {
+          if(isProc0_macro){
+            string udaDir = m_output->getOutputLocation();
+            string filename=udaDir+"/TimePressure.dat";
+            std::ofstream TP(filename.c_str(),ios::app);
+            TP << "#BHIndex UintahTime Pressure GeologicTime GeologicTemp " << endl;
+          }
 
           // Get the material points per load curve
           sumlong_vartype numPart = 0;
@@ -3412,6 +3418,9 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   old_dw->get(simTimeVar, lb->simulationTimeLabel);
   double time = simTimeVar;
 
+  const Level* level = getLevel(patches);
+  const GridP grid = level->getGrid();
+
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
 
@@ -3436,6 +3445,11 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         // get the load curve time (not the ID), use that to get the BH index
         curLCIndex = pbc->getLoadCurve()->getNextIndex(time)-1;
         currentPhase= pbc->getLoadCurve()->getPhase(curLCIndex);
+        int lastLCIndex = pbc->getLoadCurve()->getLastIndex();
+        if(lastLCIndex != curLCIndex){
+          m_output->setOutputTimeStep( true, grid );
+        }
+        pbc->getLoadCurve()->setLastIndex(curLCIndex);
         if(burialHistory != nullptr){
           curBHIndex = pbc->getLoadCurve()->getBHIndex(curLCIndex);
           geoTime_MYa = burialHistory->getTime_Ma(curBHIndex);
@@ -3446,8 +3460,8 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           string udaDir = m_output->getOutputLocation();
           string filename=udaDir+"/TimePressure.dat";
           std::ofstream TP(filename.c_str(),ios::app);
-          TP << time        << " " << curLoad   << " " 
-             << geoTime_MYa << " " << geoTemp_K << endl;
+          TP << curBHIndex << " "  << time        << " " << curLoad   << " " 
+             << geoTime_MYa << " " << geoTemp_K   << endl;
         }
 
         // Calculate the force per particle at current time
@@ -6245,12 +6259,11 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
 
       unsigned int numNewPartNeeded = 0;
       for(unsigned int m = 0; m < numMPMMatls; m++){
-//       if(m!=aMI){
        bool notAcceptorMatl = true;
        for(unsigned int index = 0; 
                         index < numAcceptorMaterials; 
                         index++){
-         if(m==flags->d_acceptorMaterialIndex[index]){
+         if(m==((unsigned int) flags->d_acceptorMaterialIndex[index])){
            notAcceptorMatl = false;
          }
        }
@@ -6328,7 +6341,7 @@ void SerialMPM::changeGrainMaterials(const ProcessorGroup*,
        for(unsigned int index = 0; 
                         index < numAcceptorMaterials; 
                         index++){
-         if(m==flags->d_acceptorMaterialIndex[index]){
+         if(m==((unsigned int) flags->d_acceptorMaterialIndex[index])){
            notAcceptorMatl = false;
          }
        }
