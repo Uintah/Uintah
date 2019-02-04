@@ -897,9 +897,9 @@ void planeAverage::sumOverAllProcs(const ProcessorGroup * pg,
     std::shared_ptr<planarVarBase> analyzeVar = planarVars[i];
 
     int rank = pg->myRank();
-    analyzeVar->ReduceWeight( rank );
     analyzeVar->ReduceCC_pos( rank );
-    analyzeVar->ReduceVar( rank );
+    analyzeVar->ReduceBcastWeight( rank );
+    analyzeVar->ReduceBcastVar( rank );
 
   }  // loop over planarVars
   d_progressVar[SUM][L_indx] = true;

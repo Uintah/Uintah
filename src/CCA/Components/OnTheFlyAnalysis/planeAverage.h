@@ -163,7 +163,8 @@ ______________________________________________________________________*/
 
         //__________________________________
         // sum over all procs the weight and nPlanar cells
-        void ReduceWeight( const int rank )
+        // broadcast the value
+        void ReduceBcastWeight( const int rank )
         {
 
           const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
@@ -175,6 +176,10 @@ ______________________________________________________________________*/
             Uintah::MPI::Reduce(  &weight.front(), 0,            nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, com );
             Uintah::MPI::Reduce(  &nCells.front(), 0,            nPlanes, MPI_INT,    MPI_SUM, rootRank, com );
           }
+
+          // broadcast the weight to all ranks
+          Uintah::MPI::Bcast( &nCells.front(), nPlanes, MPI_INT,    rootRank, com);
+          Uintah::MPI::Bcast( &weight.front(), nPlanes, MPI_DOUBLE, rootRank, com);
         }
 
         //__________________________________
@@ -227,7 +232,7 @@ ______________________________________________________________________*/
 
         virtual  void zero_all_vars(){}
 
-        virtual  void ReduceVar(const int rank ) = 0;
+        virtual  void ReduceBcastVar(const int rank ) = 0;
 
         virtual  void printAverage( FILE* & fp,
                                     const int levelIndex,
@@ -302,7 +307,9 @@ ______________________________________________________________________*/
         }
 
         //__________________________________
-        void ReduceVar( const int rank )
+        // Reduce the sum over all ranks and
+        // broadcast the value.
+        void ReduceBcastVar( const int rank )
         {
           const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
           if( rank == rootRank ){
@@ -310,6 +317,9 @@ ______________________________________________________________________*/
           } else {
             Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, MPI_DOUBLE, MPI_SUM, rootRank, com );
           }
+          
+          // broadcast the sum to all ranks
+          Uintah::MPI::Bcast( &sum.front(), nPlanes, MPI_DOUBLE, rootRank, com);
         }
 
         //__________________________________
@@ -430,11 +440,13 @@ ______________________________________________________________________*/
         }
 
         //__________________________________
-        void ReduceVar( const int rank )
+        // Reduce the sum over all ranks and
+        // broadcast the value.
+        void ReduceBcastVar( const int rank )
         {
-          MPI_Datatype  mpitype;
-          Uintah::MPI::Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
-          Uintah::MPI::Type_commit( &mpitype );
+          MPI_Datatype  Vector_type;
+          Uintah::MPI::Type_vector(1, 3, 3, MPI_DOUBLE, &Vector_type);
+          Uintah::MPI::Type_commit( &Vector_type );
 
           MPI_Op vector_add;
           MPI_Op_create( (MPI_User_function*) plusEqualVector, 1, &vector_add );
@@ -442,11 +454,14 @@ ______________________________________________________________________*/
           const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
 
           if( rank == rootRank ){
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, mpitype, vector_add, rootRank, com );
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, Vector_type, vector_add, rootRank, com );
           } else {
-            Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, mpitype, vector_add, rootRank, com );
+            Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, Vector_type, vector_add, rootRank, com );
           }
           MPI_Op_free( &vector_add );
+          
+          // broadcast the sum to all ranks
+          Uintah::MPI::Bcast( &sum.front(), nPlanes, Vector_type, rootRank, com);
         }
 
 

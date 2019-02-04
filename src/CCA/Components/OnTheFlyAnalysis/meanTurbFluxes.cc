@@ -321,7 +321,7 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 
   d_planeAve_1->sched_computePlanarAve( sched, level );
 
-  d_planeAve_1->sched_writeToFiles(     sched, level, "planeAve" );
+  d_planeAve_1->sched_writeToFiles(     sched, level, "planarAve" );
 
   d_planeAve_1->sched_resetProgressVar( sched, level );
 
@@ -347,7 +347,7 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 
   d_planeAve_2->sched_computePlanarAve( sched, level );
 
-  d_planeAve_2->sched_writeToFiles(     sched, level, "planeAve_TurbFluxes" );
+  d_planeAve_2->sched_writeToFiles(     sched, level, "TurbFluxes" );
 
   d_planeAve_2->sched_resetProgressVar( sched, level );
 }
@@ -483,7 +483,7 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
         }
 
         // convert from str -> int/double
-        int l    = stoi( num_str[0] );
+        //int l    = stoi( num_str[0] );
         double u = stod( num_str[1] );
         double v = stod( num_str[2] );
         double w = stod( num_str[3] );
@@ -500,7 +500,7 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
     //  copy the values from first plane on this patch to the
     //  remaining planes.
     for ( auto z = pLo.z()+1; z<pHi.z(); z++ ) {         // loop over the planes in this patch
-      int l = lineNum;
+     // int l = lineNum;
 
       for ( auto y = pLo.y(); y<pHi.y(); y++ ) {
         for ( auto x = pLo.x(); x<pHi.x(); x++ ) {
@@ -554,8 +554,7 @@ meanTurbFluxes::findFilePositionOffset( const PatchSubset  * patches,
   //__________________________________
   // find patches that contain the 0th plane
   // and store the patch ID in a map
-  bool is0th_planePatch = false;
-  int  nPlanePatch      = 0;
+  int  nPlanePatch = 0;
 
   for(Level::const_patch_iterator iter=level->patchesBegin(); iter < level->patchesEnd(); iter++) {
 
@@ -589,9 +588,6 @@ meanTurbFluxes::findFilePositionOffset( const PatchSubset  * patches,
     if( is0th_planePatch ){
       int offset = nPlanePatch * nPlaneCellPerPatch;
       int id     = patch->getID();
-
-      DOUT( true, d_myworld->myRank() << " fileOffsetMap patch: " << id << " offset: " << offset );
-
       fileOffsetMap[id] = offset;
       nPlanePatch += 1;
     }
@@ -604,10 +600,12 @@ meanTurbFluxes::findFilePositionOffset( const PatchSubset  * patches,
   const Patch* plane0_patch = level->getPatchFromIndex( plane0_cell, false );
   int id_p0 = plane0_patch->getID();
 
+#if 1
   DOUT( true, d_myworld->myRank() << " patch: " << myPatch->getID()
                              << " plane0Cell: " << plane0_cell
                            << " plane0_patch: " << plane0_patch->getID()
                            << " offset: " << fileOffsetMap[id_p0] );
+#endif
 
   return fileOffsetMap[id_p0];
 }
