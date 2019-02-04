@@ -111,17 +111,8 @@ WARNING
         d_load[index] = newLoad;
       }
 
-      inline void setLastIndex(int index) {
-        d_lastIndex = index;
-      }
-
       // Get the load curve id
       inline int getID() const {return d_id;}
-
-      // Get the index used last timestep
-      inline int  getLastIndex(){
-        return d_lastIndex;
-      }
 
       // Get the load at time t
       inline T getLoad(double t) {
@@ -173,7 +164,6 @@ WARNING
       double d_curTime;
       double d_stableKE;
       bool d_UBH;
-      int d_lastIndex;
    };
 
    // Construct a load curve from the problem spec
@@ -188,7 +178,6 @@ WARNING
      loadCurve->require("id", d_id);
      loadCurve->getWithDefault("use_burial_history", d_UBH, false);
      loadCurve->getWithDefault("stableKE", d_stableKE,      2.0e-6);
-     loadCurve->getWithDefault("lastIndex",d_lastIndex,     0);
      if(d_UBH){
       ProblemSpecP root = ps->getRootNode();
       ProblemSpecP TimeBlock = root->findBlock("Time");
@@ -266,7 +255,6 @@ WARNING
            timeLoad = timeLoad->findNextBlock("time_point") ) {
          double time = 0.0;
          double maxKE = 9.9e99;
-         double temp = 300.;
          int BHIndex;
          std::string phaseType;
          T load;
@@ -291,7 +279,6 @@ WARNING
        lc_ps->appendElement("id",d_id);
        lc_ps->appendElement("stableKE",d_stableKE);
        lc_ps->appendElement("use_burial_history", false);
-       lc_ps->appendElement("lastIndex", d_lastIndex);
        for (int i = 0; i<(int)d_time.size();i++) {
          ProblemSpecP time_ps = lc_ps->appendChild("time_point");
          time_ps->appendElement("time",      d_time[i]);

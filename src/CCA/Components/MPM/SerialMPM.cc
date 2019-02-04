@@ -829,6 +829,7 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                     this, &SerialMPM::applyExternalLoads);
 
   t->requires(Task::OldDW, lb->simulationTimeLabel);
+  t->requires(Task::OldDW, lb->delTLabel);
 
   if (!flags->d_mms_type.empty()) {
     //MMS problems need displacements
@@ -3418,6 +3419,9 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   old_dw->get(simTimeVar, lb->simulationTimeLabel);
   double time = simTimeVar;
 
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+
   const Level* level = getLevel(patches);
   const GridP grid = level->getGrid();
 
@@ -3437,23 +3441,62 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
     for (int ii = 0;ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
       string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
       if (bcs_type == "Pressure") {
-
         PressureBC* pbc =
           dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
         pbcP.push_back(pbc);
 
         // get the load curve time (not the ID), use that to get the BH index
         curLCIndex = pbc->getLoadCurve()->getNextIndex(time)-1;
+        int lastLCIndex = pbc->getLoadCurve()->getNextIndex(time-delT)-1;
         currentPhase= pbc->getLoadCurve()->getPhase(curLCIndex);
-        int lastLCIndex = pbc->getLoadCurve()->getLastIndex();
+        bool outputStep = false;
         if(lastLCIndex != curLCIndex){
-          m_output->setOutputTimeStep( true, grid );
+          m_output->setOutputTimeStep(    true, grid );
+          m_output->setCheckpointTimeStep(true, grid );
+          outputStep = true;
         }
-        pbc->getLoadCurve()->setLastIndex(curLCIndex);
         if(burialHistory != nullptr){
           curBHIndex = pbc->getLoadCurve()->getBHIndex(curLCIndex);
+//          cout << "curBHIndex = " << curBHIndex << endl;
+          double uintahDisTime = 
+                         burialHistory->getUintahDissolutionTime(curBHIndex);
+          double geoInterval = burialHistory->getTime_Ma(curBHIndex) - 
+                         burialHistory->getTime_Ma(curBHIndex - 1);
+          // The following is to get an interpolated temperature out
+          // of the burial history for use in the dissolution model
+ 
+          if(currentPhase=="hold"){
+            double holdStartTime = pbc->getLoadCurve()->getTime(curLCIndex);
+            double startTemp = burialHistory->getTemperature_K(curBHIndex);
+            double endTemp   = burialHistory->getTemperature_K(curBHIndex-1);
+            geoTemp_K = startTemp + ((endTemp-startTemp)/uintahDisTime)
+                                    *(time-holdStartTime);
+          } else if(currentPhase=="ramp") {
+            geoTemp_K   = burialHistory->getTemperature_K(curBHIndex-1);
+          } else if(currentPhase=="settle"){
+            geoTemp_K   = burialHistory->getTemperature_K(curBHIndex);
+          }
           geoTime_MYa = burialHistory->getTime_Ma(curBHIndex);
-          geoTemp_K   = burialHistory->getTemperature_K(curBHIndex);
+          bool EOC    = burialHistory->getEndOnCompletion(curBHIndex);
+          if(EOC && currentPhase=="ramp" && outputStep){
+            proc0cout << "Stopping per burial history specification" << endl;
+            new_dw->put(bool_or_vartype(true), 
+                        VarLabel::find(endSimulation_name));
+          }
+          if(curBHIndex==0){ // shut down the simulation
+            proc0cout << "Reached the end of the burial history" << endl;
+            new_dw->put(bool_or_vartype(true), 
+                        VarLabel::find(endSimulation_name));
+          } // endif
+          burialHistory->setCurrentIndex(curBHIndex);
+          burialHistory->setCurrentPhaseType(currentPhase);
+
+          // DISSOLUTION
+          if (flags->d_doingDissolution) {
+           dissolutionModel->setTemperature(geoTemp_K);
+           dissolutionModel->setPhase(currentPhase);
+           dissolutionModel->setTimeConversionFactor(geoInterval/uintahDisTime);
+          }
         }
         if(isProc0_macro){
           double curLoad = pbc->getLoadCurve()->getLoad(time);
@@ -3469,31 +3512,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       }
     } // loop over BCs
   } // if use load curves
-
-  if(burialHistory != nullptr){
-    burialHistory->setCurrentIndex(curBHIndex);
-    burialHistory->setCurrentPhaseType(currentPhase);
-    double curBHTemperature = burialHistory->getTemperature_K(curBHIndex);
-    double uintahDissTime = burialHistory->getUintahDissolutionTime(curBHIndex);
-    double geoInterval = burialHistory->getTime_Ma(curBHIndex) - 
-                         burialHistory->getTime_Ma(curBHIndex - 1);
-
-//    cout << "geoInterval = " << geoInterval << endl;
-//    cout << "uintahDissTime = " << uintahDissTime << endl;
-
-    if(curBHIndex==0){ // shut down the simulation
-      cerr << "Reached the end of the burial history" << endl;
-//      m_endSimulation = true;
-        new_dw->put(bool_or_vartype(true), VarLabel::find(endSimulation_name));
-    } // endif
-
-    // DISSOLUTION
-    if (flags->d_doingDissolution) {
-      dissolutionModel->setTemperature(curBHTemperature);
-      dissolutionModel->setPhase(currentPhase);
-      dissolutionModel->setTimeConversionFactor(geoInterval/uintahDissTime);
-    }
-  }
 
   // Loop thru patches to update external force vector
   for(int p=0;p<patches->size();p++){

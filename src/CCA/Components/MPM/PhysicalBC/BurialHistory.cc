@@ -47,8 +47,8 @@ int BurialHistory::populate(ProblemSpecP& ps)
   if (burHist){
    burHist->getWithDefault("pressure_conversion_factor", 
                           d_pressure_conversion_factor, 1.0);
-   burHist->getWithDefault("ramp_time",   d_ramp_time, 1.0);
-   burHist->getWithDefault("settle_time", d_ramp_time, 2.0);
+   burHist->getWithDefault("ramp_time",   d_ramp_time,  1.0);
+   burHist->getWithDefault("settle_time", d_settle_time,2.0);
    for( ProblemSpecP timePoint = burHist->findBlock("time_point");
        timePoint != nullptr;
        timePoint = timePoint->findNextBlock("time_point") ) {
@@ -60,6 +60,9 @@ int BurialHistory::populate(ProblemSpecP& ps)
      double effStress = 0.0;
      double waterSat  = 0.0;
      double UDT       = 0.0;
+     double sigma_h   = 0.0;
+     double sigma_H   = 0.0;
+     bool   EOC       = false;
      timePoint->require("time_Ma",               time);
      timePoint->require("depth_m",               depth);
      timePoint->require("temperature_K",         temp);
@@ -68,6 +71,9 @@ int BurialHistory::populate(ProblemSpecP& ps)
      timePoint->require("effectiveStress_bar",   effStress);
      timePoint->require("waterSaturation_pct",   waterSat);
      timePoint->getWithDefault("UintahDissolutionTime", UDT, 0.0);
+     timePoint->getWithDefault("sigma_h_bar",     sigma_h,   0.0);
+     timePoint->getWithDefault("sigma_H_bar",     sigma_H,   0.0);
+     timePoint->getWithDefault("EndOnCompletion", EOC,       false);
 
      d_time_Ma.push_back(time);
      d_depth_m.push_back(depth);
@@ -77,6 +83,9 @@ int BurialHistory::populate(ProblemSpecP& ps)
      d_effectiveStress_bar.push_back(effStress);
      d_waterSaturation_pct.push_back(waterSat);
      d_uintahDissolutionTime.push_back(UDT);
+     d_sigma_h_bar.push_back(sigma_h);
+     d_sigma_H_bar.push_back(sigma_H);
+     d_endOnCompletion.push_back(EOC);
    }
    burHist->getWithDefault("current_index", d_CI, d_time_Ma.size()-1);
   } // endif
@@ -102,5 +111,8 @@ void BurialHistory::outputProblemSpec(ProblemSpecP& ps)
     time_ps->appendElement("effectiveStress_bar",  d_effectiveStress_bar[i]);
     time_ps->appendElement("waterSaturation_pct",  d_waterSaturation_pct[i]);
     time_ps->appendElement("UintahDissolutionTime",d_uintahDissolutionTime[i]);
+    time_ps->appendElement("EndOnCompletion",      d_endOnCompletion[i]);
+    time_ps->appendElement("sigma_h",              d_sigma_h_bar[i]);
+    time_ps->appendElement("sigma_H",              d_sigma_H_bar[i]);
   }
 }
