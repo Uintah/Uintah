@@ -1202,7 +1202,7 @@ planeAverage::createDirectory( mode_t mode,
 }
 
 //______________________________________________________________________
-// k is the plane
+// transform cell index back to original orientation
 IntVector planeAverage::transformCellIndex(const int i,
                                            const int j,
                                            const int k)
@@ -1218,7 +1218,7 @@ IntVector planeAverage::transformCellIndex(const int i,
       break;
     }
     case YZ:{                   // x is constant
-      c = IntVector( j,k,i );
+      c = IntVector( k,i,j );
       break;
     }
     default:
@@ -1229,7 +1229,7 @@ IntVector planeAverage::transformCellIndex(const int i,
 
 
 //______________________________________________________________________
-//
+//  Returns an index range for a plane
 void planeAverage::planeIterator( const GridIterator& patchIter,
                                   IntVector & lo,
                                   IntVector & hi )
@@ -1239,12 +1239,12 @@ void planeAverage::planeIterator( const GridIterator& patchIter,
 
   switch( d_planeOrientation ){
     case XY:{                 // z is constant
-      lo = patchLo;
+      lo = patchLo;           // Iterate over x, y cells
       hi = patchHi;
       break;
     }
     case XZ:{                 // y is constant
-      lo.x( patchLo.x() );
+      lo.x( patchLo.x() );    // iterate over x and z cells
       lo.y( patchLo.z() );
       lo.z( patchLo.y() );
 
@@ -1254,7 +1254,7 @@ void planeAverage::planeIterator( const GridIterator& patchIter,
       break;
     }
     case YZ:{                 // x is constant
-      lo.x( patchLo.y() );
+      lo.x( patchLo.y() );    // iterate over y and z cells
       lo.y( patchLo.z() );
       lo.z( patchLo.x() );
 

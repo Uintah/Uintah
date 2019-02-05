@@ -823,6 +823,10 @@
       </lines>
       
       <!--  meanTurbFluxes __________________________________-->
+      <monitorCell                      spec= "OPTIONAL VECTOR" />
+      
+      <enableVerification               spec= "OPTIONAL NO_DATA" />
+      
       <velocity                         spec= "OPTIONAL NO_DATA" need_applies_to="name meanTurbFluxes"
                                           attribute1="label REQUIRED STRING"
                                           attribute2="weighting OPTIONAL STRING 'none, nCells, mass'" />     

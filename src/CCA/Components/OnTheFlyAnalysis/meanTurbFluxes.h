@@ -199,6 +199,7 @@ ______________________________________________________________________*/
       planeAverage * d_planeAve_1;
       planeAverage * d_planeAve_2;
       IntVector d_monitorCell;             // Monitor this cells.  Used for debugging
+      bool d_doVerification { false };
   };
 }
 

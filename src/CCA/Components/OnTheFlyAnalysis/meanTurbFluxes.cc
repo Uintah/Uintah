@@ -52,8 +52,29 @@ Dout dbg_OTF_MTF("meanTurbFluxes", "OnTheFlyAnalysis", "meanTurbFluxes debug str
 
 //______________________________________________________________________
 /*
-  ToDo:
-    - verification task
+Verification steps:
+    1)  Edit: 
+        src/CCA/Components/OnTheFlyAnalysis/meanTurbFluxesVerify.py
+        nPlaneCells   = np.array( [30, 30, 1]) 
+        change nPlaneCells to match your problem.
+        
+    2)  Execute: meanTurbFluxesVerify.py
+        To generate the files "testDistribution.txt" and "covariance.txt"
+        
+    3) Modify the labels used in meanTurbFluxes section
+            <velocity label="verifyVelocity" />
+            <analyze label="verifyScalar"     weighting="nCells" /> 
+            <analyze label="verifyVelocity"   weighting="nCells" />
+       
+       Also turn on verification task:
+        <enableVerificationTask/>
+     
+     4) Run the simulation and compare:
+         <uda>/TurbFluxes/<timestep>/L-0/verifyScalar_turbFlux_0, normalTurbStrss_0,  shearTurbStrss_0
+        
+        to
+        "covariance.txt"
+          
 ______________________________________________________________________*/
 
 meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
@@ -146,6 +167,12 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
 
 
   //__________________________________
+  //  enable Verification
+  if( m_module_spec->findBlock( "enableVerification")  !=  nullptr ) {
+    d_doVerification = true;
+  }
+
+  //__________________________________
   //  velocity label
   map<string,string> attribute;
   ProblemSpecP vel_ps = m_module_spec->findBlock( "velocity" );
@@ -212,7 +239,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
 
     //__________________________________
     //  bulletproofing
-    const TypeDescription* td = label->typeDescription();
+    const TypeDescription* td      = label->typeDescription();
     const TypeDescription* subtype = td->getSubType();
 
     const TypeDescription::Type baseType = td->getType();
@@ -231,6 +258,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     // define intermediate quantity label names
     const TypeDescription * td_D   = CCVariable<double>::getTypeDescription();
     const TypeDescription * td_V   = CCVariable<Vector>::getTypeDescription();
+    
     VarLabel* primeLabel     = VarLabel::create( labelName + "_prime",    td_D );        // Q'
     VarLabel* turbFluxLabel  = VarLabel::create( labelName + "_turbFlux", td_V );        // u'Q', v'Q', w'Q'
 
@@ -355,10 +383,14 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 //______________________________________________________________________
 //  This task reads a file containing multivariant normal distribution
 //  and fills each plane with these values.  The values are duplicated
-//  on between planes.
+//  on all other planes on all patches
 void meanTurbFluxes::sched_populateVerifyLabels( SchedulerP   & sched,
                                                  const LevelP & level )
 {
+  if( ! d_doVerification ){
+    return;
+  }
+  
   Task* t = scinew Task( "meanTurbFluxes::populateVerifyLabels",
                     this,&meanTurbFluxes::populateVerifyLabels );
 
@@ -447,14 +479,14 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
     ifs.clear();        // rewind file fposition
     ifs.seekg( fpos );
 
-    int c = 0;
+    int l = 0;
 
-    while (  c!= lineNum){
+    while ( l != lineNum){
       getline(ifs, line, '\n');
-      c++;
+      l++;
     }
     fpos= ifs.tellg();
-    DOUT( true, pg->myRank() << " patch: " << patch->getID() << " lineNum: " << lineNum << " line:"  << line);
+//    DOUT( true, pg->myRank() << " patch: " << patch->getID() << " lineNum: " << lineNum << " line:"  << line);
 
 
     //__________________________________
