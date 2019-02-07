@@ -100,13 +100,9 @@ meanTurbFluxes::~meanTurbFluxes()
 {
   DOUT(dbg_OTF_MTF, " Doing: destorying meanTurbFluxes" );
 
-  if(d_matl_set && d_matl_set->removeReference()) {
-    delete d_matl_set;
-  }
-
   delete d_planeAve_1;
   delete d_planeAve_2;
-  VarLabel::destroy( d_lastCompTimeLabel );
+
   VarLabel::destroy( d_verifyVectorLabel );
   VarLabel::destroy( d_verifyScalarLabel );
 }

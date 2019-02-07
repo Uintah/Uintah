@@ -118,7 +118,6 @@ ______________________________________________________________________*/
         if(matSubSet && matSubSet->removeReference()){
           delete matSubSet;
         }
-        VarLabel::destroy( label );
         VarLabel::destroy( primeLabel );
         VarLabel::destroy( turbFluxLabel );
       }
@@ -194,11 +193,11 @@ ______________________________________________________________________*/
     VarLabel* d_verifyScalarLabel {nullptr};  // labels for verification
     VarLabel* d_verifyVectorLabel {nullptr};
 
-    private:
-      planeAverage * d_planeAve_1;
-      planeAverage * d_planeAve_2;
-      IntVector d_monitorCell;             // Monitor this cells.  Used for debugging
-      bool d_doVerification { false };
+    planeAverage * d_planeAve_1;
+    planeAverage * d_planeAve_2;
+    
+    IntVector d_monitorCell;             // Monitor this cells.  Used for debugging
+    bool d_doVerification { false };
   };
 }
 
