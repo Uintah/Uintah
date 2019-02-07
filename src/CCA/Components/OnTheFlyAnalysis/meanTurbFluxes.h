@@ -153,7 +153,6 @@ ______________________________________________________________________*/
                               DataWarehouse        * new_dw);
                               
     int findFilePositionOffset( const PatchSubset  * patches, 
-                                const Patch        * myPatch,
                                 const int nPlaneCellPerPatch,
                                 const IntVector      pLo,
                                 const IntVector      pHi);
@@ -187,7 +186,7 @@ ______________________________________________________________________*/
     //__________________________________
     // global constants begin with "d_"
     std::vector< std::shared_ptr< Qvar > >  d_Qvars;
-    std::shared_ptr< velocityVar >          d_velVar;
+    std::shared_ptr< velocityVar >          d_velocityVar;
 
     MaterialSet*  d_matl_set;
     

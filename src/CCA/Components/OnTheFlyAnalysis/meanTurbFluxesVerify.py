@@ -16,11 +16,11 @@ import matplotlib.pyplot as plt
 #______________________________________________________________________
 
 
-nPlaneCells   = np.array( [30, 30, 1])     # x, y, z
+nPlaneCells   = np.array( [80, 80, 1])     # x, y, z
 
 nPatches      = 1
 nCellsPerPatch = np.divide( nPlaneCells, nPatches )
-numSamples     = np.prod( nCellsPerPatch )
+numSamples     = int( np.prod( nCellsPerPatch ) )
 
 print ('nCellPerPatch %i' % numSamples)
 
