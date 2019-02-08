@@ -52,8 +52,29 @@ Dout dbg_OTF_MTF("meanTurbFluxes", "OnTheFlyAnalysis", "meanTurbFluxes debug str
 
 //______________________________________________________________________
 /*
-  ToDo:
-    - verification task
+Verification steps:
+    1)  Edit: 
+        src/CCA/Components/OnTheFlyAnalysis/meanTurbFluxesVerify.py
+        nPlaneCells   = np.array( [30, 30, 1]) 
+        change nPlaneCells to match your problem.
+        
+    2)  Execute: meanTurbFluxesVerify.py
+        To generate the files "testDistribution.txt" and "covariance.txt"
+        
+    3) Modify the labels used in meanTurbFluxes section
+            <velocity label="verifyVelocity" />
+            <analyze label="verifyScalar"     weighting="nCells" /> 
+            <analyze label="verifyVelocity"   weighting="nCells" />
+       
+       Also turn on verification task:
+        <enableVerificationTask/>
+     
+     4) Run the simulation and compare:
+         <uda>/TurbFluxes/<timestep>/L-0/verifyScalar_turbFlux_0, normalTurbStrss_0,  shearTurbStrss_0
+        
+        to
+        "covariance.txt"
+          
 ______________________________________________________________________*/
 
 meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
@@ -68,7 +89,7 @@ meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
   d_planeAve_2 = scinew planeAverage( myworld, materialManager, module_spec, false, true,  1);
 
   d_lastCompTimeLabel = d_planeAve_1->d_lb->lastCompTimeLabel;
-  d_velVar = make_shared< velocityVar >();
+  d_velocityVar = make_shared< velocityVar >();
 
   d_verifyScalarLabel=VarLabel::create( "verifyScalar",   CCVariable<double>::getTypeDescription() );
   d_verifyVectorLabel=VarLabel::create( "verifyVelocity", CCVariable<Vector>::getTypeDescription() );
@@ -79,13 +100,9 @@ meanTurbFluxes::~meanTurbFluxes()
 {
   DOUT(dbg_OTF_MTF, " Doing: destorying meanTurbFluxes" );
 
-  if(d_matl_set && d_matl_set->removeReference()) {
-    delete d_matl_set;
-  }
-
   delete d_planeAve_1;
   delete d_planeAve_2;
-  VarLabel::destroy( d_lastCompTimeLabel );
+
   VarLabel::destroy( d_verifyVectorLabel );
   VarLabel::destroy( d_verifyScalarLabel );
 }
@@ -100,7 +117,7 @@ meanTurbFluxes::~meanTurbFluxes()
 template<typename T, typename ...Args>
 std::unique_ptr<T> meanTurbFluxes::make_unique( Args&& ...args )
 {
-    return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
+  return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
 }
 
 
@@ -146,6 +163,12 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
 
 
   //__________________________________
+  //  enable Verification
+  if( m_module_spec->findBlock( "enableVerification")  !=  nullptr ) {
+    d_doVerification = true;
+  }
+
+  //__________________________________
   //  velocity label
   map<string,string> attribute;
   ProblemSpecP vel_ps = m_module_spec->findBlock( "velocity" );
@@ -156,25 +179,25 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
 
   vel_ps->getAttributes( attribute );
   string labelName = attribute["label"];
-  d_velVar->label   = VarLabel::find( labelName );
+  d_velocityVar->label   = VarLabel::find( labelName );
 
-  if( d_velVar->label == nullptr ){
+  if( d_velocityVar->label == nullptr ){
     throw ProblemSetupException("meanTurbFluxes: velocity label not found: " + labelName , __FILE__, __LINE__);
   }
 
-  d_velVar->matl  = defaultMatl;
+  d_velocityVar->matl  = defaultMatl;
 
   const TypeDescription * td_V     = CCVariable<Vector>::getTypeDescription();
-  d_velVar->primeLabel            = VarLabel::create( labelName + "_prime",         td_V);  // u', v', w'
-  d_velVar->normalTurbStrssLabel  = VarLabel::create( d_velVar->normalTurbStrssName, td_V); // u'u', v'v', w'w'
-  d_velVar->shearTurbStrssLabel   = VarLabel::create( d_velVar->shearTurbStrssName,  td_V); // u'v', v'w', w'u'
+  d_velocityVar->primeLabel            = VarLabel::create( labelName + "_prime",         td_V);  // u', v', w'
+  d_velocityVar->normalTurbStrssLabel  = VarLabel::create( d_velocityVar->normalTurbStrssName, td_V); // u'u', v'v', w'w'
+  d_velocityVar->shearTurbStrssLabel   = VarLabel::create( d_velocityVar->shearTurbStrssName,  td_V); // u'v', v'w', w'u'
 
   typedef planeAverage PA;
   std::vector< shared_ptr< PA::planarVarBase > >planarVars;
 
   // create planarAverage variable: normal turbulent stress
   auto pv        = make_shared< PA::planarVar_Vector >();
-  pv->label      = d_velVar->normalTurbStrssLabel;
+  pv->label      = d_velocityVar->normalTurbStrssLabel;
   pv->matl       = defaultMatl;
   pv->level      = ALL_LEVELS;
   pv->baseType   = td_V->getType();
@@ -185,10 +208,10 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
   planarVars.push_back( pv );
 
   // create planarAverage variable: shear turbulent stress
-  auto pv2    = make_unique< PA::planarVar_Vector >(*pv);
-  pv2->label  = d_velVar->shearTurbStrssLabel;
+  auto pv2    = make_unique< PA::planarVar_Vector >(*pv);  // this is a deep copy
+  pv2->label  = d_velocityVar->shearTurbStrssLabel;
   pv2->fileDesc   = "u'v'__________________v'w'______________w'u'";
-  
+
   planarVars.push_back( move(pv2) );
 
 
@@ -206,13 +229,13 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
       throw ProblemSetupException("meanTurbFluxes: analyze label not found: " + labelName , __FILE__, __LINE__);
     }
 
-    if (label == d_velVar->label ){  // velocity label has already been processed
+    if (label == d_velocityVar->label ){  // velocity label has already been processed
       continue;
     }
 
     //__________________________________
     //  bulletproofing
-    const TypeDescription* td = label->typeDescription();
+    const TypeDescription* td      = label->typeDescription();
     const TypeDescription* subtype = td->getSubType();
 
     const TypeDescription::Type baseType = td->getType();
@@ -231,11 +254,11 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     // define intermediate quantity label names
     const TypeDescription * td_D   = CCVariable<double>::getTypeDescription();
     const TypeDescription * td_V   = CCVariable<Vector>::getTypeDescription();
+    
     VarLabel* primeLabel     = VarLabel::create( labelName + "_prime",    td_D );        // Q'
     VarLabel* turbFluxLabel  = VarLabel::create( labelName + "_turbFlux", td_V );        // u'Q', v'Q', w'Q'
 
-    // Bulletproofing - The user must specify the matl for single matl
-    // variables
+    // Bulletproofing 
     if ( labelName == "press_CC" && attribute["matl"].empty() ){
       throw ProblemSetupException("meanTurbFluxes: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
     }
@@ -268,13 +291,14 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     pv->baseType   = td_V->getType();
     pv->subType    = TypeDescription::Vector;
     pv->weightType = PA::NCELLS;
-    pv->fileDesc   = "______________ u'Q'_________________v'Q'__________________w'Q'";
-    
+    pv->fileDesc   = "u'Q'_________________v'Q'__________________w'Q'";
+
     planarVars.push_back( move(pv) );
   }
 
   d_planeAve_2->setAllLevels_planarVars( 0, planarVars );
 }
+
 
 //______________________________________________________________________
 //
@@ -285,7 +309,6 @@ void meanTurbFluxes::scheduleInitialize(SchedulerP   & sched,
 
   d_planeAve_2->scheduleInitialize( sched, level);
 }
-
 
 
 //______________________________________________________________________
@@ -321,7 +344,7 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 
   d_planeAve_1->sched_computePlanarAve( sched, level );
 
-  d_planeAve_1->sched_writeToFiles(     sched, level, "planeAve" );
+  d_planeAve_1->sched_writeToFiles(     sched, level, "planarAve" );
 
   d_planeAve_1->sched_resetProgressVar( sched, level );
 
@@ -347,16 +370,22 @@ void meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 
   d_planeAve_2->sched_computePlanarAve( sched, level );
 
-  d_planeAve_2->sched_writeToFiles(     sched, level, "planeAve_TurbFluxes" );
+  d_planeAve_2->sched_writeToFiles(     sched, level, "TurbFluxes" );
 
   d_planeAve_2->sched_resetProgressVar( sched, level );
 }
 
 //______________________________________________________________________
-//
+//  This task reads a file containing multivariant normal distribution
+//  and fills each plane with these values.  The values are duplicated
+//  on all other planes on all patches
 void meanTurbFluxes::sched_populateVerifyLabels( SchedulerP   & sched,
                                                  const LevelP & level )
 {
+  if( ! d_doVerification ){
+    return;
+  }
+  
   Task* t = scinew Task( "meanTurbFluxes::populateVerifyLabels",
                     this,&meanTurbFluxes::populateVerifyLabels );
 
@@ -366,17 +395,21 @@ void meanTurbFluxes::sched_populateVerifyLabels( SchedulerP   & sched,
 }
 //______________________________________________________________________
 //
-void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * ,
+void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
                                           const PatchSubset    * patches,
                                           const MaterialSubset * ,
                                           DataWarehouse        * ,
                                           DataWarehouse        * new_dw)
 {
+
+
+
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
+    
     printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::verification");
 
-    int matl = d_velVar->matl;
+    int matl = d_velocityVar->matl;
     CCVariable< Vector > velocity;
     new_dw->allocateAndPut( velocity, d_verifyVectorLabel, matl, patch );
 
@@ -398,7 +431,7 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * ,
     int fpos;       // file fposition
 
     //__________________________________
-    //  ignore header
+    //  ignore header lines (#)
     while ( getline( ifs, line ) ){
       if ( line[0] != '#'){
         break;
@@ -410,56 +443,194 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * ,
     ifs.seekg( fpos );
 
     //__________________________________
+    //  find number of cells in the plane of interest on this patch
+    IntVector pLo;         // plane lo and hi
+    IntVector pHi;
+    GridIterator iter = patch->getCellIterator();
+    d_planeAve_1->planeIterator( iter, pLo, pHi );
+
+    int nPlaneCellsPerPatch = ( pHi.x() - pLo.x() ) * ( pHi.y() - pLo.y() );
+
+    int lineNum = findFilePositionOffset( patches, nPlaneCellsPerPatch, pLo, pHi);
+
+    //__________________________________
     //  bulletproofing
-    int numLines = 0;
+    int nFileLines = 0;
 
     while ( getline(ifs, line, '\n') ){
-      ++numLines;
+      ++nFileLines;
     }
 
-    // interior cells
-    int numCells = patch->getNumCells();
-
-    if( numLines != numCells ){
+    if( lineNum > nFileLines ){
       ostringstream warn;
-      warn<< " The number of lines ("<< numLines << ") in the verification file ("<< filename
-          << ") does not equal the number of cells in the patch (" << numCells << "). ";
+      warn << "\n\nERROR:  The filePosition ("<< lineNum << ") exceeds the length of the "
+           << " verification file ("<< filename << ":"<< nFileLines << ").\n"
+           << " Verify that the meanTurbFluxesVerify.py:nPlaneCells variable"
+           << " matches the ups resolution.\n";
       throw InternalError( warn.str(), __FILE__, __LINE__ );
     }
 
     //__________________________________
-    // populate the variables with values from the file
+    //  move file fpositon forward (lineNum)
     ifs.clear();        // rewind file fposition
     ifs.seekg( fpos );
 
-    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
+    int l = 0;
+    
+    while ( l != lineNum){
+      getline(ifs, line, '\n');
+      l++;
+    }
+    fpos= ifs.tellg();
+//    DOUT( true, pg->myRank() << " patch: " << patch->getID() << " lineNum: " << lineNum << " line:"  << line);
 
-      // load row into a stringstream
-      getline( ifs, line );
-      stringstream ss;
-      ss << line;
 
-      // Load each value of the row into num_str
-      std::vector<std::string> num_str;
+    //__________________________________
+    //  Loop over the cells in first plane on this patch and read in the
+    //  entries from the file
+    //    #   u,    v,    w,   scalar
+    int plane0_idx = pLo.z();                                  // loop over all cells in plane0
+    for ( auto y = pLo.y(); y<pHi.y(); y++ ) {
+      for ( auto x = pLo.x(); x<pHi.x(); x++ ) {
 
-      for (int i = 0; i < 4; i++){
-        std::string str;
-        getline(ss, str, ',');
-        num_str.push_back( str );
+        IntVector c;
+        c  = d_planeAve_1->transformCellIndex(x, y, plane0_idx);
+
+        // load row into a stringstream
+        getline( ifs, line );
+        stringstream ss;
+        ss << line;
+
+        // Load each value of the row into num_str
+        std::vector<std::string> num_str;
+
+        for (int col = 0; col < 5; col++){
+          std::string str;
+          getline(ss, str, ',');
+          num_str.push_back( str );
+        }
+
+        // convert from str -> int/double
+        //int l    = stoi( num_str[0] );
+        double u = stod( num_str[1] );
+        double v = stod( num_str[2] );
+        double w = stod( num_str[3] );
+        double s = stod( num_str[4] );
+
+        velocity[c] = Vector( u, v, w );
+        scalar[c]   = s;
+
+       // printf( "%i %i, %15.16e, %15.16e, %15.16e, %15.16e\n",pg->myRank(), l,u,v,w,s );
       }
+    }
 
-      // convert from str -> double
-      double u = stod( num_str[0] );
-      double v = stod( num_str[1] );
-      double w = stod( num_str[2] );
-      double s = stod( num_str[3] );
-      velocity[c] = Vector( u, v, w );
-      scalar[c]   = s;
-      
-     // printf( "%15.16e,%15.16e,%15.16e,%15.16e\n",u,v,w,s );
+    //__________________________________
+    //  copy the values from first plane on this patch to the
+    //  remaining planes.
+    for ( auto planeN_idx = pLo.z()+1; planeN_idx<pHi.z(); planeN_idx++ ) {         // loop over the planes in this patch
+     // int l = lineNum;
+
+      for ( auto y = pLo.y(); y<pHi.y(); y++ ) {
+        for ( auto x = pLo.x(); x<pHi.x(); x++ ) {
+          IntVector p0;
+          IntVector cur;
+          
+          p0  = d_planeAve_1->transformCellIndex(x, y, plane0_idx);
+          cur = d_planeAve_1->transformCellIndex(x, y, planeN_idx);
+
+          velocity[cur] =  velocity[p0];
+          scalar[cur]   =  scalar[p0];
+        #if 0
+          printf( "%i, %i %15.16e, %15.16e, %15.16e, %15.16e\n",pg->myRank(),
+               l,
+               velocity[cur].x(),
+               velocity[cur].y(),
+               velocity[cur].z(),
+               scalar[cur] );
+          l++;
+        #endif
+        }
+      }
     }
   }
+}
+
+
+//______________________________________________________________________
+//  Return the number of lines after the header
+//
+//  This is tricky!
+//  
+//  Algorithm;
+//    1) Create a map that contains the patchID and file offset for
+//       all patches containing the 0th plane.  
+//
+//    2) For find the equivalent patch that contains plane 0, based on the transformed
+//       patch low index.
+//    
+//    3) Look in the map for the offset of the equivalent patch
+//  WARNING:  This could be slow on large core count simulations
+//______________________________________________________________________
+int
+meanTurbFluxes::findFilePositionOffset( const PatchSubset  * patches,
+                                        const int nPlaneCellPerPatch,
+                                        const IntVector      pLo,
+                                        const IntVector      pHi)
+{
+  map<int, int> fileOffsetMap;
+
+  const LevelP level = getLevelP( patches );
+
+  //__________________________________
+  // Find patches that contain the 0th plane
+  // and store the patch ID in a map
+  int  nPlanePatch = 0;
+
+  for(Level::const_patch_iterator iter=level->patchesBegin(); iter < level->patchesEnd(); iter++) {
+
+    const Patch* patch = *iter;
+    IntVector lo = patch->getCellLowIndex();
+
+    bool is0th_planePatch = false;
+
+    // Is the lo index for this plane == 0?
+    switch( d_planeAve_1->d_planeOrientation ){
+
+      case planeAverage::XY:{                 // z is constant
+        is0th_planePatch = ( lo.z() == 0 );
+        break;
+      }
+      case planeAverage::XZ:{                 // y is constant
+        is0th_planePatch = ( lo.y() == 0 );
+        break;
+      }
+      case planeAverage::YZ:{                 // x is constant
+        is0th_planePatch = ( lo.x() == 0 );
+        break;
+      }
+      default:
+        break;
+    }
+
+    //__________________________________
+    //  compute the file offset
+    if( is0th_planePatch ){
+      int offset = nPlanePatch * nPlaneCellPerPatch;
+      int id     = patch->getID();
+      fileOffsetMap[id] = offset;
+      nPlanePatch += 1;
+    }
+  }
+
+  //__________________________________
+  //  Find the equivalent patch containing plane0
+  //  pLo.z() = 0 is on plane0
+  IntVector plane0_cell     = d_planeAve_1->transformCellIndex( pLo.x(), pLo.y(), 0 );
+  
+  const Patch* plane0_patch = level->getPatchFromIndex( plane0_cell, false );
+  int id_p0 = plane0_patch->getID();
+
+  return fileOffsetMap[id_p0];
 }
 
 //______________________________________________________________________
@@ -491,8 +662,8 @@ void meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
   sched_TimeVars( t, level, d_lastCompTimeLabel, false );
 
   // u,v,w -> u',v',w'
-  t->requires( Task::NewDW, d_velVar->label, d_velVar->matSubSet, Ghost::None, 0 );
-  t->computes ( d_velVar->primeLabel );
+  t->requires( Task::NewDW, d_velocityVar->label, d_velocityVar->matSubSet, Ghost::None, 0 );
+  t->computes ( d_velocityVar->primeLabel );
 
   // Q -> Q'
   for ( size_t i =0 ; i < d_Qvars.size(); i++ ) {
@@ -529,7 +700,7 @@ void meanTurbFluxes::calc_TurbFluctuations(const ProcessorGroup  * ,
     }
 
     // u,v,w -> u',v',w'
-    calc_Q_prime< Vector >( new_dw, patch, d_velVar);
+    calc_Q_prime< Vector >( new_dw, patch, d_velocityVar);
   }
 }
 //______________________________________________________________________
@@ -616,9 +787,9 @@ void meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
 
   //__________________________________
   //  velocity
-  t->requires( Task::NewDW, d_velVar->primeLabel, d_velVar->matSubSet, gn, 0 );
-  t->computes ( d_velVar->normalTurbStrssLabel );
-  t->computes ( d_velVar->shearTurbStrssLabel );
+  t->requires( Task::NewDW, d_velocityVar->primeLabel, d_velocityVar->matSubSet, gn, 0 );
+  t->computes ( d_velocityVar->normalTurbStrssLabel );
+  t->computes ( d_velocityVar->shearTurbStrssLabel );
 
   sched->addTask( t, level->eachPatch() , d_matl_set );
 }
@@ -641,11 +812,11 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
 
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
+    
     printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::calc_TurbFluxes");
 
     constCCVariable<Vector> velPrime;
-    new_dw->get ( velPrime, d_velVar->primeLabel, d_velVar->matl, patch, Ghost::None, 0 );
-
+    new_dw->get ( velPrime, d_velocityVar->primeLabel, d_velocityVar->matl, patch, Ghost::None, 0 );
 
     //__________________________________
     //  turbulent fluxes Q'u', Q'v', Q'w'
@@ -681,11 +852,12 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
     CCVariable< Vector > diag;
     CCVariable< Vector > offdiag;
 
-    new_dw->allocateAndPut( diag,    d_velVar->normalTurbStrssLabel, d_velVar->matl, patch );
-    new_dw->allocateAndPut( offdiag, d_velVar->shearTurbStrssLabel,  d_velVar->matl, patch );
+    new_dw->allocateAndPut( diag,    d_velocityVar->normalTurbStrssLabel, d_velocityVar->matl, patch );
+    new_dw->allocateAndPut( offdiag, d_velocityVar->shearTurbStrssLabel,  d_velocityVar->matl, patch );
 
     for (CellIterator iter=patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
+      
       Vector vel = velPrime[c];
       diag[c] = Vector( vel.x() * vel.x(),        // u'u'
                         vel.y() * vel.y(),        // v'v'
@@ -698,7 +870,7 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
       //__________________________________
       //  debugging
       if ( c == d_monitorCell && dbg_OTF_MTF.active() ){
-        cout << "  calc_TurbFluxes:  L-"<< L_indx << " " << d_monitorCell <<  setw(10)<< d_velVar->label->getName()
+        cout << "  calc_TurbFluxes:  L-"<< L_indx << " " << d_monitorCell <<  setw(10)<< d_velocityVar->label->getName()
              <<"\t diag: "  << diag[c] << " offdiag: " << offdiag[c] << "\t velPrime: " << velPrime[c] << endl;
       }
     }

@@ -16,11 +16,11 @@ import matplotlib.pyplot as plt
 #______________________________________________________________________
 
 
-nPlaneCells   = np.array( [100, 100, 1])     # x, y, z
+nPlaneCells   = np.array( [80, 80, 1])     # x, y, z
 
 nPatches      = 1
 nCellsPerPatch = np.divide( nPlaneCells, nPatches )
-numSamples     = np.prod( nCellsPerPatch )
+numSamples     = int( np.prod( nCellsPerPatch ) )
 
 print ('nCellPerPatch %i' % numSamples)
 
@@ -81,7 +81,13 @@ if( doOutput ):
   hdr += 'These labels are then processed by meanTurbFlux and the covariance for each plane should equal\n'
   hdr += 'the covariance computed by the script\n'
   hdr += '         u,                 v,                  w,                     scalar'
-  np.savetxt( filename, R, fmt='%16.15e', delimiter=', ', newline='\n', header=hdr)
+  
+  # prepend line numbers to R
+  length  = R.shape[0]
+  indices = np.arange( length )
+  newR    = np.column_stack( (indices, R) )
+
+  np.savetxt( filename, newR, fmt='%i, %16.15e, %16.15e, %16.15e, %16.15e', newline='\n', header=hdr)
 
   # covariance
   print ('\n__________________________________\n'

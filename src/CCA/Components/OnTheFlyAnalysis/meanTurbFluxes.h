@@ -118,7 +118,6 @@ ______________________________________________________________________*/
         if(matSubSet && matSubSet->removeReference()){
           delete matSubSet;
         }
-        VarLabel::destroy( label );
         VarLabel::destroy( primeLabel );
         VarLabel::destroy( turbFluxLabel );
       }
@@ -151,6 +150,11 @@ ______________________________________________________________________*/
                               const MaterialSubset * ,                
                               DataWarehouse        * ,          
                               DataWarehouse        * new_dw);
+                              
+    int findFilePositionOffset( const PatchSubset  * patches, 
+                                const int nPlaneCellPerPatch,
+                                const IntVector      pLo,
+                                const IntVector      pHi);
 
     void sched_TurbFluctuations(SchedulerP   & sched,
                                 const LevelP & level);
@@ -181,7 +185,7 @@ ______________________________________________________________________*/
     //__________________________________
     // global constants begin with "d_"
     std::vector< std::shared_ptr< Qvar > >  d_Qvars;
-    std::shared_ptr< velocityVar >          d_velVar;
+    std::shared_ptr< velocityVar >          d_velocityVar;
 
     MaterialSet*  d_matl_set;
     
@@ -189,10 +193,11 @@ ______________________________________________________________________*/
     VarLabel* d_verifyScalarLabel {nullptr};  // labels for verification
     VarLabel* d_verifyVectorLabel {nullptr};
 
-    private:
-      planeAverage * d_planeAve_1;
-      planeAverage * d_planeAve_2;
-      IntVector d_monitorCell;             // Monitor this cells.  Used for debugging
+    planeAverage * d_planeAve_1;
+    planeAverage * d_planeAve_2;
+    
+    IntVector d_monitorCell;             // Monitor this cells.  Used for debugging
+    bool d_doVerification { false };
   };
 }
 

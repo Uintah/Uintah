@@ -1100,6 +1100,20 @@ DynamicLoadBalancer::finalizeContributions( const GridP & grid )
 void
 DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const MaterialManagerP & materialManager )
 {
+
+  proc0cout << "\n______________________________________________________________________\n";
+  proc0cout << "                             WARNING\n";
+  proc0cout << " The Dynamic load balancer is not robust and has been shown to crash when grids \n";
+  proc0cout << " that utilize AMR are used.  Depending on the grid and number of cores used the simulation \n";
+  proc0cout << " may throw an exception:\n\n";
+  proc0cout << "../src/CCA/Components/Schedulers/OnDemandDataWarehouse.cc:824\n";
+  proc0cout << " Unknown variable: <X> requested from DW <X>, Level <X>, patch ......), material index: <X> (in Task OnDemandDataWarehouse::sendMPI)\n";
+  proc0cout << "\n";
+  proc0cout << " For other core counts the simulation may run to completion.  If you encounter this exception\n";
+  proc0cout << " try commenting out the <LoadBalancer> section of the ups file\n";
+  proc0cout << "______________________________________________________________________\n\n";
+
+
   LoadBalancerCommon::problemSetup( pspec, grid, materialManager );
 
   ProblemSpecP p = pspec->findBlock("LoadBalancer");

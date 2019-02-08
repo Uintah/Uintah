@@ -1150,7 +1150,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
   }
   double p_void0;
   db->getWithDefault( "sb_deposit_porosity",p_void0,0.6); // note here we are using the sb layer to estimate the wall density no the enamel layer.
-  double deposit_density = rho_ash_bulk * p_void0;
+  double deposit_density = rho_ash_bulk * (1 - p_void0);
 
   for ( ProblemSpecP r_db = db->findBlock("coal_region"); r_db != nullptr; r_db = r_db->findNextBlock("coal_region") ) {
 
