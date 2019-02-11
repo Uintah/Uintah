@@ -201,6 +201,7 @@ WARNING
       // Private Data
       double d_pressure_conversion_factor;
       double d_ramp_time;
+      double d_stableKE;
       double d_settle_time;
       double d_CI;
       std::string d_currentPhaseType;

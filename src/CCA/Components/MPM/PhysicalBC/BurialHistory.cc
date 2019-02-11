@@ -49,6 +49,7 @@ int BurialHistory::populate(ProblemSpecP& ps)
                           d_pressure_conversion_factor, 1.0);
    burHist->getWithDefault("ramp_time",   d_ramp_time,  1.0);
    burHist->getWithDefault("settle_time", d_settle_time,2.0);
+   burHist->getWithDefault("stableKE",    d_stableKE,   2.0e-6);
    for( ProblemSpecP timePoint = burHist->findBlock("time_point");
        timePoint != nullptr;
        timePoint = timePoint->findNextBlock("time_point") ) {
@@ -64,16 +65,16 @@ int BurialHistory::populate(ProblemSpecP& ps)
      double sigma_H   = 0.0;
      bool   EOC       = false;
      timePoint->require("time_Ma",               time);
-     timePoint->require("depth_m",               depth);
      timePoint->require("temperature_K",         temp);
-     timePoint->require("fluidOverPressure_bar", fluidOP);
-     timePoint->require("fluidPressure_bar",     fluidP);
      timePoint->require("effectiveStress_bar",   effStress);
-     timePoint->require("waterSaturation_pct",   waterSat);
-     timePoint->getWithDefault("UintahDissolutionTime", UDT, 0.0);
-     timePoint->getWithDefault("sigma_h_bar",     sigma_h,   0.0);
-     timePoint->getWithDefault("sigma_H_bar",     sigma_H,   0.0);
-     timePoint->getWithDefault("EndOnCompletion", EOC,       false);
+     timePoint->getWithDefault("depth_m",               depth,   1.0);
+     timePoint->getWithDefault("fluidOverPressure_bar", fluidOP, 0.0);
+     timePoint->getWithDefault("fluidPressure_bar",     fluidP,  0.0);
+     timePoint->getWithDefault("waterSaturation_pct",   waterSat,0.0);
+     timePoint->getWithDefault("UintahDissolutionTime", UDT,     0.0);
+     timePoint->getWithDefault("sigma_h_bar",           sigma_h, 0.0);
+     timePoint->getWithDefault("sigma_H_bar",           sigma_H, 0.0);
+     timePoint->getWithDefault("EndOnCompletion",       EOC,     false);
 
      d_time_Ma.push_back(time);
      d_depth_m.push_back(depth);
@@ -101,6 +102,7 @@ void BurialHistory::outputProblemSpec(ProblemSpecP& ps)
   lc_ps->appendElement("ramp_time",     d_ramp_time);
   lc_ps->appendElement("settle_time",   d_settle_time);
   lc_ps->appendElement("current_index", d_CI);
+  lc_ps->appendElement("stableKE",      d_stableKE);
   for (int i = 0; i<(int)d_time_Ma.size();i++) {
     ProblemSpecP time_ps = lc_ps->appendChild("time_point");
     time_ps->appendElement("time_Ma",              d_time_Ma[i]);
