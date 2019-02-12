@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Uintah_Component_Arches_CharOxidationSmith2016_h
-#define Uintah_Component_Arches_CharOxidationSmith2016_h
+#ifndef Uintah_Component_Arches_CharOxidationSmithConstLv0_h
+#define Uintah_Component_Arches_CharOxidationSmithConstLv0_h
 
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
@@ -45,17 +45,17 @@ namespace Uintah {
 //---------------------------------------------------------------------------
 // Builder
 
-class CharOxidationSmith2016Builder: public ModelBuilder
+class CharOxidationSmithConstLv0Builder: public ModelBuilder
 {
 public:
-  CharOxidationSmith2016Builder( const std::string          & modelName,
+  CharOxidationSmithConstLv0Builder( const std::string          & modelName,
                                const std::vector<std::string>  & reqICLabelNames,
                                const std::vector<std::string>  & reqScalarLabelNames,
                                ArchesLabel          * fieldLabels,
                                MaterialManagerP           & materialManager,
                                int qn );
 
-  ~CharOxidationSmith2016Builder();
+  ~CharOxidationSmithConstLv0Builder();
 
   ModelBase* build();
 
@@ -66,17 +66,17 @@ private:
 // End Builder
 //---------------------------------------------------------------------------
 
-class CharOxidationSmith2016: public CharOxidation {
+class CharOxidationSmithConstLv0: public CharOxidation {
 public:
 
-  CharOxidationSmith2016( std::string modelName,
+  CharOxidationSmithConstLv0( std::string modelName,
                         MaterialManagerP& materialManager,
                         ArchesLabel* fieldLabels,
                         std::vector<std::string> reqICLabelNames,
                         std::vector<std::string> reqScalarLabelNames,
                         int qn );
 
-  ~CharOxidationSmith2016();
+  ~CharOxidationSmithConstLv0();
 
   typedef std::map< std::string, ModelBase*> ModelMap;
   typedef std::map< std::string, Devolatilization*> DevolModelMap;
@@ -115,51 +115,51 @@ public:
 private:
 
   // UDF's
-  inline void root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, std::vector<double> &D_oxid_mix_l, std::vector<double> &phi_l,double &voidF, std::vector<double> &effectivenessF, double &Sj, double &p_rho, double &x_org);
+  inline void root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l, std::vector<double> &phi_l);
   
   struct InversionBase {
-    virtual void invert_mat( double dfdrh[3][3])=0;
+    virtual void invert_mat(DenseMatrix* &dfdrh)=0;
     virtual ~InversionBase(){}
   };
   
   struct invert_2_2 : InversionBase {
-    void invert_mat( double dfdrh[3][3]) {
-      double a11=dfdrh[0][0];
-      double a12=dfdrh[0][1];
-      double a21=dfdrh[1][0];
-      double a22=dfdrh[1][1];
+    void invert_mat(DenseMatrix* &dfdrh) {
+      double a11=(*dfdrh)[0][0];
+      double a12=(*dfdrh)[0][1];
+      double a21=(*dfdrh)[1][0];
+      double a22=(*dfdrh)[1][1];
       double det = a11*a22-a12*a21;
       double det_inv = 1/det;
-      dfdrh[0][0]=a22*det_inv;
-      dfdrh[0][1]=-a12*det_inv;
-      dfdrh[1][0]=-a21*det_inv;
-      dfdrh[1][1]=a11*det_inv;
+      (*dfdrh)[0][0]=a22*det_inv;
+      (*dfdrh)[0][1]=-a12*det_inv;
+      (*dfdrh)[1][0]=-a21*det_inv;
+      (*dfdrh)[1][1]=a11*det_inv;
     }
     ~invert_2_2(){}
   };
   
   struct invert_3_3 : InversionBase {
-    void invert_mat( double dfdrh[3][3]) {
-      double a11=dfdrh[0][0];
-      double a12=dfdrh[0][1];
-      double a13=dfdrh[0][2];
-      double a21=dfdrh[1][0];
-      double a22=dfdrh[1][1];
-      double a23=dfdrh[1][2];
-      double a31=dfdrh[2][0];
-      double a32=dfdrh[2][1];
-      double a33=dfdrh[2][2];
+    void invert_mat(DenseMatrix* &dfdrh) {
+      double a11=(*dfdrh)[0][0];
+      double a12=(*dfdrh)[0][1];
+      double a13=(*dfdrh)[0][2];
+      double a21=(*dfdrh)[1][0];
+      double a22=(*dfdrh)[1][1];
+      double a23=(*dfdrh)[1][2];
+      double a31=(*dfdrh)[2][0];
+      double a32=(*dfdrh)[2][1];
+      double a33=(*dfdrh)[2][2];
       double det = a11*a22*a33+a21*a32*a13+a31*a12*a23-a11*a32*a23-a31*a22*a13-a21*a12*a33;
       double det_inv = 1/det;
-      dfdrh[0][0]=(a22*a33-a23*a32)*det_inv;
-      dfdrh[0][1]=(a13*a32-a12*a33)*det_inv;
-      dfdrh[0][2]=(a12*a23-a13*a22)*det_inv;
-      dfdrh[1][0]=(a23*a31-a21*a33)*det_inv;
-      dfdrh[1][1]=(a11*a33-a13*a31)*det_inv;
-      dfdrh[1][2]=(a13*a21-a11*a23)*det_inv;
-      dfdrh[2][0]=(a21*a32-a22*a31)*det_inv;
-      dfdrh[2][1]=(a12*a31-a11*a32)*det_inv;
-      dfdrh[2][2]=(a11*a22-a12*a21)*det_inv;
+      (*dfdrh)[0][0]=(a22*a33-a23*a32)*det_inv;
+      (*dfdrh)[0][1]=(a13*a32-a12*a33)*det_inv;
+      (*dfdrh)[0][2]=(a12*a23-a13*a22)*det_inv;
+      (*dfdrh)[1][0]=(a23*a31-a21*a33)*det_inv;
+      (*dfdrh)[1][1]=(a11*a33-a13*a31)*det_inv;
+      (*dfdrh)[1][2]=(a13*a21-a11*a23)*det_inv;
+      (*dfdrh)[2][0]=(a21*a32-a22*a31)*det_inv;
+      (*dfdrh)[2][1]=(a12*a31-a11*a32)*det_inv;
+      (*dfdrh)[2][2]=(a11*a22-a12*a21)*det_inv;
     }
     ~invert_3_3(){}
   };
@@ -170,16 +170,11 @@ private:
   const VarLabel* _RHS_source_varlabel;
   const VarLabel* _char_birth_label;
   const VarLabel* _rcmass_varlabel;
-  const VarLabel* _p_density_varlabel;
   const VarLabel* _RC_RHS_source_varlabel;
   const VarLabel* _rawcoal_birth_label;
   const VarLabel* _devolRCLabel;
   const VarLabel* _particle_temperature_varlabel;
   const VarLabel* _number_density_varlabel;
-  const VarLabel* _weight_p_diam_varlabel;
-  const VarLabel* _RHS_length_varlabel;
-  const VarLabel* _RHS_weight_varlabel;
-  const VarLabel* _length_birth_varlabel;
   std::vector< const VarLabel*> _weight_varlabel;
   std::vector< const VarLabel*> _length_varlabel;
   std::vector< const VarLabel*> _reaction_rate_varlabels;
@@ -188,11 +183,9 @@ private:
   const VarLabel* _MW_varlabel;
   std::vector< const VarLabel*> _species_varlabels;
   // global constants
-  double _ksi; // [J/mol]
   double _HF_CO2; // [J/mol]
   double _HF_CO; // [J/mol]
   double _T0;
-  double _tau; // tortuosity
   double _R_cal; // [cal/ (K mol) ]
   double _R; // [J/ (K mol) ]
   double _gasPressure; // [ J / m^3 ] or [ N /m^2]
@@ -201,9 +194,7 @@ private:
   double _RC_scaling_constant;   ///< Scaling factor for raw coal internal coordinate
   double _char_scaling_constant;   ///< Scaling factor for char internal coordinate
   double _weight_scaling_constant;   ///< Scaling factor for weight
-  double _length_scaling_constant;   ///< Scaling factor for length 
   double _weight_small;   ///< small weight
-
   std::vector<bool> _use_co2co_l;
   std::vector<std::string> _oxid_l;
   std::vector<double> _MW_l;
@@ -211,29 +202,15 @@ private:
   std::vector<double> _e_l;
   std::vector<double> _phi_l;
   std::vector<double> _hrxn_l;
-
   int _NUM_reactions; //
   int _NUM_species; //
   double _Mh; // 12 kg carbon / kmole carbon
-  double _rho_org_bulk; // 
-  double _rho_ash_bulk; // 
-  double _mass_ash; // 
-  double _init_particle_density; // 
-  double _Sg0; // 
-  double _p_void0; // 
   double _S;
-  double _v_hiT;
-  double _p_voidmin;
   double _dynamic_visc; // [kg/(m s)]
   int _nQn_part;
-  // 12 - _D_mat
   std::vector<std::vector<double> > _D_mat;
-  //double _D_mat[4][4];
-    // 05 - Replace std::vectors with plain-old-data arrays
   std::vector<double> _MW_species;
   std::vector<int> _oxidizer_indices;
-  //  double _MW_species[4];
- //   int    _oxidizer_indices[3];
   std::vector<int> _other_indices;
   std::vector<std::string> _species_names;
 
@@ -329,6 +306,6 @@ private:
       } // end constructor
   }; // end struct
 
-}; // end CharOxidationSmith2016
+}; // end CharOxidationSmithConstLv0
 } // end namespace Uintah
 #endif

@@ -341,7 +341,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
   db_coal_props->getAttribute( "type", particleType );
 
   if ( particleType != "coal" ) {
-    throw InvalidValue( "ERROR: CharOxidationSmith2016: Can't use particles of type: " + particleType, __FILE__, __LINE__ );
+    throw InvalidValue( "ERROR: CharOxidationSmith: Can't use particles of type: " + particleType, __FILE__, __LINE__ );
   }
 
   if ( db_coal_props->findBlock( "FOWYDevol" ) ) {
@@ -349,7 +349,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
     db_BT->require( "v_hiT", _v_hiT ); //
   }
   else {
-    throw ProblemSetupException( "Error: CharOxidationSmith2016 requires FOWY v_hiT.", __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error: CharOxidationSmith requires FOWY v_hiT.", __FILE__, __LINE__ );
   }
 
   ProblemSpecP db_part_properties = params_root->findBlock( "CFD" )->findBlock( "ARCHES" )->findBlock( "ParticleProperties" );
@@ -358,16 +358,16 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
   db_part_properties->getWithDefault( "void_fraction", _p_void0,      0.3 );
 
   if ( _p_void0 == 1. ) {
-    throw ProblemSetupException( "Error: CharOxidationSmith2016, Given initial conditions for particles p_void0 is 1!! This will give NaN.", __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error: CharOxidationSmith, Given initial conditions for particles p_void0 is 1!! This will give NaN.", __FILE__, __LINE__ );
   }
 
   if ( _p_void0 <= 0. ) {
-    throw ProblemSetupException( "Error: CharOxidationSmith2016, Given initial conditions for particles p_void0 <= 0 !! ", __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error: CharOxidationSmith, Given initial conditions for particles p_void0 <= 0 !! ", __FILE__, __LINE__ );
   }
 
-  if ( db_coal_props->findBlock( "SmithChar2016" ) ) {
+  if ( db_coal_props->findBlock( "SmithChar" ) ) {
 
-    ProblemSpecP db_Smith = db_coal_props->findBlock( "SmithChar2016" );
+    ProblemSpecP db_Smith = db_coal_props->findBlock( "SmithChar" );
 
     db_Smith->getWithDefault( "Sg0",     _Sg0, 9.35e5 ); // UNCERTAIN initial specific surface area [m^2/kg], range [1e3,1e6]
     db_Smith->getWithDefault( "char_MW", _Mh,  12.0 );   // kg char / kmole char
