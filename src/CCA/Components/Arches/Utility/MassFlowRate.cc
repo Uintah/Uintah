@@ -289,7 +289,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
           m_dot_coal += value_m_dot;
           
           new_dw->put(sum_vartype(value_m_dot), VarLabel::find("m_dot_p_"+i_bc->second.name));
-          proc0cout << "\n Particle flow gas  : " << i_bc->second.name << " = "  << value_m_dot << " [kg/s]\n" << std::endl;
+          proc0cout << "\n Particle mass flow : " << i_bc->second.name << " = "  << value_m_dot << " [kg/s]\n" << std::endl;
           //const int istart = 0;
           //int iend = m_m_p_info.size();
           //for (int i = istart; i < iend; i++ ){
@@ -308,7 +308,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
     //  proc0cout << "\n Particle flow gas  : " << m_m_p_info[i].face_name  << " = "  << m_m_p_info[i].value << " [kg/s]\n" << std::endl;
     //}
 
-    proc0cout << "\n Total particle Mass flow  : Inlet face = " << m_dot_coal << " [kg/s]" << std::endl;
+    proc0cout << "\n Total particle mass flow  : Inlet face = " << m_dot_coal << " [kg/s]" << std::endl;
   }
 
   //const int istart = 0;
@@ -373,6 +373,6 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
     //}
     // ----------------------------------------------------------------------
 
-    proc0cout << "\n Total mass flow Gas  = " << m_dot_gas << " [kg/s]\n" << std::endl;
+    proc0cout << "\n Total mass flow gas  = " << m_dot_gas << " [kg/s]\n" << std::endl;
   //}
 }
