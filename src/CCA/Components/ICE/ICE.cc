@@ -4035,11 +4035,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         double src_Y = -d_fixedPressGrad.y() * dx.y() * areaY ;
         double src_Z = -d_fixedPressGrad.z() * dx.z() * areaZ ;
         Vector fixedPressSrc = Vector( src_X, src_Y, src_Z );
-        
-        Vector one(1.0,1.0,1.0);
-        cout.setf(ios::scientific,ios::floatfield);
-        cout.precision(15);
-        cout << " fixedPressSrc: " << fixedPressSrc << " oneZero: " << oneZero <<  " (one - oneZero): " << (one - oneZero) << endl;  
+        Vector one(1.0,1.0,1.0);  
           
         for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
           IntVector c = *iter;
