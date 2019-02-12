@@ -102,7 +102,7 @@ function [var, loc, O_lo, O_hi] = extractVar( varName, axial_transverse, sliceDi
   
   startEnd = sprintf('-istart %i %i %i -iend %i %i %i', U_lo(1), U_lo(2), U_lo(3), U_hi(1), U_hi(2), U_hi(3) );
 
-  c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o var.dat -m %i  -uda %s  > /dev/null 2>&1',varName, L, ts-1, startEnd, mat, uda);
+  c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o var.dat -m %i  -uda %s  > /dev/null 2>&1',varName, L, ts-1, startEnd, mat, uda)
   [s, r] = unix(c1);
 
   %__________________________________
@@ -241,17 +241,17 @@ viscosity = 1e-2
 runID = 0
 
 if ( myP == 1)
-  desc    = "Couette-Poiseuille Flow \n(P = 1, U = 3.4453, dpdx = 100, X +/- BC: LODI) \n h = (Ymax - Ymin )/2 \
-             Wall velocity computed"
-  wallVel = 3.4453  
+  desc    = "Couette-Poiseuille Flow \n(P = 1, U = 3.4453, dpdx = 100 ) \n h = (Ymax - Ymin )/2 ";
+  wallVel = 3.4453 
+  dpdx    = -100 
 elseif ( myP == -1 )
-  desc    = "Couette-Poiseuille Flow \n(P = -1, U = 3.4453, dpdx = -100, X +/- BC: periodic) \n h = (Ymax - Ymin )/2 \
-             Wall velocity computed"
+  desc    = "Couette-Poiseuille Flow \n(P = -1, U = 3.4453, dpdx = -100, X +/- BC: periodic) \n h = (Ymax - Ymin )/2 ";
   wallVel = 3.4453
+  dpdx    = 100
 elseif ( myP == -0.25 )
-  desc    = "Couette-Poiseuille Flow \n(P = -0.25, U = 13.781, dpdx = -100, X +/- BC: Periodic) \n h = (Ymax - Ymin)/2 \
-             Wall velocity computed"
+  desc    = "Couette-Poiseuille Flow \n(P = -0.25, U = 13.781, dpdx = -100, X +/- BC: Periodic) \n h = (Ymax - Ymin)/2 ";
   wallVel = 13.781
+  dpdx    = 100
 else
   disp( '\n\n***  ERROR: -P has not been specified\n\n' ) 
   Usage
@@ -290,46 +290,25 @@ if( strcmp(periodicBCs,"false")  )
   dpdx  = (  press_FC(xLo) - press_FC(xHi) )/( x_FC(xLo) - x_FC(xHi)  )
 
   printf( 'press_FC(xLo): %f press_FC(xHi): %f', press_FC(xLo), press_FC(xHi) );
-  printf( 'x_FC(xLo): %f x_FC(xHi): %f     dpdx: %g\n', x_FC(xLo), x_FC(xHi), dpdx );
-
-else
-  dpdx = 100
+  printf( 'x_FC(xLo): %f x_FC(xHi): %f     dpdx: %g\n', x_FC(xLo), x_FC(xHi), dpdx );  
 end
 
 %______________________________
 %  Simulation Velocity
 [vel_sim, y_CC, lo, hi] = extractVar( 'vel_CC', 'transverse', sliceDir, pDir, resolution, L, ts, mat, uda, false);
 
-% compute the wall velocity
-%h = hi(sliceDir);
-%wallVel = ( vel_sim(h) + vel_sim(h-1) )/2
-
-
-% redefine vel_sim
-for i = 1:length(y_CC)-1
-  vel_sim_twk(i) = ( vel_sim(i) + vel_sim(i+1) )/2;
-  y_CC_twk(i)    = ( y_CC(i) + y_CC(i+1) )/2;
-  printf('%16.15f, %16.15f\n',y_CC_twk(i), vel_sim_twk(i) );
-endfor
-
-
-%vel_sim  = vel_sim( 2: length(vel_sim) -1  );    % ignore the values in  extracells
-%y_CC     = y_CC(    2: length(y_CC)    -1 );
-
 
 %__________________________________
 % Exact solution for Combined Couette-Poiseuille flow  Equation 3.42
 
 dy   = y_CC(2) - y_CC(1)
-%h    = ( domainLength(sliceDir) + dy )/2.0
 h   = ( domainLength(sliceDir) )/2.0
-% you need to add dy because the velocity BC is set dy/2 from the edge of wall.
 
 if ( wallVel != 0.0 )
   disp("Couette-Poiseuille flow")
   P               = -dpdx * ( h^2/(2.0 * nu * wallVel) )
-  vel_ratio_exact = 0.5 * (1 + y_CC_twk./h) + P*(1 - (y_CC_twk.^2/h.^2));
-  vel_exact       = vel_ratio_exact * wallVel;
+  vel_ratio_exact = 0.5 .* (1 .+ y_CC./h) .+ P .* (1 .- (y_CC.^2/h.^2));
+  vel_exact       = vel_ratio_exact .* wallVel;
 end
 
 % Exact solution for pure Poiseuille flow, Equation 3.44
@@ -337,16 +316,17 @@ if ( wallVel == 0.0 )
   disp("Poiseuille flow")
   P               = 0;
   umax            = -dpdx .* ( h^2/(2.0 * nu) )
-  vel_exact       = umax .* (1 - y_CC_twk.^2/h.^2);
+  vel_exact       = umax .* (1 .- y_CC.^2/h.^2);
 end
 
 
 %______________________________
 % compute the L2 norm
+
 clear d;
 d = 0;
-d = abs(vel_sim_twk .- vel_exact);
-L2_norm = sqrt( sum(d.^2)/length(y_CC_twk) )
+d = abs(vel_sim .- vel_exact);
+L2_norm = sqrt( sum(d.^2)/length(y_CC) )
 
 % write L2_norm to a file
 nargv = length(output_file);
@@ -356,10 +336,12 @@ if (nargv > 0)
   fclose(fid);
 end
 
+%__________________________________
 % debugging
+
 printf("       y_CC              vel_sim              vel_exact       diff_vel\n")
-for i = 1:length(y_CC_twk)
-  printf('%16.15f, %16.15f,  %16.15f,  %16.15g\n',y_CC_twk(i), vel_sim_twk(i), vel_exact(i), d(i) )
+for i = 1:length(y_CC)
+  printf('%16.15f, %16.15f,  %16.15f,  %16.15g\n',y_CC(i), vel_sim(i), vel_exact(i), d(i) )
 endfor
 
 
@@ -379,15 +361,15 @@ end
 tau_sim  = tau( 2: length(tau)  );    % ignore values of tau in the extracells
 y_FC     = y_FC(2: length(y_FC) );
 
-dudy      = ( wallVel ./ (2 .* h) ) - 2 .* P .* wallVel .* y_FC./ (h .^ 2);
+dudy      = ( wallVel ./ (2 .* h) ) .- 2 .* P .* wallVel .* y_FC ./ (h .^ 2);
 tau_exact = viscosity .* dudy;
 
 diff_tau  = abs( tau_sim .- tau_exact );
 
-%printf("       y_FC              tau_sim              tau_exact       diff_tau\n")
-%for i = 1:length(y_FC)
-%  printf('%16.15f, %16.15f,  %16.15f,  %16.15g\n',y_FC(i), tau_sim(i), tau_exact(i), diff_tau(i) )
-%endfor
+printf("       y_FC              tau_sim              tau_exact       diff_tau\n")
+for i = 1:length(y_FC)
+  printf('%16.15f, %16.15f,  %16.15f,  %16.15g\n',y_FC(i), tau_sim(i), tau_exact(i), diff_tau(i) )
+endfor
 
 
 %______________________________________________________________________
@@ -403,7 +385,7 @@ if (strcmp(makePlot,"true"))
     set (h,'paperposition', [0,0,[6 7]])
    
     subplot(2,1,1)
-    plot( vel_sim_twk, y_CC_twk, 'b:o', vel_exact, y_CC_twk, 'r:+' )
+    plot( vel_sim, y_CC, 'b:o', vel_exact, y_CC, 'r:+' )
 
     l = legend( 'uda', 'Analytical' );
     set (l, "fontsize", 8)
@@ -415,7 +397,7 @@ if (strcmp(makePlot,"true"))
 
     %  velocity error
     subplot(2,1,2)
-    plot( d, y_CC_twk, 'b:+');
+    plot( d, y_CC, 'b:+');
     xlabel('|u - u_{exact}|'); 
     ylabel('y');
     grid on;

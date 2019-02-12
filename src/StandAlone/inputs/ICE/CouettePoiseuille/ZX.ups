@@ -29,7 +29,7 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
-      <Face side = "y-">
+      <Face side = "z-">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                             <value> 101215. </value>
         </BCType>
@@ -43,7 +43,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "y+">
+      <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                            <value> 101325. </value>
         </BCType>  
@@ -57,7 +57,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "z-">
+      <Face side = "x-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
@@ -71,7 +71,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "z+">
+      <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
@@ -90,30 +90,30 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "x+">
+      <Face side = "y+">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
-      <Face side = "x-">
+      <Face side = "y-">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,   0,-0.025]      </lower>
-              <upper>        [0.01,1, 0.025]      </upper>
-              <extraCells>   [1,1,1]             </extraCells>
-              <patches>      [1,1,1]             </patches>
+              <lower>        [-0.025, 0.0  ,0.0]    </lower>
+              <upper>        [ 0.025, 0.01 ,1.0]  </upper>
+              <extraCells>   [1,1,1]              </extraCells>
+              <patches>      [1,1,1]              </patches>
            </Box>
-           <spacing>         [0.01, 0.02, 0.0025] </spacing>
+           <spacing>         [0.02, 0.01, 0.0025] </spacing>
        </Level>
     </Grid>
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>CouettePoiseuille-YZ.uda</filebase>
+      <filebase>CouettePoiseuille-ZX.uda</filebase>
       <outputInterval>0.1</outputInterval>
       <save label = "vel_CC"/>
       <save label = "press_CC"/>
@@ -121,13 +121,13 @@
       <save label = "rho_CC"/>
       <save label = "temp_CC"/>
 
-      <save label = "pressY_FC"/>
+      <save label = "pressX_FC"/>
       <save label = "pressZ_FC"/>
 
-      <save label = "vvel_FCME"/>
+      <save label = "uvel_FCME"/>
       <save label = "wvel_FCME"/>
 
-      <save label = "tau_Y_FC"/>
+      <save label = "tau_X_FC"/>
       <save label = "tau_Z_FC"/>
 
       <!--<checkpoint interval="0.75" cycle="2"/> -->

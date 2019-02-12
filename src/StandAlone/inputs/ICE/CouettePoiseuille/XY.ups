@@ -20,7 +20,7 @@
        <delt_min>           0.0     </delt_min>
        <delt_max>           1.0     </delt_max>
        <delt_init>          1.0e-9  </delt_init>
-       <max_Timesteps>      250    </max_Timesteps>    <!-- RT -->
+       <!--<max_Timesteps>      250    </max_Timesteps>   RT -->
        <timestep_multiplier>1.0     </timestep_multiplier>
    </Time>
 
@@ -123,15 +123,12 @@
 
       <save label = "pressX_FC"/>
       <save label = "pressY_FC"/>
-      <save label = "pressZ_FC"/>
 
       <save label = "uvel_FCME"/>
       <save label = "vvel_FCME"/>
-      <save label = "wvel_FCME"/>
 
       <save label = "tau_X_FC"/>
       <save label = "tau_Y_FC"/>
-      <save label = "tau_Z_FC"/>
 
       <!--<checkpoint interval="0.75" cycle="2"/> -->
       <checkpoint timestepInterval="100" cycle="1"/>
@@ -203,25 +200,4 @@
          </material>
       </ICE>
     </MaterialProperties>
-
-<!--
-    <DataAnalysis>
-      <Module name = "momentumAnalysis">
-        <materialIndex> 0 </materialIndex>
-
-        <samplingFrequency> 1e2 </samplingFrequency>
-        <timeStart>          1   </timeStart>
-        <timeStop>          100  </timeStop>
-        <controlVolume>
-          <Face side = "x+"  extents = "entireFace"/>
-          <Face side = "x-"  extents = "entireFace"/>
-          <Face side = "y+"  extents = "entireFace"/>
-          <Face side = "y-"  extents = "entireFace"/>
-          <Face side = "z+"  extents = "entireFace"/>
-          <Face side = "z-"  extents = "entireFace"/>
-        </controlVolume>
-
-      </Module>
-    </DataAnalysis>
--->
 </Uintah_specification>
