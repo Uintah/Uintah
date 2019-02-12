@@ -3530,6 +3530,13 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
       }  //  Patches
 
       rc = PIDX_append_and_write_variable(pidx.file, pidx.varDesc[vc][m]);
+
+      int compression_type;
+      PIDX_get_compression_type(pidx.file, &compression_type);
+
+      if(compression_type == PIDX_CHUNKING_ZFP)
+        PIDX_set_lossy_compression_bit_rate(pidx.file, pidx.varDesc[vc][m], m_PIDX_flags.d_checkpointFlags.compressionBitrate);
+      
       pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure", __FILE__, __LINE__ );
       vcm++;
     }  //  Materials
