@@ -57,7 +57,7 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault("Tar_to_HCN",          _alpha2,         0.8);
   db->getWithDefault("Tar_to_NH3",          _alpha3,         0.2);
-  
+
   if  (_alpha2+_alpha3>1.0 || _alpha2+_alpha3<0.0){
     throw ProblemSetupException("Tar_to_HCN + Tar_to_NH3 must be greater than 0 and less than 1.0.", __FILE__, __LINE__);
   }
@@ -102,7 +102,7 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
       proc0cout << "Warning!! devol_to_HCN or devol_to_NH3 is being set to zero because the specified tar fraction yields more HCN or NH3 than possible given the target fraction." << endl;
     }
   }
-  
+
   db->getWithDefault("devol_to_HCN",        _beta2,          F_v_hcn);
   db->getWithDefault("devol_to_NH3",        _beta3,          F_v_nh3);
   db->getWithDefault("charOxy_to_HCN",      _gamma2,         0.8);
@@ -158,10 +158,10 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
     ProblemSpecP db_BT = db_coal_props->findBlock("FOWYDevol");
     db_BT->require("v_hiT", m_v_hiT); //
   } else {
-    m_v_hiT = 1.0; // if fowy devol model is not used than we set devol fraction to 1 in the case of birth/death. 
+    m_v_hiT = 1.0; // if fowy devol model is not used than we set devol fraction to 1 in the case of birth/death.
   }
-  
-  
+
+
   //source terms name,and ...
   db->findBlock("NO_src")->getAttribute( "label",  NO_src_name );
   db->findBlock("HCN_src")->getAttribute( "label", HCN_src_name );
@@ -189,14 +189,14 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
   m_rc_mass_root           = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);            // raw coal
   m_char_mass_root         = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_CHAR);               // char coal
   m_num_env                = ArchesCore::get_num_env(db, ArchesCore::DQMOM_METHOD);                              // qn number
-  
+
   double init_particle_density = ArchesCore::get_inlet_particle_density( db );
   double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
   for ( int i = 0; i < m_num_env; i++){
     double initial_diameter = ArchesCore::get_inlet_particle_size( db, i ); // [m]
     m_initial_rc.push_back( (M_PI/6.0)*initial_diameter*initial_diameter*initial_diameter*init_particle_density*(1.-ash_mass_frac) ); // [kg_i / #]
   }
-  m_Fd_M = m_v_hiT/(1.0 - m_v_hiT); 
+  m_Fd_M = m_v_hiT/(1.0 - m_v_hiT);
   m_Fd_B = -m_v_hiT*m_v_hiT/(1.0-m_v_hiT);
 }
 //---------------------------------------------------------------------------
@@ -235,23 +235,23 @@ psNox::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
     std::string coal_temperature_name = ArchesCore::append_env( m_coal_temperature_root, i );
     m_coal_temperature_label.push_back(  VarLabel::find(coal_temperature_name));
     tsk->requires( which_dw, m_coal_temperature_label[i], Ghost::None, 0 );
-    
+
     std::string weight_name = ArchesCore::append_env( m_weight_root, i );
     m_weight_label.push_back(  VarLabel::find(weight_name));
     tsk->requires( which_dw, m_weight_label[i], Ghost::None, 0 );
-    
+
     std::string length_name = ArchesCore::append_env( m_length_root, i );
     m_length_label.push_back(  VarLabel::find(length_name));
     tsk->requires( which_dw, m_length_label[i], Ghost::None, 0 );
-    
+
     std::string p_rho_name = ArchesCore::append_env( m_p_rho_root, i );
     m_p_rho_label.push_back(  VarLabel::find(p_rho_name));
     tsk->requires( which_dw, m_p_rho_label[i], Ghost::None, 0 );
-    
+
     std::string rc_mass_name = ArchesCore::append_env( m_rc_mass_root, i );
     m_rc_mass_label.push_back(  VarLabel::find(rc_mass_name));
     tsk->requires( which_dw, m_rc_mass_label[i], Ghost::None, 0 );
-    
+
     std::string char_mass_name = ArchesCore::append_env( m_char_mass_root, i );
     m_char_mass_label.push_back(  VarLabel::find(char_mass_name));
     tsk->requires( which_dw, m_char_mass_label[i], Ghost::None, 0 );
@@ -449,13 +449,13 @@ psNox::computeSource( const ProcessorGroup* pc,
     std::vector< constCCVariable<double> > weight(m_num_env);
     std::vector< constCCVariable<double> > rc_mass(m_num_env);
     std::vector< constCCVariable<double> > char_mass(m_num_env);
-    
+
     new_dw->allocateTemporary( temp_current_organic, patch );
     temp_current_organic.initialize(0.0);
-    
+
     new_dw->allocateTemporary( temp_initial_organic, patch );
     temp_initial_organic.initialize(0.0);
-    
+
     for ( int i_env = 0; i_env < m_num_env; i_env++){
 
       new_dw->allocateTemporary( temp_organic_conc_times_area[i_env], patch );
@@ -523,7 +523,7 @@ psNox::computeSource( const ProcessorGroup* pc,
       for (int irxn =0 ; irxn<nRates ; irxn++){
         if (nrate_coef[ispec][irxn] >0) {
           rel_ind[ispec].push_back(irxn);
-            }
+        }
       }
     }
 
@@ -568,9 +568,9 @@ psNox::computeSource( const ProcessorGroup* pc,
         std::vector<double> rxn_rates(nRates,0.);
         std::vector<std::vector<double> > rate_coef(nSpecies,std::vector<double > (nRates));
         for (int ispec =0 ; ispec<nSpecies ; ispec++){
-        for (int irxn =0 ; irxn<nRates ; irxn++){
-          rate_coef[ispec][irxn]= prate_coef[ispec][irxn] - nrate_coef[ispec][irxn];
-        }
+          for (int irxn =0 ; irxn<nRates ; irxn++){
+            rate_coef[ispec][irxn]= prate_coef[ispec][irxn] - nrate_coef[ispec][irxn];
+          }
         }
 
         //convert mixture molecular weight
@@ -660,13 +660,13 @@ psNox::computeSource( const ProcessorGroup* pc,
         // CharOxyRate = sum_i( rxn_char_i ) + Foxi*birth_death_rate
         // for TarRate the following is used to create Tar: tarSrc = sum_i( f_T*rxn_devol_i )
         // Then reactions of tar and soot are computed in the Brown soot model and "returned" to the gas phase through eta_source3 (tar_src)
-        // 
+        //
         //  v_hiT is the ultimate yield of devol products.
         //  f_T is the fraction of devol products that are tar (heavy gas instead of light).
         //  sum_i is the sum over all particle environments
         //  b/d_rc is the birth death term of rc from the perspective of the particles (thus a - sign for the gas)
         //  b/d_ch is the birth death term of ch from the perspective of the particles (thus a - sign for the gas)
-        double V_org_fraction = temp_current_organic(i,j,k)/temp_initial_organic(i,j,k); // [-] fraction of organic to initial organic 
+        double V_org_fraction = temp_current_organic(i,j,k)/temp_initial_organic(i,j,k); // [-] fraction of organic to initial organic
         double Fdevol = min(1.0, max( 0.0, m_Fd_M * V_org_fraction + m_Fd_B )); // [-] fraction of b/d that goes to devol.
         double Foxi = 1.0 - Fdevol; // [-] fraction of b/d that goes to oxi.
         double birth_death_rate = bd_devol(i,j,k) + bd_oxi(i,j,k);
