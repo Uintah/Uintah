@@ -20,7 +20,7 @@
        <delt_min>           0.0     </delt_min>
        <delt_max>           1.0     </delt_max>
        <delt_init>          1.0e-9  </delt_init>
-       <!--<max_Timesteps>      250    </max_Timesteps>   RT -->
+       <max_Timesteps>      250     </max_Timesteps>  <!-- RT -->
        <timestep_multiplier>1.0     </timestep_multiplier>
    </Time>
 
@@ -101,12 +101,12 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [-0.025, 0.0  ,0.0]    </lower>
+              <lower>        [-0.025, 0.0  ,0.0]  </lower>
               <upper>        [ 0.025, 0.01 ,1.0]  </upper>
               <extraCells>   [1,1,1]              </extraCells>
               <patches>      [1,1,1]              </patches>
            </Box>
-           <spacing>         [0.02, 0.01, 0.0025] </spacing>
+           <spacing>         [0.0025, 0.01, 0.02] </spacing>
        </Level>
     </Grid>
     <!--____________________________________________________________________-->
