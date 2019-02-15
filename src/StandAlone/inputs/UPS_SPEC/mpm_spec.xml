@@ -59,6 +59,8 @@
       <containerMaterial                  spec="OPTIONAL INTEGER 'positive'"/>
       <containerRadius                    spec="OPTIONAL DOUBLE  'positive'"/>
       <KEMaterial                         spec="OPTIONAL INTEGER 'positive'"/>
+      <MaximumVelStarToDx_DtRatio         spec="OPTIONAL DOUBLE  'positive'"/>
+      <MinimumPartVolToCellVolRatio       spec="OPTIONAL DOUBLE  'positive'"/>
     
       <!-- THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
       <dynamic                            spec="OPTIONAL BOOLEAN" />
@@ -83,6 +85,7 @@
       <pressure_conversion_factor spec="OPTIONAL DOUBLE" />
       <ramp_time               spec="OPTIONAL DOUBLE" />
       <settle_time             spec="OPTIONAL DOUBLE" />
+      <stableKE                spec="OPTIONAL DOUBLE" />
       <currentIndex            spec="OPTIONAL INTEGER" />
       <time_point              spec="MULTIPLE NO_DATA" >
         <time_Ma               spec="REQUIRED DOUBLE" />
