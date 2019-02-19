@@ -1674,7 +1674,7 @@
           <T_hardened_bond>1800.0</T_hardened_bond>
           <sigma>8.258e2</sigma>
         </FOWYDevol>
-        <SmithChar>
+        <SmithCharConstLv0>
           <!--use_simple_inversion>false</use_simple_inversion-->
           <char_MW>12.0</char_MW>
           <surface_area_mult_factor>1.0</surface_area_mult_factor>
@@ -1711,7 +1711,7 @@
             <heat_of_reaction_constant>131.3e3</heat_of_reaction_constant>
             <use_co2co>false</use_co2co>
           </reaction>
-        </SmithChar>
+        </SmithCharConstLv0>
         <ksi>1</ksi>
       </ParticleProperties>
       <Python_BC>
@@ -2012,7 +2012,7 @@
             <low_clip>9.9999999999999995e-07</low_clip>
             <high_clip>999999</high_clip>
           </model>
-          <model label="char" type="CharOxidationSmith">
+          <model label="char" type="CharOxidationSmithConstLv0">
           </model>
           <model label="max_T_rate" type="MaximumTemperature">
           </model>

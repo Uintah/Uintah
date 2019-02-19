@@ -47,6 +47,7 @@ PIDXOutputContext::PIDX_flags::PIDX_flags()
   // Checkpoint Defaults
   d_checkpointFlags.ioType             = PIDX_RAW_IO;
   d_checkpointFlags.compressionType    = PIDX_NO_COMPRESSION;
+  d_checkpointFlags.compressionBitrate = 32.0;
   d_checkpointFlags.restructureBoxSize = IntVector( 64, 64, 64 );
   d_checkpointFlags.pipeSize           =  64;
   d_checkpointFlags.partitionCount     = IntVector( 1, 1, 1 );
@@ -56,6 +57,7 @@ PIDXOutputContext::PIDX_flags::PIDX_flags()
   // VisIo Defaults
   d_visIoFlags.ioType             = PIDX_RAW_IO;
   d_visIoFlags.compressionType    = PIDX_NO_COMPRESSION;
+  d_visIoFlags.compressionBitrate = 32.0;
   d_visIoFlags.restructureBoxSize = IntVector( 64, 64, 64 );
   d_visIoFlags.pipeSize           =  64;
   d_visIoFlags.partitionCount     = IntVector( 1, 1, 1 );
@@ -128,11 +130,18 @@ PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
       flagPs->get( "compressionType", type );
       flagData->compressionType = str2CompressType( type );
 
+      if(flagPs->findBlock( "idxIo" ) != nullptr){
+        flagPs->get( "compressionBitrate", flagData->compressionBitrate );
+      }
+      
       ProblemSpecP idxIoPS = flagPs->findBlock( "idxIo" );
       ProblemSpecP rawIoPS = flagPs->findBlock( "rawIo" );
 
       if( idxIoPS != nullptr ) {
-        flagData->ioType = PIDX_LOCAL_PARTITION_IDX_IO;
+        if(flagData->compressionType == PIDX_CHUNKING_ZFP)
+          flagData->ioType = PIDX_IDX_IO;
+        else 
+          flagData->ioType = PIDX_LOCAL_PARTITION_IDX_IO;
 
         idxIoPS->get( "partitionCount", flagData->partitionCount );
         idxIoPS->get( "idxBlockSize",   flagData->blockSize );
@@ -307,6 +316,7 @@ PIDXOutputContext::initialize( const string       & filename,
   PIDX_set_io_mode( this->file, ioFlags.ioType );
 
   PIDX_set_compression_type( this->file, ioFlags.compressionType );
+
   checkReturnCode( rc, desc + " - PIDX_set_compression_type", __FILE__, __LINE__);
 
   if( ioFlags.ioType == PIDX_RAW_IO ) {

@@ -1945,34 +1945,6 @@
         </ShaddixChar>
         <SmithChar>
           <char_MW>12.0</char_MW>
-          <surface_area_mult_factor>1.0</surface_area_mult_factor>
-          <species>H2</species>
-          <species>O2</species>
-          <species>H2O</species>
-          <species>CO</species>
-          <species>CO2</species>
-          <species>N2</species>
-          <reaction>
-            <oxidizer_name>O2</oxidizer_name>
-            <oxidizer_MW>32.0</oxidizer_MW>
-            <pre_exponential_factor>80.5</pre_exponential_factor>
-            <activation_energy>18869.02486</activation_energy>
-            <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
-            <heat_of_reaction_constant>1.0</heat_of_reaction_constant>
-            <use_co2co>true</use_co2co>
-          </reaction>
-          <reaction>
-            <oxidizer_name>CO2</oxidizer_name>
-            <oxidizer_MW>44.0</oxidizer_MW>
-            <pre_exponential_factor>660</pre_exponential_factor>
-            <activation_energy>49832.69598</activation_energy>
-            <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
-            <heat_of_reaction_constant>172459</heat_of_reaction_constant>
-            <use_co2co>false</use_co2co>
-          </reaction>
-        </SmithChar>
-        <SmithChar2016>
-          <char_MW>12.0</char_MW>
           <Sg0>1010.8</Sg0>
           <surface_area_mult_factor>1.0</surface_area_mult_factor>
           <species>O2</species>
@@ -2006,7 +1978,7 @@
             <heat_of_reaction_constant>172459</heat_of_reaction_constant>
             <use_co2co>false</use_co2co>
           </reaction>
-        </SmithChar2016>
+        </SmithChar>
         <ksi>0.97266</ksi>
         <Tar_fraction>0.279</Tar_fraction>
         <LinearSwelling>
@@ -2410,7 +2382,7 @@
             <low_clip>9.9999999999999995e-07</low_clip>
             <high_clip>999999</high_clip>
           </model>
-          <model label="char" type="CharOxidationSmith2016">
+          <model label="char" type="CharOxidationSmith">
           </model>
           <model label="max_T_rate" type="MaximumTemperature">
           </model>

@@ -565,7 +565,7 @@ namespace Uintah{
 	      ProblemSpecP db_BT = db_part_properties->findBlock("FOWYDevol");
 	      db_BT->require("v_hiT", v_hiT); //
 	    } else {
-	      throw ProblemSetupException("Error: CharOxidationSmith2016 requires FOWY v_hiT.", __FILE__, __LINE__);
+	      throw ProblemSetupException("Error: CharOxidationSmith requires FOWY v_hiT.", __FILE__, __LINE__);
 	    }
 	    db_part_properties->getWithDefault( "rho_ash_bulk",rho_ash_bulk,2300.0);
 	    db_part_properties->getWithDefault( "void_fraction",p_void0,0.3);
@@ -754,7 +754,7 @@ namespace Uintah{
 	      ProblemSpecP db_BT = db_part_properties->findBlock("FOWYDevol");
 	      db_BT->require("v_hiT", v_hiT); //
 	    } else {
-	      throw ProblemSetupException("Error: CharOxidationSmith2016 requires FOWY v_hiT.", __FILE__, __LINE__);
+	      throw ProblemSetupException("Error: CharOxidationSmith requires FOWY v_hiT.", __FILE__, __LINE__);
 	    }
 	    db_part_properties->getWithDefault( "rho_ash_bulk",rho_ash_bulk,2300.0);
 	    db_part_properties->getWithDefault( "void_fraction",p_void0,0.3);

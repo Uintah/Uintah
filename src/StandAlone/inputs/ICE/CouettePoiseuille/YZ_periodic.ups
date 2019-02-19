@@ -20,7 +20,7 @@
        <delt_min>           0.0     </delt_min>
        <delt_max>           1.0     </delt_max>
        <delt_init>          1.0e-9  </delt_init>
-       <max_Timesteps>      250     </max_Timesteps>    <!-- RT -->
+       <!--<max_Timesteps>      250    </max_Timesteps>   RT -->
        <timestep_multiplier>1.0     </timestep_multiplier>
    </Time>
 
@@ -29,34 +29,6 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
-      <Face side = "x-">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                            <value> 101215. </value>
-        </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-      </Face>
-      <Face side = "x+">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                           <value> 101325. </value>
-        </BCType>  
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-      </Face>
       <Face side = "z-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
@@ -90,30 +62,31 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "y+">
+      <Face side = "x+">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
-      <Face side = "y-">
+      <Face side = "x-">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0, 0.0, -0.025]     </lower>
-              <upper>        [1, 0.01, 0.025]     </upper>
-              <extraCells>   [1,1,1]             </extraCells>
+              <lower>        [0,   0,-0.025]      </lower>
+              <upper>        [0.01,1, 0.025]      </upper>
+              <extraCells>   [1,0,1]             </extraCells>
               <patches>      [1,1,1]             </patches>
            </Box>
-           <spacing>         [0.02,0.01,0.0025]  </spacing>
+           <periodic>        [0,1,0]           </periodic>
+           <spacing>         [0.01, 0.02, 0.0025] </spacing>
        </Level>
     </Grid>
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>CouettePoiseuille-XZ.uda</filebase>
+      <filebase>CouettePoiseuille_periodic-YZ.uda</filebase>
       <outputInterval>0.1</outputInterval>
       <save label = "vel_CC"/>
       <save label = "press_CC"/>
@@ -121,15 +94,12 @@
       <save label = "rho_CC"/>
       <save label = "temp_CC"/>
 
-      <save label = "pressX_FC"/>
       <save label = "pressY_FC"/>
       <save label = "pressZ_FC"/>
 
-      <save label = "uvel_FCME"/>
       <save label = "vvel_FCME"/>
       <save label = "wvel_FCME"/>
 
-      <save label = "tau_X_FC"/>
       <save label = "tau_Y_FC"/>
       <save label = "tau_Z_FC"/>
 
@@ -150,6 +120,10 @@
           <knob_for_speedSound>  0.0          </knob_for_speedSound>
           <knob_for_diffusion>   0.6          </knob_for_diffusion>
         </TimeStepControl>
+
+        <fixedPressureGradient>
+          <y_dir> 100 </y_dir>
+        </fixedPressureGradient>
 
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
@@ -192,7 +166,7 @@
            <geom_object>
               <box label="wholeDomain">
                   <min>       [-1.0, -1.0,-1.0]       </min>
-                  <max>       [ 1.0,  1.0, 1.0]       </max>
+                  <max>       [ 1.0,  2.0, 1.0]       </max>
               </box>
               <res>           [2,2,2]                  </res>
               <velocity>      [0.,0.,0.]               </velocity>
@@ -203,24 +177,4 @@
          </material>
       </ICE>
     </MaterialProperties>
-
-<!--
-    <DataAnalysis>
-      <Module name = "momentumAnalysis">
-        <materialIndex> 0 </materialIndex>
-
-        <samplingFrequency> 1e2 </samplingFrequency>
-        <timeStart>          1   </timeStart>
-        <timeStop>          100  </timeStop>
-        <controlVolume>
-          <Face side = "x+"  extents = "entireFace"/>
-          <Face side = "x-"  extents = "entireFace"/>
-          <Face side = "y+"  extents = "entireFace"/>
-          <Face side = "y-"  extents = "entireFace"/>
-          <Face side = "z+"  extents = "entireFace"/>
-          <Face side = "z-"  extents = "entireFace"/>
-        </controlVolume>
-      </Module>
-    </DataAnalysis>
--->
 </Uintah_specification>

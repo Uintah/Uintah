@@ -110,6 +110,7 @@ class PIDXOutputContext {
     struct PIDX_IoFlags {
       PIDX_io_type ioType;          // eg: PIDX_RAW_IO (see .../pidx/PIDX_define.h)
       unsigned int compressionType; // eg: PIDX_NO_META_DATA_DUMP (see .../pidx/PIDX_define.h)
+      double compressionBitrate;
       IntVector    restructureBoxSize;
       unsigned int pipeSize;
 
@@ -137,6 +138,7 @@ class PIDXOutputContext {
                     << "PIDXFlags: " << std::setw(26) << "\n"
                     << "   checkpoint IO type: " <<  d_checkpointFlags.ioType << "\n"
                     << "   checkpoint compressionType: "<< getCompressTypeName( d_checkpointFlags.compressionType ) << "\n"
+                    << "   checkpoint compressionBitrate: "<< d_checkpointFlags.compressionBitrate << "\n"
                     << "   checkpoint restructure box size: " << d_checkpointFlags.restructureBoxSize << "\n"
                     << "   checkpoint pipe size: " << d_checkpointFlags.pipeSize << "\n"
                     << "   visIo IO type: " <<  d_visIoFlags.ioType << "\n"

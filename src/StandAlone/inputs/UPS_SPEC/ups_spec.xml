@@ -536,6 +536,7 @@
         <checkpoint           spec="OPTIONAL NO_DATA"
                                 children1="ONE_OF(CHILD idxIo, rawIo)" >
           <compressionType    spec="OPTIONAL STRING 'None, Chunking, Chunking_Zfp" />
+          <compressionBitrate spec="OPTIONAL DOUBLE" />
           <idxIo              spec="OPTIONAL NO_DATA">      <!-- If provided, then use IDX I/O -->
             <partitionCount     spec="OPTIONAL VECTOR" />
             <idxBlockSize       spec="OPTIONAL INTEGER" />
@@ -548,6 +549,7 @@
         </checkpoint>
         <visIO                spec="OPTIONAL NO_DATA">
           <compressionType    spec="OPTIONAL STRING 'None, Chunking, Chunking_Zfp" />
+          <compressionBitrate spec="OPTIONAL DOUBLE" />
           <idxIo              spec="OPTIONAL NO_DATA">
             <partitionCount     spec="OPTIONAL VECTOR" />
             <idxBlockSize       spec="OPTIONAL INTEGER" />

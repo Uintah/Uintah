@@ -56,7 +56,7 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
   ProblemSpecP db_prop = db;
 
   //bool foundPart=false;  // intended to be used in the future
-    int igasPhase=0;
+  int igasPhase=0;
   for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != nullptr; db_model=db_model->findNextBlock("model") ){
 
     std::string type;
@@ -78,7 +78,7 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
       if (soot_name==""){
         proc0cout << " WARNING:: NO SOOT FOUND FOR RADIATION  \n";
       }else{
-      _gas_part_name.push_back("absksoot"); // only needed for spectral radiation because of grey soot and colorful gas
+        _gas_part_name.push_back("absksoot"); // only needed for spectral radiation because of grey soot and colorful gas
       }
     }
     if (igasPhase > 1){
@@ -124,84 +124,66 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
       }
     }
   }
-//---------------------------------------------------------------------------//
 }
 
 //--------------------------------------------------------------------------------------------------
 void
 sumRadiation::create_local_labels(){
-    register_new_variable<CCVariable<double> >(m_abskt_name);
-
+  register_new_variable<CCVariable<double> >(m_abskt_name);
 }
 
 //--------------------------------------------------------------------------------------------------
 void
 sumRadiation::register_initialize( VIVec& variable_registry , const bool pack_tasks){
-
   register_variable( m_abskt_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry);
   for (unsigned int i=0; i<_gas_part_name.size(); i++){
-
       register_variable(_gas_part_name[i] , Uintah::ArchesFieldContainer::REQUIRES, variable_registry);
-    }
-
+  }
 }
 
-void
-sumRadiation::shared_initialize_code( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+//--------------------------------------------------------------------------------------------------
+template <typename ExecSpace, typename MemSpace>
+void sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+
   CCVariable<double>& abskt = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskt_name));
   constCCVariable<double>&  volFrac = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
 
   abskt.initialize( 1.0);
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
+
+  const double abs_frac = 1./(double)_gas_part_name.size();
+
   for (unsigned int i=0; i<_gas_part_name.size(); i++){
-      constCCVariable<double>&  abskf = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_gas_part_name[i]);
-      Uintah::parallel_for( range, [&](int i, int j, int k){
-           abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? abskt(i,j,k)+abskf(i,j,k)-1.0/ (double) _gas_part_name.size()  : 1.0;
-      });
 
-  //Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+    constCCVariable<double>&  abskf = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_gas_part_name[i]);
 
+    Uintah::parallel_for( range,
+      [&](int i, int j, int k){
+
+      abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ?
+      abskt(i,j,k)+abskf(i,j,k) - abs_frac
+      : 1.0; }
+
+    );
   }
+
   if (_gas_part_name.size()==0){
-  Uintah::parallel_for( range, [&](int i, int j, int k){
-    abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? 0.0  : 1.0;
-  });
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? 0.0  : 1.0;
+    });
   }
-
-}
-
-template <typename ExecSpace, typename MemSpace>
-void sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
-
-  shared_initialize_code( patch, tsk_info );
-
 }
 
 //--------------------------------------------------------------------------------------------------
-void sumRadiation::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
-  //register_initialize(variable_registry);
-}
-
-
-//--------------------------------------------------------------------------------------------------
-void sumRadiation::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
-  //register_initialize( variable_registry , const bool pack_tasks);
-}
-
-template <typename ExecSpace, typename MemSpace> void
-sumRadiation::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
-  //initialize( patch,tsk_info);
-}
-
-
 void sumRadiation::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
   register_initialize( variable_registry , false);
 }
 
+//--------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename MemSpace>
 void sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
-  shared_initialize_code( patch, tsk_info );
+  initialize( patch, tsk_info, execObj );
 }
 
 } //namespace Uintah

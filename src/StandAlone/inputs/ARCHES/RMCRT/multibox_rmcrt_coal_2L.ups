@@ -1687,7 +1687,7 @@
         </ShaddixChar>
         <ksi>1.00</ksi>
         <!-- Optional Fraction of the heat released by char oxidation that goes to the particle (default=1.0) -->
-        <SmithChar>
+        <SmithCharConstLv0>
           <char_MW>12.0</char_MW>
           <surface_area_mult_factor>1.0</surface_area_mult_factor>
           <species>H2</species>
@@ -1714,7 +1714,7 @@
             <heat_of_reaction_constant>172459</heat_of_reaction_constant>
             <use_co2co>false</use_co2co>
           </reaction>
-        </SmithChar>
+        </SmithCharConstLv0>
         <visc_pre_exponential_factor>1.653920826593733e-13</visc_pre_exponential_factor>
         <visc_activation_energy>47.808431840038367</visc_activation_energy>
         <ash_softening_temperature>1500.0</ash_softening_temperature>
@@ -1894,7 +1894,7 @@
             <low_clip>9.9999999999999995e-07</low_clip>
             <high_clip>999999</high_clip>
           </model>
-          <model label="char" type="CharOxidationSmith">
+          <model label="char" type="CharOxidationSmithConstLv0">
           </model>
           <model label="max_T_rate" type="MaximumTemperature">
           </model>

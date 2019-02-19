@@ -14,7 +14,7 @@
     <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
   <DataArchiver>
-    <filebase>OFC4_smith2016.uda</filebase>
+    <filebase>OFC4_smith.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="residence_time"/>
     <save label="res_source"/>
@@ -1261,7 +1261,7 @@
           <Es> 45.5e3 </Es>
           <n> 0.18 </n>
         </ShaddixChar>
-        <SmithChar2016>
+        <SmithChar>
           <char_MW>12.0</char_MW>
           <Sg0>6.7e5</Sg0>
           <surface_area_mult_factor>1.0</surface_area_mult_factor>
@@ -1296,7 +1296,7 @@
             <heat_of_reaction_constant>172459</heat_of_reaction_constant>
             <use_co2co>false</use_co2co>
           </reaction>
-        </SmithChar2016>
+        </SmithChar>
         <ksi>0.97266</ksi>
         <LinearSwelling>
           <Fsw>1.05</Fsw>
@@ -1479,7 +1479,7 @@
             <low_clip>9.9999999999999995e-07</low_clip>
             <high_clip>999999</high_clip>
           </model>
-          <model label="char" type="CharOxidationSmith2016">
+          <model label="char" type="CharOxidationSmith">
           </model>
           <model label="length_os_src" type="BirthDeath">
             <abscissa label="length"/>

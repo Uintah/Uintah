@@ -20,7 +20,7 @@
        <delt_min>           0.0     </delt_min>
        <delt_max>           1.0     </delt_max>
        <delt_init>          1.0e-9  </delt_init>
-       <max_Timesteps>      250     </max_Timesteps>    <!-- RT -->
+       <max_Timesteps>      250     </max_Timesteps>  <!-- RT -->
        <timestep_multiplier>1.0     </timestep_multiplier>
    </Time>
 
@@ -29,7 +29,7 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
-      <Face side = "x-">
+      <Face side = "z-">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                             <value> 101215. </value>
         </BCType>
@@ -43,7 +43,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "x+">
+      <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                            <value> 101325. </value>
         </BCType>  
@@ -57,7 +57,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "z-">
+      <Face side = "x-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
@@ -71,7 +71,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "z+">
+      <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
@@ -101,19 +101,19 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0, 0.0, -0.025]     </lower>
-              <upper>        [1, 0.01, 0.025]     </upper>
-              <extraCells>   [1,1,1]             </extraCells>
-              <patches>      [1,1,1]             </patches>
+              <lower>        [-0.025, 0.0  ,0.0]  </lower>
+              <upper>        [ 0.025, 0.01 ,1.0]  </upper>
+              <extraCells>   [1,1,1]              </extraCells>
+              <patches>      [1,1,1]              </patches>
            </Box>
-           <spacing>         [0.02,0.01,0.0025]  </spacing>
+           <spacing>         [0.0025, 0.01, 0.02] </spacing>
        </Level>
     </Grid>
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>CouettePoiseuille-XZ.uda</filebase>
+      <filebase>CouettePoiseuille-ZX.uda</filebase>
       <outputInterval>0.1</outputInterval>
       <save label = "vel_CC"/>
       <save label = "press_CC"/>
@@ -122,15 +122,12 @@
       <save label = "temp_CC"/>
 
       <save label = "pressX_FC"/>
-      <save label = "pressY_FC"/>
       <save label = "pressZ_FC"/>
 
       <save label = "uvel_FCME"/>
-      <save label = "vvel_FCME"/>
       <save label = "wvel_FCME"/>
 
       <save label = "tau_X_FC"/>
-      <save label = "tau_Y_FC"/>
       <save label = "tau_Z_FC"/>
 
       <!--<checkpoint interval="0.75" cycle="2"/> -->
@@ -203,24 +200,4 @@
          </material>
       </ICE>
     </MaterialProperties>
-
-<!--
-    <DataAnalysis>
-      <Module name = "momentumAnalysis">
-        <materialIndex> 0 </materialIndex>
-
-        <samplingFrequency> 1e2 </samplingFrequency>
-        <timeStart>          1   </timeStart>
-        <timeStop>          100  </timeStop>
-        <controlVolume>
-          <Face side = "x+"  extents = "entireFace"/>
-          <Face side = "x-"  extents = "entireFace"/>
-          <Face side = "y+"  extents = "entireFace"/>
-          <Face side = "y-"  extents = "entireFace"/>
-          <Face side = "z+"  extents = "entireFace"/>
-          <Face side = "z-"  extents = "entireFace"/>
-        </controlVolume>
-      </Module>
-    </DataAnalysis>
--->
 </Uintah_specification>

@@ -4,21 +4,50 @@
 <symbolicLinks>
 </symbolicLinks>
 
+<!--
 <test>
   <name>Couette-Poiseuille_XY</name>
-  <tst>Couette-Poiseuille/Couette-Poiseuille_XY.tst</tst>
+  <tst>Couette-Poiseuille/XY.tst</tst>
+</test>
+
+<test>
+  <name>Couette-Poiseuille_XY_periodic</name>
+  <tst>Couette-Poiseuille/XY_periodic.tst</tst>
 </test>
 
 
+<test>
+  <name>Couette-Poiseuille_YZ</name>
+  <tst>Couette-Poiseuille/YZ.tst</tst>
+</test>
+
+<test>
+  <name>Couette-Poiseuille_YZ_periodic</name>
+  <tst>Couette-Poiseuille/YZ_periodic.tst</tst>
+</test>
+
+
+<test>
+  <name>Couette-Poiseuille_ZX</name>
+  <tst>Couette-Poiseuille/ZX.tst</tst>
+</test>
+-->
+
+<test>
+  <name>Couette-Poiseuille_ZX_periodic</name>
+  <tst>Couette-Poiseuille/ZX_periodic.tst</tst>
+</test>
+
+<!--__________________________________-->
 <!--
 <test>
   <name>Couette-Poiseuille_delT_diffusion_knob</name>
-  <tst>Couette-Poiseuille/Couette-Poiseuille_dt.tst</tst>
+  <tst>Couette-Poiseuille/delT_diffusion_knob.tst</tst>
 </test>
 
 <test>
   <name>Couette-Poiseuille_time</name>
-  <tst>Couette-Poiseuille/Couette-Poiseuille_time.tst</tst>
+  <tst>Couette-Poiseuille/steadyState.tst</tst>
 </test>
 -->
 
