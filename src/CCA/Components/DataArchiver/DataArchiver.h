@@ -605,6 +605,10 @@ class LoadBalancer;
 
     bool m_outputDoubleAsFloat {false};
 
+    // For outputing global vars Frequency > OnTimeStep
+    unsigned int m_outputGlobalVarsFrequency {1};
+    unsigned int m_outputGlobalVarsOnTimeStep {0};
+
     std::string TranslateVariableType( std::string type, bool isThisCheckpoint );
 
     //-----------------------------------------------------------
