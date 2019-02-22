@@ -156,6 +156,8 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 
   void readInsertParticlesFile(std::string filename);
 
+  void readInsertPorePressureFile(std::string filename);
+
   void deleteGeometryObjects(const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
@@ -378,6 +380,17 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* old_dw,
 	  DataWarehouse* new_dw);
 
+  // Instert Pore Pressure 
+  virtual void scheduleInsertPorePressure(SchedulerP&,
+	  const PatchSet*,
+	  const MaterialSet*);
+
+  virtual void insertPorePressure(const ProcessorGroup*,
+	  const PatchSubset* patches,
+	  const MaterialSubset* matls,
+	  DataWarehouse* old_dw,
+	  DataWarehouse* new_dw);
+
   // Instert particle 
   virtual void scheduleInsertParticles(SchedulerP&, 
                                        const PatchSet*,
@@ -518,6 +531,13 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
   std::vector<double> d_IPColor;
   std::vector<Vector> d_IPTranslate;
   std::vector<Vector> d_IPVelNew;
+
+  // The following are used iff the d_insertPorePressure flag is true.
+  std::vector<double> d_IPoreStartTimes;
+  std::vector<double> d_IPoreEndTimes;
+
+  std::vector<double> d_IPoreColor;
+  std::vector<double> d_IPorePressure;
 
 
   bool             d_fracture;

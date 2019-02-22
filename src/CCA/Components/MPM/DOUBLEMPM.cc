@@ -258,6 +258,10 @@ void DOUBLEMPM::problemSetup(const ProblemSpecP& prob_spec,
     readInsertParticlesFile(flags->d_insertParticlesFile);
   }
 
+  if (flags->d_insertPorePressure) {
+	  readInsertPorePressureFile(flags->d_insertPorePressureFile);
+  }
+
   setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
   MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
@@ -332,6 +336,28 @@ void DOUBLEMPM::readInsertParticlesFile(string filename)
 				d_IPColor.push_back(color);
 				d_IPTranslate.push_back(Vector(transx, transy, transz));
 				d_IPVelNew.push_back(Vector(v_new_x, v_new_y, v_new_z));
+			}
+		}
+	}
+}
+
+void DOUBLEMPM::readInsertPorePressureFile(string filename)
+{
+
+	if (filename != "") {
+		std::ifstream is(filename.c_str());
+		if (!is) {
+			throw ProblemSetupException("ERROR Opening Pore Pressure insertion file '" + filename + "'\n",
+				__FILE__, __LINE__);
+		}
+		while (is) {
+			double t1, t2, color, PorePressure;
+			is >> t1 >> t2 >> color >> PorePressure;
+			if (is) {
+				d_IPoreStartTimes.push_back(t1);
+				d_IPoreEndTimes.push_back(t2);
+				d_IPoreColor.push_back(color);
+				d_IPorePressure.push_back(PorePressure);
 			}
 		}
 	}
@@ -987,7 +1013,15 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleComputeStressTensor(						sched, patches, matls);
   scheduleFinalParticleUpdate(						sched, patches, matls);
-  scheduleInsertParticles(							sched, patches, matls);
+
+  if (flags->d_insertParticles) {
+	  scheduleInsertParticles(						sched, patches, matls);
+  }
+
+  if (flags->d_insertPorePressure) {
+	  scheduleInsertPorePressure(					sched, patches, matls);
+  }
+
   scheduleRelocateParticle_DOUBLEMPM(				sched, patches, matls);
   if(flags->d_computeScaleFactor){
     scheduleComputeParticleScaleFactor(       sched, patches, matls);
@@ -2296,6 +2330,8 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 							// Liquid
 							gInternalForceLiquid[ni[k]] -= (div * PoreTensor) * pvol[idx];  // Vector
 							gPorePresure[ni[k]] += PoreVol * S[k];							// Scalar
+
+							std::cerr << gInternalForceLiquid[ni[k]] << std::endl;
 						}
 					}
 				} // End particle loop
@@ -2539,6 +2575,7 @@ void DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM (const ProcessorGroup*
 				if (gMassSolid[c] > flags->d_min_mass_for_acceleration) {
 					acc = (internalforce[c] + gInternalForceLiquid[c] + gMassLiquid[c] * (gravity - gAccelerationLiquid[c]) + externalforce[c]) / gMassSolid[c];
 					acc -= damp_coef * velocity[c];
+					acc = 0;
 				}			
 
 				acceleration[c] = acc + gravity;
@@ -2642,6 +2679,7 @@ void DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
 			new_dw->get(gvelocity, lb->gVelocityLabel, dwi, patch,
 				Ghost::None, 0);
 
+
 			// Liquid
 			NCVariable<Vector> gVelocityStarLiquid, gAccelerationLiquid;
 			constNCVariable<Vector> gVelocityLiquid;
@@ -2659,7 +2697,7 @@ void DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity_star, interp_type);
 
 			// Liquid
-			bc.setBoundaryCondition(patch, dwi, "Velocity", gVelocityStarLiquid, interp_type);
+			//bc.setBoundaryCondition(patch, dwi, "Velocity", gVelocityStarLiquid, interp_type);
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", gVelocityStarLiquid, interp_type);
 
 			// Now recompute acceleration as the difference between the velocity
@@ -2672,7 +2710,7 @@ void DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
 				gacceleration[c] = (gvelocity_star[c] - gvelocity[c]) / delT;
 
 				// Liquid
-				gAccelerationLiquid[c] = (gVelocityStarLiquid[c] - gVelocityLiquid[c]) / delT;
+				//gAccelerationLiquid[c] = (gVelocityStarLiquid[c] - gVelocityLiquid[c]) / delT;
 			}
 		} // matl loop
 	}  // patch loop
@@ -2859,7 +2897,7 @@ void DOUBLEMPM::setPrescribedMotion(const ProcessorGroup*,
 	}     // patch loop
 }
 
-
+// Update position and velocity
 void DOUBLEMPM::scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)
@@ -3421,7 +3459,6 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 				VolumeRateLiquid	= delT * StrainRateLiquid.Trace() * (1 - pPorosity[idx]) / pPorosity[idx];;
 
 				pPorePressurenew[idx] = pPorePressure[idx] + pBulkModulLiquid[idx] * (VolumeRateSolid + VolumeRateLiquid);
-				 
 				 //std::cerr << StrainRateSolid << std::endl;
 				 //std::cerr << StrainRateLiquid << std::endl;
 				// std::cerr << VolumeRateSolid << std::endl;
@@ -3700,6 +3737,92 @@ void DOUBLEMPM::finalParticleUpdate(const ProcessorGroup*,
 	} // patches
 }
 
+// Insert Pore Water Pressure (optional)
+void DOUBLEMPM::scheduleInsertPorePressure(SchedulerP& sched,
+	const PatchSet* patches,
+	const MaterialSet* matls)
+
+{
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
+
+	if (flags->d_insertPorePressure) {
+
+		printSchedule(patches, cout_doing, "MPM::scheduleInsertPorePressure");
+
+		Task* t = scinew Task("MPM::insertPorePressure", this,
+			&DOUBLEMPM::insertPorePressure);
+
+		t->requires(Task::OldDW, lb->simulationTimeLabel);
+		t->requires(Task::OldDW, lb->delTLabel);
+		t->requires(Task::OldDW, lb->pColorLabel, Ghost::None);
+
+		t->modifies(double_lb->pPorePressureLabel_preReloc);
+
+		sched->addTask(t, patches, matls);
+	}
+}
+
+void DOUBLEMPM::insertPorePressure(const ProcessorGroup*,
+	const PatchSubset* patches,
+	const MaterialSubset*,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
+{
+	for (int p = 0; p < patches->size(); p++) {
+		const Patch* patch = patches->get(p);
+		printTask(patches, patch, cout_doing, "Doing insertPorePressure");
+
+		// Get the current simulation time
+		simTime_vartype simTimeVar;
+		old_dw->get(simTimeVar, lb->simulationTimeLabel);
+		double time = simTimeVar;
+
+		delt_vartype delT;
+		old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
+		int index = -999;
+		for (int i = 0; i < (int)d_IPoreStartTimes.size(); i++) {
+			if (time > d_IPoreStartTimes[i] && time <= d_IPoreEndTimes[i]) {
+				index = i;
+				if (index >= 0) {
+					unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
+					for (unsigned int m = 0; m < numMPMMatls; m++) {
+						MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+						int dwi = mpm_matl->getDWIndex();
+						ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+						// Get the arrays of particle values to be changed
+						//ParticleVariable<Point> px;
+						//ParticleVariable<Vector> pvelocity;
+						constParticleVariable<double> pcolor;
+
+						ParticleVariable<double> pPorePressure;
+
+						old_dw->get(pcolor, lb->pColorLabel, pset);
+						new_dw->getModifiable(pPorePressure, double_lb->pPorePressureLabel_preReloc, pset);
+
+						// Loop over particles here
+						for (ParticleSubset::iterator iter = pset->begin();
+							iter != pset->end();   iter++) {
+							particleIndex idx = *iter;
+
+							//std::cerr << pcolor[idx] << std::endl;
+
+							if (pcolor[idx] == d_IPoreColor[index]) {
+								pPorePressure[idx] = d_IPorePressure[index];
+
+								//std::cerr << pPorePressure[idx] << std::endl;
+
+							} // end if
+						}   // end for
+					}     // end for
+				}       // end if
+			}         // end if
+		}           // end for
+	}             // end for
+}
 
 // Insert paticle (optional)
 void DOUBLEMPM::scheduleInsertParticles(SchedulerP& sched,

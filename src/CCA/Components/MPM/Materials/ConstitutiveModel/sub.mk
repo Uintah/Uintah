@@ -65,8 +65,9 @@ SRCS   += \
         $(SRCDIR)/Arenisca4.cc                  \
         $(SRCDIR)/TongeRamesh_gitInfo.cc        \
         $(SRCDIR)/ArrudaBoyce8Chain.cc          \
-        $(SRCDIR)/RFElasticPlastic.cc
-
+        $(SRCDIR)/RFElasticPlastic.cc		
+                
+		
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \
        $(SRCDIR)/Diamm.cc                      \
@@ -78,6 +79,7 @@ SUBDIRS := \
         $(SRCDIR)/PlasticityModels \
         $(SRCDIR)/PortableTongeRamesh \
         $(SRCDIR)/ArenaSoilBanerjeeBrannon \
+		$(SRCDIR)/QuocAnh \
 #        $(SRCDIR)/Biswajit \
 
 ifneq ($(NO_FORTRAN),yes)

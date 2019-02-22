@@ -25,7 +25,6 @@
 #ifndef UINTAH_HOMEBREW_IMP_MPM_H
 #define UINTAH_HOMEBREW_IMP_MPM_H
 
-
 #include <Core/Geometry/Vector.h>
 
 #include <Core/ProblemSpec/ProblemSpecP.h>

@@ -66,8 +66,12 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/RFElasticPlastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ArrudaBoyce8Chain.h>
-#include <CCA/Components/MPM/Core/MPMFlags.h>
 
+
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/HypoplasticB.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/MohrCoulomb.h>
+
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -108,6 +112,14 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   if (cm_type == "rigid")
     return(scinew RigidMaterial(child,flags));
+
+ else if (cm_type == "HypoplasticB") {
+	  return(scinew HypoplasticB(child, flags));
+  }
+
+ else if (cm_type == "MohrCoulomb")
+	  return(scinew MohrCoulomb(child, flags));
+
 
   else if (cm_type == "comp_mooney_rivlin") {
     return(scinew CompMooneyRivlin(child,flags));
@@ -185,6 +197,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (cm_type ==  "p_alpha"){
     return(scinew P_Alpha(child,flags));
   }
+
   else if (cm_type ==  "water"){
     computes_pLocalizedMPM = true;
     return(scinew Water(child,flags));
@@ -268,6 +281,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 //  else if (cm_type ==  "camclay"){
 //    return(scinew CamClay(child,flags));
 //  }
+
   else if (cm_type ==  "rf_elastic_plastic"){
     computes_pLocalizedMPM = true;
     return(scinew RFElasticPlastic(child,flags));

@@ -130,6 +130,8 @@ class Output;
     
 	//Flags for DOUBLEMPM
 	bool		d_DOUBLEMPM;
+	bool        d_insertPorePressure;                        // Prescribe Pore Pressure
+	std::string d_insertPorePressureFile;                   // File containing prescribed Pore Pressure
 
     // flags for turning on/off the reduction variable calculations
     struct reductionVars{

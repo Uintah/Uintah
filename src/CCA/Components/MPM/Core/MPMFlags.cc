@@ -132,6 +132,8 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 
   // DOUBLEMPM
   d_DOUBLEMPM						= false;
+  d_insertPorePressure				= false;
+
 }
 
 MPMFlags::~MPMFlags()
@@ -398,6 +400,10 @@ else{
 
   // DOUBLEMPM
   mpm_flag_ps->get("DOUBLEMPM", d_DOUBLEMPM);
+  mpm_flag_ps->get("InsertPorePressure", d_insertPorePressure);
+  if (d_insertPorePressure) {
+	  mpm_flag_ps->require("InsertPorePressureFile", d_insertPorePressureFile);
+  }
 
 }
 
@@ -443,7 +449,11 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
 
   // DOUBLEMPM
   ps->appendElement("DOUBLEMPM",						  d_DOUBLEMPM);
+  ps->appendElement("InsertPorePressure", d_insertPorePressure);
 
+  if (d_insertPorePressure) {
+	  ps->appendElement("InsertPorePressureFile", d_insertPorePressureFile);
+  }
 
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);
