@@ -235,6 +235,23 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
   m_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != nullptr;
 
+  // For outputing global vars Frequency > OnTimeStep
+  p->get("frequency",  m_outputGlobalVarsFrequency);
+  p->get("onTimeStep", m_outputGlobalVarsOnTimeStep);
+
+  if (m_outputGlobalVarsOnTimeStep >= m_outputGlobalVarsFrequency) {
+    proc0cout << "Error: the frequency of outputing the global vars " << m_outputGlobalVarsFrequency  << " "
+              << "is less than or equal to the time step ordinality " << m_outputGlobalVarsOnTimeStep << " "
+              << ". Resetting the ordinality to ";
+
+    if (m_outputGlobalVarsFrequency > 1) {
+      m_outputGlobalVarsOnTimeStep = 1;
+    }
+    else {
+      m_outputGlobalVarsOnTimeStep = 0;
+    }
+  }
+
   // set to false if restartSetup is called - we can't do it there
   // as the first timestep doesn't have any tasks
   m_outputInitTimeStep = p->findBlock("outputInitTimestep") != nullptr;
@@ -2701,6 +2718,37 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
       m_saveGlobalLabels.empty() ) {
     return;
   }
+
+  bool outputGlobalVars = false;
+
+  // If the frequency is greater than 1 check to see if output is
+  // needed.
+  if (m_outputGlobalVarsFrequency == 1) {
+    outputGlobalVars = true;
+  }
+  // Note: this check is split up so to be assured that the call to
+  // isLastTimeStep is last and called only when needed. Unfortunately,
+  // the greater the frequency the more often it will be called.  
+  else if (m_application->getTimeStep() % m_outputGlobalVarsFrequency == m_outputGlobalVarsOnTimeStep) {
+    outputGlobalVars = true;
+  }
+  else {
+    // Get the wall time if is needed, otherwise ignore it.
+    double walltime(0);
+
+    // The wall time is not available here
+    // if (m_application->getWallTimeMax() > 0) {
+    //   walltime = m_wall_timers.GetWallTime();
+    // }
+    // else {
+    //   walltime = 0;
+    // }
+
+    outputGlobalVars = m_application->isLastTimeStep(walltime);
+  }
+
+  if( !outputGlobalVars )
+    return;
 
   if (dbg.active()) {
     dbg << "  outputGlobalVars task begin\n";

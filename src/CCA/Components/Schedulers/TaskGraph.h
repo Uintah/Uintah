@@ -262,7 +262,7 @@ class TaskGraph {
       m_current_iteration = iter;
     }
 
-    inline const int getNumTaskPhases() const
+    inline int getNumTaskPhases() const
     {
       return m_num_task_phases;
     }
@@ -272,7 +272,7 @@ class TaskGraph {
       return m_tasks;
     }
 
-    inline const bool getDistalRequires() const
+    inline bool getDistalRequires() const
     {
       return m_has_distal_requires;
     }

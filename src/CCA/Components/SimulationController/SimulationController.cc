@@ -582,7 +582,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
                                         DataWarehouse*,
                                         bool header )
 {
-  bool reportStats;
+  bool reportStats = false;
 
   // If the reporting frequency is greater than 1 check to see if output is needed.
   if (m_reportStatsFrequency == 1) {

@@ -53,7 +53,7 @@ RegridderCommon* RegridderFactory::create(       ProblemSpecP   & ps,
       std::string regridderName;
       regridderPS->getAttribute("type", regridderName);
 
-      proc0cout << "Regridder: \t" << regridderName << std::endl;
+      proc0cout << "Regridder: \t\t" << regridderName << std::endl;
 
       if (regridderName == "Tiled") {
         regridder = scinew TiledRegridder(world);

@@ -52,7 +52,7 @@ SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
       solverName = "CGSolver";
   }
 
-  proc0cout << "Linear Solver: \t" << solverName << std::endl;
+  proc0cout << "Linear Solver: \t\t" << solverName << std::endl;
 
   SolverInterface* solver = nullptr;
 
