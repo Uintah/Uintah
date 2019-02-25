@@ -71,10 +71,19 @@ echo "Looking for differences in the variable lists"
 
 mkdir ~/.scratch  >&/dev/null
 
+set io_type = "UDA"
+
 foreach X ( $udas[*] )
   set here = `basename $X`
   grep variable $X/index.xml > ~/.scratch/$here
+
+  # check if io type is uda or PIDX
+  if (`grep -c "<outputFormat>PIDX</outputFormat>" "$X/index.xml"`) then
+    set io_type="PIDX"
+  endif
 end
+
+echo $io_type
 
 set n = $#argv    # counters
 @ c  = 1
@@ -113,6 +122,12 @@ sed /"\/timesteps"/,/"\/Uintah_DataArchive"/d <index.tmp > index.xml
 
 # add the list of timesteps to index.xml
 makeCombinedIndex.sh "$udas" >> index.xml
+
+# generate all gidx
+if($io_type == "PIDX") then
+  rm *.gidx
+  makeCombinedGIDX.sh "$udas"
+endif
 
 # put the xml tags back
 echo  "  </timesteps>" >> index.xml

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,8 +23,9 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
-#include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
+#include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
+#include <CCA/Components/OnTheFlyAnalysis/meanTurbFluxes.h>
 #include <CCA/Components/OnTheFlyAnalysis/momentumAnalysis.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeAverage.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
@@ -37,7 +38,6 @@
 #endif
 
 #if !defined( NO_ICE )
-  #include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
   #include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
 #endif
 
@@ -67,6 +67,8 @@ AnalysisModuleFactory::~AnalysisModuleFactory()
 {
 }
 
+//______________________________________________________________________
+//
 std::vector<AnalysisModule*>
 AnalysisModuleFactory::create(const ProcessorGroup* myworld,
                               const MaterialManagerP materialManager,
@@ -98,10 +100,13 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
         modules.push_back(scinew lineExtract(          myworld, materialManager, module_ps ) );
       }
       else if ( module == "planeAverage" ) {
-        modules.push_back( scinew planeAverage(        myworld, materialManager, module_ps ) );
+        modules.push_back( scinew planeAverage(        myworld, materialManager, module_ps, true, true, 0 ) );
       }
       else if ( module == "planeExtract" ) {
         modules.push_back( scinew planeExtract(        myworld, materialManager, module_ps ) );
+      }
+      else if ( module == "meanTurbFluxes" ) {
+        modules.push_back( scinew meanTurbFluxes(      myworld, materialManager, module_ps ) );
       }
       else if ( module == "momentumAnalysis" ) {
         modules.push_back( scinew momentumAnalysis(    myworld, materialManager, module_ps ) );
@@ -117,9 +122,6 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
 #endif
 
 #if !defined( NO_ICE )
-      else if ( module == "containerExtract" ) {
-        modules.push_back( scinew containerExtract(    myworld, materialManager, module_ps ) );
-      }
       else if ( module == "vorticity" ) {
         modules.push_back( scinew vorticity(           myworld, materialManager, module_ps ) );
       }

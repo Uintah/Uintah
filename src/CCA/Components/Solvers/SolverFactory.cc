@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -52,7 +52,7 @@ SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
       solverName = "CGSolver";
   }
 
-  proc0cout << "Linear Solver: \t" << solverName << std::endl;
+  proc0cout << "Linear Solver: \t\t" << solverName << std::endl;
 
   SolverInterface* solver = nullptr;
 

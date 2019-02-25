@@ -78,7 +78,7 @@
     <save label="ucellX"/>
     <save label="vcellY"/>
     <save label="wcellZ"/>
-    <checkpoint cycle="2" interval=".3"/>
+    <checkpoint cycle="2" interval=".0007"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
@@ -290,10 +290,9 @@
         </utility>
       </Utilities>
       <TurbulenceModels>
-	<model label="DS" type="dynamic_smagorinsky">
-	  <filter type="three_points"/>
-	  <epsilon>3.0</epsilon>
-	</model>
+	      <model label="DS" type="dynamic_smagorinsky">
+	        <filter type="three_points"/>
+	      </model>
        <!--model label="Cwale" type="wale">
         <Cs>0.5</Cs>
        </model-->
@@ -305,7 +304,7 @@
           <eqn label="phi">
             <convection scheme="superbee"/>
             <diffusion scheme ="central"/>
-	    <clip low="0" high="1"/>
+	          <clip low="0" high="1"/>
             <!--initialize value="1"/-->
           </eqn>
         </eqn_group>

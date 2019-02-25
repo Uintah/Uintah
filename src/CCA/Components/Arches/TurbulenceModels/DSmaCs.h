@@ -11,7 +11,7 @@ namespace Uintah{
 
 public:
 
-    DSmaCs( std::string task_name, int matl_index );
+    DSmaCs( std::string task_name, int matl_index, const std::string turb_model_name );
     ~DSmaCs();
 
     void problemSetup( ProblemSpecP& db );
@@ -39,16 +39,18 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index, const std::string turb_model_name )
+        : m_task_name(task_name), m_matl_index(matl_index), m_turb_model_name(turb_model_name){}
       ~Builder(){}
 
       DSmaCs* build()
-      { return scinew DSmaCs<TT>( m_task_name, m_matl_index ); }
+      { return scinew DSmaCs<TT>( m_task_name, m_matl_index, m_turb_model_name ); }
 
       private:
 
       std::string m_task_name;
       int m_matl_index;
+      const std::string m_turb_model_name;
     };
 
 private:
@@ -65,12 +67,13 @@ private:
     std::string m_IsI_name;
     bool m_create_labels_IsI_t_viscosity{true};
     Uintah::ArchesCore::TestFilter m_Filter;
+    const std::string m_turb_model_name;
   };
 
 //--------------------------------------------------------------------------------------------------
 template<typename TT>
-DSmaCs<TT>::DSmaCs( std::string task_name, int matl_index ) :
-TaskInterface( task_name, matl_index ) {
+DSmaCs<TT>::DSmaCs( std::string task_name, int matl_index, const std::string turb_model_name ) :
+TaskInterface( task_name, matl_index ), m_turb_model_name(turb_model_name) {
 
 }
 
@@ -113,10 +116,13 @@ DSmaCs<TT>::problemSetup( ProblemSpecP& db ){
 
   m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
   m_volFraction_name = "volFraction";
-  m_IsI_name = "strainMagnitudeLabel";
+  std::stringstream composite_name;
+  composite_name << "strainMagnitude_" << m_turb_model_name;
+  m_IsI_name = composite_name.str();
 
   if (m_t_vis_name == "viscosityCTS") { // this is production code
     m_create_labels_IsI_t_viscosity = false;
+    m_IsI_name = "strainMagnitudeLabel";
   }
 
 }
@@ -184,7 +190,8 @@ DSmaCs<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
 DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
-                                          variable_registry, const int time_substep , const bool packed_tasks){
+                                    variable_registry,
+                                    const int time_substep , const bool packed_tasks ){
 
   if (m_create_labels_IsI_t_viscosity) {
     register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
@@ -206,13 +213,12 @@ DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
   register_variable( m_density_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
-  register_variable( "filterML" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
-  register_variable( "filterMM" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "filterML", ArchesFieldContainer::COMPUTES, variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "filterMM", ArchesFieldContainer::COMPUTES, variable_registry, time_substep , m_task_name, packed_tasks);
 
   register_variable("MM" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
   register_variable("ML" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
   register_variable(m_IsI_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
-
 
 }
 
@@ -230,10 +236,10 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   mu_turb.initialize(0.0);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  int nG = -1;
-  if ( tsk_info->packed_tasks() ){
-    nG = 0;
-  }
+  // int nG = -1;
+  // if ( tsk_info->packed_tasks() ){
+  //   nG = 0;
+  // }
 
 
   const Vector Dx = patch->dCell(); //
@@ -250,10 +256,8 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   MM = c_field_tool.get("MM");
   IsI = c_field_tool.get(m_IsI_name);
 
-  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML", nG);
-  //CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
-  //CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
-  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM", nG);
+  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
+  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
   filterML.initialize(0.0);
   filterMM.initialize(0.0);
 

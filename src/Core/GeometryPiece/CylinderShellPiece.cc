@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -88,7 +88,7 @@ CylinderShellPiece::clone() const
 ///////////
 // Point inside cylinder
 bool 
-CylinderShellPiece::inside(const Point& p) const
+CylinderShellPiece::inside(const Point& p, const bool defVal=false) const
 {
   Vector axis = d_top-d_bottom;  
   Vector tobot = p-d_bottom;
@@ -108,9 +108,9 @@ Box
 CylinderShellPiece::getBoundingBox() const
 {
   Point lo(d_bottom.x() - d_radius, d_bottom.y() - d_radius,
-	   d_bottom.z() - d_radius);
+           d_bottom.z() - d_radius);
   Point hi(d_top.x() + d_radius, d_top.y() + d_radius,
-	   d_top.z() + d_radius);
+           d_top.z() + d_radius);
   return Box(lo,hi);
 }
 
@@ -180,13 +180,13 @@ CylinderShellPiece::returnParticleCount(const Patch* patch)
 /////////////////////////////////////////////////////////////////////////////
 int 
 CylinderShellPiece::createParticles(const Patch* patch,
-				  ParticleVariable<Point>&  pos,
-				  ParticleVariable<double>& vol,
-				  ParticleVariable<double>& pThickTop,
-				  ParticleVariable<double>& pThickBot,
-				  ParticleVariable<Vector>& pNormal,
-				  ParticleVariable<Matrix3>& psiz,
-				  particleIndex start)
+                                  ParticleVariable<Point>&  pos,
+                                  ParticleVariable<double>& vol,
+                                  ParticleVariable<double>& pThickTop,
+                                  ParticleVariable<double>& pThickBot,
+                                  ParticleVariable<Vector>& pNormal,
+                                  ParticleVariable<Matrix3>& psiz,
+                                  particleIndex start)
 {
   // Get the patch box
   Box b = patch->getExtraBox();

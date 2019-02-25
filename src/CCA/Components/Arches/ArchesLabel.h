@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -149,6 +149,15 @@ namespace Uintah {
       const VarLabel* d_vVelocitySPBCLabel;
       // W-Velocity Labels
       const VarLabel* d_wVelocitySPBCLabel;
+
+      // Duplicate Labels to get Kokkos Arches to work.
+      // These are just copies of uVelocitySPBC, etc.
+      // U-Velocity Labels
+      const VarLabel* d_uVelocityLabel;
+      // V-Velocity Labels
+      const VarLabel* d_vVelocityLabel;
+      // W-Velocity Labels
+      const VarLabel* d_wVelocityLabel;
 
       // UMom Labels
       const VarLabel* d_uMomLabel;

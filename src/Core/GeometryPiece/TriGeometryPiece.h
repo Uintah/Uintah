@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -98,8 +98,13 @@ WARNING
 
          //////////
          // Determins whether a point is inside the triangulated surface.
-         virtual bool inside(const Point &p) const;
+         virtual bool inside(const Point &p, const bool defaultValue) const;
          bool insideNew(const Point &p, int& cross) const;
+
+         // A relatively newer version of the inside test that uses three
+         // nearly orthogonal rays and counts intersections in each of those
+         // directions
+         bool insideNewest(const Point &p, int& cross) const;
 
          //////////
          // Returns the bounding box surrounding the triangulated surface.

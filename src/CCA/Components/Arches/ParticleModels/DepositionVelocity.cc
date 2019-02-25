@@ -52,7 +52,7 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
     throw InvalidValue("Error: DepositionVelocity model requires ParticleProperties to be specified.", __FILE__, __LINE__);
   }
 
-  _user_specified_rho = rho_ash_bulk * p_void0;
+  _user_specified_rho = rho_ash_bulk * (1 - p_void0);
 
   _d.push_back(IntVector(1,0,0)); // cell center located +x
   _d.push_back(IntVector(-1,0,0)); // cell center located -x

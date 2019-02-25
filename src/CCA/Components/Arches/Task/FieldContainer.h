@@ -330,32 +330,32 @@ namespace Uintah{
 
       }
 
-      /** @brief Get a temporary uintah variable **/
-      template <typename T>
-      inline T* get_temporary_field( const std::string name, const int nGhosts ){
-
-        T* field = scinew T;
-
-        Ghost::GhostType ghost_type;
-        if ( field->getTypeDescription() == CCVariable<double>::getTypeDescription() ){
-          ghost_type = Ghost::AroundCells;
-        } else {
-          ghost_type = Ghost::AroundFaces;
-        }
-
-        if ( nGhosts > 0 ){
-          _new_dw->allocateTemporary( *field, _patch, ghost_type, nGhosts );
-        } else {
-          _new_dw->allocateTemporary( *field, _patch, Ghost::None, 0 );
-        }
-
-        FieldContainer icontain;
-        icontain.set_field( field );
-        //icontain.set_label( NULL );
-        this->add_variable( name, icontain );
-
-        return field;
-      }
+      // /** @brief Get a temporary uintah variable **/
+      // template <typename T>
+      // inline T* get_temporary_field( const std::string name, const int nGhosts ){
+      //
+      //   T* field = scinew T;
+      //
+      //   Ghost::GhostType ghost_type;
+      //   if ( field->getTypeDescription() == CCVariable<double>::getTypeDescription() ){
+      //     ghost_type = Ghost::AroundCells;
+      //   } else {
+      //     ghost_type = Ghost::AroundFaces;
+      //   }
+      //
+      //   if ( nGhosts > 0 ){
+      //     _new_dw->allocateTemporary( *field, _patch, ghost_type, nGhosts );
+      //   } else {
+      //     _new_dw->allocateTemporary( *field, _patch, Ghost::None, 0 );
+      //   }
+      //
+      //   FieldContainer icontain;
+      //   icontain.set_field( field );
+      //   //icontain.set_label( NULL );
+      //   this->add_variable( name, icontain );
+      //
+      //   return field;
+      // }
 
       // @brief Get a particle field spatialOps representation of the Uintah field.
       std::tuple<ParticleVariable<double>*, ParticleSubset*> get_uintah_particle_field( const std::string name ){

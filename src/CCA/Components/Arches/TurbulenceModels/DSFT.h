@@ -10,14 +10,14 @@ namespace Uintah{
 
 public:
 
-    DSFT( std::string task_name, int matl_index );
+    DSFT( std::string task_name, int matl_index, const std::string turb_model_name );
     ~DSFT();
 
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
@@ -27,7 +27,7 @@ public:
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -38,16 +38,19 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index, const std::string turb_model_name )
+        : m_task_name(task_name), m_matl_index(matl_index), m_turb_model_name(turb_model_name){}
       ~Builder(){}
 
       DSFT* build()
-      { return scinew DSFT( m_task_name, m_matl_index ); }
+      { return scinew DSFT( m_task_name, m_matl_index, m_turb_model_name ); }
 
       private:
 
       std::string m_task_name;
       int m_matl_index;
+      const std::string m_turb_model_name;
+
     };
 
 private:
@@ -65,6 +68,8 @@ private:
     std::string m_rhov_vel_name;
     std::string m_rhow_vel_name;
     std::string m_IsI_name;
+
+    const std::string m_turb_model_name; 
     //std::string m_ref_density_name;
     //std::string m_cell_type_name;
     //int Type_filter ;

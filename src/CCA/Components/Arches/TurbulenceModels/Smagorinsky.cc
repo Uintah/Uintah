@@ -18,28 +18,28 @@ Smagorinsky::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocity" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocity" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocity" );
 
-  m_cc_u_vel_name = m_u_vel_name + "_cc";
-  m_cc_v_vel_name = m_v_vel_name + "_cc";
-  m_cc_w_vel_name = m_w_vel_name + "_cc";
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, m_u_vel_name + "_cc" );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, m_v_vel_name + "_cc" );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, m_w_vel_name + "_cc" );
+
+  m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
   Nghost_cells = 1;
 
   db->getWithDefault("Cs", m_Cs, 1.3);
 
-  if (db->findBlock("use_my_name_viscosity")){
-    db->findBlock("use_my_name_viscosity")->getAttribute("label",m_t_vis_name);
-  } else{
-    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db );
-  }
+  m_total_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, default_viscosity_name );
+
+  // ** HACK **
+  if ( m_total_vis_name == "viscosityCTS" ){ m_using_production = true; }
 
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("PhysicalConstants")) {
-    params_root->findBlock("PhysicalConstants")->require("viscosity",
-                                                          m_molecular_visc);
+    params_root->findBlock("PhysicalConstants")->require("viscosity", m_molecular_visc);
     if( m_molecular_visc == 0 ) {
       std::stringstream msg;
       msg << "ERROR: Constant WALE: problemSetup(): Zero viscosity specified \n"
@@ -59,7 +59,9 @@ Smagorinsky::problemSetup( ProblemSpecP& db ){
 void
 Smagorinsky::create_local_labels(){
 
-  register_new_variable<CCVariable<double> >( m_t_vis_name);
+  if ( !m_using_production ){
+    register_new_variable<CCVariable<double> >( m_total_vis_name);
+  }
 
 }
 
@@ -70,7 +72,7 @@ Smagorinsky::register_initialize(
   const bool packed_tasks )
 {
 
-  register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_total_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
 }
 
@@ -78,7 +80,7 @@ Smagorinsky::register_initialize(
 void
 Smagorinsky::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_t_vis_name);
+  CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_total_vis_name);
   mu_sgc.initialize(0.0);
 
 }
@@ -90,7 +92,9 @@ Smagorinsky::register_timestep_init(
   const bool packed_tasks )
 {
 
-  register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  if ( !m_using_production ){
+    register_variable( m_total_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  }
 
 }
 
@@ -98,8 +102,10 @@ Smagorinsky::register_timestep_init(
 void
 Smagorinsky::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_t_vis_name);
-  mu_sgc.initialize(0.0);
+  if ( !m_using_production ){
+    CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_total_vis_name);
+    mu_sgc.initialize(0.0);
+  }
 
 }
 
@@ -116,7 +122,9 @@ Smagorinsky::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
   register_variable( m_cc_v_vel_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_w_vel_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
 
-  register_variable( m_t_vis_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
+  register_variable( m_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+
+  register_variable( m_total_vis_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
 
 }
 
@@ -132,7 +140,9 @@ Smagorinsky::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_v_vel_name);
   constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
 
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
+  constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_density_name);
+
+  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_total_vis_name));
 
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);
@@ -219,7 +229,7 @@ Smagorinsky::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
               + 2.0 * ( pow(s12,2) + pow(s13,2) + pow(s23,2) ) );
 
     IsI = std::sqrt( IsI );
-    mu_sgc(i,j,k) = pow(m_Cs*delta,2.0)*IsI + m_molecular_visc; // I need to times density
+    mu_sgc(i,j,k) = pow(m_Cs*delta,2.0)*IsI*density(i,j,k) + m_molecular_visc; // I need to times density
 
   });
 

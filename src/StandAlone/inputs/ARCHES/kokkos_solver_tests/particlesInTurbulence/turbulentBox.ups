@@ -1,0 +1,302 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Arches Decay of Isotropic Turbulence - kokkos solver - 32x32x32</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>     0.67   </maxTime>
+    <!--maxTime>     0.2   </maxTime-->
+    <initTime>    0.0     </initTime>
+    <delt_min>    1e-2 </delt_min>
+    <delt_max>    1e-2     </delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>turbulentBox.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="z-mom"/>
+    <save label="uVelocity"/>
+    <save label="vVelocity"/>
+    <save label="wVelocity"/>
+    <!--<save label="uVelocity_cc"/>-->
+    <!--<save label="vVelocity_cc"/>-->
+    <!--<save label="wVelocity_cc"/>-->
+    <save label="gamma"/>
+    <save label="pressure"/>
+    <save label="b_press"/>
+
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="w_2"/>
+    <save label="w_3"/>
+    <save label="w_4"/>
+    <save label="w_qn0"/>
+    <save label="w_qn1"/>
+    <save label="w_qn2"/>
+    <save label="w_qn3"/>
+    <save label="w_qn4"/>
+    <save label="length_qn0"/>
+    <save label="length_qn1"/>
+    <save label="length_qn2"/>
+    <save label="length_qn3"/>
+    <save label="length_qn4"/>
+    <save label="pU_qn0"/>
+    <save label="pU_qn1"/>
+    <save label="pU_qn2"/>
+    <save label="pU_qn3"/>
+    <save label="pU_qn4"/>
+    <save label="pV_qn0"/>
+    <save label="pV_qn1"/>
+    <save label="pV_qn2"/>
+    <save label="pV_qn3"/>
+    <save label="pV_qn4"/>
+    <save label="pW_qn0"/>
+    <save label="pW_qn1"/>
+    <save label="pW_qn2"/>
+    <save label="pW_qn3"/>
+    <save label="pW_qn4"/>
+
+    <!--checkpoint cycle="2" interval=".3"/-->
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[0.56548668,0.56548668,0.56548668]</upper>
+        <resolution>[32,32,32]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+    <BoundaryConditions>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>1e-5</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <StateProperties> 
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
+      <KMomentum>
+        <convection scheme="central"/>
+        <PressureSolver>
+          <normalize_pressure>true    </normalize_pressure>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-12  </tolerance>
+            <maxiterations>    750     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+      </KMomentum>
+      <ParticleModels>
+        <model label="drag_x" type="wdrag">
+          <grid dependent_type="CC" independent_type="CC"/>
+          <direction>x</direction>
+        </model>
+        <model label="drag_y" type="wdrag">
+          <grid dependent_type="CC" independent_type="CC"/>
+          <direction>y</direction>
+        </model>
+        <model label="drag_z" type="wdrag">
+          <grid dependent_type="CC" independent_type="CC"/>
+          <direction>z</direction>
+        </model>
+        <model label="particle_rho" type="constant">
+          <grid dependent_type="CC"/>
+          <constant>[1000,1000,1000,1000,1000]</constant> 
+        </model>
+        <model label="velocities" type="particle_face_velocity">
+          <grid dependent_type="CC"/>
+        </model>
+      </ParticleModels>
+      <EulerianParticles>
+        <ParticleVariables> 
+          <variable label="length" role="size"/>
+          <variable label="particle_rho" role="density"/>
+          <variable label="pU" role="uvel"/>
+          <variable label="pV" role="vvel"/>
+          <variable label="pW" role="wvel"/>
+        </ParticleVariables>
+      </EulerianParticles>
+      <DQMOM>
+        <number_quad_nodes>5</number_quad_nodes>
+        <kokkos_translate/>
+        <write_input_with_dqmom_eqns>withdmqom.out</write_input_with_dqmom_eqns>
+        <convection scheme="upwind"/>
+        <Weights>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="10"/>
+            <env_constant qn="1" value="100"/>
+            <env_constant qn="2" value="1000"/>
+            <env_constant qn="3" value="100"/>
+            <env_constant qn="4" value="10"/>
+          </initialization>
+        </Weights>
+        <Ic label="length">
+          <initialization type="env_constant">
+            <env_constant qn="0" value="10e-5"/>
+            <env_constant qn="1" value="50e-5"/>
+            <env_constant qn="2" value="75e-5"/>
+            <env_constant qn="3" value="100e-5"/>
+            <env_constant qn="4" value="110e-5"/>
+          </initialization>
+        </Ic>
+        <Ic label="pU">
+          <model label="drag_x"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0"/>
+            <env_constant qn="1" value="0.0"/>
+            <env_constant qn="2" value="0.0"/>
+            <env_constant qn="3" value="0.0"/>
+            <env_constant qn="4" value="0.0"/>
+          </initialization>
+        </Ic>
+        <Ic label="pV">
+          <model label="drag_y"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0"/>
+            <env_constant qn="1" value="0.0"/>
+            <env_constant qn="2" value="0.0"/>
+            <env_constant qn="3" value="0.0"/>
+            <env_constant qn="4" value="0.0"/>
+          </initialization>
+        </Ic>
+        <Ic label="pW">
+          <model label="drag_z"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0."/>
+            <env_constant qn="1" value="0."/>
+            <env_constant qn="2" value="0."/>
+            <env_constant qn="3" value="0."/>
+            <env_constant qn="4" value="0."/>
+          </initialization>
+        </Ic>
+      </DQMOM>
+      <TurbulenceModels>
+        <model label="DS" type="dynamic_smagorinsky">
+        <filter type="three_points"/>
+        </model>
+      </TurbulenceModels>
+      <Initialization>
+        <task task_label="uVel-init" variable_label="uVelocity"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="0"/>
+          <variable type="FX"/>
+        </task>
+        <task task_label="vVel-init" variable_label="vVelocity"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="1"/>
+          <variable type="FY"/>
+        </task>
+        <task task_label="wVel-init" variable_label="wVelocity"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="2"/>
+          <variable type="FZ"/>
+        </task>
+        <task task_label="puVel-init0" variable_label="pU_0"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="0"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="puVel-init1" variable_label="pU_1"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="0"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="puVel-init2" variable_label="pU_2"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="0"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="puVel-init3" variable_label="pU_3"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="0"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="puVel-init4" variable_label="pU_4"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="0"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="pvVel-init0" variable_label="pV_0"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="1"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="pvVel-init1" variable_label="pV_1"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="1"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="pvVel-init2" variable_label="pV_2"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="1"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="pvVel-init3" variable_label="pV_3"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="1"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="pvVel-init4" variable_label="pV_4"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="1"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="pwVel-init0" variable_label="pW_0"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="2"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="pwVel-init1" variable_label="pW_1"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="2"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="pwVel-init2" variable_label="pW_2"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="2"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="pwVel-init3" variable_label="pW_3"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="2"/>
+          <variable type="CC"/>
+        </task>
+        <task task_label="pwVel-init4" variable_label="pW_4"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="2"/>
+          <variable type="CC"/>
+        </task>
+      </Initialization>
+      <KokkosSolver>
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

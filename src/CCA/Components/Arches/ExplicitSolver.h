@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -167,6 +167,14 @@ public:
   void computeTimestep(const LevelP& level, SchedulerP& sched);
 
   void computeStableTimeStep( const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw );
+
+  void sched_computeTaskGraphIndex(const LevelP& level, SchedulerP& sched);
+
+  void computeTaskGraphIndex( const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset*,
                               DataWarehouse* old_dw,
@@ -405,7 +413,12 @@ public:
                                 SchedulerP& sched,
                                 const bool doing_restart );
 
-  int getTaskGraphIndex(const int time_step ) const;
+  // An optional call for the application to check their reduction vars.
+  void checkReductionVars( const ProcessorGroup * pg,
+                           const PatchSubset    * patches,
+                           const MaterialSubset * matls,
+                                 DataWarehouse  * old_dw,
+                                 DataWarehouse  * new_dw );
 
   void registerModels( ProblemSpecP& db );
   void registerTransportEqns( ProblemSpecP& db );
@@ -510,7 +523,8 @@ public:
   const VarLabel* d_celltype_label;
   int d_archesLevelIndex;
   int d_rad_calc_frequency{1};
-  int d_num_taskgraphs{1};
+  bool d_perform_radiation{false};
+  bool d_dynamicSolveFrequency{false};
 
   std::map<int,WBCHelper*> m_bcHelper;
 

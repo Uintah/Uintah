@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -101,6 +101,11 @@ public:
     else {
       return m_value[0] < a.m_value[0];
     }
+  }
+
+  inline bool operator<=( const IntVector & a ) const
+  {
+    return m_value[0] <= a.m_value[0] && m_value[1] <= a.m_value[1] && m_value[2] <= a.m_value[2];
   }
 
   inline bool operator!=( const IntVector& a ) const

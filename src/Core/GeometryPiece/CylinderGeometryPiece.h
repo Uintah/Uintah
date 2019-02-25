@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,27 +36,27 @@
 namespace Uintah {
 
 /**************************************
-	
+        
 CLASS
    CylinderGeometryPiece
-	
+        
    Creates a generalized cylinder from the xml input file description.
-	
+        
 GENERAL INFORMATION
-	
+        
    CylinderGeometryPiece.h
-	
+        
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
-	
+        
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
+        
  
-	
+        
 KEYWORDS
    CylinderGeometryPiece BoundingBox inside
-	
+        
 DESCRIPTION
    Creates a generalized cylinder from the xml input file description.
    Requires three inputs: bottom point, top point and a radius.  
@@ -65,12 +65,12 @@ DESCRIPTION
    The input form looks like this:
        <cylinder>
          <bottom>[0.,0.,0.]</bottom>
-	 <top>[0.,0.,0.]</top>
-	 <radius>2.0</radius>
+         <top>[0.,0.,0.]</top>
+         <radius>2.0</radius>
        </cylinder>
-	
+        
 WARNING
-	
+        
 ****************************************/
 
   class CylinderGeometryPiece : public GeometryPiece {
@@ -103,7 +103,7 @@ WARNING
     //////////
     // Determines whether a point is inside the cylinder.
     //
-    virtual bool inside(const Point &p) const;
+    virtual bool inside(const Point &p, const bool defVal) const;
     
     //////////
     // Returns the bounding box surrounding the cylinder.

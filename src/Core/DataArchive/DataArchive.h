@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -446,7 +446,7 @@ private:
   enum FileFormatType { UDA, PIDX, NOT_SPECIFIED };
   FileFormatType d_fileFormat; 
       
-  enum VarType { BLANK, REDUCTION_VAR, PATCH_VAR };
+  enum VarType { BLANK, GLOBAL_VAR, PATCH_VAR };
  
   bool isPIDXEnabled(){
 #if HAVE_PIDX
@@ -769,4 +769,3 @@ private:
 } // end namespace Uintah
 
 #endif
-

@@ -405,7 +405,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
 //---------------------------------------------------------------------------
 void
 DQMOMEqn::sched_evalTransportEqn( const LevelP& level,
-                                  SchedulerP& sched, int timeSubStep, 
+                                  SchedulerP& sched, int timeSubStep,
                                   EQN_BUILD_PHASE phase )
 {
 
@@ -845,7 +845,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //----CONVECTION
     if ( d_doConv ){
-      
+
       d_disc->computeConv( patch, Fconv, phi, partVel, areaFraction, d_convScheme );
 
       if ( _using_new_intrusion ) {

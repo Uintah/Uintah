@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -47,7 +47,7 @@ namespace Uintah {
 
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP grid,
-                              LoadExtra loadExtraElements);
+                              LoadExtraGeometry loadExtraGeometry);
 
 GridDataRaw* getGridData(SchedulerP schedulerP,
                          GridP gridP,
@@ -57,7 +57,13 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                          int material,
                          int low[3],
                          int high[3],
-                         LoadExtra loadExtraElements);
+                         LoadExtraGeometry loadExtraGeometry);
+
+unsigned int getNumberParticles(SchedulerP schedulerP,
+                                GridP gridP,
+                                int level_i,
+                                int patch_i,
+                                int material);
 
 ParticleDataRaw* getParticleData(SchedulerP schedulerP,
                                  GridP gridP,

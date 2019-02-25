@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,13 +36,13 @@ namespace Uintah {
 /////////////////////////////////////////////////////////////////////////////
 /*!
    \class SphereShellPiece
-	
+        
    \brief Creates a spherical shell from the xml input file description.
-	
+        
    \author Jim Guilkey \n
    C-SAFE and Department of Mechanical Engineering \n
    University of Utah \n
-	
+        
    Creates a sphere from the xml input file description.
    Requires five inputs: origin, radius and thickness as well as
    num_lat and num_long.  These last two indicate how many lines of
@@ -59,18 +59,18 @@ namespace Uintah {
        <num_long>40</num_long>
      </sphere>
    \endverbatim
-	
+        
 */
 /////////////////////////////////////////////////////////////////////////////
 
   class SphereShellPiece : public ShellGeometryPiece {
-	 
+         
   public:
     //////////
     //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
     // input specification and builds a sphere.
     SphereShellPiece(ProblemSpecP &);
-	 
+         
     //////////
     // Destructor
     virtual ~SphereShellPiece();
@@ -80,11 +80,11 @@ namespace Uintah {
 
     /// Make a clone
     virtual GeometryPieceP clone() const;
-	 
+         
     //////////
     // Determines whether a point is inside the sphere. 
-    virtual bool inside(const Point &p) const;
-	 
+    virtual bool inside(const Point &p, const bool defVal) const;
+         
     //////////
     // Returns the bounding box surrounding the box.
     virtual Box getBoundingBox() const;
@@ -96,13 +96,13 @@ namespace Uintah {
     //////////
     // Creates the particles
     int createParticles(const Patch* patch,
-			ParticleVariable<Point>&  pos,
-			ParticleVariable<double>& vol,
-			ParticleVariable<double>& pThickTop,
-			ParticleVariable<double>& pThickBot,
-			ParticleVariable<Vector>& pNormal,
-			ParticleVariable<Matrix3>& psize,
-			particleIndex start);
+                        ParticleVariable<Point>&  pos,
+                        ParticleVariable<double>& vol,
+                        ParticleVariable<double>& pThickTop,
+                        ParticleVariable<double>& pThickBot,
+                        ParticleVariable<Vector>& pNormal,
+                        ParticleVariable<Matrix3>& psize,
+                        particleIndex start);
 
 
   private:

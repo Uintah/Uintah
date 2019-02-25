@@ -77,10 +77,10 @@ ZZNoxSolid::problemSetup(const ProblemSpecP& inputdb)
     std::string model_type;
     db_src->getAttribute("type",model_type);
     if (model_type == "coal_gas_devol"){
-      db_src->getAttribute("label",devol_name);
+      db_src->getWithDefault( "devol_src_label_for_nox", devol_name, "Devol_NOx_source" ); // NOTE: this model is ignoring Tar and birth/death contributions.
     }
     if (model_type == "coal_gas_oxi"){
-      db_src->getAttribute("label",oxi_name);
+      db_src->getWithDefault( "char_src_label_for_nox", oxi_name, "Char_NOx_source" );
     }
   }
   //source terms name,and ...

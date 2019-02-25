@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -85,9 +85,9 @@ WARNING
                                     const LevelP& level);
                                     
     virtual void scheduleRestartInitialize(SchedulerP& sched,
-                                           const LevelP& level){};
+                                           const LevelP& level);
 
-    virtual void restartInitialize();
+    virtual void restartInitialize(){};
 
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
@@ -204,14 +204,10 @@ WARNING
 
     //__________________________________
     // global constants
-    MaterialSubset* d_zeroMatl;
-    MaterialSubset* d_pressMatl;
-    MaterialSet* d_zeroMatlSet;
-    PatchSet* d_zeroPatch;
-
-    double d_analysisFreq;
-    double d_StartTime;
-    double d_StopTime;
+    MaterialSubset * d_zeroMatl;
+    MaterialSubset * d_pressMatl;
+    MaterialSet    * d_zeroMatlSet;
+    PatchSet       * d_zeroPatch;
 
     int d_matlIndx;                      // material index.
     int d_pressIndx;                     // pressure matl index

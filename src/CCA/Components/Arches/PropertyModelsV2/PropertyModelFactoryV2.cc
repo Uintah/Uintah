@@ -285,40 +285,51 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       std::string group_name = "null";
       std::string type = "null";
-      std::string grp_class = "null";
+      std::string grp_class = "density_weighted"; //DEFAULT
       eqn_db->getAttribute("label", group_name);
       eqn_db->getAttribute("type", type );
       if ( eqn_db->findAttribute("class") ){
         eqn_db->getAttribute("class", grp_class );
       }
 
-      // For grp_class, density_weighted is the default so no spec on class = density_weighted
-      // by definition.
+      ArchesCore::EQUATION_CLASS enum_grp_class = ArchesCore::assign_eqn_class_enum( grp_class );
 
-      if ( grp_class == "null" || grp_class == "density_weighted" ){
+      if ( grp_class == "density_weighted" ){
 
-        std::string weight_task_name = "weight_var_"+group_name;
+        std::string unweight_task_name = "unweight_vars_"+group_name;
 
         if ( type == "CC" ){
-          TaskInterface::TaskBuilder* weight_var_tsk =
-          scinew UnweightVariable<CCVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weight_var_tsk );
-          _phi_from_rho_phi.push_back(weight_task_name);
+
+          TaskInterface::TaskBuilder* unweight_var_tsk =
+          scinew UnweightVariable<CCVariable<double>>::Builder( "NULL", unweight_task_name,
+                                                                enum_grp_class, 0 );
+          register_task( unweight_task_name, unweight_var_tsk );
+          _phi_from_rho_phi.push_back(unweight_task_name);
+
         } else if ( type == "FX" ){
-          TaskInterface::TaskBuilder* weight_var_tsk =
-          scinew UnweightVariable<SFCXVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weight_var_tsk );
-          _phi_from_rho_phi.push_back(weight_task_name);
+
+          TaskInterface::TaskBuilder* unweight_var_tsk =
+          scinew UnweightVariable<SFCXVariable<double>>::Builder( "NULL", unweight_task_name,
+                                                                  enum_grp_class, 0 );
+          register_task( unweight_task_name, unweight_var_tsk );
+          _phi_from_rho_phi.push_back(unweight_task_name);
+
         } else if ( type == "FY" ){
-          TaskInterface::TaskBuilder* weight_var_tsk =
-          scinew UnweightVariable<SFCYVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weight_var_tsk );
-          _phi_from_rho_phi.push_back(weight_task_name);
+
+          TaskInterface::TaskBuilder* unweight_var_tsk =
+          scinew UnweightVariable<SFCYVariable<double>>::Builder( "NULL", unweight_task_name,
+                                                                  enum_grp_class, 0 );
+          register_task( unweight_task_name, unweight_var_tsk );
+          _phi_from_rho_phi.push_back(unweight_task_name);
+
         } else if ( type == "FZ" ){
-          TaskInterface::TaskBuilder* weight_var_tsk =
-          scinew UnweightVariable<SFCZVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weight_var_tsk );
-          _phi_from_rho_phi.push_back(weight_task_name);
+
+          TaskInterface::TaskBuilder* unweight_var_tsk =
+          scinew UnweightVariable<SFCZVariable<double>>::Builder( "NULL", unweight_task_name,
+                                                                  enum_grp_class, 0 );
+          register_task( unweight_task_name, unweight_var_tsk );
+          _phi_from_rho_phi.push_back(unweight_task_name);
+
         }
 
       }
@@ -328,29 +339,31 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
   if ( db->findBlock("KMomentum") ){
 
     using namespace ArchesCore;
-    m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-    m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-    m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+    m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
+    m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
+    m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
     m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
     // compute u from rhou
     TaskInterface::TaskBuilder* unw_x_tsk =
-    scinew UnweightVariable<SFCXVariable<double>>::Builder( m_u_vel_name , 0 );
-    register_task( m_u_vel_name,  unw_x_tsk );
-    _u_from_rho_u.push_back(m_u_vel_name);
+    scinew UnweightVariable<SFCXVariable<double>>::Builder( "x-mom", m_u_vel_name,
+                                                            ArchesCore::MOMENTUM, 0 );
+    register_task( m_u_vel_name, unw_x_tsk );
+    _u_from_rho_u.push_back( m_u_vel_name );
 
     // compute v from rhov
     TaskInterface::TaskBuilder* unw_y_tsk =
-    scinew UnweightVariable<SFCYVariable<double>>::Builder( m_v_vel_name , 0 );
+    scinew UnweightVariable<SFCYVariable<double>>::Builder( "y-mom", m_v_vel_name,
+                                                            ArchesCore::MOMENTUM, 0 );
     register_task( m_v_vel_name,  unw_y_tsk );
     _u_from_rho_u.push_back(m_v_vel_name);
 
-     // compute w from rhow
+    // compute w from rhow
     TaskInterface::TaskBuilder* unw_z_tsk =
-    scinew UnweightVariable<SFCZVariable<double>>::Builder( m_w_vel_name , 0 );
+    scinew UnweightVariable<SFCZVariable<double>>::Builder( "z-mom", m_w_vel_name,
+                                                            ArchesCore::MOMENTUM, 0 );
     register_task( m_w_vel_name,  unw_z_tsk );
     _u_from_rho_u.push_back(m_w_vel_name);
-
 
     bool compute_density_star = true;
 
@@ -442,21 +455,21 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
   }
 
   if ( db->findBlock("KScalarTransport") ){
+
     ProblemSpecP db_st = db->findBlock("KScalarTransport");
     for (ProblemSpecP group_db = db_st->findBlock("eqn_group");
     group_db != nullptr; group_db = group_db->findNextBlock("eqn_group")){
     std::string group_name = "null";
-    std::string type = "null";
     group_db->getAttribute("label", group_name);
-    group_db->getAttribute("type", type );
-    std::string weight_task_name = "weight_var_"+group_name;
+    std::string weight_task_name = "unweight_vars_"+group_name;
     TaskInterface* tsk = retrieve_task(weight_task_name);
     print_task_setup_info( group_name,  "compute_rho phi");
     tsk->problemSetup(group_db);
     tsk->create_local_labels();
 
     }
-    }
+  }
+
   TaskInterface* tsk = retrieve_task("face_velocities");
   tsk->problemSetup(db);
   tsk->create_local_labels();

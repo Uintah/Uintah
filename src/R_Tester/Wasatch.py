@@ -330,8 +330,8 @@ POKITTTESTS=[
   ("MultispeciesBC-open-premixed-flame-zdir",   "MultispeciesBC-open-premixed-flame-zdir.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
   ("MultispeciesBC-premixed-flame-xyplane",     "MultispeciesBC-premixed-flame-xyplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
   ("MultispeciesBC-premixed-flame-xzplane",     "MultispeciesBC-premixed-flame-xzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
-  ("MultispeciesBC-premixed-flame-yzplane",     "MultispeciesBC-premixed-flame-yzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
-  ("implicit-compressible-multispecies-x",      "implicit-compressible-multispecies-x.ups" ,      1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] )
+  ("MultispeciesBC-premixed-flame-yzplane",     "MultispeciesBC-premixed-flame-yzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] )
+  # ("implicit-compressible-multispecies-x",      "implicit-compressible-multispecies-x.ups" ,      1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 ]
 
 COALTESTS=[

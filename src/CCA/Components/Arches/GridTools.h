@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -316,9 +316,9 @@ namespace Uintah{ namespace ArchesCore{
   template <>
   struct GridVarMap<CCVariable<double> >{
     void problemSetup( ProblemSpecP db ){
-      uvel_name = parse_ups_for_role( UVELOCITY, db, "NotSet" );
-      vvel_name = parse_ups_for_role( VVELOCITY, db, "NotSet" );
-      wvel_name = parse_ups_for_role( WVELOCITY, db, "NotSet" );
+      uvel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
+      vvel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
+      wvel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
       mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
     }
     std::string vol_frac_name = "volFraction";

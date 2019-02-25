@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -138,7 +138,7 @@ Plane::Intersect( Point s, Vector v, Point& hit )
     {
       // the origin of plane and the origin of line are almost
       // the same
-	  
+          
       hit = ptOnPlane;
       return 1;
     }
@@ -146,16 +146,16 @@ Plane::Intersect( Point s, Vector v, Point& hit )
     {
       // point s and d are not the same, but maybe s lies
       // in the plane anyways
-	  
+          
       tmp = Dot( temp, n );
 
       if(tmp > -1.e-6 && tmp < 1.e-6)
       {
-	hit = s;
-	return 1;
+        hit = s;
+        return 1;
       }
       else
-	return 0;
+        return 0;
     }
   }
 
@@ -185,7 +185,7 @@ Plane::Intersect( Point s, Vector v, double &t ) const
     {
       // the origin of plane and the origin of line are almost
       // the same
-	  
+          
       t = 0.0;
       return 1;
     }
@@ -193,16 +193,16 @@ Plane::Intersect( Point s, Vector v, double &t ) const
     {
       // point s and d are not the same, but maybe s lies
       // in the plane anyways
-	  
+          
       tmp = Dot( temp, n );
 
       if(tmp > -1.e-6 && tmp < 1.e-6)
       {
-	t = 0.0;
-	return 1;
+        t = 0.0;
+        return 1;
       }
       else
-	return 0;
+        return 0;
     }
   }
 
@@ -233,11 +233,11 @@ Plane::Intersect(Point s, Vector v, double &t) const
       tmp = Dot(temp, n);
       if (tmp > -1.e-6 && tmp < 1.e-6)
       {
-	t = 0.0;
-	return 1;
+        t = 0.0;
+        return 1;
       }
       else
-	return 0;
+        return 0;
     }
   }
   

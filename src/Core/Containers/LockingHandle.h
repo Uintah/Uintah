@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -83,9 +83,9 @@ LockingHandle<T>::LockingHandle(T* rep)
 : rep(rep)
 {
     if(rep){
-	rep->lock.lock();
-	rep->ref_cnt++;
-	rep->lock.unlock();
+        rep->lock.lock();
+        rep->ref_cnt++;
+        rep->lock.unlock();
     }
 }
 
@@ -94,9 +94,9 @@ LockingHandle<T>::LockingHandle(const LockingHandle<T>& copy)
 : rep(copy.rep)
 {
     if(rep){
-	rep->lock.lock();
-	rep->ref_cnt++;
-	rep->lock.unlock();
+        rep->lock.lock();
+        rep->ref_cnt++;
+        rep->lock.unlock();
     }
 }
 
@@ -104,23 +104,23 @@ template<class T>
 LockingHandle<T>& LockingHandle<T>::operator=(const LockingHandle<T>& copy)
 {
     if(rep != copy.rep){
-	if(rep){
-	    rep->lock.lock();
-	    if(--rep->ref_cnt==0){
-		rep->lock.unlock();
-		delete rep;
-	    } else {
-		rep->lock.unlock();
-	    }
-	}
-	if(copy.rep){
-	    copy.rep->lock.lock();
-	    rep=copy.rep;
-	    rep->ref_cnt++;
-	    copy.rep->lock.unlock();
-	} else {
-	    rep=copy.rep;
-	}
+        if(rep){
+            rep->lock.lock();
+            if(--rep->ref_cnt==0){
+                rep->lock.unlock();
+                delete rep;
+            } else {
+                rep->lock.unlock();
+            }
+        }
+        if(copy.rep){
+            copy.rep->lock.lock();
+            rep=copy.rep;
+            rep->ref_cnt++;
+            copy.rep->lock.unlock();
+        } else {
+            rep=copy.rep;
+        }
     }
     return *this;
 }
@@ -129,21 +129,21 @@ template<class T>
 LockingHandle<T>& LockingHandle<T>::operator=(T* crep)
 {
     if(rep){
-	rep->lock.lock();
-	if(--rep->ref_cnt==0){
-	    rep->lock.unlock();
-	    delete rep;
-	} else {
-	    rep->lock.unlock();
-	}
+        rep->lock.lock();
+        if(--rep->ref_cnt==0){
+            rep->lock.unlock();
+            delete rep;
+        } else {
+            rep->lock.unlock();
+        }
     }
     if(crep){
-	crep->lock.lock();
-	rep=crep;
-	rep->ref_cnt++;
-	crep->lock.unlock();
+        crep->lock.lock();
+        rep=crep;
+        rep->ref_cnt++;
+        crep->lock.unlock();
     } else {
-	rep=crep;
+        rep=crep;
     }
     return *this;
 }
@@ -164,13 +164,13 @@ template<class T>
 LockingHandle<T>::~LockingHandle()
 {
     if(rep){
-	rep->lock.lock();
-	if(--rep->ref_cnt==0){
-	    rep->lock.unlock();
-	    delete rep;
-	} else {
-	    rep->lock.unlock();
-	}
+        rep->lock.lock();
+        if(--rep->ref_cnt==0){
+            rep->lock.unlock();
+            delete rep;
+        } else {
+            rep->lock.unlock();
+        }
     }
 }
 
@@ -180,9 +180,9 @@ void LockingHandle<T>::detach()
     ASSERT(rep != 0);
     rep->lock.lock();
     if(rep->ref_cnt==1){
-	rep->lock.unlock();
+        rep->lock.unlock();
         rep->generation = rep->compute_new_generation();
-	return; // We have the only copy
+        return; // We have the only copy
     }
     T* oldrep=rep;
     rep=oldrep->clone();

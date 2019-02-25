@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -84,10 +84,10 @@ IntersectionGeometryPiece::clone() const
 }
 
 bool
-IntersectionGeometryPiece::inside(const Point &p) const 
+IntersectionGeometryPiece::inside(const Point &p, const bool defVal=false)const 
 {
   for( unsigned int i = 0; i < child_.size(); i++ ) {
-    if (!child_[i]->inside(p))
+    if (!child_[i]->inside(p, defVal))
       return false;
   }
   return true;

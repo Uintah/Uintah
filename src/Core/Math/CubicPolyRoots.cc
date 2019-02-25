@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,7 +32,7 @@ bool test(double b, double c, double d, double x);
 double newtons_method(double b, double c, double d, double x);
 
 int cubic_poly_roots(double b, double c, double d,
-			double& x0, double& x1, double& x2)
+                        double& x0, double& x1, double& x2)
 {
   /* convert x^3 + b*x^2 + c*x + d = 0 to y^3 + m*x = n */
   

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,11 +30,11 @@
 extern "C" {
 #endif
 void fft2d_float(float* data, int res, float sign,
-		 unsigned long* flops, unsigned long* memrefs);
+                 unsigned long* flops, unsigned long* memrefs);
 void fft1d_float(float* data, int n, float sign,
-			    unsigned long* flops, unsigned long* memrefs);
+                            unsigned long* flops, unsigned long* memrefs);
 void fft1d_stride_float(float* data, int n, int stride, float sign,
-			unsigned long* flops, unsigned long* memrefs);
+                        unsigned long* flops, unsigned long* memrefs);
 #ifdef __cplusplus
 }
 #endif

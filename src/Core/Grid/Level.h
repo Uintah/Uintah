@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,27 +27,27 @@
 
 #include <CCA/Ports/LoadBalancer.h>
 
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/GridP.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/LevelP.h>
-#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Containers/OffsetArray1.h>
-#include <Core/Util/Handle.h>
-#include <Core/Util/RefCounted.h>
+#include <Core/Disclosure/TypeDescription.h>
 
 #ifdef max
 // some uintah 3p utilities define max, so undefine it before BBox chokes on it.
 #  undef max
 #endif
-
 #include <Core/Geometry/BBox.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <vector>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/Handle.h>
+#include <Core/Util/RefCounted.h>
+
 #include <map>
+#include <vector>
 
 namespace Uintah {
 
@@ -56,13 +56,13 @@ namespace Uintah {
   class Box;
   class Patch;
   class Task;
+
 /**************************************
 
 CLASS
    Level
    
-   Just a container class that manages a set of Patches that
-   make up this level.
+   Just a container class that manages a set of Patches that make up this level.
 
 GENERAL INFORMATION
 
@@ -140,7 +140,7 @@ public:
   IntVector     mapNodeToFiner(   const IntVector & idx ) const;
   IntVector     mapCellToCoarser( const IntVector & idx, int level_offset=1 ) const;
   IntVector     mapCellToFiner(   const IntVector & idx ) const;
-  IntVector     mapCellToFinest(const IntVector& idx) const;
+  IntVector     mapCellToFinest(  const IntVector & idx ) const;
   IntVector     mapCellToFinestNoAdjustments( const IntVector & idx ) const;
 
 
@@ -156,13 +156,14 @@ public:
   void finalizeLevel( bool periodicX, bool periodicY, bool periodicZ );
   void assignBCS( const ProblemSpecP & ps, LoadBalancer * lb );
       
-  int numPatches() const;
+  int  numPatches() const;
   long totalCells() const;
   
-  long getTotalCellsInRegion(const TypeDescription::Type varType,
-                             const IntVector& boundaryLayer,
-                             const IntVector& lowIndex, 
-                             const IntVector& highIndex) const;
+  long getTotalCellsInRegion( const TypeDescription::Type   varType
+                            , const IntVector             & boundaryLayer
+                            , const IntVector             & lowIndex
+                            , const IntVector             & highIndex
+                            ) const;
                              
   IntVector nCellsPatch_max() const;
 
@@ -181,9 +182,9 @@ public:
   void findInteriorNodeIndexRange( IntVector & lowIndex, IntVector & highIndex ) const;
   void findInteriorCellIndexRange( IntVector & lowIndex, IntVector & highIndex ) const;
                                   
-  void computeVariableExtents( const TypeDescription::Type TD
-                             , IntVector& lo
-                             , IntVector& hi
+  void computeVariableExtents( const TypeDescription::Type   TD
+                             ,       IntVector             & lo
+                             ,       IntVector             & hi
                              ) const;
       
   void performConsistencyCheck() const;
@@ -259,15 +260,17 @@ public:
 
   //__________________________________
   //  overlapping patches:  Used to keep track of patches that overlap in non-cubic levels
-  struct overlap{
+  struct overlap {
     std::pair <int,int> patchIDs{-9,-9};        // overlapping patch IDs
     IntVector lowIndex{ IntVector(-9,-9,-9)};   // low/high index of overlap
     IntVector highIndex{IntVector(-9,-9,-9)};
   };
+
   // for a set of patches and region return the min/max number of overlapping cells
-  std::pair<int,int> getOverlapCellsInRegion( const selectType & patches,
-                                              const IntVector  & regionLow, 
-                                              const IntVector  & regionHigh) const;
+  std::pair<int,int> getOverlapCellsInRegion( const selectType & patches
+                                            , const IntVector  & regionLow
+                                            , const IntVector  & regionHigh
+                                            ) const;
 
 private:
 
@@ -277,21 +280,21 @@ private:
   Level( Level && )                 = delete;
   Level& operator=( Level && )      = delete;
       
-  Grid    * m_grid;
-  Point     m_anchor;
-  Vector    m_dcell;
+  Grid    * m_grid{nullptr};
+  Point     m_anchor{};
+  Vector    m_dcell{};
 
   // The spatial range of the level.
-  BBox      m_spatial_range;
-  BBox      m_int_spatial_range;
+  BBox      m_spatial_range{ Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN) };
+  BBox      m_int_spatial_range{ Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN) };
 
   bool      m_isNonCubicDomain{false};                    // is level non cubic level
   void      setIsNonCubicLevel();
   
   bool      m_finalized{false};
-  int       m_index;                                      // number of the level
-  IntVector m_patch_distribution;
-  IntVector m_periodic_boundaries;
+  int       m_index{};                                      // number of the level
+  IntVector m_patch_distribution{-1,-1,-1};
+  IntVector m_periodic_boundaries{0, 0, 0};
 
   PatchSet* m_each_patch{nullptr};
   PatchSet* m_all_patches{nullptr};
@@ -300,11 +303,11 @@ private:
   IntVector m_extra_cells{IntVector(0,0,0)};
   IntVector m_numcells_patch_max{IntVector(0,0,0)};
 
-  std::vector<Patch*> m_real_patches;                    // only real patches
-  std::vector<Patch*> m_virtual_and_real_patches;        // real and virtual
+  std::vector<Patch*> m_real_patches{};                    // only real patches
+  std::vector<Patch*> m_virtual_and_real_patches{};        // real and virtual
 
-  int       m_id;
-  IntVector m_refinement_ratio;
+  int       m_id{};
+  IntVector m_refinement_ratio{};
 
   class IntVectorCompare {
   public:
@@ -321,7 +324,7 @@ private:
   PatchBVH * m_bvh{nullptr};
 
   // overlapping patches   
-  std::map< std::pair<int, int>, overlap > m_overLapPatches;
+  std::map< std::pair<int, int>, overlap > m_overLapPatches{};
   void setOverlappingPatches();
 };
 

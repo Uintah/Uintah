@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -86,7 +86,7 @@ PlaneShellPiece::clone() const
 //////////
 /*! Find if a point is inside the cylinder */
 bool 
-PlaneShellPiece::inside(const Point& p) const
+PlaneShellPiece::inside(const Point& p, const bool defVal=false) const
 {
   double halfThick = 0.5*d_thickness;
   double height2 = d_thickness*d_thickness;

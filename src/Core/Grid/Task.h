@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -628,6 +628,8 @@ public: // class Task
   inline const PatchSet * getPatchSet() const { return m_patch_set; }
 
   inline const MaterialSet * getMaterialSet() const { return m_matl_set; }
+
+  bool hasDistalRequires() const;         // determines if this Task has any "distal" ghost cell requirements
 
   int m_phase{-1};                        // synchronized phase id, for dynamic task scheduling
   int m_comm{-1};                         // task communicator id, for threaded task scheduling

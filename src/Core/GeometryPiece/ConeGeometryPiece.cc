@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -112,7 +112,7 @@ ConeGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 }
 
 bool 
-ConeGeometryPiece::inside(const Point &pt) const
+ConeGeometryPiece::inside(const Point &pt, const bool defVal=false) const
 {
   // Find the position vector of top wrt bottom
   Vector axis = d_top-d_bottom;  

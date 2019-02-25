@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/ParticleModels/Burnout.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
+#include <CCA/Components/Arches/GridTools.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 namespace Uintah{
@@ -28,8 +29,9 @@ Burnout::problemSetup( ProblemSpecP& db ){
     m_char_names.push_back(ArchesCore::append_qn_env( m_char_name, qn));
     m_char_scaling_constants.push_back(ArchesCore::get_scaling_constant(db, m_char_name, qn));
   }
-  m_vol_fraction_name = "volFraction";
 
+  ArchesCore::GridVarMap<CCVariable<double> > varMap;
+  m_vol_fraction_name = varMap.vol_frac_name;
 
 }
 
@@ -38,6 +40,8 @@ void
 Burnout::create_local_labels(){
 
   register_new_variable<CCVariable<double> >( m_task_name );
+  register_new_variable<CCVariable<double> >( m_numerator_name );
+  register_new_variable<CCVariable<double> >( m_denominator_name );
 
 }
 
@@ -92,6 +96,9 @@ Burnout::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfor
   }
   register_variable( m_task_name, ArchesFieldContainer::MODIFIES, variable_registry );
   register_variable( m_vol_fraction_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( m_denominator_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_numerator_name, ArchesFieldContainer::COMPUTES, variable_registry );
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -99,8 +106,8 @@ void
 Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-  CCVariable<double>& numerator_sum = tsk_info->get_uintah_field_add< CCVariable<double> >("numerator_sum", 0);
-  CCVariable<double>& denominator_sum = tsk_info->get_uintah_field_add< CCVariable<double> >("denominator_sum", 0);
+  CCVariable<double>& numerator_sum = tsk_info->get_uintah_field_add< CCVariable<double> >(m_numerator_name);
+  CCVariable<double>& denominator_sum = tsk_info->get_uintah_field_add< CCVariable<double> >(m_denominator_name);
   numerator_sum.initialize(0.0);
   denominator_sum.initialize(0.0);
   CCVariable<double>& burnout = tsk_info->get_uintah_field_add<CCVariable<double> >( m_task_name );
@@ -114,20 +121,20 @@ Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     constCCVariable<double>& rcmass   = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_rc_names[qn]);
     constCCVariable<double>& charmass = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_char_names[qn]);
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      numerator_sum(i,j,k) += vol_frac(i,j,k)*weight_scaling_constant*(rc_scaling_constant*rcmass(i,j,k) + 
-                                                                   char_scaling_constant*charmass(i,j,k)); 
+      numerator_sum(i,j,k) += vol_frac(i,j,k)*weight_scaling_constant*(rc_scaling_constant*rcmass(i,j,k) +
+                                                                   char_scaling_constant*charmass(i,j,k));
       // Current organic mass in the cell for environment qn. [kg/m^3]
-      
-      denominator_sum(i,j,k) += vol_frac(i,j,k)*weight_scaling_constant*rc_scaling_constant*weight(i,j,k); 
-      // Had no reactions occured this would be the current organic mass in the cell for environment qn. [kg/m^3] 
+
+      denominator_sum(i,j,k) += vol_frac(i,j,k)*weight_scaling_constant*rc_scaling_constant*weight(i,j,k);
+      // Had no reactions occured this would be the current organic mass in the cell for environment qn. [kg/m^3]
       // NOTE: this model assumes all of the initial mass is in the form raw coal.
 
     }); // parallel for
   } // environment loop
   Uintah::parallel_for( range, [&](int i, int j, int k){
 
-    burnout(i,j,k) = vol_frac(i,j,k)*(numerator_sum(i,j,k) / (denominator_sum(i,j,k) + 1e-100)); 
-  
+    burnout(i,j,k) = vol_frac(i,j,k)*(numerator_sum(i,j,k) / (denominator_sum(i,j,k) + 1e-100));
+
   });
 }
 } //namespace Uintah

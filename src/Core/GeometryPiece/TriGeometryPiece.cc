@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -160,12 +160,16 @@ TriGeometryPiece::clone() const
 }
 
 bool
-TriGeometryPiece::insideNew(const Point &p,int& cross) const
+TriGeometryPiece::insideNewest(const Point &p,int& cross) const
 {
   // Count the number of times a ray from the point p
   // intersects the triangular surface.  If the number
   // of crossings is odd, the point is inside, else it
   // is outside.
+
+  // This version checks using three roughly orthogonal rays  that are
+  // nearly, but not exactly, cast in the 3 ordinal directions.
+  // It returns the answer that two or more of those tests agree upon
 
   // Check if Point p is outside the bounding box
   if (!(p == Max(p,d_box.lower()) && p == Min(p,d_box.upper())))
@@ -187,9 +191,38 @@ TriGeometryPiece::insideNew(const Point &p,int& cross) const
   }
 }
 
+bool
+TriGeometryPiece::insideNew(const Point &p,int& cross) const
+{
+  // Count the number of times a ray from the point p
+  // intersects the triangular surface.  If the number
+  // of crossings is odd, the point is inside, else it
+  // is outside.
+
+  // This version only tests by casting a ray in the x-direction
+
+  // Check if Point p is outside the bounding box
+  if (!(p == Max(p,d_box.lower()) && p == Min(p,d_box.upper())))
+    return false;
+
+  int crossx=0;
+  int crossy=0;
+  int crossz=0;
+  d_grid->countIntersectionsx(p,crossx);
+  d_grid->countIntersectionsy(p,crossy);
+  d_grid->countIntersectionsz(p,crossz);
+  //  cout << "Point " << p << " has " << cross << " crossings " << endl;
+  if ((crossx % 2 == 1 && crossy % 2 ==1)||
+      (crossx % 2 == 1 && crossz % 2 ==1)||
+      (crossy % 2 == 1 && crossz % 2 ==1)){
+    return true;
+  } else {
+    return false;
+  }
+}
 
 bool
-TriGeometryPiece::inside(const Point &p) const
+TriGeometryPiece::inside(const Point &p,const bool useNewestVersion=false) const
 {
   // Count the number of times a ray from the point p
   // intersects the triangular surface.  If the number
@@ -206,7 +239,12 @@ TriGeometryPiece::inside(const Point &p) const
     return false;
 #if 1
   int cross_new = 0;
-  bool inside_new = insideNew(p,cross_new);
+  bool inside_new;
+  if(useNewestVersion){
+    inside_new = insideNewest(p,cross_new);
+  } else {
+    inside_new = insideNew(p,cross_new);
+  }
 
   return inside_new;
 #else
@@ -230,22 +268,22 @@ TriGeometryPiece::inside(const Point &p) const
       // intersection point is NOT behind the p.
       Vector int_ray = hit.asVector() - p.asVector();
       double cos_angle = Dot(infinity,int_ray)/
-	(infinity.length()*int_ray.length());
+        (infinity.length()*int_ray.length());
       if (cos_angle < 0.)
-	continue;
+        continue;
 
       insideTriangle(hit,i,NCS,NES);
       // cerr << "in = " << endl;
       if (NCS % 2 != 0) {
-	crossings++;
+        crossings++;
 #  if 0
-	cout << "Inside_old hit = " << hit << " vertices: " <<
-	  d_points[d_tri[i].x()] << " " << d_points[d_tri[i].y()] <<
-	  " " << d_points[d_tri[i].z()] << endl;
+        cout << "Inside_old hit = " << hit << " vertices: " <<
+          d_points[d_tri[i].x()] << " " << d_points[d_tri[i].y()] <<
+          " " << d_points[d_tri[i].z()] << endl;
 #  endif
       }
       if (NES != 0)
-	crossings -= NES/2;
+        crossings -= NES/2;
     } else
       continue;
   }
@@ -259,9 +297,9 @@ TriGeometryPiece::inside(const Point &p) const
   if (inside_new != crossing_test) {
     cout << "Point " << p << " have different inside test results" << endl;
     cout << "inside_new = " << inside_new << " crossing_test = "
-	 << crossing_test << endl;
+         << crossing_test << endl;
     cout << "cross_new = " << cross_new << " crossings = " << crossings
-	 << endl;
+         << endl;
   }
 #  endif
   return crossing_test;
@@ -472,14 +510,14 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
       NCS += 1;
     else if ( (trans_vt[0].x() > 0.0) || (trans_vt[1].x() > 0.0) ) {
       out_edge = (trans_vt[0].x() - trans_vt[0].y() *
-		  (trans_vt[1].x() - trans_vt[0].x())/
-		  (trans_vt[1].y() - trans_vt[0].y()) );
+                  (trans_vt[1].x() - trans_vt[0].x())/
+                  (trans_vt[1].y() - trans_vt[0].y()) );
       if (out_edge == 0.0) {
-	NES += 1;
-	NCS += 1;
+        NES += 1;
+        NCS += 1;
       }
       if (out_edge > 0.0)
-	NCS += 1;
+        NCS += 1;
     }
     SH = NSH;
   }
@@ -494,14 +532,14 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
       NCS += 1;
     else if ( (trans_vt[1].x() > 0.0) || (trans_vt[2].x() >0.0) ) {
       out_edge = (trans_vt[1].x() - trans_vt[1].y() *
-		  (trans_vt[2].x() -  trans_vt[1].x())/
-		  (trans_vt[2].y() - trans_vt[1].y()) );
+                  (trans_vt[2].x() -  trans_vt[1].x())/
+                  (trans_vt[2].y() - trans_vt[1].y()) );
       if (out_edge == 0.0){
-	NES += 1;
-	NCS += 1;
+        NES += 1;
+        NCS += 1;
       }
       if (out_edge > 0.0)
-	NCS +=1;
+        NCS +=1;
     }
     SH = NSH;
   }
@@ -518,14 +556,14 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
 
     else if ( (trans_vt[2].x() > 0.0) || (trans_vt[0].x() >0.0) ) {
       out_edge =  (trans_vt[2].x() - trans_vt[2].y() *
-		   (trans_vt[0].x() - trans_vt[2].x())/
-		   (trans_vt[0].y() - trans_vt[2].y()) );
+                   (trans_vt[0].x() - trans_vt[2].x())/
+                   (trans_vt[0].y() - trans_vt[2].y()) );
       if (out_edge == 0.0) {
-	NES +=1;
-	NCS +=1;
+        NES +=1;
+        NCS +=1;
       }
       if (out_edge > 0.0)
-	NCS += 1;
+        NCS += 1;
     }
     SH = NSH;
   }

@@ -1,0 +1,173 @@
+%______________________________________________________________________
+%   Notes to authors
+% Please disable your editor's auto newline wrapping feature.  
+% Please format \itemize sections 
+%______________________________________________________________________
+
+
+
+\chapter{postProcessUda } \label{Chapter:postProcessUda}
+The component postProcessUda exists to process variables and reduce uda file size. Utilizing multiple processors in parallel, this component takes your existing uda, reads the input.xml file, and outputs the modified set of variables to a new uda. The original uda is left untouched.
+
+\begin{enumerate} 
+  \item In the input.xml file set the simulation component type to ``postProcessUda'':
+    \begin{Verbatim}[fontsize=\footnotesize]
+      <SimulationComponent type=``postProcessUda''/>
+    \end{Verbatim}
+  %
+  \item To avoid confusion with the original directory  change the uda name:
+    \begin{Verbatim}[fontsize=\footnotesize]
+      <filebase> <UDA>-processed.uda </filebase>
+    \end{Verbatim}
+  %  
+  \item Run the command:
+    \begin{Verbatim}[fontsize=\footnotesize]
+      mpirun -np X sus -postProcessUda <name of uda directory>
+    \end{Verbatim}
+\end{enumerate}
+
+When using this tool please be aware of the following:
+\begin{itemize}
+    \item You must manually copy all On-the-Fly files/directories from the original uda to the new uda, postProcessUda ignores them.
+    \item The $<$outputInterval$>$, $<$outputTimestepInterval$>$ tags are ignored and every
+      timestep in the original uda is processed.  If you want to prune timesteps
+      you must manually delete timesteps directories and modify the index.xml file.
+    %
+    \item Use a different uda name for the modifed uda to prevent confusion with the original uda.
+    %
+    \item In the timestep.xml files the following non-essential entries will be changed:\\
+           numProcs:      Number of procs used during the postProcessUda run.\\
+           oldDelt:       Difference in timesteps, i.e., time(TS) - time (TS-1), in physical time.\\
+           proc:          The processor to patch assignment.
+    %
+    \item The number of files inside of a timestep directory will now equal the number of processors used to process the uda.  You should use the same number of processors to process the uda as you will use to visualize it. For large runs this should speed up data transfers and post processing utilities.
+    %
+    \item Checkpoint directories are copied with system calls from the original -$>$ modified uda.
+      Only 1 processor is used during the copy so this will be slow for large checkpoints directories.
+      Consider moving this manually.
+    %
+    \item ALWAYS, ALWAYS, ALWAYS verify that the new (modified) uda is consistent
+      with your specfications before deleting the original uda.
+ \end{itemize}
+
+
+
+%______________________________________________________________________
+\section{Reducing Uda Files}
+The typical mode of operation with production runs is to save all the variables you think you will ever want to analyze, run the series of simulations, look at the data and then sit on the udas until you are forced to move them or delete them.  To help manage the size of the uda, postProcessUda is capable of pruning out variables from an existing udas.
+Below are instructions:
+
+\begin{enumerate}
+\item Modify the DataArchiver section to restrict the data that will be saved.  Below are the available options:
+%
+   \begin{itemize}
+     \item Resave the variables as floats using $<$outputDoubleAsFloat/$>$
+     \item Remove variables from an uda by commenting them out
+  \end{itemize}
+%
+For example to convert all of the doubles variables to floats and limit the variable \verb|vel_CC| to be saved for material 1 make the following changes:
+%
+  \begin{Verbatim}[fontsize=\footnotesize]
+      <outputDoubleAsFloat/>
+      <save label="vel_CC" material="1"/>
+  \end{Verbatim}
+%
+\item Run the following command.
+  \begin{Verbatim}[fontsize=\footnotesize]
+      mpirun -np X sus -postProcessUda <name of uda directory>
+  \end{Verbatim}
+%  
+This will produce a new uda with the pruned variables. All time steps and checkpoints will be copied along with the index.xml, input file, input.xml and .dat files.
+
+\end{enumerate}
+
+
+%______________________________________________________________________
+\section{Statistics}
+postProcessUda is capable of preforming statistical calculations on saved variables, such as computing the mean, skewness and kurtosis of a variable over the entire of the computational domain per timestep. Below are instructions:
+
+\begin{enumerate}
+\item Modify the PostProcess section to include variables to be processed with the statistics module.
+\item Set start/stop time, material, and whether or not to compute higher order statistics.
+\item Define the variables to analyze.
+\item Run  following command:
+    \begin{Verbatim}[fontsize=\footnotesize]
+      mpirun -np X sus -postProcessUda <name of uda directory>
+    \end{Verbatim}
+\end{enumerate}
+
+For example, to compute the statistics on \verb|press_CC and vel_CC| add to the ups file
+
+\begin{Verbatim}[fontsize=\footnotesize]
+  <DataArchiver>
+    <!-- computed by postProcess: Statistics -->
+    <save label="mean_press_CC"/>
+    <save label="variance_press_CC"/>
+    <save label="skewness_press_CC"/>
+    <save label="kurtosis_press_CC"/>
+    
+    <save label="mean_vel_CC"/>
+    <save label="variance_vel_CC"/>
+    <save label="skewness_vel_CC"/>
+    <save label="kurtosis_vel_CC"/>
+  </DataArchiver>
+
+  <PostProcess>
+    <Module type = "statistics">
+      <timeStart>     1e-5  </timeStart>           <!-- physical time to start/stop the analysis -->
+      <timeStop>       100  </timeStop>
+      <materialIndex>   0   </materialIndex>       <!-- material name or Material index -->
+      <computeHigherOrderStats> true </computeHigherOrderStats>
+      <Variables>
+        <analyze label="press_CC" />
+        <analyze label="vel_CC"  matl="1" />
+      </Variables>
+    </Module>
+  </PostProcess>
+\end{Verbatim}
+
+
+%______________________________________________________________________
+\section{Spatio-Temporal Average}
+postProcessUda is capable of computing spatio-temporal averages on saved variables over the computational domain per timestep. Below are instructions:
+
+\begin{enumerate}
+  \item Modify the PostProcess section to include variables to be processed with the spatioTemporalAvg module. 
+  \item Set start/stop time, material, domain, and number of cells to compute average over.
+  \item Set variables to analyze.
+  \item Run the following command.
+    \begin{Verbatim}[fontsize=\footnotesize]
+      mpirun -np X sus -postProcessUda <name of uda directory>
+    \end{Verbatim}
+\end{enumerate}
+
+
+An example modification to the ups input.xml file:
+\begin{Verbatim}[fontsize=\footnotesize]
+      <DataArchiver> 
+        <!-- computed by postProcess: spatioTemporalAvg -->
+        <save label="avg_press_CC"/>    
+        <save label="avg_vel_CC"/>  
+      </DataArchiver>
+
+      <PostProcess>
+        <Module type = "spatioTemporalAvg">
+          <timeStart>       0.00264 </timeStart>     <!-- physical time to start/stop the analysis --> 
+          <timeStop>        100     </timeStop>
+          <materialIndex>    1      </materialIndex> <!-- material name or Material index -->
+          <domain>   everywhere     </domain>        <!-- everywhere, interior, boundaries -->
+          <avgBoxCells>  [5,5,5]    </avgBoxCells>   <!-- number of cells used in spatial averaging -->
+
+          <TemporalAvg OnOff = "on">
+            <baseTimestep> 4        </baseTimestep>   <!-- subtract this timestep from current timestep -->
+          </TemporalAvg>
+
+          <Variables>                                <!-- Labels to examine -->
+            <analyze label="press_CC"  matl="0"/>
+            <analyze label="vel_CC"    matl="0"/>
+          </Variables>
+        </Module>
+
+      </PostProcess>
+\end{Verbatim}
+

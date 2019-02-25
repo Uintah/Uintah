@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1223,7 +1223,6 @@ IntrusionBC::addMomRHS( const Patch*  patch,
               double area = 0;
 
               area = Dx.x() * Dx.z();
-              v_indx = 0;
 
               if ( directions[2] != 0 ){
                 IntVector cp = c;
@@ -1247,7 +1246,6 @@ IntrusionBC::addMomRHS( const Patch*  patch,
               double area = 0;
 
               area = Dx.x() * Dx.y();
-              v_indx = 0;
 
               if ( directions[4] != 0 ){
                 IntVector cp = c;

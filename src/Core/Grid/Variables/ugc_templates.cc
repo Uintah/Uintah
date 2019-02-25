@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,21 +22,21 @@
  * IN THE SOFTWARE.
  */
 
+#include <Core/Disclosure/TypeUtils.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/Reductions.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Stencil4.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Disclosure/TypeUtils.h>
 
 #include <utility>
 

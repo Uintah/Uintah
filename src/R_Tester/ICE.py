@@ -67,7 +67,7 @@ NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", [
               ]
               
 DIFFUSION  = [     ("Poiseuille_XY",      "CouettePoiseuille/XY.ups", 1, "All", ["exactComparison"]), 
-                   ("Poiseuille_XZ",      "CouettePoiseuille/XZ.ups", 1, "All", ["exactComparison"]), 
+                   ("Poiseuille_ZX",      "CouettePoiseuille/ZX.ups", 1, "All", ["exactComparison"]), 
                    ("Poiseuille_YZ",      "CouettePoiseuille/YZ.ups", 1, "All", ["exactComparison"]), 
                    ("rayleigh_dx",        "rayleigh_dx.ups",          1, "All", ["exactComparison"]),      
                    ("rayleigh_dy",        "rayleigh_dy.ups",          1, "All", ["exactComparison"]),      

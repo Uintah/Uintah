@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -94,10 +94,6 @@ Arches::Arches(const ProcessorGroup* myworld,
   m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchSize,       std::string("RMCRT_Patch_Steps"),      "steps"         );
   m_application_stats.insert( (ApplicationStatsEnum) RMCRTPatchEfficiency, std::string("RMCRT_Patch_Efficiency"), "steps/seconds" );
 #endif
-
-  m_application_stats.insert( (ApplicationStatsEnum) DORadiationTime,   std::string("DO_Radiation_Time"),   "seconds" );
-  m_application_stats.insert( (ApplicationStatsEnum) DORadiationSweeps, std::string("DO_Radiation_Sweeps"), "sweeps"  );
-  m_application_stats.insert( (ApplicationStatsEnum) DORadiationBands,  std::string("DO_Radiation_Bands"),  "bands"   );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -322,21 +318,15 @@ Arches::scheduleAnalysis( const LevelP& level,
   }
 }
 
-int Arches::computeTaskGraphIndex( const int timeStep )
+// An optional call for the application to check their reduction vars.
+void
+Arches::checkReductionVars( const ProcessorGroup * pg,
+                            const PatchSubset    * patches,
+                            const MaterialSubset * matls,
+                                  DataWarehouse  * old_dw,
+                                  DataWarehouse  * new_dw )
 {
-  // Setup the task graph for execution on the next timestep.
-
-  // Check to see if the DORadiation is using the dynamic solve frequency.
-  if( activeReductionVariable( dynamicSolveCount_name ) ) {
-    // If the variable is not benign then at least one rank set the value.
-    // The bengin value is realy large so this check is somewhat moot.
-    if( !isBenignReductionVariable( dynamicSolveCount_name ) )
-      return( getReductionVariable( dynamicSolveCount_name ) <= 1 );
-    else
-      return 0;
-  }
-  else
-    return m_nlSolver->getTaskGraphIndex( timeStep );
+  m_nlSolver->checkReductionVars( pg, patches, matls, old_dw, new_dw );
 }
 
 //--------------------------------------------------------------------------------------------------

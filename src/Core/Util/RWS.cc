@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,7 +43,7 @@ bool remove_lt_white_space(string &str)
   while ((iter < str.end())) 
   {
     if (*iter == ' '  || *iter == '\t' || 
-	*iter == '\n' || *iter == '\r') 
+        *iter == '\n' || *iter == '\r') 
     {
       ++iter; ++idx1;
     } 
@@ -56,7 +56,7 @@ bool remove_lt_white_space(string &str)
   while ((riter < str.rend())) 
   {
     if (*riter == ' '  || *riter == '\t' || 
-	*riter == '\n' || *riter == '\r') 
+        *riter == '\n' || *riter == '\r') 
     {
       ++riter; --idx2;
     } 

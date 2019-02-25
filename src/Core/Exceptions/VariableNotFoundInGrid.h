@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,13 +46,13 @@ namespace Uintah {
   class VariableNotFoundInGrid : public Uintah::Exception {
   public:
     VariableNotFoundInGrid(const std::string& varname, long particleID,
-			   int matlIndex, const std::string& extramsg, 
+                           int matlIndex, const std::string& extramsg, 
                            const char* file, int line);
     VariableNotFoundInGrid(const std::string& varname, IntVector loc,
-			   int matlIndex, const std::string& extramsg,
+                           int matlIndex, const std::string& extramsg,
                            const char* file, int line);
     VariableNotFoundInGrid(const std::string& varname,
-			   const std::string& extramsg,
+                           const std::string& extramsg,
                            const char* file, int line);
     VariableNotFoundInGrid(const VariableNotFoundInGrid&);
     virtual ~VariableNotFoundInGrid();

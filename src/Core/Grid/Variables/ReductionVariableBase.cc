@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,10 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <Core/Grid/Variables/ReductionVariableBase.h>
-
-#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/InternalError.h>
 
 using namespace Uintah;
@@ -44,3 +41,8 @@ ReductionVariableBase::getRefCounted()
   SCI_THROW( InternalError( "getRefCounted not implemented for ReductionVariable", __FILE__, __LINE__ ) );
 }
     
+void
+ReductionVariableBase::allocate( const Patch*, const IntVector& )
+{
+  SCI_THROW(InternalError("Should not call allocate for ReductionVariableBase", __FILE__, __LINE__));
+}

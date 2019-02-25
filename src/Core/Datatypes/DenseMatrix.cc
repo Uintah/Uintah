@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1017,12 +1017,12 @@ Concat_rows(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2){
     ASSERTEQ(m1.ncols(), m2.ncols());
     for (r = 0; r <= m1.nrows()-1; r++) {
       for (c = 0; c <= m1.ncols()-1; c++) {
-  	out[r][c] = m1[r][c];
+        out[r][c] = m1[r][c];
       }
     }
     for (r = m1.nrows(); r <= m1.nrows()+m2.nrows()-1; r++) {
       for (c = 0; c <= m2.ncols()-1; c++) {
-  	out[r][c] = m2[r-m1.nrows()][c];
+        out[r][c] = m2[r-m1.nrows()][c];
       }
     }
     return;
@@ -1035,12 +1035,12 @@ Concat_cols(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2){
     ASSERTEQ(m1.nrows(), m2.nrows());
     for (r = 0; r <= m1.nrows()-1; r++) {
       for (c = 0; c <= m1.ncols()-1; c++) {
-	out[r][c] = m1[r][c];
+        out[r][c] = m1[r][c];
       }
     }
     for (r = 0; r <= m2.nrows()-1; r++) {
       for (c = m1.ncols(); c <= m1.ncols()+m2.ncols()-1; c++) {
-	out[r][c] = m2[r][c-m1.ncols()];
+        out[r][c] = m2[r][c-m1.ncols()];
       }
     }
     return;

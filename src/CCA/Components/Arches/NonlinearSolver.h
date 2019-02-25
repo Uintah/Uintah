@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -53,7 +53,8 @@ namespace Uintah {
 class ProcessorGroup;
 class ApplicationCommon;
 class ArchesBCHelper;
-
+class DataWarehouse;
+  
 class NonlinearSolver {
 
 public:
@@ -82,10 +83,13 @@ public:
 
   virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0;
 
-  virtual int getTaskGraphIndex(const int timeStep ) const = 0;
-
-  // virtual int taskGraphsRequested() const = 0;
-
+  // An optional call for the application to check their reduction vars.
+  virtual void checkReductionVars( const ProcessorGroup * pg,
+                                   const PatchSubset    * patches,
+                                   const MaterialSubset * matls,
+                                         DataWarehouse  * old_dw,
+                                         DataWarehouse  * new_dw ) {};
+    
   class NLSolverBuilder {
 
     public:

@@ -28,6 +28,7 @@ SRCS += \
       $(SRCDIR)/ClassicTableInterface.cc  \
       $(SRCDIR)/ColdFlow.cc               \
       $(SRCDIR)/MixingRxnModel.cc         \
+      $(SRCDIR)/PCProperties.cc         \
       $(SRCDIR)/ConstantProps.cc         
 
 PSELIBS := $(PSELIBS) Core/IO

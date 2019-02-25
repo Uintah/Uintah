@@ -25,6 +25,10 @@
 #ifndef UINTAH_VISIT_LIBSIM_DATABASE_H
 #define UINTAH_VISIT_LIBSIM_DATABASE_H
 
+#include "VisItDataInterface_V2.h"
+
+#include <set>
+
 /**************************************
         
 CLASS
@@ -60,6 +64,90 @@ visit_handle visit_SimGetVariable(int domain, const char *name, void *cbdata);
 visit_handle visit_SimGetDomainList      (const char *name, void *cbdata);
 visit_handle visit_SimGetDomainBoundaries(const char *name, void *cbdata);
 visit_handle visit_SimGetDomainNesting   (const char *name, void *cbdata);
+
+void addRectilinearMesh( visit_handle md, std::set<std::string> &meshes_added,
+                         std::string meshName, visit_simulation_data *sim );
+
+void addParticleMesh( visit_handle md, std::set<std::string> &meshes_added,
+                      std::string meshName, visit_simulation_data *sim );
+
+void addMeshNodeRankSIL( visit_handle md, std::string mesh,
+                         visit_simulation_data *sim );
+  
+void addMeshVariable( visit_handle md, std::set<std::string> &mesh_vars_added,
+                      std::string varName, std::string varType,
+                      std::string meshName, VisIt_VarCentering cent );
+
+template< class ENUM, class T >
+void addReductionStats( visit_handle md, ReductionInfoMapper< ENUM, T > stats,
+                        std::string statName, std::string meshName,
+                        std::string meshLayout )
+{
+  // There is performance on a per rank and per node basis.
+  const unsigned int nProcLevels = 3;
+  std::string proc_level[nProcLevels] = {"/Rank", "/Node/Average", "/Node/Sum"};
+
+  for( unsigned j=0; j<nProcLevels; ++j )
+  {
+    for( unsigned int i=0; i<stats.size(); ++i )
+    {
+      visit_handle vmd = VISIT_INVALID_HANDLE;
+      
+      if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+      {
+        std::string tmp_name = statName + 
+          stats.getName( i ) + proc_level[j];
+        
+        tmp_name += meshLayout;
+
+        std::string units = stats.getUnits( i );
+        
+        VisIt_VariableMetaData_setName(vmd, tmp_name.c_str());
+        VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
+        VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+        VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+        VisIt_VariableMetaData_setNumComponents(vmd, 1);
+        VisIt_VariableMetaData_setUnits(vmd, units.c_str());
+      
+        // ARS - FIXME
+        //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+        VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+        
+        VisIt_SimulationMetaData_addVariable(md, vmd);
+      }
+    }
+  }
+}
+
+template< class ENUM, class T >
+void addVectorStats( visit_handle md, VectorInfoMapper< ENUM, T > stats,
+                     std::string statName, std::string meshName )
+{
+  
+  for( unsigned int i=0; i<stats[0].size(); ++i )
+  {
+    visit_handle vmd = VISIT_INVALID_HANDLE;
+    
+    if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+    {
+      std::string tmp_name = statName + stats[0].getName( i );
+      std::string units = stats[0].getUnits( i );
+      
+      VisIt_VariableMetaData_setName(vmd, tmp_name.c_str());
+      VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
+      VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+      VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+      VisIt_VariableMetaData_setNumComponents(vmd, 1);
+      VisIt_VariableMetaData_setUnits(vmd, units.c_str());
+      
+      // ARS - FIXME
+      //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+      VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+      
+      VisIt_SimulationMetaData_addVariable(md, vmd);
+    }
+  }
+}
 
 } // End namespace Uintah
 

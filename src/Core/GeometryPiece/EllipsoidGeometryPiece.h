@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -121,7 +121,7 @@ public:
 
   //////////
   // Determines whether a point is inside the sphere. 
-  virtual bool inside(const Point &p) const;
+  virtual bool inside(const Point &p, const bool defVal) const;
          
   //////////
   // Returns the bounding box surrounding the box.

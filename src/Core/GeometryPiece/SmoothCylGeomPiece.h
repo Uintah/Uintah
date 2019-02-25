@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,11 +37,11 @@ namespace Uintah {
 
 /////////////////////////////////////////////////////////////////////////////
 /*!
-	
+        
  \class SmoothCylGeomPiece
-	
+        
  \brief Creates a smooth cylinder with end-caps
-	
+        
  \warning Does not allow for correct application of symmetry 
           boundary conditions.  Use symmetry at your own risk.
           The end caps are exactly the same diameter as the outer
@@ -90,12 +90,12 @@ namespace Uintah {
      <output_file>"fileName"</output_file>
    </smoothcyl> 
    \endverbatim
-	
+        
 */
 /////////////////////////////////////////////////////////////////////////////
 
   class SmoothCylGeomPiece : public SmoothGeomPiece {
-	 
+         
   public:
     //////////////////////////////////////////////////////////////////////
     /*!  
@@ -104,7 +104,7 @@ namespace Uintah {
     */
     //////////////////////////////////////////////////////////////////////
     SmoothCylGeomPiece(ProblemSpecP &);
-	 
+         
     //////////////////////////////////////////////////////////////////////
     /*! Destructor */
     //////////////////////////////////////////////////////////////////////
@@ -115,12 +115,12 @@ namespace Uintah {
 
     /// Make a clone
     virtual GeometryPieceP clone() const;
-	 
+         
     //////////////////////////////////////////////////////////////////////
     /*! Determines whether a point is inside the cylinder. */
     //////////////////////////////////////////////////////////////////////
-    virtual bool inside(const Point &p) const;
-	 
+    virtual bool inside(const Point &p, const bool defVal) const;
+         
     //////////////////////////////////////////////////////////////////////
     /*! Returns the bounding box surrounding the box. */
     //////////////////////////////////////////////////////////////////////

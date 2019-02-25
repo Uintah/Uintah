@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -87,8 +87,8 @@ WARNING
   
   class ApplicationInterface : public UintahParallelPort {
 
-    // NOTE: ONLY CS infrasture should be a friend class - the actual
-    // applictions should NOT have access to private member methods as
+    // NOTE: ONLY CS infrastructure should be a friend class - the actual
+    // applications should NOT have access to private member methods as
     // they should get those values via the Data Warehouse.
     friend class SimulationController;
     friend class AMRSimulationController;
@@ -114,6 +114,7 @@ WARNING
     
     friend void visit_SetTimeValues( visit_simulation_data *sim );
     friend void visit_SetDeltaTValues( visit_simulation_data *sim );
+    friend void visit_SetApplicationStats( visit_simulation_data *sim );
     friend void visit_SimTimeMaxCallback(char *val, void *cbdata);
     friend void visit_DeltaTVariableCallback(char *val, void *cbdata);
 #endif
@@ -148,7 +149,7 @@ WARNING
     // Used to write parts of the problem spec.
     virtual void outputProblemSpec( ProblemSpecP & ps ) = 0;
 
-    // Schedule the inital setup of the problem.
+    // Schedule the initial setup of the problem.
     virtual void scheduleInitialize( const LevelP     & level,
                                            SchedulerP & scheduler ) = 0;
                                  
@@ -165,20 +166,19 @@ WARNING
     // is restarted.
     virtual void restartInitialize() = 0;
 
-    // Ask the application which primary task graph it wishes to
-    // execute this time step, this will be an index into the
-    // scheduler's vector of task-graphs.
-    virtual int computeTaskGraphIndex() = 0;
-    virtual int computeTaskGraphIndex( const int TimeStep ) = 0;
+    // Get the task graph the application wants to execute. Returns an
+    // index into the scheduler's list of task graphs.
+    virtual void setTaskGraphIndex( int index ) = 0;
+    virtual int  getTaskGraphIndex() = 0;
 
-    // Schedule the inital switching.
+    // Schedule the initial switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,
                                                      SchedulerP & sched ) = 0;
       
     virtual void scheduleSwitchTest( const LevelP &     level,
                                            SchedulerP & scheduler ) = 0;
 
-    // Schedule the actual time step advencement tasks.
+    // Schedule the actual time step advancement tasks.
     virtual void scheduleTimeAdvance( const LevelP     & level,
                                             SchedulerP & scheduler ) = 0;
 
@@ -259,7 +259,7 @@ WARNING
     virtual void setDynamicRegridding(bool val) = 0;
     virtual bool isDynamicRegridding() const = 0;
   
-    // Boolean for vars chanegd by the in-situ.
+    // Boolean for vars changed by the in-situ.
     virtual void haveModifiedVars( bool val ) = 0;
     virtual bool haveModifiedVars() const = 0;
      
@@ -274,8 +274,8 @@ WARNING
     
     // Some applications can set reduction variables
     virtual void addReductionVariable( std::string name,
-				       const TypeDescription *varType,
-				       bool varActive = false ) = 0;
+                                       const TypeDescription *varType,
+                                       bool varActive = false ) = 0;
     virtual unsigned int numReductionVariable() const = 0;
     virtual void activateReductionVariable(std::string name, bool val) = 0;
     virtual bool activeReductionVariable(std::string name) = 0;
@@ -284,6 +284,7 @@ WARNING
     virtual void setReductionVariable(DataWarehouse* new_dw, std::string name, double val) = 0;
     virtual void overrideReductionVariable(DataWarehouse* new_dw, std::string name,   bool val) = 0;
     virtual void overrideReductionVariable(DataWarehouse* new_dw, std::string name, double val) = 0;
+    
     // Get application specific reduction values all cast to doubles.
     virtual double getReductionVariable( std::string name ) const = 0;
     virtual double getReductionVariable( unsigned int index ) const = 0;
@@ -301,13 +302,11 @@ WARNING
       DummyEnum = 999
     };
 
-    virtual ReductionInfoMapper< ApplicationStatsEnum,
-                                 double > & getApplicationStats() = 0;
+    virtual ReductionInfoMapper< ApplicationStatsEnum, double > & getApplicationStats() = 0;
 
     virtual void resetApplicationStats( double val ) = 0;
       
-    virtual void reduceApplicationStats( bool allReduce,
-                                         const ProcessorGroup* myWorld ) = 0;
+    virtual void reduceApplicationStats( bool allReduce, const ProcessorGroup* myWorld ) = 0;
 
     virtual void   setDelTOverrideRestart( double val ) = 0;
     virtual double getDelTOverrideRestart() const = 0;
@@ -372,7 +371,7 @@ WARNING
     // The 'set' function should only be called by the
     // SimulationController at the beginning of a simulation.  The
     // 'increment' function is called by the SimulationController at
-    // the begining of each time step.
+    // the beginning of each time step.
     virtual void setTimeStep( int timeStep ) = 0;
     virtual void incrementTimeStep() = 0;
     virtual int  getTimeStep() const = 0;

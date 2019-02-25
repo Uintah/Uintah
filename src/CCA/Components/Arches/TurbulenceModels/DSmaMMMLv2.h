@@ -92,40 +92,40 @@ DSmaMMMLv2<TT>::problemSetup( ProblemSpecP& db ){
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
 DSmaMMMLv2<TT>::create_local_labels(){
-register_new_variable< CCVariable<double>  > ( "filterbeta11");
-register_new_variable< CCVariable<double>  > ( "filterbeta12");
-register_new_variable< CCVariable<double>  > ( "filterbeta13");
-register_new_variable< CCVariable<double>  > ( "filterbeta22");
-register_new_variable< CCVariable<double>  > ( "filterbeta23");
-register_new_variable< CCVariable<double>  > ( "filterbeta33");
+  register_new_variable< CCVariable<double>  > ( "filterbeta11");
+  register_new_variable< CCVariable<double>  > ( "filterbeta12");
+  register_new_variable< CCVariable<double>  > ( "filterbeta13");
+  register_new_variable< CCVariable<double>  > ( "filterbeta22");
+  register_new_variable< CCVariable<double>  > ( "filterbeta23");
+  register_new_variable< CCVariable<double>  > ( "filterbeta33");
 
-register_new_variable< CCVariable<double> > ("filterIsI");
-register_new_variable< CCVariable<double> > ("filters11");
-register_new_variable< CCVariable<double> > ("filters12");
-register_new_variable< CCVariable<double> > ("filters13");
-register_new_variable< CCVariable<double> > ("filters22");
-register_new_variable< CCVariable<double> > ("filters23");
-register_new_variable< CCVariable<double> > ("filters33");
+  register_new_variable< CCVariable<double> > ("filterIsI");
+  register_new_variable< CCVariable<double> > ("filters11");
+  register_new_variable< CCVariable<double> > ("filters12");
+  register_new_variable< CCVariable<double> > ("filters13");
+  register_new_variable< CCVariable<double> > ("filters22");
+  register_new_variable< CCVariable<double> > ("filters23");
+  register_new_variable< CCVariable<double> > ("filters33");
 
-register_new_variable< CCVariable<double> > ( "alpha11");
-register_new_variable< CCVariable<double> > ( "alpha12");
-register_new_variable< CCVariable<double> > ( "alpha13");
-register_new_variable< CCVariable<double> > ( "alpha22");
-register_new_variable< CCVariable<double> > ( "alpha23");
-register_new_variable< CCVariable<double> > ( "alpha33");
+  register_new_variable< CCVariable<double> > ( "alpha11");
+  register_new_variable< CCVariable<double> > ( "alpha12");
+  register_new_variable< CCVariable<double> > ( "alpha13");
+  register_new_variable< CCVariable<double> > ( "alpha22");
+  register_new_variable< CCVariable<double> > ( "alpha23");
+  register_new_variable< CCVariable<double> > ( "alpha33");
 
-register_new_variable< CCVariable<double> > ( "filterrhoUU");
-register_new_variable< CCVariable<double> > ( "filterrhoVV");
-register_new_variable< CCVariable<double> > ( "filterrhoWW");
-register_new_variable< CCVariable<double> > ( "filterrhoUV");
-register_new_variable< CCVariable<double> > ( "filterrhoUW");
-register_new_variable< CCVariable<double> > ( "filterrhoVW");
-register_new_variable< CCVariable<double> > ( "filterrhoU");
-register_new_variable< CCVariable<double> > ( "filterrhoV");
-register_new_variable< CCVariable<double> > ( "filterrhoW");
+  register_new_variable< CCVariable<double> > ( "filterrhoUU");
+  register_new_variable< CCVariable<double> > ( "filterrhoVV");
+  register_new_variable< CCVariable<double> > ( "filterrhoWW");
+  register_new_variable< CCVariable<double> > ( "filterrhoUV");
+  register_new_variable< CCVariable<double> > ( "filterrhoUW");
+  register_new_variable< CCVariable<double> > ( "filterrhoVW");
+  register_new_variable< CCVariable<double> > ( "filterrhoU");
+  register_new_variable< CCVariable<double> > ( "filterrhoV");
+  register_new_variable< CCVariable<double> > ( "filterrhoW");
 
-register_new_variable< CCVariable<double> > ( "MM");
-register_new_variable< CCVariable<double> > ( "ML");
+  register_new_variable< CCVariable<double> > ( "MM");
+  register_new_variable< CCVariable<double> > ( "ML");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -161,7 +161,7 @@ DSmaMMMLv2<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
   if (packed_tasks ){
    nG = 3;
   }
- register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( "filterbeta11"  , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
   register_variable( "filterbeta12"  , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);

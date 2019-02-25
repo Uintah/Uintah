@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -100,7 +100,7 @@ GUVSphereShellPiece::clone() const
 }
 
 bool 
-GUVSphereShellPiece::inside(const Point& p) const
+GUVSphereShellPiece::inside(const Point& p, const bool defVal=false) const
 {
   Vector diff = p - d_origin;
   if (diff.length() > d_radius)

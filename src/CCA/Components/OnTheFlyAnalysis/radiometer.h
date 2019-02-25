@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -77,8 +77,9 @@ _____________________________________________________________________*/
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
 
-    void scheduleDoAnalysis_preReloc(SchedulerP& sched,
-                                    const LevelP& level) {};
+    virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
+                                             const LevelP& level) {};
+
   //______________________________________________________________________
 
   private:

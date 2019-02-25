@@ -5,7 +5,7 @@
 
 namespace Uintah{
 
-  class PartVariablesDQMOM : public TaskInterface { 
+  class PartVariablesDQMOM : public TaskInterface {
 
 public:
 
@@ -32,6 +32,8 @@ public:
 
     void create_local_labels();
 
+    void computeSurfaceAreaFraction( const Patch* patch, ArchesTaskInfoManager* tsk_info ); 
+
 
     //Build instructions for this (PartVariablesDQMOM) class.
     class Builder : public TaskInterface::TaskBuilder {
@@ -56,6 +58,7 @@ private:
     int m_Nenv;
     std::string m_length_root;
     std::string m_number_density_name;
+    std::string m_area_sum_name{"DQMOMAreaSum"};
     std::string m_surfAreaF_root;
 
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,21 +40,21 @@
 #include <Core/Exceptions/Exception.h>
 
 namespace Uintah {
-	class ArrayIndexOutOfBounds : public Exception {
-	public:
-	    ArrayIndexOutOfBounds(long value, long lower, long upper, 
+        class ArrayIndexOutOfBounds : public Exception {
+        public:
+            ArrayIndexOutOfBounds(long value, long lower, long upper, 
                                   const char* file, int line);
-	    ArrayIndexOutOfBounds(const ArrayIndexOutOfBounds&);
-	    virtual ~ArrayIndexOutOfBounds();
-	    virtual const char* message() const;
-	    virtual const char* type() const;
-	protected:
-	private:
-	    long value, lower, upper;
-	    char* msg;
+            ArrayIndexOutOfBounds(const ArrayIndexOutOfBounds&);
+            virtual ~ArrayIndexOutOfBounds();
+            virtual const char* message() const;
+            virtual const char* type() const;
+        protected:
+        private:
+            long value, lower, upper;
+            char* msg;
 
-	    ArrayIndexOutOfBounds& operator=(const ArrayIndexOutOfBounds);
-	};
+            ArrayIndexOutOfBounds& operator=(const ArrayIndexOutOfBounds);
+        };
 } // End namespace Uintah
 
 #endif

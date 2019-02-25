@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -107,7 +107,7 @@ private:
 class ConsecutiveRangeSet
 {
   friend std::ostream& operator<<(std::ostream& out,
-				  const ConsecutiveRangeSet& set);
+                                  const ConsecutiveRangeSet& set);
 public:
   
   class iterator
@@ -160,7 +160,7 @@ public:
     { return low_ < r2.low_; }
 
     inline void display(std::ostream& out) const;
-	
+        
     int high() const { return (int)(low_ + extent_); }
     int low_;
     unsigned long extent_;

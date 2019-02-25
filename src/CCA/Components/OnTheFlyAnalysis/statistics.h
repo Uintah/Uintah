@@ -90,8 +90,8 @@ WARNING
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
 
-    void scheduleDoAnalysis_preReloc(SchedulerP& sched,
-                                     const LevelP& level) {};
+    virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
+                                             const LevelP& level) {};
 
   private:
     enum ORDER {lowOrder, highOrder};
@@ -230,17 +230,15 @@ WARNING
 
     //__________________________________
     // global constants
-    double    d_startTime;
-    double    d_stopTime;
 //    int       d_startTimeTimestep;   // timestep when stats are turn on.
     IntVector d_monitorCell;         // Cell to output
 
     bool d_doHigherOrderStats;
     std::vector< Qstats >  d_Qstats;
 
-    const Material* d_matl;
-    MaterialSet* d_matlSet;
-    const MaterialSubset* d_matSubSet;
+    const Material       * d_matl;
+    MaterialSet          * d_matlSet;
+    const MaterialSubset * d_matSubSet;
 
     bool required;
   };

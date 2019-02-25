@@ -195,8 +195,10 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
           tsk = scinew FileInit<SFCXVariable<double> >::Builder( task_name, 0, eqn_name );
         } else if ( var_type == "FY" ){
           tsk = scinew FileInit<SFCYVariable<double> >::Builder( task_name, 0, eqn_name );
-        } else {
+        } else if ( var_type == "FZ" ){
           tsk = scinew FileInit<SFCZVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else {
+          throw ProblemSetupException("Error: Variable type for FileInit not recognized for variable: "+eqn_name, __FILE__, __LINE__);
         }
 
         register_task( task_name, tsk );

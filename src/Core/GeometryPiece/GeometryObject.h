@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,32 +44,32 @@ class GeometryPiece;
 
 
 /**************************************
-	
+        
 CLASS
    GeometryObject
-	
+        
    Short description...
-	
+        
 GENERAL INFORMATION
-	
+        
    GeometryObject.h
-	
+        
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
-	
+        
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
+        
  
-	
+        
 KEYWORDS
    GeometryObject
-	
+        
 DESCRIPTION
    Long description...
-	
+        
 WARNING
-	
+        
 ****************************************/
 
 class GeometryObject {

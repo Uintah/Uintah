@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -78,7 +78,7 @@ public:
                   THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
   
   Arches(const ProcessorGroup* myworld,
-	 const MaterialManagerP materialManager);
+         const MaterialManagerP materialManager);
 
   virtual ~Arches();
 
@@ -101,10 +101,15 @@ public:
                                     SchedulerP&);
 
   virtual void scheduleAnalysis( const LevelP& level,
-				 SchedulerP&);
+                                 SchedulerP&);
 
-  virtual int computeTaskGraphIndex( const int timeStep );
-
+  // An optional call for the application to check their reduction vars.
+  virtual void checkReductionVars( const ProcessorGroup * pg,
+                                   const PatchSubset    * patches,
+                                   const MaterialSubset * matls,
+                                         DataWarehouse  * old_dw,
+                                         DataWarehouse  * new_dw );
+    
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
     m_MAlab = MAlb;
   }
@@ -114,7 +119,7 @@ public:
   void setWithMPMARCHES() {
     m_with_mpmarches = true;
   };
-
+  
   //________________________________________________________________________________________________
   //  Multi-level/AMR
   // stub functions.  Needed for multi-level RMCRT and

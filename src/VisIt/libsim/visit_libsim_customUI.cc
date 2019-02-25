@@ -174,8 +174,6 @@ void visit_SetReductionVariables( visit_simulation_data *sim )
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
-  Output * output       = sim->simController->getOutput();
-
   VisItUI_setTableValueS("ReductionVariableTable",
                          -1, -1, "CLEAR_TABLE", 0);
 
@@ -212,9 +210,6 @@ void visit_SetReductionVariables( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOutputIntervals( visit_simulation_data *sim )
 {
-  ApplicationInterface* appInterface =
-    sim->simController->getApplicationInterface();
-
   Output * output       = sim->simController->getOutput();
 
   VisItUI_setTableValueS("OutputIntervalVariableTable",
@@ -892,12 +887,7 @@ void visit_SetStripChartValue( visit_simulation_data *sim,
     {
       if( name == sim->stripChartNames[chart][curve] )
       {
-        char cmd[128];
-      
-        sprintf( cmd, "%d | %d | %lf | %lf",
-                 chart, curve, (double) sim->cycle, value );
-        
-        VisItUI_setValueS("STRIP_CHART_ADD_POINT", cmd, 1);
+        VisItUI_addStripChartPoint( chart, curve, (double) sim->cycle, value ); 
       }
     }
   }
@@ -1086,7 +1076,7 @@ void visit_SetDouts( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDatabase( visit_simulation_data *sim )
 {
-  VisItUI_setValueI("LoadExtraElements", sim->loadExtraElements, 1);
+  VisItUI_setValueI("LoadExtraGeometry", sim->loadExtraGeometry, 1);
 }
 
 } // End namespace Uintah

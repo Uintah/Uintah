@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,9 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <Core/Grid/Variables/SoleVariableBase.h>
-#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/InternalError.h>
 
 using namespace Uintah;
@@ -37,34 +35,14 @@ SoleVariableBase::SoleVariableBase()
 {
 }   
 
-
 RefCounted*
 SoleVariableBase::getRefCounted()
 {
   SCI_THROW(InternalError("getRefCounted not implemented for SoleVariable", __FILE__, __LINE__));
 }
 
-const Uintah::TypeDescription* SoleVariableBase::virtualGetTypeDescription() const
-{
-  SCI_THROW(InternalError("virtualGetTypeDescription not implemented for SoleVariable", __FILE__, __LINE__));
-}
-
-
-void SoleVariableBase::emitNormal(std::ostream&, const IntVector&,
-                              const IntVector&, ProblemSpecP, bool)
-{
-  SCI_THROW(InternalError("emitNormal not implemented for SoleVariable", __FILE__, __LINE__));
-
-}
-void SoleVariableBase::readNormal(std::istream&, bool)
-{
-  SCI_THROW(InternalError("readNormal not implemented for SoleVariable", __FILE__, __LINE__));
-
-}
-
-void SoleVariableBase::allocate(const Patch*, const IntVector&)
+void
+SoleVariableBase::allocate(const Patch* patch, const IntVector&)
 {
   SCI_THROW(InternalError("Should not call allocate for SoleVariable", __FILE__, __LINE__));
 }
-
-    

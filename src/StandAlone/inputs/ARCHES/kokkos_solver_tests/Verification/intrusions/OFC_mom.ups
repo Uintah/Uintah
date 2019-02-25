@@ -23,7 +23,7 @@
     <max_Timesteps>5</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>x-mom-minus.uda</filebase>
+    <filebase>OFC_mom.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="A_press"/>
@@ -232,7 +232,7 @@
           <Parameters>
             <solver>           cg     </solver>
             <preconditioner>  pfmg    </preconditioner>
-            <tolerance>      1.0e-10  </tolerance>
+            <tolerance>      1.0e-16  </tolerance>
             <maxiterations>    75     </maxiterations>
             <skip>              1     </skip>
             <setupFrequency>    0     </setupFrequency>

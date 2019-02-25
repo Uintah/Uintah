@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -848,7 +848,7 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     }
 
     string msg = "Time for the Filter operation in Turbulence Model: (patch: ";
-    proc0cerr << msg << p << ") " << timer().seconds() << " seconds\n";
+    proc0cout << msg << p << ") " << timer().seconds() << " seconds\n";
 
     Vector Dx = patch->dCell();
     double fhat = 3.0;

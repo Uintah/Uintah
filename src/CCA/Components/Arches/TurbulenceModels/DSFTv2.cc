@@ -21,6 +21,11 @@ DSFTv2::problemSetup( ProblemSpecP& db ){
   m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
   m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
   m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );
+  
   m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
   m_rhou_vel_name = "x-mom";
@@ -28,9 +33,6 @@ DSFTv2::problemSetup( ProblemSpecP& db ){
   m_rhow_vel_name = "z-mom" ;
 
   m_volFraction_name = "volFraction";
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );//;m_u_vel_name + "_cc";
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
 
   if (m_u_vel_name == "uVelocitySPBC") { // this is production code
     m_create_labels_IsI_t_viscosity = false;

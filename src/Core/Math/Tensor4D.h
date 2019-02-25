@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -119,7 +119,7 @@ namespace Uintah {
     Tensor4D<T>::operator()(int dim0, int dim1, int dim2, int dim3) 
     {
       ASSERT(!(dim0 < 0 || dim0 >= this->d_dim[0] || dim1 < 0 || dim1 >= this->d_dim[1] ||
-	       dim2 < 0 || dim2 >= this->d_dim[2] || dim3 < 0 || dim3 >= this->d_dim[3]));
+               dim2 < 0 || dim2 >= this->d_dim[2] || dim3 < 0 || dim3 >= this->d_dim[3]));
       return this->d_data[dim0*d_offset0 + dim1*d_offset1 + dim2*d_offset2 + dim3];
     }
 
@@ -129,7 +129,7 @@ namespace Uintah {
     Tensor4D<T>::operator()(int dim0, int dim1, int dim2, int dim3) const
     {
       ASSERT(!(dim0 < 0 || dim0 >= this->d_dim[0] || dim1 < 0 || dim1 >= this->d_dim[1] ||
-	       dim2 < 0 || dim2 >= this->d_dim[2] || dim3 < 0 || dim3 >= this->d_dim[3]));
+               dim2 < 0 || dim2 >= this->d_dim[2] || dim3 < 0 || dim3 >= this->d_dim[3]));
       return this->d_data[dim0*d_offset0 + dim1*d_offset1 + dim2*d_offset2 + dim3];
     }
 

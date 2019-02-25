@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -78,7 +78,6 @@ namespace Uintah {
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/Arches/Arches.h>
-#include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Geometry/Vector.h>
 
 #undef RIGID_MPM
@@ -137,7 +136,7 @@ public:
 
   //////////
   virtual void scheduleAnalysis( const LevelP& level, 
-				 SchedulerP&);
+				 SchedulerP&){};
 
   // Copy cut cell information from time step to next time step
   void scheduleCopyCutCells(SchedulerP& sched,
@@ -373,8 +372,6 @@ public:
 #endif
 
   Arches*          d_arches;
-  
-  std::vector<AnalysisModule*> d_analysisModules;
 
   double d_tcond;
   bool d_calcEnergyExchange;

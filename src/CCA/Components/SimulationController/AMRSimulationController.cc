@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -643,9 +643,15 @@ AMRSimulationController::executeTimeStep( int totalFine )
   // multiple times.
   bool success = false;
 
-  int tg_index = m_application->computeTaskGraphIndex();
+  int tg_index = m_application->getTaskGraphIndex();
 
-  // Execute at least once.
+#ifdef HAVE_VISIT
+  if( getVisIt() && m_visitSimData ) {
+    m_visitSimData->imageGenerate = tg_index;
+  }
+#endif
+  
+   // Execute at least once.
   while (!success) {
     m_application->setDelTForAllLevels( m_scheduler, m_current_gridP, totalFine );
 
@@ -693,9 +699,9 @@ AMRSimulationController::executeTimeStep( int totalFine )
       // Recompute the delta T.
       m_application->recomputeDelT();
 
-      // As the delta T, re-evaluate the outputting and checkpointing.
-      m_output->reevaluate_OutputCheckPointTimeStep(m_application->getSimTime(),
-                                                    m_application->getDelT());
+      // Use the recomputed DelT and check the need for performing an
+      // output and checkpoint time step.
+      m_output->recompute_OutputCheckPointTimeStep();
 
       success = false;
     }
@@ -832,7 +838,8 @@ AMRSimulationController::compileTaskGraph( int totalFine )
 
   taskGraphTimer.start();
 
-  proc0cout << "Compiling taskgraph..." << std::endl;
+  std::string plural = ( (m_scheduler->getNumTaskGraphs() == 1) ? "" : "s" );
+  proc0cout << "Compiling taskgraph" << plural << "..." << std::endl;
 
   m_output->recompile( m_current_gridP );
   

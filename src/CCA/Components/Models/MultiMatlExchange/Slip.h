@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,7 +44,8 @@ namespace ExchangeModels{
 
   public:
     SlipExch(const ProblemSpecP     & prob_spec,
-             const MaterialManagerP & materialManager );
+             const MaterialManagerP & materialManager,
+             const bool with_mpm );
 
     virtual ~SlipExch();
 
@@ -54,7 +55,8 @@ namespace ExchangeModels{
 
     virtual void sched_PreExchangeTasks(SchedulerP           & sched,
                                         const PatchSet       * patches,
-                                        const MaterialSubset * iceMatls,
+                                        const MaterialSubset * ice_matls,
+                                        const MaterialSubset * mpm_matls,
                                         const MaterialSet    * allMatls);
 
     virtual void addExchangeModelRequires ( Task* t,
@@ -125,25 +127,22 @@ namespace ExchangeModels{
                           std::vector< CCVariable<Vector> >      & delta_vel_exch );
 
     template<class constSFC, class SFC>
-    void vel_FC_exchange( CellIterator       iter,
-                          const IntVector    adj_offset,
-                          const int          pDir,
-                          const FastMatrix & k_org,
-                          const double       delT,
-                          std::vector<constCCVariable<double> >& vol_frac_CC,
-                          std::vector<constCCVariable<double> >& sp_vol_CC,
-                          std::vector<constCCVariable<double> >& rho_CC,
-                          std::vector<CCVariable<Vector> >     & delta_vel_exch,
-                          std::vector< constSFC>               & vel_FC,
-                          std::vector< SFC >                   & sp_vol_FC,
-                          std::vector< SFC >                   & vel_FCME);
+    void  vel_FC_exchange( CellIterator      iter,
+                           const Patch     * patch,
+                           const IntVector   adj_offset,
+                           const double      delT,
+                           constCCVariable<int> & isSurfaceCell,
+                           std::vector<constCCVariable<Vector> >& surfaceNorm,
+                           std::vector<constCCVariable<double> >& meanFreePath,
+                           std::vector<constCCVariable<double> >& vol_frac_CC,
+                           std::vector<constCCVariable<double> >& sp_vol_CC,
+                           std::vector< constSFC>               & vel_FC,
+                           std::vector< SFC >                   & sp_vol_FC,
+                           std::vector< SFC >                   & vel_FCME );
 
     //__________________________________
     //  variables local to SlipExch
     ExchangeCoefficients* d_exchCoeff;
-
-    MPMLabel* Mlb;
-    ICELabel* Ilb;
 
     const VarLabel* d_vel_CCTransLabel;
     const VarLabel* d_meanFreePathLabel;
