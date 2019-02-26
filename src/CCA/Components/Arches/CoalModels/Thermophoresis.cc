@@ -14,7 +14,6 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
 
-#include <boost/math/special_functions/erf.hpp>
 //===========================================================================
 
 using namespace std;
