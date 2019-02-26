@@ -33,7 +33,6 @@
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <Core/Grid/Box.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
-#include <Core/Grid/Variables/PerPatch.h>
 
 #include <Core/Parallel/Parallel.h>
 #include <iostream>
@@ -386,8 +385,8 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
     if( time_subset == 0 ) {
       if (_lastRadSolveLabel!=nullptr){
-        PerPatch< int > lastSolve= 0;
-        old_dw->get( lastSolve, _lastRadSolveLabel, m_matl_index,patch); 
+        SoleVariable< int > lastSolve= 0;
+        old_dw->get( lastSolve, _lastRadSolveLabel); 
         timeStep_vartype timeStep(0);
         old_dw->get(timeStep, VarLabel::find(timeStep_name) ); // For this to be totally correct, should have corresponding requires.
         vars.relax*= ( (double) ( timeStep - lastSolve) / (double) _calc_freq );

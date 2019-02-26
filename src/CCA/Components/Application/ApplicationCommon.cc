@@ -127,7 +127,7 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   // End the simulation
   m_appReductionVars[ endSimulation_name ] = new
     ApplicationReductionVariable( endSimulation_name, bool_or_vartype::getTypeDescription() );
- }
+}
 
 ApplicationCommon::~ApplicationCommon()
 {
