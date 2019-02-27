@@ -605,6 +605,9 @@ class LoadBalancer;
 
     bool m_outputDoubleAsFloat {false};
 
+    bool m_outputGlobalVarsSimTime  {true};
+    bool m_outputGlobalVarsTimeStep {false};
+    
     // For outputing global vars Frequency > OnTimeStep
     unsigned int m_outputGlobalVarsFrequency {1};
     unsigned int m_outputGlobalVarsOnTimeStep {0};

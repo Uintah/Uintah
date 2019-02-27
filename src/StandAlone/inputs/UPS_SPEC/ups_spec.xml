@@ -529,9 +529,12 @@
                                 attribute3="material     OPTIONAL STRING" 
                                 attribute4="table_lookup OPTIONAL BOOLEAN" /> <!-- FIXME: are these really STRINGs? and what are the valid values? -->
       <save_crack_geometry    spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
+      <outputDoubleAsFloat    spec="OPTIONAL NO_DATA" />
       <frequency              spec="OPTIONAL INTEGER 'positive'" /> <!-- Only output global vars on every n^th timestep -->
       <onTimeStep             spec="OPTIONAL INTEGER 'positive'" /> <!-- Output global vars on time steps which end with this ordinal -->
-      <outputDoubleAsFloat    spec="OPTIONAL NO_DATA" />
+
+      <simTime                spec="OPTIONAL BOOLEAN" /> <!-- Output the sim time with the global vars -->
+      <timeStep               spec="OPTIONAL BOOLEAN" /> <!-- Output the time step with the global vars -->
       
       <PIDX                   spec="OPTIONAL NO_DATA">
         <debugOutput          spec="OPTIONAL BOOLEAN" />

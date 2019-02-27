@@ -235,9 +235,13 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
   m_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != nullptr;
 
+  // For outputing the sim time and/or time step with the global vars
+  p->get("simTime",  m_outputGlobalVarsSimTime);  // default true
+  p->get("timeStep", m_outputGlobalVarsTimeStep); // default false
+
   // For outputing global vars Frequency > OnTimeStep
-  p->get("frequency",  m_outputGlobalVarsFrequency);
-  p->get("onTimeStep", m_outputGlobalVarsOnTimeStep);
+  p->get("frequency",  m_outputGlobalVarsFrequency);  // default 1
+  p->get("onTimeStep", m_outputGlobalVarsOnTimeStep); // default 0
 
   if (m_outputGlobalVarsOnTimeStep >= m_outputGlobalVarsFrequency) {
     proc0cout << "Error: the frequency of outputing the global vars " << m_outputGlobalVarsFrequency  << " "
@@ -2757,11 +2761,11 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
   Timers::Simple timer;
   timer.start();
 
-  const double simTime = m_application->getSimTime();
-  const double delT    = m_application->getDelT();
+  const int    timeStep = getTimeStepTopLevel();
+  const double simTime  = m_application->getSimTime();
+  const double delT     = m_application->getDelT();
 
-  // Dump the stuff in the global saveset into files in the uda
-  // at every timestep
+  // Dump the variables in the global saveset into files in the uda.
   for(int i=0; i<(int)m_saveGlobalLabels.size(); ++i) {
     SaveItem& saveItem = m_saveGlobalLabels[i];
     const VarLabel* var = saveItem.label;
@@ -2794,8 +2798,13 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
                              "\" could not be opened for writing!",
                              errno, __FILE__, __LINE__);
       }
+
+      out << std::setprecision(17);
       
-      out << std::setprecision(17) << simTime + delT << "\t";
+      if( m_outputGlobalVarsTimeStep)
+        out << std::setw(10) << timeStep << "\t";
+      if( m_outputGlobalVarsSimTime)
+        out << std::setprecision(17) << simTime + delT << "\t";
       new_dw->print(out, var, 0, matlIndex);
       out << "\n";
     }
