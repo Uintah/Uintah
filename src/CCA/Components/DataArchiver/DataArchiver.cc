@@ -236,10 +236,11 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   m_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != nullptr;
 
   // For outputing the sim time and/or time step with the global vars
-  p->get("simTime",  m_outputGlobalVarsSimTime);  // default true
   p->get("timeStep", m_outputGlobalVarsTimeStep); // default false
+  p->get("simTime",  m_outputGlobalVarsSimTime);  // default true
 
-  // For outputing global vars Frequency > OnTimeStep
+  // For modulating the output frequency global vars. By default
+  // they are output every time step. Note: Frequency > OnTimeStep
   p->get("frequency",  m_outputGlobalVarsFrequency);  // default 1
   p->get("onTimeStep", m_outputGlobalVarsOnTimeStep); // default 0
 
@@ -254,6 +255,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     else {
       m_outputGlobalVarsOnTimeStep = 0;
     }
+    proc0cout << m_outputGlobalVarsOnTimeStep << std::endl;
   }
 
   // set to false if restartSetup is called - we can't do it there
@@ -2799,14 +2801,19 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
                              errno, __FILE__, __LINE__);
       }
 
+      // Set the precision which affects the sim time and the global
+      // var values.
       out << std::setprecision(17);
-      
-      if( m_outputGlobalVarsTimeStep)
+
+      // For outputing the sim time and/or time step with the global vars
+      if( m_outputGlobalVarsTimeStep ) // default false
         out << std::setw(10) << timeStep << "\t";
-      if( m_outputGlobalVarsSimTime)
+      if( m_outputGlobalVarsSimTime )  // default true
         out << std::setprecision(17) << simTime + delT << "\t";
+
+      // Output the global var for this matial index.
       new_dw->print(out, var, 0, matlIndex);
-      out << "\n";
+      out << std::endl;
     }
   }
 
