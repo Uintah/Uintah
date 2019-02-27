@@ -26,6 +26,7 @@
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
+#include <CCA/Components/Schedulers/KokkosScheduler.h>
 #include <CCA/Components/Schedulers/KokkosOpenMPScheduler.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
@@ -89,6 +90,11 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::PTHREADS);
   }
 
+  else if (scheduler == "Kokkos") {
+    sch = scinew KokkosScheduler(world, nullptr);
+    Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::OPEN_MP_THREADS);
+  }
+
   else if (scheduler == "KokkosOpenMP") {
     sch = scinew KokkosOpenMPScheduler(world, nullptr);
     Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::OPEN_MP_THREADS);
@@ -105,13 +111,13 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   //  bulletproofing
 
   // "-nthreads" at command line, something other than "Unified" specified in UPS file (w/ -do_not_validate)
-  if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "Unified")) {
-    throw ProblemSetupException("\nERROR<Scheduler>: Unified Scheduler needed for '-nthreads <n>' option.\n", __FILE__, __LINE__);
+  if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "Unified") && (scheduler != "Kokkos")) {
+    throw ProblemSetupException("\nERROR<Scheduler>: Kokkos Scheduler or Unified Scheduler needed for '-nthreads <n>' option.\n", __FILE__, __LINE__);
   }
 
   // "-gpu" provided at command line, but not using "Unified"
-  if ((scheduler != "Unified") && Uintah::Parallel::usingDevice()) {
-    std::string error = "\nERROR<Scheduler>: To use '-gpu' option you must invoke the Unified Scheduler.  Add '-nthreads <n>' to the sus command line.\n";
+  if ((scheduler != "Unified") && (scheduler != "Kokkos") && Uintah::Parallel::usingDevice()) {
+    std::string error = "\nERROR<Scheduler>: To use '-gpu' option you must invoke the Kokkos Scheduler or Unified Scheduler.  Add '-nthreads <n>' to the sus command line.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
