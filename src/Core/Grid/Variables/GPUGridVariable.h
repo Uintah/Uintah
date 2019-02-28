@@ -188,7 +188,8 @@ namespace Uintah {
 
   template<class T> class GPUGridVariable: public GPUGridVariableBase, public GPUArray3<T> {
 
-      friend class UnifiedScheduler;  // allow Scheduler access
+    friend class KokkosScheduler;   // allow scheduler access
+    friend class UnifiedScheduler;  // allow scheduler access
 
     public:
 

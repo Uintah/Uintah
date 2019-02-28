@@ -37,7 +37,8 @@ namespace Uintah {
 template<class T>
 class GPUReductionVariable : public GPUReductionVariableBase {
 
-  friend class UnifiedScheduler; // allow Scheduler access
+  friend class KokkosScheduler;   // allow scheduler access
+  friend class UnifiedScheduler;  // allow scheduler access
 
   public:
 

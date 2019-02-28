@@ -969,6 +969,7 @@ public:
   static bool s_combine_memory;
 
   friend class SchedulerCommon;
+  friend class KokkosScheduler;
   friend class UnifiedScheduler;
 
 private:

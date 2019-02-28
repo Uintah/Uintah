@@ -37,7 +37,8 @@ namespace Uintah {
 template<class T>
 class GPUPerPatch : public GPUPerPatchBase {
 
-  friend class UnifiedScheduler; // allow UnifiedScheduler access
+  friend class KokkosScheduler;   // allow scheduler access
+  friend class UnifiedScheduler;  // allow scheduler access
 
   public:
 

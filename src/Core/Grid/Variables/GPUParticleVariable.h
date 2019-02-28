@@ -35,7 +35,8 @@ namespace Uintah {
 template<class T>
 class GPUParticleVariable : public GPUParticleVariableBase {
 
-  friend class UnifiedScheduler; // allow Scheduler access
+  friend class KokkosScheduler;   // allow scheduler access
+  friend class UnifiedScheduler;  // allow scheduler access
 
   public:
 
