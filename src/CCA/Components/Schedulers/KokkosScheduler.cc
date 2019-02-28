@@ -73,9 +73,6 @@ namespace {
   Dout g_dbg(         "Kokkos_DBG"        , "KokkosScheduler", "general debugging info for the KokkosScheduler"  , false );
   Dout g_queuelength( "Kokkos_QueueLength", "KokkosScheduler", "report the task queue length for the KokkosScheduler", false );
 
-  Dout g_thread_stats     ( "Kokkos_ThreadStats",    "KokkosScheduler", "Aggregated MPI thread stats for the KokkosScheduler", false );
-  Dout g_thread_indv_stats( "Kokkos_IndvThreadStats","KokkosScheduler", "Individual MPI thread stats for the KokkosScheduler", false );
-
   Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
   Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
   Uintah::MasterLock g_lb_mutex{};                  // load balancer lock
@@ -455,17 +452,6 @@ KokkosScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
   // this spawns threads, sets affinity, etc
   init_threads(this, num_threads);
-
-  // Setup the thread info mapper
-  if( g_thread_stats || g_thread_indv_stats ) {
-    thread_info_.resize( Impl::g_num_threads );
-    thread_info_.insert( WaitTime  , std::string("WaitTime")  , "seconds" );
-    thread_info_.insert( NumTasks  , std::string("NumTasks")  , "tasks"   );
-    thread_info_.insert( NumPatches, std::string("NumPatches"), "patches" );
-
-    thread_info_.calculateMinimum(true);
-    thread_info_.calculateStdDev (true);
-  }
 }
 
 //______________________________________________________________________
@@ -486,19 +472,6 @@ KokkosScheduler::runTask( DetailedTask*         dtask
                         , CallBackEvent         event
                         )
 {
-  // end of per-thread wait time - how long has a thread waited before executing another task
-  if (thread_id > 0) {
-    Impl::g_runners[thread_id]->stopWaitTime();
-
-    if( g_thread_stats || g_thread_indv_stats ) {
-      thread_info_[thread_id][NumTasks] += 1;
-
-      const PatchSubset *patches = dtask->getPatches();
-      if (patches)
-        thread_info_[thread_id][NumPatches] += patches->size();
-    }
-  }
-
   // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
   if ( event == CallBackEvent::CPU || event == CallBackEvent::GPU) {
     
@@ -618,15 +591,8 @@ KokkosScheduler::runTask( DetailedTask*         dtask
         m_parent_scheduler->mpi_info_[i] += mpi_info_[i];
       }
       mpi_info_.reset(0);
-      thread_info_.reset( 0 );
     }
   }
-
-  // beginning of per-thread wait time... until executing another task
-  if (thread_id > 0) {
-    Impl::g_runners[thread_id]->startWaitTime();
-  }
-
 }  // end runTask()
 
 //______________________________________________________________________
@@ -684,7 +650,6 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   makeTaskGraphDoc(m_detailed_tasks, my_rank);
 
   mpi_info_.reset( 0 );
-  thread_info_.reset( 0 );
 
   m_num_tasks_done = 0;
   m_abort = false;
@@ -795,35 +760,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
 
   // compute the net timings
   if( d_runtimeStats ) {
-
-    // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
-    for (int i = 1; i < Impl::g_num_threads; ++i) {
-      (*d_runtimeStats)[TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
-
-      if( g_thread_stats || g_thread_indv_stats )
-        thread_info_[i][WaitTime] = Impl::g_runners[i]->getWaitTime();
-    }
-
     MPIScheduler::computeNetRuntimeStats();
-  }
-
-  // Thread average runtime performance stats.
-  if (g_thread_stats ) {
-    thread_info_.reduce( true ); // true == skip the first entry.
-
-    thread_info_.reportSummaryStats( "Thread",
-                                     d_myworld->myRank(),
-                                     m_application->getTimeStep(),
-                                     m_application->getSimTime(),
-                                     false );
-  }
-
-  // Per thread runtime performance stats
-  if (g_thread_indv_stats) {
-    thread_info_.reportIndividualStats( "Thread",
-                                        d_myworld->myRank(),
-                                        m_application->getTimeStep(),
-                                        m_application->getSimTime() );
   }
 
   // only do on toplevel scheduler
@@ -4944,7 +4881,6 @@ KokkosSchedulerWorker::run()
 {
   while( Impl::g_run_tasks.load(std::memory_order_relaxed) == 1 ) {
     try {
-      resetWaitTime();
       m_scheduler->runTasks(Impl::t_tid);
     }
     catch (Exception& e) {
@@ -4954,42 +4890,4 @@ KokkosSchedulerWorker::run()
       }
     }
   }
-}
-
-
-//______________________________________________________________________
-//
-void
-KokkosSchedulerWorker::resetWaitTime()
-{
-  m_wait_timer.reset( true );
-  m_wait_time = 0.0;
-}
-
-
-//______________________________________________________________________
-//
-void
-KokkosSchedulerWorker::startWaitTime()
-{
-  m_wait_timer.start();
-}
-
-
-//______________________________________________________________________
-//
-void
-KokkosSchedulerWorker::stopWaitTime()
-{
-  m_wait_timer.stop();
-  m_wait_time += m_wait_timer().seconds();
-}
-
-
-//______________________________________________________________________
-//
-double
-KokkosSchedulerWorker::getWaitTime()
-{
-  return m_wait_time;
 }
