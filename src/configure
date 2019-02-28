@@ -39870,12 +39870,6 @@ if test "$BUILD_WASATCH" = "yes"; then
   fi
 fi
 
-if test "$BUILD_ARCHES" = "yes"; then
-  if test "$HAVE_BOOST"      != "yes"; then
-    as_fn_error $? "You enabled the Arches component but do not have all of the prereqs: Boost ($HAVE_BOOST). " "$LINENO" 5
-  fi
-fi
-
 if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
   if test "$with_hypre" = NOT_SET -a "$with_hypre_include" = NOT_SET; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:  Requiring Hypre due to Arches or Wasatch... " >&5
