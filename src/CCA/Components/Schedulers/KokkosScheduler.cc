@@ -54,6 +54,12 @@
 #include <thread>
 
 
+/*______________________________________________________________________
+  TO DO:
+  - Add wait time and thread stats
+______________________________________________________________________*/
+
+
 using namespace Uintah;
 
 //______________________________________________________________________
@@ -103,139 +109,8 @@ namespace {
 //
 namespace Uintah { namespace Impl {
 
-namespace {
+namespace { thread_local  int  t_tid = 0; }  // unique ID assigned in thread_driver()
 
-thread_local  int  t_tid = 0;   // unique ID assigned in thread_driver()
-
-}
-
-namespace {
-
-enum class ThreadState : int
-{
-    Inactive
-  , Active
-  , Exit
-};
-
-KokkosSchedulerWorker    * g_runners[MAX_THREADS]        = {};
-std::vector<std::thread>   g_threads                       {};
-volatile ThreadState       g_thread_states[MAX_THREADS]  = {};
-int                        g_cpu_affinities[MAX_THREADS] = {};
-int                        g_num_threads                 = 0;
-
-std::atomic<int> g_run_tasks{0};
-
-
-//______________________________________________________________________
-//
-void set_affinity( const int proc_unit )
-{
-#ifndef __APPLE__
-  //disable affinity on OSX since sched_setaffinity() is not available in OSX API
-  cpu_set_t mask;
-  unsigned int len = sizeof(mask);
-  CPU_ZERO(&mask);
-  CPU_SET(proc_unit, &mask);
-  sched_setaffinity(0, len, &mask);
-#endif
-}
-
-
-//______________________________________________________________________
-//
-void thread_driver( const int tid )
-{
-  // t_tid is a thread_local variable, unique to each std::thread spawned below
-  t_tid = tid;
-
-  // set each TaskWorker thread's affinity
-  set_affinity( g_cpu_affinities[tid] );
-
-  try {
-    // wait until main thread sets function and changes states
-    g_thread_states[tid] = ThreadState::Inactive;
-    while (g_thread_states[tid] == ThreadState::Inactive) {
-      std::this_thread::yield();
-    }
-
-    while (g_thread_states[tid] == ThreadState::Active) {
-
-      // run the function and wait for main thread to reset state
-      g_runners[tid]->run();
-
-      g_thread_states[tid] = ThreadState::Inactive;
-      while (g_thread_states[tid] == ThreadState::Inactive) {
-        std::this_thread::yield();
-      }
-    }
-
-  } catch (const std::exception & e) {
-    std::cerr << "Exception thrown from worker thread: " << e.what() << std::endl;
-    std::cerr.flush();
-    std::abort();
-  } catch (...) {
-    std::cerr << "Unknown Exception thrown from worker thread" << std::endl;
-    std::cerr.flush();
-    std::abort();
-  }
-}
-
-
-//______________________________________________________________________
-// only called by thread 0 (main thread)
-void thread_fence()
-{
-  // main thread tid is at [0]
-  g_thread_states[0] = ThreadState::Inactive;
-
-  // TaskRunner threads start at [1]
-  for (int i = 1; i < g_num_threads; ++i) {
-    while (g_thread_states[i] == ThreadState::Active) {
-      std::this_thread::yield();
-    }
-  }
-  std::atomic_thread_fence(std::memory_order_seq_cst);
-}
-
-
-//______________________________________________________________________
-// only called by main thread
-void init_threads( KokkosScheduler * sched, int num_threads )
-{
-  // we now need to refer to the total number of active threads (num_threads + 1)
-  g_num_threads = num_threads + 1;
-
-  for (int i = 0; i < g_num_threads; ++i) {
-    g_thread_states[i]  = ThreadState::Active;
-    g_cpu_affinities[i] = i;
-  }
-
-  // set main thread's affinity (core-0) and tid
-  set_affinity(g_cpu_affinities[0]);
-  t_tid = 0;
-
-  // TaskRunner threads start at g_runners[1]
-  for (int i = 1; i < g_num_threads; ++i) {
-    g_runners[i] = new KokkosSchedulerWorker(sched);
-  }
-
-  // spawn worker threads
-  // TaskRunner threads start at [1]
-  for (int i = 1; i < g_num_threads; ++i) {
-    Impl::g_threads.push_back(std::thread(thread_driver, i));
-  }
-
-  for (auto& t : Impl::g_threads) {
-    if (t.joinable()) {
-      t.detach();
-    }
-  }
-
-  thread_fence();
-}
-
-} // namespace
 }} // namespace Uintah::Impl
 
 
@@ -449,9 +324,6 @@ KokkosScheduler::problemSetup( const ProblemSpecP     & prob_spec
     }
   }
 #endif
-
-  // this spawns threads, sets affinity, etc
-  init_threads(this, num_threads);
 }
 
 //______________________________________________________________________
@@ -688,35 +560,8 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   static int totaltasks;
 
 
-  //------------------------------------------------------------------------------------------------
-  // activate TaskRunners
-  //------------------------------------------------------------------------------------------------
-  if (!m_is_copy_data_timestep) {
-    Impl::g_run_tasks.store(1, std::memory_order_relaxed);
-    for (int i = 1; i < Impl::g_num_threads; ++i) {
-      Impl::g_thread_states[i] = Impl::ThreadState::Active;
-    }
-  }
-  //------------------------------------------------------------------------------------------------
-
-
   // main thread also executes tasks
   runTasks( Impl::t_tid );
-
-
-  //------------------------------------------------------------------------------------------------
-  // deactivate TaskRunners
-  //------------------------------------------------------------------------------------------------
-  if (!m_is_copy_data_timestep) {
-    Impl::g_run_tasks.store(0, std::memory_order_relaxed);
-
-    Impl::thread_fence();
-
-    for (int i = 1; i < Impl::g_num_threads; ++i) {
-      Impl::g_thread_states[i] = Impl::ThreadState::Inactive;
-    }
-  }
-  //------------------------------------------------------------------------------------------------
 
 
   //---------------------------------------------------------------------------
@@ -4852,42 +4697,4 @@ KokkosScheduler::myRankThread()
   std::ostringstream out;
   out << Uintah::Parallel::getMPIRank()<< "." << Impl::t_tid;
   return out.str();
-}
-
-
-//______________________________________________________________________
-//
-void
-KokkosScheduler::init_threads( KokkosScheduler * sched, int num_threads )
-{
-  Impl::init_threads(sched, num_threads);
-}
-
-
-//------------------------------------------
-// KokkosSchedulerWorker Thread Methods
-//------------------------------------------
-KokkosSchedulerWorker::KokkosSchedulerWorker( KokkosScheduler * scheduler )
-  : m_scheduler{ scheduler }
-  , m_rank{ scheduler->d_myworld->myRank() }
-{
-}
-
-
-//______________________________________________________________________
-//
-void
-KokkosSchedulerWorker::run()
-{
-  while( Impl::g_run_tasks.load(std::memory_order_relaxed) == 1 ) {
-    try {
-      m_scheduler->runTasks(Impl::t_tid);
-    }
-    catch (Exception& e) {
-      DOUT(true, "Worker " << m_rank << "-" << Impl::t_tid << ": Caught exception: " << e.message());
-      if (e.stackTrace()) {
-        DOUT(true, "Stack trace: " << e.stackTrace());
-      }
-    }
-  }
 }

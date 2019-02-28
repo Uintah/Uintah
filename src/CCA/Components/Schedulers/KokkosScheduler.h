@@ -124,8 +124,6 @@ class KokkosScheduler : public MPIScheduler  {
 
     void markTaskConsumed( int & numTasksDone, int & currphase, int numPhases, DetailedTask * dtask );
 
-    static void init_threads( KokkosScheduler * scheduler, int num_threads );
-
     // thread shared data, needs lock protection when accessed
     std::vector<int>             m_phase_tasks;
     std::vector<int>             m_phase_tasks_done;
@@ -299,26 +297,6 @@ class KokkosScheduler : public MPIScheduler  {
     };
 
 #endif
-};
-
-
-class KokkosSchedulerWorker {
-
-public:
-  
-  KokkosSchedulerWorker( KokkosScheduler * scheduler );
-
-  void run();
-  
-  friend class KokkosScheduler;
-
-private:
-
-  KokkosScheduler * m_scheduler{nullptr};
-  int                m_rank{-1};
-
-  Timers::Simple     m_wait_timer{};
-  double             m_wait_time{0.0};
 };
 
 } // namespace Uintah
