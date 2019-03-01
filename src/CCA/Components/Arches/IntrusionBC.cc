@@ -263,6 +263,8 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
         }
       }
 
+      std::cout << " SIX " << std::endl;
+
       intrusion.inverted = false;
       if ( db_intrusion->findBlock("inverted") ){
         intrusion.inverted = true;
@@ -285,6 +287,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
 
       }
 
+      std::cout << " SEVEN " << std::endl;
       //direction of boundary
       //initialize to zero
       std::vector<int> temp;
@@ -333,6 +336,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
 
       }
 
+      std::cout << " THREE " << std::endl;
       //temperature of the intrusion
       // Either choose constant T or an integrated T from MPM
       intrusion.temperature = 298.0;
@@ -347,6 +351,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
         _do_energy_exchange = true;
       }
 
+      std::cout << " FOUR " << std::endl;
       //initialize density
       intrusion.density = 0.0;
 
@@ -360,6 +365,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
       } else {
         throw ProblemSetupException("Error: Two intrusion boundaries with the same name listed in input file", __FILE__, __LINE__);
       }
+      std::cout << " FIVE " << std::endl;
 
     }
   }
@@ -516,7 +522,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
       if ( !iIntrusion->second.bc_cell_iterator.empty() && iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){
 
-        MixingRxnModel* mixingTable = _table_lookup->get_table();
+          MixingRxnModel* mixingTable = _table_lookup->get_table();
         StringVec iv_var_names = mixingTable->getAllIndepVars();
 
         BCIterator::iterator iBC_iter = (iIntrusion->second.interior_cell_iterator).find(patchID);
@@ -554,6 +560,14 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
             std::map<std::string, scalarInletBase*>::iterator scalar_iter
               = iIntrusion->second.scalar_map.find( iv_var_names[niv] );
+
+            if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
+              std::stringstream msg;
+              msg << " Error: The scalar " << iv_var_names[niv] << ", \n" <<
+                "        which is required for computing properties, is missing in the boundary specification for" << "\n" <<
+                "        the intrusion named: "<< iIntrusion->second.name << std::endl;
+              throw InvalidValue(msg.str(), __FILE__, __LINE__);
+            }
 
             double scalar_var = scalar_iter->second->get_scalar( patch, c );
 
