@@ -263,8 +263,6 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
         }
       }
 
-      std::cout << " SIX " << std::endl;
-
       intrusion.inverted = false;
       if ( db_intrusion->findBlock("inverted") ){
         intrusion.inverted = true;
@@ -287,7 +285,6 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
 
       }
 
-      std::cout << " SEVEN " << std::endl;
       //direction of boundary
       //initialize to zero
       std::vector<int> temp;
@@ -336,7 +333,6 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
 
       }
 
-      std::cout << " THREE " << std::endl;
       //temperature of the intrusion
       // Either choose constant T or an integrated T from MPM
       intrusion.temperature = 298.0;
@@ -351,7 +347,6 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
         _do_energy_exchange = true;
       }
 
-      std::cout << " FOUR " << std::endl;
       //initialize density
       intrusion.density = 0.0;
 
@@ -365,7 +360,6 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
       } else {
         throw ProblemSetupException("Error: Two intrusion boundaries with the same name listed in input file", __FILE__, __LINE__);
       }
-      std::cout << " FIVE " << std::endl;
 
     }
   }
