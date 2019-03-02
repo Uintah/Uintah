@@ -235,9 +235,14 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
   m_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != nullptr;
 
-  // For outputing global vars Frequency > OnTimeStep
-  p->get("frequency",  m_outputGlobalVarsFrequency);
-  p->get("onTimeStep", m_outputGlobalVarsOnTimeStep);
+  // For outputing the sim time and/or time step with the global vars
+  p->get("timeStep", m_outputGlobalVarsTimeStep); // default false
+  p->get("simTime",  m_outputGlobalVarsSimTime);  // default true
+
+  // For modulating the output frequency global vars. By default
+  // they are output every time step. Note: Frequency > OnTimeStep
+  p->get("frequency",  m_outputGlobalVarsFrequency);  // default 1
+  p->get("onTimeStep", m_outputGlobalVarsOnTimeStep); // default 0
 
   if (m_outputGlobalVarsOnTimeStep >= m_outputGlobalVarsFrequency) {
     proc0cout << "Error: the frequency of outputing the global vars " << m_outputGlobalVarsFrequency  << " "
@@ -250,6 +255,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     else {
       m_outputGlobalVarsOnTimeStep = 0;
     }
+    proc0cout << m_outputGlobalVarsOnTimeStep << std::endl;
   }
 
   // set to false if restartSetup is called - we can't do it there
@@ -2757,11 +2763,11 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
   Timers::Simple timer;
   timer.start();
 
-  const double simTime = m_application->getSimTime();
-  const double delT    = m_application->getDelT();
+  const int    timeStep = getTimeStepTopLevel();
+  const double simTime  = m_application->getSimTime();
+  const double delT     = m_application->getDelT();
 
-  // Dump the stuff in the global saveset into files in the uda
-  // at every timestep
+  // Dump the variables in the global saveset into files in the uda.
   for(int i=0; i<(int)m_saveGlobalLabels.size(); ++i) {
     SaveItem& saveItem = m_saveGlobalLabels[i];
     const VarLabel* var = saveItem.label;
@@ -2794,10 +2800,20 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
                              "\" could not be opened for writing!",
                              errno, __FILE__, __LINE__);
       }
-      
-      out << std::setprecision(17) << simTime + delT << "\t";
+
+      // Set the precision which affects the sim time and the global
+      // var values.
+      out << std::setprecision(17);
+
+      // For outputing the sim time and/or time step with the global vars
+      if( m_outputGlobalVarsTimeStep ) // default false
+        out << std::setw(10) << timeStep << "\t";
+      if( m_outputGlobalVarsSimTime )  // default true
+        out << std::setprecision(17) << simTime + delT << "\t";
+
+      // Output the global var for this matial index.
       new_dw->print(out, var, 0, matlIndex);
-      out << "\n";
+      out << std::endl;
     }
   }
 

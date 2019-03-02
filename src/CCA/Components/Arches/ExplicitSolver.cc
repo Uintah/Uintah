@@ -1129,12 +1129,13 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
       }
 
       //Check intrusion velocities:
-      // NOTE: Currently this isn't working....please fix
       Vector max_intrusion_vel = d_boundaryCondition->getMaxIntrusionVelocity(level);
       double tmp_time= Abs(max_intrusion_vel.x())/(DX.x())+
                        Abs(max_intrusion_vel.y())/(DX.y())+
                        Abs(max_intrusion_vel.z())/(DX.z())+small_num;
-      //delta_t2=Min(1.0/tmp_time, delta_t2);
+      if ( tmp_time > 0. ){ 
+        delta_t2=Min(1.0/tmp_time, delta_t2);
+      }
 
       if (d_underflow) {
 

@@ -215,7 +215,7 @@ public:
 
 private:
 
-  int m_value[3]{0,0,0};
+  int m_value[3];
 
 }; // end class IntVector
 

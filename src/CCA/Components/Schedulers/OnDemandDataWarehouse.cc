@@ -86,7 +86,6 @@ namespace Uintah {
   extern Dout g_mpi_dbg;
 
 #ifdef HAVE_CUDA
-  extern DebugStream simulate_multiple_gpus;
   extern DebugStream gpudbg;
 #endif
 
@@ -150,11 +149,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
 
   if (Uintah::Parallel::usingDevice()) {
     int numDevices;
-    if (simulate_multiple_gpus.active()) {
-      numDevices = 3;
-    } else {
-      CUDA_RT_SAFE_CALL( cudaGetDeviceCount(&numDevices) );
-    }
+    CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
 
     for (int i = 0; i < numDevices; i++) {
       //those gpuDWs should only live host side.
@@ -433,11 +428,7 @@ OnDemandDataWarehouse::getReductionVariable( const VarLabel * label
 
 void
 OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
-  //if (simulate_multiple_gpus.active()) {
-  //  CUDA_RT_SAFE_CALL( cudaSetDevice(0) );
-  //} else {
   //  CUDA_RT_SAFE_CALL( cudaSetDevice(deviceNum) );
-  //}
 }
 
 int
@@ -445,15 +436,11 @@ OnDemandDataWarehouse::getNumDevices() {
   int numDevices = 0;
 
   if (Uintah::Parallel::usingDevice()) {
-    if (simulate_multiple_gpus.active()) {
-      numDevices = 2;
-    } else {
-      numDevices = 1;
-    }
+    numDevices = 1;
   }
 
   //if multiple devices are desired, use this:
-  CUDA_RT_SAFE_CALL( cudaGetDeviceCount(&numDevices) );
+   CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
 
   return numDevices;
 }
@@ -463,18 +450,23 @@ OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type)
   switch(type){
     case TypeDescription::double_type : {
       return sizeof(double);
+      break;
     }
     case TypeDescription::float_type : {
       return sizeof(float);
+      break;
     }
     case TypeDescription::int_type : {
       return sizeof(int);
+      break;
     }
     case TypeDescription::Stencil7 : {
       return sizeof(Stencil7);
+      break;
     }
     case TypeDescription::Vector : {
       return sizeof(Vector);
+      break;
     }
     default : {
       SCI_THROW(InternalError("OnDemandDataWarehouse::getTypeDescriptionSize unsupported GPU Variable base type: " + type, __FILE__, __LINE__));
@@ -3222,13 +3214,13 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
 //See the GPU's transferFrom() method for many more more details.
 template <typename ExecSpace, typename MemSpace>
 void
-OnDemandDataWarehouse::transferFrom(       DataWarehouse           * from
-                                   , const VarLabel                * label
-                                   , const PatchSubset             * patches
-                                   , const MaterialSubset          * matls
+OnDemandDataWarehouse::transferFrom(       DataWarehouse                        * from
+                                   , const VarLabel                             * label
+                                   , const PatchSubset                          * patches
+                                   , const MaterialSubset                       * matls
                                    ,       ExecutionObject<ExecSpace, MemSpace> & execObj
-                                   ,       bool                      replace
-                                   , const PatchSubset             * newPatches
+                                   ,       bool                                   replace
+                                   , const PatchSubset                          * newPatches
                                    )
 {
   OnDemandDataWarehouse* fromDW = dynamic_cast<OnDemandDataWarehouse*>( from );
