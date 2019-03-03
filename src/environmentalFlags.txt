@@ -66,17 +66,26 @@ DynamicMPI_QueueLength     SCI_DEBUG     Prints the average task queue length
 
 
 
+KokkosScheduler Related:
+__________________________________
+Kokkos_DBG                 SCI_DEBUG     Prints general debugging information
+Kokkos_QueueLength         SCI_DEBUG     Prints the average task queue length
+Kokkos_GPU_IDs             SCI_DEBUG     Prints detailed information to uniquely identify GPUs on a node
+
+
+
 UnifiedScheduler Related:
 __________________________________
 Unified_DBG                SCI_DEBUG     Prints general debugging information
 Unified_QueueLength        SCI_DEBUG     Prints the average task queue length
+Unified_GPU_IDs            SCI_DEBUG     Prints detailed information to uniquely identify GPUs on a node
+
 
 
 GPU Related:
 __________________________________
 GPUStats          SCI_DEBUG     Reports detailed GPU statistics from within the UnififedScheudler on "H2D" and "D2H" data movement.
 GPUDataWarehouse  SCI_DEBUG     Reports detailed statistics from within the GPUDW on GPUDataWarehouse activity.
-GPUIDs            SCI_DEBUG     Reports detailed information to identify GPU(s) used when using multiple per node.
 
 
 

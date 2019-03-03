@@ -70,7 +70,7 @@ namespace Uintah {
 
 namespace {
 
-  Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "general debugging info for the UnifiedScheduler"  , false );
+  Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "general debugging info for the UnifiedScheduler"      , false );
   Dout g_queuelength( "Unified_QueueLength", "UnifiedScheduler", "report the task queue length for the UnifiedScheduler", false );
 
   Dout g_thread_stats     ( "Unified_ThreadStats",    "UnifiedScheduler", "Aggregated MPI thread stats for the UnifiedScheduler", false );
@@ -88,14 +88,18 @@ namespace {
 extern Uintah::MasterLock cerrLock;
 
 namespace Uintah {
+
   DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "detailed GPU statistics on H2D and D2H data movement"                  , false );
   DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
 
-  Dout gpu_ids( "GPUIDs", "UnifiedScheduler", "detailed information to identify GPU(s) used when using multiple per node"                                  , false );
 }
 
 namespace {
+
+  Dout g_gpu_ids( "Unified_GPU_IDs", "UnifiedScheduler", "detailed information to uniquely identify GPUs on a node", false );
+
   Uintah::MasterLock g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
+
 }
 
 #endif
@@ -383,7 +387,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
         << num_threads + 1 << ").\n" << std::endl;
 
 #ifdef HAVE_CUDA
-    if ( !gpu_ids && Uintah::Parallel::usingDevice() ) {
+    if ( !g_gpu_ids && Uintah::Parallel::usingDevice() ) {
       cudaError_t retVal;
       int availableDevices;
       CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
@@ -401,7 +405,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   }
 
 #ifdef HAVE_CUDA
-  if ( gpu_ids && Uintah::Parallel::usingDevice() ) {
+  if ( g_gpu_ids && Uintah::Parallel::usingDevice() ) {
     cudaError_t retVal;
     int availableDevices;
     std::ostringstream message;

@@ -57,6 +57,7 @@
 /*______________________________________________________________________
   TO DO:
   - Add wait time and thread stats
+  - Toggle setDebug calls with a Dout for GPUDW debugging output?
 ______________________________________________________________________*/
 
 
@@ -76,7 +77,7 @@ namespace Uintah {
 
 namespace {
 
-  Dout g_dbg(         "Kokkos_DBG"        , "KokkosScheduler", "general debugging info for the KokkosScheduler"  , false );
+  Dout g_dbg(         "Kokkos_DBG"        , "KokkosScheduler", "general debugging info for the KokkosScheduler"      , false );
   Dout g_queuelength( "Kokkos_QueueLength", "KokkosScheduler", "report the task queue length for the KokkosScheduler", false );
 
   Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
@@ -90,16 +91,12 @@ namespace {
 
 extern Uintah::MasterLock cerrLock;
 
-namespace Uintah {
-  DebugStream gpu_stats(              "GPUStats"             , "KokkosScheduler", "detailed GPU statistics on H2D and D2H data movement"                  , false );
-  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "KokkosScheduler", "simulate multiple GPUs, when using only one"                           , false );
-  DebugStream gpudbg(                 "GPUDataWarehouse"     , "KokkosScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
-
-  Dout gpu_ids( "GPUIDs", "KokkosScheduler", "detailed information to identify GPU(s) used when using multiple per node"                                  , false );
-}
-
 namespace {
+
+  Dout g_gpu_ids( "Kokkos_GPU_IDs", "KokkosScheduler", "detailed information to uniquely identify GPUs on a node", false );
+
   Uintah::MasterLock g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
+
 }
 
 #endif
@@ -256,7 +253,7 @@ KokkosScheduler::problemSetup( const ProblemSpecP     & prob_spec
         << num_threads + 1 << ").\n" << std::endl;
 
 #ifdef HAVE_CUDA
-    if ( !gpu_ids && Uintah::Parallel::usingDevice() ) {
+    if ( !g_gpu_ids && Uintah::Parallel::usingDevice() ) {
       cudaError_t retVal;
       int availableDevices;
       CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
@@ -274,7 +271,7 @@ KokkosScheduler::problemSetup( const ProblemSpecP     & prob_spec
   }
 
 #ifdef HAVE_CUDA
-  if ( gpu_ids && Uintah::Parallel::usingDevice() ) {
+  if ( g_gpu_ids && Uintah::Parallel::usingDevice() ) {
     cudaError_t retVal;
     int availableDevices;
     std::ostringstream message;
@@ -1277,19 +1274,6 @@ KokkosScheduler::prepareGpuDependencies( DetailedTask          * dtask
             if (!(dtask->getTaskVars().varAlreadyExists(dep->m_req->m_var, fromPatch, matlIndx, levelID, dep->m_req->mapDataWarehouse()))) {
               // let this Task GPU DW know about the source location.
               dtask->getTaskVars().addTaskGpuDWVar(fromPatch, matlIndx, levelID, elementDataSize, dep->m_req, fromDeviceIndex);
-            } else {
-              if (gpu_stats.active()) {
-                cerrLock.lock();
-                {
-                  gpu_stats << myRankThread()
-                            << " prepareGpuDependencies - Already had a task GPUDW Var for label " << dep->m_req->m_var->getName()
-                            << " patch " << fromPatch->getID()
-                            << " matl " << matlIndx
-                            << " level " << levelID
-                            << std::endl;
-                }
-                cerrLock.unlock();
-              }
             }
 
             // Handle a GPU-another GPU same device transfer.  We have already queued up the staging array on
@@ -1304,29 +1288,6 @@ KokkosScheduler::prepareGpuDependencies( DetailedTask          * dtask
               // And the task should know of this staging array.
               dtask->getTaskVars().addTaskGpuDWStagingVar(toPatch, matlIndx, levelID, host_offset, host_size, elementDataSize, dep->m_req, toDeviceIndex);
 
-            }
-
-            if (gpu_stats.active()) {
-              cerrLock.lock();
-              {
-                gpu_stats << myRankThread()
-                    << " prepareGpuDependencies - Preparing a GPU contiguous ghost cell array ";
-                if (dest == GpuUtilities::anotherMpiRank) {
-                  gpu_stats << "to prepare for a later copy from MPI Rank " << fromresource << " to MPI Rank " << toresource;
-                } else if (dest == GpuUtilities::anotherDeviceSameMpiRank) {
-                  gpu_stats << "to prepare for a later GPU to GPU copy from on-node device # " << fromDeviceIndex << " to on-node device # " << toDeviceIndex;
-                } else {
-                  gpu_stats << "to UNKNOWN ";
-                }
-                gpu_stats << " for " << dep->m_req->m_var->getName().c_str()
-                    << " from patch " << fromPatch->getID()
-                    << " to patch " << toPatch->getID()
-                    << " between shared low (" << dep->m_low.x() << ", " << dep->m_low.y() << ", " << dep->m_low.z() << ")"
-                    << " and shared high (" << dep->m_high.x() << ", " << dep->m_high.y() << ", " << dep->m_high.z() << ")"
-                    << " and host offset (" << host_offset.x() << ", " << host_offset.y() << ", " << host_offset.z() << ")"
-                    << std::endl;
-              }
-              cerrLock.unlock();
             }
 
             // we always write this to a "foreign" staging variable. We are going to copying it from the foreign = false var to the foreign = true var.
@@ -1344,23 +1305,6 @@ KokkosScheduler::prepareGpuDependencies( DetailedTask          * dtask
 
             if (dest == GpuUtilities::anotherDeviceSameMpiRank) {
               // GPU to GPU copies needs another entry indicating a peer to peer transfer.
-
-              if (gpu_stats.active()) {
-                cerrLock.lock();
-                {
-                  gpu_stats << myRankThread()
-                      << " prepareGpuDependencies - Preparing a GPU to GPU peer copy "
-                      << " for " << dep->m_req->m_var->getName().c_str()
-                      << " from patch " << fromPatch->getID()
-                      << " to patch " << toPatch->getID()
-                      << " between shared low (" << dep->m_low.x() << ", " << dep->m_low.y() << ", " << dep->m_low.z() << ")"
-                      << " and shared high (" << dep->m_high.x() << ", " << dep->m_high.y() << ", " << dep->m_high.z() << ")"
-                      << " and host offset (" << host_offset.x() << ", " << host_offset.y() << ", " << host_offset.z() << ")"
-                      << std::endl;
-                }
-                cerrLock.unlock();
-              }
-
               dtask->getGhostVars().add(dep->m_req->m_var, fromPatch, toPatch,
                  matlIndx, levelID, true, true, host_offset, host_size, dep->m_low, dep->m_high,
                  OnDemandDataWarehouse::getTypeDescriptionSize(dep->m_req->m_var->typeDescription()->getSubType()->getType()),
@@ -1368,23 +1312,8 @@ KokkosScheduler::prepareGpuDependencies( DetailedTask          * dtask
                  temp,
                  fromDeviceIndex, toDeviceIndex, fromresource, toresource,
                  (Task::WhichDW) dep->m_req->mapDataWarehouse(), GpuUtilities::anotherDeviceSameMpiRank);
-
-            } else if (dest == GpuUtilities::anotherMpiRank)  {
-              if (gpu_stats.active()) {
-                cerrLock.lock();
-                {
-                  gpu_stats << myRankThread()
-                      << " prepareGpuDependencies - Preparing a GPU to host ghost cell copy"
-                      << " for " << dep->m_req->m_var->getName().c_str()
-                      << " from patch " << fromPatch->getID()
-                      << " to patch " << toPatch->getID()
-                      << " between shared low (" << dep->m_low.x() << ", " << dep->m_low.y() << ", " << dep->m_low.z() << ")"
-                      << " and shared high (" << dep->m_high.x() << ", " << dep->m_high.y() << ", " << dep->m_high.z() << ")"
-                      << " and host offset (" << host_offset.x() << ", " << host_offset.y() << ", " << host_offset.z() << ")"
-                      << std::endl;
-                }
-                cerrLock.unlock();
-              }
+            }
+            else if (dest == GpuUtilities::anotherMpiRank)  {
               dtask->getGhostVars().add(dep->m_req->m_var, fromPatch, toPatch,
                  matlIndx, levelID, true, true, host_offset, host_size, dep->m_low, dep->m_high,
                  OnDemandDataWarehouse::getTypeDescriptionSize(dep->m_req->m_var->typeDescription()->getSubType()->getType()),
@@ -1392,7 +1321,6 @@ KokkosScheduler::prepareGpuDependencies( DetailedTask          * dtask
                  temp,
                  fromDeviceIndex, toDeviceIndex, fromresource, toresource,
                  (Task::WhichDW) dep->m_req->mapDataWarehouse(), GpuUtilities::anotherMpiRank);
-
             }
           }
         }
@@ -1412,34 +1340,20 @@ KokkosScheduler::gpuInitialize( bool reset )
 {
 
   cudaError_t retVal;
-  if (simulate_multiple_gpus.active()) {
-    printf("SimulateMultipleGPUs is on, simulating 3 GPUs\n");
-    m_num_devices = 3;
-  } else {
-    int numDevices = 0;
-    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
-    m_num_devices = numDevices;
-  }
+  int numDevices = 0;
+  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+  m_num_devices = numDevices;
 
-  if (simulate_multiple_gpus.active()) {
-
-    // we're simulating many, but we only will use one.
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
+  for (int i = 0; i < m_num_devices; i++) {
     if (reset) {
+      CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
       CUDA_RT_SAFE_CALL(retVal = cudaDeviceReset());
     }
-  } else {
-    for (int i = 0; i < m_num_devices; i++) {
-      if (reset) {
-        CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
-        CUDA_RT_SAFE_CALL(retVal = cudaDeviceReset());
-      }
-    }
-    // set it back to the 0th device
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
-    m_current_device = 0;
   }
 
+  // set it back to the 0th device
+  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
+  m_current_device = 0;
 }
 
 
@@ -1728,32 +1642,6 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
                                       make_int3(low.x(), low.y(), low.z()),
                                       make_int3(host_size.x(), host_size.y(), host_size.z()));
 
-
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << myRankThread()
-              << " InitiateH2D - Handling this task's dependency for "
-              << curDependency->m_var->getName() << " for patch: " << patchID
-              << " material: " << matlID << " level: " << levelID;
-          if (curDependency->m_dep_type == Task::Requires) {
-            gpu_stats << " - A REQUIRES dependency";
-          } else if (curDependency->m_dep_type == Task::Computes) {
-            gpu_stats << " - A COMPUTES dependency";
-          }
-          if (type != TypeDescription::PerPatch && type != TypeDescription::ReductionVariable) {
-            gpu_stats << " with a size of (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ")"
-                      << " and each element in it has a size of " << elementDataSize << " bytes";
-          } else if (type == TypeDescription::PerPatch) {
-            gpu_stats << " a PerPatch variable";
-          } else if (type == TypeDescription::ReductionVariable) {
-            gpu_stats << " a reduction variable";
-          }
-          gpu_stats<< " and the entire variable uses  " << memSize << " bytes." << std::endl;
-        }
-        cerrLock.unlock();
-      }
-
       if (curDependency->m_dep_type == Task::Requires || curDependency->m_dep_type == Task::Modifies) {
 
         // For any variable, only ONE task should manage all ghost cells for it.
@@ -1791,18 +1679,6 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
           if (gatherGhostCells) {
             // The variable's space exists or will soon exist on the GPU.  Now copy in any ghost cells
             // into the GPU and let the GPU handle the ghost cell copying logic.
-
-            if (gpu_stats.active()) {
-              cerrLock.lock();
-              {
-                gpu_stats << myRankThread()
-                    << " InitiateH2D() - The variable "
-                    << curDependency->m_var->getName().c_str()
-                    << " patch " << patchID << " material " << matlID
-                    << " has been copied in or is copying into the GPU.  But ghost cells are not copied in, so starting that process now." << std::endl;
-              }
-              cerrLock.unlock();
-            }
 
             // Indicate to the scheduler later on that this variable can be marked as valid with ghost cells.
             dtask->getVarsToBeGhostReady().addVarToBeGhostReady(dtask->getName(), patch, matlID, levelID, curDependency, deviceIndex);
@@ -1882,18 +1758,6 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
               const size_t ghost_mem_size =  ghost_host_size.x() * ghost_host_size.y() * ghost_host_size.z() * elementDataSize;
 
               if (useGpuStaging) {
-                if (gpu_stats.active()) {
-                  cerrLock.lock();
-                  {
-                    gpu_stats << myRankThread()
-                        << " InitiateH2D() - Using source staging variable in the GPU "
-                        << sourcePatch->getID() << " to "
-                        << patchID << " from device "
-                        << destDeviceNum << " to device " << destDeviceNum
-                        << std::endl;
-                  }
-                  cerrLock.unlock();
-                }
 
                 // Make sure this task GPU DW knows about the staging var
                 dtask->getTaskVars().addTaskGpuDWStagingVar(patch, matlID, levelID, iter->low, iter->high - iter->low,
@@ -1919,41 +1783,7 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
                     (Task::WhichDW) curDependency->mapDataWarehouse(),
                     GpuUtilities::sameDeviceSameMpiRank);
 
-                if (gpu_stats.active()) {
-                  cerrLock.lock();
-                  {
-                    gpu_stats << myRankThread()
-                        << " InitaiteH2D() - Internal GPU ghost cell copy queued for "
-                        << curDependency->m_var->getName().c_str() << " from patch "
-                        << patchID << " staging true to patch " << patchID
-                        << " staging false using a variable starting at ("
-                        << iter->low.x() << ", " << iter->low.y() << ", "
-                        << iter->low.z() << ") and size ("
-                        << (iter->high.x() - iter->low.x()) << ", " << (iter->high.y() - iter->low.y()) << ", "
-                        << (iter->high.z() - iter->low.z()) << ")"
-                        << " copying from ("
-                        << iter->low.x() << ", " << iter->low.y() << ", "
-                        << iter->low.z() << ")" << " to (" << iter->high.x()
-                        << ", " << iter->high.y() << ", " << iter->high.z()
-                        << ")" << " with virtual patch offset ("
-                        << virtualOffset.x() << ", " << virtualOffset.y()
-                        << ", " << virtualOffset.z() << ")"
-                        << "." << std::endl;
-                  }
-                  cerrLock.unlock();
-                }
               } else if (useGpuGhostCells) {
-                if (gpu_stats.active()) {
-                  cerrLock.lock();
-                  {
-                    gpu_stats << myRankThread()
-                        << " InitiateH2D() - Host memory does not need to supply ghost cells to GPU memory from patch "
-                        << sourcePatch->getID() << " to "
-                        << patchID
-                        << std::endl;
-                  }
-                  cerrLock.unlock();
-                }
 
                 // If this task doesn't own this source patch, then we need to make sure
                 // the upcoming task data warehouse at least has knowledge of this GPU variable that
@@ -1981,58 +1811,8 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
                     destDeviceNum, destDeviceNum, -1, -1,   /* we're copying within a device, so destDeviceNum -> destDeviceNum */
                     (Task::WhichDW) curDependency->mapDataWarehouse(),
                     GpuUtilities::sameDeviceSameMpiRank);
-                if (gpu_stats.active()) {
-                  cerrLock.lock();
-                  {
-                    gpu_stats << myRankThread()
-                        << " InitaiteH2D() - Internal GPU memory ghost cell copy queued for "
-                        << curDependency->m_var->getName().c_str() << " from patch "
-                        << sourcePatch->getID() << " to patch " << patchID
-                        << " using a variable starting at ("
-                        << ghost_host_low.x() << ", " << ghost_host_low.y() << ", "
-                        << ghost_host_low.z() << ") and size ("
-                        << ghost_host_size.x() << ", " << ghost_host_size.y() << ", "
-                        << ghost_host_size.z() << ")"
-                        << " copying from ("
-                        << iter->low.x() << ", " << iter->low.y() << ", "
-                        << iter->low.z() << ")" << " to (" << iter->high.x()
-                        << ", " << iter->high.y() << ", " << iter->high.z()
-                        << ")" << " with virtual patch offset ("
-                        << virtualOffset.x() << ", " << virtualOffset.y()
-                        << ", " << virtualOffset.z() << ")"
-                        << "." << std::endl;
-                  }
-                  cerrLock.unlock();
-                }
-              } else if (useCpuForeign) {
 
-                if (gpu_stats.active()) {
-                   cerrLock.lock();
-                   {
-                     gpu_stats << myRankThread()
-                         << " InitiateH2D() -  The host memory has foreign ghost cells that we will use for "
-                         << curDependency->m_var->getName().c_str() << " for patch "
-                         << sourcePatch->getID() << " to "
-                         << patchID
-                         << " with size (" << ghost_host_size.x()
-                         << ", " << ghost_host_size.y()
-                         << ", " << ghost_host_size.z()
-                         << ") with low (" << ghost_host_low.x()
-                         << ", " << ghost_host_low.y()
-                         << ", " << ghost_host_low.z() << ")"
-                         << ".  The iter low is (" << iter->low.x()
-                         << ", " << iter->low.y()
-                         << ", " << iter->low.z()
-                         << ") and iter high is (" << iter->high.x()
-                         << ", " << iter->high.y()
-                         << ", " << iter->high.z()
-                         << ") and the neighbor variable has a virtual offset (" << virtualOffset.x()
-                         << ", " << virtualOffset.y()
-                         << ", " << virtualOffset.z() << ")"
-                         << std::endl;
-                   }
-                   cerrLock.unlock();
-                 }
+              } else if (useCpuForeign) {
 
                 // Prepare to tell the host-side GPU DW to allocate space for this variable.
                 // Since we already got the gridVariableBase pointer to that foreign var, go ahead and add it in here.
@@ -2067,33 +1847,6 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
                 // then the foreign var section above should handle it, not here.
                 if (!dtask->getDeviceVars().varAlreadyExists(curDependency->m_var, sourcePatch, matlID, levelID, curDependency->mapDataWarehouse())) {
 
-                  if (gpu_stats.active()) {
-                    cerrLock.lock();
-                    {
-                      gpu_stats << myRankThread()
-                          << " InitiateH2D() -  The CPU variable has ghost cells needed, use it.  For "
-                          << curDependency->m_var->getName().c_str() << " from patch "
-                          << sourcePatch->getID() << " to "
-                          << patchID
-                          << " with size (" << host_size.x()
-                          << ", " << host_size.y()
-                          << ", " << host_size.z()
-                          << ") with low (" << ghost_host_low.x()
-                          << ", " << ghost_host_low.y()
-                          << ", " << ghost_host_low.z() << ")"
-                          << ".  The iter low is (" << iter->low.x()
-                          << ", " << iter->low.y()
-                          << ", " << iter->low.z()
-                          << ") and iter high is (" << iter->high.x()
-                          << ", " << iter->high.y()
-                          << ", " << iter->high.z()
-                          << ") and the neighbor variable has a virtual offset (" << virtualOffset.x()
-                          << ", " << virtualOffset.y()
-                          << ", " << virtualOffset.z() << ")"
-                          << std::endl;
-                    }
-                    cerrLock.unlock();
-                  }
                   // Prepare to tell the host-side GPU DW to possibly allocate and/or copy this variable.
                   dtask->getDeviceVars().add(sourcePatch, matlID, levelID, false,
                       ghost_host_size, ghost_mem_size,
@@ -2104,39 +1857,7 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
                   // Prepare this task GPU DW for knowing about this variable on the GPU.
                   dtask->getTaskVars().addTaskGpuDWVar(sourcePatch, matlID, levelID, elementDataSize, curDependency, destDeviceNum);
 
-                } else {  // else the variable is already in deviceVars
-                  if (gpu_stats.active()) {
-                    cerrLock.lock();
-                    {
-                      gpu_stats << myRankThread()
-                            << " InitiateH2D() - The CPU has ghost cells needed but it's already been queued to go into the GPU.  Patch "
-                            << sourcePatch->getID() << " to "
-                            << patchID << " from device "
-                            << sourceDeviceNum << " to device " << destDeviceNum
-                            << ".  The ghost variable is at (" << ghost_host_low.x()
-                            << ", " << ghost_host_low.y()
-                            << ", " << ghost_host_low.z()
-                            << ") with size (" << ghost_host_size.x()
-                            << ", " << ghost_host_size.y()
-                            << ", " << ghost_host_size.z()
-                            << ") with low (" << ghost_host_low.x()
-                            << ", " << ghost_host_low.y()
-                            << ", " << ghost_host_low.z() << ")"
-                            << ".  The iter low is (" << iter->low.x()
-                            << ", " << iter->low.y()
-                            << ", " << iter->low.z()
-                            << ") and iter high is *" << iter->high.x()
-                            << ", " << iter->high.y()
-                            << ", " << iter->high.z()
-                            << ") the patch ID is " << patchID
-                            << " and the neighbor variable has a virtual offset (" << virtualOffset.x()
-                            << ", " << virtualOffset.y()
-                            << ", " << virtualOffset.z() << ")"
-                            << std::endl;
-                    }
-                    cerrLock.unlock();
-                  }
-                }
+                } // else the variable is already in deviceVars
 
                 // Add in info to perform a GPU ghost cell copy.  (It will ensure duplicates can't be entered.)
                 dtask->getGhostVars().add(curDependency->m_var,
@@ -2172,15 +1893,6 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
           // I believe both issues can be fixed with proper checkpoints.  But in reality
           // we shouldn't be resizing variables on the GPU, so this event should never happen.
           gpudw->remove(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
-          gpu_stats <<  myRankThread() 
-                    << " Resizing of GPU grid vars not implemented at this time.  "
-                    << "For the GPU, computes need to be declared with scratch computes to have room for ghost cells.  "
-                    << "For " << curDependency->m_var->getName()
-                    << " patch " << patchID
-                    << " material " << matlID
-                    << " level " << levelID
-                    << ".  Requested var of size (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ") "
-                    << "with offset (" << low.x() << ", " << low.y() << ", " << low.z() << ")" << std::endl;
           SCI_THROW(InternalError("ERROR: Resizing of GPU grid vars not implemented at this time",__FILE__, __LINE__));
 
         } else if (( !allocated )
@@ -2232,22 +1944,6 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
       } else if (curDependency->m_dep_type == Task::Computes) {
         // compute the amount of space the host needs to reserve on the GPU for this variable.
 
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-          {
-            gpu_stats << myRankThread()
-                << " InitiateH2D() - Preparing to allocate computes space on device"
-                << " for " << curDependency->m_var->getName()
-                << " patch " << patchID
-                << " material " << matlID
-                << " level " << levelID
-                << " on device "
-                << deviceIndex
-                << std::endl;
-          }
-          cerrLock.unlock();
-        }
-
         if (type == TypeDescription::PerPatch) {
           //For PerPatch, it's not a mesh of variables, it's just a single variable, so elementDataSize is the memSize.
           dtask->getDeviceVars().add(patch, matlID, levelID, memSize, elementDataSize, curDependency, deviceIndex, nullptr,
@@ -2279,18 +1975,14 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
 
   // We've now gathered up all possible things that need to go on the device.  Copy it over.
 
-  // gpu_stats << myRankThread() << " Calling createTaskGpuDWs for " << dtask->getName() << std::endl;
   createTaskGpuDWs(dtask);
 
-  // gpu_stats << myRankThread() << " Calling prepareDeviceVars for " << dtask->getName() << std::endl;
   prepareDeviceVars(dtask);
 
   //At this point all needed variables will have a pointer.
 
-  // gpu_stats << myRankThread() << " Calling prepareTaskVarsIntoTaskDW for " << dtask->getName() << std::endl;
   prepareTaskVarsIntoTaskDW(dtask);
 
-  // gpu_stats << myRankThread() << " Calling prepareGhostCellsIntoTaskDW for " << dtask->getName() << std::endl;
   prepareGhostCellsIntoTaskDW(dtask);
 
 }
@@ -2322,16 +2014,6 @@ KokkosScheduler::prepareDeviceVars( DetailedTask * dtask )
       OnDemandDataWarehouseP dw = m_dws[dwIndex];
       GPUDataWarehouse* gpudw = dw->getGPUDW(whichGPU);
       if (!gpudw) {
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-           {
-            gpu_stats << myRankThread()
-                      << " prepareDeviceVars() - ERROR - No task data warehouse found for device #" << it->second.m_whichGPU
-                      << " and dwindex " << dwIndex
-                      << std::endl;
-          }
-          cerrLock.unlock();
-        }
         SCI_THROW(InternalError("No GPU data warehouse found\n",__FILE__, __LINE__));
       }
 
@@ -2416,36 +2098,10 @@ KokkosScheduler::prepareDeviceVars( DetailedTask * dtask )
           // If it's a requires, copy the data on over.  If it's a computes, leave it as allocated but unused space.
           if (it->second.m_dep->m_dep_type == Task::Requires) {
             if (!device_ptr) {
-              gpu_stats << myRankThread() << " ERROR: GPU variable's device pointer was nullptr. "
-                  << "For " << label_cstr
-                  << " patch " << patchID
-                  << " material " << matlIndx
-                  << " level " << levelID << "." << std::endl;
               SCI_THROW(InternalError("ERROR: GPU variable's device pointer was nullptr",__FILE__, __LINE__));
             }
 
             if (it->second.m_dest == GpuUtilities::sameDeviceSameMpiRank) {
-
-              //See if we get to be the thread that performs the H2D copy.
-              if (gpu_stats.active()) {
-                cerrLock.lock();
-                {
-                  gpu_stats << myRankThread()
-                            << " prepareDeviceVars() - Checking if we should copy"
-                            << " data for variable " << label_cstr
-                            << " patch " << patchID
-                            << " material " << matlIndx
-                            << " level " << levelID
-                            << " staging " << staging;
-                  if (staging) {
-                    gpu_stats << " offset (" << low.x() << ", " << low.y() << ", " << low.z()
-                              << ") and size (" << size.x() << ", " << size.y() << ", " << size.z() << ")";
-                  }
-                  gpu_stats << " destination enum is " << it->second.m_dest
-                            << std::endl;
-                }
-                cerrLock.unlock();
-              }
 
               //Figure out which thread gets to copy data H2D.  First touch wins.  In case of a superpatch,
               //the patch vars were shallow copied so they all patches in the superpatch refer to the same atomic status.
@@ -2502,20 +2158,6 @@ KokkosScheduler::prepareDeviceVars( DetailedTask * dtask )
                         }
                         //get the host pointer as well
                         host_ptr = gridVar->getBasePointer();
-                        if (gpu_stats.active()) {
-                          cerrLock.lock();
-                          {
-                            gpu_stats << myRankThread()
-                                      << " prepareDeviceVars() - Placed a level variable into the host-side levelDB for"
-                                      << " patch " << it->first.m_patchID
-                                      << " material " << it->first.m_matlIndx
-                                      << " level " << it->first.m_levelIndx
-                                      << " total variable size " << it->second.m_varMemSize
-                                      << " in host address " << host_ptr
-                                      << std::endl;
-                          }
-                          cerrLock.unlock();
-                        }
 
                         //let go of our reference, allowing a single reference to remain and keep the variable alive in leveDB.
                         //delete gridVar;
@@ -2582,28 +2224,6 @@ KokkosScheduler::prepareDeviceVars( DetailedTask * dtask )
                 }
 
                 if (host_ptr && device_ptr) {
-                  if (gpu_stats.active()) {
-                    cerrLock.lock();
-                    {
-                      gpu_stats << myRankThread()
-                                << " prepareDeviceVars() - Copying into GPU #" << whichGPU
-                                << " data for variable " << it->first.m_label
-                                << " patch " << it->first.m_patchID
-                                << " material " << it->first.m_matlIndx
-                                << " level " << it->first.m_levelIndx
-                                << " staging " << it->second.m_staging;
-
-                      if (it->second.m_staging) {
-                        gpu_stats << " offset (" << low.x() << ", " << low.y() << ", " << low.z()
-                                  << ") and size (" << size.x() << ", " << size.y() << ", " << size.z() << ")";
-                      }
-                      gpu_stats << " total variable size " << it->second.m_varMemSize
-                                << " from host address " << host_ptr
-                                << " to device address " << device_ptr << " into REQUIRES GPUDW "
-                                << std::endl;
-                    }
-                    cerrLock.unlock();
-                  }
 
                   //Perform the copy!
 
@@ -2690,39 +2310,10 @@ KokkosScheduler::prepareTaskVarsIntoTaskDW( DetailedTask * dtask )
             if (it->second.m_staging) {
               offset = make_int3(it->second.m_offset.x(), it->second.m_offset.y(), it->second.m_offset.z());
               size = make_int3(it->second.m_sizeVector.x(), it->second.m_sizeVector.y(), it->second.m_sizeVector.z());
-              if (gpu_stats.active()) {
-                cerrLock.lock();
-                {
-                  gpu_stats << myRankThread()
-                            << " prepareTaskVarsIntoTaskDW() - data for staging variable "
-                            << it->second.m_dep->m_var->getName()
-                            << " patch " << patchID
-                            << " material " << matlIndx
-                            << " level " << levelIndx
-                            << " offset (" << offset.x << ", " << offset.y << ", " << offset.z << ") "
-                            << " size (" << size.x << ", " << size.y << ", " << size.z << ") "
-                            << std::endl;
-                }
-                cerrLock.unlock();
-              }
-
             }
             else {
               offset = make_int3(0, 0, 0);
               size = make_int3(0, 0, 0);
-              if (gpu_stats.active()) {
-                cerrLock.lock();
-                {
-                  gpu_stats << myRankThread()
-                            << " prepareTaskVarsIntoTaskDW() - data for variable "
-                            << it->second.m_dep->m_var->getName()
-                            << " patch " << patchID
-                            << " material " << matlIndx
-                            << " level " << levelIndx
-                            << std::endl;
-                }
-                cerrLock.unlock();
-              }
             }
 
             GPUDataWarehouse* taskgpudw = dtask->getTaskGpuDataWarehouse(it->second.m_whichGPU, (Task::WhichDW)dwIndex);
@@ -2731,16 +2322,6 @@ KokkosScheduler::prepareTaskVarsIntoTaskDW( DetailedTask * dtask )
                                             it->second.m_staging, offset, size);
             }
             else {
-              if (gpu_stats.active()) {
-                cerrLock.lock();
-                {
-                  gpu_stats << myRankThread()
-                            << " prepareTaskVarsIntoTaskDW() - ERROR - No task data warehouse found for device #" << it->second.m_whichGPU
-                            << " and dwindex " << dwIndex
-                            << std::endl;
-                }
-                cerrLock.unlock();
-              }
               printf("ERROR - No task data warehouse found for device %d for task %s\n", it->second.m_whichGPU, dtask->getTask()->getName().c_str());
               SCI_THROW(InternalError("No task data warehouse found\n", __FILE__, __LINE__));
             }
@@ -2793,20 +2374,6 @@ KokkosScheduler::prepareGhostCellsIntoTaskDW( DetailedTask * dtask )
       IntVector ghost_low = it->first.m_sharedLowCoordinates;
       IntVector ghost_high = it->first.m_sharedHighCoordinates;
       IntVector virtualOffset = it->second.m_virtualOffset;
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << myRankThread()
-              << " prepareGhostCellsIntoTaskDW() - Preparing ghost cell upcoming copy for " << it->first.m_label
-              << " matl " << it->first.m_matlIndx << " level " << it->first.m_levelIndx
-              << " from patch " << it->second.m_sourcePatchPointer->getID() << " staging "  << it->second.m_sourceStaging
-              << " to patch " << it->second.m_destPatchPointer->getID() << " staging "  << it->second.m_destStaging
-              << " from device #" << it->second.m_sourceDeviceNum
-              << " to device #" << it->second.m_destDeviceNum
-              << " in the Task GPU DW " << dwIndex << std::endl;
-        }
-        cerrLock.unlock();
-      }
 
       // Add in an entry into this Task DW's d_varDB which isn't a var, but is instead
       // metadata describing how to copy ghost cells between two vars listed in d_varDB.
@@ -2850,17 +2417,6 @@ KokkosScheduler::ghostCellsProcessingReady( DetailedTask * dtask )
             it->second.m_sourcePatchPointer->getID(),
             it->second.m_matlIndx,
             it->first.m_levelIndx))) {
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-          {
-            gpu_stats << myRankThread() << " KokkosScheduler::ghostCellsProcessingReady() -"
-                // Task: " << dtask->getName()
-                << " Required staging variable for ghost cells not ready for "
-                << it->first.m_label << " patch " << it->second.m_sourcePatchPointer->getID()
-                << " material " << it->second.m_matlIndx << " level " << it->first.m_levelIndx << std::endl;
-          }
-          cerrLock.unlock();
-        }
         return false;
       }
     } else {
@@ -2868,17 +2424,6 @@ KokkosScheduler::ghostCellsProcessingReady( DetailedTask * dtask )
             it->second.m_sourcePatchPointer->getID(),
             it->second.m_matlIndx,
             it->first.m_levelIndx))) {
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-          {
-            gpu_stats << myRankThread() << " KokkosScheduler::ghostCellsProcessingReady() -"
-                // Task: " << dtask->getName()
-                << " Required source varaible for ghost cells not ready for "
-                << it->first.m_label << " patch " << it->second.m_sourcePatchPointer->getID()
-                << " material " << it->second.m_matlIndx << " level " << it->first.m_levelIndx << std::endl;
-          }
-          cerrLock.unlock();
-        }
         return false;
       }
     }
@@ -2953,39 +2498,10 @@ KokkosScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
     if (curDependency->m_dep_type == Task::Requires) {
       if (gpudw->dwEntryExistsOnCPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID)) {
         if (!(gpudw->isValidOnCPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID))) {
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats
-                  << myRankThread()
-                  << " KokkosScheduler::allHostVarsProcessingReady() - Task: "
-                  << dtask->getName()
-                  << " CPU Task: "
-                  << dtask->getName() << " is not ready because this var isn't valid in host memory.  Var "
-                  << curDependency->m_var->getName() << " patch " << patchID << " material " << matlID << " level " << levelID
-                  << std::endl;
-            }
-            cerrLock.unlock();
-          }
           return false;
         }
       }
     }
-  }
-
-  // if we got there, then everything must be ready to go.
-  if (gpu_stats.active()) {
-    cerrLock.lock();
-    {
-      gpu_stats
-          << myRankThread()
-          << " KokkosScheduler::allHostVarsProcessingReady() - Task: "
-          << dtask->getName()
-          << " CPU Task: "
-          << dtask->getName() << " is ready to execute, all required vars are found in in host memory."
-          << std::endl;
-    }
-    cerrLock.unlock();
   }
 
   return true;
@@ -3054,44 +2570,12 @@ KokkosScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
         // it has ghost cells.
         if (!(gpudw->isValidWithGhostsOnGPU(curDependency->m_var->getName().c_str(),patchID, matlID, levelID))) {
           return false;
-        } else {
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats
-                  << myRankThread()
-                  << " KokkosScheduler::allGPUVarsProcessingReady() - Task: "
-                  << dtask->getName()
-                  << " GPU Task: "
-                  << dtask->getName() << " verified that var " << curDependency->m_var->getName()
-                  << " on patch " << patchID
-                  << " is valid with ghost cells."
-                  << std::endl;
-            }
-            cerrLock.unlock();
-          }
         }
       } else {
         // If it's a gridvar, then we just don't have the ghost cells processed yet by another thread
         // If it's another type of variable, something went wrong, it should have been marked as valid previously.
         if (!(gpudw->isValidOnGPU(curDependency->m_var->getName().c_str(),patchID, matlID, levelID))) {
           return false;
-        } else {
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats
-                  << myRankThread()
-                  << " KokkosScheduler::allGPUVarsProcessingReady() - Task: "
-                  << dtask->getName()
-                  << " GPU Task: "
-                  << dtask->getName() << " verified that var " << curDependency->m_var->getName()
-                  << " on patch " << patchID
-                  << " is valid."
-                  << std::endl;
-            }
-            cerrLock.unlock();
-          }
         }
       }
     }
@@ -3130,26 +2614,8 @@ KokkosScheduler::markDeviceRequiresDataAsValid( DetailedTask * dtask )
     GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
     if (it->second.m_dep->m_dep_type == Task::Requires) {
       if (!it->second.m_staging) {
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-          {
-            gpu_stats << myRankThread() << " markDeviceRequiresDataAsValid() -"
-                << " Marking GPU memory as valid for " << it->second.m_dep->m_var->getName().c_str() << " patch " << it->first.m_patchID << std::endl;
-          }
-          cerrLock.unlock();
-        }
         gpudw->compareAndSwapSetValidOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       } else {
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-          {
-            gpu_stats << myRankThread() << " markDeviceRequiresDataAsValid() -"
-                << " Marking GPU memory as valid for " << it->second.m_dep->m_var->getName().c_str() << " patch " << it->first.m_patchID
-                << " offset(" << it->second.m_offset.x() << ", " << it->second.m_offset.y() << ", " << it->second.m_offset.z()
-                << ") size (" << it->second.m_sizeVector.x() << ", " << it->second.m_sizeVector.y() << ", " << it->second.m_sizeVector.z() << ")" << std::endl;
-          }
-          cerrLock.unlock();
-        }
         gpudw->compareAndSwapSetValidOnGPUStaging(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx,
                                     make_int3(it->second.m_offset.x(),it->second.m_offset.y(),it->second.m_offset.z()),
                                     make_int3(it->second.m_sizeVector.x(), it->second.m_sizeVector.y(), it->second.m_sizeVector.z()));
@@ -3178,17 +2644,6 @@ KokkosScheduler::markDeviceGhostsAsValid( DetailedTask * dtask )
     int dwIndex = it->second.m_dep->mapDataWarehouse();
     GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
 
-
-    if (gpu_stats.active()) {
-      cerrLock.lock();
-      {
-        gpu_stats << myRankThread() << " markDeviceGhostsAsValid() -"
-            << " Marking GPU memory as valid with ghosts for " << it->second.m_dep->m_var->getName().c_str() << " patch " << it->first.m_patchID
-            << " offset(" << it->second.m_offset.x() << ", " << it->second.m_offset.y() << ", " << it->second.m_offset.z()
-            << ") size (" << it->second.m_sizeVector.x() << ", " << it->second.m_sizeVector.y() << ", " << it->second.m_sizeVector.z() << ")" << std::endl;
-      }
-      cerrLock.unlock();
-    }
     gpudw->setValidWithGhostsOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
   }
 }
@@ -3248,14 +2703,6 @@ KokkosScheduler::markHostRequiresDataAsValid( DetailedTask * dtask )
     GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
     if (it->second.m_dep->m_dep_type == Task::Requires) {
       if (!it->second.m_staging) {
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-          {
-            gpu_stats << myRankThread() << " markHostRequiresDataAsValid() -"
-                << " Marking host memory as valid for " << it->second.m_dep->m_var->getName().c_str() << " patch " << it->first.m_patchID << std::endl;
-          }
-          cerrLock.unlock();
-        }
         gpudw->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       }
       if (it->second.m_var) {
@@ -3339,17 +2786,6 @@ KokkosScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
                 case TypeDescription::SFCYVariable:
                 case TypeDescription::SFCZVariable: {
 
-                  if (gpu_stats.active()) {
-                    cerrLock.lock();
-                    {
-                      gpu_stats << myRankThread() << " initiateD2HForHugeGhostCells() -"
-                          // Task: " << dtask->getName()
-                          << " Checking if we should copy of \""
-                          << compVarName << "\" Patch " << patchID
-                          << " Material " << matlID << std::endl;
-                    }
-                    cerrLock.unlock();
-                  }
                   bool performCopy = gpudw->compareAndSwapCopyingIntoCPU(compVarName.c_str(), patchID, matlID, levelID);
                   if (performCopy) {
                     // size the host var to be able to fit all r::oom needed.
@@ -3376,20 +2812,6 @@ KokkosScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
 
                     gtype = (Ghost::GhostType) tempgtype;
 
-
-                    if (gpu_stats.active()) {
-                      cerrLock.lock();
-                      {
-                        gpu_stats << myRankThread() << " initiateD2HForHugeGhostCells() -"
-                            // Task: " << dtask->getName()
-                            << " Yes, we are copying \""
-                            << compVarName << "\" patch" << patchID
-                            << " material " << matlID
-                            << " number of ghost cells " << numGhostCells << " from device to host" << std::endl;
-                      }
-                      cerrLock.unlock();
-                    }
-
                     GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(comp->m_var->typeDescription()->createInstance());
 
                     bool finalized = dw->isFinalized();
@@ -3400,19 +2822,6 @@ KokkosScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
                     dw->allocateAndPut(*gridVar, comp->m_var, matlID, patch, gtype, numGhostCells);
                     if (finalized) {
                       dw->refinalize();
-                    }
-
-                    if (gpu_stats.active()) {
-                      cerrLock.lock();
-                      {
-                        gpu_stats << myRankThread() << " initiateD2HForHugeGhostCells() -"
-                            // Task: " << dtask->getName()
-                            << " allocateAndPut for "
-                            << compVarName << " patch" << patchID
-                            << " material " << matlID
-                            << " number of ghost cells " << numGhostCells << " from device to host" << std::endl;
-                      }
-                      cerrLock.unlock();
                     }
 
                     gridVar->getSizes(host_low, host_high, host_offset, host_size, host_strides);
@@ -3434,22 +2843,6 @@ KokkosScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
                         && device_size.y   == host_size.y()
                         && device_size.z   == host_size.z()) {
 
-                      if (gpu_stats.active()) {
-                        cerrLock.lock();
-                        {
-                          gpu_stats << myRankThread() << " initiateD2HForHugeGhostCells - Copy of \""
-                              << compVarName << "\""
-                              << " patch " << patchID
-                              << " material " << matlID
-                              << " level " << levelID
-                              << ", size = "
-                              << std::dec << host_bytes << " to " << std::hex
-                              << host_ptr << " from " << std::hex << device_ptr
-                              << ", using stream " << std::hex
-                              << stream << std::dec << std::endl;
-                        }
-                        cerrLock.unlock();
-                      }
                       cudaError_t retVal;
                       CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
 
@@ -3522,18 +2915,6 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
       for (int j = 0; j < numMatls; j++) {
         labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
         if (vars.find(lpmd) == vars.end()) {
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread() << " InitiateD2H - For task "
-                  << dtask->getName() << " checking on requires \""
-                  << dependantVar->m_var->getName() << "\""
-                  << " patch " <<  patches->get(i)->getID()
-                  << " material " << matls->get(j)
-                  << std::endl;
-            }
-            cerrLock.unlock();
-          }
           vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
         }
       }
@@ -3548,20 +2929,6 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
     for (int i = 0; i < numPatches; i++) {
       for (int j = 0; j < numMatls; j++) {
         labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Computes);
-        if (vars.find(lpmd) == vars.end()) {
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread() << " InitiateD2H - For task "
-                  << dtask->getName() << " checking on computes \""
-                  << dependantVar->m_var->getName() << "\""
-                  << " patch " <<  patches->get(i)->getID()
-                  << " material " << matls->get(j)
-                  << std::endl;
-            }
-            cerrLock.unlock();
-          }
-        }
       }
     }
   }
@@ -3667,32 +3034,8 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
           case TypeDescription::SFCYVariable:
           case TypeDescription::SFCZVariable: {
 
-            if (gpu_stats.active()) {
-              cerrLock.lock();
-              {
-                gpu_stats << myRankThread() << " InitiateD2H() -"
-                    // Task: " << dtask->getName()
-                    << " Checking if we should copy of \""
-                    << varName << "\" Patch " << patchID
-                    << " Material " << matlID << std::endl;
-              }
-              cerrLock.unlock();
-            }
             bool performCopy = gpudw->compareAndSwapCopyingIntoCPU(varName.c_str(), patchID, matlID, levelID);
             if (performCopy) {
-
-              if (gpu_stats.active()) {
-                cerrLock.lock();
-                {
-                  gpu_stats << myRankThread() << " InitiateD2H() -"
-                      // Task: " << dtask->getName()
-                      << " Yes, we are copying \""
-                      << varName << "\" patch" << patchID
-                      << " material " << matlID
-                      << " number of ghost cells " << dependantVar->m_num_ghost_cells << " from device to host" << std::endl;
-                }
-                cerrLock.unlock();
-              }
 
               // It's possible the computes data may contain ghost cells.  But a task needing to get the data
               // out of the GPU may not know this.  It may just want the var data.
@@ -3733,20 +3076,6 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
               host_size = host_high - host_low;
               int dwIndex = dependantVar->mapDataWarehouse();
               OnDemandDataWarehouseP dw = m_dws[dwIndex];
-
-              // Get/make the host var
-              if (gpu_stats.active()) {
-                cerrLock.lock();
-                {
-                  gpu_stats << myRankThread() << " InitiateD2H() -"
-                      << " calling allocateAndPut for "
-                      << varName << " patch" << patchID
-                      << " material " << matlID
-                      << " level " << levelID
-                      << " number of ghost cells " << numGhostCells << " from device to host" << std::endl;
-                 }
-                cerrLock.unlock();
-              }
 
               // get the device var so we can get the pointer.
               GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(datatype);
@@ -3838,24 +3167,6 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
                 host_ptr = gridVar->getBasePointer();
                 host_bytes = gridVar->getDataSize();
 
-                if (gpu_stats.active()) {
-                  cerrLock.lock();
-                  {
-                    gpu_stats << myRankThread() << " InitiateD2H() - Copy of \""
-                        << varName << "\""
-                        << " patch " << patchID
-                        << " material " << matlID
-                        << " level " << levelID
-                        << ", size = "
-                        << std::dec << host_bytes
-                        << " offset (" << device_offset.x << ", " << device_offset.y << ", " << device_offset.z << ")"
-                        << " size (" << device_size.x << ", " << device_size.y << ", " << device_size.z << ")"
-                        << " to " << std::hex << host_ptr << " from " << std::hex << device_ptr
-                        << ", using stream " << std::hex
-                        << stream << std::dec << std::endl;
-                  }
-                  cerrLock.unlock();
-                }
                 cudaError_t retVal;
 
                 if (host_bytes == 0) {
@@ -3912,19 +3223,6 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
               size_t device_bytes = gpuPerPatchVar->getMemSize();
               delete gpuPerPatchVar;
 
-              if (gpu_stats.active()) {
-                cerrLock.lock();
-                {
-                  gpu_stats << myRankThread() << "initiateD2H copy of \""
-                      << varName << "\", size = "
-                      << std::dec << host_bytes << " to " << std::hex
-                      << host_ptr << " from " << std::hex << device_ptr
-                      << ", using stream " << std::hex << stream
-                      << std::dec << std::endl;
-                }
-                cerrLock.unlock();
-              }
-
               // TODO: Verify no memory leaks
               if (host_bytes == device_bytes) {
                 CUDA_RT_SAFE_CALL(cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
@@ -3963,19 +3261,6 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
               device_ptr = gpuReductionVar->getVoidPointer();
               size_t device_bytes = gpuReductionVar->getMemSize();
               delete gpuReductionVar;
-
-              if (gpu_stats.active()) {
-                cerrLock.lock();
-                {
-                  gpu_stats << myRankThread() << "initiateD2H copy of \""
-                      << varName << "\", size = "
-                      << std::dec << host_bytes << " to " << std::hex
-                      << host_ptr << " from " << std::hex << device_ptr
-                      << ", using stream " << std::hex << stream
-                      << std::dec << std::endl;
-                }
-                cerrLock.unlock();
-              }
 
               if (host_bytes == device_bytes) {
                 CUDA_RT_SAFE_CALL(cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
@@ -4030,24 +3315,10 @@ KokkosScheduler::createTaskGpuDWs( DetailedTask * dtask )
       std::ostringstream out;
       out << "Old task GPU DW" << " MPIRank: " << Uintah::Parallel::getMPIRank() << " Task: " << dtask->getTask()->getName();
       old_taskGpuDW->init( currentDevice, out.str());
-      old_taskGpuDW->setDebug(gpudbg.active());
+      old_taskGpuDW->setDebug(false);
 
       old_taskGpuDW->init_device(objectSizeInBytes, numItemsInDW);
       dtask->setTaskGpuDataWarehouse(currentDevice, Task::OldDW, old_taskGpuDW);
-
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << myRankThread()
-             << " KokkosScheduler::createTaskGpuDWs() - Created an old Task GPU DW for task " <<  dtask->getName()
-             << " for device #" << currentDevice
-             << " at host address " << old_taskGpuDW
-             << " to contain " << dtask->getTaskVars().getTotalVars(currentDevice, Task::OldDW)
-             << " task variables and " << dtask->getGhostVars().getNumGhostCellCopies(currentDevice, Task::OldDW)
-             << " ghost cell copies." << std::endl;
-        }
-        cerrLock.unlock();
-      }
     }
 
     numItemsInDW = dtask->getTaskVars().getTotalVars(currentDevice, Task::NewDW) + dtask->getGhostVars().getNumGhostCellCopies(currentDevice, Task::NewDW);
@@ -4061,24 +3332,10 @@ KokkosScheduler::createTaskGpuDWs( DetailedTask * dtask )
       std::ostringstream out;
       out << "New task GPU DW" << " MPIRank: " << Uintah::Parallel::getMPIRank() << " Thread:" << Impl::t_tid << " Task: " << dtask->getName();
       new_taskGpuDW->init(currentDevice, out.str());
-      new_taskGpuDW->setDebug(gpudbg.active());
+      new_taskGpuDW->setDebug(false);
       new_taskGpuDW->init_device(objectSizeInBytes, numItemsInDW);
 
       dtask->setTaskGpuDataWarehouse(currentDevice, Task::NewDW, new_taskGpuDW);
-
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << myRankThread()
-             << " KokkosScheduler::createTaskGpuDWs() - Created a new Task GPU DW for task " <<  dtask->getName()
-             << " for device #" << currentDevice
-             << " at host address " << new_taskGpuDW
-             << " to contain " << dtask->getTaskVars().getTotalVars(currentDevice, Task::NewDW)
-             << " task variables and " << dtask->getGhostVars().getNumGhostCellCopies(currentDevice, Task::NewDW)
-             << " ghost cell copies." << std::endl;
-        }
-        cerrLock.unlock();
-      }
     }
   }
 }
@@ -4104,16 +3361,6 @@ KokkosScheduler::assignDevicesAndStreams( DetailedTask * dtask )
           dtask->assignDevice(0); 
           cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(i);
           dtask->setCudaStreamForThisTask(i, stream);
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread() << " Assigning for task " << dtask->getName() << " at " << std::hex << dtask
-                    << " stream " << stream << std::dec
-                    << " for device " << index
-                    << std::endl;
-            }
-            cerrLock.unlock();
-          }
         }
       }
     
@@ -4147,16 +3394,6 @@ KokkosScheduler::assignDevicesAndStreams( DetailedTask * dtask )
         if (dtask->getCudaStreamForThisTask(index) == nullptr) {
           dtask->assignDevice(index);
           cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(index);
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread() << " Assigning for task " << dtask->getName() << " at " << std::hex << dtask
-              << " stream " << stream << std::dec
-              << " for device " << index
-              << std::endl;
-            }
-            cerrLock.unlock();
-          }
           dtask->setCudaStreamForThisTask(index, stream);
         }
       } else {
@@ -4224,16 +3461,6 @@ KokkosScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
                                              , int            t_id
                                              )
 {
-  if (gpu_stats.active()) {
-    cerrLock.lock();
-    {
-      gpu_stats << myRankThread()
-                << " findIntAndExtGpuDependencies - task "
-                << *dtask
-                << std::endl;
-    }
-    cerrLock.unlock();
-  }
 
   dtask->clearPreparationCollections();
 
@@ -4253,15 +3480,6 @@ KokkosScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0) || (req->m_comm_condition == DetailedDep::SubsequentIterations && iteration == 0)
             || (m_no_copy_data_vars.count(req->m_req->m_var->getName()) > 0)) {
           // See comment in DetailedDep about CommCondition
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread()
-                        << "   Preparing GPU dependencies, ignoring conditional send for requires: " << *req
-                        << std::endl;
-            }
-            cerrLock.unlock();
-          }
           continue;
         }
 
@@ -4281,31 +3499,10 @@ KokkosScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         // an out of sync output or checkpoint.
         
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread()
-                        << "   Preparing GPU dependencies, ignoring non-output-timestep send for requires: " << *req
-                        << std::endl;
-            }
-            cerrLock.unlock();
-          }
           continue;
         }
         OnDemandDataWarehouse* dw = m_dws[req->m_req->mapDataWarehouse()].get_rep();
 
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-          {
-            gpu_stats << myRankThread()
-                      << " --> Preparing GPU dependencies for sending requires: " << *req
-                      << ", ghost-type: " << req->m_req->m_gtype
-                      << ", number of ghost cells: " << req->m_req->m_num_ghost_cells
-                      << " from dw " << dw->getID()
-                      << std::endl;
-          }
-          cerrLock.unlock();
-        }
         const VarLabel* posLabel;
         OnDemandDataWarehouse* posDW;
 
@@ -4375,32 +3572,10 @@ KokkosScheduler::performInternalGhostCellCopies( DetailedTask * dtask )
     if (dtask->getTaskGpuDataWarehouse(currentDevice, Task::OldDW) != nullptr
         && dtask->getTaskGpuDataWarehouse(currentDevice, Task::OldDW)->ghostCellCopiesNeeded()) {
       dtask->getTaskGpuDataWarehouse(currentDevice, Task::OldDW)->copyGpuGhostCellsToGpuVarsInvoker(dtask->getCudaStreamForThisTask(currentDevice));
-    } else {
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << myRankThread()
-                    << " A No internal ghost cell copies needed for this task \""
-                    << dtask->getName() << "\"\'s old DW"
-                    << std::endl;
-        }
-        cerrLock.unlock();
-      }
     }
     if (dtask->getTaskGpuDataWarehouse(currentDevice, Task::NewDW) != nullptr
         && dtask->getTaskGpuDataWarehouse(currentDevice, Task::NewDW)->ghostCellCopiesNeeded()) {
       dtask->getTaskGpuDataWarehouse(currentDevice, Task::NewDW)->copyGpuGhostCellsToGpuVarsInvoker(dtask->getCudaStreamForThisTask(currentDevice));
-    } else {
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << myRankThread()
-                    << " B No internal ghost cell copies needed for this task \""
-                    << dtask->getName() << "\"\'s new DW"
-                    << std::endl;
-        }
-        cerrLock.unlock();
-      }
     }
   }
 }
@@ -4457,29 +3632,6 @@ KokkosScheduler::copyAllGpuToGpuDependences( DetailedTask * dtask )
                      make_int3(ghostSize.x(), ghostSize.y(), ghostSize.z()));
       device_dest_var->getArray3(device_dest_offset, device_dest_size, device_dest_ptr);
 
-
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << myRankThread()
-                    << " GpuDependenciesToHost()  - \""
-                     << "GPU to GPU peer transfer from GPU #"
-                     << it->second.m_sourceDeviceNum << " to GPU #"
-                     << it->second.m_destDeviceNum << " for label "
-                     << it->first.m_label << " from patch "
-                     << it->second.m_sourcePatchPointer->getID() << " to patch "
-                     << it->second.m_destPatchPointer->getID() << " matl "
-                     << it->first.m_matlIndx << " level "
-                     << it->first.m_levelIndx << " size = "
-                     << std::dec << memSize << " from ptr " << std::hex
-                     << device_source_ptr << " to ptr " << std::hex << device_dest_ptr
-                     << ", using stream " << std::hex
-                     << dtask->getCudaStreamForThisTask(it->second.m_sourceDeviceNum) << std::dec
-                     << std::endl;
-        }
-        cerrLock.unlock();
-      }
-
       // We can run peer copies from the source or the device stream.  While running it
       // from the device technically is said to be a bit slower, it's likely just
       // to an extra event being created to manage blocking the destination stream.
@@ -4492,11 +3644,7 @@ KokkosScheduler::copyAllGpuToGpuDependences( DetailedTask * dtask )
       cudaStream_t* stream = dtask->getCudaStreamForThisTask(it->second.m_destDeviceNum);
       OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_destDeviceNum);
 
-      if (simulate_multiple_gpus.active()) {
-        CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(device_dest_ptr, 0, device_source_ptr, 0, memSize, *stream));
-       } else {
-        CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(device_dest_ptr, it->second.m_destDeviceNum, device_source_ptr, it->second.m_sourceDeviceNum, memSize, *stream));
-      }
+      CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(device_dest_ptr, it->second.m_destDeviceNum, device_source_ptr, it->second.m_sourceDeviceNum, memSize, *stream));
     }
   }
 }
@@ -4575,20 +3723,6 @@ KokkosScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
           // Since we know we need a stream, obtain one.
           cudaStream_t* stream = dtask->getCudaStreamForThisTask(it->second.m_sourceDeviceNum);
           OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_sourceDeviceNum);
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread()
-                        << " copyAllExtGpuDependenciesToHost()  - \""
-                        << it->first.m_label << "\", size = "
-                        << std::dec << host_bytes << " to " << std::hex
-                        << host_ptr << " from " << std::hex << device_ptr
-                        << ", using stream " << std::hex
-                        << dtask->getCudaStreamForThisTask(it->second.m_sourceDeviceNum) << std::dec
-                        << std::endl;
-            }
-            cerrLock.unlock();
-          }
 
           CUDA_RT_SAFE_CALL(cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
           copiesExist = true;
