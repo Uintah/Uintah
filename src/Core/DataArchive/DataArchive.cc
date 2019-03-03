@@ -1133,13 +1133,14 @@ DataArchive::query(       Variable     & var,
 
     vector<VarnameMatlPatch>::iterator iter = std::find( timedata.d_datafileInfoIndex.begin(), timedata.d_datafileInfoIndex.end(), VarnameMatlPatch(name, matlIndex, patchid ) );
     if( iter == timedata.d_datafileInfoIndex.end() ) { // Previously used the hashmap lookup( timedata.d_datafileInfo.lookup() )
-      cerr << "VARIABLE NOT FOUND: " << name 
-           << ", material index " << matlIndex 
-           << ", Level " << patch->getLevel()->getIndex() 
-           << ", patch " << patch->getID() 
-           << ", time index " << timeIndex << "\n";
+//      cerr << "VARIABLE NOT FOUND: " << name 
+//           << ", material index " << matlIndex 
+//           << ", Level " << patch->getLevel()->getIndex() 
+//           << ", patch " << patch->getID() 
+//           << ", time index " << timeIndex << "\n";
 
-      throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
+      return false;
+//      throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
     }
     
     int pos = std::distance( timedata.d_datafileInfoIndex.begin(), iter );

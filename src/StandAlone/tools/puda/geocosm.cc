@@ -61,6 +61,7 @@ void
 Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
 {
   bool have_volume = false;
+  bool have_plastic_strain = false;
   vector<string> vars;
   vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
@@ -71,6 +72,9 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
     cout << vars[i] << ": " << types[i]->getName() << endl;
     if(vars[i]=="p.volume"){
        have_volume=true;
+    }
+    if(vars[i]=="p.plasticStrain"){
+       have_plastic_strain=true;
     }
   }
 
@@ -98,10 +102,14 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
 
     partfile.precision(12);
 
-    if(have_volume){
+    if(have_volume && have_plastic_strain){
       partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress plasStrain volume" << endl;
-    }else{
+    }else if(!have_volume && have_plastic_strain){
       partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress plasStrain" << endl;
+    }else if(have_volume && !have_plastic_strain){
+      partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress volume" << endl;
+    }else if(!have_volume && !have_plastic_strain){
+      partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress" << endl;
     }
 
     for(int l=0;l<grid->numLevels();l++){
@@ -119,11 +127,14 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
         da->query(pos,    "p.x",              matl, patch, t);
         da->query(pID,    "p.particleID",     matl, patch, t);
         da->query(col,    "p.color",          matl, patch, t);
-        bool havePS = da->query(plas,   "p.plasticStrain",  matl, patch, t);
-        da->query(stress, "p.stress",         matl, patch, t);
-        if(have_volume){
-         da->query(volume, "p.volume",        matl, patch, t);
+        bool havePS = false;
+        if(have_plastic_strain){
+         havePS = da->query(plas,  "p.plasticStrain",  matl, patch, t);
         }
+        if(have_volume){
+         da->query(volume,"p.volume",         matl, patch, t);
+        }
+        da->query(stress, "p.stress",         matl, patch, t);
         ParticleSubset* pset = pos.getParticleSubset();
         if(pset->numParticles() > 0){
           ParticleSubset::iterator iter = pset->begin();
@@ -142,10 +153,12 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
                      << sig(1,1) << " " << sig(2,2) << " " 
                      << sig(1,2) << " " << sig(0,2) << " "
                      << sig(0,1) << " " << pressure << " " << eqStress << " ";
-            if(havePS){
+            if(have_plastic_strain){
+             if(havePS){
               partfile <<  plas[*iter] << " ";
-            }else{
+             }else{
               partfile <<  0.0 << " ";
+             }
             }
             if(have_volume){
               partfile <<  volume[*iter];
