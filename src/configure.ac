@@ -4340,12 +4340,6 @@ if test "$BUILD_WASATCH" = "yes"; then
   fi
 fi
 
-if test "$BUILD_ARCHES" = "yes"; then
-  if test "$HAVE_BOOST"      != "yes"; then
-    AC_MSG_ERROR( [You enabled the Arches component but do not have all of the prereqs: Boost ($HAVE_BOOST).] )
-  fi
-fi
-
 if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
   if test "$with_hypre" = NOT_SET -a "$with_hypre_include" = NOT_SET; then
     AC_MSG_WARN( [ Requiring Hypre due to Arches or Wasatch...] )
