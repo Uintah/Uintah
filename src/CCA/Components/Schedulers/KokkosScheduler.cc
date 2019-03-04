@@ -48,6 +48,8 @@
   #include <Core/Util/DebugStream.h>
 #endif
 
+#include <sci_defs/kokkos_defs.h>
+
 #include <atomic>
 #include <cstring>
 #include <iomanip>
@@ -225,32 +227,12 @@ KokkosScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
   proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
-  int num_threads = Uintah::Parallel::getNumThreads() - 1;
-
-  if ( (num_threads < 0) &&  Uintah::Parallel::usingDevice() ) {
-    if (d_myworld->myRank() == 0) {
-      std::cerr << "Error: no thread number specified for Kokkos Scheduler"
-          << std::endl;
-      throw ProblemSetupException(
-          "This scheduler requires number of threads to be in the range [1, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
-          __FILE__, __LINE__);
-    }
-  } else if (num_threads > MAX_THREADS) {
-    if (d_myworld->myRank() == 0) {
-      std::cerr << "Error: Number of threads too large..." << std::endl;
-      throw ProblemSetupException(
-          "Too many threads. Reduce MAX_THREADS and recompile.", __FILE__,
-          __LINE__);
-    }
-  }
+  // Run configuration paramaters to pass Kokkos::OpenMP::partition_master
+  m_num_partitions        = Uintah::Parallel::getNumPartitions();
+  m_threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
 
   if (d_myworld->myRank() == 0) {
-    std::string plural = (num_threads == 1) ? " thread" : " threads";
-    std::cout
-        << "\nWARNING: Multi-threaded Kokkos scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
-        << "Creating " << num_threads << " additional "
-        << plural + " for task execution (total task execution threads = "
-        << num_threads + 1 << ").\n" << std::endl;
+    std::cout << "\nWARNING: Multi-threaded Kokkos scheduler is EXPERIMENTAL, not all tasks are thread safe or Kokkos-enabled yet.\n" << std::endl;
 
 #ifdef HAVE_CUDA
     if ( !g_gpu_ids && Uintah::Parallel::usingDevice() ) {
@@ -556,10 +538,29 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
 
   static int totaltasks;
 
+#if defined( KOKKOS_ENABLE_OPENMP )
 
-  // main thread also executes tasks
-  runTasks( Impl::t_tid );
+    auto task_runner = [&] ( int partition_id, int num_partitions ) {
 
+      // Each partition executes this block of code
+      // A task_runner can run either a serial task (e.g., m_threads_per_partition == 1)
+      //       or a Kokkos-based data parallel task (e.g., m_threads_per_partition > 1)
+
+      this->runTasks( partition_id );
+
+    }; // end task_worker
+
+    // Executes task_workers
+    Kokkos::OpenMP::partition_master( task_runner
+                                    , m_num_partitions
+                                    , m_threads_per_partition
+                                    );
+
+#else // KOKKOS_ENABLE_OPENMP
+
+    this->runTasks( 0 );
+
+#endif // KOKKOS_ENABLE_OPENMP
 
   //---------------------------------------------------------------------------
   // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16

@@ -140,6 +140,9 @@ class KokkosScheduler : public MPIScheduler  {
     bool     m_abort{false};
     int      m_abort_point{0};
 
+    int      m_num_partitions{0};
+    int      m_threads_per_partition{0};
+
 #ifdef HAVE_CUDA
 
     using DeviceVarDest = GpuUtilities::DeviceVarDestination;
