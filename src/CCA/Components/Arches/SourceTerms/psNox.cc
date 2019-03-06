@@ -17,14 +17,14 @@
 //===========================================================================
 using namespace std;
 using namespace Uintah;
-psNox::psNox( std::string src_name, ArchesLabel* field_labels,
+psNOx::psNOx( std::string src_name, ArchesLabel* field_labels,
     vector<std::string> req_label_names, std::string type )
 : SourceTermBase(src_name, field_labels->d_materialManager, req_label_names, type), _field_labels(field_labels)
 {
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() );
   _source_grid_type = CC_SRC;
 }
-psNox::~psNox()
+psNOx::~psNOx()
 {
   VarLabel::destroy(NO_src_label);
   VarLabel::destroy(HCN_src_label);
@@ -33,95 +33,123 @@ psNox::~psNox()
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
+
+namespace {
+
+  auto split_lambda = []( const double& tillman_value, const double& vol_tar_split,
+                       double& tar_N_split, const double& vol_fraction ){
+
+    double split = (tillman_value - vol_tar_split*tar_N_split) / vol_fraction;
+    //adjusting the tar split if bounds are exceeded
+    if ( split < 0.0 ){
+      split = 0.0;
+      tar_N_split = tillman_value / vol_tar_split;
+    }
+    if ( split > 1.0 ){
+      split = 1.0;
+      tar_N_split = ( tillman_value - ( 1. - vol_tar_split ) ) / vol_tar_split;
+    }
+
+    //if tar goes out of bounds, throw and error
+    // In this case, one needs to explore the possiblity that:
+    // 1) The NOx model is wrong or
+    // 2) The parameters need to be manually specificied
+    // 3) More UQ works needs to be performed for the fuel of interest
+    if ( tar_N_split < 0.0 || tar_N_split > 1.0 ){
+      throw ProblemSetupException("Error: The splits for the volatiles cannot be resolved for this coal in the NO model.", __FILE__, __LINE__);
+    }
+    return split;
+
+  };
+}
   void
-psNox::problemSetup(const ProblemSpecP& inputdb)
+psNOx::problemSetup(const ProblemSpecP& inputdb)
 {
+
   CoalHelper& coal_helper = CoalHelper::self();
+  ChemHelper& chemistry_helper = ChemHelper::self();
+
   ProblemSpecP db = inputdb;
   const ProblemSpecP params_root = db->getRootNode();
-  //read pressure
-  ChemHelper& helper = ChemHelper::self();
 
-  //read and calculate nitrogen content in coal, dry and ash free basis
-  if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
-    ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
-    if ( db_coal_props->findBlock("ultimate_analysis")){
-      ProblemSpecP db_ua = db_coal_props->findBlock("ultimate_analysis");
-      db_ua->require("N",_N_ad);
-      db_ua->require("ASH",_Ash_ad);
-      db_ua->require("H2O",_H2O_ad);
-    }
-    _Nit = _N_ad/(1-_Ash_ad-_H2O_ad);
+  CoalHelper::CoalDBInfo& coal_db = coal_helper.get_coal_db();
+
+  //Compute the nitrogen content, dry/ash-free
+  _Nit = coal_db.coal.N / ( 1. - coal_db.coal.H2O - coal_db.coal.ASH );
+
+  // A note on DEFAULT parameters:
+  // Default rate/split parameters are a result of the DTF analysis performed
+  // by Jeremy, Oscar, Phil and Sean. These parameters were from a best result from a Latin Hypercube
+  // sampling performed for a V/UQ analysis.
+  db->getWithDefault("tar_to_HCN",          _alpha2,         0.);
+  db->getWithDefault("tar_to_NH3",          _alpha3,         1.);
+
+  const double eps = 1e-8;
+  if  (_alpha2+_alpha3 > 1.0 + eps || _alpha2+_alpha3 < 0.0 - eps ){
+
+    throw ProblemSetupException("tar_to_HCN + tar_to_NH3 must be greater than 0 and less than 1.0.", __FILE__, __LINE__);
+
   }
 
-
-  db->getWithDefault("Tar_to_HCN",          _alpha2,         0.8);
-  db->getWithDefault("Tar_to_NH3",          _alpha3,         0.2);
-
-  if  (_alpha2+_alpha3>1.0 || _alpha2+_alpha3<0.0){
-    throw ProblemSetupException("Tar_to_HCN + Tar_to_NH3 must be greater than 0 and less than 1.0.", __FILE__, __LINE__);
-  }
   tarFrac = coal_helper.get_coal_db().Tar_fraction;
+
+  // Here we are constraining the values of the light gas split so that the
+  // total volatile split obtained matches that from
+  // Combustion of Solid Fuel and Waste by Tillman
   std::string coal_rank = coal_helper.get_coal_db().coal_rank;
   double volFrac=std::max(1e-20,1.0-tarFrac);
-  double F_v_hcn = 0.8; // values used if coal rank is unknown.
-  double F_v_nh3 = 0.2;
+  // Defaults (from UQ analysis)
+  double F_v_hcn = 0.7;
+  double F_v_nh3 = 0.3;
+
+  double y_HCN = 0.0;
+  double y_NH3 = 0.0;
+
+  // estimated from Tillman
   if (coal_rank=="lignite"){
-    double y_HCN=0.1;
-    double y_NH3=0.9;
-    F_v_hcn=std::max(0.0,(y_HCN-tarFrac*_alpha2)/volFrac);
-    F_v_nh3=std::max(0.0,(y_NH3-tarFrac*_alpha3)/volFrac);
-    //std::cout << "coal_rank " << coal_rank << std::endl;
-    //std::cout << "tarFrac " << tarFrac << std::endl;
-    //std::cout << "_alpha2 " << _alpha2 << std::endl;
-    //std::cout << "_alpha3 " << _alpha3 << std::endl;
-    //std::cout << "volFrac " << volFrac << std::endl;
-    //std::cout << "y_HCN " << y_HCN << std::endl;
-    //std::cout << "y_NH3 " << y_NH3 << std::endl;
-    //std::cout << "tarFrac*_alpha2 " << tarFrac*_alpha2 << std::endl;
-    //std::cout << "tarFrac*_alpha3 " << tarFrac*_alpha3 << std::endl;
-    //std::cout << "F_v_hcn " << F_v_hcn << std::endl;
-    //std::cout << "F_v_nh3 " << F_v_nh3 << std::endl;
-    if  (y_NH3-tarFrac*_alpha3<0.0 || y_HCN-tarFrac*_alpha2<0.0){
-      proc0cout << "Warning!! devol_to_HCN or devol_to_NH3 is being set to zero because the specified tar fraction yields more HCN or NH3 than possible given the target fraction." << endl;
-    }
+
+    y_HCN=0.1;
+    y_NH3=0.9;
+
   } else if (coal_rank=="high_volatile_bituminous"){
-    double y_HCN=0.45;
-    double y_NH3=0.4;
-    F_v_hcn=std::max(0.0,(y_HCN-tarFrac*_alpha2)/volFrac);
-    F_v_nh3=std::max(0.0,(y_NH3-tarFrac*_alpha3)/volFrac);
-    if  (y_NH3-tarFrac*_alpha3<0.0 || y_HCN-tarFrac*_alpha2<0.0){
-      proc0cout << "Warning!! devol_to_HCN or devol_to_NH3 is being set to zero because the specified tar fraction yields more HCN or NH3 than possible given the target fraction." << endl;
-    }
+
+    y_HCN=0.45;
+    y_NH3=0.4;
+
   } else if (coal_rank=="subbituminous"){
-    double y_HCN=0.2;
-    double y_NH3=0.77;
-    F_v_hcn=std::max(0.0,(y_HCN-tarFrac*_alpha2)/volFrac);
-    F_v_nh3=std::max(0.0,(y_NH3-tarFrac*_alpha3)/volFrac);
-    if  (y_NH3-tarFrac*_alpha3<0.0 || y_HCN-tarFrac*_alpha2<0.0){
-      proc0cout << "Warning!! devol_to_HCN or devol_to_NH3 is being set to zero because the specified tar fraction yields more HCN or NH3 than possible given the target fraction." << endl;
-    }
+
+    y_HCN=0.2;
+    y_NH3=0.77;
+
+  } else {
+
+    throw ProblemSetupException("Error: In NOx model, coal type not supported: "+coal_rank, __FILE__, __LINE__);
+
   }
+
+  F_v_hcn = split_lambda( y_HCN, tarFrac, _alpha2, volFrac );
+  F_v_nh3 = split_lambda( y_NH3, tarFrac, _alpha3, volFrac );
 
   db->getWithDefault("devol_to_HCN",        _beta2,          F_v_hcn);
   db->getWithDefault("devol_to_NH3",        _beta3,          F_v_nh3);
-  db->getWithDefault("charOxy_to_HCN",      _gamma2,         0.8);
-  db->getWithDefault("charOxy_to_NH3",      _gamma3,         0.2);
+  // Defaults from UQ analysis best fit
+  db->getWithDefault("charOxy_to_HCN",      _gamma2,         0.5);
+  db->getWithDefault("charOxy_to_NH3",      _gamma3,         0.5);
 
-
+  //NO direct pathways
    _beta1=1.0-_beta2-_beta3;     // devol
 
-   _alpha1=1.0-_alpha2-_alpha3;   // tar
+   _alpha1=1.0-_alpha2-_alpha3;  // tar
 
    _gamma1=1.0- _gamma2-_gamma3; // char-oxy
 
-
-  db->getWithDefault("PreExpReburn",_A_reburn  ,34830  );
-  db->getWithDefault("ExpReburn",   _E_reburn  ,19953.6);
-  db->getWithDefault("PowerReburn", _m_gr      ,2.25);
-
-   // Factor for A in first De soete reaction
-  db->getWithDefault("F1_De_soete", _F1_Desoete      ,12);
+  // Defaults from UQ analysis best fit
+  // reburn parameters
+  db->getWithDefault("PreExpReburn",_A_reburn  , 1000  );
+  db->getWithDefault("ExpReburn",   _E_reburn  , 27000 );
+  db->getWithDefault("PowerReburn", _m_gr      , 2.3   );
+   // (Factor for A in first De soete reaction)
+  db->getWithDefault("F1_De_soete", _F1_Desoete      ,1.);
 
   //read concentrations of species in the table
   db->getWithDefault("o2_label",             m_O2_name,            "O2");
@@ -137,7 +165,7 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("HCN_label",            HCN_name,             "HCN_zz");
   db->getWithDefault("NH3_label",            NH3_name,             "NH3_zz");
 
-  db->getWithDefault("Tar_src_label",        tar_src_name,    "eta_source3");
+  db->getWithDefault("tar_src_label",        tar_src_name,    "eta_source3");
 
   //read devol. & oxi. rate from coal particles
   ProblemSpecP db_source = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
@@ -173,14 +201,14 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
   HCN_src_label    = VarLabel::create( HCN_src_name, CCVariable<double>::getTypeDescription() );
   NH3_src_label    = VarLabel::create( NH3_src_name, CCVariable<double>::getTypeDescription() );
   //read concentrations of species in the table
-  helper.add_lookup_species( m_O2_name );
-  helper.add_lookup_species( m_N2_name );
-  helper.add_lookup_species( m_CO_name );
-  helper.add_lookup_species( m_H2O_name);
-  helper.add_lookup_species( m_H2_name );
-  helper.add_lookup_species( m_temperature_name);
-  helper.add_lookup_species( m_density_name);
-  helper.add_lookup_species( m_mix_mol_weight_name );
+  chemistry_helper.add_lookup_species( m_O2_name );
+  chemistry_helper.add_lookup_species( m_N2_name );
+  chemistry_helper.add_lookup_species( m_CO_name );
+  chemistry_helper.add_lookup_species( m_H2O_name);
+  chemistry_helper.add_lookup_species( m_H2_name );
+  chemistry_helper.add_lookup_species( m_temperature_name);
+  chemistry_helper.add_lookup_species( m_density_name);
+  chemistry_helper.add_lookup_species( m_mix_mol_weight_name );
   //read DQMOM Information
   m_coal_temperature_root  = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE);        // coal particle temperature
   m_weight_root            = "w";                                                                                // particle weight root name
@@ -203,11 +231,11 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
 // Method: Schedule the calculation of the source term
 //---------------------------------------------------------------------------
   void
-psNox::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
+psNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  ChemHelper& helper = ChemHelper::self();
+  ChemHelper& chemistry_helper = ChemHelper::self();
   _gasPressure=101325.;
-  ChemHelper::TableConstantsMapType the_table_constants = helper.get_table_constants();
+  ChemHelper::TableConstantsMapType the_table_constants = chemistry_helper.get_table_constants();
   if (the_table_constants != nullptr){
     auto press_iter = the_table_constants->find("Pressure");
     if (press_iter !=the_table_constants->end()){
@@ -215,8 +243,8 @@ psNox::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
     }
   }
 
-  std::string taskname = "psNox::eval";
-  Task* tsk = scinew Task(taskname, this, &psNox::computeSource, timeSubStep);
+  std::string taskname = "psNOx::eval";
+  Task* tsk = scinew Task(taskname, this, &psNOx::computeSource, timeSubStep);
   Task::WhichDW which_dw;
   if (timeSubStep == 0) {
     tsk->computes(NO_src_label);
@@ -302,7 +330,7 @@ psNox::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
 // Method: Actually compute the source term
 //---------------------------------------------------------------------------
   void
-psNox::computeSource( const ProcessorGroup* pc,
+psNOx::computeSource( const ProcessorGroup* pc,
     const PatchSubset*    patches,
     const MaterialSubset* matls,
     DataWarehouse*  old_dw,
@@ -740,12 +768,12 @@ psNox::computeSource( const ProcessorGroup* pc,
 // Method: Schedule initialization
 //---------------------------------------------------------------------------
   void
-psNox::sched_initialize( const LevelP& level, SchedulerP& sched )
+psNOx::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
 
-  ChemHelper& helper = ChemHelper::self();
+  ChemHelper& chemistry_helper = ChemHelper::self();
   _gasPressure=101325.;
-  ChemHelper::TableConstantsMapType the_table_constants = helper.get_table_constants();
+  ChemHelper::TableConstantsMapType the_table_constants = chemistry_helper.get_table_constants();
   if (the_table_constants != nullptr){
     auto press_iter = the_table_constants->find("Pressure");
     if (press_iter !=the_table_constants->end()){
@@ -753,9 +781,9 @@ psNox::sched_initialize( const LevelP& level, SchedulerP& sched )
     }
   }
 
-  string taskname = "psNox::initialize";
+  string taskname = "psNOx::initialize";
 
-  Task* tsk = scinew Task(taskname, this, &psNox::initialize);
+  Task* tsk = scinew Task(taskname, this, &psNOx::initialize);
 
   tsk->computes(NO_src_label);
   tsk->computes(HCN_src_label);
@@ -765,7 +793,7 @@ psNox::sched_initialize( const LevelP& level, SchedulerP& sched )
 
 }
   void
-psNox::initialize( const ProcessorGroup* pc,
+psNOx::initialize( const ProcessorGroup* pc,
     const PatchSubset* patches,
     const MaterialSubset* matls,
     DataWarehouse* old_dw,
