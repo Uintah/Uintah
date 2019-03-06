@@ -293,21 +293,21 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
       } else if (src_type == "momic_soot") {
         SourceTermBase::Builder* srcBuilder = scinew MoMICSoot::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
-      
+
       } else if (src_type == "mono_soot") {
         SourceTermBase::Builder* srcBuilder = scinew MonoSoot::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
-      
+
       } else if (src_type == "ht_convection") {
         SourceTermBase::Builder* srcBuilder = scinew HTConvection::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
-      
+
       } else if (src_type == "zzNox_Solid") {
         SourceTermBase::Builder* srcBuilder = scinew ZZNoxSolid::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
-      } else if (src_type == "psNox") {
-        SourceTermBase::Builder* srcBuilder = scinew psNox::Builder(src_name, required_varLabels, lab);
+      } else if (src_type == "psNOx") {
+        SourceTermBase::Builder* srcBuilder = scinew psNOx::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "mms1"){

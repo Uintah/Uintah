@@ -2276,32 +2276,14 @@
             <soot_mass_src label="BrownYsoot"/>
             <mass_balance_src label="eta_source3"/>
           </src>
-          <src label="ps_Nox_source" type="psNox">
-            <devol_to_HCN>0.677</devol_to_HCN>
-            <devol_to_NH3>0.323</devol_to_NH3>
-            <charOxy_to_HCN>0.503</charOxy_to_HCN>
-            <charOxy_to_NH3>0.043</charOxy_to_NH3>
-            <Tar_to_HCN>0.003</Tar_to_HCN>
-            <Tar_to_NH3>0.997</Tar_to_NH3>
-            <PreExpReburn>996.578</PreExpReburn>
-            <ExpReburn>27033.419</ExpReburn>
-            <PowerReburn>2.322</PowerReburn>
-            <F1_De_soete>1.546</F1_De_soete>
+          <src label="ps_NOx_source" type="psNOx">
             <NO_src label="NO_ps_src" />
             <HCN_src label="HCN_ps_src" />
             <NH3_src label="NH3_ps_src" />
-            <o2_label>O2</o2_label>
-            <n2_label>N2</n2_label>
-            <co_label>CO</co_label>
-            <h2o_label>H2O</h2o_label>
-            <h2_label>H2</h2_label>
-            <temperature_label>temperature</temperature_label>
-            <density_label>density</density_label>
-            <mix_mol_weight_label>mixture_molecular_weight</mix_mol_weight_label>
             <NO_label>NO_ps</NO_label>
             <HCN_label>HCN_ps</HCN_label>
             <NH3_label>NH3_ps</NH3_label>
-            <Tar_src_label>eta_source3</Tar_src_label>
+            <tar_src_label>eta_source3</tar_src_label>
           </src>
         </Sources>
       </TransportEqns>

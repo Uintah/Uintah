@@ -134,19 +134,19 @@ class PIDXOutputContext {
         //__________________________________
         // debugging
         void print(){
-          std::cout << Parallel::getMPIRank() 
-                    << "PIDXFlags: " << std::setw(26) << "\n"
-                    << "   checkpoint IO type: " <<  d_checkpointFlags.ioType << "\n"
-                    << "   checkpoint compressionType: "<< getCompressTypeName( d_checkpointFlags.compressionType ) << "\n"
-                    << "   checkpoint compressionBitrate: "<< d_checkpointFlags.compressionBitrate << "\n"
-                    << "   checkpoint restructure box size: " << d_checkpointFlags.restructureBoxSize << "\n"
-                    << "   checkpoint pipe size: " << d_checkpointFlags.pipeSize << "\n"
-                    << "   visIo IO type: " <<  d_visIoFlags.ioType << "\n"
-                    << "   visIo compressionType: "<< getCompressTypeName( d_visIoFlags.compressionType ) << "\n"
-                    << "   visIo restructure box size: " << d_visIoFlags.restructureBoxSize << "\n"
-                    << "   visIo partition count: " << d_visIoFlags.partitionCount << "\n"
-                    << "   visIo block size: " << d_visIoFlags.blockSize << "\n"
-                    << "   visIo block count: " << d_visIoFlags.blockCount << "\n";
+          //std::cout << Parallel::getMPIRank() 
+                    //<< "PIDXFlags: " << std::setw(26) << "\n"
+                    //<< "   checkpoint IO type: " <<  d_checkpointFlags.ioType << "\n"
+                    //<< "   checkpoint compressionType: "<< getCompressTypeName( d_checkpointFlags.compressionType ) << "\n"
+                    //<< "   checkpoint compressionBitrate: "<< d_checkpointFlags.compressionBitrate << "\n"
+                    //<< "   checkpoint restructure box size: " << d_checkpointFlags.restructureBoxSize << "\n"
+                    //<< "   checkpoint pipe size: " << d_checkpointFlags.pipeSize << "\n"
+                    //<< "   visIo IO type: " <<  d_visIoFlags.ioType << "\n"
+                    //<< "   visIo compressionType: "<< getCompressTypeName( d_visIoFlags.compressionType ) << "\n"
+                    //<< "   visIo restructure box size: " << d_visIoFlags.restructureBoxSize << "\n"
+                    //<< "   visIo partition count: " << d_visIoFlags.partitionCount << "\n"
+                    //<< "   visIo block size: " << d_visIoFlags.blockSize << "\n"
+                    //<< "   visIo block count: " << d_visIoFlags.blockCount << "\n";
         }  
 
         void problemSetup( const ProblemSpecP& params );
@@ -173,9 +173,9 @@ class PIDXOutputContext {
 
       // debugging
       void print(std::ostream& out){
-        out  << Parallel::getMPIRank()
-             << " patchExtents: patchOffset: " << patchOffset << " patchSize: " << patchSize << ", totalCells_EC " << totalCells_EC 
-             << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << "\n"; 
+        //out  << Parallel::getMPIRank()
+             //<< " patchExtents: patchOffset: " << patchOffset << " patchSize: " << patchSize << ", totalCells_EC " << totalCells_EC 
+             //<< ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << "\n"; 
       }
     };
     
