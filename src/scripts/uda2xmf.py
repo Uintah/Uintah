@@ -19,13 +19,13 @@ Summary:
 
 Usage:      python uda2xmf.py [-flages] <uda_directory>
 
-Input:      Mesh files from Abaqus (*.inp), Tetgen (*.ele, *.node), etc.describing geometry for particle domains (GIMP,CPDI - HEX or CPTI - TET)
-Output:     Uintah *.pts files created for simulations 
+Input:      Uintah *.uda directory
+Output:     XDMF *.xmf and HDF5 *.h5 files for visualization 
             
 Revisions:  YYMMDD    Author            Comments
 -------------------------------------------------------------------------------------
-            150205    Brian Leavy       Abaqus import option added 
-            140505    Brian Leavy       created mesh2uintah.py
+            171201    Ashley Spear and students Speed up of python code 
+            151201    Brian Leavy       Initial visualization tool 
 """ 
 try:
     from mpi4py import MPI
