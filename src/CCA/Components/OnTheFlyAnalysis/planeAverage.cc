@@ -420,6 +420,7 @@ void planeAverage::initialize(const ProcessorGroup  *,
 
     const TypeDescription::Type td = planarVars[i]->baseType;
 
+    IntVector EC  = IntVector( 2,2,2 ) * level->getExtraCells();    
     IntVector L_lo_EC;      // includes extraCells
     IntVector L_hi_EC;
 
@@ -428,15 +429,15 @@ void planeAverage::initialize(const ProcessorGroup  *,
     int nPlanes = 0;
     switch( d_planeOrientation ){
       case XY:{
-        nPlanes = L_hi_EC.z() - L_lo_EC.z() - 2 ;   // subtract 2 for interior cells
+        nPlanes = L_hi_EC.z() - L_lo_EC.z() - EC.z();   // subtract EC for interior cells
         break;
       }
       case XZ:{
-        nPlanes = L_hi_EC.y() - L_lo_EC.y() - 2 ;
+        nPlanes = L_hi_EC.y() - L_lo_EC.y() - EC.y();
         break;
       }
       case YZ:{
-        nPlanes = L_hi_EC.x() - L_lo_EC.x() - 2 ;
+        nPlanes = L_hi_EC.x() - L_lo_EC.x() - EC.x();
         break;
       }
       default:
