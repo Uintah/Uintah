@@ -16,6 +16,8 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
 
+#include <functional>
+
 //===========================================================================
 
 using namespace std;
