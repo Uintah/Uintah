@@ -15,6 +15,8 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
 
+#include <functional>
+
 //===========================================================================
 
 using namespace std;
