@@ -49,38 +49,38 @@ public:
                        const Patch* patch,
                        DataWarehouse* new_dw,
                        const CCVariable<vertex<T> >& q_vertex, 
-                          CCVariable<T>& q_grad_x,
-                          CCVariable<T>& q_grad_y,
-                          CCVariable<T>& q_grad_z);
-                       
+                       CCVariable<T>& q_grad_x,    
+                       CCVariable<T>& q_grad_y,    
+                       CCVariable<T>& q_grad_z);   
+                                                   
   template<class T> 
   void Q_vertex( const bool useCompatibleFluxes,
                  const CCVariable<T>& q_CC,
                  CCVariable<vertex<T> >& q_vertex,
                  const Patch* patch,
-                  const CCVariable<T>& q_grad_x,
-                  const CCVariable<T>& q_grad_y,
-                  const CCVariable<T>& q_grad_z);
+                 const CCVariable<T>& q_grad_x,  
+                 const CCVariable<T>& q_grad_y,  
+                 const CCVariable<T>& q_grad_z); 
   
                                  
   template<class T> 
-    inline void q_CCMaxMin(const CCVariable<T>& q_CC,
-                           const Patch* patch,
-                              CCVariable<T>& q_CC_max, 
-                              CCVariable<T>& q_CC_min);
+  void q_CCMaxMin(const CCVariable<T>& q_CC,
+                  const Patch* patch,
+                  CCVariable<T>& q_CC_max, 
+                  CCVariable<T>& q_CC_min);
                            
   template<class T>                                    
   void gradQ( const CCVariable<T>& q_CC,
               const Patch* patch,
-               CCVariable<T>& q_grad_x,
-               CCVariable<T>& q_grad_y,
-               CCVariable<T>& q_grad_z);
+              CCVariable<T>& q_grad_x,
+              CCVariable<T>& q_grad_y,
+              CCVariable<T>& q_grad_z);
  
   void mass_massVertex_ratio( const CCVariable<double>& mass_CC,
-                            const Patch* patch,
-                               const CCVariable<double>& q_grad_x,
-                               const CCVariable<double>& q_grad_y,
-                               const CCVariable<double>& q_grad_z);
+                              const Patch* patch,
+                              const CCVariable<double>& q_grad_x,  
+                              const CCVariable<double>& q_grad_y,  
+                              const CCVariable<double>& q_grad_z); 
 
   template <class T>
   bool 
@@ -102,12 +102,12 @@ public:
  Purpose   Find the x, y, z gradients of q_CC, centered differencing 
 _____________________________________________________________________*/
 template <class T>
-inline void
+void
 SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
                         const Patch* patch,
-                           CCVariable<T>& q_grad_x,
-                           CCVariable<T>& q_grad_y,
-                           CCVariable<T>& q_grad_z)
+                        CCVariable<T>& q_grad_x,
+                        CCVariable<T>& q_grad_y,
+                        CCVariable<T>& q_grad_z)
 {
   T zero(0.0);
   q_grad_x.initialize(zero);
@@ -214,11 +214,11 @@ Purpose~   This calculates the max and min values of q_CC from the surrounding
            cells
 _____________________________________________________________________*/
 template <class T>
-inline void
+void
 SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
                             const Patch* patch,
-                               CCVariable<T>& q_CC_max, 
-                               CCVariable<T>& q_CC_min)
+                            CCVariable<T>& q_CC_max, 
+                            CCVariable<T>& q_CC_min)
 {  
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
