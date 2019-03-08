@@ -91,7 +91,9 @@ public:
                      const CCVariable<double>& mass,
                      CCVariable<T>& q_CC);
                        
-  CCVariable<fflux>  r_out_x, r_out_y, r_out_z;
+  CCVariable<fflux> d_r_out_x;
+  CCVariable<fflux> d_r_out_y; 
+  CCVariable<fflux> d_r_out_z;
   CCVariable<vertex<double> > d_mass_massVertex;
   
   bool d_smokeOnOff; 
@@ -233,20 +235,24 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
     IntVector bk= c + IntVector( 0, 0,-1); 
 
     T max_tmp, min_tmp;
-    max_tmp = Max(q_CC[r], q_CC[l]);
-    min_tmp = Min(q_CC[r], q_CC[l]);
-
-    max_tmp = Max(max_tmp, q_CC[t]);
-    min_tmp = Min(min_tmp, q_CC[t]);
-
-    max_tmp = Max(max_tmp, q_CC[b]);
-    min_tmp = Min(min_tmp, q_CC[b]);
-
-    max_tmp = Max(max_tmp, q_CC[f]);
-    min_tmp = Min(min_tmp, q_CC[f]);
-
-    max_tmp = Max(max_tmp, q_CC[bk]);
-    min_tmp = Min(min_tmp, q_CC[bk]);
+    T q_R  = q_CC[r];      // optimization mimize number of [] calls
+    T q_L  = q_CC[l];
+    T q_T  = q_CC[t];
+    T q_B  = q_CC[b];
+    T q_F  = q_CC[f];
+    T q_BK = q_CC[bk];
+        
+    max_tmp = Max( q_R, q_L );
+    max_tmp = Max( max_tmp, q_T );
+    max_tmp = Max( max_tmp, q_B );
+    max_tmp = Max( max_tmp, q_F );
+    max_tmp = Max( max_tmp, q_BK );
+    
+    min_tmp = Min( q_R, q_L );
+    min_tmp = Min( min_tmp, q_T );
+    min_tmp = Min( min_tmp, q_B );
+    min_tmp = Min( min_tmp, q_F );
+    min_tmp = Min( min_tmp, q_BK );
 
     q_CC_max[c] = max_tmp;
     q_CC_min[c] = min_tmp;

@@ -52,11 +52,11 @@ SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw,
                                          const bool isNewGrid) 
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
-  new_dw->allocateTemporary(r_out_x,       patch, gac, 1); 
-  new_dw->allocateTemporary(r_out_y,       patch, gac, 1); 
-  new_dw->allocateTemporary(r_out_z,       patch, gac, 1);
-  new_dw->allocateTemporary(d_mass_massVertex, patch, gac, 1);
-  new_dw->allocateTemporary(d_mass_slabs,      patch, gac, 1);
+  new_dw->allocateTemporary( d_r_out_x,         patch, gac, 1); 
+  new_dw->allocateTemporary( d_r_out_y,         patch, gac, 1); 
+  new_dw->allocateTemporary( d_r_out_z,         patch, gac, 1);
+  new_dw->allocateTemporary( d_mass_massVertex, patch, gac, 1);
+  new_dw->allocateTemporary( d_mass_slabs,      patch, gac, 1);
   
   // Initialize temporary variables when the grid changes
   if(isNewGrid){   
@@ -67,10 +67,10 @@ SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw,
       const IntVector& c = *iter;
 
       for(int face = TOP; face <= BACK; face++ )  {
-        r_out_x[c].d_fflux[face]  = EVILNUM;
-        r_out_y[c].d_fflux[face]  = EVILNUM;
-        r_out_z[c].d_fflux[face]  = EVILNUM;
-        d_mass_slabs[c].d_data[face] = EVILNUM;
+        d_r_out_x[c].fflux[face]   = EVILNUM;
+        d_r_out_y[c].fflux[face]   = EVILNUM;
+        d_r_out_z[c].fflux[face]   = EVILNUM;
+        d_mass_slabs[c].fdata[face] = EVILNUM;
       }
       for(int i = 0; i< 8; i++){
         d_mass_massVertex[c].d_vrtx[i] = EVILNUM;
@@ -153,18 +153,18 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
     double delX_Y = delX * delY;
     double delY_Z = delY * delZ;
     fflux& ofs = VB->OFS[c];
-    ofs.d_fflux[TOP]   = delY_top   * delX_Z;
-    ofs.d_fflux[BOTTOM]= delY_bottom* delX_Z;
-    ofs.d_fflux[RIGHT] = delX_right * delY_Z;
-    ofs.d_fflux[LEFT]  = delX_left  * delY_Z;
-    ofs.d_fflux[FRONT] = delZ_front * delX_Y;
-    ofs.d_fflux[BACK]  = delZ_back  * delX_Y; 
+    ofs.fflux[TOP]   = delY_top   * delX_Z;
+    ofs.fflux[BOTTOM]= delY_bottom* delX_Z;
+    ofs.fflux[RIGHT] = delX_right * delY_Z;
+    ofs.fflux[LEFT]  = delX_left  * delY_Z;
+    ofs.fflux[FRONT] = delZ_front * delX_Y;
+    ofs.fflux[BACK]  = delZ_back  * delX_Y; 
     
     //__________________________________
     //  Bullet proofing
     double total_fluxout = 0.0;
     for(int face = TOP; face <= BACK; face++ )  {
-      total_fluxout  += ofs.d_fflux[face];
+      total_fluxout  += ofs.fflux[face];
     }
     if(total_fluxout > vol){
       error = true;
@@ -176,33 +176,33 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
     r_y = delY_bottom/2.0 - delY_top/2.0;
     r_z = delZ_back/2.0   - delZ_front/2.0;
 
-    fflux& rx = r_out_x[c];
-    fflux& ry = r_out_y[c];
-    fflux& rz = r_out_z[c];
+    fflux& rx = d_r_out_x[c];
+    fflux& ry = d_r_out_y[c];
+    fflux& rz = d_r_out_z[c];
 
-    rx.d_fflux[RIGHT] = delX/2.0 - delX_right/2.0;
-    ry.d_fflux[RIGHT] = r_y;
-    rz.d_fflux[RIGHT] = r_z;
+    rx.fflux[RIGHT] = delX/2.0 - delX_right/2.0;
+    ry.fflux[RIGHT] = r_y;
+    rz.fflux[RIGHT] = r_z;
 
-    rx.d_fflux[LEFT] = delX_left/2.0 - delX/2.0;
-    ry.d_fflux[LEFT] = r_y;
-    rz.d_fflux[LEFT] = r_z;
+    rx.fflux[LEFT] = delX_left/2.0 - delX/2.0;
+    ry.fflux[LEFT] = r_y;
+    rz.fflux[LEFT] = r_z;
 
-    rx.d_fflux[TOP] = r_x;
-    ry.d_fflux[TOP] = delY/2.0 - delY_top/2.0;
-    rz.d_fflux[TOP] = r_z;
+    rx.fflux[TOP] = r_x;
+    ry.fflux[TOP] = delY/2.0 - delY_top/2.0;
+    rz.fflux[TOP] = r_z;
 
-    rx.d_fflux[BOTTOM] = r_x;
-    ry.d_fflux[BOTTOM] = delY_bottom/2.0 - delY/2.0;
-    rz.d_fflux[BOTTOM] = r_z;
+    rx.fflux[BOTTOM] = r_x;
+    ry.fflux[BOTTOM] = delY_bottom/2.0 - delY/2.0;
+    rz.fflux[BOTTOM] = r_z;
 
-    rx.d_fflux[FRONT] = r_x;
-    ry.d_fflux[FRONT] = r_y;
-    rz.d_fflux[FRONT] = delZ/2.0 - delZ_front/2.0;
+    rx.fflux[FRONT] = r_x;
+    ry.fflux[FRONT] = r_y;
+    rz.fflux[FRONT] = delZ/2.0 - delZ_front/2.0;
 
-    rx.d_fflux[BACK] = r_x;
-    ry.d_fflux[BACK] = r_y;
-    rz.d_fflux[BACK] = delZ_back/2.0 - delZ/2.0;
+    rx.fflux[BACK] = r_x;
+    ry.fflux[BACK] = r_y;
+    rz.fflux[BACK] = delZ_back/2.0 - delZ/2.0;
   }//cell iterator
   
   //__________________________________
@@ -223,8 +223,8 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
       fflux ofs = VB->OFS[c];
       
       for(int face = TOP; face <= BACK; face++ )  {
-        total_fluxout  += VB->OFS[c].d_fflux[face];
-        VB->OFS[c].d_fflux[face] = 0.0;
+        total_fluxout  += VB->OFS[c].fflux[face];
+        VB->OFS[c].fflux[face] = 0.0;
       }
       
       // keep track of which cells are bad
@@ -486,11 +486,11 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
       //__________________________________
       //   S L A B S
       IntVector ac = c + S_ac[f];     // slab adjacent cell
-      double outfluxVol = OFS[c ].d_fflux[OF_slab[f]];
-      double influxVol  = OFS[ac].d_fflux[IF_slab[f]];
+      double outfluxVol = OFS[c ].fflux[OF_slab[f]];
+      double influxVol  = OFS[ac].fflux[IF_slab[f]];
 
-      T q_faceFlux_tmp = q_OAFS[ac].d_data[IF_slab[f]] * influxVol
-                       - q_OAFS[c].d_data[OF_slab[f]] * outfluxVol;
+      T q_faceFlux_tmp = q_OAFS[ac].fdata[IF_slab[f]] * influxVol
+                       - q_OAFS[c].fdata[OF_slab[f]] * outfluxVol;
                                 
       faceVol[f]       = outfluxVol +  influxVol;
       q_face_flux[f]   = q_faceFlux_tmp; 
@@ -532,14 +532,14 @@ SecondOrderAdvector::qAverageFlux( const bool useCompatibleFluxes,
       T q_grad_Y = grad_y[c];
       T q_grad_Z = grad_z[c];
       facedata<T>& q_slab = q_OAFS[c];
-      const fflux& rx = r_out_x[c];
-      const fflux& ry = r_out_y[c];
-      const fflux& rz = r_out_z[c];
+      const fflux& rx = d_r_out_x[c];
+      const fflux& ry = d_r_out_y[c];
+      const fflux& rz = d_r_out_z[c];
 
       for (int face = TOP; face <= BACK; face ++){
-        q_slab.d_data[face] = q_grad_X * rx.d_fflux[face] +         
-                              q_grad_Y * ry.d_fflux[face] +               
-                              q_grad_Z * rz.d_fflux[face] + Q_CC;   
+        q_slab.fdata[face] = q_grad_X * rx.fflux[face] +         
+                              q_grad_Y * ry.fflux[face] +               
+                              q_grad_Z * rz.fflux[face] + Q_CC;   
       } 
     }
   }
@@ -554,17 +554,17 @@ SecondOrderAdvector::qAverageFlux( const bool useCompatibleFluxes,
       T q_grad_Z = grad_z[c];
       
       facedata<T>& q_slab = q_OAFS[c];
-      const fflux& rx = r_out_x[c];
-      const fflux& ry = r_out_y[c];
-      const fflux& rz = r_out_z[c];
+      const fflux& rx = d_r_out_x[c];
+      const fflux& ry = d_r_out_y[c];
+      const fflux& rz = d_r_out_z[c];
       const facedata<double> mass_slab = d_mass_slabs[c];
       const double mass = mass_CC[c];
       
       for (int face = TOP; face <= BACK; face ++){
-        q_slab.d_data[face] = mass_slab.d_data[face] * Q_CC 
-            + mass * ( q_grad_X * rx.d_fflux[face] +         
-                       q_grad_Y * ry.d_fflux[face] +               
-                       q_grad_Z * rz.d_fflux[face]);
+        q_slab.fdata[face] = mass_slab.fdata[face] * Q_CC 
+            + mass * ( q_grad_X * rx.fflux[face] +         
+                       q_grad_Y * ry.fflux[face] +               
+                       q_grad_Z * rz.fflux[face]);
       } 
     }
   }
@@ -588,11 +588,11 @@ void SecondOrderAdvector::q_FC_operator(CellIterator iter,
      
      // face:           LEFT,   BOTTOM,   BACK  
      // IF_slab[face]:  RIGHT,  TOP,      FRONT
-    double outfluxVol = OFS[R].d_fflux[face];
-    double influxVol  = OFS[L].d_fflux[IF_slab[face]];
+    double outfluxVol = OFS[R].fflux[face];
+    double influxVol  = OFS[L].fflux[IF_slab[face]];
                        
-    double q_faceFlux = q_OAFS[L].d_data[IF_slab[face]] * influxVol 
-                      - q_OAFS[R].d_data[face] * outfluxVol;
+    double q_faceFlux = q_OAFS[L].fdata[IF_slab[face]] * influxVol 
+                      - q_OAFS[R].fdata[face] * outfluxVol;
                       
     double faceVol = outfluxVol + influxVol;
     
@@ -673,8 +673,8 @@ void SecondOrderAdvector::q_FC_flux_operator(CellIterator iter,
      
      // face:           LEFT,   BOTTOM,   BACK  
      // IF_slab[face]:  RIGHT,  TOP,      FRONT
-    double outfluxVol = OFS[c].d_fflux[out_indx];
-    double influxVol  = OFS[ac].d_fflux[in_indx];
+    double outfluxVol = OFS[c].fflux[out_indx];
+    double influxVol  = OFS[ac].fflux[in_indx];
                        
     //  if(is_Q_massSpecific) then
     //    q_OAFS = (mass, momentum, sp_vol*mass, transportedVars) 
@@ -682,8 +682,8 @@ void SecondOrderAdvector::q_FC_flux_operator(CellIterator iter,
     //    q_OAFS = (vol_frac)
     //  be careful with the units.
     //
-    q_FC_flux[c] += (q_OAFS[ac].d_data[in_indx] * influxVol 
-                   - q_OAFS[c].d_data[out_indx] * outfluxVol) * invVol;
+    q_FC_flux[c] += (q_OAFS[ac].fdata[in_indx] * influxVol 
+                   - q_OAFS[c].fdata[out_indx] * outfluxVol) * invVol;
   }
 }
 /*_____________________________________________________________________
