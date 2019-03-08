@@ -129,10 +129,13 @@ namespace Uintah {
 			ParticleVariable<double> pPermeability;
 			ParticleVariable<Vector> pVelocityLiquid;
 			ParticleVariable<Matrix3>pVelocityGradLiquid;
-
+			
 			ParticleVariable<double> pMassSolid;
 			ParticleVariable<double> pMassLiquid;
 			ParticleVariable<double> pBulkModulLiquid;
+
+			// Generalized Alpha scheme
+			ParticleVariable<Vector> pAcceleration;
 
 		} ParticleVars;
 
@@ -195,6 +198,7 @@ namespace Uintah {
 		bool d_withGaussSolver;
 
 		bool d_DOUBLEMPM;
+		bool d_GeneralizedAlpha;
 
 		std::vector<const VarLabel* > particle_state, particle_state_preReloc;
 

@@ -152,6 +152,9 @@ WARNING
    double getInitialPermeability() const;
    double getBulkLiquidModulus() const;
 
+   // For Generalized Alpha scheme
+   //double getSpectralRadius() const;
+
    int nullGeomObject() const;
 
 
@@ -204,6 +207,10 @@ WARNING
    double d_Permeability;
    double d_densityLiquid;
    double d_BulkLiquidModulus;
+
+   // for Generalized Alpha scheme
+   //double d_SpectralRadius;
+
 
    // for autocycleflux boundary condtions
    bool d_do_conc_reduction;

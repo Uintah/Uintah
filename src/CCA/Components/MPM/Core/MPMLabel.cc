@@ -310,8 +310,21 @@ MPMLabel::MPMLabel()
   pNegChargeFluxLabel_preReloc = VarLabel::create("p.negChargeFlux+",
         ParticleVariable<Vector>::getTypeDescription() );
 
+  // Generalized Alpha scheme
+
+  gAccelerationBeginLabel = VarLabel::create("g.accelerationBegin",
+	  NCVariable<Vector>::getTypeDescription());
+
+  gAccelerationBeginNewLabel = VarLabel::create("g.accelerationBeginNew",
+	  NCVariable<Vector>::getTypeDescription());
+
+  gAccelerationMiddleLabel = VarLabel::create("g.accelerationMiddle",
+	  NCVariable<Vector>::getTypeDescription());
+
+  gAccelerationEndLabel = VarLabel::create("g.accelerationEnd",
+	  NCVariable<Vector>::getTypeDescription());
+
   // Node Centered Variables
-  
   gAccelerationLabel = VarLabel::create( "g.acceleration",
                         NCVariable<Vector>::getTypeDescription() );
 
@@ -847,6 +860,8 @@ MPMLabel::MPMLabel()
   // for assigning particle ids
   pCellNACZIDLabel =
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
+
+
 } 
 
 MPMLabel::~MPMLabel()
@@ -944,6 +959,12 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pNegChargeFluxLabel);
   VarLabel::destroy(pNegChargeFluxLabel_preReloc);
 
+  // Generalized Alpha scheme
+  VarLabel::destroy(gAccelerationBeginLabel);
+  VarLabel::destroy(gAccelerationBeginNewLabel);
+  VarLabel::destroy(gAccelerationMiddleLabel);
+  VarLabel::destroy(gAccelerationEndLabel);
+   
   VarLabel::destroy(gAccelerationLabel);
   VarLabel::destroy(gColorLabel);
   VarLabel::destroy(gMassLabel);

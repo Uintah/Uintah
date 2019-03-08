@@ -135,6 +135,13 @@ namespace Uintah {
       const VarLabel* pNegChargeFluxLabel;
       const VarLabel* pNegChargeFluxLabel_preReloc;
       
+
+	  // Generalized Alpha scheme
+	  const VarLabel* gAccelerationBeginLabel;
+	  const VarLabel* gAccelerationBeginNewLabel;
+	  const VarLabel* gAccelerationMiddleLabel;
+	  const VarLabel* gAccelerationEndLabel;
+	  	   
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;
       const VarLabel* gMassLabel;

@@ -39,7 +39,6 @@
 #include <Core/Math/Short27.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Containers/StaticArray.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
@@ -182,7 +181,7 @@ void HypoplasticB::initializeCMData(const Patch* patch,
 
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
-  StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
+  std::vector<ParticleVariable<double> > ISVs(d_NINSV+1);
 
   cout << "In initializeCMData" << endl;
   for(int i=0;i<d_NINSV;i++){
@@ -278,7 +277,7 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-    StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
+	std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],           ISVLabels[i],                 pset);
     }
@@ -293,7 +292,7 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
     new_dw->get(pvolume_new,     lb->pVolumeLabel_preReloc,              pset);
     new_dw->get(velGrad,         lb->pVelGradLabel_preReloc,             pset);
 
-    StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+	std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
     }
@@ -449,8 +448,8 @@ void HypoplasticB::carryForward(const PatchSubset* patches,
     carryForwardSharedData(pset, old_dw, new_dw, matl);
 
     // Carry forward the data local to this constitutive model
-    StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
-    StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+	std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
+	std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
 
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],ISVLabels[i], pset);

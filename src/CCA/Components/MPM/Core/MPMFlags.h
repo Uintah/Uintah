@@ -132,8 +132,13 @@ class Output;
 	bool		d_DOUBLEMPM;
 	bool        d_insertPorePressure;                        // Prescribe Pore Pressure
 	std::string d_insertPorePressureFile;                   // File containing prescribed Pore Pressure
+	bool		d_NullSpaceFilter;
 
-    // flags for turning on/off the reduction variable calculations
+	// Flag for Generalized Alpha scheme
+	bool        d_GeneralizedAlpha;
+	double      d_SpectralRadius;
+
+	// flags for turning on/off the reduction variable calculations
     struct reductionVars{
      bool mass;
      bool momentum;

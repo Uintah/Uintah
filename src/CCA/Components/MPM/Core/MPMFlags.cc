@@ -133,7 +133,11 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   // DOUBLEMPM
   d_DOUBLEMPM						= false;
   d_insertPorePressure				= false;
+  d_NullSpaceFilter					= false;
 
+  // Generalized Alpha scheme
+  d_GeneralizedAlpha   			    = false;
+  d_SpectralRadius					= 1;
 }
 
 MPMFlags::~MPMFlags()
@@ -404,7 +408,12 @@ else{
   if (d_insertPorePressure) {
 	  mpm_flag_ps->require("InsertPorePressureFile", d_insertPorePressureFile);
   }
+  mpm_flag_ps->get("NullSpaceFilter", d_NullSpaceFilter);
 
+
+  // Generalized Alpha scheme
+  mpm_flag_ps->get("GeneralizedAlpha", d_GeneralizedAlpha);
+  mpm_flag_ps->get("SpectralRadius", d_SpectralRadius);
 }
 
 void
@@ -448,13 +457,21 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("UsePrescribedDeformation",           d_prescribeDeformation);
 
   // DOUBLEMPM
-  ps->appendElement("DOUBLEMPM",						  d_DOUBLEMPM);
-  ps->appendElement("InsertPorePressure", d_insertPorePressure);
+  ps->appendElement("DOUBLEMPM", d_DOUBLEMPM);
 
+  ps->appendElement("InsertPorePressure", d_insertPorePressure);
   if (d_insertPorePressure) {
 	  ps->appendElement("InsertPorePressureFile", d_insertPorePressureFile);
   }
+  ps->appendElement("NullSpaceFilter", d_NullSpaceFilter);
 
+  // Generalized Alpha scheme
+  ps->appendElement("GeneralizedAlpha", d_GeneralizedAlpha);
+  if (d_GeneralizedAlpha) {
+	  ps->appendElement("SpectralRadius", d_SpectralRadius);
+  }
+
+  // PrescribeDeformation
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);
   }

@@ -260,7 +260,7 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
 	  mpm_ps->appendElement("Porosity", d_Porosity);
 	  mpm_ps->appendElement("Permeability", d_Permeability);
 	  mpm_ps->appendElement("BulkLiquidModulus", d_BulkLiquidModulus);
- // }
+ //}
 
  
 

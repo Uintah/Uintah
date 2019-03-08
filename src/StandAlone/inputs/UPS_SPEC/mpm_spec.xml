@@ -13,6 +13,9 @@
       <axisymmetric                       spec="OPTIONAL BOOLEAN" />
       <AMR                                spec="OPTIONAL BOOLEAN" />
       <DOUBLEMPM                          spec="OPTIONAL BOOLEAN" />
+	  <NullSpaceFilter                    spec="OPTIONAL BOOLEAN" />
+	  <GeneralizedAlpha                   spec="OPTIONAL BOOLEAN" />
+	  <SpectralRadius                     spec="OPTIONAL DOUBLE 'positive'"/> 
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
       <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
       <computeColinearNormals             spec="OPTIONAL BOOLEAN" />
@@ -152,11 +155,11 @@
       
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
-        <density                       spec="REQUIRED DOUBLE" />
-	<density_liquid                 spec="OPTIONAL DOUBLE" />
-	<Porosity                	spec="OPTIONAL DOUBLE" />
-	<Permeability            	spec="OPTIONAL DOUBLE" />
-	<BulkLiquidModulus          	spec="OPTIONAL DOUBLE" />
+    <density                         	spec="REQUIRED DOUBLE" />
+	<density_liquid                  	spec="OPTIONAL DOUBLE" />
+	<Porosity                			spec="OPTIONAL DOUBLE" />
+	<Permeability            			spec="OPTIONAL DOUBLE" />
+	<BulkLiquidModulus          		spec="OPTIONAL DOUBLE" />
 	
         <include href="constitutive_models.xml" />
         <!--__________________________________-->

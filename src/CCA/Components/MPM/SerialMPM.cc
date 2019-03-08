@@ -708,7 +708,14 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleDiffusionInterfaceDiv(        sched, patches, matls);
   }
 
-  scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
+  if (flags->d_GeneralizedAlpha) {
+	  scheduleComputeAndIntegrateAccelerationGeneralizedAlpha(sched, patches, matls);
+	  //scheduleRelocateParticle(sched, patches, matls);
+  }
+  else {
+	  scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
+  }
+
   if (flags->d_doScalarDiffusion) {
     scheduleComputeAndIntegrateDiffusion( sched, patches, matls);
   }
@@ -728,7 +735,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleSolveHeatEquations(           sched, patches, matls);
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
+
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+
   scheduleComputeParticleGradients(       sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   scheduleFinalParticleUpdate(            sched, patches, matls);
@@ -773,6 +782,67 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
       am->scheduleDoAnalysis( sched, level);
     }
   }
+}
+
+void SerialMPM::scheduleRelocateParticle(SchedulerP& sched,
+	const PatchSet* patches,
+	const MaterialSet* matls) 
+{
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
+
+	printSchedule(patches, cout_doing, "MPM::scheduleRelocateParticle");
+
+	Task* t = scinew Task("MPM::RelocateParticle",
+		this, &SerialMPM::RelocateParticle);
+	Ghost::GhostType  gan = Ghost::AroundNodes;
+	Ghost::GhostType gnone = Ghost::None;
+
+	t->requires(Task::OldDW, lb->pAccelerationLabel, gan, NGP);
+	t->computes(lb->pAccelerationLabel_preReloc);
+
+	sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::RelocateParticle(const ProcessorGroup*,
+	const PatchSubset* patches,
+	const MaterialSubset*,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
+{
+	// Loop all the patches
+	for (int p = 0; p < patches->size(); p++) {
+		const Patch* patch = patches->get(p);
+
+		printTask(patches, patch, cout_doing,
+			"Doing MPM::RelocateParticle");
+
+		// numMatls = number of materials
+		unsigned int numMatls = m_materialManager->getNumMatls("MPM");
+		Ghost::GhostType  gan = Ghost::AroundNodes;
+
+		// Loop all materials
+		for (unsigned int m = 0; m < numMatls; m++) {
+			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);		// mpm_matl is the material with index m
+			int dwi = mpm_matl->getDWIndex();													// dwi is the  material index in datawarehouse
+																								// Create arrays for the particle data
+			constParticleVariable<Vector> pAcceleration;
+			ParticleVariable<Vector> pAccelerationNew;
+			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+			old_dw->get(pAcceleration, lb->pAccelerationLabel, pset);
+			new_dw->allocateAndPut(pAccelerationNew, lb->pAccelerationLabel_preReloc, pset);
+
+			//loop over all particles in the patch:
+			for (ParticleSubset::iterator iter = pset->begin();
+				iter != pset->end(); iter++) {
+				particleIndex idx = *iter;
+
+				pAccelerationNew[idx] = pAcceleration[idx];
+			}
+		} // End of particle loop
+	}
 }
 
 void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
@@ -841,6 +911,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
+  
   if (flags->d_useCBDI) {
     t->requires(Task::NewDW,  lb->pExternalForceCorner1Label,gan,NGP);
     t->requires(Task::NewDW,  lb->pExternalForceCorner2Label,gan,NGP);
@@ -851,7 +922,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   if (flags->d_doScalarDiffusion) {
     t->requires(Task::OldDW, lb->pStressLabel,              gan, NGP);
     t->requires(Task::OldDW, lb->diffusion->pConcentration, gan, NGP);
-    if (flags->d_GEVelProj) {
+    
+	if (flags->d_GEVelProj) {
       t->requires(Task::OldDW, lb->diffusion->pGradConcentration, gan, NGP);
     }
     t->requires(Task::NewDW, lb->diffusion->pExternalScalarFlux_preReloc, gan, NGP);
@@ -859,6 +931,13 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     t->computes(lb->diffusion->gConcentrationNoBC);
     t->computes(lb->diffusion->gHydrostaticStress);
     t->computes(lb->diffusion->gExternalScalarFlux);
+  }
+
+  if (flags->d_GeneralizedAlpha) {
+	  t->requires(Task::OldDW, lb->pAccelerationLabel, gan, NGP);
+	  t->computes(lb->gAccelerationBeginLabel, m_materialManager->getAllInOneMatls(),
+		  Task::OutOfDomain);
+	  t->computes(lb->gAccelerationBeginLabel);
   }
 
   t->computes(lb->gMassLabel,        m_materialManager->getAllInOneMatls(),
@@ -1202,6 +1281,7 @@ void SerialMPM::scheduleComputeAndIntegrateDiffusion(       SchedulerP  & sched
 
   sched->addTask(t, patches, matls);
 }
+
 void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls)
@@ -1215,6 +1295,7 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
                         this, &SerialMPM::computeAndIntegrateAcceleration);
 
+ 
   t->requires(Task::OldDW, lb->delTLabel );
 
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
@@ -1236,6 +1317,36 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 //  }
 
   sched->addTask(t, patches, matls);
+}
+
+
+void SerialMPM::scheduleComputeAndIntegrateAccelerationGeneralizedAlpha(SchedulerP& sched,
+	const PatchSet* patches,
+	const MaterialSet* matls)
+{
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
+
+	printSchedule(patches, cout_doing, "MPM::scheduleComputeAndIntegrateAccelerationGeneralizedAlpha");
+
+	Task* t = scinew Task("MPM::computeAndIntegrateAccelerationGeneralizedAlpha",
+		this, &SerialMPM::computeAndIntegrateAccelerationGeneralizedAlpha);
+
+	t->requires(Task::OldDW, lb->delTLabel);
+
+	t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
+	t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
+	t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
+	t->requires(Task::NewDW, lb->gVelocityLabel, Ghost::None);
+	t->requires(Task::NewDW, lb->gAccelerationBeginLabel, Ghost::None);
+
+	t->computes(lb->gVelocityStarLabel);
+	t->computes(lb->gAccelerationEndLabel);
+	t->computes(lb->gAccelerationBeginNewLabel);
+	t->computes(lb->gAccelerationLabel);
+
+	sched->addTask(t, patches, matls);
 }
 
 void SerialMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
@@ -1282,11 +1393,17 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   const MaterialSubset* mss = matls->getUnion();
   t->requires(Task::OldDW, lb->delTLabel );
 
+  t->requires(Task::NewDW, lb->gVelocityLabel, Ghost::None);
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
-  t->requires(Task::NewDW, lb->gVelocityLabel,   Ghost::None);
 
-  sched->addTask(t, patches, matls);
+  if (flags->d_GeneralizedAlpha) {
+	  //t->requires(Task::NewDW, lb->gAccelerationBeginNewLabel, Ghost::None);
+	  //t->requires(Task::NewDW, lb->gAccelerationEndLabel, Ghost::None);
+	  t->modifies(lb->gAccelerationBeginNewLabel, mss);
+	  t->modifies(lb->gAccelerationEndLabel, mss);
+  }
+ sched->addTask(t, patches, matls);
 }
 
 void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
@@ -1325,6 +1442,12 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
+
+  if (flags->d_GeneralizedAlpha) {
+	  t->requires(Task::NewDW, lb->gAccelerationEndLabel, gac, NGN);
+	  t->requires(Task::NewDW, lb->gAccelerationBeginNewLabel, gac, NGN);
+	  t->computes(lb->pAccelerationLabel_preReloc);
+  }
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -2232,6 +2355,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     gvelglobal.initialize(Vector(0.0));
     Ghost::GhostType  gan = Ghost::AroundNodes;
 
+	// Generalized Alpha scheme
+	
+	NCVariable<Vector> gAccBeginglobal;
+	if (flags->d_GeneralizedAlpha) {
+		new_dw->allocateAndPut(gAccBeginglobal, lb->gAccelerationBeginLabel, globMatID, patch);
+		gAccBeginglobal.initialize(Vector(0.0));
+	}
+
     for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
@@ -2255,6 +2386,13 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 //    old_dw->get(pColor,         lb->pColorLabel,         pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
+
+	  // Generalized Alpha scheme
+	  constParticleVariable<Vector> pAcceleration;
+	  if (flags->d_GeneralizedAlpha) {
+		old_dw->get(pAcceleration,lb->pAccelerationLabel, pset);
+	  }
+
       if (flags->d_GEVelProj){
         old_dw->get(pVelGrad,     lb->pVelGradLabel,             pset);
         old_dw->get(pTempGrad,    lb->pTemperatureGradientLabel, pset);
@@ -2267,6 +2405,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<double> pConcentration, pExternalScalarFlux;
       constParticleVariable<Vector> pConcGrad;
       constParticleVariable<Matrix3> pStress;
+
       if (flags->d_doScalarDiffusion) {
         new_dw->get(pExternalScalarFlux, lb->diffusion->pExternalScalarFlux_preReloc, pset);
         old_dw->get(pConcentration,      lb->diffusion->pConcentration,   pset);
@@ -2346,6 +2485,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gExtScalarFlux.initialize(0);
       }
 
+	  // Generalized Alpha scheme
+	  NCVariable<Vector> gAccelerationBegin;
+	  if (flags->d_GeneralizedAlpha) {
+	  new_dw->allocateAndPut(gAccelerationBegin, lb->gAccelerationBeginLabel, dwi, patch);
+	  gAccelerationBegin.initialize(Vector(0, 0, 0));
+	  }
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
       // Need to compute the lumped global mass matrix and velocity
@@ -2389,6 +2534,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gTemperature[node]   += ptemp_ext * pmass[idx] * S[k];
             gSp_vol[node]        += pSp_vol   * pmass[idx] * S[k];
             //gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
+
+			if (flags->d_GeneralizedAlpha) {
+			gAccelerationBegin[node]		 += pAcceleration[idx] *pmass[idx] * S[k];
+			}
           }
         }
         if (flags->d_doScalarDiffusion) {
@@ -2465,6 +2614,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           gHydrostaticStress[c]   /= gmass[c];
           gConcentrationNoBC[c]    = gConcentration[c];
         }
+
+		if (flags->d_GeneralizedAlpha) {
+		gAccBeginglobal[c] += gAccelerationBegin[c];
+		gAccelerationBegin[c] /= gmass[c];
+		}
       }
 
       // Apply boundary conditions to the temperature and velocity (if symmetry)
@@ -2475,6 +2629,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         bc.setBoundaryCondition(patch, dwi, "SD-Type", gConcentration,
                                                                    interp_type);
       }
+
+	  if (flags->d_GeneralizedAlpha) {
+	   bc.setBoundaryCondition(patch, dwi, "Symmetric", gAccelerationBegin, interp_type);
+	  }
 
       // If an MPMICE problem, create a velocity with BCs variable for NCToCC_0
       if(flags->d_with_ice){
@@ -2490,6 +2648,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       IntVector c = *iter;
       gtempglobal[c] /= gmassglobal[c];
       gvelglobal[c] /= gmassglobal[c];
+
+	  if (flags->d_GeneralizedAlpha) {
+	  gAccBeginglobal[c] /= gmassglobal[c];
+	  }
     }
     delete interpolator;
     delete linear_interpolator;
@@ -2809,7 +2971,6 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
 
   }
 }
-
 
 //______________________________________________________________________
 //
@@ -3251,7 +3412,6 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 //      new_dw->allocateAndPut(gConcStar, lb->diffusion->gConcentrationStar,
 //                             dwi, patch);
 
-
       for(NodeIterator iter=patch->getExtraNodeIterator();
                         !iter.done();iter++){
         IntVector c = *iter;
@@ -3289,6 +3449,80 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
   }
 }
 
+void SerialMPM::computeAndIntegrateAccelerationGeneralizedAlpha(const ProcessorGroup*,
+	const PatchSubset* patches,
+	const MaterialSubset*,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
+{
+	for (int p = 0; p < patches->size(); p++) {
+		const Patch* patch = patches->get(p);
+		printTask(patches, patch, cout_doing,
+			"Doing SerialMPM::computeAndIntegrateAccelerationGeneralizedAlpha");
+
+		Ghost::GhostType  gnone = Ghost::None;
+		Vector gravity = flags->d_gravity;
+
+		// Generalized-Alpha scheme
+		double p_b = flags->d_SpectralRadius;
+		double alpha_m = (2 * p_b - 1) / (1 + p_b);
+		//double beta = (5 - 3 * p_b) / ((1 + p_b) * (1 + p_b) * (2 - p_b));
+		double gamma = 1.5 - alpha_m;
+
+		for (unsigned int m = 0; m < m_materialManager->getNumMatls("MPM"); m++) {
+			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+			int dwi = mpm_matl->getDWIndex();
+
+			// Get required variables for this patch
+			constNCVariable<Vector> internalforce, externalforce, velocity, accelerationBegin;
+			constNCVariable<double> mass;
+
+			delt_vartype delT;
+			old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
+			new_dw->get(internalforce, lb->gInternalForceLabel, dwi, patch, gnone, 0);
+			new_dw->get(externalforce, lb->gExternalForceLabel, dwi, patch, gnone, 0);
+			new_dw->get(mass, lb->gMassLabel, dwi, patch, gnone, 0);
+			new_dw->get(velocity, lb->gVelocityLabel, dwi, patch, gnone, 0);
+
+			// Generalized-Alpha scheme
+			new_dw->get(accelerationBegin, lb->gAccelerationBeginLabel, dwi, patch, gnone, 0);
+			//new_dw->getModifiable(accelerationBegin, lb->gAccelerationBeginLabel, dwi, patch);
+
+			// Create variables for the results
+			NCVariable<Vector> velocity_star, acceleration, accelerationEnd, accelerationBeginNew;
+			new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
+			new_dw->allocateAndPut(accelerationEnd, lb->gAccelerationEndLabel, dwi, patch);
+			new_dw->allocateAndPut(accelerationBeginNew, lb->gAccelerationBeginNewLabel, dwi, patch);
+			new_dw->allocateAndPut(acceleration, lb->gAccelerationLabel, dwi, patch);
+
+			accelerationEnd.initialize(Vector(0., 0., 0.));
+			accelerationBeginNew.initialize(Vector(0., 0., 0.));
+			acceleration.initialize(Vector(0., 0., 0.));
+			double damp_coef = flags->d_artificialDampCoeff;
+
+			for (NodeIterator iter = patch->getExtraNodeIterator();
+				!iter.done(); iter++) {
+				IntVector c = *iter;
+
+				Vector accMiddle(0., 0., 0.);
+				Vector accEnd(0., 0., 0.);
+
+				if (mass[c] > flags->d_min_mass_for_acceleration) {
+					accMiddle = (internalforce[c] + externalforce[c]) / mass[c];
+					accMiddle -= damp_coef * velocity[c];
+					accEnd = (accMiddle - accelerationBegin[c] * alpha_m) / (1 - alpha_m);
+				}
+				accelerationEnd[c] = accEnd + gravity;
+				accelerationBeginNew[c] = accelerationBegin[c] + gravity;
+
+				acceleration[c] = (gamma*accelerationEnd[c] + (1 - gamma)*accelerationBeginNew[c]);
+				velocity_star[c] = velocity[c] + acceleration[c] * delT;
+			}
+		}    // matls
+	}
+}
+
 void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
                                           const PatchSubset* patches,
                                           const MaterialSubset* ,
@@ -3316,12 +3550,26 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
       new_dw->getModifiable(gvelocity_star,lb->gVelocityStarLabel,  dwi,patch);
       new_dw->get(gvelocity,               lb->gVelocityLabel,      dwi,patch,
                                                                  Ghost::None,0);
+	  
+	  NCVariable<Vector> accelerationEnd, accelerationBeginNew;
+	  if (flags->d_GeneralizedAlpha) {  
+		  new_dw->getModifiable(accelerationBeginNew, lb->gAccelerationBeginNewLabel, dwi, patch);
+		  new_dw->getModifiable(accelerationEnd, lb->gAccelerationEndLabel, dwi, patch);
+	  }
 
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity_star,interp_type);
       bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,interp_type);
+
+	  if (flags->d_GeneralizedAlpha) {
+	  bc.setBoundaryCondition(patch, dwi, "Velocity", accelerationBeginNew, interp_type);
+	  bc.setBoundaryCondition(patch, dwi, "Symmetric", accelerationBeginNew, interp_type);
+
+	  bc.setBoundaryCondition(patch, dwi, "Velocity", accelerationEnd, interp_type);
+	  bc.setBoundaryCondition(patch, dwi, "Symmetric", accelerationEnd, interp_type);
+	  }
 
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
@@ -3666,6 +3914,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double minPatchConc =  5e11;
     double maxPatchConc = -5e11;
 
+	// Generalized-Alpha scheme
+	double p_b = flags->d_SpectralRadius;
+	double beta = (5 - 3 * p_b) / ((1 + p_b) * (1 + p_b) * (2 - p_b));
+
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -3698,6 +3950,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration, gvelSPSSP;
+	  constNCVariable<Vector> accelerationEnd, accelerationBeginNew;
       constNCVariable<double> gTemperatureRate;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
 
@@ -3713,6 +3966,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       if(flags->d_XPIC2){
         new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
       }
+
+	  ParticleVariable<Vector> pAccelerationNew;
+	  if (flags->d_GeneralizedAlpha) {	  
+		  new_dw->get(accelerationEnd, lb->gAccelerationEndLabel, dwi, patch, gnone, 0);
+		  new_dw->get(accelerationBeginNew, lb->gAccelerationBeginNewLabel, dwi, patch, gnone, 0);
+		  new_dw->allocateAndPut(pAccelerationNew, lb->pAccelerationLabel_preReloc, pset);
+	  }
 
       new_dw->allocateAndPut(pxnew,      lb->pXLabel_preReloc,            pset);
       new_dw->allocateAndPut(pvelnew,    lb->pVelocityLabel_preReloc,     pset);
@@ -3887,12 +4147,20 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           double tempRate = 0.0;
           double concRate = 0.0;
           double burnFraction = 0.0;
+		  Vector accEnd(0.0, 0.0, 0.0);
+		  Vector accBeginNew(0.0, 0.0, 0.0);
+		  Vector gravity = flags->d_gravity;
 
           // Accumulate the contribution from each surrounding vertex
           for (int k = 0; k < NN; k++) {
             IntVector node = ni[k];
             vel      += gvelocity_star[node]  * S[k];
             acc      += gacceleration[node]   * S[k];
+
+			if (flags->d_GeneralizedAlpha) {
+			accEnd   += accelerationEnd[node] * S[k];
+			accBeginNew += accelerationBeginNew[node] * S[k];
+			}
 
             fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
             tempRate += (gTemperatureRate[node] + dTdt[node] +
@@ -3901,11 +4169,19 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           }
 
           // Update the particle's pos and vel using std "FLIP" method
-          pxnew[idx]   = px[idx]        + vel*delT;
           pdispnew[idx]= pdisp[idx]     + vel*delT;
           pvelnew[idx] = pvelocity[idx] + acc*delT;
 
-          pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
+		  if (flags->d_GeneralizedAlpha) {
+			  //pxnew[idx] = px[idx] + vel * delT + ( beta * accEnd + (0.5 - beta) * accBeginNew)*delT*delT;
+			  pxnew[idx] = px[idx] + vel * delT;
+			  pAccelerationNew[idx] = accEnd - gravity;
+		  }
+		  else {
+			  pxnew[idx] = px[idx] + vel * delT;
+		  }
+
+		  pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];

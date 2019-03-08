@@ -1009,7 +1009,13 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleSetPrescribedMotion(          sched, patches, matls);
   }
   scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(sched, patches, matls);
-  scheduleComputeParticleGradientsAndPorePressure_DOUBLEMPM(		sched, patches, matls);
+  scheduleComputeParticleGradientsAndPorePressure_DOUBLEMPM(sched, patches, matls);
+  
+  
+  if (flags->d_NullSpaceFilter) {
+  scheduleInterpolatePorePresureToGrid(sched, patches, matls);
+  scheduleInterpolatePorePresureToParticle(sched, patches, matls);
+  }
 
   scheduleComputeStressTensor(						sched, patches, matls);
   scheduleFinalParticleUpdate(						sched, patches, matls);
@@ -1700,12 +1706,6 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 						gvelocity[node] += pmom * S[k];
 						gPorosity[node] += pPorosity[idx] * pMassSolid[idx] * S[k];
 						gDragging[node] += pMassLiquid[idx] * 9.81 / pPermeability[idx] * S[k];
-
-						//std::cerr << pMassSolid[idx] << std::endl;
-						//std::cerr << gmass_solid[node] << std::endl;
-						//std::cerr << pMassLiquid[idx] << std::endl;
-						//std::cerr << gmass_liquid[node] << std::endl;
-						//std::cerr << " " << std::endl;
 					}
 				}
 				if (flags->d_useCBDI && pLoadCurveID[idx].x() > 0) {
@@ -1771,14 +1771,6 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 				gPorosityglobal[c] += gPorosity[c];
 				gPorosity[c] /= gmass_solid[c];
 				gDraggingglobal[c] += gDragging[c];
-
-				//std::cerr << gmass[c] << std::endl;
-				//std::cerr << gmass_solid[c] << std::endl;
-				//std::cerr << gmass_liquid[c] << std::endl;
-				//std::cerr << gPorosity[c] << std::endl;
-				//std::cerr << gDragging[c] << std::endl;
-				//std::cerr << gvelocity_liquid[c] << std::endl;
-				//std::cerr << " " << std::endl;
 			}
 
 			// Apply boundary conditions to the temperature and velocity (if symmetry)
@@ -2158,9 +2150,10 @@ void DOUBLEMPM::scheduleComputeInternalForce_DOUBLEMPM(SchedulerP& sched,
 	// Liquid
 	t->requires(Task::OldDW, double_lb->pPorePressureLabel, gan, NGP);
 	t->computes(double_lb->gInternalForceLiquidLabel);
-	t->computes(double_lb->gPorePressureLabel);
-	t->computes(double_lb->gPorePressureLabel, m_materialManager->getAllInOneMatls(),
-		Task::OutOfDomain);
+
+	//t->computes(double_lb->gPorePressureLabel);
+	//t->computes(double_lb->gPorePressureLabel, m_materialManager->getAllInOneMatls(),
+	//	Task::OutOfDomain);
 
 	// Boundary force
 	for (std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
@@ -2217,9 +2210,9 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 			m_materialManager->getAllInOneMatls()->get(0), patch);
 
 		// Liquid phase
-		NCVariable<double>       gPorePressureglobal;
-		new_dw->allocateAndPut(gPorePressureglobal, double_lb->gPorePressureLabel,
-			m_materialManager->getAllInOneMatls()->get(0), patch);
+		//NCVariable<double>       gPorePressureglobal;
+		//new_dw->allocateAndPut(gPorePressureglobal, double_lb->gPorePressureLabel,
+		//	m_materialManager->getAllInOneMatls()->get(0), patch);
 
 		for (unsigned int m = 0; m < numMPMMatls; m++) {
 			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
@@ -2260,11 +2253,11 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 			NCVariable<Vector>		      gInternalForceLiquid;
 
 			old_dw->get(pPorePressure, double_lb->pPorePressureLabel, pset);
-			new_dw->allocateAndPut(gPorePresure, double_lb->gPorePressureLabel, dwi, patch);
+			//new_dw->allocateAndPut(gPorePresure, double_lb->gPorePressureLabel, dwi, patch);
 			new_dw->allocateAndPut(gInternalForceLiquid, double_lb->gInternalForceLiquidLabel, dwi, patch);
 			
 			gInternalForceLiquid.initialize(Vector(0, 0, 0));
-			gPorePresure.initialize(0.0);
+			//gPorePresure.initialize(0.0);
 
 			// For artificial vicousity
 			ParticleVariable<double>  p_pressure_create;
@@ -2293,7 +2286,7 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 
 			//Liquid
 			Matrix3 PoreTensor;
-			double PoreVol;
+			//double PoreVol;
 
 			// for the non axisymmetric case:
 			if (!flags->d_axisymmetric) {
@@ -2312,11 +2305,9 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 					// Consider the vicousity otherwise stresspress = pstress[idx];
 					stresspress = pstress[idx] + Id * (p_pressure[idx] - p_q[idx]);
 
-					//std::cerr << pstress[idx] << std::endl;
-
 					// Liquid pressure
 					PoreTensor = Id * pPorePressure[idx];
-					PoreVol = pPorePressure[idx] * pvol[idx];
+					//PoreVol = pPorePressure[idx] * pvol[idx];
 
 					for (int k = 0; k < NN; k++) {
 						if (patch->containsNode(ni[k])) {
@@ -2329,9 +2320,7 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 
 							// Liquid
 							gInternalForceLiquid[ni[k]] -= (div * PoreTensor) * pvol[idx];  // Vector
-							gPorePresure[ni[k]] += PoreVol * S[k];							// Scalar
-
-							std::cerr << gInternalForceLiquid[ni[k]] << std::endl;
+							//gPorePresure[ni[k]] += PoreVol * S[k];							// Scalar
 						}
 					}
 				} // End particle loop
@@ -2374,12 +2363,8 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 				gstress[c] /= gvolume[c];
 
 				// Liquid
-				gPorePressureglobal[c] += gPorePresure[c];
-				gPorePresure[c] /= gvolume[c];
-
-				//std::cerr << gInternalForceLiquid[c] << std::endl;
-				//std::cerr << gPorePresure[c] << std::endl;
-
+				//gPorePressureglobal[c] += gPorePresure[c];
+				//gPorePresure[c] /= gvolume[c];
 			}
 
 			// save boundary forces before apply symmetry boundary condition.
@@ -2430,7 +2415,7 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
 			IntVector c = *iter;
 			gstressglobal[c] /= gvolumeglobal[c];
-			gPorePressureglobal[c] /= gvolumeglobal[c];
+			//gPorePressureglobal[c] /= gvolumeglobal[c];
 		}
 		delete interpolator;
 	}
@@ -2575,27 +2560,11 @@ void DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM (const ProcessorGroup*
 				if (gMassSolid[c] > flags->d_min_mass_for_acceleration) {
 					acc = (internalforce[c] + gInternalForceLiquid[c] + gMassLiquid[c] * (gravity - gAccelerationLiquid[c]) + externalforce[c]) / gMassSolid[c];
 					acc -= damp_coef * velocity[c];
-					acc = 0;
+					//acc = 0;
 				}			
 
 				acceleration[c] = acc + gravity;
-				velocity_star[c] = velocity[c] + acceleration[c] * delT;	
-				
-				//std::cerr << gMassLiquid[c] << std::endl;
-				//std::cerr << gMassSolid[c] << std::endl;
-				//std::cerr << gAccelerationLiquid[c] << std::endl;
-				//std::cerr << gVelocityLiquid[c] << std::endl;
-				//std::cerr << gInternalForceLiquid[c] << std::endl;
-				//std::cerr << gVelocityStarLiquid[c] << std::endl;
-				//std::cerr << acceleration[c] << std::endl;
-				//std::cerr << velocity[c] << std::endl;
-				//std::cerr << velocity_star[c] << std::endl;
-				//std::cerr << DraggingForce << std::endl;
-				//std::cerr << internalforce[c] << std::endl;
-				//std::cerr << externalforce[c] << std::endl;
-				//std::cerr << " " << std::endl;
-
-				
+				velocity_star[c] = velocity[c] + acceleration[c] * delT;							
 			}
 		}    // matls
 	}
@@ -2697,7 +2666,7 @@ void DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity_star, interp_type);
 
 			// Liquid
-			//bc.setBoundaryCondition(patch, dwi, "Velocity", gVelocityStarLiquid, interp_type);
+			bc.setBoundaryCondition(patch, dwi, "Velocity", gVelocityStarLiquid, interp_type);
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", gVelocityStarLiquid, interp_type);
 
 			// Now recompute acceleration as the difference between the velocity
@@ -2710,7 +2679,7 @@ void DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
 				gacceleration[c] = (gvelocity_star[c] - gvelocity[c]) / delT;
 
 				// Liquid
-				//gAccelerationLiquid[c] = (gVelocityStarLiquid[c] - gVelocityLiquid[c]) / delT;
+				gAccelerationLiquid[c] = (gVelocityStarLiquid[c] - gVelocityLiquid[c]) / delT;
 			}
 		} // matl loop
 	}  // patch loop
@@ -3459,11 +3428,8 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 				VolumeRateLiquid	= delT * StrainRateLiquid.Trace() * (1 - pPorosity[idx]) / pPorosity[idx];;
 
 				pPorePressurenew[idx] = pPorePressure[idx] + pBulkModulLiquid[idx] * (VolumeRateSolid + VolumeRateLiquid);
-				 //std::cerr << StrainRateSolid << std::endl;
-				 //std::cerr << StrainRateLiquid << std::endl;
-				// std::cerr << VolumeRateSolid << std::endl;
-				 //std::cerr << VolumeRateLiquid << std::endl;
-				 //std::cerr << pPorePressurenew[idx] << std::endl;
+
+				//std::cerr << pPorePressurenew[idx] << std::endl;
 
 				// Update porosity
 				pPorositynew[idx] = 1 - (1 - mpm_matl->getInitialPorosity()) / J;
@@ -3536,6 +3502,234 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 		delete interpolator;
 	}
 }
+
+
+// Null space filter using local method
+void DOUBLEMPM::scheduleInterpolatePorePresureToGrid(SchedulerP& sched,
+	const PatchSet* patches,
+	const MaterialSet* matls)
+{
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
+
+	printSchedule(patches, cout_doing, "DOUBLEMPM::scheduleInterpolatePorePresureToGrid");
+
+	Task* t = scinew Task("DOUBLEMPM::InterpolatePorePresureToGrid",
+		this, &DOUBLEMPM::InterpolatePorePresureToGrid);
+
+	Ghost::GhostType  gan = Ghost::AroundNodes;
+	Ghost::GhostType  gnone = Ghost::None;
+
+	t->requires(Task::NewDW, lb->gVolumeLabel, gnone);
+	t->requires(Task::NewDW, lb->gVolumeLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain, gnone);
+	t->requires(Task::OldDW, lb->pVolumeLabel, gan, NGP);
+	t->requires(Task::OldDW, lb->pXLabel, gan, NGP);
+	t->requires(Task::OldDW, lb->pSizeLabel, gan, NGP);
+	t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
+
+	// Liquid
+	t->requires(Task::NewDW, double_lb->pPorePressureLabel_preReloc, gnone);
+	t->computes(double_lb->gPorePressureLabel);
+	t->computes(double_lb->gPorePressureLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+	sched->addTask(t, patches, matls);
+}
+
+void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
+	const PatchSubset* patches,
+	const MaterialSubset*,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
+{
+	for (int p = 0; p < patches->size(); p++) {
+		const Patch* patch = patches->get(p);
+		printTask(patches, patch, cout_doing, "Doing InterpolatePorePresureToGrid");
+
+		ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+		vector<IntVector> ni(interpolator->size());
+		vector<double> S(interpolator->size());
+		string interp_type = flags->d_interpolator_type;
+
+		unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
+
+		constNCVariable<double>   gvolumeglobal;
+		new_dw->get(gvolumeglobal, lb->gVolumeLabel,
+			m_materialManager->getAllInOneMatls()->get(0), patch, Ghost::None, 0);
+
+		NCVariable<double>       gPorePressureglobal;
+		new_dw->allocateAndPut(gPorePressureglobal, double_lb->gPorePressureLabel,
+			m_materialManager->getAllInOneMatls()->get(0), patch);
+
+		for (unsigned int m = 0; m < numMPMMatls; m++) {
+			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+			int dwi = mpm_matl->getDWIndex();
+			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+				Ghost::AroundNodes, NGP, lb->pXLabel);
+
+			// Create arrays for the particle position, volume
+			// and the constitutive model
+			constParticleVariable<Point>   px;
+			constParticleVariable<double>  pvol;
+			constParticleVariable<Matrix3> psize;
+			constParticleVariable<Matrix3> pFOld;
+			constNCVariable<double>        gvolume;
+
+			old_dw->get(px, lb->pXLabel, pset);
+			old_dw->get(pvol, lb->pVolumeLabel, pset);
+			old_dw->get(psize, lb->pSizeLabel, pset);
+			old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
+
+			new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
+
+			constParticleVariable<double> pPorePressure;
+			NCVariable<double>		      gPorePresure;
+
+			new_dw->get(pPorePressure, double_lb->pPorePressureLabel_preReloc, pset);
+			new_dw->allocateAndPut(gPorePresure, double_lb->gPorePressureLabel, dwi, patch);
+
+			gPorePresure.initialize(0.0);
+
+			double PoreVol;
+
+			// for the non axisymmetric case:
+			if (!flags->d_axisymmetric) {
+				for (ParticleSubset::iterator iter = pset->begin();
+					iter != pset->end();
+					iter++) {
+					particleIndex idx = *iter;
+
+					// Get the node indices that surround the cell
+					int  NN = interpolator->findCellAndWeights(px[idx], ni, S,
+						psize[idx], pFOld[idx]);
+
+					// Liquid pressure
+					PoreVol = pPorePressure[idx] * pvol[idx];
+
+
+					//if (PoreVol > 0) {
+					//	std::cerr << PoreVol << std::endl;
+					//}
+
+					for (int k = 0; k < NN; k++) {
+						if (patch->containsNode(ni[k])) {
+							gPorePresure[ni[k]] += PoreVol * S[k];							// Scalar
+						}
+					}
+				} // End particle loop
+			}
+
+			for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+				IntVector c = *iter;	
+				gPorePressureglobal[c] += gPorePresure[c];
+				gPorePresure[c] /= gvolume[c];
+
+				//if (gPorePresure[c] > 0) {
+				//	std::cerr << gPorePresure[c] << std::endl;
+				//}
+			}
+		}
+
+		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+			IntVector c = *iter;
+			gPorePressureglobal[c] /= gvolumeglobal[c];
+		}
+		delete interpolator;
+	}
+}
+
+void DOUBLEMPM::scheduleInterpolatePorePresureToParticle(SchedulerP& sched,
+	const PatchSet* patches,
+	const MaterialSet* matls)
+
+{
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
+
+	printSchedule(patches, cout_doing,
+		"DOUBLEMPM::scheduleInterpolatePorePresureToParticle");
+
+	Task* t = scinew Task("DOUBLEMPM::InterpolatePorePresureToParticle",
+		this, &DOUBLEMPM::InterpolatePorePresureToParticle);
+
+	Ghost::GhostType gac = Ghost::AroundCells;
+	Ghost::GhostType gnone = Ghost::None;
+
+	// Liquid
+	t->requires(Task::OldDW, lb->pXLabel, gnone);
+	t->requires(Task::OldDW, lb->pSizeLabel, gnone);
+	t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gnone);
+	t->requires(Task::NewDW, double_lb->gPorePressureLabel, gac, NGN);
+	t->modifies(double_lb->pPorePressureLabel_preReloc);
+
+	sched->addTask(t, patches, matls);
+}
+
+void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
+	const PatchSubset* patches,
+	const MaterialSubset*,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
+{
+	for (int p = 0; p < patches->size(); p++) {
+		const Patch* patch = patches->get(p);
+		printTask(patches, patch, cout_doing,
+			"Doing InterpolatePorePresureToParticle");
+
+		ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+		vector<IntVector> ni(interpolator->size());
+		vector<double> S(interpolator->size());
+
+		unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
+
+		for (unsigned int m = 0; m < numMPMMatls; m++) {
+			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+			int dwi = mpm_matl->getDWIndex();
+
+			// Liquid
+			constNCVariable<double> gPorePresure;
+			constParticleVariable<Point> px;
+			constParticleVariable<Matrix3> psize, pFOld;
+
+			ParticleVariable<double> pPorePressurenew;
+
+			Ghost::GhostType  gac = Ghost::AroundCells;
+			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+			new_dw->get(gPorePresure, double_lb->gPorePressureLabel, dwi, patch, gac, NGP);
+			old_dw->get(px, lb->pXLabel, pset);
+			old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
+			old_dw->get(psize, lb->pSizeLabel, pset);
+
+			new_dw->getModifiable(pPorePressurenew, double_lb->pPorePressureLabel_preReloc, pset);
+
+			// Loop over particles
+			for (ParticleSubset::iterator iter = pset->begin();
+				iter != pset->end(); iter++) {
+				particleIndex idx = *iter;
+
+				// Get the node indices that surround the cell
+				int NN = interpolator->findCellAndWeights(px[idx], ni, S,
+					psize[idx], pFOld[idx]);
+				double pPorePressure = 0.0;
+				// Accumulate the contribution from each surrounding vertex
+				for (int k = 0; k < NN; k++) {
+					IntVector node = ni[k];
+
+					pPorePressure += gPorePresure[node] * S[k];
+				}
+
+				pPorePressurenew[idx] = pPorePressure;
+				//pPorePressurenew[idx] = 0;
+				}
+
+		}  // loop over materials
+		delete interpolator;
+	}
+}
+
 
 // Compute stress tensor
 // Flags: d_reductionVars
@@ -3808,12 +4002,8 @@ void DOUBLEMPM::insertPorePressure(const ProcessorGroup*,
 							iter != pset->end();   iter++) {
 							particleIndex idx = *iter;
 
-							//std::cerr << pcolor[idx] << std::endl;
-
 							if (pcolor[idx] == d_IPoreColor[index]) {
 								pPorePressure[idx] = d_IPorePressure[index];
-
-								//std::cerr << pPorePressure[idx] << std::endl;
 
 							} // end if
 						}   // end for

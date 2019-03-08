@@ -314,6 +314,18 @@ protected:
                                                const MaterialSubset* matls,
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
+  
+  virtual void computeAndIntegrateAccelerationGeneralizedAlpha(const ProcessorGroup*,
+	                                           const PatchSubset* patches,
+	                                           const MaterialSubset* matls,
+	                                           DataWarehouse* old_dw,
+	                                           DataWarehouse* new_dw);
+
+	virtual void RelocateParticle(const ProcessorGroup*,
+		const PatchSubset* patches,
+		const MaterialSubset* matls,
+		DataWarehouse* old_dw,
+		DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:                            
@@ -482,6 +494,15 @@ protected:
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
                                                        const PatchSet*,
                                                        const MaterialSet*);
+  
+  virtual void scheduleComputeAndIntegrateAccelerationGeneralizedAlpha(SchedulerP&,
+	  const PatchSet*,
+	  const MaterialSet*);
+	  
+
+  virtual void scheduleRelocateParticle(SchedulerP&,
+	  const PatchSet*,
+	  const MaterialSet*);
 
   virtual void scheduleIntegrateTemperatureRate(SchedulerP&, const PatchSet*,
                                                 const MaterialSet*);

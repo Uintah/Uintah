@@ -349,6 +349,28 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* old_dw,
 	  DataWarehouse* new_dw);
 
+  // Null space filter using local method
+  virtual void scheduleInterpolatePorePresureToGrid(SchedulerP&,
+	  const PatchSet*,
+	  const MaterialSet*);
+
+  virtual void InterpolatePorePresureToGrid(const ProcessorGroup*,
+	  const PatchSubset* patches,
+	  const MaterialSubset* matls,
+	  DataWarehouse* old_dw,
+	  DataWarehouse* new_dw);
+  
+  virtual void scheduleInterpolatePorePresureToParticle(SchedulerP&,
+	  const PatchSet*,
+	  const MaterialSet*);
+
+  virtual void InterpolatePorePresureToParticle(const ProcessorGroup*,
+	  const PatchSubset* patches,
+	  const MaterialSubset* matls,
+	  DataWarehouse* old_dw,
+	  DataWarehouse* new_dw);
+
+   
   // Compute stress tensor
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
