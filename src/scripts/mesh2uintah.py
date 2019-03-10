@@ -8,7 +8,8 @@ Summary:    Conversion utility to read external mesh file formats and
 Usage:      python mesh2uintah.py <mesh.inp> [-flags]
 
 Input:      Mesh files from Abaqus (*.inp), Tetgen (*.ele, *.node), etc. describing 
-            geometry for particle domains (GIMP,CPDI - HEX or CPTI - TET)
+            geometry for approximate particle domains
+             (GIMP,CPDI - cuboid, hexahedron or CPTI - tetrahedron)
 Output:     Uintah *.pts files created for file geometry import of particle domains
             
 Revisions:  YYMMDD    Author            Comments

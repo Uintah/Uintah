@@ -13,9 +13,9 @@ Filename:   uda2xmf.py
 
 Summary:    
             This is a python script for the post-processing of Uintah *.uda output files.
-            Approximate particle domains are visualized for GIMP, CPDI and CPTI approximate
-            particle domains, using the XDMF *.xmf file format, which can be visualized 
-            using ParaView or VisIt. 
+            Approximate particle domains are visualized for GIMP, CPDI and CPTI 
+            interpolators, using the XDMF *.xmf file format, which can be visualized 
+            using tools like ParaView or VisIt. 
 
 Usage:      python uda2xmf.py [-flages] <uda_directory>
 
@@ -24,8 +24,8 @@ Output:     XDMF *.xmf and HDF5 *.h5 files for visualization
             
 Revisions:  YYMMDD    Author            Comments
 -------------------------------------------------------------------------------------
-            171201    Ashley Spear and students Speed up of python code 
-            151201    Brian Leavy       Initial visualization tool 
+            171201    Cody Herndon, Brian Phung, Ashley Spear Speed up of python code 
+            151201    Brian Leavy       Initial visualization of particle domains 
 """ 
 try:
     from mpi4py import MPI
