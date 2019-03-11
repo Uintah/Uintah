@@ -75,35 +75,43 @@ WARNING
 class GeometryObject {
  
 public:
+  
   enum DataType
   {
     IntVector, Vector, Point, Double, Integer
   };
+  
+  
   struct DataItem
   {
     std::string name;
     DataType type;
     DataItem(std::string name, DataType datatype) : name(name), type(datatype) {};
   };
-  //////////
-  // Insert Documentation Here:
-  GeometryObject(GeometryPieceP piece, ProblemSpecP&,std::list<DataItem>& data);
+  
+  //__________________________________
+  //
+  GeometryObject(GeometryPieceP       piece, 
+                 ProblemSpecP       & ps,
+                 std::list<DataItem>& data);
 
-  //////////
-  // Destructor
+  //__________________________________
+  //
   ~GeometryObject() {}
 
   void outputProblemSpec(ProblemSpecP& ps);
 
-  //////////
-  // Insert Documentation Here:
+  //__________________________________
+  //
   GeometryPieceP getPiece() const {
     return d_piece;
   }
 
+  //______________________________________________________________________
+  //
   double getInitialData_double(const std::string& data_string) {
-    if(d_double_data.find(data_string)==d_double_data.end())
-    {
+  
+    if( d_double_data.find(data_string) == d_double_data.end() ){
       std::stringstream msg;
       msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
       throw InternalError(msg.str(),__FILE__,__LINE__);
@@ -111,9 +119,11 @@ public:
     return d_double_data[data_string];
   }
   
+  //______________________________________________________________________
+  //
   int getInitialData_int(const std::string& data_string) {
-    if(d_int_data.find(data_string)==d_int_data.end())
-    {
+  
+    if( d_int_data.find(data_string) == d_int_data.end() ){
       std::stringstream msg;
       msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
       throw InternalError(msg.str(),__FILE__,__LINE__);
@@ -121,9 +131,11 @@ public:
     return d_int_data[data_string];
   }
   
+  //______________________________________________________________________
+  //
   Uintah::Point getInitialData_Point(const std::string& data_string) {
-    if(d_point_data.find(data_string)==d_point_data.end())
-    {
+  
+    if( d_point_data.find(data_string) == d_point_data.end() ){
       std::stringstream msg;
       msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
       throw InternalError(msg.str(),__FILE__,__LINE__);
@@ -131,9 +143,11 @@ public:
     return d_point_data[data_string];
   }
   
+  //______________________________________________________________________
+  //
   Uintah::Vector getInitialData_Vector(const std::string& data_string) {
-    if(d_vector_data.find(data_string)==d_vector_data.end())
-    {
+  
+    if( d_vector_data.find(data_string) == d_vector_data.end() ){
       std::stringstream msg;
       msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
       throw InternalError(msg.str(),__FILE__,__LINE__);
@@ -141,23 +155,26 @@ public:
     return d_vector_data[data_string];
   }
   
+  //______________________________________________________________________
+  //
   Uintah::IntVector getInitialData_IntVector(const std::string& data_string) {
-    if(d_intvector_data.find(data_string)==d_intvector_data.end())
-    {
+    if( d_intvector_data.find(data_string) == d_intvector_data.end() ){
       std::stringstream msg;
       msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
       throw InternalError(msg.str(),__FILE__,__LINE__);
     }
     return d_intvector_data[data_string];
   }
-
+  
+//______________________________________________________________________
+//
 private:
   GeometryPieceP     d_piece;
-  std::map<std::string,int>    d_int_data;
-  std::map<std::string,double> d_double_data;
-  std::map<std::string,Uintah::Vector> d_vector_data;
+  std::map<std::string,int>               d_int_data;
+  std::map<std::string,double>            d_double_data;
+  std::map<std::string,Uintah::Vector>    d_vector_data;
   std::map<std::string,Uintah::IntVector> d_intvector_data;
-  std::map<std::string,Uintah::Point>  d_point_data;
+  std::map<std::string,Uintah::Point>     d_point_data;
 
 };
 

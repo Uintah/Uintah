@@ -31,6 +31,8 @@ using namespace Uintah;
 using namespace std;
 
 
+//______________________________________________________________________
+//
 GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
                                list<DataItem>& data) :
   d_piece(piece)
@@ -42,13 +44,13 @@ GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
         case Double:
         {
           double val;
-          if(it->name == "volumeFraction")
-          {
-              ps->getWithDefault(it->name,val,-1.0);
-          } else
-          {
-              ps->require(it->name,val);
+          if(it->name == "volumeFraction"){
+            ps->getWithDefault(it->name,val,-1.0);
+          } 
+          else {
+            ps->require(it->name,val);
           }
+          
           d_double_data[it->name] = val;
           break;
         }
@@ -62,26 +64,22 @@ GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
         case Vector:
         {
           Uintah::Vector val;
-          if(it->name == "affineTransformation_A0")
-          {
-              ps->getWithDefault(it->name,val,Uintah::Vector(1.,0.,0.));
+          if(it->name == "affineTransformation_A0") {
+            ps->getWithDefault( it->name, val, Uintah::Vector(1.,0.,0.) );
+          } 
+          else if(it->name == "affineTransformation_A1") {
+            ps->getWithDefault( it->name, val, Uintah::Vector(0.,1.,0.) );
 
-          } else if(it->name == "affineTransformation_A1")
-          {
-              ps->getWithDefault(it->name,val,Uintah::Vector(0.,1.,0.));
+          } else if(it->name == "affineTransformation_A2") {
+            ps->getWithDefault( it->name, val, Uintah::Vector(0.,0.,1.) );
 
-          } else if(it->name == "affineTransformation_A2")
-          {
-              ps->getWithDefault(it->name,val,Uintah::Vector(0.,0.,1.));
+          } else if(it->name == "affineTransformation_b") {
+            ps->getWithDefault( it->name, val, Uintah::Vector(0.,0.,0.) );
 
-          } else if(it->name == "affineTransformation_b")
-          {
-              ps->getWithDefault(it->name,val,Uintah::Vector(0.,0.,0.));
-
-          } else
-          {
-              ps->require(it->name,val);
+          } else{
+            ps->require(it->name,val);
           }
+          
           d_vector_data[it->name] = val;
           break;
         }
@@ -103,6 +101,7 @@ GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
    }
 }
 
+//______________________________________________________________________
 void
 GeometryObject::outputProblemSpec(ProblemSpecP& ps)
 {
@@ -111,17 +110,21 @@ GeometryObject::outputProblemSpec(ProblemSpecP& ps)
   
   for (map<string,double>::iterator it = d_double_data.begin(); 
        it != d_double_data.end(); it++) {
-    if(!(it->first.compare("volumeFraction") == 0 && it->second == -1.0))
+    if( !(it->first.compare("volumeFraction") == 0 && it->second == -1.0) ){
       geom_obj_ps->appendElement(it->first.c_str(),it->second);
+    }
   }
+  
   for (map<string,Uintah::Vector>::iterator it = d_vector_data.begin(); 
        it != d_vector_data.end(); it++) {
     geom_obj_ps->appendElement(it->first.c_str(),it->second);
   }
+  
   for (map<string,Uintah::IntVector>::iterator it = d_intvector_data.begin(); 
        it != d_intvector_data.end(); it++) {
     geom_obj_ps->appendElement(it->first.c_str(),it->second);
   }
+  
   for (map<string,Uintah::Point>::iterator it = d_point_data.begin(); 
        it != d_point_data.end(); it++) {
     geom_obj_ps->appendElement(it->first.c_str(),it->second);

@@ -104,11 +104,17 @@ public:
     COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, 
     DOCUMENT_FRAGMENT_NODE, NOTATION_NODE};
      
-  inline ProblemSpec( const xmlNode* node, bool toplevel = false ) {
+  inline ProblemSpec( const xmlNode* node, 
+                      bool  toplevel = false ) {
     d_node = const_cast<xmlNode*>(node); 
     d_documentNode = toplevel;
   }
-  inline virtual ~ProblemSpec() { if ( d_documentNode ) releaseDocument(); }
+  
+  inline virtual ~ProblemSpec() { 
+    if ( d_documentNode ){
+     releaseDocument();
+    } 
+  }
 
   // Creates a ProblemSpec object based on the XML in 'buffer'.
   ProblemSpec( const std::string & buffer );
