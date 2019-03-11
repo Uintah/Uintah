@@ -43,6 +43,7 @@
         
         <vortices                       spec="OPTIONAL NO_DATA" >
           <vortex                       spec="MULTIPLE NO_DATA" >
+            <axis                       spec="REQUIRED STRING 'x, X, y, Y, z, Z'" />
             <origin                     spec="REQUIRED VECTOR" />
             <strength                   spec="REQUIRED DOUBLE" />
             <radius                     spec="REQUIRED DOUBLE 'positive'" />

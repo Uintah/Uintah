@@ -32,6 +32,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MersenneTwister.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/StringUtil.h>
 
 using namespace std;
 
@@ -68,13 +69,19 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
         Point origin;
         double strength;
         double radius;
+        string axis;
+        
         if(vortex_ps){
           vortex_ps->require("origin",   origin);
           vortex_ps->require("strength", strength);
           vortex_ps->require("radius",   radius);
-          cib->vortex_vars.origin.push_back(origin);
-          cib->vortex_vars.strength.push_back(strength);
-          cib->vortex_vars.radius.push_back(radius);
+          vortex_ps->require( "axis",    axis);
+
+          cib->vortex_vars.origin.push_back(   origin   );
+          cib->vortex_vars.strength.push_back( strength );
+          cib->vortex_vars.radius.push_back(   radius   );
+          cib->vortex_vars.axis.push_back( string_toupper(axis) );  // upper case
+          
         }
       }
     }  // multiple vortices
@@ -214,20 +221,39 @@ void customInitialization(const Patch* patch,
     //     Flows" by Poinsot & LeLe pg 121
     
     if ( whichMethod == "vortices" ){
-      for (int i = 0; i<(int) cib->vortex_vars.origin.size(); i++) {
-
-        Point origin = cib->vortex_vars.origin[i]; // vortex origin
-        double C1 = cib->vortex_vars.strength[i];  // vortex strength
-        double R = cib->vortex_vars.radius[i];     // vortex radius
+      for (int v = 0; v<(int) cib->vortex_vars.origin.size(); v++) {
+        
+        Point origin = cib->vortex_vars.origin[v];    // vortex origin
+        double C1    = cib->vortex_vars.strength[v];  // vortex strength
+        double R     = cib->vortex_vars.radius[v];    // vortex radius
         double R_sqr = R * R;
-        double p_ref  = 101325;        // assumed reference pressure
+        double p_ref  = 101325;                       // assumed reference pressure
+        
+        //                                            --- Should be using geometry objects -Todd
+        // axis of vortex
+        string axis = cib->vortex_vars.axis[v];
+        int i = -1;
+        int j = -1;
+        
+        if(axis == "X"){
+          i = 1;
+          j = 2;
+        }
+        else if( axis == "Y" ){
+          i = 0;
+          j = 2;
+        }
+        else if( axis == "Z" ){
+          i = 0;
+          j = 1;
+        } 
 
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
           IntVector c = *iter;
           Point pt = patch->cellPosition(c);
 
-          double x = pt.x() - origin.x();
-          double y = pt.y() - origin.y();
+          double x = pt(i) - origin(i);
+          double y = pt(j) - origin(j);
           double r = sqrt( x*x + y*y);
 
           if(r <= R ) {
@@ -235,11 +261,11 @@ void customInitialization(const Patch* patch,
 
             press_CC[c] = p_ref + rho_CC[c] * ((C1*C1)/R_sqr) * A;
 
-            double uvel = vel_CC[c].x();
-            double vvel = vel_CC[c].y();
+            double uvel = vel_CC[c][i];
+            double vvel = vel_CC[c][j];
 
-            vel_CC[c].x(uvel - ((C1 * y)/(rho_CC[c] * R_sqr) ) * A);
-            vel_CC[c].y(vvel + ((C1 * x)/(rho_CC[c] * R_sqr) ) * A);
+            vel_CC[c][i] = ( uvel - ((C1 * y)/( rho_CC[c] * R_sqr ) ) * A );
+            vel_CC[c][j] = ( vvel + ((C1 * x)/( rho_CC[c] * R_sqr ) ) * A );
           }
         }
       }  // loop
