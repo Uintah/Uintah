@@ -724,7 +724,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   if(flags->d_doExplicitHeatConduction){
     scheduleComputeHeatExchange(          sched, patches, matls);
     scheduleComputeInternalHeatRate(      sched, patches, matls);
-    //scheduleComputeNodalHeatFlux(       sched, patches, matls);
+    scheduleComputeNodalHeatFlux(         sched, patches, matls);
     scheduleSolveHeatEquations(           sched, patches, matls);
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
@@ -1153,7 +1153,6 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeInternalHeatRate");
   heatConductionModel->scheduleComputeInternalHeatRate(sched,patches,matls);
 }
 
@@ -1164,7 +1163,7 @@ void SerialMPM::scheduleComputeNodalHeatFlux(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeNodalHeatFlux");
+
   heatConductionModel->scheduleComputeNodalHeatFlux(sched,patches,matls);
 }
 
@@ -1175,7 +1174,6 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-  printSchedule(patches,cout_doing,"MPM::scheduleSolveHeatEquations");
   heatConductionModel->scheduleSolveHeatEquations(sched,patches,matls);
 }
 
@@ -1186,7 +1184,7 @@ void SerialMPM::scheduleComputeAndIntegrateDiffusion(       SchedulerP  & sched
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels())) return;
   printSchedule(patches, cout_doing,
-                "SerialMPM::scheduleComputeAndIntegrateDiffusion");
+                "MPM::scheduleComputeAndIntegrateDiffusion");
 
   Task* t = scinew Task("SerialMPM::computeAndIntegrateDiffusion",
                         this, &SerialMPM::computeAndIntegrateDiffusion);
@@ -1245,7 +1243,7 @@ void SerialMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-  printSchedule(patches,cout_doing,"MPM::scheduleIntegrateTemperatureRate");
+
   heatConductionModel->scheduleIntegrateTemperatureRate(sched,patches,matls);
 }
 
@@ -1850,7 +1848,7 @@ void SerialMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
                                                 DataWarehouse* new_dw)
 {
 
-  printTask(patches, patches->get(0) ,cout_doing,"countMaterialPointsPerLoadCurve");
+  printTask(patches, patches->get(0) ,cout_doing,"MPM::countMaterialPointsPerLoadCurve");
   // Find the number of pressure BCs in the problem
   int nofPressureBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
@@ -1897,7 +1895,7 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
 {
   // Get the current time
   double time = 0.0;
-  printTask(patches, patches->get(0),cout_doing,"Doing initializePressureBC");
+  printTask(patches, patches->get(0),cout_doing,"Doing MPM::initializePressureBC");
   if (cout_dbg.active())
     cout_dbg << "Current Time (Initialize Pressure BC) = " << time << endl;
 
@@ -2012,7 +2010,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch,cout_doing,"Doing SerialMPM::actuallyInitialize");
+    printTask(patches, patch,cout_doing,"Doing MPM::actuallyInitialize");
 
     CCVariable<int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
@@ -2208,7 +2206,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     printTask(patches,patch,cout_doing,
-              "Doing SerialMPM::interpolateParticlesToGrid");
+              "Doing MPM::interpolateParticlesToGrid");
 
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
@@ -2510,7 +2508,7 @@ void SerialMPM::computeSSPlusVp(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
-              "Doing computeSSPlusVp");
+              "Doing MPM::computeSSPlusVp");
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -2570,7 +2568,7 @@ void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
-              "Doing computeSPlusSSPlusVp");
+              "Doing MPM::computeSPlusSSPlusVp");
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -2640,7 +2638,7 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches,patch,cout_doing,"Doing addCohesiveZoneForces");
+    printTask(patches,patch,cout_doing,"Doing MPM::addCohesiveZoneForces");
 
 //    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     ParticleInterpolator* interpolator = scinew LinearInterpolator(patch);
@@ -2787,7 +2785,7 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
 {
 
   printTask(patches, patches->get(0),cout_doing,
-            "Doing computeStressTensor");
+            "Doing MPM::computeStressTensor");
 
   for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
 
@@ -2829,7 +2827,7 @@ void SerialMPM::computeContactArea(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing computeContactArea");
+    printTask(patches, patch,cout_doing,"Doing MPM::computeContactArea");
 
     Vector dx = patch->dCell();
 
@@ -2909,7 +2907,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing computeInternalForce");
+    printTask(patches, patch,cout_doing,"Doing MPM::computeInternalForce");
 
     Vector dx = patch->dCell();
     double oodx[3];
@@ -3143,7 +3141,7 @@ void SerialMPM::computeAndIntegrateDiffusion(const  ProcessorGroup  *
 {
   for (int p=0; p < patches->size(); ++p) {
     const Patch*  patch = patches->get(p);
-    printTask(patches, patch, cout_doing, "Doing SerialMPM::computeAndIntegrateDiffusion");
+    printTask(patches, patch, cout_doing, "Doing MPM::computeAndIntegrateDiffusion");
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -3208,7 +3206,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
-                       "Doing SerialMPM::computeAndIntegrateAcceleration");
+                       "Doing MPM::computeAndIntegrateAcceleration");
 
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
@@ -3303,7 +3301,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
-              "Doing setGridBoundaryConditions");
+              "Doing MPM::setGridBoundaryConditions");
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
@@ -3355,7 +3353,7 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
 
  for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing, "Doing setPrescribedMotion");
+    printTask(patches, patch,cout_doing, "Doing MPM::setPrescribedMotion");
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
@@ -3526,7 +3524,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   // Loop thru patches to update external force vector
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing applyExternalLoads");
+    printTask(patches, patch,cout_doing,"Doing MPM::applyExternalLoads");
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
@@ -3650,7 +3648,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
-              "Doing interpolateToParticlesAndUpdate");
+              "Doing MPM::interpolateToParticlesAndUpdate");
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -4003,7 +4001,7 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
-              "Doing computeParticleGradients");
+              "Doing MPM::computeParticleGradients");
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -4225,7 +4223,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
-              "Doing finalParticleUpdate");
+              "Doing MPM::finalParticleUpdate");
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -4277,7 +4275,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
-              "Doing updateCohesiveZones");
+              "Doing MPM::updateCohesiveZones");
 
     // The following is adapted from "Simulation of dynamic crack growth
     // using the generalized interpolation material point (GIMP) method"
@@ -4529,7 +4527,7 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing, "Doing insertParticles");
+    printTask(patches, patch,cout_doing, "Doing MPM::insertParticles");
 
     // Get the current simulation time
     simTime_vartype simTimeVar;
@@ -4584,7 +4582,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
-    printTask(patches, patch,cout_doing, "Doing addParticles");
+    printTask(patches, patch,cout_doing, "Doing MPM::addParticles");
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
     //Carry forward CellNAPID
@@ -5082,7 +5080,7 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing, "Doing computeParticleScaleFactor");
+    printTask(patches, patch,cout_doing, "Doing MPM::computeParticleScaleFactor");
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
@@ -5178,7 +5176,7 @@ SerialMPM::initialErrorEstimate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing initialErrorEstimate");
+    printTask(patches, patch,cout_doing,"Doing MPM::initialErrorEstimate");
 
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
@@ -5226,7 +5224,7 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
     for(int p=0;p<coarsePatches->size();p++){
       const Patch* coarsePatch = coarsePatches->get(p);
       printTask(coarsePatches, coarsePatch,cout_doing,
-                "Doing errorEstimate");
+                "Doing MPM::errorEstimate");
 
       CCVariable<int> refineFlag;
       PerPatch<PatchFlagP> refinePatchFlag;
@@ -5285,7 +5283,7 @@ SerialMPM::refine(const ProcessorGroup*,
 
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing refine");
+    printTask(patches, patch,cout_doing,"Doing MPM::refine");
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
@@ -5376,7 +5374,7 @@ void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
                                        const PatchSet * patches,
                                        const MaterialSet * matls )
 {
-  printSchedule(patches,cout_doing,"MPMCommon::scheduleComputeNormals");
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeNormals");
   
   Task* t = scinew Task("MPM::computeNormals", this, 
                         &SerialMPM::computeNormals);
@@ -5444,7 +5442,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
     vector<Vector> d_S(interpolator->size());
     string interp_type = flags->d_interpolator_type;
 
-    printTask(patches, patch, cout_doing, "Doing computeNormals");
+    printTask(patches, patch, cout_doing, "Doing MPM::computeNormals");
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
@@ -5574,7 +5572,7 @@ void SerialMPM::scheduleConcInterpolated(       SchedulerP  & sched
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels())) return;
 
-  printSchedule(patches,cout_doing,"SerialMPM::scheduleConcInterpolated");
+  printSchedule(patches,cout_doing,"MPM::scheduleConcInterpolated");
 
   d_sdInterfaceModel->addComputesAndRequiresInterpolated(sched, patches, matls);
 
@@ -5587,7 +5585,7 @@ void SerialMPM::scheduleComputeFlux(       SchedulerP  & sched
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels())) return;
 
-  printSchedule(patches,cout_doing,"SerialMPM::scheduleComputeFlux");
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeFlux");
 
   Task* t = scinew Task("SerialMPM::computeFlux",
                         this, &SerialMPM::computeFlux);
@@ -5611,7 +5609,7 @@ void SerialMPM::computeFlux(  const ProcessorGroup  *
 {
   for (int p = 0; p < patches->size(); ++p) {
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, cout_doing, "Doing SerialMPM::computeFlux");
+    printTask(patches, patch, cout_doing, "Doing MPM::computeFlux");
 
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
 
@@ -5630,7 +5628,7 @@ void SerialMPM::scheduleComputeDivergence(       SchedulerP  & sched
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels())) return;
 
-  printSchedule(patches,cout_doing,"SerialMPM::scheduleComputeDivergence");
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeDivergence");
 
   Task* t = scinew Task("SerialMPM::computeDivergence",
                         this, &SerialMPM::computeDivergence);
@@ -5655,7 +5653,7 @@ void SerialMPM::computeDivergence(  const ProcessorGroup  *
 {
   for (int p = 0; p < patches->size(); ++p) {
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, cout_doing, "Doing SerialMPM::computeDivergence");
+    printTask(patches, patch, cout_doing, "Doing MPM::computeDivergence");
 
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
 
@@ -5674,7 +5672,7 @@ void SerialMPM::scheduleDiffusionInterfaceDiv(       SchedulerP  & sched
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels())) return;
 
-  printSchedule(patches,cout_doing,"SerialMPM::scheduleDiffusionInterfaceDiv");
+  printSchedule(patches,cout_doing,"MPM::scheduleDiffusionInterfaceDiv");
 
   d_sdInterfaceModel->addComputesAndRequiresDivergence(sched, patches, matls);
 }

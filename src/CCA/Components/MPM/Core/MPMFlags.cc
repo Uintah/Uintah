@@ -261,26 +261,14 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("auto_cycle_max", d_autoCycleMax);
   mpm_flag_ps->get("auto_cycle_min", d_autoCycleMin);
   mpm_flag_ps->get("with_gauss_solver", d_withGaussSolver);
+  
+  
+  d_computeScaleFactor = dataArchive->isLabelSaved("p.scalefactor");
 
-  // d_doComputeHeatFlux:
-  // set to true if the label g.HeatFlux is saved or 
+
+  // d_doComputeHeatFlux if the label g.HeatFlux is saved or if
   // flatPlat_heatFlux analysis module is used.
-  //
-  // orginal problem spec
-  ProblemSpecP DA_ps = root->findBlock( "DataArchiver" );
-  if( DA_ps != nullptr ){
-    for( ProblemSpecP label_iter = DA_ps->findBlock( "save" ); label_iter != nullptr; label_iter = label_iter->findNextBlock( "save" ) ) {
-      map<string,string> labelName;
-
-      label_iter->getAttributes(labelName);
-      if(labelName["label"] == "g.HeatFlux"){
-        d_computeNodalHeatFlux = true;
-      }
-      if(labelName["label"] == "p.scalefactor"){
-        d_computeScaleFactor = true;
-      }
-    }
-  }
+  d_computeNodalHeatFlux   = dataArchive->isLabelSaved("g.HeatFlux");
 
   ProblemSpecP da_ps = root->findBlock("DataAnalysis");
 

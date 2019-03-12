@@ -80,7 +80,7 @@ namespace Uintah {
       double total_fluxout = 0.0;
       
       for(int f = TOP; f <= BACK; f++ )  {
-        double flux = outflux_faces.d_fflux[f];
+        double flux = outflux_faces.fflux[f];
         total_fluxout += flux;
         cout << " \t face: " << f << " (" << flux << ") ";
       }
@@ -116,7 +116,7 @@ namespace Uintah {
 namespace Uintah {
 
   void swapbytes( Uintah::fflux& f) {
-    double *p = f.d_fflux;
+    double *p = f.fflux;
     SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
     SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
   }

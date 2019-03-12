@@ -41,18 +41,16 @@ compareUda_function()
 
   if [ -s $test_uda_dir/input.xml.orig ]; then
     echo "comparing input.xml.orig"
-    sdiff -Ws $test_uda_dir/input.xml.orig $gs_uda_dir/input.xml.orig
+    upsDiff.py --no-color $test_uda_dir/input.xml.orig $gs_uda_dir/input.xml.orig
   else
     echo "comparing input.xml"
-    sdiff -Ws $test_uda_dir/input.xml $gs_uda_dir/input.xml
+    upsDiff.py --no-color $test_uda_dir/input.xml $gs_uda_dir/input.xml
   fi
 
   if [ $? != "0" ]; then
-    echo
-    echo "  Input files differ."
+    echo "To compare ups files use:"
+    echo "  diff $test_uda_dir/input.xml $gs_uda_dir/input.xml"
     inputs_differ=1
-  else
-    echo "  Input files are the same."
   fi
 
   failed="0"
