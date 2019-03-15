@@ -486,12 +486,12 @@ KeyDatabase<DomainType>::print( std::ostream & out, int rank ) const
 {
   for (auto keyiter = m_keys.begin(); keyiter != m_keys.end(); ++keyiter) {
     const VarLabelMatl<DomainType>& vlm = keyiter->first;
-    const DomainType* dom = vlm.domain_;
+    const DomainType* dom = vlm.m_domain;
     if (dom) {
-      out << rank << " Name: " << vlm.label_->getName() << "  domain: " << *dom << "  matl:" << vlm.matlIndex_ << '\n';
+      out << rank << " Name: " << vlm.m_label->getName() << "  domain: " << *dom << "  matl:" << vlm.m_matl_index << '\n';
     }
     else {
-      out << rank << " Name: " << vlm.label_->getName() << "  domain: N/A  matl: " << vlm.matlIndex_ << '\n';
+      out << rank << " Name: " << vlm.m_label->getName() << "  domain: N/A  matl: " << vlm.m_matl_index << '\n';
     }
   }
 }
