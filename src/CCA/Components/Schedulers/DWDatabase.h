@@ -706,8 +706,6 @@ DWDatabase<DomainType>::getlist( const VarLabel               * label
                                ,       std::vector<Variable*> & varlist
                                ) const
 {
-  // this function is allowed to return an empty list
-
   std::lock_guard<Uintah::MasterLock> get_list_lock(g_keyDB_lock);
 
   for (DataItem* dataItem = getDataItem(label, matlIndex, dom); dataItem != nullptr; dataItem = dataItem->m_next) {
