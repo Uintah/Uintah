@@ -295,8 +295,6 @@ template<class DomainType>
 void
 DWDatabase<DomainType>::cleanForeign()
 {
-  std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_lock);
-
   for (auto iter = m_vars.begin(); iter != m_vars.end(); ++iter) {
     if (*iter && (*iter)->m_var->isForeign()) {
       delete (*iter);
@@ -322,6 +320,8 @@ DWDatabase<DomainType>::decrementScrubCount( const VarLabel   * label
 
   ASSERT(matlIndex >= -1);
 
+  std::lock_guard<Uintah::MasterLock> decrement_scrub_count_lock(g_keyDB_lock);
+
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
     return 0;
@@ -329,11 +329,13 @@ DWDatabase<DomainType>::decrementScrubCount( const VarLabel   * label
   if (!m_vars[idx]) {
     return 0;
   }
+
   int rt = __sync_sub_and_fetch(&(m_scrubs[idx]), 1);
   if (rt == 0) {
     delete m_vars[idx];
     m_vars[idx] = nullptr;
   }
+
   return rt;
 }
 
@@ -347,6 +349,8 @@ DWDatabase<DomainType>::setScrubCount( const VarLabel   * label
                                      ,       int          count
                                      )
 {
+  std::lock_guard<Uintah::MasterLock> set_scrub_count_lock(g_keyDB_lock);
+
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex, "DWDatabase::setScrubCount", __FILE__, __LINE__));
@@ -364,6 +368,8 @@ DWDatabase<DomainType>::scrub( const VarLabel   * label
                              )
 {
   ASSERT(matlIndex >= -1);
+
+  std::lock_guard<Uintah::MasterLock> scrub_lock(g_keyDB_lock);
 
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx != -1 && m_vars[idx]) {
@@ -422,8 +428,6 @@ KeyDatabase<DomainType>::lookup( const VarLabel   * label
                                , const DomainType * dom
                                )
 {
-  std::lock_guard<Uintah::MasterLock> lookup_lock(g_keyDB_lock);
-
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   typename keyDBtype::const_iterator const_iter = m_keys.find(v);
   if (const_iter == m_keys.end()) {
@@ -512,20 +516,16 @@ DWDatabase<DomainType>::exists( const VarLabel   * label
                               , const DomainType * dom
                               ) const
 {
-  // lookup is lock_guard protected
+  std::lock_guard<Uintah::MasterLock> exists_lock(g_keyDB_lock);
+
   int idx = m_keyDB->lookup(label, matlIndex, dom);
-
-  {
-    std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_lock);
-    if (idx == -1) {
-      return false;
-    }
-    if (m_vars[idx] == nullptr) {
-      return false;
-    }
-    return true;
+  if (idx == -1) {
+    return false;
   }
-
+  if (m_vars[idx] == nullptr) {
+    return false;
+  }
+  return true;
 }
 
 //______________________________________________________________________
@@ -540,18 +540,15 @@ DWDatabase<DomainType>::put( const VarLabel   * label
                            ,       bool         replace
                            )
 {
-
   ASSERT(matlIndex >= -1);
 
-  {
-    std::lock_guard<Uintah::MasterLock> put_lock(g_keyDB_lock);
-    if (init) {
-      m_keyDB->insert(label, matlIndex, dom);
-      this->doReserve(m_keyDB);
-    }
+  std::lock_guard<Uintah::MasterLock> put_lock(g_keyDB_lock);
+
+  if (init) {
+    m_keyDB->insert(label, matlIndex, dom);
+    this->doReserve(m_keyDB);
   }
 
-  // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "DWDatabase::put", __FILE__, __LINE__));
@@ -567,6 +564,7 @@ DWDatabase<DomainType>::put( const VarLabel   * label
     ASSERT(m_vars[idx]->m_var != var);
     delete m_vars[idx];
   }
+
   DataItem* newdi = new DataItem();
   newdi->m_var = var;
   m_vars[idx] = newdi;
@@ -585,15 +583,13 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
 {
   ASSERT(matlIndex >= -1);
 
-  { // scoping for std::lock_guard
-    std::lock_guard<Uintah::MasterLock> put_reduce_lock(g_keyDB_lock);
-    if (init) {
-      m_keyDB->insert(label, matlIndex, dom);
-      this->doReserve(m_keyDB);
-    }
-  } // end scoping for std::lock_guard
+  std::lock_guard<Uintah::MasterLock> put_reduce_lock(g_keyDB_lock);
 
-  // lookup is lock_guard protected
+  if (init) {
+    m_keyDB->insert(label, matlIndex, dom);
+    this->doReserve(m_keyDB);
+  }
+
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "DWDatabase::putReduce", __FILE__, __LINE__));
@@ -630,15 +626,13 @@ DWDatabase<DomainType>::putForeign( const VarLabel   * label
 {
   ASSERT(matlIndex >= -1);
 
-  {
-    std::lock_guard<Uintah::MasterLock> put_foreign_lock(g_keyDB_lock);
-    if (init) {
-      m_keyDB->insert(label, matlIndex, dom);
-      this->doReserve(m_keyDB);
-    }
+  std::lock_guard<Uintah::MasterLock> put_foreign_lock(g_keyDB_lock);
+
+  if (init) {
+    m_keyDB->insert(label, matlIndex, dom);
+    this->doReserve(m_keyDB);
   }
 
-  // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "DWDatabase::putForeign", __FILE__, __LINE__));
@@ -662,6 +656,7 @@ DWDatabase<DomainType>::getDataItem( const VarLabel   * label
                                    ) const
 {
   ASSERT(matlIndex >= -1);
+
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex, "DWDatabase::getDataItem", __FILE__, __LINE__));
@@ -679,6 +674,8 @@ DWDatabase<DomainType>::get( const VarLabel   * label
                            , const DomainType * dom
                            ) const
 {
+  std::lock_guard<Uintah::MasterLock> get_lock(g_keyDB_lock);
+
   const DataItem* dataItem = getDataItem(label, matlIndex, dom);
   ASSERT(dataItem != nullptr);          // should have thrown an exception before
   ASSERT(dataItem->m_next == nullptr);  // should call getlist()
@@ -711,6 +708,8 @@ DWDatabase<DomainType>::getlist( const VarLabel               * label
 {
   // this function is allowed to return an empty list
 
+  std::lock_guard<Uintah::MasterLock> get_list_lock(g_keyDB_lock);
+
   for (DataItem* dataItem = getDataItem(label, matlIndex, dom); dataItem != nullptr; dataItem = dataItem->m_next) {
     varlist.push_back(dataItem->m_var);
   }
@@ -722,7 +721,7 @@ template<class DomainType>
 void
 DWDatabase<DomainType>::print( std::ostream & out, int rank ) const
 {
-  for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
+  for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); ++keyiter) {
     if (m_vars[keyiter->second]) {
       const VarLabelMatl<DomainType>& vlm = keyiter->first;
       const DomainType* dom = vlm.m_domain;
@@ -746,7 +745,7 @@ DWDatabase<DomainType>::logMemoryUse(       std::ostream  & out
                                     ,       int             dwid
                                     )
 {
-  for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
+  for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); ++keyiter) {
     if (m_vars[keyiter->second]) {
       Variable* var = m_vars[keyiter->second]->m_var;
       VarLabelMatl<DomainType> vlm = keyiter->first;
@@ -769,6 +768,8 @@ template<class DomainType>
 void
 DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatl<DomainType> > & v) const
 {
+  std::lock_guard<Uintah::MasterLock> get_var_label_mat_triples_lock(g_keyDB_lock);
+
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); ++keyiter) {
     const VarLabelMatl<DomainType>& vlm = keyiter->first;
     if (m_vars[keyiter->second]) {
@@ -799,8 +800,7 @@ using Uintah::VarLabelMatl;
 
 template<class DomainType>
 struct hash<VarLabelMatl<DomainType> > {
-  size_t operator()( const VarLabelMatl<DomainType>& v ) const
-  {
+  size_t operator()( const VarLabelMatl<DomainType>& v ) const {
     size_t h = 0u;
     char* str = const_cast<char*>(v.m_label->getName().data());
     while (int c = *str++) {
