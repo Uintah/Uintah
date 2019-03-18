@@ -55,6 +55,8 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 	pPorePressureLabel			= VarLabel::create("p.PorePressure", ParticleVariable<double>::getTypeDescription());
 	pPorePressureLabel_preReloc = VarLabel::create("p.PorePressure+", ParticleVariable<double>::getTypeDescription());
 
+	pStressFilterLabel			= VarLabel::create("p.StressFilter", ParticleVariable<Matrix3>::getTypeDescription());
+
 	pPorosityLabel				= VarLabel::create("p.Porosity", ParticleVariable<double>::getTypeDescription());
 	pPorosityLabel_preReloc		= VarLabel::create("p.Porosity+", ParticleVariable<double>::getTypeDescription());
 
@@ -106,6 +108,9 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 	//gVeloctySolidLabel		= VarLabel::create("g.gVeloctySolid", NCVariable<Vector>::getTypeDescription());
 	gPorePressureLabel			= VarLabel::create("g.PorePressure", NCVariable<double>::getTypeDescription());
 
+	gStressLabel				= VarLabel::create("g.Stress", NCVariable<Matrix3>::getTypeDescription());
+
+
 	gDraggingLabel				= VarLabel::create("g.Dragging", NCVariable<double>::getTypeDescription());
 
 }
@@ -115,6 +120,8 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 	// particles variables
 	VarLabel::destroy(pPorePressureLabel);
 	VarLabel::destroy(pPorePressureLabel_preReloc);
+
+	VarLabel::destroy(pStressFilterLabel);
 
 	VarLabel::destroy(pPorosityLabel);
 	VarLabel::destroy(pPorosityLabel_preReloc);
@@ -158,6 +165,8 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 	//VarLabel::destroy(gVeloctySolidLabel);
 
 	VarLabel::destroy(gPorePressureLabel);
+
+	VarLabel::destroy(gStressLabel);
 
 	VarLabel::destroy(gDraggingLabel);
 }

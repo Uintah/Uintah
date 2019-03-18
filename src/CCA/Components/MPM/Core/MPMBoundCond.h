@@ -45,6 +45,14 @@ namespace Uintah {
     void setBoundaryCondition(const Patch* patch,int dwi, const std::string& type,
                               NCVariable<double>& variable,
                               std::string interp_type="linear");
+	
+	void setBoundaryConditionLiquid(const Patch* patch, int dwi, const std::string& type,
+		NCVariable<Vector>& variable,
+		std::string interp_type = "linear");
+
+	void setBoundaryConditionLiquid(const Patch* patch, int dwi, const std::string& type,
+		NCVariable<double>& variable,
+		std::string interp_type = "linear");
 
   private:
 

@@ -1011,13 +1011,13 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(sched, patches, matls);
   scheduleComputeParticleGradientsAndPorePressure_DOUBLEMPM(sched, patches, matls);
   
-  
+  scheduleComputeStressTensor(sched, patches, matls);
+
   if (flags->d_NullSpaceFilter) {
   scheduleInterpolatePorePresureToGrid(sched, patches, matls);
   scheduleInterpolatePorePresureToParticle(sched, patches, matls);
   }
 
-  scheduleComputeStressTensor(						sched, patches, matls);
   scheduleFinalParticleUpdate(						sched, patches, matls);
 
   if (flags->d_insertParticles) {
@@ -3534,6 +3534,18 @@ void DOUBLEMPM::scheduleInterpolatePorePresureToGrid(SchedulerP& sched,
 	t->computes(double_lb->gPorePressureLabel);
 	t->computes(double_lb->gPorePressureLabel, m_materialManager->getAllInOneMatls(),
 		Task::OutOfDomain);
+
+	// Solid
+	t->requires(Task::NewDW, lb->pStressLabel_preReloc, gnone);
+	t->computes(double_lb->gStressLabel);
+	t->computes(double_lb->gStressLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+
+	// Porosity
+	const MaterialSubset* mss = matls->getUnion();
+	t->requires(Task::NewDW, double_lb->pPorosityLabel_preReloc, gnone);
+	t->modifies(double_lb->gPorosityLabel, mss);
+
 	sched->addTask(t, patches, matls);
 }
 
@@ -3558,9 +3570,24 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 		new_dw->get(gvolumeglobal, lb->gVolumeLabel,
 			m_materialManager->getAllInOneMatls()->get(0), patch, Ghost::None, 0);
 
+		// Liquid
 		NCVariable<double>       gPorePressureglobal;
 		new_dw->allocateAndPut(gPorePressureglobal, double_lb->gPorePressureLabel,
 			m_materialManager->getAllInOneMatls()->get(0), patch);
+		gPorePressureglobal.initialize(0.0);
+
+		// Solid
+		NCVariable<Matrix3>       gStressglobal;
+		new_dw->allocateAndPut(gStressglobal, double_lb->gStressLabel,
+			m_materialManager->getAllInOneMatls()->get(0), patch);
+		gStressglobal.initialize(0.0);
+
+		// Porosity
+		NCVariable<double>       gPorosityglobal;
+		new_dw->getModifiable(gPorosityglobal, double_lb->gPorosityLabel,
+			m_materialManager->getAllInOneMatls()->get(0), patch, Ghost::None, 0);
+		gPorosityglobal.initialize(0.0);
+
 
 		for (unsigned int m = 0; m < numMPMMatls; m++) {
 			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
@@ -3583,6 +3610,7 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 
 			new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
 
+			// Liquid
 			constParticleVariable<double> pPorePressure;
 			NCVariable<double>		      gPorePresure;
 
@@ -3591,7 +3619,28 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 
 			gPorePresure.initialize(0.0);
 
-			double PoreVol;
+			double PoreVol = 0;
+
+			// Solid
+			constParticleVariable<Matrix3> pstress;
+			NCVariable<Matrix3>		      gStress;
+			new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
+			new_dw->allocateAndPut(gStress, double_lb->gStressLabel, dwi, patch);
+
+			gStress.initialize(Matrix3(0.0));
+
+			Matrix3 StressVol =		(0, 0, 0,
+									0, 0, 0,
+									0, 0, 0);
+
+			// Porosity			
+			constParticleVariable<double>  pPorosity;
+			NCVariable<double>		      gPorosity;
+			new_dw->get(pPorosity, double_lb->pPorosityLabel_preReloc, pset);
+			new_dw->getModifiable(gPorosity, double_lb->gPorosityLabel, dwi, patch);
+			gPorosity.initialize(0.0);
+
+			double PorosityVol = 0;
 
 			// for the non axisymmetric case:
 			if (!flags->d_axisymmetric) {
@@ -3606,7 +3655,8 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 
 					// Liquid pressure
 					PoreVol = pPorePressure[idx] * pvol[idx];
-
+					StressVol = pstress[idx] * pvol[idx];
+					PorosityVol = pPorosity[idx] * pvol[idx];
 
 					//if (PoreVol > 0) {
 					//	std::cerr << PoreVol << std::endl;
@@ -3615,6 +3665,8 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 					for (int k = 0; k < NN; k++) {
 						if (patch->containsNode(ni[k])) {
 							gPorePresure[ni[k]] += PoreVol * S[k];							// Scalar
+							gStress[ni[k]] += StressVol * S[k];
+							gPorosity[ni[k]] += PorosityVol * S[k];
 						}
 					}
 				} // End particle loop
@@ -3622,8 +3674,18 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 
 			for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
 				IntVector c = *iter;	
+
+				// Liquid
 				gPorePressureglobal[c] += gPorePresure[c];
 				gPorePresure[c] /= gvolume[c];
+
+				// Solid
+				gStressglobal[c] += gStress[c];
+				gStress[c] /= gvolume[c];
+
+				// Porosity
+				gPorosityglobal[c] += gPorosity[c];
+				gPorosity[c] /= gvolume[c];
 
 				//if (gPorePresure[c] > 0) {
 				//	std::cerr << gPorePresure[c] << std::endl;
@@ -3634,6 +3696,8 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
 			IntVector c = *iter;
 			gPorePressureglobal[c] /= gvolumeglobal[c];
+			gStressglobal[c] /= gvolumeglobal[c];
+			gPorosityglobal[c] /= gvolumeglobal[c];
 		}
 		delete interpolator;
 	}
@@ -3656,13 +3720,21 @@ void DOUBLEMPM::scheduleInterpolatePorePresureToParticle(SchedulerP& sched,
 
 	Ghost::GhostType gac = Ghost::AroundCells;
 	Ghost::GhostType gnone = Ghost::None;
-
-	// Liquid
 	t->requires(Task::OldDW, lb->pXLabel, gnone);
 	t->requires(Task::OldDW, lb->pSizeLabel, gnone);
 	t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gnone);
+
+	// Liquid
 	t->requires(Task::NewDW, double_lb->gPorePressureLabel, gac, NGN);
 	t->modifies(double_lb->pPorePressureLabel_preReloc);
+
+	// Solid
+	t->requires(Task::NewDW, double_lb->gStressLabel, gac, NGN);
+	t->modifies(lb->pStressLabel_preReloc);
+
+	// Porosity
+	t->requires(Task::NewDW, double_lb->gPorosityLabel, gac, NGN);
+	t->modifies(double_lb->pPorosityLabel_preReloc);
 
 	sched->addTask(t, patches, matls);
 }
@@ -3687,23 +3759,33 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 		for (unsigned int m = 0; m < numMPMMatls; m++) {
 			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
 			int dwi = mpm_matl->getDWIndex();
-
-			// Liquid
-			constNCVariable<double> gPorePresure;
-			constParticleVariable<Point> px;
-			constParticleVariable<Matrix3> psize, pFOld;
-
-			ParticleVariable<double> pPorePressurenew;
-
 			Ghost::GhostType  gac = Ghost::AroundCells;
 			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-			new_dw->get(gPorePresure, double_lb->gPorePressureLabel, dwi, patch, gac, NGP);
+			constParticleVariable<Point> px;
+			constParticleVariable<Matrix3> psize, pFOld;
 			old_dw->get(px, lb->pXLabel, pset);
 			old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
 			old_dw->get(psize, lb->pSizeLabel, pset);
 
+			// Liquid
+			constNCVariable<double> gPorePresure;
+			ParticleVariable<double> pPorePressurenew;
+			new_dw->get(gPorePresure, double_lb->gPorePressureLabel, dwi, patch, gac, NGP);
 			new_dw->getModifiable(pPorePressurenew, double_lb->pPorePressureLabel_preReloc, pset);
+
+			// Solid
+			constNCVariable<Matrix3> gStress;
+			ParticleVariable<Matrix3> pstressnew;
+			new_dw->get(gStress, double_lb->gStressLabel, dwi, patch, gac, NGP);
+			new_dw->getModifiable(pstressnew, lb->pStressLabel_preReloc, pset);
+
+			// Liquid
+			constNCVariable<double> gPorosity;
+			ParticleVariable<double> pPorosityNew;
+
+			new_dw->get(gPorosity, double_lb->gPorosityLabel, dwi, patch, gac, NGP);
+			new_dw->getModifiable(pPorosityNew, double_lb->pPorosityLabel_preReloc, pset);
 
 			// Loop over particles
 			for (ParticleSubset::iterator iter = pset->begin();
@@ -3713,16 +3795,24 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 				// Get the node indices that surround the cell
 				int NN = interpolator->findCellAndWeights(px[idx], ni, S,
 					psize[idx], pFOld[idx]);
-				double pPorePressure = 0.0;
+
+				double PorePressure = 0;
+				double Porosity = 0;
+				Matrix3 Stressnew = (	0, 0, 0,
+										0, 0, 0,
+										0, 0, 0);
+
 				// Accumulate the contribution from each surrounding vertex
 				for (int k = 0; k < NN; k++) {
 					IntVector node = ni[k];
-
-					pPorePressure += gPorePresure[node] * S[k];
+					PorePressure += gPorePresure[node] * S[k];
+					Stressnew += gStress[node] * S[k];
+					Porosity += gPorosity[node] * S[k];
 				}
 
-				pPorePressurenew[idx] = pPorePressure;
-				//pPorePressurenew[idx] = 0;
+				pPorePressurenew[idx] = PorePressure;
+				pstressnew[idx] = Stressnew;
+				pPorosityNew[idx] = Porosity;
 				}
 
 		}  // loop over materials

@@ -21,8 +21,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+//#include <CCA/Components/MPM/ConstitutiveModel/HypoplasticB.h> // Uintah 1.6
+//#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h> // Uintah 1.6
+
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/HypoplasticB.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
+
 #include <CCA/Ports/DataWarehouse.h>
 
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -34,11 +38,15 @@
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
+
+//#include <Core/Labels/MPMLabel.h> // Uintah 1.6
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
+#include <Core/Containers/StaticArray.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
@@ -68,15 +76,20 @@ extern "C"{
                 char* keya[], double rinit[], double rdim[], int iadvct[],
                 int itype[] );
 }
-
-double stepTimeB;
+ double ElAreaB[20000];
+ double coordXB[1][20000];
+ double coordYB[1][20000];
+ //double coordZ[1][20000];
+ double dlocMB[1][20000];
+ double dnonlocMB[1][20000];
+ int iNLB;
 
 using namespace std; using namespace Uintah;
 
 HypoplasticB::HypoplasticB(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
-  d_NBASICINPUTS=11;
+  d_NBASICINPUTS=14;
   d_NMGDC=0;
 
   // Total number of properties
@@ -98,7 +111,7 @@ HypoplasticB::HypoplasticB(ProblemSpecP& ps,MPMFlags* Mflag)
 
   // DMMRXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
 
-  nx=11;
+  nx=14;
 
   for (int i=0;i<nx;i++)
     {
@@ -148,7 +161,9 @@ n - compression coefficient
 alpha - pycontrophy coefficient
 E - young modulus
 v - poisson ratio
-epocz - void ratio
+epocz - initial void ratio
+nl - non-local (0 - OFF; 1 - ON)
+lchar - characterstic length
    */
 
   cm_ps->appendElement("ei0_B",UI[0]);
@@ -162,7 +177,9 @@ epocz - void ratio
   cm_ps->appendElement("E_B",UI[8]);
   cm_ps->appendElement("v_B",UI[9]);  
   cm_ps->appendElement("epocz_B",UI[10]);
-  //  cm_ps->appendElement("CurrentVR",UI[11]); 
+  cm_ps->appendElement("nl_B",UI[11]);
+  cm_ps->appendElement("lchar_B",UI[12]);
+  cm_ps->appendElement("stress_x_pocz",UI[13]);
 
 }
 
@@ -181,7 +198,8 @@ void HypoplasticB::initializeCMData(const Patch* patch,
 
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
-  std::vector<ParticleVariable<double> > ISVs(d_NINSV+1);
+  //StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
+  StaticArray<ParticleVariable<double> > ISVs(d_NINSV + 1);
 
   cout << "In initializeCMData" << endl;
   for(int i=0;i<d_NINSV;i++){
@@ -277,7 +295,9 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-	std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
+	StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
+
+
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],           ISVLabels[i],                 pset);
     }
@@ -292,10 +312,129 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
     new_dw->get(pvolume_new,     lb->pVolumeLabel_preReloc,              pset);
     new_dw->get(velGrad,         lb->pVelGradLabel_preReloc,             pset);
 
-	std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+	StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
     }
+///////////// NAPREZENIA POCZATKOWE IMPLEMENTED BY JAKUB KRZYZANOWSKI, 03.2019
+
+ double stress_x_poczB=UI[13];
+
+
+ Matrix3 stress_poczB(0.0);
+ stress_poczB.set(0,0,stress_x_poczB);
+
+///////////// NAPREZENIA POCZATKOWE IMPLEMENTED BY JAKUB KRZYZANOWSKI, 03.2019
+
+
+///////////// NON - LOCAL PROBLEM IMPLEMENTED BY JAKUB KRZYZANOWSKI, 02.2019
+
+    //Okreslam wartosc, od ktorej bedzie startowal itercoord
+    int itercoordB=0;
+
+    //iNLB - wykona sie tyle razy, ile jest czastek w analizie
+    iNLB=0;
+
+    // Petla "for" wykona sie tyle razy, ile jest wszystkich czastek w analizie, w kazdym kroku czasowym
+
+    for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+    {
+      particleIndex idx = *iter;
+
+      //Kazda wspolrzedna "x" oraz "y" oraz objetosc czastki zostaje zapisana. Petla wykona sie
+      //tyle razy, ile jest czastek - wiec wszystkie wspolrzedne sa zapisywane z kazdej czastki
+      //w danej chwili czasowej
+      coordXB[0][itercoordB]=px[idx].x();
+      coordYB[0][itercoordB]=px[idx].y();
+      //coordZ[0][itercoord]=px[idx].z();
+      ElAreaB[itercoordB]=pvolume[idx];
+
+              Matrix3 D=(velGrad[idx]+velGrad[idx].Transpose())*.5;
+
+              Matrix3 tensorR, tensorU;
+              double Darray[6];
+              Darray[0]=D(0,0)*delT;
+              Darray[1]=D(1,1)*delT;
+              Darray[2]=D(2,2)*delT;
+              Darray[3]=D(0,1)*delT;
+              Darray[4]=D(1,2)*delT;
+              Darray[5]=D(2,0)*delT;
+
+      //Wartosc ponizej jest to wartosc pod pierwiastkiem
+	      double dlooocB=pow(((1.0/delT)*Darray[0]),2)+pow(((1.0/delT)*Darray[1]),2)+pow(((1.0/delT)*Darray[2]),2)+2.0*pow(((1.0/delT)*Darray[3]),2)+2.0*pow(((1.0/delT)*Darray[4]),2)+2.0*pow(((1.0/delT)*Darray[5]),2);
+
+      double dlocB;
+
+      //Jezeli wartosc pod pierwiastkiem bylaby mniejsza od 0, to wiadomo - przyjmij 0
+      if (dlooocB<=0)
+      {
+      dlocB=0;
+      }
+      else
+      {
+      dlocB=sqrt(dlooocB);
+      }
+
+      //Przykladowo - tutaj dla pierwszej czastki, okreslam modul lokalny potrzebny do dalszych obliczen
+      dlocMB[0][itercoordB]=dlocB;
+
+      //Petla wykona sie tyle razy ile jest czastek, a ponizej okreslam jak maja zmieniac sie kolejne
+      //szufladki, tzn. dlocM[0][0] - oznacza szufladka dla 1. czastki, dlocM[0][1] - dla 2. itd
+      //Petla sie przerwie - jezeli wszystkie czastki beda mialy przypisany modul lokalny
+      itercoordB=itercoordB+1;
+    }
+
+    int itercoord2B=0;
+    double PI2B=2*asin(1.0);
+    double nlbetaB=UI[11];
+    double charlB=UI[12];
+    double lcharB=charlB*charlB;
+    double stalaB=1/(charlB*sqrt(PI2B));
+    double dziewlkwB=9*lcharB;
+
+    for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+    {
+
+    int itercoord3B=0;
+    double sumaB, sumB, distxB, distyB, rdistB, wwB; //distz
+           sumaB=0;
+	   sumB=0;
+
+
+
+	   //Ta petla ponizej dziala tak, ze wezmie najpierw czastke [0][0][0] i do niej
+	   //odniesie wszystkie wszystkie punkty wokol zgodnie z itercoord3. Jak itercoord
+	   //przeleci wszystkie czastki, to dopiero sie przerywa i dla tej czastki jest 
+	   //okreslany modul nielokalny,ktory wedruje bezposrednio do obliczenia dla niej stresu
+	   //w dziale CalculateStress. Dla kazdej czastki okreslany jest tu modul nielokalny.
+	   //Za zmiane rozwazanej w nadej chwili czastki odpowiada itercoord2, natomiast
+	   //itercoord3 - tez zmienia kazdy punkcik, ale w sensie, bierze wszystkie czastki
+	   //z calego ciala i odnosi je do aktualnie rozpatrywanej.
+	   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+           {
+	     distxB=coordXB[0][itercoord3B]-coordXB[0][itercoord2B];
+	     distyB=coordYB[0][itercoord3B]-coordYB[0][itercoord2B];
+	     //distz=coordZ[0][itercoord3]-coordZ[0][itercoord2];
+	     rdistB=distxB*distxB+distyB*distyB;//+distz*distz;
+
+	     //Ten "if" jest po to, zeby uwzglednic, ze wplyw nielokalnosci na polu (3l)^2=9l^2
+	     if (rdistB<=dziewlkwB)
+	     {
+	     wwB=stalaB*exp(-(rdistB/lcharB));
+	     sumaB=sumaB+(dlocMB[0][itercoord3B])*wwB*ElAreaB[itercoord3B];
+	     sumB=sumB+(wwB*ElAreaB[itercoord3B]);
+	     }
+	     itercoord3B=itercoord3B+1;
+	   }
+
+	   //Tutaj zapisywany jest dla danej czastki rozpatrzonej modul nielokalny.
+	   //Co warto zauwazyc - jezeli nl=0, to zapisywany modul jest tak naprawde lokalnym
+	   dnonlocMB[0][itercoord2B]=(1-nlbetaB)*dlocMB[0][itercoord2B]+nlbetaB*sumaB/sumB;
+
+	   itercoord2B=itercoord2B+1;
+    }
+
+///////////// NON - LOCAL PROBLEM IMPLEMENTED BY JAKUB KRZYZANOWSKI, 02.2019
 
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
@@ -334,8 +473,8 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 
       // This is the previous timestep Cauchy stress
       // unrotated tensorSig=R^T*pstress*R
-      // added initial stress
-      Matrix3 tensorSig = (tensorR.Transpose())*(pstress[idx]*tensorR);
+      // added initial stress ZMIANA: stress_poczB
+      Matrix3 tensorSig = (tensorR.Transpose())*((pstress[idx]+stress_poczB)*tensorR);
 
       // Load into 1-D array for the fortran code
       double sigarg[6];
@@ -386,8 +525,8 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
       tensorSig(2,0) = sigarg[5];
       tensorSig(0,2) = sigarg[5];
 
-      // ROTATE pstress_new: S=R*tensorSig*R^T
-      pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
+      // ROTATE pstress_new: S=R*tensorSig*R^T ZMIANA: stress_poczB
+      pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose())-stress_poczB;
 
       c_dil = sqrt(USM/rho_cur);
 
@@ -448,8 +587,8 @@ void HypoplasticB::carryForward(const PatchSubset* patches,
     carryForwardSharedData(pset, old_dw, new_dw, matl);
 
     // Carry forward the data local to this constitutive model
-	std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
-	std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+	StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
+	StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
 
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],ISVLabels[i], pset);
@@ -553,7 +692,7 @@ void HypoplasticB::computePressEOSCM(double rho_cur, double& pressure,
 
 double HypoplasticB::getCompressibility()
 {
-    //TU JEST ZMIANA, DZIALA STABILNIEJ
+    //TU MOZNA ZMIENIAC:
     return 1.0;
 //  return 1.0/((UI[8])/(3*(1-2*UI[9])));
 }
@@ -572,7 +711,9 @@ HypoplasticB::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("E_B",UI[8],0.0);
   ps->getWithDefault("v_B",UI[9],0.0);
   ps->getWithDefault("epocz_B",UI[10],0.0);
-  //  ps->getWithDefault("CurrentVR",UI[11],0.0);
+  ps->getWithDefault("nl_B",UI[11],0.0);
+  ps->getWithDefault("lchar_B",UI[12],0.0);
+  ps->getWithDefault("stress_x_pocz",UI[13],0.0);
 }
 
 void
@@ -591,7 +732,9 @@ HypoplasticB::initializeLocalMPMLabels()
   ISVNames.push_back("E_B");
   ISVNames.push_back("v_B");
   ISVNames.push_back("epocz_B");
-  //  ISVNames.push_back("CurrentVR");
+  ISVNames.push_back("nl_B");
+  ISVNames.push_back("lchar_B");
+  ISVNames.push_back("stress_x_pocz");
   
   for(int i=0;i<d_NINSV;i++){
     ISVLabels.push_back(VarLabel::create(ISVNames[i],
@@ -601,7 +744,7 @@ HypoplasticB::initializeLocalMPMLabels()
   }
 }
 
-//
+//CONSTITUTIVE MODEL IMPLEMENTED BY JAKUB KRZYZANOWSKI, 01.2019
 
 void HypoplasticB::CalculateStress (int &nblk, int &ninsv, double &dt, double UI[], double stress[], double D[], double svarg[], double &USM)
 //C**********************************************************************
@@ -616,7 +759,7 @@ void HypoplasticB::CalculateStress (int &nblk, int &ninsv, double &dt, double UI
 //C     input output arguments
 //C     ======================
 //C      STRESS   dp,ar(6)                stress
-//C      SVARG    dp,ar(ninsv)            state variables//////////////statenew
+//C      SVARG    dp,ar(ninsv)            state variables/statenew
 //C
 //C     output arguments
 //C     ================
@@ -749,14 +892,17 @@ double NT12=a1*(2.0*InitialPointstress[3]/(trT));
 double NT23=a1*(2.0*InitialPointstress[4]/(trT));
 double NT13=a1*(2.0*InitialPointstress[5]/(trT));
 
-double Ds=(1.0/dt)*sqrt(pow(strainInc[0],2.0)+pow(strainInc[1],2.0)+pow(strainInc[2],2.0)+2.0*pow(strainInc[3],2.0)+2.0*pow(strainInc[4],2.0)+2.0*pow(strainInc[5],2.0));
+double dloc=dnonlocMB[0][iNLB];
 
-double dT1=fs*(LTD1+fd*NT1*Ds); 		
-double dT2=fs*(LTD2+fd*NT2*Ds);
-double dT3=fs*(LTD3+fd*NT3*Ds);
-double dT12=fs*(LTD12+fd*NT12*Ds);
-double dT23=fs*(LTD23+fd*NT23*Ds);
-double dT13=fs*(LTD13+fd*NT13*Ds);
+//To na dole jest OK, jezeli nie ma nielokalnosci-zeby uaktywnic usunac nielokalnosc
+//double Ds=(1.0/dt)*sqrt(pow(strainInc[0],2.0)+pow(strainInc[1],2.0)+pow(strainInc[2],2.0)+2.0*pow(strainInc[3],2.0)+2.0*pow(strainInc[4],2.0)+2.0*pow(strainInc[5],2.0));
+
+double dT1=fs*(LTD1+fd*NT1*dloc); 		
+double dT2=fs*(LTD2+fd*NT2*dloc);
+double dT3=fs*(LTD3+fd*NT3*dloc);
+double dT12=fs*(LTD12+fd*NT12*dloc);
+double dT23=fs*(LTD23+fd*NT23*dloc);
+double dT13=fs*(LTD13+fd*NT13*dloc);
 
 InitialPointstress[0]=InitialPointstress[0]+dT1*dt;
 InitialPointstress[1]=InitialPointstress[1]+dT2*dt;
@@ -765,8 +911,11 @@ InitialPointstress[3]=InitialPointstress[3]+dT12*dt;
 InitialPointstress[4]=InitialPointstress[4]+dT23*dt;
 InitialPointstress[5]=InitialPointstress[5]+dT13*dt;
 
+iNLB=iNLB+1;
+
 double de=(1.0+esd)*(1.0/dt)*(strainInc[0]+strainInc[1]+strainInc[2]);
 
+//Zeby pokazac porowatosc, musi ona byc jednoczesnie UI oraz svarg
 svarg[10]=svarg[10]+de*dt;
 
 //double edd=ed*1.001;
@@ -792,7 +941,8 @@ svarg[10]=svarg[10]+de*dt;
 //     svarg[0]=stateN;
 //}
 
-//cerr << D[0] << endl;
+//cerr << iNLB  << endl;
+//cerr << dnonlocMB[0][iNLB] << endl;
 
 for (int k=0; k<6; k++)
 {
