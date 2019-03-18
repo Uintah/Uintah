@@ -1063,11 +1063,7 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
              
   t = scinew Task("ICE::computeThermoTransportProperties", 
             this, &ICE::computeThermoTransportProperties); 
-            
-  //if(d_doAMR && level->getIndex() !=0){
-  // dummy variable needed to keep the taskgraph in sync
-  //t->requires(Task::NewDW,lb->AMR_SyncTaskgraphLabel,Ghost::None,0);
-  //}           
+           
   t->requires(Task::OldDW,lb->temp_CCLabel, ice_matls->getUnion(), Ghost::None, 0);  
 
   t->computes(lb->viscosityLabel);
@@ -4041,7 +4037,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           IntVector c = *iter;
 
           Vector fixedPressSrc = pressSrc * vol_frac[c];
-          mom_source[c] = oneZero * mom_source[c] + (one - oneZero) * fixedPressSrc;
+          mom_source[c] = mom_source[c] + (one - oneZero) * fixedPressSrc;
         }
       }
       
@@ -5113,7 +5109,7 @@ void ICE::TestConservation(const ProcessorGroup*,
       }
     }
     //__________________________________
-    // conservation of momentum
+    // conservation of convective momentum 
     if(d_conservationTest->momentum){
       CCVariable<Vector> mom;
       constCCVariable<Vector> vel_CC;
