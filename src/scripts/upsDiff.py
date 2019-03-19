@@ -17,7 +17,6 @@ import re
     Usage: upsDiff.py file1.ups file2.ups <optional args>
     
     Optional arguments:")
-        --no-color           |Print using default console color. Overrules the --ellipsis option. Does not support line numbers.
         --no-output          |Do not display output. Does not apply to error messages. Overrules all other options.
         --ellipsis <int>     |Truncate path differences after <int> number of different elements. Default is 1. Setting 0 for <int> will turn truncation off.
     
@@ -238,7 +237,7 @@ def processDifferencesNoOutput(list1, list2):
 
 # ____________________________________________________________
 # Compares two lists of paths for differences.
-def processDifferences(list1, list2, tree1Name, tree2Name):
+def processDifferences(list1, list2, tree1Name, tree2Name, tree1, tree2):
   # Call helper method to generate differences
   [uniqueToFirst, uniqueToSecond] = setDifferenceHelper(list1, list2)
 
@@ -250,52 +249,17 @@ def processDifferences(list1, list2, tree1Name, tree2Name):
     print("No differences")
     return returnCodeNoDifference
   else:
-    print("Diferences Detected")
+    print("Differences detected:")
 
   # Otherwise, print differences then return
   if length1 > 0:
-    simplePrintPaths("<     ",uniqueToFirst)
+    printPaths(uniqueToFirst, tree2, tree1Name, "<")
 
   print("\n---")
-  
-  if length2 > 0:
-    simplePrintPaths(">     ",uniqueToSecond)
-  
-  print()
-
-  return returnCodeDifferencesFound
-# end processDiffs()
-
-
-# ____________________________________________________________
-# Compares two lists of paths for differences.
-# Output is displayed in color
-def processDifferencesColor(list1, list2, tree1Name, tree2Name, tree1, tree2):
-  # Call helper method to generate differences
-  [uniqueToFirst, uniqueToSecond] = setDifferenceHelper(list1, list2)
-
-  # If length of inputs is 0, no differences
-  length1 = len(uniqueToFirst)
-  length2 = len(uniqueToSecond)
-  
-  if length1 == 0 and length2 == 0:
-    printRed("\nNo differences")
-    return returnCodeNoDifference
-  else:
-    printRed("Differences detected:")
-
-  # Otherwise, print differences then return
-  if length1 > 0:
-    printBlue("\n" + tree1Name)
-    printPathsColor(uniqueToFirst, tree2, tree1Name)
-  else:
-    printBlue("\n" + tree1Name)
 
   if length2 > 0:
-    printGreen("\n" + tree2Name)
-    printPathsColor(uniqueToSecond, tree1, tree2Name)
-  else:
-    printGreen("\n" + tree2Name)
+    printPaths(uniqueToSecond, tree1, tree2Name, ">")
+
   print()
 
   return returnCodeDifferencesFound
@@ -317,71 +281,63 @@ def setDifferenceHelper(list1, list2):
 
 # ____________________________________________________________
 # Prints every path from a list of path, in sorted order.
-def simplePrintPaths( LorR, nodes):
-  for node in sorted(nodes):
-    print( LorR + node)
-# end simplePrintPaths()
-
-
-# ____________________________________________________________
-# Prints every path from a list of path, in sorted order.
-# Each path is compared to the other tree. Nodes are printed in the default color until the path
-# diverges from the other tree. After diverging, nodes are printed in red.
+# Each path is compared to the other tree.
 # If the non-matching part has a long path, print the first non-matching elements + "/..."
-def printPathsColor(nodes, otherTree, thisTreeFileName):
+def printPaths(nodes, otherTree, thisTreeFileName, angleBracket):
 
   setOfPaths = set()
   lineNumbers = []
 
   for node in sorted(nodes):
 
-    redIdx = findEquivalentPartialPath(node, otherTree)
+    diffIdx = findEquivalentPartialPath(node, otherTree)
 
     splitByPathParts = node.split("/")
 
     printPath = ""
 
     # Add matching part of path
-    for partOfPath in splitByPathParts[0:redIdx]:
+    for partOfPath in splitByPathParts[0:diffIdx]:
       printPath = printPath + partOfPath + "/"
 
     addLastBit = True
 
-    # Add non-matching part of path in red
-    for i in range(0, len(splitByPathParts[redIdx:-1])):
-      partOfPath = splitByPathParts[redIdx:-1][i]
+    # Add non-matching part of path. Previously added this part with a different color.
+    # This block of code could most likely be consolidated with the previous block. All we really need now is the diffIdx
+    for i in range(0, len(splitByPathParts[diffIdx:-1])):
+      partOfPath = splitByPathParts[diffIdx:-1][i]
 
       # if the non-matching part has a long path
       if ellipsisOn:
-        if len(splitByPathParts) - redIdx > 1 and i > ellipsisLevel:
-          printPath = printPath + '\033[91m' + "..." + '\033[0m' #Red
+        if len(splitByPathParts) - diffIdx > 1 and i > ellipsisLevel:
+          printPath = printPath + "..."
           addLastBit = False
           break
 
       # else
-      printPath = printPath + '\033[91m' + partOfPath + "/" + '\033[0m' #Red
+      printPath = printPath + partOfPath + "/"
 
     # Add last element separate to exclude the "/"
     if addLastBit:
-      printPath = printPath + '\033[91m' + splitByPathParts[-1] + '\033[0m' # Red
+      printPath = printPath + splitByPathParts[-1]
 
     if not setOfPaths.__contains__(printPath):
       setOfPaths.add(printPath)
-      lineNumb = getLineNumber(printPath, thisTreeFileName, redIdx)
+      lineNumb = getLineNumber(printPath, thisTreeFileName, diffIdx)
       lineNumbers.append(lineNumb)
 
 
   #Print
   i = 0
   for path in sorted(setOfPaths):
-    print(path, end="    Line ")
+    print(angleBracket, "    ", path, end="    Line ")
     print(lineNumbers[i])
     i += 1
 
     if "*" in path:
       print("   Element with difference has at least one sibling of the same name. Please manually compare both/all similar siblings." )
 
-# end printPathsColor()
+# end printPaths()
 
 
 # ____________________________________________________________
@@ -399,7 +355,6 @@ def getLineNumber(path, inputFileName, divergeIdx):
     beforeDivertPart = pathParts[divergeIdx - 1]
     line2 = runGrep(beforeDivertPart, inputFileName)
 
-    trueLineNumber = line1[0]
     for line in line1:
       if line < line2[0]:
         continue
@@ -415,13 +370,11 @@ def getLineNumber(path, inputFileName, divergeIdx):
 # ____________________________________________________________
 # Use subprocess to run grep to find where an element occurs in the input file
 def runGrep(input, inputFileName):
-  ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
-  uncoloredText = ansi_escape.sub('', input)
 
-  if "*" in uncoloredText:
-    uncoloredText = uncoloredText.replace("*", "")
+  if "*" in input:
+    input = input.replace("*", "")
 
-  commandArgs1 = ["grep", "-n", uncoloredText, inputFileName]
+  commandArgs1 = ["grep", "-n", input, inputFileName]
   out = subprocess.run(commandArgs1, stdout=subprocess.PIPE, check=True)
   output = str(out.stdout, 'utf-8')
 
@@ -476,27 +429,6 @@ def findEquivalentPartialPathRecursive(currentIdx, otherTree, pathParts):
 
 
 # ____________________________________________________________
-# Somehow this changes the color of print output to blue
-def printBlue(inputStr):
-  print('\033[94m' + inputStr + '\033[0m')
-
-
-# ____________________________________________________________
-# Somehow this changes the color of print output to green
-def printGreen(inputStr):
-  print('\033[92m' + inputStr + '\033[0m')
-
-
-# ____________________________________________________________
-# Somehow this changes the color of print output to red
-def printRed(inputStr, printNewLine=True):
-  if printNewLine:
-    print('\033[91m' + inputStr + '\033[0m')
-  else:
-    print('\033[91m' + inputStr + '\033[0m', end="")
-
-
-# ____________________________________________________________
 # Display usage and info message
 def displayHelpMessage():
   print()
@@ -508,8 +440,7 @@ def displayHelpMessage():
   print("Usage: upsDiff.py file1.ups file2.ups <optional args>")
   print()
   print("Optional arguments:")
-  print("    --no-color         |Print using default console color. Overrules --ellipsis option. Does not support line numbers.")
-  print("    --no-output        |Do not display output. Does not apply to error messages. Overrules --no-color")
+  print("    --no-output        |Do not display output. Does not apply to error messages.")
   print("    --ellipsis <int>   |Truncate path differences after <int> number of different elements.")
   print("                       |    Default is 1. Setting 0 for <int> will turn truncation off.")
   print()
@@ -535,7 +466,6 @@ if numArgs < 3:  # Two few args
 
 
 # Default optional parameter values
-printWithColor = True
 printOutput = True
 ellipsisOn = True
 ellipsisLevel = 0 # Default is 1, -1 to fix offset
@@ -553,10 +483,7 @@ for i in range(1, numArgs):
 
   if arg[0: 2] == "--":  # Arg is an optional parameter
 
-    if arg == "--no-color":
-      printWithColor = False
-
-    elif arg == "--no-output":
+    if arg == "--no-output":
       printOutput = False
 
     elif arg == "--ellipsis":
@@ -616,10 +543,7 @@ formattedListOfPaths2 = generateTreePaths(xmlTree2)
 # Compare and print differences
 if printOutput:
 
-  if printWithColor:
-    outCode = processDifferencesColor(formattedListOfPaths1, formattedListOfPaths2, path1, path2, xmlTree1, xmlTree2)
-  else:
-    outCode = processDifferences(formattedListOfPaths1, formattedListOfPaths2, path1, path2)
+  outCode = processDifferences(formattedListOfPaths1, formattedListOfPaths2, path1, path2, xmlTree1, xmlTree2)
 
 else:
   outCode = processDifferencesNoOutput(formattedListOfPaths1, formattedListOfPaths2)
