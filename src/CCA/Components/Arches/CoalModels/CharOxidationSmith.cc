@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2019 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -301,7 +301,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     double initial_rc = (M_PI/6.0)*initial_diameter*initial_diameter*initial_diameter*_init_particle_density*(1.-ash_mass_frac);
 
     _rho_org_bulk = initial_rc / (p_volume*(1-_p_void0) - _mass_ash/_rho_ash_bulk) ; // bulk density of char [kg/m^3]
-    _p_voidmin = 1. - (1/p_volume)*(initial_rc*(1.-_v_hiT)/_rho_org_bulk + _mass_ash/_rho_ash_bulk);  // minimum particle porosity after devolatilization [-]
+    _p_voidmin = 1. - (1/p_volume)*(initial_rc*(1.-_v_hiT)/_rho_org_bulk + _mass_ash/_rho_ash_bulk); // bulk density of char [kg/m^3]
     db_Smith->getWithDefault("surface_area_mult_factor",_S,1.0);
     _NUM_species = 0;
     for ( ProblemSpecP db_species = db_Smith->findBlock( "species" ); db_species != nullptr; db_species = db_species->findNextBlock( "species" ) ){
@@ -749,6 +749,8 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     // initialize all temporary variables which are use in the cell loop.
     int count;
     double relative_velocity;
+    //double CO_CO2_ratio;
+    //double CO2onCO;
     double gas_rho;
     double gas_T;
     double p_T;
@@ -758,6 +760,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     double p_volume;
     double Sj;
     double p_void;
+    double p_void_max;
     double psi;
     double rc;
     double ch;
@@ -811,6 +814,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 
       } else {
      // 03 - No DenseMatrix
+     ///double dfdrh[_NUM_reactions][_NUM_reactions];
      double dfdrh[3][3];
      //double **dfdrh;
      for (int l=0; l<_NUM_reactions; l++) {
@@ -819,8 +823,34 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
       }
      }
 
+      // 04 - Replace std::vector with plain-old-data arrays
+    //std::vector<double> effectivenessF(_NUM_reactions);
+    //std::vector<double> M_T(_NUM_reactions);
+    //std::vector<double> phi_l(_NUM_reactions);
+    //std::vector<double> hrxn_l(_NUM_reactions);
+    //std::vector<double> oxid_mass_frac(_NUM_reactions);
+    //std::vector<double> oxid_mole_frac(_NUM_reactions);
+    //std::vector<double> co_r(_NUM_reactions);
+    //std::vector<double> k_r(_NUM_reactions);
+    //std::vector<double> species_mass_frac(_NUM_species);
+    //std::vector<double> rh_l(_NUM_reactions);
+    //std::vector<double> rh_l_new(_NUM_reactions);
+    //std::vector<double> D_oxid_mix_l(_NUM_reactions);
+    //std::vector<double> D_kn(_NUM_reactions);
+    //std::vector<double> D_eff(_NUM_reactions);
+    //std::vector<double> F(_NUM_reactions);
+   // std::vector<double> F_delta(_NUM_reactions);
+    //std::vector<double> rh_l_delta(_NUM_reactions);
+    //std::vector<double> Sc(_NUM_reactions);
+    //std::vector<double> Sh(_NUM_reactions);
+    //std::vector<double> co_s(_NUM_reactions);
+    //std::vector<double> r_h_ex(_NUM_reactions);
+    //std::vector<double> r_h_in(_NUM_reactions);
+
       double D_oxid_mix_l     [ _NUM_reactions ];
       // 06 - Cut excess temporary variables
+      //double D_kn             [ _NUM_reactions ];
+      //double D_eff            [ _NUM_reactions ];
       double phi_l            [ _NUM_reactions ];
       double hrxn_l           [ _NUM_reactions ];
       double rh_l             [ _NUM_reactions ];
@@ -832,6 +862,8 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
       //double Sc            [ _NUM_reactions ];
       double Sh            [ _NUM_reactions ];
       // 06 - Cut excess temporary variables
+      //double co_s          [ _NUM_reactions ];
+      //double oxid_mole_frac[ _NUM_reactions ];
       double co_r          [ _NUM_reactions ];
       double k_r           [ _NUM_reactions ];
       double M_T           [ _NUM_reactions ];
@@ -865,6 +897,8 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         // 03 - No DenseMatrix
         //dfdrh->zero();// [-]
         for (int l=0; l<_NUM_reactions; l++) {
+          // 06 - Cut excess temporary variables - Set by rh_l_new in Netwon solve
+          //rh_l[l]=old_reaction_rate_l[l](i,j,k);// [kg/m^3/s]
           rh_l_new[l]=old_reaction_rate_l[l](i,j,k);// [kg/m^3/s]
         }
         for (int l=0; l<_NUM_reactions; l++) {
@@ -880,6 +914,10 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           AreaSum+=  weight[ix](i,j,k)*length[ix](i,j,k)*length[ix](i,j,k); // [#/m]
         }
         surfaceAreaFraction=w*p_diam*p_diam/AreaSum; // [-] this is the weighted area fraction for the current particle size.
+        // 06 - Cut excess temporary variables
+        //CO_CO2_ratio = 200.*exp(-9000./(_R_cal*p_T)); // [ kg CO / kg CO2]
+        //CO_CO2_ratio=CO_CO2_ratio*44.0/28.0; // [kmoles CO / kmoles CO2]
+        //CO2onCO=1./CO_CO2_ratio; // [kmoles CO2 / kmoles CO]
         double CO2onCO = 1. / ( 200. * exp( -9000. / ( _R_cal * p_T ) ) * 44.0 / 28.0 ); // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2] => [kmoles CO2 / kmoles CO]
         for (int l=0; l<_NUM_reactions; l++) {
 
@@ -891,25 +929,32 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             phi_l[l]  = _phi_l[l];
             hrxn_l[l] = _hrxn_l[l];
           }
+          // 1 - Conditionals
+//          phi_l[l] = (_use_co2co_l[l]) ? (CO2onCO + 1)/(CO2onCO + 0.5) : _phi_l[l];
+//          hrxn_l[l] = (_use_co2co_l[l]) ? (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) : _hrxn_l[l];
         }
+        // 06 - Cut excess temporary variables
+        //relative_velocity = sqrt( ( gas_vel.x() - part_vel.x() ) * ( gas_vel.x() - part_vel.x() ) +
+        //                                 ( gas_vel.y() - part_vel.y() ) * ( gas_vel.y() - part_vel.y() ) +
+        //                                 ( gas_vel.z() - part_vel.z() ) * ( gas_vel.z() - part_vel.z() )  );// [m/s]
+        //Re_p  = relative_velocity * p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
         Re_p = std::sqrt( ( gas_vel.x() - part_vel.x() ) * ( gas_vel.x() - part_vel.x() ) +
                                  ( gas_vel.y() - part_vel.y() ) * ( gas_vel.y() - part_vel.y() ) +
                                  ( gas_vel.z() - part_vel.z() ) * ( gas_vel.z() - part_vel.z() ) )*
                                   p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
 
-        x_org    = (rc + ch) / (rc + ch + _mass_ash );// mass fraction of the organic matter
+        x_org    = (rc + ch) / (rc + ch + _mass_ash );
         cg       = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
         p_area   =  M_PI * p_diam*p_diam; // particle surface area [m^2]
         p_volume = M_PI/6.*p_diam*p_diam*p_diam; // particle volme [m^3]
 
-        // updated by Salvatore Iavarone
-        p_void   = std::fmin( 1.,std::fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / _rho_org_bulk + _mass_ash / _rho_ash_bulk ) ) ); // current porosity. (-) required due to sign convention of char.
- 
-        Sj  = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * std::sqrt( 1 -  1./( -log(1. - _p_void0) * ( 1. - _p_void0 ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) ;
- 
-        rp  = -2 * log( 1. -  p_void ) * ( 1. - p_void ) / ( p_rho * Sj * _Sg0 ); // average particle pore radius [m]
-        // end update
-
+        p_void_max = 1. - ( 1. / p_volume ) * (  _mass_ash / _rho_ash_bulk ); 
+        p_void   = std::fmin( p_void_max,std::fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc+ch ) / _rho_org_bulk + _mass_ash / _rho_ash_bulk ) ) ); // current porosity. (-) required due to sign convention of char.
+        // 06 - Cut excess temporary variables
+        //psi = 1./(_p_void0*(1.-_p_void0));
+        //Sj =  _init_particle_density/p_rho*((1-p_void)/(1-_p_void0))*sqrt(1-std::min(1.0,psi*log((1-p_void)/(1-_p_void0))));
+        Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * std::sqrt( 1 - std::fmin( 1.0, ( 1. / ( -log(1. - _p_void0) * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
+        rp       = -2 * log(1. - p_void) * (1. - p_void)/(p_rho * Sj * _Sg0); // average particle radius [m]
         // Calculate oxidizer diffusion coefficient // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
         for (int l=0; l<_NUM_reactions; l++) {
           sum_x_D=0;
@@ -924,16 +969,30 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
               sum_x   = sum_x;
             }
 
+            // 1 - Conditionals
+            //sum_x_D = (_oxid_l[l] != _species_names[l2]) ? sum_x_D + species_mass_frac[l2]/(_MW_species[l2]*_D_mat[_oxidizer_indices[l]][l2]) : sum_x_D;
+           // sum_x = (_oxid_l[l] != _species_names[l2]) ? sum_x + species_mass_frac[l2]/(_MW_species[l2]) : sum_x;
           }
 
           D_oxid_mix_l[l] = sum_x/sum_x_D * std::sqrt(CUBE( gas_T/_T0));
-          Sh[l]           = 2.0 + 0.6 * std::sqrt( Re_p ) * std::cbrt( _dynamic_visc / ( gas_rho * D_oxid_mix_l[l] ) ); // Sherwood number [-]
-
-          co_r[l]        = cg * ( oxid_mass_frac[l] * MW / _MW_l[l] ); // oxidizer concentration, [kmoles/m^3]
+          // 06 - Cut excess temporary variables
+          //D_kn[l] = 97.*rp*sqrt(p_T/_MW_species[l]);
+          //D_eff[l] = p_void / _tau/(1./D_kn[l] + 1/D_oxid_mix_l[l]);
+        //}
+        //for (int l=0; l<_NUM_reactions; l++) {
+          // 06 - Cut excess temporary variables
+          //Sc[l] = _dynamic_visc / (gas_rho * D_oxid_mix_l[l]); // Schmidt number [-]
+          //Sh[l] = 2.0 + 0.6 * std::sqrt(Re_p) * std::cbrt(Sc[l]); // Sherwood number [-]
+          Sh[l]             = 2.0 + 0.6 * std::sqrt( Re_p ) * std::cbrt( _dynamic_visc / ( gas_rho * D_oxid_mix_l[l] ) ); // Sherwood number [-]
+          // 06 - Cut excess temporary variables
+          //oxid_mole_frac[l] = oxid_mass_frac[l] * MW / _MW_l[l]; // [mole fraction]
+          //co_r[l] = cg * oxid_mole_frac[l]; // oxidizer concentration, [kmoles/m^3]
+          co_r[l]           = cg * ( oxid_mass_frac[l] * MW / _MW_l[l] ); // oxidizer concentration, [kmoles/m^3]
           k_r[l] = ( 10.0 * _a_l[l] * exp( - _e_l[l] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * phi_l[l] * 101325. ); // [m / s]
           // 06 - Cut excess temporary variables
+          //M_T[l] = p_diam/2.*sqrt(k_r[l]*_Sg0*Sj*p_rho/D_eff[l]);    //Thiele modulus, Mitchell's formulation
           M_T[l]            = p_diam / 2. * std::sqrt( k_r[l] * _Sg0 * Sj * p_rho /                                 // Thiele modulus, Mitchell's formulation
-                              ( p_void / _tau / ( 1. / ( 97. * rp * std::sqrt( p_T / _MW_l[l] ) ) + 1. / D_oxid_mix_l[l] ) ) );
+                              ( p_void / _tau / ( 1. / ( 97. * rp * std::sqrt( p_T / _MW_species[l] ) ) + 1. / D_oxid_mix_l[l] ) ) );
           effectivenessF[l] = (M_T[l] < 1e-5) ? 1.0 : 3./M_T[l]*(1./std::tanh(M_T[l])-1./M_T[l]);   // effectiveness factor
         }
         // Newton-Raphson solve for rh_l.
@@ -950,6 +1009,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             rh_l[l]=rh_l_new[l];
           }
           // get F and Jacobian -> dF/drh
+          //root_function( F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org);
           rtot    = ( rh_l[0] + rh_l[1] + rh_l[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
           Sfactor = 0.0;
           Bjm     = 0.0;
@@ -958,10 +1018,10 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           for ( int l = 0; l < _NUM_reactions; l++ ) {
 
             Bjm     = std::min( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
-            mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-10 ) ?  Bjm / ( std::exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
+            mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( std::exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
             Sfactor = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
             F[l]    = rh_l[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
-                      (  MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r )  + rtot ); // [kg-char/m^3/s]
+                      ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
           }
 
           // end 07 - Root function
@@ -971,6 +1031,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             }
             rh_l_delta[j] = rh_l[j]+delta;
             // 07 - Root function
+            //root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org);
             rtot    = ( rh_l_delta[0] + rh_l_delta[1] + rh_l_delta[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
             Sfactor = 0.0;
             Bjm     = 0.0;
@@ -982,19 +1043,25 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
               mtc_r      = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( std::exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
               Sfactor    = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
               F_delta[l] = rh_l_delta[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
-                           (  MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r )  + rtot ); // [kg-char/m^3/s]
+                           ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
              }
 
             // end 07 - Root function
             for (int l=0; l<_NUM_reactions; l++) {
+              // 03 - No DenseMatrix
+              //(*dfdrh)[l][j] = (F_delta[l] - F[l]) / delta;
               dfdrh[l][j] = ( F_delta[l] - F[l] ) / delta;
             }
           }
+          // 03 - No DenseMatrix
+          // invert Jacobian -> (dF_(n)/drh_(n))^-1
           invf->invert_mat(dfdrh); // simple matrix inversion for a 2x2 matrix.
 
           double dominantRate=0.0;
           for (int l=0; l<_NUM_reactions; l++) {
             for (int var=0; var<_NUM_reactions; var++) {
+              // 03 - No DenseMatrix
+              //rh_l_new[l]-=(*dfdrh)[l][var]*F[var];
               rh_l_new[l] -= dfdrh[l][var] * F[var];
             }
             dominantRate=std::max(dominantRate,std::abs(rh_l_new[l]));
@@ -1008,7 +1075,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           for (int l=0; l<_NUM_reactions; l++) {
             rh_l_new[l]=std::min(100000., std::max(0.0, rh_l_new[l])); // max rate adjusted based on pressure (empirical limit)
           }
-          if (residual < 1e-6) {
+          if (residual < 1e-3) {
             break;
             //std::cout << " number of interations " << std::endl;
           }
@@ -1041,32 +1108,32 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         }
         char_mass_rate  = 0.0;
         d_mass = 0.0;
-        //d_mass2 = 0.0;
+        d_mass2 = 0.0;
         h_rxn = 0.0; // this is to compute the reaction rate averaged heat of reaction. It is needed so we don't need to clip any additional rates.
-        //h_rxn_factor = 0.0; // this is to compute a multiplicative factor to correct for fp.
+        h_rxn_factor = 0.0; // this is to compute a multiplicative factor to correct for fp.
         surface_rate_factor = 0.0; // this is to compute a multiplicative factor to correct for external vs interal rxn.
         oxi_lim = 0.0; // max rate due to reactions
         rh_l_i = 0.0;
         for (int l=0; l<_NUM_reactions; l++) {
-          reaction_rate_l[l](i,j,k)=rh_l_new[l];// [kg/m^2/s/#] this is for the intial guess during the next time-step
+          reaction_rate_l[l](i,j,k)=rh_l_new[l];// [kg/m^2/s] this is for the intial guess during the next time-step
           // check to see if reaction rate is oxidizer limited.
           oxi_lim = (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / (dt * w);// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
           rh_l_i = std::min(rh_l_new[l]*p_area*x_org*(1-p_void), oxi_lim);// [kg/s/#]
           char_mass_rate += -rh_l_i;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
           d_mass += rh_l_i;
-
-          r_h_ex[l]            = rh_l_i / ( 1. + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) ) ); // [kg/s/#]
-          //r_h_ex[l]            = phi_l[l] * _Mh * k_r[l] * ( rh_l_i / ( phi_l[l] * _Mh * k_r[l] * ( 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1 - p_void ) ) ) ) ); // [kg/m^2/s]
-          r_h_in[l]            = r_h_ex[l] * effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) ); // [kg/s/#]
-          //r_h_in[l] = r_h_ex[l]*effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1-p_void)); // [kg/m^2/s]
-          //h_rxn_factor += r_h_ex[l]*_ksi + r_h_in[l];
-          h_rxn += hrxn_l[l] * (r_h_ex[l]*_ksi + r_h_in[l]);// [J/mole * kg/s/#]
-          //d_mass2 += r_h_ex[l]*_ksi + r_h_in[l];
+          // 06 - Cut excess temporary variables
+          //co_s[l] = rh_l_i/(phi_l[l]*_Mh*k_r[l]*(1 + effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1-p_void)))); //oxidizer concentration at particle surface [kmoles/m^3]
+          //r_h_ex[l] = phi_l[l]*_Mh*k_r[l]*co_s[l]; // [kg/m^2/s]
+          r_h_ex[l]            = phi_l[l] * _Mh * k_r[l] * ( rh_l_i / ( phi_l[l] * _Mh * k_r[l] * ( 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1 - p_void ) ) ) ) ); // [kg/m^2/s]
+          r_h_in[l] = r_h_ex[l]*effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1-p_void)); // [kg/m^2/s]
+          h_rxn_factor += r_h_ex[l]*_ksi + r_h_in[l];
+          h_rxn += hrxn_l[l] * (r_h_ex[l]*_ksi + r_h_in[l]);
+          d_mass2 += r_h_ex[l]*_ksi + r_h_in[l];
           surface_rate_factor += r_h_ex[l];
         }
-        //h_rxn_factor /= (d_mass + 1e-50);
+        h_rxn_factor /= (d_mass + 1e-50);
         surface_rate_factor /= (d_mass + 1e-50);
-        //h_rxn /= (d_mass2 + 1e-50); // [J/mole]
+        h_rxn /= (d_mass2 + 1e-50); // [J/mole]
         // rate clipping for char_mass_rate
         if ( add_rawcoal_birth && add_char_birth ){
           char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#]
@@ -1076,11 +1143,11 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         char_mass_rate = std::min( 0.0, char_mass_rate); // [kg/s/#] make sure we aren't creating char.
 
         // organic consumption rate
-        char_rate(i,j,k) = (char_mass_rate*w)/(_char_scaling_constant*_weight_scaling_constant); // // [1/s] scaled
+        char_rate(i,j,k) = (char_mass_rate*w)/(_char_scaling_constant*_weight_scaling_constant); // [kg/m^3/s - scaled]
         // off-gas production rate
         gas_char_rate(i,j,k) = -char_mass_rate*w;// [kg/m^3/s] (negative sign for exchange between solid and gas)
         // heat of reaction source term for enthalpyshaddix
-        particle_temp_rate(i,j,k) = h_rxn * 1000. / _Mh * w / _ksi; // [J/s/m^4] -- the *1000 is need to convert J/mole to J/kmole. char_mass_rate was already multiplied by x_org * (1-p_void).
+        particle_temp_rate(i,j,k) = h_rxn * 1000. / _Mh * h_rxn_factor * char_mass_rate * w / _ksi; // [J/s/m^4] -- the *1000 is need to convert J/mole to J/kmole. char_mass_rate was already multiplied by x_org * (1-p_void).
                                                                                                     // note: this model is designed to work with EnthalpyShaddix. The effect of ksi has already been added to Qreaction so we divide here.
         // particle shrinkage rate
         double updated_weight = std::max(w/_weight_scaling_constant + dt / vol * ( RHS_weight(i,j,k) ) , 1e-15);
@@ -1090,17 +1157,15 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         } else {
           max_Size_rate = ( updated_weight * min_p_diam / _length_scaling_constant - weight_p_diam(i,j,k) ) / dt - ( RHS_length(i,j,k) / vol);
         }
-        //Size_rate = (x_org < 1e-8) ? 0.0 : w/_weight_scaling_constant * 2.*x_org * surface_rate_factor * char_mass_rate / _rho_org_bulk / p_area / x_org / (1-p_void) / _length_scaling_constant; // [m/s]
-        
-        Size_rate = ( x_org < 1e-8 ) ? 0.0 : 2. / p_area / ( 1. - p_void ) / _rho_org_bulk * surface_rate_factor * char_mass_rate * w / _weight_scaling_constant / _length_scaling_constant; // [1/s] scaled
-
-
-
-        particle_Size_rate(i,j,k) = std::fmax( max_Size_rate, Size_rate ); // [1/s] scaled -- these source terms are negative.
-        surface_rate(i,j,k) = char_mass_rate / p_area;               // [kg/s/#/m^2]
+        Size_rate = (x_org < 1e-8) ? 0.0 : w/_weight_scaling_constant * 2.*x_org * surface_rate_factor * char_mass_rate / _rho_org_bulk / p_area / x_org / (1-p_void) / _length_scaling_constant; // [m/s]
+        particle_Size_rate(i,j,k) = std::max(max_Size_rate, Size_rate); // [m/s] -- these source terms are negative.
+        surface_rate(i,j,k) = char_mass_rate/p_area;  // in [kg/(s # m^2)]
         PO2surf_(i,j,k) = 0.0; // multiple oxidizers, so we are leaving this empty.
       } // else statement
     }); //end cell loop
+    // delete scinew DenseMatrix
+      // 03 - No DenseMatrix
+    //delete dfdrh;
     delete invf;
   } //end patch loop
 }
