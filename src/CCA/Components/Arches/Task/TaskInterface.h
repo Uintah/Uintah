@@ -12,7 +12,6 @@
 #include <Core/Grid/Task.h>
 #include <string>
 #include <vector>
-#include <boost/foreach.hpp>
 
 //==================================================================================================
 

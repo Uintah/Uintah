@@ -28,8 +28,6 @@
 #include <vector>
 #include <iostream>
 
-#include <boost/foreach.hpp>
-
 //-- Uintah Includes --//
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Patch.h>
