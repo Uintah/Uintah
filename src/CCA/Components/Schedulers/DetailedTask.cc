@@ -413,19 +413,19 @@ DetailedTask::checkExternalDepCount()
   std::lock_guard<Uintah::MasterLock> external_ready_guard(g_external_ready_mutex);
 
   DOUT(g_external_deps_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: "
-                                    << m_external_dependency_count.load(std::memory_order_seq_cst)
+                                    << m_external_dependency_count.load(std::memory_order_acquire)
                                     << " internal deps: " << m_num_pending_internal_dependencies);
 
-  if ((m_external_dependency_count.load(std::memory_order_seq_cst) == 0) && m_task_group->m_sched_common->useInternalDeps() &&
-       m_initiated.load(std::memory_order_seq_cst) && !m_task->usesMPI()) {
+  if ((m_external_dependency_count.load(std::memory_order_acquire) == 0) && m_task_group->m_sched_common->useInternalDeps() &&
+       m_initiated.load(std::memory_order_acquire) && !m_task->usesMPI()) {
 
     DOUT(g_external_deps_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
                                       << " MPI requirements satisfied, placing into external ready queue");
 
-    if (m_externally_ready.load(std::memory_order_seq_cst) == false) {
+    if (m_externally_ready.load(std::memory_order_acquire) == false) {
       m_task_group->m_mpi_completed_tasks.push(this);
       m_task_group->m_atomic_mpi_completed_tasks_size.fetch_add(1);
-      m_externally_ready.store(true, std::memory_order_seq_cst);
+      m_externally_ready.store(true, std::memory_order_release);
     }
   }
 }
@@ -435,9 +435,9 @@ DetailedTask::checkExternalDepCount()
 void
 DetailedTask::resetDependencyCounts()
 {
-  m_external_dependency_count.store(     0, std::memory_order_seq_cst);
-  m_externally_ready.store(         false, std::memory_order_seq_cst);
-  m_initiated.store(               false, std::memory_order_seq_cst);
+  m_external_dependency_count.store(     0, std::memory_order_relaxed);
+  m_externally_ready.store(          false, std::memory_order_relaxed);
+  m_initiated.store(                 false, std::memory_order_relaxed);
 
   m_wait_timer.reset(true);
   m_exec_timer.reset(true);
