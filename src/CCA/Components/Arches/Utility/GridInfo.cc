@@ -105,7 +105,7 @@ void GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
   const double lowz = domainBox.lower().z();
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-  Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
     gridX(i,j,k) = lowx + i * dx + dx2;
     gridY(i,j,k) = lowy + j * dy + dy2;
     gridZ(i,j,k) = lowz + k * dz + dz2;

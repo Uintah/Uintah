@@ -367,7 +367,7 @@ void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     const double ScalingConst = ieqn->second.constant;
     auto  var = tsk_info->get_uintah_field_add<T, double, MemSpace>(ieqn->first);
-    Uintah::parallel_for( range, KOKKOS_LAMBDA (int i, int j, int k){
+    Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       var(i,j,k) /= ScalingConst;
     });
   }

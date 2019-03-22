@@ -587,7 +587,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
       }
 
       Uintah::BlockRange range1( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-      Uintah::parallel_for(execObj,  range1, KOKKOS_LAMBDA (int i, int j, int k){
+      Uintah::parallel_for(execObj, range1, KOKKOS_LAMBDA (int i, int j, int k){
         rhs(i,j,k)=(0.0);
         phi(i,j,k)=(scalar_init_value);
         x_flux(i,j,k)=(0.0);
@@ -606,7 +606,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
 
       Uintah::BlockRange range2( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-      Uintah::parallel_for( range2, KOKKOS_LAMBDA (int i, int j, int k){
+      Uintah::parallel_for(execObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
         phi_unscaled(i,j,k) = phi(i,j,k) * scalingConstant * eps(i,j,k)  ;
 
       });
