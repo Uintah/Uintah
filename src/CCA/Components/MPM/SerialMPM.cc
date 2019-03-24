@@ -3671,6 +3671,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     NC_CCweight_new.copyData(NC_CCweight);
 
     vector<double> useInKECalc(numMPMMatls);
+    if((unsigned int) flags->d_KEMaterial >= numMPMMatls){
+      ostringstream warn;
+      warn << "KEMaterial index is greater than number of MPM matls\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+
     if(flags->d_KEMaterial==-999){
       for(unsigned int m = 0; m < numMPMMatls; m++){
         useInKECalc[m]=1.0;
