@@ -131,28 +131,26 @@ class LoadBalancer;
     //! If it is, setup directories and xml files that we need to output.
     //! Call once per time step, and if recompiling,
     //! after all the other tasks are scheduled.
-    virtual void finalizeTimeStep( const GridP      & /* grid */,
-                                   SchedulerP & /* scheduler */,
-                                   bool         recompile = false );
+    virtual void finalizeTimeStep( const GridP       & grid,
+                                         SchedulerP  & scheduler );
            
     //! schedule the output tasks if we are recompiling the taskgraph.  
-    virtual void sched_allOutputTasks( const GridP      & /* grid */,
-                                       SchedulerP & /* scheduler */,
-                                       bool         recompile = false );
+    virtual void sched_allOutputTasks( const GridP      & grid,
+                                             SchedulerP & scheduler );
                                       
     //! Call this after the time step has been executed to find the
     //! next time step to output
-    virtual void findNext_OutputCheckPointTimeStep( const bool restart,
-                                                    const GridP& grid );
+    virtual void findNext_OutputCheckPointTimeStep();
+    virtual void findNext_OutputCheckPointTimeStep( const GridP& grid );
 
     //! Called after a time step recompute where delta t is adjusted
     //! to make sure an output and/or checkpoint time step is needed.
     virtual void recompute_OutputCheckPointTimeStep();
 
     //! write meta data to xml files 
-    //! Call after time step has completed.
-    virtual void writeto_xml_files( const GridP & grid );
+    void writeto_xml_files();
 
+    //! write meta data to xml files used by the in situ
     virtual void writeto_xml_files( std::map< std::string,
                                     std::pair<std::string,
                                     std::string> > &modifiedVars );
@@ -169,6 +167,8 @@ class LoadBalancer;
     virtual bool needRecompile( const GridP & grid );
 
     virtual void recompile(const GridP& grid);
+
+    virtual void currentGrid( const GridP & grid ) { m_grid = grid; };
 
     //! The task that handles the outputting.  Scheduled in
     //! finalizeTimeStep.  Handles outputs and checkpoints and
@@ -189,6 +189,12 @@ class LoadBalancer;
                                  DataWarehouse  * old_dw,
                                  DataWarehouse  * new_dw );
 
+    void writeXMLAndFindNext( const ProcessorGroup *,
+                              const PatchSubset    * /* pss */,
+                              const MaterialSubset * /* matls */,
+                              DataWarehouse        * old_dw,
+                              DataWarehouse        * new_dw);
+    
     //! Get the time the next output will occur
     virtual double getNextOutputTime() const { return m_nextOutputTime; }
     //! Get the time step the next output will occur
@@ -357,7 +363,7 @@ class LoadBalancer;
     void createPIDXCommunicator(       std::vector<SaveItem> & saveLabels,
                                  const GridP                 & grid, 
                                        SchedulerP            & sched,
-                                       bool                    isThisACheckpoint );
+                                       int                     type );
 
     // Timestep # of the last time we saved "timestep.xml". -1 == not
     // yet saved. Only save timestep.xml as needed (ie, when a
@@ -369,10 +375,10 @@ class LoadBalancer;
     int m_lastOutputOfTimeStepXML = -1; 
 
     //! helper for finalizeTimeStep - schedules a task for each var's output
-    void scheduleOutputTimeStep(       std::vector<SaveItem> & saveLabels,
+    void scheduleOutputVariables(      std::vector<SaveItem> & saveLabels,
                                  const GridP                 & grid, 
                                        SchedulerP            & sched,
-                                       bool                    isThisCheckpoint );
+                                       int                     type );
 
     //! Helper for finalizeTimeStep - determines if, based on the current
     //! time and time step, this will be an output or checkpoint time step.
@@ -429,6 +435,8 @@ class LoadBalancer;
     //! pointer to simulation state, to get time step and time info
     MaterialManagerP m_materialManager;
 
+    GridP m_grid{nullptr};
+    
     // Only one of these should be non-zero.  The value is read
     // from the .ups file.
     double m_outputInterval {0};         // In seconds.
@@ -569,7 +577,8 @@ class LoadBalancer;
     // happen to fall on the same time step run in a serialized manner
     // (as it appears that PIDX is not thread safe).  If there was a
     // better way to synchronize tasks, we should do that...
-    VarLabel * m_sync_io_label;
+    VarLabel * m_sync_output_label{nullptr};
+    VarLabel * m_sync_checkpoint_label{nullptr};
 
     //__________________________________
     //  PostProcessUda related
@@ -648,12 +657,12 @@ class LoadBalancer;
     bool m_pidx_checkpointing {false};
 #endif
     
-#if SCI_ASSERTION_LEVEL >= 2
+// #if SCI_ASSERTION_LEVEL >= 2
     //! double-check to make sure that DA::output is only called once per level per processor per type
     std::vector<bool> m_outputCalled;
     std::vector<bool> m_checkpointCalled;
     bool m_checkpointGlobalCalled {false};
-#endif
+// #endif
     Uintah::MasterLock m_outputLock;
 
     DataArchiver(const DataArchiver&);

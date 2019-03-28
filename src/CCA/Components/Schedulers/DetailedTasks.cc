@@ -181,6 +181,14 @@ DetailedTasks::assignMessageTags( int me )
       DOUT(true, num << " messages from rank-" << from << " to rank-" << to);;
     }
   }
+
+  for (auto iter = perPairBatchIndices.begin(); iter != perPairBatchIndices.end(); ++iter) {
+    int from = iter->first.first;
+    int to   = iter->first.second;
+    int num  = iter->second;
+
+    DOUT(true, from << "  " << to);;
+  }
 }  // end assignMessageTags()
 
 //_____________________________________________________________________________

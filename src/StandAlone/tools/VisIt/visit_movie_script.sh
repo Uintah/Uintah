@@ -43,6 +43,8 @@ endif
 # Report which machine profile is being used.
 if ("$hostname" == "ash") then
     echo "Using UCHPC ash profile"
+else if ("$hostname" == "cheyenne") then
+    echo "Using UCAR cheyenne profile"
 else if ("$hostname" == "cooley") then
     echo "Using ANL cooley profile"
 else if ("$hostname" == "rhea") then
@@ -89,6 +91,8 @@ if ("$visit:t" != "visit") then
         set visit = $VISITHOME/bin/visit
     else if ("$hostname" == "ash") then
         set visit = "/uufs/chpc.utah.edu/sys/installdir/VisIt/install/bin/visit"
+    else if ("$hostname" == "cheyenne") then
+        set visit = "/glade/u/apps/ch/opt/visit/2.13.2/mpt/2.15/intel/16.0.3/server"
     else if ("$hostname" == "cooley") then
         set visit = "/soft/visualization/visit/bin/visit"
     else if ("$hostname" == "rhea") then
@@ -185,9 +189,33 @@ if ("$hostname" == "ash") then
 #       endif
     endif
 
+else if ("$hostname" == "cheyenne") then
+
+    # Replace cheyenne.ucar.edu by localhost for the SourceMap
+    sed -i 's/\"SOURCE00\" type=\"string\">cheyenne.ucar.edu:/\"SOURCE00\" type=\"string\">localhost:/g' $sessionFile
+    sed -i 's/\"SOURCE01\" type=\"string\">cheyenne.ucar.edu:/\"SOURCE01\" type=\"string\">localhost:/g' $sessionFile
+    sed -i 's/\"SOURCE02\" type=\"string\">cheyenne.ucar.edu:/\"SOURCE02\" type=\"string\">localhost:/g' $sessionFile
+    sed -i 's/\"SOURCE03\" type=\"string\">cheyenne.ucar.edu:/\"SOURCE03\" type=\"string\">localhost:/g' $sessionFile
+    sed -i 's/\"SOURCE04\" type=\"string\">cheyenne.ucar.edu:/\"SOURCE04\" type=\"string\">localhost:/g' $sessionFile
+                    
+    # Replace cheyenne.ucar.edu by localhost for the SourcePlugins
+    sed -i 's/Field name=\"cheyenne.ucar.edu:/Field name=\"localhost:/g' $sessionFile
+                
+    if($batch == "true") then
+        # Replace cheyenne.ucar.edu by cheyenne.ucar.edu
+        # for the MachineProfile host
+#        sed -i 's/\"host\" type=\"string\">cheyenne.ucar.edu/\"host\" type=\"string\">cheyenne.ucar.edu/g' $sessionFile
+
+    else #if($batch == "false") then
+        # Replace cheyenne.ucar.edu by cheyenne#.ucar.edu
+        # for the MachineProfile host
+        set host = `hostname`
+        sed -i "s/cheyenne.ucar.edu/${host}.ucar.edu/g" $sessionFile
+    endif
+
 else if ("$hostname" == "cooley") then
 
-    # Replace ash.chpc.utah.edu by localhost for the SourceMap
+    # Replace cooley.alcf.anl.gov by localhost for the SourceMap
     sed -i 's/\"SOURCE00\" type=\"string\">cooley.alcf.anl.gov:/\"SOURCE00\" type=\"string\">localhost:/g' $sessionFile
     sed -i 's/\"SOURCE01\" type=\"string\">cooley.alcf.anl.gov:/\"SOURCE01\" type=\"string\">localhost:/g' $sessionFile
     sed -i 's/\"SOURCE02\" type=\"string\">cooley.alcf.anl.gov:/\"SOURCE02\" type=\"string\">localhost:/g' $sessionFile
@@ -297,6 +325,8 @@ set version = ""
         set launchMethod = `grep '"launchMethod"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     else if ("$hostname" == "ash") then
         set launchMethod = sbatch/mpirun
+    else if ("$hostname" == "cheyenne") then
+        set launchMethod = qsub/mpiexec
     else if ("$hostname" == "cooley") then
         set launchMethod = qsub/mpirun
     else if ("$hostname" == "rhea") then
@@ -334,6 +364,8 @@ set version = ""
         @ nProcsPerNode = $nProcs / $nNodes
     else if ("$hostname" == "ash") then
         set nProcsPerNode = 12
+    else if ("$hostname" == "cheyenne") then
+        set nProcsPerNode = 36
     else if ("$hostname" == "cooley") then
         set nProcsPerNode = 12
     else if ("$hostname" == "rhea") then
@@ -359,6 +391,8 @@ set version = ""
         set bank = `grep '"bank"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     else if ("$hostname" == "ash") then
         set bank = "smithp-ash-cs"
+    else if ("$hostname" == "cheyenne") then
+        set bank = ""
     else if ("$hostname" == "cooley") then
         set bank = "SoPE_2"
     else if ("$hostname" == "rhea") then
@@ -376,6 +410,8 @@ set version = ""
         set partition = `grep '"partition"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     else if ("$hostname" == "ash") then
         set partition = "smithp-ash"
+    else if ("$hostname" == "cheyenne") then
+        set partition = ""
     else if ("$hostname" == "cooley") then
         set partition = ""
     else if ("$hostname" == "rhea") then
@@ -650,6 +686,44 @@ EOF
 
             echo "Submitting $queue script for $jobName"
             $queue $jobName
+
+# Cheyenne
+# $queue = qsub && $launchmethod = mpiexec
+        else if ("$hostname" == "cheyenne") then
+
+            echo "Creating cobalt script for $jobName"
+            /bin/rm -f $jobName
+            /bin/touch $jobName
+            /bin/chmod 755 $jobName
+            echo "#! /bin/csh" >> $jobName
+            echo " " >> $jobName
+            echo "cd $cwd" >> $jobName
+            echo " " >> $jobName
+            echo '#==============visit command below======================'  >> $jobName
+            set run = 0
+
+            while ($run < $nRuns)
+                @ runStart = $start + $run * $maxFramesToRender
+                @ runEnd   = $runStart + $maxFramesToRender - 1
+
+                if( $runEnd > $end ) set runEnd = $end
+
+                echo -n "$visit $version " >> $jobName
+                echo -n "-movie -start $runStart -end $runEnd " >> $jobName
+                echo -n "-frame $runStart " >> $jobName
+                echo -n "$geometry $format $fullMovieName " >> $jobName
+                echo -n "-sessionfile $sessionFile " >> $jobName
+                echo -n "-ignoresessionengines " >> $jobName
+                echo -n "-par -l $launchMethod " >> $jobName
+                echo -n "-nn $nNodes -np $nProcs " >> $jobName
+                echo -n '-machinefile ${COBALT_NODEFILE} ' >> $jobName
+                echo " " >> $jobName
+                @ run = $run + 1
+            end
+
+            echo "Submitting $queue script for $jobName"
+            $queue --nodecount=$nNodes --proccount=$nProcs --project=$bank --time=$time $launchArgs --jobname=$jobName --mode=script $jobName
+
 
 # Cooley
 # $queue = qsub && $launchmethod = mpirun

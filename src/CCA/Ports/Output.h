@@ -113,22 +113,22 @@ WARNING
 
     virtual void recompile( const GridP & grid ) = 0;
 
+    virtual void currentGrid( const GridP & grid ) = 0;
+
     //////////
     // Call this after all other tasks have been added to the scheduler
     virtual void finalizeTimeStep(const GridP      & grid,
-                                        SchedulerP & scheduler,
-                                        bool         recompile = false ) = 0;
+                                        SchedulerP & scheduler ) = 0;
 
     // schedule all output tasks
     virtual void sched_allOutputTasks( const GridP      & grid,
-                                             SchedulerP & scheduler,
-                                             bool         recompile = false ) = 0;
+                                             SchedulerP & scheduler ) = 0;
 
     //////////
     // Call this after the time step has been executed to find the
     // next time step to output
-    virtual void findNext_OutputCheckPointTimeStep( const bool    restart,
-                                                    const GridP & grid ) = 0;
+    virtual void findNext_OutputCheckPointTimeStep() = 0;
+    virtual void findNext_OutputCheckPointTimeStep( const GridP & grid ) = 0;
     
     //////////
     //! Called after a time step recompute where delta t is adjusted
@@ -136,9 +136,9 @@ WARNING
     virtual void recompute_OutputCheckPointTimeStep() = 0;
 
     //////////
-    // update or write to the xml files
-    virtual void writeto_xml_files( const GridP& grid ) = 0;
-    
+    // Write meta data to xml files used by the in situ
+    virtual void writeto_xml_files() = 0;
+
     virtual void writeto_xml_files( std::map< std::string,
                                               std::pair< std::string,
                                                          std::string > > & modifiedVars ) = 0;

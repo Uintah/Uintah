@@ -209,10 +209,12 @@ AMRSimulationController::run()
   // simulation time to get a measurement of the simulation to wall time.
   m_wall_timers.TimeStep.reset( true );
     
-  double walltime = m_wall_timers.GetWallTime();
-  
+  // The wall time is needed at the top of the loop in the while
+  // conditional.
+  double walltime;
+
   // The main loop where the specified application problem is solved.
-  while( !m_application->isLastTimeStep( walltime ) ) {
+  while( !m_application->isLastTimeStep( walltime = m_wall_timers.GetWallTime()) ) {
 
     // Perform a bunch of housekeeping operations at the top of the
     // loop. Performing them here assures that everything is ready
@@ -249,16 +251,17 @@ AMRSimulationController::run()
     // sync'd across all ranks). The Data Archive uses it for
     // determining when to output or checkpoint.
     m_output->setElapsedWallTime( walltime );
-    
+
     // Get the next output checkpoint time step. This step is not done
-    // in m_output->beginOutputTimeStep because the original values
-    // are needed to compare with if there is a timestep restart so it
-    // is performed here.
+    // in m_output->beginOutputTimeStep via m_output->finalizeTimeStep
+    // because the original values are needed to compare with if there
+    // a timestep is recomputed so it is performed here.
 
     // NOTE: It is called BEFORE m_application->prepareForNextTimeStep
     // because at this point the delT, nextDelT, time step, sim time,
-    // and all wall times are all in sync.
-    m_output->findNext_OutputCheckPointTimeStep( first && m_restarting, m_current_gridP );
+    // and all wall times are all in sync. This call is PIDX Only.
+    // m_output->findNext_OutputCheckPointTimeStep();
+    m_output->findNext_OutputCheckPointTimeStep( m_current_gridP );
 
     // Reset the runtime performance stats.
     ResetStats();
@@ -317,6 +320,8 @@ AMRSimulationController::run()
         doRegridding( false );
         m_regridder->setAdaptivity( false );
       }
+
+      m_output->currentGrid( m_current_gridP );
     }
 
     // Compute number of data warehouses - multiplies by the time
@@ -386,9 +391,12 @@ AMRSimulationController::run()
       compileTaskGraph( totalFine );
     }
     else {
-      // This is not correct if we have switched to a different
-      // component, since the delT will be wrong
-      m_output->finalizeTimeStep( m_current_gridP, m_scheduler, false );
+      // This is not correct if the controller has switched to a
+      // different component, because the delT will be wrong.
+
+      // Among other actions this call sets whether an output or
+      // checkpoint will happen.
+      m_output->finalizeTimeStep( m_current_gridP, m_scheduler );
     }
 
     if (dbg_barrier.active()) {
@@ -419,10 +427,11 @@ AMRSimulationController::run()
         DOUT(dbg_barrier, mesg.str())
       }
     }
-   
-    // ARS - CAN THIS BE SCHEDULED??
-    m_output->writeto_xml_files( m_current_gridP );
 
+    // ARS - FIX ME - SCHEDULE INSTEAD
+    // m_output->writeto_xml_files();
+    // m_output->findNext_OutputCheckPointTimeStep();
+    
     // ARS - FIX ME - SCHEDULE INSTEAD
     ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, false );
     
@@ -437,12 +446,7 @@ AMRSimulationController::run()
       m_application->setRestartTimeStep( false );
       
       first = false;
-    }
-
-    // The wall time is needed at the top of the loop in the while
-    // conditional. So get it here.
-    walltime = m_wall_timers.GetWallTime();
-    
+    }    
   } // end while main time loop (time is not up, etc)
   
   // m_ups->releaseDocument();
@@ -587,11 +591,8 @@ AMRSimulationController::doInitialTimeStep()
       }
 
       // Output tasks
-      const bool recompile = true;
-
-      m_output->finalizeTimeStep( m_current_gridP, m_scheduler, recompile) ;
-
-      m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, recompile );
+      m_output->finalizeTimeStep( m_current_gridP, m_scheduler );
+      m_output->sched_allOutputTasks( m_current_gridP, m_scheduler );
 
       // Report all of the stats before doing any possible in-situ work
       // as that effects the lap timer for the time steps.
@@ -623,8 +624,6 @@ AMRSimulationController::doInitialTimeStep()
       }
 
     } while ( needNewLevel );
-
-    m_output->writeto_xml_files( m_current_gridP );
   }
 
   // ARS - FIX ME - SCHEDULE INSTEAD
@@ -651,7 +650,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
   }
 #endif
   
-   // Execute at least once.
+  // Execute at least once.
   while (!success) {
     m_application->setDelTForAllLevels( m_scheduler, m_current_gridP, totalFine );
 
@@ -706,8 +705,16 @@ AMRSimulationController::executeTimeStep( int totalFine )
       success = false;
     }
     else if (m_application->getReductionVariable( abortTimeStep_name ) ) {
-      proc0cout << "Time step aborted and cannot recompute it. "
+      proc0cout << "Time step aborted and cannot recompute it, "
+                << "outputing and checkpointing the time step. "
                 << "Ending the simulation." << std::endl;
+
+      m_application->setReductionVariable( m_scheduler->getLastDW(),
+                                           abortTimeStep_name, true );      
+
+      // This should be a for the previous time step.
+      m_output->setOutputTimeStep( true, m_current_gridP );
+      m_output->setCheckpointTimeStep( true, m_current_gridP );
       
       success = true;
     }
@@ -930,6 +937,12 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   // Compute the next time step.
   scheduleComputeStableTimeStep();
   
+  // Update the system var (time step and simulation time). Must be
+  // done after scheduleComputeStableTimeStep.
+  m_application->scheduleUpdateSystemVars( m_current_gridP,
+                                           m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+                                           m_scheduler );
+
   // NOTE ARS - FIXME before the output so the values can be saved.
   // Monitoring tasks must be scheduled last!!
   for (int i = 0; i < m_current_gridP->numLevels(); i++) {
@@ -937,15 +950,8 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   }
   
   // Output tasks
-  m_output->finalizeTimeStep( m_current_gridP, m_scheduler, true );
-
-  m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, true );
-
-  // Update the system var (time step and simulation time). Must be
-  // done after the output and after scheduleComputeStableTimeStep.
-  m_application->scheduleUpdateSystemVars( m_current_gridP,
-                                           m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
-                                           m_scheduler );
+  m_output->finalizeTimeStep( m_current_gridP, m_scheduler );
+  m_output->sched_allOutputTasks( m_current_gridP, m_scheduler );
 
   // Report all of the stats before doing any possible in-situ work
   // as that effects the lap timer for the time steps.

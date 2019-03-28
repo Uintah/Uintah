@@ -1291,22 +1291,20 @@ Level::mapCellToCoarser( const IntVector & idx, int level_offset ) const
   while (--level_offset) {
     refinementRatio = refinementRatio * m_grid->getLevel(m_index - level_offset)->m_refinement_ratio;
   }
-  IntVector ratio = idx / refinementRatio;
 
-  // If the fine cell index is negative you must add an offset to get the right coarse cell. -Todd
+  // If the fine cell index is negative it must be made positive first,
+  // then an offset must be subtracted to get the right coarse cell.
+  IntVector index = idx;;
   IntVector offset(0, 0, 0);
-  if (idx.x() < 0 && refinementRatio.x() > 1) {
-    offset.x((int)fmod((double)idx.x(), (double)refinementRatio.x()));
+
+  for( unsigned int i=0; i<3; ++i ) {
+    while( index[i] < 0 ) {
+      index[i] += refinementRatio[i];
+      ++offset[i];
+    }
   }
 
-  if (idx.y() < 0 && refinementRatio.y() > 1) {
-    offset.y((int)fmod((double)idx.y(), (double)refinementRatio.y()));
-  }
-
-  if (idx.z() < 0 && refinementRatio.z() > 1) {
-    offset.z((int)fmod((double)idx.z(), (double)refinementRatio.z()));
-  }
-  return ratio + offset;
+  return index / refinementRatio - offset;
 }
 
 //______________________________________________________________________
@@ -1315,21 +1313,8 @@ IntVector
 Level::mapCellToFiner( const IntVector & idx ) const
 {
   IntVector r_ratio = m_grid->getLevel(m_index + 1)->m_refinement_ratio;
-  IntVector fineCell = idx * r_ratio;
 
-  IntVector offset(0, 0, 0);
-  if (idx.x() < 0 && r_ratio.x() > 1) {
-    offset.x(1);
-  }
-
-  if (idx.y() < 0 && r_ratio.y() > 1) {  // If the coarse cell index is negative
-    offset.y(1);                      // you must add an offset to get the right
-  }                                   // fine cell. -Todd
-
-  if (idx.z() < 0 && r_ratio.z() > 1) {
-    offset.z(1);
-  }
-  return fineCell + offset;
+  return idx * m_grid->getLevel(m_index + 1)->m_refinement_ratio;
 }
 
 //______________________________________________________________________
@@ -1343,27 +1328,12 @@ Level::mapCellToFiner( const IntVector & idx ) const
 IntVector
 Level::mapCellToFinest( const IntVector & idx ) const
 {
-
-  IntVector r_ratio  = IntVector(1,1,1);
+  IntVector r_ratio = IntVector(1,1,1);
   for (int i=m_index; i< m_grid->numLevels()-1; i++){
-    r_ratio  = r_ratio*m_grid->getLevel(i+1)->getRefinementRatio();
+    r_ratio = r_ratio * m_grid->getLevel(i+1)->getRefinementRatio();
   }
 
-  IntVector fineCell = idx * r_ratio;
-  IntVector offset(0,0,0);
-  if (idx.x()< 0 && r_ratio.x() > 1){
-    offset.x(1);
-  }
-
-  if (idx.y()< 0 && r_ratio.y() > 1){ // If the coarse cell index is negative
-    offset.y(1);                      // you must add an offset to get the right
-  }                                   // fine cell. -Todd
-
-  if (idx.z()< 0 && r_ratio.z() > 1){
-    offset.z(1);
-  }
-
-  return fineCell + offset;
+  return idx * r_ratio;
 }
 
 //______________________________________________________________________
@@ -1374,12 +1344,12 @@ Level::mapCellToFinest( const IntVector & idx ) const
 IntVector
 Level::mapCellToFinestNoAdjustments( const IntVector & idx ) const
 {
+  IntVector r_ratio = IntVector(1,1,1);
+  for (int i=m_index; i< m_grid->numLevels()-1; ++i){
+    r_ratio = r_ratio * m_grid->getLevel(i+1)->getRefinementRatio();
+  }
 
-      IntVector r_ratio  = IntVector(1,1,1);
-      for (int i=m_index; i< m_grid->numLevels()-1; ++i){
-       r_ratio  = r_ratio*m_grid->getLevel(i+1)->getRefinementRatio();
-      }
-      return idx * r_ratio;
+  return idx * r_ratio;
 }
 
 //______________________________________________________________________
@@ -1397,7 +1367,46 @@ Level::mapCellToFinestNoAdjustments( const IntVector & idx ) const
 IntVector
 Level::mapNodeToCoarser( const IntVector & idx ) const
 {
-  return ( idx + m_refinement_ratio - IntVector(1,1,1) ) / m_refinement_ratio;
+  IntVector refinementRatio = m_refinement_ratio;
+
+  // If the fine node index is negative it must be made positive first,
+  // then an offset must be subtracted to get the right coarse node.
+  IntVector index = idx;;
+  IntVector offset(0, 0, 0);
+
+  for( unsigned int i=0; i<3; ++i ) {
+    while( index[i] < 0 ) {
+      index[i] += refinementRatio[i];
+      ++offset[i];
+    }
+  }
+
+  // This returns what is listed in the comments above.
+  return index / m_refinement_ratio - offset;
+  
+  // The original below creates a bias and shifts ALL of the fine
+  // interior nodes to the next largest coarse node. Further, it does
+  // not account negative indices.
+  
+  // Example: 1D grid with refinement ratio = 4
+  //  Coarse Node index: 10                  11
+  //                 ----*----*----*----*----*-----
+  //  Fine Node Index    40   41   42   43   44
+  //  What is returned   10   11   11   11   11
+  
+  // return ( idx + m_refinement_ratio - IntVector(1,1,1) ) / m_refinement_ratio;
+
+  // A option would be to create a bias that half of the resolution
+  // and shifts the lower/upper the fine interior nodes to the next
+  // smallest/largest coarse node. 
+  
+  // Example: 1D grid with refinement ratio = 4
+  //  Coarse Node index: 10                  11
+  //                 ----*----*----*----*----*-----
+  //  Fine Node Index    40   41   42   43   44
+  //  What is returned   10   10   11   11   11
+  
+  // return (index + m_refinement_ratio/2) / m_refinement_ratio - offset;
 }
 
 //______________________________________________________________________
@@ -1426,8 +1435,6 @@ Level::getRefinementRatioMaxDim() const
   return Max( Max(m_refinement_ratio.x(), m_refinement_ratio.y()), m_refinement_ratio.z() );
 }
 
-
-
 //______________________________________________________________________
 //
 namespace Uintah {
@@ -1443,7 +1450,8 @@ const Level* getLevel( const PatchSubset * subset )
 #endif
   return level;
 }
-//______________________________________________________________________
+
+  //______________________________________________________________________
 //
 const LevelP& getLevelP( const PatchSubset * subset )
 {
