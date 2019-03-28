@@ -299,7 +299,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
             sim->hostName = sim->myworld->myNodeName();
             sim->hostNode = "";
-            break;
+            return;
           }
           
           sim->nodeStart.push_back( start );
@@ -379,21 +379,19 @@ void visit_InitLibSim( visit_simulation_data *sim )
       if( sim->switchNodeList.size() &&
           ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) )
       {
-	sim->switchNodeList.clear();
-	sim->nodeStart.clear();
-	sim->nodeStop.clear();
-	sim->nodeCores.clear();
-	sim->nodeMemory.clear();
-
         std::stringstream msg;
         msg << "Visit libsim - "
             << "Can not find node " << sim->myworld->myNodeName() << " "
             << "in the current network file: " << filename;
           
         VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
-
-	DOUT( true, msg.str() );
       }
+
+      DOUT( (sim->switchNodeList.size() &&
+             ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) ),
+            "Visit libsim - "
+            << "Can not find node " << sim->myworld->myNodeName() << " "
+            << "in the current network file: " << filename );
 
       infile.close();
     }
