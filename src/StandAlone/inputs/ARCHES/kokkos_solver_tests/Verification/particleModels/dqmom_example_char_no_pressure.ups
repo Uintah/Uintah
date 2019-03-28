@@ -343,6 +343,7 @@
         </eqn_group>
       </KScalarTransport>
       <ParticleProperties type="coal">
+        <daf_volatiles_fraction>.517</daf_volatiles_fraction>  <!--dray ash free volatiles content - computed from Indonesian analysis -->
         <diameter_distribution>[50e-6,50e-6,150e-6,200e-6,200e-6]</diameter_distribution>
         <density>1130.0</density>
         <rho_ash_bulk>2300.0</rho_ash_bulk>
@@ -379,7 +380,7 @@
           <Es> 45.5e3 </Es>
           <n> 0.18 </n>
         </ShaddixChar>
-        <SmithChar2016>
+        <SmithChar>
           <char_MW>12.0</char_MW>
           <Sg0>6.7e5</Sg0>
           <surface_area_mult_factor>1.0</surface_area_mult_factor>
@@ -414,7 +415,7 @@
             <heat_of_reaction_constant>172459</heat_of_reaction_constant>
             <use_co2co>false</use_co2co>
           </reaction>
-        </SmithChar2016>
+        </SmithChar>
         <ksi>0.97266</ksi>
         <LinearSwelling>
           <Fsw>1.05</Fsw>
