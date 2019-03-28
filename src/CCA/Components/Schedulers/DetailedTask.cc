@@ -434,11 +434,11 @@ DetailedTask::checkExternalDepCount()
   std::lock_guard<Uintah::MasterLock> external_ready_guard(g_external_ready_mutex);
 
   DOUT(g_external_deps_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: "
-                                    << m_external_dependency_count.load(std::memory_order_seq_cst)
+                                    << m_external_dependency_count.load(std::memory_order_acquire)
                                     << " internal deps: " << m_num_pending_internal_dependencies);
 
-  if ((m_external_dependency_count.load(std::memory_order_seq_cst) == 0) && m_task_group->m_sched_common->useInternalDeps() &&
-       m_initiated.load(std::memory_order_seq_cst) && !m_task->usesMPI()) {
+  if ((m_external_dependency_count.load(std::memory_order_acquire) == 0) && m_task_group->m_sched_common->useInternalDeps() &&
+       m_initiated.load(std::memory_order_acquire) && !m_task->usesMPI()) {
 
     DOUT(g_external_deps_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
                                       << " MPI requirements satisfied, placing into external ready queue");
@@ -453,10 +453,10 @@ DetailedTask::checkExternalDepCount()
         m_task_group->atomic_task_to_debug_size.fetch_add(1);
       }
     }
-    if (m_externally_ready.load(std::memory_order_seq_cst) == false) {
+    if (m_externally_ready.load(std::memory_order_acquire) == false) {
       m_task_group->m_mpi_completed_tasks.push(this);
       m_task_group->m_atomic_mpi_completed_tasks_size.fetch_add(1);
-      m_externally_ready.store(true, std::memory_order_seq_cst);
+      m_externally_ready.store(true, std::memory_order_release);
     }
   }
 }
@@ -466,9 +466,9 @@ DetailedTask::checkExternalDepCount()
 void
 DetailedTask::resetDependencyCounts()
 {
-  m_external_dependency_count.store(     0, std::memory_order_seq_cst);
-  m_externally_ready.store(         false, std::memory_order_seq_cst);
-  m_initiated.store(               false, std::memory_order_seq_cst);
+  m_external_dependency_count.store(     0, std::memory_order_relaxed);
+  m_externally_ready.store(          false, std::memory_order_relaxed);
+  m_initiated.store(                 false, std::memory_order_relaxed);
 
   m_wait_timer.reset(true);
   m_exec_timer.reset(true);
@@ -780,10 +780,12 @@ DetailedTask::checkCudaStreamDoneForThisTask( unsigned int device_id ) const
   if (it == d_cudaStreams.end()) {
     printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Request for stream information for device %d, but this task wasn't assigned any streams for this device.  For task %s\n", device_id,  getName().c_str());
     SCI_THROW(InternalError("Request for stream information for a device, but it wasn't assigned any streams for that device.  For task: " + getName() , __FILE__, __LINE__));
+    return false;
   }
   if (it->second == nullptr) {
     printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with nullptr address for task %s\n", getName().c_str());
     SCI_THROW(InternalError("Stream pointer with nullptr address for task: " + getName() , __FILE__, __LINE__));
+    return false;
   }
 
   retVal = cudaStreamQuery(*(it->second));
@@ -796,6 +798,7 @@ DetailedTask::checkCudaStreamDoneForThisTask( unsigned int device_id ) const
   else if (retVal ==  cudaErrorLaunchFailure) {
     printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask(%d) - CUDA kernel execution failure on Task: %s\n", device_id, getName().c_str());
     SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: " + getName() , __FILE__, __LINE__));
+    return false;
   } else { //other error
     printf("\nAn CUDA error occurred with error code %d.\n\nWaiting for 60 seconds\n", retVal);
 

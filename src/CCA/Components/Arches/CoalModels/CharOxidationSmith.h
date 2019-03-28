@@ -188,7 +188,7 @@ private:
   const VarLabel* _MW_varlabel;
   std::vector< const VarLabel*> _species_varlabels;
   // global constants
-  double _ksi; // 
+  double _ksi; // [J/mol]
   double _HF_CO2; // [J/mol]
   double _HF_CO; // [J/mol]
   double _T0;

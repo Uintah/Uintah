@@ -41,10 +41,10 @@ compareUda_function()
 
   if [ -s $test_uda_dir/input.xml.orig ]; then
     echo "comparing input.xml.orig"
-    upsDiff.py --no-color $test_uda_dir/input.xml.orig $gs_uda_dir/input.xml.orig
+    upsDiff.py  $test_uda_dir/input.xml.orig $gs_uda_dir/input.xml.orig
   else
     echo "comparing input.xml"
-    upsDiff.py --no-color $test_uda_dir/input.xml $gs_uda_dir/input.xml
+    upsDiff.py  $test_uda_dir/input.xml $gs_uda_dir/input.xml
   fi
 
   if [ $? != "0" ]; then

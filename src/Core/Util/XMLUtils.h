@@ -52,19 +52,22 @@ namespace UintahXML {
 
 enum CheckType { UINT_TYPE, INT_TYPE, FLOAT_TYPE };
 
+//__________________________________
 // 'validateType()' determines if the input string is a valid int or float (based on 'type').
 //  If the string is not valid, a ProblemSetupException is thrown.
 //
-void                     validateType( const std::string & stringValue, CheckType type );
+void validateType( const std::string & stringValue, CheckType type );
 
+//__________________________________
 // Returns a (collapsed (no begin/end spaces)) string that holds one line from the flie.
 // 'fp' is updated to point to following line in file.
 //
 // NOTES: getLine() skips blank lines.  If the return result is "", then the end of the file
 //            was reached.
 //
-std::string              getLine( FILE * fp );                    
+std::string getLine( FILE * fp );                    
 
+//__________________________________
 // Used for breaking <tag> value </tag> into three separate strings.
 //
 std::vector<std::string> splitXMLtag( const std::string & line );

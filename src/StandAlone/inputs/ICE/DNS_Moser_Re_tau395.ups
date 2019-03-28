@@ -20,7 +20,7 @@
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
  <Time>
-     <maxTime>            1.0        </maxTime>
+     <maxTime>            3600.0        </maxTime>
      <initTime>           0.0         </initTime>
      <delt_min>           0.0         </delt_min>
      <delt_max>           1.0         </delt_max>
@@ -55,7 +55,7 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
@@ -82,7 +82,6 @@
     Paper: Table 1
     Resolution = 256x193x192
     Let's start with 256 in the Y dir
-
     -->
 
 
@@ -91,15 +90,17 @@
         <lower>       [0,       0, 0]        </lower>
         <upper>       [6.28319, 2, 3.14159]  </upper>
         <extraCells>  [0,1,0]               </extraCells>
-    <!--     
-        <patches>     [10,10,8]             </patches>
-        <resolution>  [512,192 ,192]        </resolution>
-    -->
+        <patches>     [8,6,6]               </patches> <!--32^3-->
+        <resolution>  [256,192 ,192]        </resolution>
+    
     <!-- for square cells
         <patches>     [10,2,5]             </patches>
         <resolution>  [512,164,256]        </resolution>
+        
+        Debugging
+        <patches>     [2, 1, 2]             </patches>
+        <resolution>  [50,32,50]           </resolution>
     -->
-    
       </Box>
       <periodic>  [1,0,1]     </periodic>
     </Level>
@@ -110,8 +111,8 @@
   <!--____________________________________________________________________-->
   <DataArchiver>
     <filebase>DNS_Moser_Re_tau395.uda</filebase>
-    <outputInitTimestep/>
-    <outputTimestepInterval>3</outputTimestepInterval>
+    <!--<outputInitTimestep/> -->
+    <outputInterval>10</outputInterval>
 
     <save label="press_CC"/>
     <save label="rho_CC"/>
@@ -142,9 +143,10 @@
     <save label="mean_press_CC" />
     <save label="mean_vel_CC"   />
     <save label="mean_scalar-f" />
+    <save label="vorticity"     />
 
     <outputDoubleAsFloat/>
-    <checkpoint cycle="2" interval="900"/>
+    <checkpoint cycle="2" interval="600"/>
   </DataArchiver>
 
 
@@ -158,16 +160,16 @@
       <TimeStepControl>
         <Scheme_for_delT_calc> aggressive     </Scheme_for_delT_calc>
         <knob_for_speedSound>  0.0            </knob_for_speedSound>
-        <knob_for_diffusion>   0.6            <knob_for_diffusion>
+        <knob_for_diffusion>   0.6            </knob_for_diffusion>
       </TimeStepControl>
 
       <ImplicitSolver>
         <max_outer_iterations>          5      </max_outer_iterations>
-        <outer_iteration_tolerance>     1.0e-7 </outer_iteration_tolerance>
+        <outer_iteration_tolerance>     1.0e-2 </outer_iteration_tolerance>
         <iters_before_timestep_restart> 3      </iters_before_timestep_restart>
 
         <Parameters variable="implicitPressure">
-          <tolerance>      1.e-8   </tolerance>
+          <tolerance>      1.e-6   </tolerance>        <!--increase tolerance -->
           <solver>         cg      </solver>
           <preconditioner> pfmg    </preconditioner>
           <maxiterations>  7500    </maxiterations>
@@ -179,14 +181,32 @@
       </ImplicitSolver>
       
       <fixedPressureGradient>
-        <x_dir>            -1.5E-5 </x_dir>          <!-- JG: I'm not sure about this -->
+        <x_dir>            -1.5E-5   </x_dir>          <!-- JG: I'm not sure about this -->
       </fixedPressureGradient>
         
       <customInitialization>
         <DNS_Moser>
-          <verticalDirection> 1        </verticalDirection>
-          <dpdx>            -1.5E-5  </dpdx>        <!-- JG: I'm not sure about this -->
+          <verticalDirection> 1      </verticalDirection>
+          <dpdx>            -1.5E-5  </dpdx>  
         </DNS_Moser>
+
+        <vortices>
+          <vortex>
+            <axis>       Y              </axis>
+            <origin>     [1.5708, 0, 1.5708]   </origin>
+
+            <strength>   -0.1           </strength>
+            <radius>     0.2            </radius>
+          </vortex>
+          
+          <vortex>
+            <axis>       Y              </axis>
+            <origin>     [2.5708, 0, 1.5708] </origin>
+
+            <strength>   0.1            </strength>
+            <radius>     0.2            </radius>
+          </vortex>
+          </vortices> 
       </customInitialization>
 
     </ICE>
@@ -217,7 +237,7 @@
              <max>  [10.0,6.0,6.0]  </max>
            </box>
            <res>          [2,2,2]        </res>
-           <velocity>     [0.07,0,0]     </velocity>
+           <velocity>     [0.0,0,0]     </velocity>
            <density>  1.1792946927374306 </density>
            <pressure>     101325.0       </pressure>
            <temperature>  300.0          </temperature>
@@ -235,9 +255,11 @@
         <material>air</material>
         <scalar name="f">
           <test_conservation> false </test_conservation>
+          
           <constants>
             <diffusivity> 0.0 </diffusivity>
           </constants>
+          
           <initialization>
             <geom_object>
               <box label="wholeDomain"/>
@@ -247,12 +269,25 @@
 
           <!-- at the edge of the computational domain -->
           <interiorSources>
+            
             <geom_object>
-                <sphere label = "x-">
-                  <origin>[ 0.0, 2.5, 2.5 ]</origin>
-                  <radius> 0.05 </radius>
+              <union>
+                <sphere label = "x-1">
+                     <origin>[ 0.0, 0.1, 0.7854]</origin>
+                     <radius> 0.1 </radius>
                 </sphere>
-              <scalar> 1 </scalar>
+                <sphere label = "x-2">
+                  <origin>[ 0.0, 0.1, 1.5708 ]</origin>
+                  <radius> 0.1 </radius>
+                </sphere>
+                <sphere label = "x-3">
+                  <origin>[ 0.0, 0.1, 2.3562 ]</origin>
+                  <radius> 0.1 </radius>
+                </sphere>
+              </union>
+              
+              <scalar>    1   </scalar>
+              <maxScalar> 1.0 </maxScalar>
             </geom_object>
           </interiorSources>
 
@@ -260,12 +295,14 @@
       </PassiveScalar>
     </Model>
   </Models>
+  
 <!--__________________________________-->
   <DataAnalysis>
     <Module name="statistics">
-      <material>   air   </material>
-      <timeStart>  0.0   </timeStart>
-      <timeStop>   4400  </timeStop>
+      <material>          air  </material>
+      <samplingFrequency> 0.1  </samplingFrequency>
+      <timeStart>         0    </timeStart>
+      <timeStop>          1e99 </timeStop>
 
       <computeHigherOrderStats> true </computeHigherOrderStats>
       <Variables>
@@ -274,14 +311,14 @@
         <analyze label="vel_CC"  computeReynoldsStress="true"/>
       </Variables>
     </Module>
-    
-    
+
+
+    <!--________________-->    
     <Module name="meanTurbFluxes">
-       
       <material>          air  </material>
-      <samplingFrequency> 500  </samplingFrequency>
-      <timeStart>         0.00 </timeStart>
-      <timeStop>          100  </timeStop>
+      <samplingFrequency> 0.1  </samplingFrequency>
+      <timeStart>         0    </timeStart>
+      <timeStop>          1e99 </timeStop>
 
       <planeOrientation>  XY   </planeOrientation>
       <weight label="mass_adv"/>
@@ -293,7 +330,27 @@
         <analyze label="temp_CC"           weighting="nCells" />
         <analyze label="rho_CC"            weighting="nCells" />
       </Variables>
+    </Module>
+    
+    <!--________________-->
+    <Module name="vorticity">
+      <material>air</material>
+    </Module> 
 
+    <!--________________-->      
+    <Module name="momentumAnalysis">
+      <material>          air  </material>
+      <samplingFrequency> 0.1  </samplingFrequency>
+      <timeStart>         0    </timeStart>
+      <timeStop>          1e99 </timeStop>
+      <controlVolume>
+        <Face side = "x+"  extents = "entireFace"/>
+        <Face side = "x-"  extents = "entireFace"/>
+        <Face side = "y+"  extents = "entireFace"/>
+        <Face side = "y-"  extents = "entireFace"/>
+        <Face side = "z+"  extents = "entireFace"/>
+        <Face side = "z-"  extents = "entireFace"/>
+      </controlVolume>
     </Module>
   </DataAnalysis>
 </Uintah_specification>

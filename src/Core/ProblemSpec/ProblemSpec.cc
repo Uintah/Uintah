@@ -1598,7 +1598,7 @@ ProblemSpecP
 ProblemSpec::getParent() 
 {
   xmlNode* d = d_node->parent;
-  if( d ) {
+  if( d->content != nullptr) {
     return scinew ProblemSpec( d, false );
   }
   else {
@@ -1753,10 +1753,14 @@ ProblemSpec::print()
 
   string nextSibling = "(none)";
   string parent      = "(none)";
+  string child       = "(none)";
   string nextBlock   = "(none)";
   
   if ( ps->getNextSibling() ){
     nextSibling = ps->getNextSibling()->getNodeName();
+  }
+  if ( ps->getFirstChild() ){
+    child       = ps->getFirstChild()->getNodeName();
   }
   if ( ps->getParent() ){
     parent      = ps->getParent()->getNodeName();
@@ -1765,6 +1769,7 @@ ProblemSpec::print()
     nextBlock   = ps->findNextBlock()->getNodeName();
   }
    cout<< "\n getNextSibling():  " << nextSibling
+       << "\n getFirstChild():   " << child
        << "\n getParent():       " << parent
        << "\n findNextBlock():   " << nextBlock << "\n";
 }

@@ -90,43 +90,46 @@ cat >> gp << fin
 #__________________________________
 # compute stats this version of gnuplot is > 3.8
 haveStats =0
-if ( strstrt(GPVAL_COMPILE_OPTIONS,"+STATS") ) print "Computing the statistics of the mean time per timestep"; haveStats = 1
-# compute statistics of mean time and scale the results
-if(haveStats == 1) stats 'data' using 2 name "A"; 
-if(haveStats == 1) stats 'data' using 3 name "B"; 
-if(haveStats == 1) stats 'data' using 4 name "C"; 
+if ( strstrt(GPVAL_COMPILE_OPTIONS,"+STATS") ) {
+  print "Computing the statistics of the mean time per timestep"; 
+  haveStats = 1
+}
 
+# compute statistics of mean time and scale the results
+if(haveStats == 1){
+  stats 'data' using 2 name "A"; 
+  stats 'data' using 3 name "B"; 
+  stats 'data' using 4 name "C"; 
+}
 
 set multiplot
-set size   1.0, 0.5
+set size   1.0, 0.33
 set autoscale
 
-set origin 0.0, 0.5
+set origin 0.0, 0.666
 set grid xtics ytics
 
 set title "$date, $machine, $procs MPI ranks, $threads Threads, uda: $uda"
 set xlabel 'Timesteps'
-set y2tics
-set ylabel  'Time [s]'        textcolor lt 1
-set y2label 'Solver Time [s]' textcolor lt 2
+set ylabel 'Time [s]'        textcolor lt 2
+set yrange[A_lo_quartile - A_median:A_up_quartile + A_median]
 
-set yrange[A_mean - 2*A_stddev:A_mean + 2*A_stddev]
-set y2range[B_mean - 2*B_stddev:B_mean + 2*B_stddev]
+plot 'data' using 2   t 'meanTime/timestep' with lines
 
-
-plot 'data' using 2            t 'meanTime/timestep' with lines,\
-     'data' using 3  axes x1y2 t 'solver Time ' with lines
 #__________________________________
-set size 1.0,0.5
+unset title
+set yrange[B_lo_quartile - B_median:B_up_quartile + B_median]
+set ylabel 'Solver Time [s]' textcolor lt 2
+set origin 0.0,0.333
+
+plot 'data' using 3  t 'solver Time ' with lines
+
+#__________________________________
 set origin 0.0,0.0
 set ylabel 'Solver iterations'
-unset title
-unset y2tics
-unset y2label
 set autoscale
+set yrange[C_lo_quartile - C_stddev:C_up_quartile + C_stddev]
 
-
-set yrange[C_min - .01*C_min:C_max + .01*C_max]
 plot 'data' using 4 t 'solver iterations' with lines
 
 set nomultiplot

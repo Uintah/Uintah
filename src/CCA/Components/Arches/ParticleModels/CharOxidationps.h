@@ -54,7 +54,8 @@ public:
     template <typename ExecSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -941,8 +942,9 @@ CharOxidationps<T>::eval( const Patch                                     * patc
       const double p_area   = M_PI * SQUARE( p_diam );             // particle surface area [m^2]
       const double p_volume = M_PI / 6. * CUBE( p_diam );          // particle volme [m^3]
       const double p_void   = fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / local_rho_org_bulk + local_mass_ash / local_rho_ash_bulk ) ); // current porosity. (-) required due to sign convention of char.
-      const double Sj       = local_init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - local_p_void0 ) ) * sqrt( 1 - fmin( 1.0, ( 1. / ( local_p_void0 * ( 1. - local_p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - local_p_void0 ) ) ) );
-      const double rp  = 2 * p_void * (1. - p_void ) / ( p_rho * Sj * local_Sg0 ); // average particle radius [m]
+
+      const double Sj       = local_init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - local_p_void0 ) ) * sqrt( 1 - fmin( 1.0, ( 1. / (-log(1. - local_p_void0) * ( 1. - local_p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - local_p_void0 ) ) ) );
+      const double rp  = -2 * log(1. - p_void) * (1. - p_void ) / ( p_rho * Sj * local_Sg0 ); // average particle radius [m]
 
       // Calculate oxidizer diffusion coefficient
       // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
