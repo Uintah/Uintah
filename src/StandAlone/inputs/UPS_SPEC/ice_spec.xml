@@ -49,6 +49,12 @@
             <radius                     spec="REQUIRED DOUBLE 'positive'" />
           </vortex>                
         </vortices> 
+
+        <vortexPairs                    spec="OPTIONAL NO_DATA" >
+          <numVortexPairs               spec="REQUIRED DOUBLE" />
+          <axis                         spec="REQUIRED STRING 'x, X, y, Y, z, Z'" />
+          <strength                     spec="REQUIRED DOUBLE" />
+        </vortexPairs>
          
         <gaussianTemperature            spec="OPTIONAL NO_DATA">
           <origin                       spec="REQUIRED VECTOR "/>
