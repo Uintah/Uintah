@@ -42,6 +42,14 @@ namespace Uintah {
     ~vortices() {};
   };
 
+ // vortex pairs 
+  struct vortexPairs{    
+    double nPairs;
+    double strength;
+    std::string axis;
+    ~vortexPairs() {};
+  };
+
 // method of manufactured solutions
   struct mms{
     double A;      // mms_1
@@ -97,6 +105,7 @@ namespace Uintah {
 
   struct customInitialize_basket{
     vortices     vortex_vars;
+    vortexPairs  vortexPairs_vars;
     mms          mms_vars;
     gaussTemp    gaussTemp_vars;
     counterflow  counterflow_vars;

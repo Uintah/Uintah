@@ -343,7 +343,6 @@
         </eqn_group>
       </KScalarTransport>
       <ParticleProperties type="coal">
-        <daf_volatiles_fraction>.517</daf_volatiles_fraction>  <!--dray ash free volatiles content - computed from Indonesian analysis -->
         <diameter_distribution>[50e-6,50e-6,150e-6,200e-6,200e-6]</diameter_distribution>
         <density>1130.0</density>
         <rho_ash_bulk>2300.0</rho_ash_bulk>

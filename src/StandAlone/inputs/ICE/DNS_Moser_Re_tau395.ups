@@ -190,23 +190,11 @@
           <dpdx>            -1.5E-5  </dpdx>  
         </DNS_Moser>
 
-        <vortices>
-          <vortex>
-            <axis>       Y              </axis>
-            <origin>     [1.5708, 0, 1.5708]   </origin>
-
-            <strength>   -0.1           </strength>
-            <radius>     0.2            </radius>
-          </vortex>
-          
-          <vortex>
-            <axis>       Y              </axis>
-            <origin>     [2.5708, 0, 1.5708] </origin>
-
-            <strength>   0.1            </strength>
-            <radius>     0.2            </radius>
-          </vortex>
-          </vortices> 
+        <vortexPairs>
+          <strength>      0.1        </strength>
+          <axis>           x          </axis>
+          <numVortexPairs> 1          </numVortexPairs>
+        </vortexPairs>
       </customInitialization>
 
     </ICE>
