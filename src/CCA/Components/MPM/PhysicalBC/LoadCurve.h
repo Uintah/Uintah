@@ -162,7 +162,6 @@ WARNING
       std::vector<int>    d_BHIndex;
       int d_id;
       double d_curTime;
-      double d_stableKE;
       bool d_UBH;
    };
 
@@ -177,7 +176,6 @@ WARNING
      }
      loadCurve->require("id", d_id);
      loadCurve->getWithDefault("use_burial_history", d_UBH, false);
-     loadCurve->getWithDefault("stableKE", d_stableKE,      2.0e-6);
      if(d_UBH){
       ProblemSpecP root = ps->getRootNode();
       ProblemSpecP TimeBlock = root->findBlock("Time");
@@ -278,7 +276,6 @@ WARNING
      {
        ProblemSpecP lc_ps = ps->appendChild("load_curve");
        lc_ps->appendElement("id",d_id);
-       lc_ps->appendElement("stableKE",d_stableKE);
        lc_ps->appendElement("use_burial_history", false);
        for (int i = 0; i<(int)d_time.size();i++) {
          ProblemSpecP time_ps = lc_ps->appendChild("time_point");
