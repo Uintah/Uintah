@@ -349,6 +349,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
     ArchesFieldContainer::VariableInformation& ivar = *pivar;
 
+    insert_max_ghost(ivar); 
+
     switch(ivar.depend) {
     case ArchesFieldContainer::COMPUTES:
       {
@@ -379,7 +381,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
             allPatches->getSubset( Uintah::Parallel::getMPIRank() );
           DOUT( dbg_arches_task, "[TaskFactoryBase]  modifying (wsg): " << ivar.name );
           tsk->modifiesWithScratchGhost( ivar.label,
-                                         localPatches, 
+                                         localPatches,
                                          Uintah::Task::ThisLevel,
                                          matls->getSubset(0), Uintah::Task::NormalDomain,
                                          ivar.ghost_type, ivar.nGhost );
