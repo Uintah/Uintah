@@ -473,6 +473,13 @@ KokkosSolver::sched_initialize( const LevelP& level,
   //  TaskInterface::INITIALIZE, level, sched, matls, 0, true, true );
   //m_task_factory_map["property_models_factory"]->schedule_task( "compute_cc_velocities",
   // TaskInterface::INITIALIZE, level, sched, matls, 0, true, true );
+  
+  for (auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
+    std::map<std::string, int> the_newdw_map = i->second->get_max_ghost_info(true);
+    std::map<std::string, int> the_olddw_map = i->second->get_max_ghost_info(false);
+    insert_max_ghost( the_newdw_map, true );
+    insert_max_ghost( the_olddw_map, false );
+  }
 
 }
 
