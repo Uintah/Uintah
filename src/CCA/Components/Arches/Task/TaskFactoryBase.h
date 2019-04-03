@@ -209,6 +209,14 @@ namespace Uintah{
                    int time_substep,
                    const bool pack_tasks );
 
+    /** @brief A container to hold variable information across tasks **/
+    struct GhostHelper{
+      int max_ghost{0};        ///< Max ghost across tasks
+      bool multTasks{false};   ///< Variable is used across multiple tasks
+      bool newDW{false};       ///< Variable is accessed from newDW
+      bool oldDW{false};       ///< Variable is accessed from oldDW
+    };
+
     /** @brief Potentially insert a new variable to the max ghost list **/
     void insert_max_ghost(const ArchesFieldContainer::VariableInformation& var_info){
       //Store max ghost information per variable:
@@ -245,13 +253,6 @@ namespace Uintah{
       }
       proc0cout << " :: End report of max ghost cells for Factory " << _factory_name << " :: " << std::endl;
     }
-
-    struct GhostHelper{
-      int max_ghost{0};        ///< Max ghost across tasks
-      bool multTasks{false};   ///< Variable is used across multiple tasks
-      bool newDW{false};       ///< Variable is accessed from newDW
-      bool oldDW{false};       ///< Variable is accessed from oldDW
-    };
 
     /** @brief Get the ghost cell information **/
     std::map<std::string, GhostHelper>& get_max_ghost_info(){
