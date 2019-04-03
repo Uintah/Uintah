@@ -101,6 +101,7 @@ class Output;
     bool        d_doPressureStabilization;
     bool        d_computeNormals;
     bool        d_computeColinearNormals;
+    bool        d_restartOnLargeNodalVelocity;
     bool        d_computeNodalHeatFlux;                        // compute the auxilary nodal heat flux
     bool        d_computeScaleFactor;                          // compute the scale factor for viz 
     bool        d_doGridReset;                                 // Default is true, standard MPM

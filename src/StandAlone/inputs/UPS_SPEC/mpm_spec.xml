@@ -15,6 +15,7 @@
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
       <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
       <computeColinearNormals             spec="OPTIONAL BOOLEAN" />
+      <restartOnLargeNodalVelocity        spec="OPTIONAL BOOLEAN" />
       <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
       <UseGradientEnhancedVelocityProjection spec="OPTIONAL BOOLEAN" />
       <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
