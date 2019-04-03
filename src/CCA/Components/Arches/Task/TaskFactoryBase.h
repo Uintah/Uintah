@@ -212,48 +212,50 @@ namespace Uintah{
     /** @brief Potentially insert a new variable to the max ghost list **/
     void insert_max_ghost(const ArchesFieldContainer::VariableInformation& var_info){
       //Store max ghost information per variable:
+      bool in_new_dw = false;
+      bool in_old_dw = false;
       if ( var_info.dw == ArchesFieldContainer::NEWDW ){
-        auto iter = m_newdw_variable_max_ghost.find(var_info.name);
-        if ( iter == m_newdw_variable_max_ghost.end() ){
-          m_newdw_variable_max_ghost.insert(std::make_pair(var_info.name, var_info.nGhost));
-        } else {
-          if ( iter->second < var_info.nGhost ){
-            iter->second = var_info.nGhost;
-          }
-        }
+        in_new_dw = true;
       } else {
-        auto iter = m_olddw_variable_max_ghost.find(var_info.name);
-        if ( iter == m_olddw_variable_max_ghost.end() ){
-          m_olddw_variable_max_ghost.insert(std::make_pair(var_info.name, var_info.nGhost));
-        } else {
-          if ( iter->second < var_info.nGhost ){
-            iter->second = var_info.nGhost;
-          }
+        in_old_dw = true;
+      }
+      auto iter = m_variable_ghost_info.find(var_info.name);
+      if ( iter == m_variable_ghost_info.end() ){
+        //first record of this variable
+        GhostHelper ghelp{var_info.nGhost, false, in_new_dw, in_old_dw};
+        m_variable_ghost_info.insert(std::make_pair(var_info.name, ghelp));
+      } else {
+        //variable already in list, update it
+        if ( iter->second.max_ghost < var_info.nGhost ){
+          iter->second.max_ghost = var_info.nGhost;
         }
+        iter->second.multTasks = true;
+        iter->second.newDW = in_new_dw;
+        iter->second.oldDW = in_old_dw;
       }
     }
 
     /** @brief Print ghost cell requirements for all variables in this task **/
     void print_variable_max_ghost(){
       proc0cout << " :: Reporting max ghost cells for Factory " << _factory_name << " :: " << std::endl;
-      proc0cout << " :: :: NewDW :: :: " << std::endl;
-      for ( auto i = m_newdw_variable_max_ghost.begin(); i != m_newdw_variable_max_ghost.end(); i++ ){
-        proc0cout << "     variable: " << i->first << " with max ghosts of " << i->second << std::endl;
-      }
-      proc0cout << " :: :: OldDW :: :: " << std::endl;
-      for ( auto i = m_olddw_variable_max_ghost.begin(); i != m_olddw_variable_max_ghost.end(); i++ ){
-        proc0cout << "     variable: " << i->first << " with max ghosts of " << i->second << std::endl;
+      for ( auto i = m_variable_ghost_info.begin(); i != m_variable_ghost_info.end(); i++ ){
+        proc0cout << "   Variable: " << i->first << " Max Ghost: " <<
+        i->second.max_ghost << " MultTask: " << i->second.multTasks <<
+        " NewDW: " << i->second.newDW << " OldDW: " << i->second.oldDW << std::endl;
       }
       proc0cout << " :: End report of max ghost cells for Factory " << _factory_name << " :: " << std::endl;
     }
 
+    struct GhostHelper{
+      int max_ghost{0};        ///< Max ghost across tasks
+      bool multTasks{false};   ///< Variable is used across multiple tasks
+      bool newDW{false};       ///< Variable is accessed from newDW
+      bool oldDW{false};       ///< Variable is accessed from oldDW
+    };
+
     /** @brief Get the ghost cell information **/
-    std::map<std::string, int>& get_max_ghost_info(const bool newdw){
-      if ( newdw ){
-        return m_newdw_variable_max_ghost;
-      } else {
-        return m_olddw_variable_max_ghost;
-      }
+    std::map<std::string, GhostHelper>& get_max_ghost_info(){
+      return m_variable_ghost_info;
     }
 
   protected:
@@ -289,8 +291,7 @@ namespace Uintah{
 
     ArchesParticlesHelper* _part_helper;          ///< Particle Helper
     int m_matl_index;
-    std::map<std::string, int> m_newdw_variable_max_ghost;      ///< Stores the max ghost cell info/variable, NewDW.
-    std::map<std::string, int> m_olddw_variable_max_ghost;      ///< Stores the max ghost cell info/variable, OldDW.
+    std::map<std::string, GhostHelper> m_variable_ghost_info;   ///< Stores ghost info for variables across all tasks in this factory
 
   };
 
