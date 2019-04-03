@@ -255,7 +255,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
   sim->hostName = hostName;
   sim->hostNode = hostNode;
-  
+
   // A machine layout file could exist for this machine.
   if( sim->hostName.size() && sim->hostNode.size() )
   {
@@ -299,9 +299,9 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
             sim->hostName = sim->myworld->myNodeName();
             sim->hostNode = "";
-            return;
+            break;
           }
-          
+
           sim->nodeStart.push_back( start );
           sim->nodeStop.push_back( stop );
           sim->nodeCores.push_back( nCores );
@@ -375,23 +375,24 @@ void visit_InitLibSim( visit_simulation_data *sim )
         }
       }
 
-      
       if( sim->switchNodeList.size() &&
           ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) )
       {
+        sim->switchNodeList.clear();
+        sim->nodeStart.clear();
+        sim->nodeStop.clear();
+        sim->nodeCores.clear();
+        sim->nodeMemory.clear();
+
         std::stringstream msg;
         msg << "Visit libsim - "
             << "Can not find node " << sim->myworld->myNodeName() << " "
             << "in the current network file: " << filename;
           
         VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
-      }
 
-      DOUT( (sim->switchNodeList.size() &&
-             ((int) sim->switchIndex == -1 && (int) sim->nodeIndex == -1) ),
-            "Visit libsim - "
-            << "Can not find node " << sim->myworld->myNodeName() << " "
-            << "in the current network file: " << filename );
+        DOUT( true, msg.str() );
+      }
 
       infile.close();
     }
@@ -417,7 +418,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
     sim->switchNodeList.back().push_back( sim->nodeIndex );
   }
 
-  
   // Get the greatest common demoninator so to have multiple
   // columns for the cores.
   unsigned int gcd = 2;
@@ -434,12 +434,12 @@ void visit_InitLibSim( visit_simulation_data *sim )
       
       for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
       {
-	if( sim->nodeCores[j] % i == 0 )
-	  ++cc;
+        if( sim->nodeCores[j] % i == 0 )
+          ++cc;
       }
       
       if( cc == sim->nodeCores.size() )
-	gcd = i;
+        gcd = i;
     }
   }
   
