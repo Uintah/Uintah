@@ -135,13 +135,13 @@ particleIndex
 ParticleCreator::createParticles(MPMMaterial* matl,
                                  CCVariable<int>& cellNAPID,
                                  const Patch* patch,DataWarehouse* new_dw,
-                                 vector<GeometryObject*>& d_geom_objs)
+                                 vector<GeometryObject*>& geom_objs)
 {
   ObjectVars vars;
   ParticleVars pvars;
   particleIndex numParticles = 0;
   vector<GeometryObject*>::const_iterator geom;
-  for (geom=d_geom_objs.begin(); geom != d_geom_objs.end(); ++geom){ 
+  for (geom=geom_objs.begin(); geom != geom_objs.end(); ++geom){ 
     numParticles += countAndCreateParticles(patch,*geom, vars);
   }
 
@@ -151,7 +151,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
   particleIndex start = 0;
   
   vector<GeometryObject*>::const_iterator obj;
-  for (obj = d_geom_objs.begin(); obj != d_geom_objs.end(); ++obj) {
+  for (obj = geom_objs.begin(); obj != geom_objs.end(); ++obj) {
     particleIndex count = 0;
     GeometryPieceP piece = (*obj)->getPiece();
     Box b1 = piece->getBoundingBox();
