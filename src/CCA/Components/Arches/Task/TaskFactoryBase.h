@@ -230,7 +230,10 @@ namespace Uintah{
       auto iter = m_variable_ghost_info.find(var_info.name);
       if ( iter == m_variable_ghost_info.end() ){
         //first record of this variable
-        GhostHelper ghelp{var_info.nGhost, false, in_new_dw, in_old_dw};
+        GhostHelper ghelp; 
+        ghelp.max_ghost = var_info.nGhost; 
+        ghelp.newDW = in_new_dw; 
+        ghelp.oldDW = in_old_dw;
         m_variable_ghost_info.insert(std::make_pair(var_info.name, ghelp));
       } else {
         //variable already in list, update it
