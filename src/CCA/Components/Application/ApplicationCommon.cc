@@ -123,7 +123,7 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   // Abort the time step
   m_appReductionVars[ abortTimeStep_name ] = new
     ApplicationReductionVariable( abortTimeStep_name, bool_or_vartype::getTypeDescription() );
- 
+
   // End the simulation
   m_appReductionVars[ endSimulation_name ] = new
     ApplicationReductionVariable( endSimulation_name, bool_or_vartype::getTypeDescription() );
@@ -488,7 +488,7 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup * pg,
   new_dw->get(delTvar, m_delTLabel);
   m_delTNext = delTvar;
 
-  // Valiadate after the reduction. NOTE: Because each rank will
+  // Validate after the reduction. NOTE: Because each rank will
   // independently modify delta T the resulting values may be
   // different due to round off.
   if (!g_deltaT_prevalidate && !g_deltaT_prevalidate_sum) {
@@ -1099,7 +1099,7 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 
 //______________________________________________________________________
 //
-// Flag for outputing or checkpointing if the next delta is invalid
+// Flag for outputting or checkpointing if the next delta is invalid
 void
 ApplicationCommon::outputIfInvalidNextDelT( ValidateFlag flag )
 {

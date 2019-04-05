@@ -636,12 +636,18 @@ public: // class Task
   std::map<int,int> m_max_ghost_cells;    // max ghost cells of this task
   int m_max_level_offset{0};              // max level offset of this task
 
+  // Used in compiling the task graph with topological sort.
+  //   Kept around for historical and reproducability reasons - APH, 04/05/19
+  std::set<Task*> m_child_tasks;
+  std::set<Task*> m_all_child_tasks;
+
   enum DepType {
       Modifies
     , Computes
     , Requires
   };
 
+  struct Edge;
 
   struct Dependency {
 
@@ -657,7 +663,6 @@ public: // class Task
       MaterialDomainSpec     m_matls_dom;
       Ghost::GhostType       m_gtype{Ghost::None};
       WhichDW                m_whichdw;  // Used only by requires
-
 
       // in the multi-TG construct, this will signify that the required
       // m_var will be constructed by the old TG
@@ -698,6 +703,15 @@ public: // class Task
       constHandle<MaterialSubset>
       getMaterialsUnderDomain( const MaterialSubset * domainMaterials ) const;
 
+      // Used in compiling the task graph with topological sort.
+      //   Kept around for historical and reproducability reasons - APH, 04/05/19
+      Edge                 * m_req_head{nullptr};
+      Edge                 * m_req_tail{nullptr};
+      Edge                 * m_comp_head{nullptr};
+      Edge                 * m_comp_tail{nullptr};
+      inline void addComp( Edge * edge );
+      inline void addReq(  Edge * edge );
+
 
   private:  // struct Dependency
 
@@ -716,6 +730,23 @@ public: // class Task
                               ,       int               ngc
                               );
   };  // end struct Dependency
+
+
+  // Used in compiling the task graph with topological sort.
+  //   Kept around for historical and reproducability reasons - APH, 04/05/19
+  struct Edge {
+
+     const Dependency * m_comp{nullptr};
+     Edge             * m_comp_next{nullptr};
+     const Dependency * m_req{nullptr};
+     Edge             * m_req_next{nullptr};
+
+     inline Edge( const Dependency * comp , const Dependency * req )
+       : m_comp(comp)
+       , m_req(req)
+     {}
+
+  }; // struct Edge
 
 
 
@@ -840,6 +871,31 @@ protected: // class Task
   friend std::ostream & operator <<(std::ostream & out, const Uintah::Task::Dependency & dep);
 
 }; // end class Task
+
+
+// Used in compiling the task graph with topological sort.
+//   Kept around for historical and reproducability reasons - APH, 04/05/19
+inline void Task::Dependency::addComp( Edge * edge )
+{
+  if (m_comp_tail) {
+    m_comp_tail->m_comp_next = edge;
+  }
+  else {
+    m_comp_head = edge;
+  }
+  m_comp_tail = edge;
+}
+
+inline void Task::Dependency::addReq( Edge * edge )
+{
+  if (m_req_tail) {
+    m_req_tail->m_req_next = edge;
+  }
+  else {
+    m_req_head = edge;
+  }
+  m_req_tail = edge;
+}
 
 }  // End namespace Uintah
 
