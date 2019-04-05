@@ -97,6 +97,8 @@ public:
   SDInterfaceModel* d_sdInterfaceModel;
   //////////
   // Insert Documentation Here:
+  virtual double recomputeDelT(const double delT);
+
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec,
                             GridP&);

@@ -30,6 +30,7 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 //#include <Core/Grid/Task.h>
 #include <Core/Parallel/Parallel.h>
+#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 
 
 //--------------------------------------------------------------------------------------------------
@@ -112,27 +113,25 @@ public:
   inline double get_initial_dt(){ return d_initial_dt; }
 
   /** @brief Potentially insert a new variable to the max ghost list **/
-  void insert_max_ghost(const std::map<std::string, int>& the_map, const bool newdw ){
+  void insert_max_ghost(const std::map<std::string, TaskFactoryBase::GhostHelper>& the_map ){
 
     //Store max ghost information per variable across all possible tasks and factories
     for (auto ivar = the_map.begin(); ivar != the_map.end(); ivar++ ){
-      if ( newdw ){
-        auto iter = m_newdw_variable_max_ghost.find(ivar->first);
-        if ( iter == m_newdw_variable_max_ghost.end() ){
-          m_newdw_variable_max_ghost.insert(std::make_pair(ivar->first, ivar->second));
-        } else {
-          if ( iter->second < ivar->second ){
-            iter->second = ivar->second;
-          }
-        }
+      auto iter = m_total_variable_ghost_info.find(ivar->first);
+      if ( iter == m_total_variable_ghost_info.end() ){
+        m_total_variable_ghost_info.insert( std::make_pair(ivar->first, ivar->second));
       } else {
-        auto iter = m_olddw_variable_max_ghost.find(ivar->first);
-        if ( iter == m_olddw_variable_max_ghost.end() ){
-          m_olddw_variable_max_ghost.insert(std::make_pair(ivar->first, ivar->second));
-        } else {
-          if ( iter->second < ivar->second ){
-            iter->second = ivar->second;
-          }
+        if ( ivar->second.max_ghost > iter->second.max_ghost ){
+          iter->second.max_ghost = ivar->second.max_ghost;
+        }
+        if ( !iter->second.multTasks ){
+          iter->second.multTasks = true;
+        }
+        if ( ivar->second.newDW == true ){
+          iter->second.newDW = true;
+        }
+        if ( ivar->second.oldDW == true ){
+          iter->second.oldDW = true;
         }
       }
     }
@@ -140,16 +139,13 @@ public:
 
   /** @brief Print ghost cell requirements for all variables in this task **/
   void print_variable_max_ghost(){
-    proc0cout << " :: Reporting max ghost cells across all tasks :: " << std::endl;
-    proc0cout << " :: :: NewDW :: :: " << std::endl;
-    for ( auto i = m_newdw_variable_max_ghost.begin(); i != m_newdw_variable_max_ghost.end(); i++ ){
-      proc0cout << "     variable: " << i->first << " with max ghosts of " << i->second << std::endl;
+    proc0cout << " :: Reporting max ghost cells :: " << std::endl;
+    for ( auto i = m_total_variable_ghost_info.begin(); i != m_total_variable_ghost_info.end(); i++ ){
+      proc0cout << "   Variable: " << i->first << " Max Ghost: " <<
+      i->second.max_ghost << " MultTask: " << i->second.multTasks <<
+      " NewDW: " << i->second.newDW << " OldDW: " << i->second.oldDW << std::endl;
     }
-    proc0cout << " :: :: OldDW :: :: " << std::endl;
-    for ( auto i = m_olddw_variable_max_ghost.begin(); i != m_olddw_variable_max_ghost.end(); i++ ){
-      proc0cout << "     variable: " << i->first << " with max ghosts of " << i->second << std::endl;
-    }
-    proc0cout << " :: End report of max ghost cells for across all tasks :: " << std::endl;
+    proc0cout << " :: End report of max ghost cells :: " << std::endl;
   }
 
 protected:
@@ -162,8 +158,8 @@ protected:
    typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
    BCHelperMapT _bcHelperMap;
    ProblemSpecP m_arches_spec;
-   std::map <std::string, int> m_newdw_variable_max_ghost;
-   std::map <std::string, int> m_olddw_variable_max_ghost;
+
+   std::map <std::string, TaskFactoryBase::GhostHelper> m_total_variable_ghost_info;
 
 private:
 

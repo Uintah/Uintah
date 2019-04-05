@@ -126,6 +126,9 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   // Diffusion related
   d_fluxBC = nullptr;
   d_sdInterfaceModel = nullptr;
+
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 SerialMPM::~SerialMPM()
@@ -1222,16 +1225,8 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 
   t->computes(lb->gVelocityStarLabel);
   t->computes(lb->gAccelerationLabel);
-
-//  // This stuff should have its own task
-//  if (flags->d_doScalarDiffusion) {
-//    t->requires(Task::NewDW, lb->diffusion->gConcentrationNoBC, Ghost::None);
-//    t->requires(Task::NewDW, lb->diffusion->gConcentration,     Ghost::None);
-//    t->requires(Task::NewDW, lb->diffusion->gExternalScalarFlux, Ghost::None);
-//    t->requires(Task::NewDW, d_sdInterfaceModel->getInterfaceFluxLabel(), Ghost::None);
-//    t->modifies(lb->diffusion->gConcentrationRate);
-//    t->computes(lb->diffusion->gConcentrationStar);
-//  }
+  t->computes( VarLabel::find(abortTimeStep_name) );
+  t->computes( VarLabel::find(recomputeTimeStep_name) );
 
   sched->addTask(t, patches, matls);
 }
@@ -3203,6 +3198,11 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
                                                 DataWarehouse* old_dw,
                                                 DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  IntVector lowNode, highNode;
+  level->findInteriorNodeIndexRange(lowNode, highNode);
+  string interp_type = flags->d_interpolator_type;
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
@@ -3234,27 +3234,6 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       acceleration.initialize(Vector(0.,0.,0.));
       double damp_coef = flags->d_artificialDampCoeff;
 
-//      // Scalar Diffusion Related Variables -- JBH
-//      constNCVariable<double> gSD_IF_FluxRate;
-//      constNCVariable<double> gConcentration, gConcNoBC, gExternalScalarFlux;
-//      NCVariable<double> gConcRate, gConcStar;
-//      const VarLabel* SD_IF_FluxLabel =
-//                        d_sdInterfaceModel->getInterfaceFluxLabel();
-//      new_dw->get(gSD_IF_FluxRate,      SD_IF_FluxLabel,
-//                  dwi,  patch, gnone, 0);
-//      new_dw->get(gConcentration,       lb->diffusion->gConcentration,
-//                  dwi,  patch, gnone, 0);
-//      new_dw->get(gConcNoBC,            lb->diffusion->gConcentrationNoBC,
-//                  dwi,  patch, gnone, 0);
-//      new_dw->get(gExternalScalarFlux,  lb->diffusion->gExternalScalarFlux,
-//                  dwi,  patch, gnone, 0);
-//
-//      new_dw->getModifiable( gConcRate, lb->diffusion->gConcentrationRate,
-//                             dwi, patch);
-//      new_dw->allocateAndPut(gConcStar, lb->diffusion->gConcentrationStar,
-//                             dwi, patch);
-
-
       for(NodeIterator iter=patch->getExtraNodeIterator();
                         !iter.done();iter++){
         IntVector c = *iter;
@@ -3268,26 +3247,30 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
       }
 
-//      // JBH -- Variables associated with scalar diffusion
-//      if (flags->d_doScalarDiffusion) {
-//
-//        for (NodeIterator iter=patch->getExtraNodeIterator();
-//            !iter.done(); ++iter) {
-//          IntVector node = *iter;
-//          gConcRate[node] /= mass[node];
-//          gConcStar[node]  = gConcentration[node] +
-//                              (gConcRate[node] + gSD_IF_FluxRate[node]);
-//        }
-//        MPMBoundCond bc;
-//        bc.setBoundaryCondition(patch, dwi, "SD-Type", gConcStar,
-//                                flags->d_interpolator_type);
-//        for (NodeIterator iter=patch->getExtraNodeIterator();
-//            !iter.done(); ++iter) {
-//          IntVector node = *iter;
-//          gConcRate[node] = (gConcStar[node] - gConcNoBC[node]) / delT
-//                             + gExternalScalarFlux[node]/mass[node];
-//        }
-//      } // if (flags->d_doScalarDiffusion)
+      // Check the integrated nodal velocity and if the product of velocity
+      // and timestep size is larger than half the cell size, restart the
+      // timestep with 10% as large of a timestep (see recomputeDelT in this
+      // file).
+      if(flags->d_restartOnLargeNodalVelocity){
+       Vector dxCell = patch->dCell();
+       double cell_size_sq = dxCell.length2();
+       for(NodeIterator iter=patch->getExtraNodeIterator();
+                       !iter.done();iter++){
+        IntVector c = *iter;
+        if(c.x()>lowNode.x() && c.x()<highNode.x() &&
+           c.y()>lowNode.y() && c.y()<highNode.y() &&
+           c.z()>lowNode.z() && c.z()<highNode.z()){
+           if((velocity_star[c]*delT).length2() > 0.25*cell_size_sq){
+            cerr << "Aborting timestep, velocity star too large" << endl;
+            cerr << "velocity_star[" << c << "] = " << velocity_star[c] << endl;
+            new_dw->put( bool_or_vartype(true), 
+                         VarLabel::find(abortTimeStep_name));
+            new_dw->put( bool_or_vartype(true), 
+                         VarLabel::find(recomputeTimeStep_name));
+           }
+        }
+       }
+     }
     }    // matls
   }
 }
@@ -5675,4 +5658,11 @@ void SerialMPM::scheduleDiffusionInterfaceDiv(       SchedulerP  & sched
   printSchedule(patches,cout_doing,"MPM::scheduleDiffusionInterfaceDiv");
 
   d_sdInterfaceModel->addComputesAndRequiresDivergence(sched, patches, matls);
+}
+
+//______________________________________________________________________
+//
+double SerialMPM::recomputeDelT( const double delT )
+{
+  return delT * 0.1;
 }

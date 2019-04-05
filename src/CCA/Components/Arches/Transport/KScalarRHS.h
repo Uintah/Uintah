@@ -76,7 +76,8 @@ public:
     template <typename ExecSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -515,11 +516,9 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
     int iend = m_eqn_names.size();
     for (int i = istart; i < iend; i++ ){
       register_new_variable<T>( m_eqn_names[i] );
-      //if ( m_premultiplier_name != "none" )
-      //if ( m_transported_eqn_names[i] != "NA" )
-      if ( m_transported_eqn_names[i] != m_eqn_names[i] )
-        //register_new_variable<T>( m_premultiplier_name+m_eqn_names[i] );
+      if ( m_transported_eqn_names[i] != m_eqn_names[i] ){
         register_new_variable<T>( m_transported_eqn_names[i] );
+      }
       register_new_variable<T>(   m_transported_eqn_names[i]+"_RHS" );
       register_new_variable<FXT>( m_eqn_names[i]+"_x_flux" );
       register_new_variable<FYT>( m_eqn_names[i]+"_y_flux" );
@@ -576,11 +575,10 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
       auto phi = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_eqn_names[ieqn]);
 
 
-      auto  x_flux = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
-      auto  y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
-      auto  z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
+      auto x_flux = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
+      auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
+      auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
-       
       auto rho_phi = createContainer<T, double, imax, MemSpace>(m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ?  1 : 0);
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
          tsk_info->get_unmanaged_uintah_field<T, double, MemSpace>(m_transported_eqn_names[ieqn],rho_phi[0] );
@@ -755,8 +753,8 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
         rho_phi[0] = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_transported_eqn_names[ieqn]);
       }
 
-      auto  phi     = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eqn_names[ieqn]);
-      auto  rhs      = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_transported_eqn_names[ieqn]+"_RHS");
+      auto phi     = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eqn_names[ieqn]);
+      auto rhs      = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_transported_eqn_names[ieqn]+"_RHS");
 
       //Timers::Simple timer;
       //Timers::Simple timer2;
