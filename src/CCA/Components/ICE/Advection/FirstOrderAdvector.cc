@@ -125,18 +125,18 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     double delY_Z = delY * delZ;
     fflux& ofs = VB->OFS[c];
     
-    ofs.d_fflux[TOP]   = delY_top   * delX_Z;
-    ofs.d_fflux[BOTTOM]= delY_bottom* delX_Z;
-    ofs.d_fflux[RIGHT] = delX_right * delY_Z;
-    ofs.d_fflux[LEFT]  = delX_left  * delY_Z;
-    ofs.d_fflux[FRONT] = delZ_front * delX_Y;
-    ofs.d_fflux[BACK]  = delZ_back  * delX_Y; 
+    ofs.fflux[TOP]   = delY_top   * delX_Z;
+    ofs.fflux[BOTTOM]= delY_bottom* delX_Z;
+    ofs.fflux[RIGHT] = delX_right * delY_Z;
+    ofs.fflux[LEFT]  = delX_left  * delY_Z;
+    ofs.fflux[FRONT] = delZ_front * delX_Y;
+    ofs.fflux[BACK]  = delZ_back  * delX_Y; 
 
     //__________________________________
     //  Bullet proofing
     double total_fluxout = 0.0;
     for(int face = TOP; face <= BACK; face++ )  {
-      total_fluxout  += ofs.d_fflux[face];
+      total_fluxout  += ofs.fflux[face];
     }
     if(total_fluxout > vol){
       error = true;
@@ -161,8 +161,8 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
       fflux& ofs = VB->OFS[c];
       
       for(int face = TOP; face <= BACK; face++ )  {
-        total_fluxout  += VB->OFS[c].d_fflux[face];
-        VB->OFS[c].d_fflux[face] = 0.0;
+        total_fluxout  += VB->OFS[c].fflux[face];
+        VB->OFS[c].fflux[face] = 0.0;
       }
       // keep track of which cells are bad
       if (vol - total_fluxout < 0.0) {
@@ -288,8 +288,8 @@ template <class T, typename F>
       //      for consistent units you need to divide by cell volume
       // 
       IntVector ac = c + S_ac[f];     // slab adjacent cell
-      double outfluxVol = OFS[c ].d_fflux[OF_slab[f]];
-      double influxVol  = OFS[ac].d_fflux[IF_slab[f]];
+      double outfluxVol = OFS[c ].fflux[OF_slab[f]];
+      double influxVol  = OFS[ac].fflux[IF_slab[f]];
 
       T q_faceFlux_tmp  =   q_CC[ac] * influxVol - q_CC[c] * outfluxVol;
         
@@ -322,8 +322,8 @@ void FirstOrderAdvector::q_FC_operator(CellIterator iter,
 
      // face:           LEFT,   BOTTOM,   BACK  
      // IF_slab[face]:  RIGHT,  TOP,      FRONT
-    double outfluxVol = OFS[R].d_fflux[face];
-    double influxVol  = OFS[L].d_fflux[IF_slab[face]];
+    double outfluxVol = OFS[R].fflux[face];
+    double influxVol  = OFS[L].fflux[IF_slab[face]];
 
     double q_faceFlux = q_CC[L] * influxVol - q_CC[R] * outfluxVol;
     double faceVol = outfluxVol + influxVol;
@@ -393,8 +393,8 @@ void FirstOrderAdvector::q_FC_flux_operator(CellIterator iter,
     IntVector c = *iter;      
     IntVector ac = c + adj_offset; 
 
-    double outfluxVol = OFS[c].d_fflux[out_indx];
-    double influxVol  = OFS[ac].d_fflux[in_indx];
+    double outfluxVol = OFS[c].fflux[out_indx];
+    double influxVol  = OFS[ac].fflux[in_indx];
 
     q_FC_flux[c] += q_CC[ac] * influxVol - q_CC[c] * outfluxVol;
     

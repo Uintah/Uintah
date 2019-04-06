@@ -89,7 +89,6 @@ extern Uintah::MasterLock cerrLock;
 
 namespace Uintah {
   DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "detailed GPU statistics on H2D and D2H data movement"                  , false );
-  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "UnifiedScheduler", "simulate multiple GPUs, when using only one"                           , false );
   DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
 
   Dout gpu_ids( "GPUIDs", "UnifiedScheduler", "detailed information to identify GPU(s) used when using multiple per node"                                  , false );
@@ -1630,34 +1629,20 @@ UnifiedScheduler::gpuInitialize( bool reset )
 {
 
   cudaError_t retVal;
-  if (simulate_multiple_gpus.active()) {
-    printf("SimulateMultipleGPUs is on, simulating 3 GPUs\n");
-    m_num_devices = 3;
-  } else {
-    int numDevices = 0;
-    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
-    m_num_devices = numDevices;
-  }
+  int numDevices = 0;
+  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+  m_num_devices = numDevices;
 
-  if (simulate_multiple_gpus.active()) {
-
-    // we're simulating many, but we only will use one.
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
+  for (int i = 0; i < m_num_devices; i++) {
     if (reset) {
+      CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
       CUDA_RT_SAFE_CALL(retVal = cudaDeviceReset());
     }
-  } else {
-    for (int i = 0; i < m_num_devices; i++) {
-      if (reset) {
-        CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
-        CUDA_RT_SAFE_CALL(retVal = cudaDeviceReset());
-      }
-    }
-    // set it back to the 0th device
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
-    m_current_device = 0;
   }
 
+  // set it back to the 0th device
+  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
+  m_current_device = 0;
 }
 
 
@@ -4643,11 +4628,7 @@ UnifiedScheduler::copyAllGpuToGpuDependences( DetailedTask * dtask )
       cudaStream_t* stream = dtask->getCudaStreamForThisTask(it->second.m_destDeviceNum);
       OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_destDeviceNum);
 
-      if (simulate_multiple_gpus.active()) {
-        CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(device_dest_ptr, 0, device_source_ptr, 0, memSize, *stream));
-       } else {
-        CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(device_dest_ptr, it->second.m_destDeviceNum, device_source_ptr, it->second.m_sourceDeviceNum, memSize, *stream));
-      }
+      CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(device_dest_ptr, it->second.m_destDeviceNum, device_source_ptr, it->second.m_sourceDeviceNum, memSize, *stream));
     }
   }
 }

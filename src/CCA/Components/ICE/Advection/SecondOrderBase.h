@@ -49,38 +49,38 @@ public:
                        const Patch* patch,
                        DataWarehouse* new_dw,
                        const CCVariable<vertex<T> >& q_vertex, 
-                          CCVariable<T>& q_grad_x,
-                          CCVariable<T>& q_grad_y,
-                          CCVariable<T>& q_grad_z);
-                       
+                       CCVariable<T>& q_grad_x,    
+                       CCVariable<T>& q_grad_y,    
+                       CCVariable<T>& q_grad_z);   
+                                                   
   template<class T> 
   void Q_vertex( const bool useCompatibleFluxes,
                  const CCVariable<T>& q_CC,
                  CCVariable<vertex<T> >& q_vertex,
                  const Patch* patch,
-                  const CCVariable<T>& q_grad_x,
-                  const CCVariable<T>& q_grad_y,
-                  const CCVariable<T>& q_grad_z);
+                 const CCVariable<T>& q_grad_x,  
+                 const CCVariable<T>& q_grad_y,  
+                 const CCVariable<T>& q_grad_z); 
   
                                  
   template<class T> 
-    inline void q_CCMaxMin(const CCVariable<T>& q_CC,
-                           const Patch* patch,
-                              CCVariable<T>& q_CC_max, 
-                              CCVariable<T>& q_CC_min);
+  void q_CCMaxMin(const CCVariable<T>& q_CC,
+                  const Patch* patch,
+                  CCVariable<T>& q_CC_max, 
+                  CCVariable<T>& q_CC_min);
                            
   template<class T>                                    
   void gradQ( const CCVariable<T>& q_CC,
               const Patch* patch,
-               CCVariable<T>& q_grad_x,
-               CCVariable<T>& q_grad_y,
-               CCVariable<T>& q_grad_z);
+              CCVariable<T>& q_grad_x,
+              CCVariable<T>& q_grad_y,
+              CCVariable<T>& q_grad_z);
  
   void mass_massVertex_ratio( const CCVariable<double>& mass_CC,
-                            const Patch* patch,
-                               const CCVariable<double>& q_grad_x,
-                               const CCVariable<double>& q_grad_y,
-                               const CCVariable<double>& q_grad_z);
+                              const Patch* patch,
+                              const CCVariable<double>& q_grad_x,  
+                              const CCVariable<double>& q_grad_y,  
+                              const CCVariable<double>& q_grad_z); 
 
   template <class T>
   bool 
@@ -91,7 +91,9 @@ public:
                      const CCVariable<double>& mass,
                      CCVariable<T>& q_CC);
                        
-  CCVariable<fflux>  r_out_x, r_out_y, r_out_z;
+  CCVariable<fflux> d_r_out_x;
+  CCVariable<fflux> d_r_out_y; 
+  CCVariable<fflux> d_r_out_z;
   CCVariable<vertex<double> > d_mass_massVertex;
   
   bool d_smokeOnOff; 
@@ -102,12 +104,12 @@ public:
  Purpose   Find the x, y, z gradients of q_CC, centered differencing 
 _____________________________________________________________________*/
 template <class T>
-inline void
+void
 SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
                         const Patch* patch,
-                           CCVariable<T>& q_grad_x,
-                           CCVariable<T>& q_grad_y,
-                           CCVariable<T>& q_grad_z)
+                        CCVariable<T>& q_grad_x,
+                        CCVariable<T>& q_grad_y,
+                        CCVariable<T>& q_grad_z)
 {
   T zero(0.0);
   q_grad_x.initialize(zero);
@@ -214,11 +216,11 @@ Purpose~   This calculates the max and min values of q_CC from the surrounding
            cells
 _____________________________________________________________________*/
 template <class T>
-inline void
+void
 SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
                             const Patch* patch,
-                               CCVariable<T>& q_CC_max, 
-                               CCVariable<T>& q_CC_min)
+                            CCVariable<T>& q_CC_max, 
+                            CCVariable<T>& q_CC_min)
 {  
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
@@ -233,20 +235,24 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
     IntVector bk= c + IntVector( 0, 0,-1); 
 
     T max_tmp, min_tmp;
-    max_tmp = Max(q_CC[r], q_CC[l]);
-    min_tmp = Min(q_CC[r], q_CC[l]);
-
-    max_tmp = Max(max_tmp, q_CC[t]);
-    min_tmp = Min(min_tmp, q_CC[t]);
-
-    max_tmp = Max(max_tmp, q_CC[b]);
-    min_tmp = Min(min_tmp, q_CC[b]);
-
-    max_tmp = Max(max_tmp, q_CC[f]);
-    min_tmp = Min(min_tmp, q_CC[f]);
-
-    max_tmp = Max(max_tmp, q_CC[bk]);
-    min_tmp = Min(min_tmp, q_CC[bk]);
+    T q_R  = q_CC[r];      // optimization mimize number of [] calls
+    T q_L  = q_CC[l];
+    T q_T  = q_CC[t];
+    T q_B  = q_CC[b];
+    T q_F  = q_CC[f];
+    T q_BK = q_CC[bk];
+        
+    max_tmp = Max( q_R, q_L );
+    max_tmp = Max( max_tmp, q_T );
+    max_tmp = Max( max_tmp, q_B );
+    max_tmp = Max( max_tmp, q_F );
+    max_tmp = Max( max_tmp, q_BK );
+    
+    min_tmp = Min( q_R, q_L );
+    min_tmp = Min( min_tmp, q_T );
+    min_tmp = Min( min_tmp, q_B );
+    min_tmp = Min( min_tmp, q_F );
+    min_tmp = Min( min_tmp, q_BK );
 
     q_CC_max[c] = max_tmp;
     q_CC_min[c] = min_tmp;

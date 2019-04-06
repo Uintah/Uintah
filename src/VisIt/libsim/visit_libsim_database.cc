@@ -1123,6 +1123,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
           
           // Get the number of cores for this node.
           unsigned int nCores = 0;
+
           for( unsigned int i=0; i<sim->nodeCores.size(); ++i )
           {
             if( sim->nodeStart[i] <= sim->switchNodeList[s][n] &&

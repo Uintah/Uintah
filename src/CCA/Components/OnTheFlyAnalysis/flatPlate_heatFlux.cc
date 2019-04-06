@@ -32,6 +32,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -232,7 +233,8 @@ void flatPlate_heatFlux::restartInitialize()
 void flatPlate_heatFlux::scheduleDoAnalysis(SchedulerP& sched,
                                             const LevelP& level)
 {
-  cout_doing << "flatPlate_heatFlux::scheduleDoAnalysis " << endl;
+  printSchedule(level, cout_doing, "flatPlate_heatFlux::scheduleDoAnalysis");
+  
   Task* t = scinew Task("flatPlate_heatFlux::doAnalysis", 
                    this,&flatPlate_heatFlux::doAnalysis);
   
@@ -242,8 +244,6 @@ void flatPlate_heatFlux::scheduleDoAnalysis(SchedulerP& sched,
   t->computes(v_lb->total_heatRateLabel);
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
-  
-  //cout << " is required " << sched->isVariableRequired(M_lb->gHeatFluxLabel) << endl;
 }
 
 //______________________________________________________________________
@@ -254,16 +254,12 @@ void flatPlate_heatFlux::doAnalysis(const ProcessorGroup* pg,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {       
-  const Level* level = getLevel(patches);
   Vector total_heatRate = Vector(0.0);  
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << pg->myRank() << " " 
-               << "Doing doAnalysis (flatPlate_heatFlux)\t\t\t\tL-"
-               << level->getIndex()
-               << " patch " << patch->getGridIndex()<< endl;
+    printTask(patches, patch, cout_doing, "Doing flatPlate_heatFlux::doAnalysis");
                 
     Ghost::GhostType gn = Ghost::None;
     int indx = d_matl->getDWIndex();

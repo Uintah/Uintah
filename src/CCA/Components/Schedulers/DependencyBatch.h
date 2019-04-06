@@ -64,9 +64,9 @@ public:
   void addVar( Variable * var );
 
   DependencyBatch          * m_comp_next{nullptr};
-  DetailedTask             * m_from_task;
+  DetailedTask             * m_from_task{nullptr};
   DetailedDep              * m_head{nullptr};
-  std::list<DetailedTask*>   m_to_tasks;
+  std::list<DetailedTask*>   m_to_tasks{};
   int                        m_message_tag{-1};
   int                        m_to_rank{-1};
 
@@ -82,7 +82,7 @@ private:
   bool m_received{false};
   std::atomic<bool> m_made_mpi_request{false};
 
-  std::vector<Variable*> m_to_vars;
+  std::vector<Variable*> m_to_vars{};
 
 };
 

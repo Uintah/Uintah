@@ -209,6 +209,53 @@ namespace Uintah{
                    int time_substep,
                    const bool pack_tasks );
 
+    /** @brief Potentially insert a new variable to the max ghost list **/
+    void insert_max_ghost(const ArchesFieldContainer::VariableInformation& var_info){
+      //Store max ghost information per variable:
+      if ( var_info.dw == ArchesFieldContainer::NEWDW ){
+        auto iter = m_newdw_variable_max_ghost.find(var_info.name);
+        if ( iter == m_newdw_variable_max_ghost.end() ){
+          m_newdw_variable_max_ghost.insert(std::make_pair(var_info.name, var_info.nGhost));
+        } else {
+          if ( iter->second < var_info.nGhost ){
+            iter->second = var_info.nGhost;
+          }
+        }
+      } else {
+        auto iter = m_olddw_variable_max_ghost.find(var_info.name);
+        if ( iter == m_olddw_variable_max_ghost.end() ){
+          m_olddw_variable_max_ghost.insert(std::make_pair(var_info.name, var_info.nGhost));
+        } else {
+          if ( iter->second < var_info.nGhost ){
+            iter->second = var_info.nGhost;
+          }
+        }
+      }
+    }
+
+    /** @brief Print ghost cell requirements for all variables in this task **/
+    void print_variable_max_ghost(){
+      proc0cout << " :: Reporting max ghost cells for Factory " << _factory_name << " :: " << std::endl;
+      proc0cout << " :: :: NewDW :: :: " << std::endl;
+      for ( auto i = m_newdw_variable_max_ghost.begin(); i != m_newdw_variable_max_ghost.end(); i++ ){
+        proc0cout << "     variable: " << i->first << " with max ghosts of " << i->second << std::endl;
+      }
+      proc0cout << " :: :: OldDW :: :: " << std::endl;
+      for ( auto i = m_olddw_variable_max_ghost.begin(); i != m_olddw_variable_max_ghost.end(); i++ ){
+        proc0cout << "     variable: " << i->first << " with max ghosts of " << i->second << std::endl;
+      }
+      proc0cout << " :: End report of max ghost cells for Factory " << _factory_name << " :: " << std::endl;
+    }
+
+    /** @brief Get the ghost cell information **/
+    std::map<std::string, int>& get_max_ghost_info(const bool newdw){
+      if ( newdw ){
+        return m_newdw_variable_max_ghost;
+      } else {
+        return m_olddw_variable_max_ghost;
+      }
+    }
+
   protected:
 
     BuildMap  _builders;                           ///< Builder map
@@ -242,6 +289,8 @@ namespace Uintah{
 
     ArchesParticlesHelper* _part_helper;          ///< Particle Helper
     int m_matl_index;
+    std::map<std::string, int> m_newdw_variable_max_ghost;      ///< Stores the max ghost cell info/variable, NewDW.
+    std::map<std::string, int> m_olddw_variable_max_ghost;      ///< Stores the max ghost cell info/variable, OldDW.
 
   };
 

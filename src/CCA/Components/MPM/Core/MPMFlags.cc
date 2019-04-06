@@ -80,8 +80,10 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_computeNormals                =  false;
   d_doingDissolution              =  false;
   d_computeColinearNormals        =  true;
+  d_restartOnLargeNodalVelocity   =  false;
   d_addFrictionWork               =  0.0;
   d_ndim                          =  3;
+  d_addFrictionWork               =  0.0;               // don't do frictional heating by default
 
   d_extraSolverFlushes                 =  0;            // Have PETSc do more flushes to save memory
   d_doImplicitHeatConduction           =  false;
@@ -293,7 +295,13 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("doingDissolution",            d_doingDissolution);
   mpm_flag_ps->get("computeColinearNormals",      d_computeColinearNormals);
   mpm_flag_ps->get("d_ndim",                      d_ndim);
-  if (!d_do_contact_friction) d_addFrictionWork = 0.0;
+  mpm_flag_ps->get("do_contact_friction_heating",d_do_contact_friction);
+  mpm_flag_ps->get("computeNormals",             d_computeNormals);
+  mpm_flag_ps->get("computeColinearNormals",     d_computeColinearNormals);
+  mpm_flag_ps->get("restartOnLargeNodalVelocity",d_restartOnLargeNodalVelocity);
+  if (!d_do_contact_friction){
+    d_addFrictionWork = 0.0;
+  }
 
   // Setting Scalar Diffusion
   mpm_flag_ps->get("do_scalar_diffusion", d_doScalarDiffusion);
@@ -302,26 +310,14 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("auto_cycle_max", d_autoCycleMax);
   mpm_flag_ps->get("auto_cycle_min", d_autoCycleMin);
   mpm_flag_ps->get("with_gauss_solver", d_withGaussSolver);
+  
+  
+  d_computeScaleFactor = dataArchive->isLabelSaved("p.scalefactor");
 
-  // d_doComputeHeatFlux:
-  // set to true if the label g.HeatFlux is saved or 
+
+  // d_doComputeHeatFlux if the label g.HeatFlux is saved or if
   // flatPlat_heatFlux analysis module is used.
-  //
-  // orginal problem spec
-  ProblemSpecP DA_ps = root->findBlock( "DataArchiver" );
-  if( DA_ps != nullptr ){
-    for( ProblemSpecP label_iter = DA_ps->findBlock( "save" ); label_iter != nullptr; label_iter = label_iter->findNextBlock( "save" ) ) {
-      map<string,string> labelName;
-
-      label_iter->getAttributes(labelName);
-      if(labelName["label"] == "g.HeatFlux"){
-        d_computeNodalHeatFlux = true;
-      }
-      if(labelName["label"] == "p.scalefactor"){
-        d_computeScaleFactor = true;
-      }
-    }
-  }
+  d_computeNodalHeatFlux   = dataArchive->isLabelSaved("g.HeatFlux");
 
   ProblemSpecP da_ps = root->findBlock("DataAnalysis");
 
@@ -487,7 +483,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
-//MMS
+  //MMS
   ps->appendElement("RunMMSProblem",d_mms_type);
   ps->appendElement("InsertParticles",d_insertParticles);
   if(d_insertParticles){
@@ -514,6 +510,13 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("AuthigenesisBaseFilename",d_authigenesisBaseFilename);
   ps->appendElement("ChangeGrainMaterials",    d_changeGrainMaterials);
   ps->appendElement("AcceptorMaterialIndex",   d_acceptorMaterialIndex);
+  ps->appendElement("do_contact_friction_heating",d_do_contact_friction);
+  ps->appendElement("computeNormals",             d_computeNormals);
+  ps->appendElement("computeColinearNormals",     d_computeColinearNormals);
+  ps->appendElement("restartOnLargeNodalVelocity",d_restartOnLargeNodalVelocity);
+  ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
+  ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
+  ps->appendElement("do_scalar_diffusion", d_doScalarDiffusion);
 }
 
 bool

@@ -724,6 +724,17 @@ void meanTurbFluxes::calc_Q_prime( DataWarehouse * new_dw,
 
   d_planeAve_1->getPlanarAve< T >( L_indx, Q->label, Qbar );
 
+  // bulletproofing
+  if( Qbar.size() == 0 ){
+    string name = Q->label->getName();
+    ostringstream err;
+    err << "\n\tERROR meanTurbFluxes::calc_Q_prime.  Could not find the planarAverage"
+        << " for the variable (" << name << ")."  
+        << " \n\t" << name << " must be one of the variables"
+        << " listed in the ups file: <DataAnalysis>-><Module name=\"meanTurbFluxes\">-><Variables>-><analyze>\n";
+    throw InternalError( err.str(), __FILE__, __LINE__ );
+  }
+
   IntVector lo;
   IntVector hi;
   GridIterator iter=patch->getCellIterator();

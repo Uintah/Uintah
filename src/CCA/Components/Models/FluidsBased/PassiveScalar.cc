@@ -35,6 +35,7 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Grid/Box.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -43,19 +44,16 @@
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <iostream>
-#include <Core/Util/DebugStream.h>
 #include <cstdio>
 
 using namespace Uintah;
 using namespace std;
-//__________________________________
-//  To turn on the output
-//  setenv SCI_DEBUG "MODELS_DOING_COUT:+,PASSIVE_SCALAR_DBG_COUT:+"
-//  PASSIVE_SCALAR_DBG:  dumps out during problemSetup 
-static DebugStream cout_doing("MODELS_DOING_COUT", false);
-static DebugStream cout_dbg("PASSIVE_SCALAR_DBG_COUT", false);
+
+
+Dout dout_models_ps("MODELS_DOING_COUT", "Models::PassiveScalar", "Models::PassiveScalar debug stream", false);
 //______________________________________________________________________
 PassiveScalar::PassiveScalar(const ProcessorGroup* myworld, 
                              const MaterialManagerP& materialManager,
@@ -148,7 +146,7 @@ PassiveScalar::interiorRegion::interiorRegion(GeometryPieceP piece, ProblemSpecP
 //     P R O B L E M   S E T U P
 void PassiveScalar::problemSetup(GridP&, const bool isRestart)
 {
-  cout_doing << "Doing problemSetup \t\t\t\tPASSIVE_SCALAR" << endl;
+  DOUT(dout_models_ps, "Doing problemSetup \t\t\t\tPASSIVE_SCALAR" );
 
   ProblemSpecP PS_ps = d_params->findBlock("PassiveScalar");
   d_matl = m_materialManager->parseAndLookupMaterial(PS_ps, "material");
@@ -242,9 +240,11 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
       GeometryPieceP mainpiece;
       if(pieces.size() == 0){
         throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-      } else if(pieces.size() > 1){
+      } 
+      else if(pieces.size() > 1){
         mainpiece = scinew UnionGeometryPiece(pieces);
-      } else {
+      } 
+      else {
         mainpiece = pieces[0];
       }
 
@@ -258,42 +258,45 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
 void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
-  model_ps->setAttribute("type","PassiveScalar");
-  ProblemSpecP PS_ps = model_ps->appendChild("PassiveScalar");
+  model_ps->setAttribute( "type","PassiveScalar" );
+  ProblemSpecP PS_ps = model_ps->appendChild( "PassiveScalar" );
 
-  PS_ps->appendElement("material",d_matl->getName());
-  ProblemSpecP scalar_ps = PS_ps->appendChild("scalar");
-  scalar_ps->setAttribute("name","f");
-  scalar_ps->appendElement("test_conservation",d_test_conservation);
+  PS_ps->appendElement( "material",d_matl->getName() );
+  ProblemSpecP scalar_ps = PS_ps->appendChild( "scalar" );
+  scalar_ps->setAttribute( "name", "f" );
+  scalar_ps->appendElement( "test_conservation", d_test_conservation );
 
 
-  ProblemSpecP const_ps = scalar_ps->appendChild("constants");
-  const_ps->appendElement("initialize_diffusion_knob",d_scalar->initialize_diffusion_knob);
-  const_ps->appendElement("diffusivity",              d_scalar->diff_coeff);
-  const_ps->appendElement("AMR_Refinement_Criteria",  d_scalar->refineCriteria);
+  ProblemSpecP const_ps = scalar_ps->appendChild( "constants" );
+  const_ps->appendElement( "initialize_diffusion_knob",d_scalar->initialize_diffusion_knob) ;
+  const_ps->appendElement( "diffusivity",              d_scalar->diff_coeff );
+  const_ps->appendElement( "AMR_Refinement_Criteria",  d_scalar->refineCriteria );
 
   //__________________________________
   //  initialization regions
-  ProblemSpecP init_ps = scalar_ps->appendChild("initialization");
+  ProblemSpecP init_ps = scalar_ps->appendChild( "initialization" );
   
   vector<Region*>::const_iterator iter;
   for ( iter = d_scalar->regions.begin(); iter != d_scalar->regions.end(); iter++) {
-    ProblemSpecP geom_ps = init_ps->appendChild("geom_object");
+    ProblemSpecP geom_ps = init_ps->appendChild( "geom_object" );
+    
     (*iter)->piece->outputProblemSpec(geom_ps);
-    geom_ps->appendElement("scalar",(*iter)->initialScalar);
+    geom_ps->appendElement( "scalar",(*iter)->initialScalar );
   }
   
 
   //__________________________________
   //  regions inside the domain
   if( d_scalar->interiorRegions.size() > 0 ){
-    ProblemSpecP int_ps = scalar_ps->appendChild("interiorSources");
+    ProblemSpecP int_ps = scalar_ps->appendChild( "interiorSources" );
     
     vector<interiorRegion*>::const_iterator itr;
     for ( itr = d_scalar->interiorRegions.begin(); itr != d_scalar->interiorRegions.end(); itr++) {
       ProblemSpecP geom_ps = int_ps->appendChild("geom_object");
-      (*itr)->piece->outputProblemSpec(geom_ps);
-      geom_ps->appendElement("scalar",(*itr)->value);
+      (*itr)->piece->outputProblemSpec( geom_ps );
+      
+      geom_ps->appendElement( "scalar",   (*itr)->value );
+      geom_ps->appendElement( "maxScalar",(*itr)->clampValue );
     }
   }
 }
@@ -304,7 +307,8 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
 void PassiveScalar::scheduleInitialize(SchedulerP& sched,
                                        const LevelP& level)
 {
-  cout_doing << "PassiveScalar::scheduleInitialize " << endl;
+  printSchedule(level,dout_models_ps,"PassiveScalar::scheduleInitialize");
+  
   Task* t = scinew Task("PassiveScalar::initialize", 
                   this, &PassiveScalar::initialize);
   
@@ -325,10 +329,12 @@ void PassiveScalar::initialize(const ProcessorGroup*,
   new_dw->get(timeStep, VarLabel::find( timeStep_name) );
 
   bool isNotInitialTimeStep = (timeStep > 0);
-
-  cout_doing << "Doing Initialize \t\t\t\t\tPASSIVE_SCALAR" << endl;
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    
+    printTask(patches, patch, dout_models_ps, "Doing PassiveScalar::initialize");
+    
     int indx = d_matl->getDWIndex();
     
     CCVariable<double>  f;
@@ -344,9 +350,9 @@ void PassiveScalar::initialize(const ProcessorGroup*,
       
       if(region->uniformInitialize){
       
-        for(CellIterator iter = patch->getExtraCellIterator();
-            !iter.done(); iter++){
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
+          
           Point p = patch->cellPosition(c);            
           if(region->piece->inside(p)) {
             f[c] = region->initialScalar;
@@ -358,6 +364,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
       // Sinusoidal & linear initialization
       if(!region->uniformInitialize){
         IntVector freq = region->freq;
+        
         // bulletproofing
         if(region->sinusoidalInitialize && freq.x()==0 && freq.y()==0 && freq.z()==0){
           throw ProblemSetupException("PassiveScalar: you need to specify a <freq> whenever you use sinusoidalInitialize", __FILE__, __LINE__);
@@ -382,16 +389,19 @@ void PassiveScalar::initialize(const ProcessorGroup*,
           
 
         if(region->exponentialInitialize_2D && (coeff.x()!=0) && (coeff.y()!=0) && (coeff.z()!=0) ) {
-            throw ProblemSetupException("PassiveScalar: 2D Exponential Initialize. This profile is designed for 2D problems only, one <coeff> must equal zero",__FILE__, __LINE__);
+          throw ProblemSetupException("PassiveScalar: 2D Exponential Initialize. This profile is designed for 2D problems only, one <coeff> must equal zero",__FILE__, __LINE__);
         }
         
         Point lo = region->piece->getBoundingBox().lower();
         Point hi = region->piece->getBoundingBox().upper();
         Vector dist = hi.asVector() - lo.asVector();
         
-        for(CellIterator iter = patch->getExtraCellIterator();
-            !iter.done(); iter++){
+        //__________________________________
+        //
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+        
           IntVector c = *iter;
+        
           Point p = patch->cellPosition(c);            
           if(region->piece->inside(p)) {
             // normalized distance
@@ -403,8 +413,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
                      sin( 2.0 * freq.z() * d.z() * M_PI);
             }
             if(region->linearInitialize){  // f[c] = kx + b
-              f[c] = (slope.x() * d.x() + slope.y() * d.y() + slope.z() * d.z() )
-                   +  region->initialScalar; 
+              f[c] = (slope.x() * d.x() + slope.y() * d.y() + slope.z() * d.z() ) +  region->initialScalar; 
             }
             if(region->triangularInitialize){
               if(d.x() <= 0.5)
@@ -472,9 +481,11 @@ void PassiveScalar::scheduleModifyThermoTransportProperties(SchedulerP& sched,
                                                             const LevelP& level,
                                                             const MaterialSet* /*ice_matls*/)
 {
-  cout_doing << "PASSIVE_SCALAR::scheduleModifyThermoTransportProperties" << endl;
+  printSchedule(level,dout_models_ps,"PassiveScalar::scheduleModifyThermoTransportProperties");
+  
   Task* t = scinew Task("PassiveScalar::modifyThermoTransportProperties", 
                    this,&PassiveScalar::modifyThermoTransportProperties);
+                   
   t->computes(d_scalar->diffusionCoefLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -487,8 +498,8 @@ void PassiveScalar::modifyThermoTransportProperties(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing modifyThermoTransportProperties on patch "
-               <<patch->getID()<< "\t PassiveScalar" << endl;
+    
+    printTask(patches, patch, dout_models_ps, "Doing PassiveScalar::modifyThermoTransportProperties");
    
     int indx = d_matl->getDWIndex();
     CCVariable<double> diffusionCoeff;
@@ -512,7 +523,8 @@ void PassiveScalar::computeSpecificHeat(CCVariable<double>& ,
 void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
                                                 const LevelP& level)
 {
-  cout_doing << "PASSIVE_SCALAR::scheduleComputeModelSources " << endl;
+  printSchedule(level,dout_models_ps,"PassiveScalar::scheduleComputeModelSources");
+  
   Task* t = scinew Task("PassiveScalar::computeModelSources", 
                    this,&PassiveScalar::computeModelSources);
                      
@@ -539,8 +551,8 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing computeModelSources... on patch "<<patch->getID()
-               << "\t\t\t PassiveScalar" << endl;
+    
+    printTask(patches, patch, dout_models_ps, "Doing PassiveScalar::computeModelSources");
    
     constCCVariable<double> f_old, diff_coeff;
     CCVariable<double>  f_src;
@@ -571,7 +583,9 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
             
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
+        
         Point p = patch->cellPosition(c);            
+        
         if(region->piece->inside(p)) {
           f_src[c] = region->value;
           
@@ -601,7 +615,9 @@ void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
   int L = level->getIndex();
   
   if(d_test_conservation && L == 0){
-    cout_doing << "PASSIVESCALAR::scheduleTestConservation " << endl;
+
+    printSchedule(patches, dout_models_ps, "PassiveScalar::scheduleTestConservation");
+    
     Task* t = scinew Task("PassiveScalar::testConservation", 
                      this,&PassiveScalar::testConservation);
 
@@ -633,9 +649,9 @@ void PassiveScalar::testConservation(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing testConservation on patch "<<patch->getID()
-               << "\t\t\t PassiveScalar" << endl;
-               
+    
+    printTask(patches, patch, dout_models_ps, "Doing PassiveScalar::testConservation");
+                   
     //__________________________________
     //  conservation of f test
     constCCVariable<double> rho_CC, f;
@@ -673,8 +689,7 @@ void PassiveScalar::testConservation(const ProcessorGroup*,
 void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
                                           SchedulerP& sched)
 {
-  cout_doing << "PassiveScalar::scheduleErrorEstimate \t\t\tL-" 
-             << coarseLevel->getIndex() << '\n';
+  printSchedule( coarseLevel,dout_models_ps,"PassiveScalar::scheduleErrorEstimate" );
   
   Task* t = scinew Task("PassiveScalar::errorEstimate", 
                   this, &PassiveScalar::errorEstimate, false);  
@@ -710,10 +725,11 @@ void PassiveScalar::errorEstimate(const ProcessorGroup*,
                                   DataWarehouse*,
                                   DataWarehouse* new_dw,
                                   bool)
-{
-  cout_doing << "Doing errorEstimate \t\t\t\t\t PassiveScalar"<< endl;
+{  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+
+    printTask(patches, patch, dout_models_ps, "Doing PassiveScalar::errorEstimate");
     
     Ghost::GhostType  gac  = Ghost::AroundCells;
     const VarLabel* refineFlagLabel = m_regridder->getRefineFlagLabel();
@@ -729,9 +745,8 @@ void PassiveScalar::errorEstimate(const ProcessorGroup*,
     constCCVariable<double> f;
     CCVariable<double> mag_grad_f;
     
-    new_dw->get(f,                     d_scalar->scalar_CCLabel,  indx ,patch,gac,1);
-    new_dw->allocateAndPut(mag_grad_f, d_scalar->mag_grad_scalarLabel, 
-                           indx,patch);
+    new_dw->get(f,                     d_scalar->scalar_CCLabel,       indx ,patch,gac,1);
+    new_dw->allocateAndPut(mag_grad_f, d_scalar->mag_grad_scalarLabel, indx, patch);
     mag_grad_f.initialize(0.0);
     
     //__________________________________
@@ -741,6 +756,7 @@ void PassiveScalar::errorEstimate(const ProcessorGroup*,
     for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       Vector grad_f;
+      
       for(int dir = 0; dir <3; dir ++ ) {
         IntVector r = c;
         IntVector l = c; 
@@ -754,8 +770,10 @@ void PassiveScalar::errorEstimate(const ProcessorGroup*,
     //__________________________________
     // set refinement flag
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
+    
     for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
+    
       if( mag_grad_f[c] > d_scalar->refineCriteria){
         refineFlag[c] = true;
         refinePatch->set();

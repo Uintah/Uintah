@@ -61,7 +61,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
       "t.harman@utah.edu,"                 \
       "bradpeterson@gmail.com,"            \
       "jholmen@sci.utah.edu,"              \
-      "jthornock@gmail.com,"               \
+      "jeremy.thornock@utah.edu,"          \
       "derkhar@gmail.com,"                 \
       "bisaac2@gmail.com,"                 \
       "allen@sci.utah.edu" )
@@ -75,7 +75,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
     names=(\
     "bradpeterson@gmail.com,"     \
     "jholmen@sci.utah.edu,"       \
-    "jthornock@gmail.com,"        \
+    "jeremy.thornock@utah.edu,"   \
     "derkhar@gmail.com,"          \
     "ohdiazi@gmail.com,"          \
     "t.harman@utah.edu" )

@@ -605,10 +605,21 @@ class LoadBalancer;
 
     bool m_outputDoubleAsFloat {false};
 
-    // For outputing global vars Frequency > OnTimeStep
+    //-----------------------------------------------------------
+
+    // These four variables affect the global var output only.
+    
+    // For outputing the sim time and/or time step with the global vars
+    bool m_outputGlobalVarsTimeStep {false};
+    bool m_outputGlobalVarsSimTime  {true};
+    
+    // For modulating the output frequency global vars. By default
+    // they are output every time step. Note: Frequency > OnTimeStep
     unsigned int m_outputGlobalVarsFrequency {1};
     unsigned int m_outputGlobalVarsOnTimeStep {0};
 
+    
+    //-----------------------------------------------------------
     std::string TranslateVariableType( std::string type, bool isThisCheckpoint );
 
     //-----------------------------------------------------------

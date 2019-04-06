@@ -111,6 +111,7 @@ class Output;
     bool        d_doingDissolution;
     bool        d_computeColinearNormals;
     int         d_ndim;
+    bool        d_restartOnLargeNodalVelocity;
     bool        d_computeNodalHeatFlux;                        // compute the auxilary nodal heat flux
     bool        d_computeScaleFactor;                          // compute the scale factor for viz 
     bool        d_doGridReset;                                 // Default is true, standard MPM

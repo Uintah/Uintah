@@ -110,12 +110,15 @@ DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL
                    ("RMCRT_+Domain_DO",      "RMCRT_+Domain_DO.ups",     8, "ALL", ["exactComparison"])
               ]
 
-KOKKOSTESTS   = [  ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]),
-                   ("RMCRT_1L_bounded",  "RMCRT_bm1_1L_bounded.ups",   8, "ALL", ["exactComparison"]),
-                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1, "ALL", ["exactComparison"]),
-                   ("RMCRT_isoScat",    "RMCRT_isoScat.ups",           1, "ALL", ["exactComparison"]),
-                   ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"])
+KOKKOSTESTS   = [  
+#                   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]),
+#                   ("RMCRT_1L_bounded",  "RMCRT_bm1_1L_bounded.ups",   8, "ALL", ["exactComparison"]),
+#                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1, "ALL", ["exactComparison"]),
+#                   ("RMCRT_isoScat",    "RMCRT_isoScat.ups",           1, "ALL", ["exactComparison"]),
+#                   ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"])
                 ]
+                
+                
               
 POISSON3TESTS = [ #("poisson3_2L",         "poisson3_2L.ups",             2, "All", ["exactComparison"] ),       
                   #("poisson3_3L",         "poisson3_3L.ups",             2, "All", ["exactComparison"] ),       

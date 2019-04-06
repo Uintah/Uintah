@@ -84,7 +84,6 @@ namespace Uintah {
   extern Dout g_mpi_dbg;
 
 #ifdef HAVE_CUDA
-  extern DebugStream simulate_multiple_gpus;
   extern DebugStream gpudbg;
 #endif
 
@@ -149,11 +148,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
   if (Uintah::Parallel::usingDevice()) {
     int numDevices;
     cudaError_t retVal;
-    if (simulate_multiple_gpus.active()) {
-      numDevices = 3;
-    } else {
-      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
-    }
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
 
     for (int i = 0; i < numDevices; i++) {
       //those gpuDWs should only live host side.
@@ -432,11 +427,7 @@ OnDemandDataWarehouse::getReductionVariable( const VarLabel * label
 
 void
 OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
-  //if (simulate_multiple_gpus.active()) {
-  //  CUDA_RT_SAFE_CALL( cudaSetDevice(0) );
-  //} else {
   //  CUDA_RT_SAFE_CALL( cudaSetDevice(deviceNum) );
-  //}
 }
 
 int
@@ -445,11 +436,7 @@ OnDemandDataWarehouse::getNumDevices() {
   cudaError_t retVal;
 
   if (Uintah::Parallel::usingDevice()) {
-    if (simulate_multiple_gpus.active()) {
-      numDevices = 2;
-    } else {
-      numDevices = 1;
-    }
+    numDevices = 1;
   }
 
   //if multiple devices are desired, use this:

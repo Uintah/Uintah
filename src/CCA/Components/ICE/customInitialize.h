@@ -33,11 +33,21 @@ namespace Uintah {
   class ICEMaterial;
 
  // multiple vortices
-  struct vortices{
-    std::vector<Point> origin;
+  struct vortices{    
+    std::vector<Point>  origin;
     std::vector<double> strength;
     std::vector<double> radius;
+    std::vector<std::string> axis;
+    
     ~vortices() {};
+  };
+
+ // vortex pairs 
+  struct vortexPairs{    
+    double nPairs;
+    double strength;
+    std::string axis;
+    ~vortexPairs() {};
   };
 
 // method of manufactured solutions
@@ -95,6 +105,7 @@ namespace Uintah {
 
   struct customInitialize_basket{
     vortices     vortex_vars;
+    vortexPairs  vortexPairs_vars;
     mms          mms_vars;
     gaussTemp    gaussTemp_vars;
     counterflow  counterflow_vars;
@@ -103,14 +114,6 @@ namespace Uintah {
     bool         doesComputePressure;
     std::vector<std::string> whichMethod;
   };
-
-  void vortex( const Patch* patch,
-               const Point & origin,
-               const double C1,
-               const double R,
-               CCVariable<double> & rho_CC,
-               CCVariable<Vector> & vel_CC,
-               CCVariable<double> & press_CC);
 
   void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
                                         customInitialize_basket* cib,

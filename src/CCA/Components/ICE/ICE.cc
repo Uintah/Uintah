@@ -1063,11 +1063,7 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
              
   t = scinew Task("ICE::computeThermoTransportProperties", 
             this, &ICE::computeThermoTransportProperties); 
-            
-  //if(d_doAMR && level->getIndex() !=0){
-  // dummy variable needed to keep the taskgraph in sync
-  //t->requires(Task::NewDW,lb->AMR_SyncTaskgraphLabel,Ghost::None,0);
-  //}           
+           
   t->requires(Task::OldDW,lb->temp_CCLabel, ice_matls->getUnion(), Ghost::None, 0);  
 
   t->computes(lb->viscosityLabel);
@@ -4007,9 +4003,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
 
-        right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
-        top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
-        front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
+        right    = c + IntVector(1,0,0);    left     = c;
+        top      = c + IntVector(0,1,0);    bottom   = c;
+        front    = c + IntVector(0,0,1);    back     = c;
           
         double press_src_X = ( pressX_FC[right] - pressX_FC[left] )   * vol_frac[c];
         double press_src_Y = ( pressY_FC[top]   - pressY_FC[bottom] ) * vol_frac[c]; 
@@ -4031,18 +4027,17 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         oneZero.y(  ( d_fixedPressGrad.y() == d_EVIL_NUM) ? 1.0 : 0.0 );
         oneZero.z(  ( d_fixedPressGrad.z() == d_EVIL_NUM) ? 1.0 : 0.0 );
         
-        double src_X = -d_fixedPressGrad.x() * dx.x() * areaX ;
-        double src_Y = -d_fixedPressGrad.y() * dx.y() * areaY ;
-        double src_Z = -d_fixedPressGrad.z() * dx.z() * areaZ ;
-        Vector fixedPressSrc = Vector( src_X, src_Y, src_Z );
-        Vector one(1.0,1.0,1.0);  
+        double src_X    = d_fixedPressGrad.x() * dx.x() * areaX ;
+        double src_Y    = d_fixedPressGrad.y() * dx.y() * areaY ;
+        double src_Z    = d_fixedPressGrad.z() * dx.z() * areaZ ;
+        Vector pressSrc = Vector( src_X, src_Y, src_Z );
+        Vector one( 1.0, 1.0, 1.0 );
           
         for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
           IntVector c = *iter;
 
-          fixedPressSrc *= vol_frac[c];
-          mom_source[c] = oneZero * mom_source[c] + (one - oneZero) * fixedPressSrc;          
-          
+          Vector fixedPressSrc = pressSrc * vol_frac[c];
+          mom_source[c] = mom_source[c] + (one - oneZero) * fixedPressSrc;
         }
       }
       
@@ -5114,7 +5109,7 @@ void ICE::TestConservation(const ProcessorGroup*,
       }
     }
     //__________________________________
-    // conservation of momentum
+    // conservation of convective momentum 
     if(d_conservationTest->momentum){
       CCVariable<Vector> mom;
       constCCVariable<Vector> vel_CC;

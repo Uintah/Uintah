@@ -402,11 +402,9 @@ private:
     int iend = m_eqn_names.size();
     for (int i = istart; i < iend; i++ ){
       register_new_variable<T>( m_eqn_names[i] );
-      //if ( m_premultiplier_name != "none" )
-      //if ( m_transported_eqn_names[i] != "NA" )
-      if ( m_transported_eqn_names[i] != m_eqn_names[i] )
-        //register_new_variable<T>( m_premultiplier_name+m_eqn_names[i] );
+      if ( m_transported_eqn_names[i] != m_eqn_names[i] ){
         register_new_variable<T>( m_transported_eqn_names[i] );
+      }
       register_new_variable<T>(   m_transported_eqn_names[i]+"_RHS" );
       register_new_variable<FXT>( m_eqn_names[i]+"_x_flux" );
       register_new_variable<FYT>( m_eqn_names[i]+"_y_flux" );
