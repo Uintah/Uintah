@@ -75,8 +75,14 @@ enum QueueAlg {
     FCFS
   , Stack
   , Random
+  , MostChildren
+  , LeastChildren
+  , MostAllChildren
+  , LeastAllChildren
   , MostMessages
   , LeastMessages
+  , MostL2Children
+  , LeastL2Children
   , PatchOrder
   , PatchOrderRandom
 };

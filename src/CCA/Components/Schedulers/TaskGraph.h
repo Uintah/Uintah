@@ -367,6 +367,82 @@ class TaskGraph {
     std::vector<std::shared_ptr<Task> > m_tasks{};
 
 
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //
+    //  Archived code for topological sort functionality. Please leave this here - APH, 04/05/19
+    //
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  public:
+
+    //______________________________________________________________________
+    // This is so we can keep tasks independent of the task graph
+    struct GraphSortInfo {
+
+        GraphSortInfo()
+          : m_visited{false}
+          , m_sorted{false}
+        {}
+
+        bool m_visited;
+        bool m_sorted;
+    };
+
+    using CompMap          = std::multimap<const VarLabel*, Task::Dependency*>;
+    using GraphSortInfoMap = std::map<Task*, GraphSortInfo>;
+    using ReductionTasksMap         = std::map<VarLabelMatl<Level>, Task*>;
+
+
+  private:
+
+    /// Helper function for setupTaskConnections, adding dependency edges
+    /// for the given task for each of the require (or modify) depencies in
+    /// the list whose head is req.  If modifies is true then each found
+    /// compute will be replaced by its modifying dependency on the CompMap.
+    void addDependencyEdges( Task              * task
+                           , GraphSortInfoMap  & sortinfo
+                           , Task::Dependency  * req
+                           , CompMap           & comps
+                           , ReductionTasksMap & reductionTasks
+                           , bool                modifies
+                           );
+
+    bool overlaps( const Task::Dependency * comp
+                 , const Task::Dependency * req
+                 ) const;
+
+    /// Helper function for processTasks, processing the dependencies
+    /// for the given task in the dependency list whose head is req.
+    /// Will call processTask (recursively, as this is a helper for
+    /// processTask) for each dependent task.
+    void processDependencies( Task               * task
+                            , Task::Dependency   * req
+                            , std::vector<Task*> & sortedTasks
+                            , GraphSortInfoMap   & sortinfo
+                            ) const;
+
+    /// Called for each task, this "sorts" the taskgraph.
+    /// This sorts in topological order by calling processDependency
+    /// (which checks for cycles in the graph), which then recursively
+    /// calls processTask for each dependentTask.  After this process is
+    /// finished, then the task is added at the end of sortedTasks.
+    void processTask( Task               * task
+                    , std::vector<Task*> & sortedTasks
+                    , GraphSortInfoMap   & sortinfo
+                    ) const;
+
+    /// Adds edges in the TaskGraph between requires/modifies and their
+    /// associated computes.  Uses addDependencyEdges as a helper
+    void setupTaskConnections( GraphSortInfoMap & sortinfo );
+
+    /// sets up the task connections and puts them in a sorted order.
+    /// Calls setupTaskConnections, which has the side effect of creating
+    /// reduction tasks for tasks that compute reduction variables.
+    /// calls processTask on each task to sort them.
+    void topologicalSort( std::vector<Task*>& tasks );
+
+    std::vector<Task::Edge*>            m_edges;
+
 }; // class TaskGraph
 
 }  // namespace Uintah

@@ -73,40 +73,60 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
                                  , const MaterialManagerP& materialManager
                                  )
 {
+  // Default taskReadyQueueAlg
   std::string taskQueueAlg = "";
 
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
   if (params) {
     params->get("taskReadyQueueAlg", taskQueueAlg);
-  }
-  if (taskQueueAlg == "") {
-    taskQueueAlg = "MostMessages";  //default taskReadyQueueAlg
+    if (taskQueueAlg == "") {
+      taskQueueAlg = "MostMessages";  //default taskReadyQueueAlg
+    }
+    if (taskQueueAlg == "FCFS") {
+      m_task_queue_alg = FCFS;
+    }
+    else if (taskQueueAlg == "Stack") {
+      m_task_queue_alg = Stack;
+    }
+    else if (taskQueueAlg == "Random") {
+      m_task_queue_alg = Random;
+    }
+    else if (taskQueueAlg == "MostChildren") {
+      m_task_queue_alg = MostChildren;
+    }
+    else if (taskQueueAlg == "LeastChildren") {
+      m_task_queue_alg = LeastChildren;
+    }
+    else if (taskQueueAlg == "MostAllChildren") {
+      m_task_queue_alg = MostChildren;
+    }
+    else if (taskQueueAlg == "LeastAllChildren") {
+      m_task_queue_alg = LeastChildren;
+    }
+    else if (taskQueueAlg == "MostL2Children") {
+      m_task_queue_alg = MostL2Children;
+    }
+    else if (taskQueueAlg == "LeastL2Children") {
+      m_task_queue_alg = LeastL2Children;
+    }
+    else if (taskQueueAlg == "MostMessages") {
+      m_task_queue_alg = MostMessages;
+    }
+    else if (taskQueueAlg == "LeastMessages") {
+      m_task_queue_alg = LeastMessages;
+    }
+    else if (taskQueueAlg == "PatchOrder") {
+      m_task_queue_alg = PatchOrder;
+    }
+    else if (taskQueueAlg == "PatchOrderRandom") {
+      m_task_queue_alg = PatchOrderRandom;
+    }
+    else {
+      throw ProblemSetupException("Unknown task ready queue algorithm", __FILE__, __LINE__);
+    }
   }
 
-  if (taskQueueAlg == "FCFS") {
-    m_task_queue_alg = FCFS;
-  }
-  else if (taskQueueAlg == "Random") {
-    m_task_queue_alg = Random;
-  }
-  else if (taskQueueAlg == "Stack") {
-    m_task_queue_alg = Stack;
-  }
-  else if (taskQueueAlg == "MostMessages") {
-    m_task_queue_alg = MostMessages;
-  }
-  else if (taskQueueAlg == "LeastMessages") {
-    m_task_queue_alg = LeastMessages;
-  }
-  else if (taskQueueAlg == "PatchOrder") {
-    m_task_queue_alg = PatchOrder;
-  }
-  else if (taskQueueAlg == "PatchOrderRandom") {
-    m_task_queue_alg = PatchOrderRandom;
-  }
-  else {
-    throw ProblemSetupException("Unknown task ready queue algorithm", __FILE__, __LINE__);
-  }
+  proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   SchedulerCommon::problemSetup(prob_spec, materialManager);
 }
