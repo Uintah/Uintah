@@ -875,7 +875,7 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
     t->requires(Task::NewDW, MIlb->temp_CCLabel,           gn);
     t->requires(Task::NewDW, MIlb->vel_CCLabel,            gn);
 
-    t->requires(Task::NewDW, Ilb->timeStepLabel);
+    t->requires(Task::OldDW, Ilb->timeStepLabel);
     
     if(d_ice->d_models.size() > 0 && !do_mlmpmice){
       t->requires(Task::NewDW, Ilb->modelMass_srcLabel,   gn);
