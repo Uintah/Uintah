@@ -1043,6 +1043,14 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
   else if (alg == PatchOrder) {  // smaller level, larger size, smaller patchID, smaller tasksortID
     const PatchSubset* lpatches = ltask->getPatches();
     const PatchSubset* rpatches = rtask->getPatches();
+    // send_old_data task will have a nullptr PatchSubset, there will be only one per node
+    if (lpatches == nullptr) {
+      return true;
+    }
+    if (rpatches == nullptr) {
+      return false;
+    }
+    // otherwise do the standard comparison
     if (getLevel(lpatches) == getLevel(rpatches)) {
       if (lpatches->size() == rpatches->size()) {
         return lpatches->get(0)->getID() > rpatches->get(0)->getID();
@@ -1059,6 +1067,14 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
   else if (alg == PatchOrderRandom) {  // smaller level, larger size, smaller patchID, smaller tasksortID
     const PatchSubset* lpatches = ltask->getPatches();
     const PatchSubset* rpatches = rtask->getPatches();
+    // send_old_data task will have a nullptr PatchSubset, there will be only one per node
+    if (lpatches == nullptr) {
+      return true;
+    }
+    if (rpatches == nullptr) {
+      return false;
+    }
+    // otherwise do the standard comparison
     if (getLevel(lpatches) == getLevel(rpatches)) {
       if (lpatches->size() == rpatches->size()) {
         return (random() % 2 == 0);
