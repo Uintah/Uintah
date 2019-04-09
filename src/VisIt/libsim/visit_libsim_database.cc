@@ -816,7 +816,7 @@ visit_handle visit_SimGetDomainBoundaries(const char *name, void *cbdata)
 
       int plow[3], phigh[3];
       patchInfo.getBounds(plow, phigh, meshname);
-        
+
       // For node based meshes add one if there is a neighbor patch.
       if( meshname.find("NC_") == 0 )
       {
@@ -827,19 +827,20 @@ visit_handle visit_SimGetDomainBoundaries(const char *name, void *cbdata)
           phigh[i] += nhigh[i];
       }
 
+      // These are indices, the high values are exclusive.
       int extents[6] = { plow[0], phigh[0],
                          plow[1], phigh[1],
                          plow[2], phigh[2] };
-        
-      // std::cerr << "\trdb->SetIndicesForPatch(" << patch << ","
-      //        << my_level << ", " << local_patch << ", <"
-      //        << extents[0] << "," << extents[2] << "," << extents[4]
-      //        << "> to <"
-      //        << extents[1] << "," << extents[3] << "," << extents[5] << ">)"
-      //        << std::endl;
 
       VisIt_DomainBoundaries_set_amrIndices(rdb, patch, my_level, extents);
-      //      VisIt_DomainBoundaries_finish(rdb, patch);
+      // VisIt_DomainBoundaries_finish(rdb, patch);
+
+      // std::cerr << "\trdb->SetIndicesForPatch(" << patch << ","
+      //           << my_level << ", " << local_patch << ", <"
+      //           << extents[0] << "," << extents[2] << "," << extents[4]
+      //           << "> to <"
+      //           << extents[1] << "," << extents[3] << "," << extents[5] << ">)"
+      //           << std::endl;
     }
 
     return rdb;
@@ -906,10 +907,10 @@ visit_handle visit_SimGetDomainNesting(const char *name, void *cbdata)
       for (int i=0; i<3; ++i)
         rr[i] = stepInfo->levelInfo[level].refinementRatio[i];
         
+      VisIt_DomainNesting_set_levelRefinement(dn, level, rr);
+
       // std::cerr << "\tdn->SetLevelRefinementRatios(" << level << ", <"
       //                << rr[0] << "," << rr[1] << "," << rr[2] << ">)\n";
-
-      VisIt_DomainNesting_set_levelRefinement(dn, level, rr);
     }      
 
     // Calculating the child patches really needs some better sorting
@@ -996,23 +997,40 @@ visit_handle visit_SimGetDomainNesting(const char *name, void *cbdata)
       int plow[3], phigh[3];
       patchInfo.getBounds(plow, phigh, meshname);
         
+      int extents[6];
+
       // For node based meshes add one if there is a neighbor patch.
       if( meshname.find("NC_") == 0 )
       {
         int nlow[3], nhigh[3];
         patchInfo.getBounds(nlow, nhigh, "NEIGHBORS");
-          
+        
+        // For node meshes always subtract two because the domain
+        // extents is inclusive.
         for (int i=0; i<3; i++)
+        {
           phigh[i] += nhigh[i];
+
+          extents[i+0] = plow[i];
+          extents[i+3] = phigh[i] - 2;
+        }
       }
-
-      int extents[6];
-
-      for (int i=0; i<3; ++i)
+      else
       {
-        extents[i+0] = plow[i];
-        extents[i+3] = phigh[i] - 1;
+        // For cell and face meshes always subtract one because the
+        // domain extents is inclusive.
+        for (int i=0; i<3; i++)
+        {
+          extents[i+0] = plow[i];
+          extents[i+3] = phigh[i] - 1;
+        }
       }
+
+      // These extents are inclusive.
+      VisIt_DomainNesting_set_nestingForPatch(dn, p, my_level,
+                                              &(childPatches[p][0]),
+                                              childPatches[p].size(),
+                                              extents);
 
       // std::cerr << "\tdn->SetNestingForDomain("
       //                << p << "," << my_level << ") <"
@@ -1025,11 +1043,6 @@ visit_handle visit_SimGetDomainNesting(const char *name, void *cbdata)
       //        std::cerr << childPatches[p][i] << ",  ";
 
       // std::cerr << ">" << std::endl;;
-
-      VisIt_DomainNesting_set_nestingForPatch(dn, p, my_level,
-                                              &(childPatches[p][0]),
-                                              childPatches[p].size(),
-                                              extents);
     }
 
     return dn;

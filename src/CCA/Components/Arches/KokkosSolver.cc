@@ -477,6 +477,8 @@ KokkosSolver::sched_initialize( const LevelP& level,
     std::map<std::string, TaskFactoryBase::GhostHelper>& the_ghost_info = i->second->get_max_ghost_info();
     insert_max_ghost( the_ghost_info );
   }
+  
+  print_variable_max_ghost();
 
 }
 
@@ -550,7 +552,7 @@ KokkosSolver::sched_nonlinearSolve( const LevelP & level,
     insert_max_ghost( the_ghost_info );
   }
 
-  //print_variable_max_ghost();
+  print_variable_max_ghost();
 
   return 0;
 

@@ -54,6 +54,7 @@
 //--------------------------------------------------------------------------------------------------
 
 namespace Uintah {
+
 class ProcessorGroup;
 class ApplicationCommon;
 class ArchesBCHelper;
@@ -62,6 +63,9 @@ class DataWarehouse;
 class NonlinearSolver {
 
 public:
+
+  Uintah::Dout dbg_vartask_dep{"Arches_Variable_Task_Dep", "Arches::NonlinearSolver",
+          "Prints variable ghost req. across all tasks.", false };
 
   NonlinearSolver( const ProcessorGroup* myworld,
                    ApplicationCommon* arches );
@@ -117,35 +121,72 @@ public:
 
     //Store max ghost information per variable across all possible tasks and factories
     for (auto ivar = the_map.begin(); ivar != the_map.end(); ivar++ ){
+
       auto iter = m_total_variable_ghost_info.find(ivar->first);
+
       if ( iter == m_total_variable_ghost_info.end() ){
         m_total_variable_ghost_info.insert( std::make_pair(ivar->first, ivar->second));
       } else {
-        if ( ivar->second.max_ghost > iter->second.max_ghost ){
-          iter->second.max_ghost = ivar->second.max_ghost;
+        iter->second.numTasksNewDW += ivar->second.numTasksNewDW;
+        iter->second.numTasksOldDW += ivar->second.numTasksOldDW;
+        if ( ivar->second.max_newdw_ghost > iter->second.max_newdw_ghost ){
+          iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
         }
-        if ( !iter->second.multTasks ){
-          iter->second.multTasks = true;
+        if ( ivar->second.max_olddw_ghost > iter->second.max_olddw_ghost ){
+          iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
         }
-        if ( ivar->second.newDW == true ){
-          iter->second.newDW = true;
+        if ( ivar->second.min_newdw_ghost < iter->second.min_newdw_ghost ){
+          iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
         }
-        if ( ivar->second.oldDW == true ){
-          iter->second.oldDW = true;
+        if ( ivar->second.min_olddw_ghost > iter->second.min_olddw_ghost ){
+          iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
         }
+        if ( iter->second.numTasksNewDW > 0 ){
+          for (auto niter = ivar->second.taskNamesNewDW.begin();
+                niter != ivar->second.taskNamesNewDW.end(); niter++ ){
+             iter->second.taskNamesNewDW.push_back(*niter);
+           }
+        }
+        if ( iter->second.numTasksOldDW > 0 ){
+          for (auto niter = ivar->second.taskNamesOldDW.begin();
+                niter != ivar->second.taskNamesOldDW.end(); niter++ ){
+            iter->second.taskNamesOldDW.push_back(*niter);
+          }
+        }
+
       }
     }
   }
 
   /** @brief Print ghost cell requirements for all variables in this task **/
   void print_variable_max_ghost(){
-    proc0cout << " :: Reporting max ghost cells :: " << std::endl;
+    std::stringstream msg;
+    msg << " :: Reporting max ghost cells :: " << std::endl;
     for ( auto i = m_total_variable_ghost_info.begin(); i != m_total_variable_ghost_info.end(); i++ ){
-      proc0cout << "   Variable: " << i->first << " Max Ghost: " <<
-      i->second.max_ghost << " MultTask: " << i->second.multTasks <<
-      " NewDW: " << i->second.newDW << " OldDW: " << i->second.oldDW << std::endl;
+
+      msg << "   Variable: " << i->first << std::endl;
+      if ( i->second.numTasksNewDW > 0 ){
+        msg << "        Min NewDW Ghost: " << i->second.min_newdw_ghost << " Max NewDW Ghost: " << i->second.max_newdw_ghost <<
+        " across " << i->second.numTasksNewDW << " tasks. " << std::endl;
+        msg << "        In the following tasks: " << std::endl;
+        for (auto niter = i->second.taskNamesNewDW.begin();
+             niter != i->second.taskNamesNewDW.end(); niter++ ){
+          msg << "         " << *niter << std::endl;
+        }
+      }
+        if ( i->second.numTasksOldDW > 0 ){
+          msg << "      Min OldDW Ghost: " << i->second.min_olddw_ghost << " Max OldDW Ghost: " << i->second.max_olddw_ghost <<
+          " across " << i->second.numTasksOldDW << " tasks. " << std::endl;
+          msg << "      In the following tasks: " << std::endl;
+       for (auto niter = i->second.taskNamesOldDW.begin();
+             niter != i->second.taskNamesOldDW.end(); niter++ ){
+          msg << "         " << *niter << std::endl;
+        }
+      }
+
     }
-    proc0cout << " :: End report of max ghost cells :: " << std::endl;
+    msg << " :: End report of max ghost cells :: " << std::endl;
+    DOUT( dbg_vartask_dep, msg.str());
   }
 
 protected:
