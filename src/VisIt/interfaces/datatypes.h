@@ -118,8 +118,8 @@ public:
 
     case PATCH:
       low[0] = patch_id;
-      low[1] = 0;
-      low[2] = 0;
+      low[1] = patch_id;
+      low[2] = patch_id;
       break;
 
     default:
@@ -170,8 +170,8 @@ public:
 
     case PATCH:
       high[0] = patch_id + 1;
-      high[1] = 0;
-      high[2] = 0;
+      high[1] = patch_id + 1;
+      high[2] = patch_id + 1;
       break;
 
     default:
