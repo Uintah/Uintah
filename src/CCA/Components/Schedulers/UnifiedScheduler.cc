@@ -665,10 +665,6 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     return;
   }
 
-  DOUT(true, "------------------------------------------------------------");
-  DOUT(true, "     Task queue algorithm: " << m_task_queue_alg);
-  DOUT(true, "------------------------------------------------------------");
-
   // track total scheduler execution time across timesteps
   m_exec_timer.reset(true);
 
