@@ -86,10 +86,9 @@ WARNING
 
          TriGeometryPiece(const TriGeometryPiece&);
 
-         TriGeometryPiece& operator=(const TriGeometryPiece&);
-
-         // Destructor
          virtual ~TriGeometryPiece();
+         
+         TriGeometryPiece& operator=(const TriGeometryPiece&);
 
          static const std::string TYPE_NAME;
          virtual std::string getType() const { return TYPE_NAME; }
@@ -99,6 +98,7 @@ WARNING
          //////////
          // Determins whether a point is inside the triangulated surface.
          virtual bool inside(const Point &p, const bool defaultValue) const;
+         
          bool insideNew(const Point &p, int& cross) const;
 
          // A relatively newer version of the inside test that uses three
@@ -114,8 +114,11 @@ WARNING
 
          double surfaceArea() const;
 
-         inline int getNumIntersections( const Point& start, const Point& end, double& min_distance ){
+         inline int getNumIntersections( const Point & start, 
+                                         const Point & end, 
+                                         double      & min_distance ){
            int intersections = 0;
+           
            d_grid->countIntersections( start, end, intersections, min_distance );
            return intersections;
          }
@@ -131,10 +134,13 @@ WARNING
          virtual void outputHelper( ProblemSpecP & ps ) const;
 
          void readPoints(const std::string& file);
-         void readTri(const std::string& file);
+         void readTri(   const std::string& file);
          void makePlanes();
 //         void makeTriBoxes();
-         void insideTriangle(Point& p, int i, int& NCS, int& NES) const;
+         void insideTriangle( Point& p, 
+                              int i, 
+                              int& NCS, 
+                              int& NES) const;
 
          std::string d_file;
          Box d_box;
