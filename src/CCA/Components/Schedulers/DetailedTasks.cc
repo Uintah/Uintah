@@ -977,34 +977,30 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
     return false;               // First Come First Serve;
   }
 
-  if (alg == Stack) {
+  else if (alg == Stack) {
     return true;               // First Come Last Serve, for robust testing;
   }
 
-  if (alg == Random) {
+  else if (alg == Random) {
     return (random() % 2 == 0);   // Random;
   }
 
-  if (ltask->getTask()->getSortedOrder() > rtask->getTask()->getSortedOrder()) {
-    return true;
-  }
-
-  if (ltask->getTask()->getSortedOrder() < rtask->getTask()->getSortedOrder()) {
-    return false;
-  }
-
-  if (alg == MostChildren) {
+  else if (alg == MostChildren) {
     return ltask->getTask()->m_child_tasks.size() < rtask->getTask()->m_child_tasks.size();
   }
+
   else if (alg == LeastChildren) {
     return ltask->getTask()->m_child_tasks.size() > rtask->getTask()->m_child_tasks.size();
   }
+
   else if (alg == MostAllChildren) {
     return ltask->getTask()->m_all_child_tasks.size() < rtask->getTask()->m_all_child_tasks.size();
   }
+
   else if (alg == LeastAllChildren) {
     return ltask->getTask()->m_all_child_tasks.size() > rtask->getTask()->m_all_child_tasks.size();
   }
+
   else if (alg == MostL2Children || alg == LeastL2Children) {
     int ll2 = 0;
     int rl2 = 0;
@@ -1022,6 +1018,7 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
       return ll2 > rl2;
     }
   }
+
   else if (alg == MostMessages || alg == LeastMessages) {
     int lmsg = 0;
     int rmsg = 0;
@@ -1042,6 +1039,7 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
       return lmsg > rmsg;
     }
   }
+
   else if (alg == PatchOrder) {  // smaller level, larger size, smaller patchID, smaller tasksortID
     const PatchSubset* lpatches = ltask->getPatches();
     const PatchSubset* rpatches = rtask->getPatches();
@@ -1057,6 +1055,7 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
       return getLevel(lpatches) > getLevel(rpatches);
     }
   }
+
   else if (alg == PatchOrderRandom) {  // smaller level, larger size, smaller patchID, smaller tasksortID
     const PatchSubset* lpatches = ltask->getPatches();
     const PatchSubset* rpatches = rtask->getPatches();
@@ -1072,9 +1071,20 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
       return getLevel(lpatches) > getLevel(rpatches);
     }
   }
+
   else {
     return false;
   }
+
+  // Will later reincorporate this correctly, AscendingStaticOrder and DecendingStaticOrder
+//  if (ltask->getTask()->getSortedOrder() > rtask->getTask()->getSortedOrder()) {
+//    return true;
+//  }
+//
+//  if (ltask->getTask()->getSortedOrder() < rtask->getTask()->getSortedOrder()) {
+//    return false;
+//  }
+
 }
 
 

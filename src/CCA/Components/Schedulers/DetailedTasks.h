@@ -72,7 +72,7 @@ using DepCommCond         = DetailedDep::CommCondition;
 //_____________________________________________________________________________
 //
 enum QueueAlg {
-    FCFS
+    FCFS = 0
   , Stack
   , Random
   , MostChildren

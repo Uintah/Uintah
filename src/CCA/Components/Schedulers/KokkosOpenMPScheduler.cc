@@ -121,10 +121,10 @@ KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
       m_task_queue_alg = LeastChildren;
     }
     else if (taskQueueAlg == "MostAllChildren") {
-      m_task_queue_alg = MostChildren;
+      m_task_queue_alg = MostAllChildren;
     }
     else if (taskQueueAlg == "LeastAllChildren") {
-      m_task_queue_alg = LeastChildren;
+      m_task_queue_alg = LeastAllChildren;
     }
     else if (taskQueueAlg == "MostL2Children") {
       m_task_queue_alg = MostL2Children;

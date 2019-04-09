@@ -348,10 +348,10 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
       m_task_queue_alg = LeastChildren;
     }
     else if (taskQueueAlg == "MostAllChildren") {
-      m_task_queue_alg = MostChildren;
+      m_task_queue_alg = MostAllChildren;
     }
     else if (taskQueueAlg == "LeastAllChildren") {
-      m_task_queue_alg = LeastChildren;
+      m_task_queue_alg = LeastAllChildren;
     }
     else if (taskQueueAlg == "MostL2Children") {
       m_task_queue_alg = MostL2Children;
@@ -664,6 +664,10 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     MPIScheduler::execute( tgnum, iteration );
     return;
   }
+
+  DOUT(true, "------------------------------------------------------------");
+  DOUT(true, "     Task queue algorithm: " << m_task_queue_alg);
+  DOUT(true, "------------------------------------------------------------");
 
   // track total scheduler execution time across timesteps
   m_exec_timer.reset(true);

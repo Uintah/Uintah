@@ -98,10 +98,10 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
       m_task_queue_alg = LeastChildren;
     }
     else if (taskQueueAlg == "MostAllChildren") {
-      m_task_queue_alg = MostChildren;
+      m_task_queue_alg = MostAllChildren;
     }
     else if (taskQueueAlg == "LeastAllChildren") {
-      m_task_queue_alg = LeastChildren;
+      m_task_queue_alg = LeastAllChildren;
     }
     else if (taskQueueAlg == "MostL2Children") {
       m_task_queue_alg = MostL2Children;
@@ -197,16 +197,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
     m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, m_loadBalancer, m_reloc_new_pos_label, iteration);
   }
 
-#if 0
-  // hook to post all the messages up front
-  if (!m_is_copy_data_timestep) {
-    // post the receives in advance
-    for (int i = 0; i < ntasks; i++) {
-      initiateTask( dts->localTask(i), abort, abort_point, iteration );
-    }
-  }
-#endif
-
   int currphase = 0;
   std::map<int, int> phaseTasks;
   std::map<int, int> phaseTasksDone;
@@ -234,6 +224,16 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
   bool abort       = false;
   int  abort_point = 987654;
   int i            = 0;
+
+#if 0
+  // hook to post all the messages up front
+  if (!m_is_copy_data_timestep) {
+    // post the receives in advance
+    for (int i = 0; i < ntasks; i++) {
+      initiateTask( dts->localTask(i), abort, abort_point, iteration );
+    }
+  }
+#endif
 
   while( numTasksDone < ntasks ) {
 
@@ -366,9 +366,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
       abort = true;
       abort_point = task->getTask()->getSortedOrder();
 
-      DOUT(g_dbg,  "Rank-" << d_myworld->myRank()
-	                   << "  WARNING: Aborting time step after task: "
-                           << task->getTask()->getName());
+      DOUT(g_dbg,  "Rank-" << d_myworld->myRank() << "  WARNING: Aborting time step after task: " << task->getTask()->getName());
     }
   } // end while( numTasksDone < ntasks )
 
