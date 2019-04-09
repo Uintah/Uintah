@@ -348,8 +348,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     counter++;
 
     ArchesFieldContainer::VariableInformation& ivar = *pivar;
-
-    insert_max_ghost(ivar); 
+    insert_max_ghost(ivar, _factory_name+"::"+task_group_name+", "+type_string); 
 
     switch(ivar.depend) {
     case ArchesFieldContainer::COMPUTES:
