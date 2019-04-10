@@ -133,13 +133,6 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   d_arches->setComponents( this );
   dynamic_cast<ApplicationInterface*>(d_arches)->problemSetup( prob_spec );
 
-  // Must be set here rather than the constructor because ARCHES sets
-  // the value based on the solver being requested in the problem setup.
-  activateReductionVariable( recomputeTimeStep_name,
-                             d_arches->activeReductionVariable( recomputeTimeStep_name ) );
-  activateReductionVariable( abortTimeStep_name,
-                             d_arches->activeReductionVariable( abortTimeStep_name ) );
-  
   ProblemSpecP restart_mat_ps = 0;
   if (materials_ps){
     restart_mat_ps = materials_ps;
@@ -1116,6 +1109,29 @@ void MPMArches::scheduleTimeAdvance( const LevelP & level,
                                     Mlb->pParticleIDLabel,
                                     mpm_matls);
 }
+
+/* _____________________________________________________________________
+MPMArches::scheduleFinalizeTimestep--
+This task called at the very bottom of the timestep, after
+scheduleTimeAdvance.
+
+This is scheduled on every level.
+_____________________________________________________________________*/
+void
+MPMArches::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched )
+{
+  // Check all of the reduction vars that were activated by either MPM
+  // or Arches. If activated there then activate in MPMArches.
+  for ( auto & var : m_appReductionVars ) {
+  
+    if( d_mpm->activeReductionVariable( var.first ) )
+      activateReductionVariable( var.first, true );     
+
+    if( d_arches->activeReductionVariable( var.first ) )
+      activateReductionVariable( var.first, true );
+  }
+}
+
 
 //______________________________________________________________________
 //

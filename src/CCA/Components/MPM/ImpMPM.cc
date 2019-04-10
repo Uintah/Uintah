@@ -112,9 +112,6 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld,
   NGP     = 1;
   NGN     = 1;
   d_loadCurveIndex=0;
-
-  activateReductionVariable( recomputeTimeStep_name, true);
-  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 ImpMPM::~ImpMPM()
@@ -1244,6 +1241,9 @@ void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
 
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
+
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 void ImpMPM::scheduleFormHCQ(SchedulerP& sched,const PatchSet* patches,
@@ -1395,6 +1395,9 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   
   task->setType(Task::OncePerProc);
   sched->addTask(task,patches,m_materialManager->allMaterials());
+
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 void ImpMPM::scheduleComputeStressTensorImplicit(SchedulerP& sched,

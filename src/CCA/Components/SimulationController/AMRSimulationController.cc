@@ -706,8 +706,16 @@ AMRSimulationController::executeTimeStep( int totalFine )
       success = false;
     }
     else if (m_application->getReductionVariable( abortTimeStep_name ) ) {
-      proc0cout << "Time step aborted and cannot recompute it. "
+      proc0cout << "Time step aborted and cannot recompute it, "
+                // << "outputing and checkpointing the time step. "
                 << "Ending the simulation." << std::endl;
+
+      m_application->setReductionVariable( m_scheduler->getLastDW(),
+                                           abortTimeStep_name, true );
+
+      // This should be a for the previous time step.
+      // m_output->setOutputTimeStep( true, m_current_gridP );
+      // m_output->setCheckpointTimeStep( true, m_current_gridP );
       
       success = true;
     }

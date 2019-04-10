@@ -1080,8 +1080,13 @@ void CGSolver::scheduleSolve(const LevelP       & level,
   task->requires(which_b_dw, b, Ghost::None, 0);
   task->hasSubScheduler();
 
-  task->computes( VarLabel::find(abortTimeStep_name) );
-  task->computes( VarLabel::find(recomputeTimeStep_name) );
+  if(m_params->getRecomputeTimeStepOnFailure()) {
+    task->computes( VarLabel::find(abortTimeStep_name) );
+    task->computes( VarLabel::find(recomputeTimeStep_name) );
+  
+    m_application->activateReductionVariable( recomputeTimeStep_name, true);
+    m_application->activateReductionVariable(     abortTimeStep_name, true);
+  }
   
   LoadBalancer * lb = sched->getLoadBalancer();
   const PatchSet * perproc_patches = lb->getPerProcessorPatchSet( level );

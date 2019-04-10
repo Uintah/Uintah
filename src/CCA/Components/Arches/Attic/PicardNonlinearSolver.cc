@@ -381,6 +381,9 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   
   sched->addTask(tsk, d_perproc_patches, d_lab->d_materialManager->allMaterials( "Arches" ));
 
+  m_arches->activateReductionVariable( recomputeTimeStep_name, true);
+  m_arches->activateReductionVariable(     abortTimeStep_name, true);
+
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_materialManager->allMaterials( "Arches" );
   if (d_boundaryCondition->anyArchesPhysicalBC()) {

@@ -126,9 +126,6 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   // Diffusion related
   d_fluxBC = nullptr;
   d_sdInterfaceModel = nullptr;
-
-  activateReductionVariable( recomputeTimeStep_name, true);
-  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 SerialMPM::~SerialMPM()
@@ -1229,6 +1226,9 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   t->computes( VarLabel::find(recomputeTimeStep_name) );
 
   sched->addTask(t, patches, matls);
+
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 void SerialMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,

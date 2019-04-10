@@ -123,9 +123,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
                          // unlike the situation for ice materials
 
   d_switchCriteria = 0;
-
-  activateReductionVariable( recomputeTimeStep_name, true);
-  activateReductionVariable(     abortTimeStep_name, true);
 }
 //______________________________________________________________________
 //
@@ -206,14 +203,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
 
   d_ice->problemSetup(prob_spec, restart_prob_spec,grid);
 
-  // An ice model may adjust the output interval or the checkpoint
-  // interval during a simulation.  For example in deflagration ->
-  // detonation simulations
-  activateReductionVariable( outputInterval_name,
-                             d_ice->activeReductionVariable( outputInterval_name ) );      
-  activateReductionVariable( checkpointInterval_name,
-                             d_ice->activeReductionVariable( checkpointInterval_name ) );
-  
   ProblemSpecP mpm_ps = 0;
   mpm_ps = prob_spec->findBlock("MPM");
   
@@ -250,7 +239,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
       AnalysisModule* am = *iter;
       am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
       am->problemSetup(prob_spec, restart_prob_spec, grid,
-		       d_mpm->d_particleState, d_mpm->d_particleState_preReloc);
+                       d_mpm->d_particleState, d_mpm->d_particleState_preReloc);
     }
   }  
 }
@@ -676,11 +665,11 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   // only do on finest level until we get AMR MPM
   if (level->getIndex() == level->getGrid()->numLevels()-1)
     sched->scheduleParticleRelocation(level,
-				      Mlb->pXLabel_preReloc, 
-				      d_mpm->d_particleState_preReloc,
-				      Mlb->pXLabel,
-				      d_mpm->d_particleState,
-				      Mlb->pParticleIDLabel, mpm_matls);
+                                      Mlb->pXLabel_preReloc, 
+                                      d_mpm->d_particleState_preReloc,
+                                      Mlb->pXLabel,
+                                      d_mpm->d_particleState,
+                                      Mlb->pParticleIDLabel, mpm_matls);
   
   //__________________________________
   //  on the fly analysis
@@ -692,6 +681,20 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
       am->scheduleDoAnalysis( sched, level);
     }
   }
+
+  // Check all of the reduction vars that were activated by either MPM
+  // or ICE. If activated there then activate in MPMICE.
+  for ( auto & var : m_appReductionVars ) {
+  
+    if( d_mpm->activeReductionVariable( var.first ) ) {
+      activateReductionVariable( var.first, true );     
+    }
+    
+    if( d_ice->activeReductionVariable( var.first ) ) {
+      activateReductionVariable( var.first, true );
+    }
+  }
+
   cout_doing << "---------------------------------------------------------"<<endl;
 }
 
@@ -2236,23 +2239,23 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
  Reference:  Se Numerical Methods by Robert W. Hornbeck.
 _____________________________________________________________________*/ 
 void MPMICE::binaryPressureSearch( std::vector<constCCVariable<double> >& Temp,
-				   std::vector<CCVariable<double> >& rho_micro, 
-				   std::vector<CCVariable<double> >& vol_frac, 
-				   std::vector<CCVariable<double> >& rho_CC_new,
-				   std::vector<CCVariable<double> >& speedSound,
-				   std::vector<double> & dp_drho, 
-				   std::vector<double> & dp_de, 
-				   std::vector<double> & press_eos,
-				   constCCVariable<double> & press,
-				   CCVariable<double> & press_new, 
-				   double press_ref,
-				   std::vector<constCCVariable<double> > & cv,
-				   std::vector<constCCVariable<double> > & gamma,
-				   double convergence_crit,
-				   unsigned int numALLMatls,
-				   int & count,
-				   double & sum,
-				   IntVector c )
+                                   std::vector<CCVariable<double> >& rho_micro, 
+                                   std::vector<CCVariable<double> >& vol_frac, 
+                                   std::vector<CCVariable<double> >& rho_CC_new,
+                                   std::vector<CCVariable<double> >& speedSound,
+                                   std::vector<double> & dp_drho, 
+                                   std::vector<double> & dp_de, 
+                                   std::vector<double> & press_eos,
+                                   constCCVariable<double> & press,
+                                   CCVariable<double> & press_new, 
+                                   double press_ref,
+                                   std::vector<constCCVariable<double> > & cv,
+                                   std::vector<constCCVariable<double> > & gamma,
+                                   double convergence_crit,
+                                   unsigned int numALLMatls,
+                                   int & count,
+                                   double & sum,
+                                   IntVector c )
 {
   // Start over for this cell using a binary search
 //  cout << " cell " << c << " Starting binary pressure search "<< endl;

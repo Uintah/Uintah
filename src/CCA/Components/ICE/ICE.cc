@@ -123,9 +123,6 @@ ICE::ICE(const ProcessorGroup* myworld,
   d_BC_globalVars->mms      =  scinew mms_globalVars();                
   d_BC_globalVars->sine     =  scinew sine_globalVars();               
   d_BC_globalVars->inletVel =  scinew inletVel_globalVars();           
-  
-  activateReductionVariable( recomputeTimeStep_name, true);
-  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 //______________________________________________________________________
@@ -1362,6 +1359,9 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->computes( VarLabel::find(recomputeTimeStep_name) );
 
   sched->addTask(task, patches, matls);
+
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 /* _____________________________________________________________________
@@ -1634,6 +1634,9 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   t->computes( VarLabel::find(recomputeTimeStep_name) );
 
   sched->addTask(t, patches, matls);
+
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 /* _____________________________________________________________________
@@ -1843,6 +1846,9 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->computes( VarLabel::find(recomputeTimeStep_name) );
   
   sched->addTask(task, patch_set, ice_matls);
+
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 /* _____________________________________________________________________
  Function~  ICE::scheduleConservedtoPrimitive_Vars--

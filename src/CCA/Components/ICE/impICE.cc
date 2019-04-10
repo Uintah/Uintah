@@ -166,6 +166,9 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   t->computes( VarLabel::find(recomputeTimeStep_name) );
 
   sched->addTask(t, patches, all_matls);                     
+
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 /*___________________________________________________________________
@@ -423,6 +426,9 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   const PatchSet * perproc_patches = m_loadBalancer->getPerProcessorPatchSet(level);
 
   sched->addTask( t, perproc_patches, all_matls );
+
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 /*___________________________________________________________________
