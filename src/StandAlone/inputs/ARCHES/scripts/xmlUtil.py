@@ -24,6 +24,14 @@ class UPSxmlHelper:
 
         return 
 
+    def rm_node( self, node ): 
+        """
+        Remove a node from the tree
+        """
+        delete_me = self.root.find(node)
+        parent = delete_me.getparent()
+        parent.remove(delete_me)
+
     def add_node( self, parent_node, new_node, xml_node=None ):
         """
         Add a new node to the root at the parent_node location
