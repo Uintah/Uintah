@@ -16,6 +16,7 @@ unalias mv
 set FFMPEG = "none"
 which ffmpeg >& /dev/null
 set rc = $status
+
 which avconv >& /dev/null
 set rc1 = $status
 
@@ -178,6 +179,8 @@ endif
 echo "Now renaming files $orgExt files into $EXT files "
 @ count  = 0
 
+
+
 foreach i ( *.*.$orgExt)
   @ num  = `echo $i | awk -F. '{printf "%i", $2 }'`
   echo " Now renaming $i to $num.$orgExt"
@@ -199,9 +202,8 @@ end
 
 if ($n == 0 ) then
   echo "Now converting $orgExt files into $EXT files "
-  set FILES = [0-9]*.$orgExt
 
-  foreach T ($FILES:q)
+  foreach T ( [0-9]*.$orgExt )
     set num = `basename $T .$orgExt`
     echo " Now converting $T to $num.$EXT"
     convert  $T  $num.$EXT
@@ -212,9 +214,9 @@ endif
 #__________________________________
 # add labels 
 if( $addLabels == "true" ) then
-  set FILES = [0-9]*.$EXT
 
-  foreach T ($FILES:q)
+  foreach T ( [0-9]*.$EXT )
+  
    echo " Now adding labels to "$T
    set num = `basename $T .$EXT`
 
@@ -239,9 +241,8 @@ endif
 #__________________________________
 # do Resize
 if( $doResize == "true" ) then
-  set FILES = [0-9]*.$EXT
 
-  foreach T ($FILES:q)
+  foreach T ( [0-9]*.$EXT )
    echo " Now resizing "$T
    set num = `basename $T .$EXT`
    mogrify -resize $size $T
@@ -253,10 +254,10 @@ endif
 # make the movies
 echo "___________________________________"
 echo "Now making the movie"
-echo "$FFMPEG  -r $playBackSpeed -i %d.$EXT -r 30 -qscale 1 $imageName.$movieFormat"
+echo "$FFMPEG  -r $playBackSpeed -i %d.$EXT -r 30 -q 1 $imageName.$movieFormat"
 
 rm movie.mpeg
-$FFMPEG -r $playBackSpeed -i %d.$EXT -r 30 -qscale 1 $imageName.$movieFormat
+$FFMPEG -r $playBackSpeed -i %d.$EXT -r 30 -q 1 $imageName.$movieFormat
 
 #$FFMPEG -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.$EXT -r 30 movie.mpeg
 
@@ -267,8 +268,7 @@ echo "__________________________________"
 echo "Do you want to keep the individual titled frames as $EXT? [n]"
 set ans = $<
 
-set FILES = [0-9]*.$EXT
-foreach T ($FILES:q)
+foreach T ( [0-9]*.$EXT )
   if( $ans != "y" ) then
     set num = `basename $T .$EXT`
     rm $num.$EXT 
