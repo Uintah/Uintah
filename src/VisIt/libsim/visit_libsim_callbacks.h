@@ -89,6 +89,7 @@ namespace Uintah {
   void visit_DoutCallback         ( char *val, void *cbdata );
 
   void visit_LoadExtraGeometryCallback( int   val, void *cbdata );
+  void visit_LoadVariablesCallback( int   val, void *cbdata );
 } // End namespace Uintah
 
 #endif

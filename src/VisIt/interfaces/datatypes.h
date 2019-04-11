@@ -47,6 +47,12 @@ typedef enum loadExtraGeometry {
     PATCHES           = 2,
   } LoadExtraGeometry;
     
+typedef enum loadVariables {
+    LOAD_ALL_VARIABLES = 0,
+    LOAD_OUTPUT_VARIABLES = 1,
+    LOAD_CHECKPOINT_VARIABLES = 2,
+  } LoadVariables;
+    
 class PatchInfo {
 public:
 

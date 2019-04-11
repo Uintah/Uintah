@@ -69,10 +69,12 @@ namespace Uintah {
 // This uses the scheduler for in-situ.
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP gridP,
-                              LoadExtraGeometry loadExtraGeometry)
+                              LoadExtraGeometry loadExtraGeometry,
+                              LoadVariables     loadVariables)
 {
   DataWarehouse* dw = schedulerP->getLastDW();
   LoadBalancer * lb = schedulerP->getLoadBalancer();
+  Output       * output = schedulerP->getOutput();
 
   int numLevels = gridP->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();
@@ -84,65 +86,72 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
 
   std::set<const VarLabel*, VarLabel::Compare> varLabels;
   std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
+
+  // Loop through all of the required or computed variables.
+  if( loadVariables == LOAD_CHECKPOINT_VARIABLES )
+    varLabels = schedulerP->getInitialRequiredVars();
+  else
+    varLabels = schedulerP->getComputedVars();
   
-  // Loop through all of the required and computed variables.
-  for (int i=0; i<2; ++i )
+  for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter )
   {
-    if( i == 0 )
-        varLabels = schedulerP->getInitialRequiredVars();
-    else
-        varLabels = schedulerP->getComputedVars();
+    const VarLabel *varLabel = *varIter;
+    
+    if( // Toss out variables not being saved.
+        (loadVariables == LOAD_OUTPUT_VARIABLES &&
+         !output->isLabelSaved( varLabel->getName() )) ||
 
-    for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter )
-    {      
-      const VarLabel *varLabel = *varIter;
+        // Toss out variables not being checkpointed.
+        (loadVariables == LOAD_CHECKPOINT_VARIABLES &&
+         schedulerP->getNotCheckPointVars().find( varLabel->getName() ) !=
+         schedulerP->getNotCheckPointVars().end() ) )
+      continue;
 
-      VariableInfo varInfo;
-      varInfo.name = varLabel->getName();
-      varInfo.type = varLabel->typeDescription()->getName();
-
-      // Loop through all of the materials for this variable
-      Scheduler::VarLabelMaterialMap::iterator matMapIter =
-        pLabelMatlMap->find( varInfo.name );
-
-      if( matMapIter != pLabelMatlMap->end() )
+    VariableInfo varInfo;
+    varInfo.name = varLabel->getName();
+    varInfo.type = varLabel->typeDescription()->getName();
+    
+    // Loop through all of the materials for this variable
+    Scheduler::VarLabelMaterialMap::iterator matMapIter =
+      pLabelMatlMap->find( varInfo.name );
+    
+    if( matMapIter != pLabelMatlMap->end() )
+    {
+      std::list< int > &materials = matMapIter->second;
+      std::list< int >::iterator matIter;
+      
+      for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
       {
-        std::list< int > &materials = matMapIter->second;
-        std::list< int >::iterator matIter;
+        const int material = *matIter;
 
-        for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
-        {
-          const int material = *matIter;
-
-          // Check to make sure the variable exists on at least one patch
-          // for at least one level.
-          bool exists = false;
+        // Check to make sure the variable exists on at least one patch
+        // for at least one level.
+        bool exists = false;
           
-          for (int l=0; l<numLevels; ++l)
+        for (int l=0; l<numLevels; ++l)
+        {
+          const LevelP &level = gridP->getLevel(l);
+          int numPatches = level->numPatches();
+          
+          for (int p=0; p<numPatches; ++p)
           {
-            const LevelP &level = gridP->getLevel(l);
-            int numPatches = level->numPatches();
+            const Patch* patch = level->getPatch(p);
             
-            for (int p=0; p<numPatches; ++p)
+            if( dw->exists( varLabel, material, patch ) )
             {
-              const Patch* patch = level->getPatch(p);
-              
-              if( dw->exists( varLabel, material, patch ) )
-              {
-                // The variable exists on this level and patch.
-                varInfo.materials.push_back( material );
-                exists = true;
-                break;
-              }
-            }
-            
-            if( exists == true )
+              // The variable exists on this level and patch.
+              varInfo.materials.push_back( material );
+              exists = true;
               break;
+            }
           }
+          
+          if( exists == true )
+            break;
         }
-        
-        stepInfo->varInfo.push_back( varInfo );
       }
+      
+      stepInfo->varInfo.push_back( varInfo );
     }
   }
   

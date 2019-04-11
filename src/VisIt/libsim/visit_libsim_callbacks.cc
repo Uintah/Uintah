@@ -1443,5 +1443,16 @@ void visit_LoadExtraGeometryCallback(int val, void *cbdata)
   sim->loadExtraGeometry = (LoadExtraGeometry) val;
 }
 
+//---------------------------------------------------------------------
+// LoadVariablesCallback
+//     Custom UI callback for a check box
+//---------------------------------------------------------------------
+void visit_LoadVariablesCallback(int val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->loadVariables = (LoadVariables) val;
+}
+
 
 } // End namespace Uintah
