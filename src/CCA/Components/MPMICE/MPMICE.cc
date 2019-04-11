@@ -682,19 +682,6 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
     }
   }
 
-  // Check all of the reduction vars that were activated by either MPM
-  // or ICE. If activated there then activate in MPMICE.
-  for ( auto & var : m_appReductionVars ) {
-  
-    if( d_mpm->activeReductionVariable( var.first ) ) {
-      activateReductionVariable( var.first, true );     
-    }
-    
-    if( d_ice->activeReductionVariable( var.first ) ) {
-      activateReductionVariable( var.first, true );
-    }
-  }
-
   cout_doing << "---------------------------------------------------------"<<endl;
 }
 

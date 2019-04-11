@@ -135,10 +135,6 @@ public:
                                     SchedulerP&);
 
   //////////
-  virtual void scheduleFinalizeTimestep( const LevelP& level, 
-                                         SchedulerP&);
-
-  //////////
   virtual void scheduleAnalysis( const LevelP& level, 
                                  SchedulerP&){};
 

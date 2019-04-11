@@ -970,10 +970,6 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   tsk->computes( VarLabel::find(    outputTimeStep_name) );
   tsk->computes( VarLabel::find(checkpointTimeStep_name) );
   tsk->computes( VarLabel::find(     endSimulation_name) );
-
-  m_arches->activateReductionVariable(     outputTimeStep_name, true );
-  m_arches->activateReductionVariable( checkpointTimeStep_name, true );
-  m_arches->activateReductionVariable(      endSimulation_name, true );
 #endif
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
@@ -3511,9 +3507,6 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
   tsk->computes( VarLabel::find(recomputeTimeStep_name) );
 
   sched->addTask(tsk, patches, matls);
-
-  m_arches->activateReductionVariable( recomputeTimeStep_name, true);
-  m_arches->activateReductionVariable(     abortTimeStep_name, true);
 }
 //****************************************************************************
 // Actually check for negative density guess

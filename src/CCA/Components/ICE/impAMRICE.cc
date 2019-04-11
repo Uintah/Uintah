@@ -350,9 +350,6 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
 
   sched->addTask(t, perprocPatches, all_matls);
 
-  activateReductionVariable( recomputeTimeStep_name, true);
-  activateReductionVariable(     abortTimeStep_name, true);
-
   cout << d_myworld->myRank() << " proc_patches are " << *perprocPatches << "\n";
 }
 /*___________________________________________________________________ 

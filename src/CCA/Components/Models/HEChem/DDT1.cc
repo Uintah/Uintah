@@ -620,13 +620,9 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     
     t1->computes( VarLabel::find( outputInterval_name ) );
     t1->computes( VarLabel::find( checkpointInterval_name ) );
-
-    m_application->activateReductionVariable(     outputInterval_name, true );
-    m_application->activateReductionVariable( checkpointInterval_name, true );
   } 
   
   sched->addTask(t1, level->eachPatch(), d_mymatls);    
-    
     
   //__________________________________
   //
