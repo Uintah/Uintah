@@ -26,6 +26,8 @@
 #define CCA_PORTS_SCHEDULER_H
 
 #include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
 
 #include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
@@ -94,8 +96,9 @@ class Scheduler : public UintahParallelPort {
     virtual void getComponents() = 0;
     virtual void releaseComponents() = 0;
 
-    // TEMPORARY
     virtual ApplicationInterface *getApplication() = 0;
+    virtual LoadBalancer * getLoadBalancer() = 0;
+    virtual Output       * getOutput() = 0;
   
     virtual void problemSetup( const ProblemSpecP     & prob_spec
                                                , const MaterialManagerP & materialManager
@@ -147,8 +150,6 @@ class Scheduler : public UintahParallelPort {
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars() const = 0;
 
     virtual const std::set<std::string>&                        getNotCheckPointVars() const = 0;    
-
-    virtual LoadBalancer * getLoadBalancer() = 0;
 
     virtual DataWarehouse* get_dw( int idx ) = 0;
 
