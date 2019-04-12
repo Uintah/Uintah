@@ -630,7 +630,7 @@ AMRSimulationController::doInitialTimeStep()
   // ARS - FIX ME - SCHEDULE INSTEAD
   ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, true );
   
-  CheckInSitu(  nullptr, nullptr, nullptr, nullptr, nullptr, true );
+  CheckInSitu( nullptr, nullptr, nullptr, nullptr, nullptr, true );
   
 } // end doInitialTimeStep()
 
