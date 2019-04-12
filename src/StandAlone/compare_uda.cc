@@ -1540,12 +1540,12 @@ main( int argc, char** argv )
         std::string var = vars[v];
 
 	// FOR NOW KEEP THE PARTICLE CHECK DISABLED
-        // if (var == "p.particleID"){
-        //   hasParticleIDs = true;
-        // }
-        // if (types[v]->getType() == Uintah::TypeDescription::ParticleVariable){
-        //   hasParticleData = true;
-        // }
+         if (var == "p.particleID"){
+           hasParticleIDs = true;
+         }
+         if (types[v]->getType() == Uintah::TypeDescription::ParticleVariable){
+           hasParticleData = true;
+         }
 
         if (types[v]->getType() == Uintah::TypeDescription::PerPatch){
           hasPerPatchData = true;
