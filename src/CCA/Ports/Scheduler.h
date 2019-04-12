@@ -167,8 +167,6 @@ class Scheduler : public UintahParallelPort {
 
     virtual void replaceDataWarehouse( int index, const GridP & grid, bool initialization = false ) = 0;
 
-    virtual bool isRestartInitTimestep() = 0;
-
 //        protected:
 
     virtual void setPositionVar( const VarLabel * posLabel ) = 0;
@@ -253,6 +251,7 @@ class Scheduler : public UintahParallelPort {
     virtual void setInitTimestep( bool ) = 0;
 
     virtual void setRestartInitTimestep( bool ) = 0;
+    virtual bool isRestartInitTimestep() const  = 0;
 
     virtual void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) = 0;
 

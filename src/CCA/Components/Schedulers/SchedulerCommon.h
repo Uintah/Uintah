@@ -287,7 +287,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     void setRestartInitTimestep( bool isRestartInitTimestep ) { m_is_restart_init_timestep = isRestartInitTimestep; }
 
-    virtual bool isRestartInitTimestep() { return m_is_restart_init_timestep; }
+    bool isRestartInitTimestep() const { return m_is_restart_init_timestep; }
 
     const VarLabel* m_reloc_new_pos_label{nullptr};
 
