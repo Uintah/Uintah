@@ -172,8 +172,8 @@ namespace Uintah
     newDW->allocateAndPut(pFlux,          d_lb->pFluxLabel,           pset);
     newDW->getModifiable(pConcentration,  d_lb->pConcentrationLabel,  pset);
 
-    double minConc = getMinConcentration();
-    double maxConc = getMaxConcentration();
+    double minConc = getClampedMinConc();
+    double maxConc = getClampedMaxConc();
 
     for (int pIndex = 0; pIndex < pset->numParticles(); ++pIndex) {
       pFlux[pIndex] = Vector(0.0);

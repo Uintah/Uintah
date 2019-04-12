@@ -27,20 +27,13 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/MPM/Diffusion/DiffusionModels
+SRCDIR   := CCA/Components/MPM/Diffusion/FunctionInterpolators
 
 SRCS     += \
-	$(SRCDIR)/ConstantRate.cc \
-	$(SRCDIR)/JGConcentrationDiffusion.cc \
-	$(SRCDIR)/NonLinearDiff1.cc \
-	$(SRCDIR)/NonLinearDiff2.cc \
-	$(SRCDIR)/RFConcDiffusion1MPM.cc \
-	$(SRCDIR)/BazantModel.cc \
-	$(SRCDIR)/ScalarDiffusionModel.cc \
-	$(SRCDIR)/ActivatedDiffusion.cc \
-	$(SRCDIR)/ActivatedDiffusion2.cc \
-	$(SRCDIR)/Null.cc \
-	$(SRCDIR)/CahnHilliard.cc \
-	$(SRCDIR)/Perlin.cc \
-	$(SRCDIR)/2ProcessNiAlDiffusion.cc
+	$(SRCDIR)/FunctionInterpolatorFactory.cc \
+	$(SRCDIR)/FunctionInterpolator.cc \
+	$(SRCDIR)/HeavisideInterpolator.cc \
+	$(SRCDIR)/GloballyGatedHeavisideInterpolator.cc\
+	$(SRCDIR)/LocallyGatedHeavisideInterpolator.cc\
+	$(SRCDIR)/LinearFnInterpolator.cc 
 	

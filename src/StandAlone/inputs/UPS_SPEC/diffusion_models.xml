@@ -4,7 +4,7 @@
   <diffusion_model         spec="OPTIONAL NO_DATA"
                            attribute1="type REQUIRED STRING 'jg, rf1, null, 
                                        non_linear1, non_linear2, constant_rate,
-                                       bazant, activated, activated2, cahn-hilliard'">                                       
+                                       bazant, activated, activated2, cahn-hilliard, eam_alni'">                                       
                                        
     <diffusivity           spec="REQUIRED DOUBLE" />
     <max_concentration     spec="REQUIRED DOUBLE 'positive' " />
@@ -39,9 +39,19 @@
     <!--  Activated diffusion models -->
     
     <!-- Ni/Al specific model parameters -->
-    <scaleMultiplier       spec="OPTIONAL DOUBLE"   need_applies_to="type activated2" />
-    <normalized            spec="OPTIONAL BOOLEAN"  need_applies_to="type activated2" />
-
+    <scaleMultiplier       spec="OPTIONAL DOUBLE"   need_applies_to="type activated2, eam_alni" />
+    <normalized            spec="OPTIONAL BOOLEAN"  need_applies_to="type activated2, eam_alni" />
+ 
+    <!--Ni/Al 2 Process specific paramaters -->
+    <D0_Liquid             spec="REQUIRED DOUBLE 'positive' " need_applies_to="type eam_alni" />
+    <D0_Solid              spec="OPTIONAL DOUBLE 'positive' " need_applies_to="type eam_alni" />
+    <function_interp       spec="REQUIRED NO_DATA"
+                           attribute1="interp REQUIRED STRING 'linear, heaviside, heaviside_global, heaviside_local'"
+                           need_applies_to="type eam_alni" >
+       <switch_point       spec="REQUIRED DOUBLE 'positive' " need_applies_to="interp heaviside, heaviside_global, heaviside_local" />
+       <min_grad_norm      spec="OPTIONAL DOUBLE 'positive' " need_applies_to="interp heaviside_local" />
+    </function_interp>
+                        
     <!-- Required for constant_rate model -->    
     <constant_rate         spec="REQUIRED DOUBLE" need_applies_to="type constant_rate" />
 

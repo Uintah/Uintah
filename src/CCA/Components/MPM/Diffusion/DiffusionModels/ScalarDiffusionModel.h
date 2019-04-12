@@ -67,9 +67,15 @@ namespace Uintah {
     // Functions which are constant for all diffusion models.
     std::string getDiffusionType() const;
 
-    virtual double getMaxConcentration() const;
+    virtual double getClampedMaxConc() const;
 
-    virtual double getMinConcentration() const;
+    virtual double getClampedMinConc() const;
+
+    virtual double getPhaseMaxConc( const double Temp
+                                  , const double Conc ) const;
+
+    virtual double getPhaseMinConc( const double Temp
+                                  , const double Conc ) const;
 
     virtual double getConcentrationTolerance() const;
 
@@ -180,6 +186,16 @@ namespace Uintah {
     virtual Matrix3 getStressFreeExpansionMatrix() const;
 
     virtual ConductivityEquation* getConductivityEquation();
+
+    virtual void scheduleTrackConcentrationThreshold(       Task        *
+                                                    ,const  MPMMaterial *
+                                                    ,const  PatchSet    *
+                                                    ) const;
+
+    virtual void trackConcentrationThreshold(const  Patch         * patch
+                                            ,const  MPMMaterial   * matl
+                                            ,       DataWarehouse * old_dw
+                                            ,       DataWarehouse * new_dw  );
 
   protected:
 

@@ -36,6 +36,7 @@ SRCS     += \
 SUBDIRS := \
         $(SRCDIR)/ConductivityModels \
         $(SRCDIR)/DiffusionInterfaces \
-        $(SRCDIR)/DiffusionModels
+        $(SRCDIR)/DiffusionModels \
+        $(SRCDIR)/FunctionInterpolators
         
 include $(SCIRUN_SCRIPTS)/recurse.mk

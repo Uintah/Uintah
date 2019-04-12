@@ -38,6 +38,7 @@
 #include <CCA/Components/MPM/Diffusion/DiffusionModels/RFConcDiffusion1MPM.h>
 #include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/Diffusion/DiffusionModels/CahnHilliard.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/2ProcessNiAlDiffusion.h>
 
 using namespace std;
 using namespace Uintah;
@@ -82,6 +83,9 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
 
   else if (diffusion_type == "cahn-hilliard")
     return(scinew CahnHilliardDiffusion(child, ss, flags, diffusion_type));
+
+  else if (diffusion_type == "eam_alni")
+    return(scinew NiAl2Process(child, ss, flags, diffusion_type));
 
   else
     throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diffusion_type+")", __FILE__, __LINE__);

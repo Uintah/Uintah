@@ -3764,11 +3764,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       double sdmMaxEffectiveConc=-1e+99;
       double sdmMinEffectiveConc=1e+99;
+      ScalarDiffusionModel* sdm = nullptr;
+      double sdmConcTol = 0.0;
       if (flags->d_doScalarDiffusion) {
         // Grab min/max concentration and conc. tolerance for particle loop.
-        ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-        sdmMaxEffectiveConc = sdm->getMaxConcentration() - sdm->getConcentrationTolerance();
-        sdmMinEffectiveConc = sdm->getMinConcentration() + sdm->getConcentrationTolerance();
+        sdm = mpm_matl->getScalarDiffusionModel();
+        sdmConcTol = sdm->getConcentrationTolerance();
+        sdmMaxEffectiveConc = sdm->getClampedMaxConc() - sdmConcTol;
+        sdmMinEffectiveConc = sdm->getClampedMinConc() + sdmConcTol;
+
       }
       if(flags->d_XPIC2) {
         // Loop over particles

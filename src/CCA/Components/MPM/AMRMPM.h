@@ -596,6 +596,15 @@ private:
                                              const PatchSet     * patches ,
                                              const MaterialSet  * matls   );
 
+  void scheduleDiffusionCleanUp(      SchedulerP  & sched
+                               ,const PatchSet    * patches
+                               ,const MaterialSet * matls   );
+  void doDiffusionCleanUp(const ProcessorGroup  *
+                         ,const PatchSubset     * patches
+                         ,const MaterialSubset  * matls
+                         ,      DataWarehouse   * old_dw
+                         ,      DataWarehouse   * new_dw    );
+
   /*
    * Scalar Flux Boundary Conditions have been moved to the FluxBCModel
    *

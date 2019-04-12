@@ -101,8 +101,8 @@ namespace Uintah
     ParticleVariable<Vector> pFluxNew;
     NewDW->allocateAndPut(pFluxNew, d_lb->pFluxLabel_preReloc, pset);
 
-    double R = 8.3144598; // Gas constant in J/(mol*K)
-    double Rinv = 1.0/R;
+//    double R = 8.3144598; // Gas constant in J/(mol*K)
+//    double Rinv = 1.0/R;
     double delT_local = 1.0e99;
     for (int pIdx = 0; pIdx < pset->numParticles(); ++pIdx)
     {

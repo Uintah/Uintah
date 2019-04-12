@@ -120,12 +120,26 @@ std::string ScalarDiffusionModel::getDiffusionType() const
   return diffusion_type;
 }
 
-double ScalarDiffusionModel::getMaxConcentration() const
+double ScalarDiffusionModel::getClampedMaxConc() const
 {
   return d_MaxConcentration;
 }
 
-double ScalarDiffusionModel::getMinConcentration() const
+double ScalarDiffusionModel::getClampedMinConc() const
+{
+  return d_MinConcentration;
+}
+
+double ScalarDiffusionModel::getPhaseMaxConc( const double Temp
+                                            , const double Conc
+                                            ) const
+{
+  return d_MaxConcentration;
+}
+
+double ScalarDiffusionModel::getPhaseMinConc(  const double Temp
+                                            ,  const double Conc
+                                            ) const
 {
   return d_MinConcentration;
 }
@@ -461,6 +475,21 @@ double ScalarDiffusionModel::computeDiffusivityTerm(double concentration, double
 
 ConductivityEquation* ScalarDiffusionModel::getConductivityEquation(){
   return d_conductivity_equation;
+}
+
+void ScalarDiffusionModel::scheduleTrackConcentrationThreshold(      Task         * task
+                                                              ,const MPMMaterial  * matl
+                                                              ,const PatchSet     * patchSet
+                                                              ) const {
+  // Do nothing for default model
+
+}
+
+void ScalarDiffusionModel::trackConcentrationThreshold(const Patch          * patch
+                                                      ,const MPMMaterial    * matl
+                                                      ,      DataWarehouse  * old_dw
+                                                      ,      DataWarehouse  * new_dw    ) {
+  // Do nothing for default model
 }
 
 void ScalarDiffusionModel::baseInitializeSDMData(
