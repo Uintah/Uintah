@@ -88,15 +88,16 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
   std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
 
   // Loop through all of the required or computed variables.
-  if( loadVariables == LOAD_CHECKPOINT_VARIABLES )
+  if( schedulerP->isRestartInitTimestep() ||
+      loadVariables == LOAD_CHECKPOINT_VARIABLES )
     varLabels = schedulerP->getInitialRequiredVars();
   else
     varLabels = schedulerP->getComputedVars();
-  
+
   for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter )
   {
     const VarLabel *varLabel = *varIter;
-    
+
     if( // Toss out variables not being saved.
         (loadVariables == LOAD_OUTPUT_VARIABLES &&
          !output->isLabelSaved( varLabel->getName() )) ||
@@ -110,16 +111,16 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
     VariableInfo varInfo;
     varInfo.name = varLabel->getName();
     varInfo.type = varLabel->typeDescription()->getName();
-    
+
     // Loop through all of the materials for this variable
     Scheduler::VarLabelMaterialMap::iterator matMapIter =
       pLabelMatlMap->find( varInfo.name );
-    
+
     if( matMapIter != pLabelMatlMap->end() )
     {
       std::list< int > &materials = matMapIter->second;
       std::list< int >::iterator matIter;
-      
+
       for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
       {
         const int material = *matIter;
@@ -127,16 +128,16 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
         // Check to make sure the variable exists on at least one patch
         // for at least one level.
         bool exists = false;
-          
+
         for (int l=0; l<numLevels; ++l)
         {
           const LevelP &level = gridP->getLevel(l);
           int numPatches = level->numPatches();
-          
+
           for (int p=0; p<numPatches; ++p)
           {
             const Patch* patch = level->getPatch(p);
-            
+
             if( dw->exists( varLabel, material, patch ) )
             {
               // The variable exists on this level and patch.
@@ -145,7 +146,7 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
               break;
             }
           }
-          
+
           if( exists == true )
             break;
         }
