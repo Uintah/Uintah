@@ -418,6 +418,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   //d_mpm->scheduleTotalParticleCount(          sched, mpm_patches, mpm_matls);
    
   d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeCurrentParticleSize(  sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateParticlesToGrid(  sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeHeatExchange(         sched, mpm_patches, mpm_matls);
 
@@ -749,9 +750,8 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
   t->requires(Task::NewDW, MIlb->press_NCLabel,       press_matl,gac, NGN);
   t->requires(Task::NewDW, MIlb->cMassLabel,          mpm_matl,  gac, 1);
   t->requires(Task::OldDW, Mlb->pXLabel,              mpm_matl,  Ghost::None);
-  t->requires(Task::OldDW, Mlb->pSizeLabel,           mpm_matl,  Ghost::None);
-  t->requires(Task::OldDW, Mlb->pDeformationMeasureLabel, mpm_matl, Ghost::None);
-   
+  t->requires(Task::NewDW, Mlb->pCurSizeLabel,        mpm_matl,  Ghost::None);
+
   t->computes(Mlb->pPressureLabel,   mpm_matl);
   sched->addTask(t, patches, all_matls);
 }
@@ -1266,9 +1266,8 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       constParticleVariable<Point> px;
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> deformationGradient;
-      old_dw->get(psize,                Mlb->pSizeLabel,     pset);     
+      new_dw->get(psize,                Mlb->pCurSizeLabel,  pset);     
       old_dw->get(px,                   Mlb->pXLabel,        pset);     
-      old_dw->get(deformationGradient,  Mlb->pDeformationMeasureLabel, pset);
       new_dw->allocateAndPut(pPressure, Mlb->pPressureLabel, pset);     
 
      //__________________________________
@@ -1279,8 +1278,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
         double press = 0.;
 
         // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(px[idx], ni,
-                                         S,psize[idx],deformationGradient[idx]);
+        int NN = interpolator->findCellAndWeights(px[idx], ni, S,psize[idx]);
 
         for (int k = 0; k < NN; k++) {
           press += pressNC[ni[k]] * S[k];

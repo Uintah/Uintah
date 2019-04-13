@@ -41,21 +41,19 @@ namespace Uintah {
     virtual fastAxiCpdiInterpolator* clone(const Patch*);
     
     virtual int findCellAndWeights(const Point& p,vector<IntVector>& ni, 
-                                    vector<double>& S, const Matrix3& size,
-                                    const Matrix3& defgrad);
+                                    vector<double>& S, const Matrix3& size);
 
     virtual int findCellAndShapeDerivatives(const Point& pos,
                                              vector<IntVector>& ni,
                                              vector<Vector>& d_S,
-                                             const Matrix3& size,
-                                             const Matrix3& defgrad);
+                                             const Matrix3& size);
 
     virtual int findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                        vector<IntVector>& ni,
                                                        vector<double>& S,
                                                        vector<Vector>& d_S,
-                                                       const Matrix3& size,
-                                                       const Matrix3& defgrad);
+                                                       const Matrix3& size);
+
     virtual int size();
     
   private:

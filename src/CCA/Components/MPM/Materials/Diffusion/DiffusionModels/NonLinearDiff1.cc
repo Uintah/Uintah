@@ -154,7 +154,6 @@ void NonLinearDiff1::computeFlux(
   constParticleVariable<Matrix3> pStress;
   constParticleVariable<Point>   px;
   constParticleVariable<Matrix3> psize;
-  constParticleVariable<Matrix3> pFOld;
   constParticleVariable<double>  pDiffusivity_old;
 
   constNCVariable<double>  gConcentration;
@@ -169,9 +168,8 @@ void NonLinearDiff1::computeFlux(
   old_dw->get(pConcGrad,        d_lb->diffusion->pGradConcentration,  pset);
   old_dw->get(pConcentration,   d_lb->diffusion->pConcentration,      pset);
   old_dw->get(pStress,          d_lb->pStressLabel,                   pset);
-  old_dw->get(pFOld,            d_lb->pDeformationMeasureLabel,       pset);
   old_dw->get(pDiffusivity_old, d_lb->diffusion->pDiffusivity,        pset);
-  old_dw->get(psize,            d_lb->pSizeLabel,                     pset);
+  new_dw->get(psize,            d_lb->pCurSizeLabel,                  pset);
 
   new_dw->get(gConcentration, d_lb->diffusion->gConcentration,     dwi, patch, gac, NGN);
   new_dw->get(gHydroStress,   d_lb->diffusion->gHydrostaticStress, dwi, patch, gac, NGN);
@@ -197,7 +195,7 @@ void NonLinearDiff1::computeFlux(
                                                       iter++){
     particleIndex idx = *iter;
 
-    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
 
 #if defined USE_PARTICLE_VALUES
     double neg_one_third = -1.0/3.0;
@@ -292,9 +290,8 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   task->requires(Task::OldDW, d_lb->diffusion->pGradConcentration,  matlset, gnone);
   task->requires(Task::OldDW, d_lb->diffusion->pConcentration,      matlset, gnone);
   task->requires(Task::OldDW, d_lb->pStressLabel,                   matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,       matlset, gnone);
   task->requires(Task::OldDW, d_lb->diffusion->pDiffusivity,        matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pSizeLabel,                     matlset, gnone);
+  task->requires(Task::NewDW, d_lb->pCurSizeLabel,                  matlset, gnone);
 
   task->requires(Task::NewDW, d_lb->diffusion->gConcentration,      matlset, gac, NGN);
   task->requires(Task::NewDW, d_lb->diffusion->gHydrostaticStress,  matlset, gac, NGN);

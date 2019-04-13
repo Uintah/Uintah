@@ -45,20 +45,19 @@ namespace Uintah {
     
     virtual int findCellAndWeights(const Point& p,std::vector<IntVector>& ni,
                                     std::vector<double>& S,
-                                    const Matrix3& size,
-                                    const Matrix3& defgrad);
+                                    const Matrix3& size);
 
     virtual int findCellAndShapeDerivatives(const Point& pos,
                                              std::vector<IntVector>& ni,
                                              std::vector<Vector>& d_S,
-                                             const Matrix3& size,
-                                             const Matrix3& defgrad);
+                                             const Matrix3& size);
+
     virtual int findCellAndWeightsAndShapeDerivatives(const Point& pos,
-                                                       std::vector<IntVector>& ni,
-                                                       std::vector<double>& S,
-                                                       std::vector<Vector>& d_S,
-                                                       const Matrix3& size,
-                                                       const Matrix3& defgrad);
+                                                     std::vector<IntVector>& ni,
+                                                     std::vector<double>& S,
+                                                     std::vector<Vector>& d_S,
+                                                     const Matrix3& size);
+
     virtual int size();
 
     void findNodeComponents(const int& idx, int* xn, int& count,

@@ -55,8 +55,7 @@ AxiGIMPInterpolator* AxiGIMPInterpolator::clone(const Patch* patch)
 int AxiGIMPInterpolator::findCellAndWeights(const Point& pos,
                                              vector<IntVector>& ni,
                                              vector<double>& S,
-                                             const Matrix3& size,
-                                             const Matrix3& defgrad)
+                                             const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   double L =  d_patch->getLevel()->dCell().x();
@@ -201,8 +200,7 @@ int AxiGIMPInterpolator::findCellAndWeights(const Point& pos,
 int AxiGIMPInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                      vector<IntVector>& ni,
                                                      vector<Vector>& d_S,
-                                                     const Matrix3& size,
-                                                     const Matrix3& defgrad)
+                                                     const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   double L =  d_patch->getLevel()->dCell().x();
@@ -379,8 +377,7 @@ AxiGIMPInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                          vector<IntVector>& ni,
                                                          vector<double>& S,
                                                          vector<Vector>& d_S,
-                                                         const Matrix3& size,
-                                                         const Matrix3& defgrad)
+                                                         const Matrix3& size)
 {
  // IMPORTANT NOTE TO USERS:
  // This function is only for use with axisymmetric problems.

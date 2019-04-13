@@ -186,6 +186,9 @@ MPMLabel::MPMLabel()
   pSizeLabel_preReloc = VarLabel::create( "p.size+",
                         ParticleVariable<Matrix3>::getTypeDescription());
   
+  pCurSizeLabel = VarLabel::create( "p.currentsize",
+                        ParticleVariable<Matrix3>::getTypeDescription());
+  
   pLocalizedMPMLabel  = VarLabel::create( "p.localizedMPM",
                         ParticleVariable<int>::getTypeDescription() );
   
@@ -920,6 +923,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pRefinedLabel_preReloc);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);
+  VarLabel::destroy(pCurSizeLabel);
   VarLabel::destroy(pFiberDirLabel_preReloc);
   VarLabel::destroy(pFiberDirLabel);
   VarLabel::destroy(p_qLabel);

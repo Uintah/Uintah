@@ -53,8 +53,7 @@ AxiLinearInterpolator* AxiLinearInterpolator::clone(const Patch* patch)
 int AxiLinearInterpolator::findCellAndWeights(const Point& pos,
                                            vector<IntVector>& ni, 
                                            vector<double>& S,
-                                           const Matrix3& size,
-                                           const Matrix3& defgrad)
+                                           const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos );
   int ix = Floor(cellpos.x());
@@ -87,8 +86,7 @@ int AxiLinearInterpolator::findCellAndWeights(const Point& pos,
 int AxiLinearInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                         vector<IntVector>& ni,
                                                         vector<Vector>& d_S,
-                                                        const Matrix3& size,
-                                                        const Matrix3& defgrad)
+                                                        const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
@@ -121,8 +119,7 @@ AxiLinearInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                          vector<IntVector>& ni,
                                                          vector<double>& S,
                                                          vector<Vector>& d_S,
-                                                         const Matrix3& size,
-                                                         const Matrix3& defgrad)
+                                                         const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());

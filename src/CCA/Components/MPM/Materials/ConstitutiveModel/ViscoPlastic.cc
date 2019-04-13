@@ -1151,8 +1151,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
 
 //     Calculate the displacement gradient
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                                   psize[idx],pDeformGrad[idx]);
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
       computeGrad(DispGrad, ni, d_S, oodx, gDisp);
 
 //       Compute the deformation gradient increment
@@ -1527,8 +1526,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Calculate the displacement gradient
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                                   psize[idx],pDeformGrad[idx]);
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
       computeGradAndBmats(DispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
 
       // Compute the deformation gradient increment

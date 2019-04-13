@@ -589,6 +589,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     schedulePartitionOfUnity(               sched, patches, matls);
     scheduleComputeZoneOfInfluence(         sched, patches, matls);
+    scheduleComputeCurrentParticleSize(     sched, patches, matls);
     scheduleApplyExternalLoads(             sched, patches, matls);
     d_fluxbc->scheduleApplyExternalScalarFlux( sched, patches, matls);
   }
@@ -835,8 +836,9 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                  d_gan,NGP);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,  d_gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,        d_gan,NGP);
-  t->requires(Task::NewDW, lb->pSizeLabel_preReloc,      d_gan,NGP);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, d_gan,NGP);
+//  t->requires(Task::NewDW, lb->pSizeLabel_preReloc,      d_gan,NGP);
+  t->requires(Task::NewDW, lb->pCurSizeLabel,            d_gan,NGP);
+//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, d_gan,NGP);
 
   t->computes(lb->gMassLabel);
   t->computes(lb->gVolumeLabel);
@@ -1120,8 +1122,8 @@ void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pStressLabel,               d_gan,NGP);
   t->requires(Task::OldDW,lb->pVolumeLabel,               d_gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    d_gan,NGP);
-  t->requires(Task::NewDW,lb->pSizeLabel_preReloc,        d_gan,NGP);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,  d_gan,NGP);
+  t->requires(Task::NewDW,lb->pCurSizeLabel,              d_gan,NGP);
+//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,  d_gan,NGP);
   if(flags->d_artificial_viscosity){
     t->requires(Task::OldDW, lb->p_qLabel,                d_gan,NGP);
   }
@@ -1277,7 +1279,7 @@ void AMRMPM::scheduleComputeLAndF(SchedulerP& sched,
   
   t->requires(Task::OldDW, lb->pXLabel,                         d_gn);
   t->requires(Task::OldDW, lb->pMassLabel,                      d_gn);
-  t->requires(Task::NewDW, lb->pSizeLabel_preReloc,             d_gn);
+  t->requires(Task::NewDW, lb->pCurSizeLabel,                   d_gn);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        d_gn);
 
   t->computes(lb->pVelGradLabel_preReloc);
@@ -1331,9 +1333,9 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,               d_gn);   
   t->requires(Task::OldDW, lb->pVelocityLabel,                  d_gn);   
   t->requires(Task::OldDW, lb->pDispLabel,                      d_gn);   
-  t->requires(Task::NewDW, lb->pSizeLabel_preReloc,             d_gn);   
+  t->requires(Task::NewDW, lb->pCurSizeLabel,                   d_gn);   
   t->requires(Task::OldDW, lb->pVolumeLabel,                    d_gn);   
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        d_gn); 
+//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        d_gn); 
 
   t->computes(lb->pDispLabel_preReloc);
   t->computes(lb->pVelocityLabel_preReloc);
@@ -1927,7 +1929,6 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    const Matrix3 nU;
 
     for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
@@ -1970,7 +1971,7 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
 
         partitionUnity[idx] = 0;
 
-        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],nU);
+        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
 
         for(int k = 0; k < NN; k++) {
           partitionUnity[idx] += S[k];
@@ -2041,7 +2042,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
 #endif
 
-      new_dw->get(psize,                lb->pSizeLabel_preReloc,      pset);
+      new_dw->get(psize,                lb->pCurSizeLabel,            pset);
       old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
       new_dw->get(pexternalforce,       lb->pExtForceLabel_preReloc,  pset);
       if (flags->d_GEVelProj){
@@ -2111,8 +2112,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
-                                         pDeformationMeasure[idx]);
+        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
 
         pmom = pvelocity[idx]*pmass[idx];
 
@@ -2188,8 +2188,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                          px[idx].y()+0.5*psize[idx](1,1)*dx.y(),
                          px[idx].z());
         }
-        LPI->findCellAndWeights(flux_pos,ni_LPI,S_LPI,psize[idx],
-                                       pDeformationMeasure[idx]);
+        LPI->findCellAndWeights(flux_pos,ni_LPI,S_LPI,psize[idx]);
         for(int k = 0; k < 8; k++) {
           if(patch->containsNode(ni_LPI[k])) {
             gextscalarflux[ni_LPI[k]]  += pExternalScalarFlux[idx] * S_LPI[k];
@@ -2958,8 +2957,8 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(px,      lb->pXLabel,                              pset);
       old_dw->get(pvol,    lb->pVolumeLabel,                         pset);
       old_dw->get(pstress, lb->pStressLabel,                         pset);
-      new_dw->get(psize,   lb->pSizeLabel_preReloc,                  pset);
-      old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
+      new_dw->get(psize,   lb->pCurSizeLabel,                        pset);
+//      old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
 
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
@@ -3003,7 +3002,7 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
   
         // Get the node indices that surround the cell
         int NN = interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,
-                                   S, d_S, psize[idx],pDeformationMeasure[idx]);
+                                                            S, d_S, psize[idx]);
 
         stresspress = pstress[idx] + Id*(/*p_pressure*/-p_q[idx]);
 
@@ -3633,7 +3632,7 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
       old_dw->get(px,           lb->pXLabel,                         pset);
-      new_dw->get(psize,        lb->pSizeLabel_preReloc,             pset);
+      new_dw->get(psize,        lb->pCurSizeLabel,                   pset);
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
 
@@ -3674,13 +3673,13 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
         if(!flags->d_axisymmetric){
          // Get the node indices that surround the cell
          NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                                        psize[idx],pFOld[idx]);
+                                                        psize[idx]);
 
          computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity_star,NN);
         } else {  // axi-symmetric kinematics
          // Get the node indices that surround the cell
          NN = interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
-                                                     d_S,psize[idx],pFOld[idx]);
+                                                     d_S,psize[idx]);
          // x -> r, y -> z, z -> theta
          computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity_star,
                                                                    px[idx],NN);
@@ -3887,8 +3886,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
-      old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
-      new_dw->get(psize,        lb->pSizeLabel_preReloc,             pset);
+//      old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
+      new_dw->get(psize,        lb->pCurSizeLabel,                   pset);
 
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
@@ -3949,8 +3948,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
-                                                               pFOld[idx]);
+        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
 
         Vector vel(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);
@@ -5035,8 +5033,8 @@ void AMRMPM::scheduleDebug_CFI(SchedulerP& sched,
   }
 
   t->requires(Task::OldDW, lb->pXLabel,                  d_gn,0);
-  t->requires(Task::OldDW, lb->pSizeLabel,               d_gn,0);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, d_gn,0);
+  t->requires(Task::NewDW, lb->pCurSizeLabel,            d_gn,0);
+//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, d_gn,0);
   
   t->computes(lb->pColorLabel_preReloc);
 
@@ -5066,12 +5064,12 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
     
     constParticleVariable<Point>  px;
     constParticleVariable<Matrix3> psize;
-    constParticleVariable<Matrix3> pDeformationMeasure;
+//    constParticleVariable<Matrix3> pDeformationMeasure;
     ParticleVariable<double>  pColor;
     
     old_dw->get(px,                   lb->pXLabel,                  pset);
-    old_dw->get(psize,                lb->pSizeLabel,               pset);
-    old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
+    new_dw->get(psize,                lb->pCurSizeLabel,            pset);
+//    old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
     new_dw->allocateAndPut(pColor,    lb->pColorLabel_preReloc,     pset);
     
     ParticleInterpolator* interpolatorCoarse = flags->d_interpolator->clone(patch);
@@ -5082,8 +5080,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
       particleIndex idx = *iter;
       pColor[idx] = 0;
       
-      int NN = interpolatorCoarse->findCellAndWeights(px[idx],ni,S,psize[idx],
-                                                     pDeformationMeasure[idx]);
+      int NN = interpolatorCoarse->findCellAndWeights(px[idx],ni,S,psize[idx]);
       
       for(int k = 0; k < NN; k++) {
         pColor[idx] += S[k];

@@ -871,7 +871,6 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         computeDeformationGradientFromTotalDisplacement(gdisplacement,
                                                         pset, px,
                                                         pDefGrad_new,
-                                                        pDefGrad,
                                                         dx, pSize,interpolator);
       }
 
@@ -884,8 +883,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
 
         // Compute the displacement gradient and B matrices
         if( d_usePlasticity ){
-          interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,
-                                                    pSize[idx],pDefGrad[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx], ni,d_S,pSize[idx]);
 
           computeGradAndBmats(pDispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
         }
@@ -948,8 +946,8 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
           double kgeo[24][24];
 
           // Fill in the B and Bnl matrices and the dof vector
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S, pSize[idx],
-                                                    pDefGrad[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S, pSize[idx]);
+
           loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
           // kmat = B.transpose()*D*B*volold
           BtDB(B,D,kmat);
@@ -988,8 +986,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
           D[4][3] = D[3][4];
 
           // Fill in the B and Bnl matrices and the dof vector
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                                      pSize[idx],pDefGrad[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,pSize[idx]);
           loadBMatsGIMP(l2g,dof,B,Bnl,d_S,ni,oodx);
           // kmat = B.transpose()*D*B*volold
           BtDBGIMP(B,D,kmat);
@@ -1148,7 +1145,6 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,1);
         computeDeformationGradientFromTotalDisplacement(gdisplacement,pset, pX,
                                                         pDefGrad_new,
-                                                        pDefGrad,
                                                         dx, pSize,interpolator);
       }
 

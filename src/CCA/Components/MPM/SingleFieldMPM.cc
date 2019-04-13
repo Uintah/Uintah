@@ -926,7 +926,7 @@ void SingleFieldMPM::interpolateSurfaceToGrid(const ProcessorGroup*,
 #endif
 #if 1
         int NN =
-           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
         for(int k = 0; k < NN; k++) {
           node = ni[k];
           if(patch->containsNode(node)) {
@@ -1930,17 +1930,17 @@ void SingleFieldMPM::initializePressureBC(const ProcessorGroup*,
       constParticleVariable<Point> px;
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
-      new_dw->get(px, lb->pXLabel, pset);
-      new_dw->get(psize, lb->pSizeLabel, pset);
-      new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
       constParticleVariable<IntVector> pLoadCurveID;
-      new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
       ParticleVariable<Vector> pExternalForce;
+      new_dw->get(px,    lb->pXLabel, pset);
+      new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
       new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
 
       ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
                               pExternalForceCorner3, pExternalForceCorner4;
       if (flags->d_useCBDI) {
+        new_dw->get(psize,               lb->pSizeLabel,               pset);
+        new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
         new_dw->allocateAndPut(pExternalForceCorner1,
                                lb->pExternalForceCorner1Label, pset);
         new_dw->allocateAndPut(pExternalForceCorner2,
@@ -2326,7 +2326,7 @@ void SingleFieldMPM::interpolateParticlesToGrid(const ProcessorGroup*,
            iter++){
         particleIndex idx = *iter;
         int NN =
-           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
         Vector pmom = pvelocity[idx]*pmass[idx];
         double ptemp_ext = pTemperature[idx];
         total_mom += pmom;
@@ -2367,13 +2367,13 @@ void SingleFieldMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           vector<double> SCorner3(linear_interpolator->size());
           vector<double> SCorner4(linear_interpolator->size());
           linear_interpolator->findCellAndWeights(pExternalForceCorner1[idx],
-                                 niCorner1,SCorner1,psize[idx],pFOld[idx]);
+                                 niCorner1,SCorner1,psize[idx]);
           linear_interpolator->findCellAndWeights(pExternalForceCorner2[idx],
-                                 niCorner2,SCorner2,psize[idx],pFOld[idx]);
+                                 niCorner2,SCorner2,psize[idx]);
           linear_interpolator->findCellAndWeights(pExternalForceCorner3[idx],
-                                 niCorner3,SCorner3,psize[idx],pFOld[idx]);
+                                 niCorner3,SCorner3,psize[idx]);
           linear_interpolator->findCellAndWeights(pExternalForceCorner4[idx],
-                                 niCorner4,SCorner4,psize[idx],pFOld[idx]);
+                                 niCorner4,SCorner4,psize[idx]);
           for(int k = 0; k < 8; k++) { // Iterates through the nodes which receive information from the current particle
             node = niCorner1[k];
             if(patch->containsNode(node)) {
@@ -2465,7 +2465,7 @@ void SingleFieldMPM::computeSSPlusVp(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
       old_dw->get(px,       lb->pXLabel,                         pset);
-      old_dw->get(psize,    lb->pSizeLabel,                      pset);
+      new_dw->get(psize,    lb->pCurSizeLabel,                   pset);
       old_dw->get(pFOld,    lb->pDeformationMeasureLabel,        pset);
 
       new_dw->allocateAndPut(pvelSSPlus,lb->pVelocitySSPlusLabel,    pset);
@@ -2479,8 +2479,7 @@ void SingleFieldMPM::computeSSPlusVp(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(px[idx], ni, S,
-                                                  psize[idx], pFOld[idx]);
+        int NN = interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
         // Accumulate the contribution from each surrounding vertex
         Vector vel(0.0,0.0,0.0);
         for (int k = 0; k < NN; k++) {
@@ -2530,8 +2529,7 @@ void SingleFieldMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
 
       old_dw->get(px,         lb->pXLabel,                         pset);
       old_dw->get(pmass,      lb->pMassLabel,                      pset);
-      old_dw->get(psize,      lb->pSizeLabel,                      pset);
-      old_dw->get(pFOld,      lb->pDeformationMeasureLabel,        pset);
+      new_dw->get(psize,      lb->pCurSizeLabel,                   pset);
       new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
       new_dw->get(gmass,      lb->gMassLabel,         dwi,patch,gac,NGP);
       new_dw->allocateAndPut(gvelSPSSP,   lb->gVelSPSSPLabel,   dwi,patch);
@@ -2543,7 +2541,7 @@ void SingleFieldMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
            iter != pset->end(); iter++){
         particleIndex idx = *iter;
         int NN =
-           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
         Vector pmom = pvelSSPlus[idx]*pmass[idx];
 
         IntVector node;
@@ -2618,11 +2616,9 @@ void SingleFieldMPM::addCohesiveZoneForces(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         Matrix3 size(0.1,0.,0.,0.,0.1,0.,0.,0.,0.1);
-        Matrix3 defgrad;
-        defgrad.Identity();
 
         // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
+        int NN = interpolator->findCellAndWeights(czx[idx],ni,S,size);
 
         int TopMat = czTopMat[idx];
         int BotMat = czBotMat[idx];
@@ -2890,8 +2886,7 @@ void SingleFieldMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(px,      lb->pXLabel,                      pset);
       old_dw->get(pvol,    lb->pVolumeLabel,                 pset);
       old_dw->get(pstress, lb->pStressLabel,                 pset);
-      old_dw->get(psize,   lb->pSizeLabel,                   pset);
-      old_dw->get(pFOld,   lb->pDeformationMeasureLabel,     pset);
+      new_dw->get(psize,   lb->pCurSizeLabel,                pset);
 
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
 
@@ -2937,7 +2932,7 @@ void SingleFieldMPM::computeInternalForce(const ProcessorGroup*,
           // Get the node indices that surround the cell
           int NN =
             interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
-                                                     d_S,psize[idx],pFOld[idx]);
+                                                     d_S,psize[idx]);
           stressvol  = pstress[idx]*pvol[idx];
           stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
 
@@ -2961,7 +2956,7 @@ void SingleFieldMPM::computeInternalForce(const ProcessorGroup*,
 
           int NN =
             interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
-                                                   d_S,psize[idx],pFOld[idx]);
+                                                                d_S,psize[idx]);
 
           stressvol   = pstress[idx]*pvol[idx];
           stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
@@ -3526,7 +3521,8 @@ void SingleFieldMPM::applyExternalLoads(const ProcessorGroup* ,
               if (flags->d_useCBDI) {
                Vector dxCell = patch->dCell();
                pExternalForce_new[idx] += pbc->getForceVectorCBDI(px[idx],
-                                 psize[idx],pDeformationMeasure[idx],force,time,
+                                    psize[idx], pDeformationMeasure[idx],
+                                    force, time,
                                     pExternalForceCorner1[idx],
                                     pExternalForceCorner2[idx],
                                     pExternalForceCorner3[idx],
@@ -3714,7 +3710,7 @@ void SingleFieldMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       //Carry forward ParticleID and pSize
       old_dw->get(pids,                lb->pParticleIDLabel,          pset);
-      old_dw->get(psize,               lb->pSizeLabel,                pset);
+      new_dw->get(psize,               lb->pCurSizeLabel,             pset);
       old_dw->get(pSurf,               lb->pSurfLabel,                pset);
       new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,       pset);
@@ -3822,8 +3818,7 @@ void SingleFieldMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           particleIndex idx = *iter;
 
           // Get the node indices that surround the cell
-          int NN = interpolator->findCellAndWeights(px[idx], ni, S,
-                                                    psize[idx], pFOld[idx]);
+          int NN = interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
           Vector vel(0.0,0.0,0.0);
           Vector acc(0.0,0.0,0.0);
           Vector vel01(0.0,0.0,0.0);
@@ -3975,7 +3970,7 @@ void SingleFieldMPM::computeParticleGradients(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
       old_dw->get(px,           lb->pXLabel,                         pset);
-      old_dw->get(psize,        lb->pSizeLabel,                      pset);
+      new_dw->get(psize,        lb->pCurSizeLabel,                   pset);
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
@@ -3986,8 +3981,6 @@ void SingleFieldMPM::computeParticleGradients(const ProcessorGroup*,
       new_dw->allocateAndPut(pvolume,    lb->pVolumeLabel_preReloc,       pset);
       new_dw->allocateAndPut(pVelGrad,   lb->pVelGradLabel_preReloc,      pset);
       new_dw->allocateAndPut(pTempGrad,  lb->pTemperatureGradientLabel_preReloc,
-                                                                          pset);
-      new_dw->allocateAndPut(pFNew,      lb->pDeformationMeasureLabel_preReloc,
                                                                           pset);
 
 //      new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
@@ -4010,7 +4003,7 @@ void SingleFieldMPM::computeParticleGradients(const ProcessorGroup*,
 #endif
          // Get the node indices that surround the cell
          NN =interpolator->findCellAndShapeDerivatives(px[idx],ni,
-                                                     d_S,psize[idx],pFOld[idx]);
+                                                       d_S,psize[idx]);
          for(int k = 0; k < NN; k++) {
           double dotProd = Dot(pSurfGrad[idx],gSurfGrad[ni[k]]); 
           Vector gvel;
@@ -4311,11 +4304,9 @@ void SingleFieldMPM::updateCohesiveZones(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         Matrix3 size(0.1,0.,0.,0.,0.1,0.,0.,0.,0.1);
-        Matrix3 defgrad;
-        defgrad.Identity();
 
         // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
+        int NN = interpolator->findCellAndWeights(czx[idx],ni,S,size);
 
         Vector velTop(0.0,0.0,0.0);
         Vector velBot(0.0,0.0,0.0);
@@ -5310,9 +5301,8 @@ void SingleFieldMPM::computeNormals(const ProcessorGroup *,
       old_dw->get(pdisp,               lb->pDispLabel,               pset);
       old_dw->get(pmass,               lb->pMassLabel,               pset);
       old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
-      old_dw->get(psize,               lb->pSizeLabel,               pset);
+      new_dw->get(psize,               lb->pCurSizeLabel,            pset);
       old_dw->get(pstress,             lb->pStressLabel,             pset);
-      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
       gposition[m].initialize(Point(0.0,0.0,0.0));
@@ -5326,7 +5316,7 @@ void SingleFieldMPM::computeNormals(const ProcessorGroup *,
           particleIndex idx = *it;
 
           NN = interpolator->findCellAndWeightsAndShapeDerivatives(
-                          px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
+                          px[idx],ni,S,d_S,psize[idx]);
           double rho = pmass[idx]/pvolume[idx];
           for(int k = 0; k < NN; k++) {
             if (patch->containsNode(ni[k])){
@@ -5343,7 +5333,7 @@ void SingleFieldMPM::computeNormals(const ProcessorGroup *,
           particleIndex idx = *it;
 
           NN = interpolator->findCellAndWeightsAndShapeDerivatives(
-                          px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
+                          px[idx],ni,S,d_S,psize[idx]);
           for(int k = 0; k < NN; k++) {
             if (patch->containsNode(ni[k])){
               Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
@@ -5663,13 +5653,10 @@ void SingleFieldMPM::computeGridSurfaceGradient(const ProcessorGroup *,
 
       constParticleVariable<Point>   px;
       constParticleVariable<double>  psurf;
-      constParticleVariable<Matrix3> psize, deformationGradient;
       constParticleVariable<Vector>  pSurfGrad, pvelocity,pextforce;
 
       old_dw->get(px,                  lb->pXLabel,                  pset);
-      old_dw->get(psize,               lb->pSizeLabel,               pset);
       old_dw->get(psurf,               lb->pSurfLabel,               pset);
-      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
       new_dw->get(pSurfGrad,           lb->pSurfGradLabel_preReloc,  pset);
 
       for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
@@ -5709,17 +5696,16 @@ void SingleFieldMPM::computeGridSurfaceGradient(const ProcessorGroup *,
       old_dw->get(px,                  lb->pXLabel,                  pset);
       old_dw->get(pmass,               lb->pMassLabel,               pset);
       old_dw->get(pvol,                lb->pVolumeLabel,             pset);
-      old_dw->get(psize,               lb->pSizeLabel,               pset);
+      new_dw->get(psize,               lb->pCurSizeLabel,            pset);
       old_dw->get(pstress,             lb->pStressLabel,             pset);
       old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
       old_dw->get(pextforce,           lb->pExternalForceLabel,      pset);
       new_dw->get(pSurfGrad,           lb->pSurfGradLabel_preReloc,  pset);
 
       for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
         particleIndex idx = *it;
         int NN = interpolator->findCellAndWeightsAndShapeDerivatives(
-                        px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
+                        px[idx],ni,S,d_S,psize[idx]);
         for (int k = 0; k < NN; k++){
           if(patch->containsNode(ni[k])) {
             Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
