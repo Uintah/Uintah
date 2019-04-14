@@ -2018,7 +2018,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<double> pExternalScalarFlux;
       constParticleVariable<Vector> pvelocity, pexternalforce;
       constParticleVariable<Matrix3> psize;
-      constParticleVariable<Matrix3> pDeformationMeasure;
+//      constParticleVariable<Matrix3> pDeformationMeasure;
       constParticleVariable<Matrix3> pStress;
       constParticleVariable<Matrix3> pVelGrad;
       constParticleVariable<double> pPosCharge;
@@ -2043,7 +2043,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 #endif
 
       new_dw->get(psize,                lb->pCurSizeLabel,            pset);
-      old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
+//      old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
       new_dw->get(pexternalforce,       lb->pExtForceLabel_preReloc,  pset);
       if (flags->d_GEVelProj){
         old_dw->get(pVelGrad,           lb->pVelGradLabel,            pset);
@@ -2948,7 +2948,7 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
       constNCVariable<double>        gvolume;
-      constParticleVariable<Matrix3> pDeformationMeasure;
+//      constParticleVariable<Matrix3> pDeformationMeasure;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        Ghost::AroundNodes, NGP,
