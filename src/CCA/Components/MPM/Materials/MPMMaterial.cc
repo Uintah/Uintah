@@ -194,9 +194,9 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
        mainpiece = pieces[0];
      }
 
-     //    piece_num++;
-     d_geom_objs.push_back(scinew GeometryObject(mainpiece, 
-                           geom_obj_ps, geom_obj_data));
+     GeometryObject* obj = scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data);
+
+     d_geom_objs.push_back( obj );
     }
   }
 }

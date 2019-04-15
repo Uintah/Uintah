@@ -40,13 +40,13 @@
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
-#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -59,6 +59,7 @@
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -2009,12 +2010,14 @@ void SerialMPM::deleteGeometryObjects(const ProcessorGroup*,
                                       DataWarehouse* ,
                                       DataWarehouse* new_dw)
 {
-  cout << "Deleting Geometry Objects " << endl;
-  unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
-  for(unsigned int m = 0; m < numMPMMatls; m++){
-    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
-    mpm_matl->deleteGeomObjects();
-  }
+   printTask( cout_doing,"Doing MPM::deleteGeometryObjects");
+
+   unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+   for(unsigned int m = 0; m < numMPMMatls; m++){
+     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+     cout << "MPM::Deleting Geometry Objects  matl: " << mpm_matl->getDWIndex() << "\n";
+     mpm_matl->deleteGeomObjects();
+   }
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorGroup*,
@@ -2147,6 +2150,14 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     }
   }
 
+  // The call below is necessary because the GeometryPieceFactory holds on to a pointer
+  // to all geom_pieces (so that it can look them up by name during initialization)
+  // The pieces are never actually deleted until the factory is destroyed at the end
+  // of the program. resetFactory() will rid of the pointer (lookup table) and
+  // allow the deletion of the unneeded pieces.  
+  
+  GeometryPieceFactory::resetFactory();
+ 
 }
 
 void SerialMPM::readPrescribedDeformations(string filename)
