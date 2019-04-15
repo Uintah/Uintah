@@ -659,6 +659,18 @@ AMRSimulationController::executeTimeStep( int totalFine )
     if (m_scrub_datawarehouse && m_loadBalancer->getNthRank() == 1) {
       if (m_application->activeReductionVariable( recomputeTimeStep_name )) {
         m_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+
+        static bool reported = false;
+
+        if( !reported )
+          
+          proc0cout << "The ability to recompute a time step is turned on. "
+            "This will affect the data warehouse scrubbing for all time steps "
+            "regardless if a time step is recomputed or not. "
+            "There may be a memory increase."
+                    << std::endl;
+
+        reported = true;
       }
       else {
         m_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
