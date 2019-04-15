@@ -37,11 +37,10 @@ NIGHTLYTESTS = [  ("ice_perf_32KPatches",  "icePerf_32KPatches.ups",            
                   ("PostProcessUda",       "N/A",                               8,  "All", [ "postProcessUda", "exactComparison"] )
                ]
 
-LOCALTESTS = [
-# ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "All", ["no_memoryTest"]),
-#               ("switchExample3",         "Switcher/switchExample3.ups",        1, "All", ["no_restart","no_memoryTest"]),
-#               ("ice_perf_test",          "icePerformanceTest.ups",             1, "All", ["do_performance_test"]), 
-#               ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "All", ["do_performance_test"]), 
+LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "All", ["no_memoryTest"]),
+               ("switchExample3",         "Switcher/switchExample3.ups",        1, "All", ["no_restart","no_memoryTest"]),
+               ("ice_perf_test",          "icePerformanceTest.ups",             1, "All", ["do_performance_test"]), 
+               ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "All", ["do_performance_test"]), 
                ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "All", []),     # Cannot use exact comparison since the load balancer generates fuzz in the dat files.  It's non deterministic.                                                                               
              ]
              

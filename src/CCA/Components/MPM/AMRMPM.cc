@@ -916,7 +916,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pXLabel,                  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
     t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
     t->requires(Task::OldDW, lb->pTemperatureLabel,        allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
-    t->requires(Task::OldDW, lb->pDeformationMeasureLabel, allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
+//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
 
     t->modifies(lb->gMassLabel);
     t->modifies(lb->gVolumeLabel);
