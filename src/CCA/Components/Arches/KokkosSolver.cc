@@ -501,6 +501,10 @@ KokkosSolver::sched_nonlinearSolve( const LevelP & level,
   BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
   BFM::iterator i_particle_model_fac = m_task_factory_map.find("particle_model_factory");
 
+  for ( auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){ 
+    (*i->second).clear_max_ghost_list(); 
+  }
+
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
 
   // ----------------- Timestep Initialize ---------------------------------------------------------

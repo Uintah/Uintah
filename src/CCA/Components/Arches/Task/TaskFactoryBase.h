@@ -221,16 +221,18 @@ namespace Uintah{
       int min_olddw_ghost{0};
     };
 
+    /** @brief Clean out the list of max ghost cells **/
+    void clear_max_ghost_list(){
+      m_variable_ghost_info.clear();
+    }
+
     /** @brief Potentially insert a new variable to the max ghost list **/
     void insert_max_ghost(const ArchesFieldContainer::VariableInformation& var_info,
                           const std::string task_group_name ){
       //Store max ghost information per variable:
       bool in_new_dw = false;
-      bool in_old_dw = false;
       if ( var_info.dw == ArchesFieldContainer::NEWDW ){
         in_new_dw = true;
-      } else {
-        in_old_dw = true;
       }
       auto iter = m_variable_ghost_info.find(var_info.name);
       if ( iter == m_variable_ghost_info.end() ){
@@ -246,6 +248,7 @@ namespace Uintah{
           ghelp.taskNamesOldDW.push_back(task_group_name);
           ghelp.numTasksOldDW = 1;
           ghelp.min_olddw_ghost = var_info.nGhost;
+          ghelp.max_olddw_ghost = var_info.nGhost;
         }
         m_variable_ghost_info.insert(std::make_pair(var_info.name, ghelp));
 
@@ -255,20 +258,34 @@ namespace Uintah{
         if ( in_new_dw ){
           iter->second.taskNamesNewDW.push_back(task_group_name);
           iter->second.numTasksNewDW += 1;
-          if ( var_info.nGhost > iter->second.max_newdw_ghost ){
+          if ( iter->second.numTasksNewDW == 1 ){
+            //This is the first time this variable is encountered for
+            // this DW so set max and min ghosts equal
             iter->second.max_newdw_ghost = var_info.nGhost;
-          }
-          if ( var_info.nGhost < iter->second.min_newdw_ghost ){
             iter->second.min_newdw_ghost = var_info.nGhost;
+          } else {
+            if ( var_info.nGhost > iter->second.max_newdw_ghost ){
+              iter->second.max_newdw_ghost = var_info.nGhost;
+            }
+            if ( var_info.nGhost < iter->second.min_newdw_ghost ){
+              iter->second.min_newdw_ghost = var_info.nGhost;
+            }
           }
         } else {
           iter->second.taskNamesOldDW.push_back(task_group_name);
           iter->second.numTasksOldDW += 1;
-          if ( var_info.nGhost > iter->second.max_olddw_ghost ){
+          if ( iter->second.numTasksOldDW == 1 ){
+            //This is the first time this variable is encountered for
+            // this DW so set max and min ghosts equal
             iter->second.max_olddw_ghost = var_info.nGhost;
-          }
-          if ( var_info.nGhost < iter->second.min_olddw_ghost ){
             iter->second.min_olddw_ghost = var_info.nGhost;
+          } else {
+            if ( var_info.nGhost > iter->second.max_olddw_ghost ){
+              iter->second.max_olddw_ghost = var_info.nGhost;
+            }
+            if ( var_info.nGhost < iter->second.min_olddw_ghost ){
+              iter->second.min_olddw_ghost = var_info.nGhost;
+            }
           }
         }
       }
