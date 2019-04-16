@@ -64,9 +64,6 @@ class NonlinearSolver {
 
 public:
 
-  Uintah::Dout dbg_vartask_dep{"Arches_Variable_Task_Dep", "Arches::NonlinearSolver",
-          "Prints variable ghost req. across all tasks.", false };
-
   NonlinearSolver( const ProcessorGroup* myworld,
                    ApplicationCommon* arches );
 
@@ -159,35 +156,7 @@ public:
   }
 
   /** @brief Print ghost cell requirements for all variables in this task **/
-  void print_variable_max_ghost(){
-    std::stringstream msg;
-    msg << " :: Reporting max ghost cells :: " << std::endl;
-    for ( auto i = m_total_variable_ghost_info.begin(); i != m_total_variable_ghost_info.end(); i++ ){
-
-      msg << "   Variable: " << i->first << std::endl;
-      if ( i->second.numTasksNewDW > 0 ){
-        msg << "        Min NewDW Ghost: " << i->second.min_newdw_ghost << " Max NewDW Ghost: " << i->second.max_newdw_ghost <<
-        " across " << i->second.numTasksNewDW << " tasks. " << std::endl;
-        msg << "        In the following tasks: " << std::endl;
-        for (auto niter = i->second.taskNamesNewDW.begin();
-             niter != i->second.taskNamesNewDW.end(); niter++ ){
-          msg << "         " << *niter << std::endl;
-        }
-      }
-        if ( i->second.numTasksOldDW > 0 ){
-          msg << "      Min OldDW Ghost: " << i->second.min_olddw_ghost << " Max OldDW Ghost: " << i->second.max_olddw_ghost <<
-          " across " << i->second.numTasksOldDW << " tasks. " << std::endl;
-          msg << "      In the following tasks: " << std::endl;
-       for (auto niter = i->second.taskNamesOldDW.begin();
-             niter != i->second.taskNamesOldDW.end(); niter++ ){
-          msg << "         " << *niter << std::endl;
-        }
-      }
-
-    }
-    msg << " :: End report of max ghost cells :: " << std::endl;
-    DOUT( dbg_vartask_dep, msg.str());
-  }
+  void print_variable_max_ghost();
 
 protected:
 
