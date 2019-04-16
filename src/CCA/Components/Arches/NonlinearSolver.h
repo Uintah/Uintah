@@ -126,17 +126,27 @@ public:
       } else {
         iter->second.numTasksNewDW += ivar->second.numTasksNewDW;
         iter->second.numTasksOldDW += ivar->second.numTasksOldDW;
-        if ( ivar->second.max_newdw_ghost > iter->second.max_newdw_ghost ){
+        if ( iter->second.numTasksNewDW > 1 ){
+          if ( ivar->second.max_newdw_ghost > iter->second.max_newdw_ghost ){
+            iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
+          }
+          if ( ivar->second.min_newdw_ghost < iter->second.min_newdw_ghost ){
+            iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
+          }
+        } else {
           iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
-        }
-        if ( ivar->second.max_olddw_ghost > iter->second.max_olddw_ghost ){
-          iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
-        }
-        if ( ivar->second.min_newdw_ghost < iter->second.min_newdw_ghost ){
           iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
         }
-        if ( ivar->second.min_olddw_ghost > iter->second.min_olddw_ghost ){
-          iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
+        if ( iter->second.numTasksOldDW > 1 ){
+          if ( ivar->second.max_olddw_ghost > iter->second.max_olddw_ghost ){
+            iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
+          }
+          if ( ivar->second.min_olddw_ghost > iter->second.min_olddw_ghost ){
+            iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
+          }
+        } else {
+          iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
+          iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost; 
         }
         if ( iter->second.numTasksNewDW > 0 ){
           for (auto niter = ivar->second.taskNamesNewDW.begin();

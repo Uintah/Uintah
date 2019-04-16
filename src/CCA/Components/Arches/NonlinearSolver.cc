@@ -72,9 +72,9 @@ void NonlinearSolver::print_variable_max_ghost(){
       }
     }
     if ( i->second.numTasksOldDW > 0 ){
-      msg << "      Min OldDW Ghost: " << i->second.min_olddw_ghost << " Max OldDW Ghost: " << i->second.max_olddw_ghost <<
+      msg << "        Min OldDW Ghost: " << i->second.min_olddw_ghost << " Max OldDW Ghost: " << i->second.max_olddw_ghost <<
       " across " << i->second.numTasksOldDW << " tasks. " << std::endl;
-      msg << "      In the following tasks: " << std::endl;
+      msg << "        In the following tasks: " << std::endl;
       for (auto niter = i->second.taskNamesOldDW.begin();
          niter != i->second.taskNamesOldDW.end(); niter++ ){
            msg << "         " << *niter << std::endl;
