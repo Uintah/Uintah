@@ -47,7 +47,8 @@ namespace Uintah {
 
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP grid,
-                              LoadExtraGeometry loadExtraGeometry);
+                              LoadExtraGeometry loadExtraGeometry,
+                              LoadVariables     loadVariables);
 
 GridDataRaw* getGridData(SchedulerP schedulerP,
                          GridP gridP,

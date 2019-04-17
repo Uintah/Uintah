@@ -86,13 +86,13 @@ void UFromRhoU::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_in
   SFCXVariable<double>& u = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_u_vel_name);
   SFCYVariable<double>& v = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_v_vel_name);
   SFCZVariable<double>& w = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_w_vel_name);
-  
+
   u.copy(old_u);
   v.copy(old_v);
   w.copy(old_w);
 }
 //--------------------------------------------------------------------------------------------------
-void UFromRhoU::register_timestep_eval( VIVec& variable_registry, const int time_substep , 
+void UFromRhoU::register_timestep_eval( VIVec& variable_registry, const int time_substep ,
                                         const bool packed_tasks){
 
   typedef ArchesFieldContainer AFC;
@@ -134,18 +134,18 @@ void UFromRhoU::compute_velocities( const Patch* patch, ArchesTaskInfoManager* t
   IntVector cell_lo = patch->getCellLowIndex();
   IntVector cell_hi = patch->getCellHighIndex();
 
-  IntVector low_fx_patch_range = cell_lo; 
+  IntVector low_fx_patch_range = cell_lo;
   IntVector high_fx_patch_range = cell_hi;
-  
+
   GET_WALL_BUFFERED_PATCH_RANGE(low_fx_patch_range,high_fx_patch_range,0,1,-1,1,-1,1);
   Uintah::BlockRange x_range( low_fx_patch_range,high_fx_patch_range );
-  
+
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
     const double rho_face = (rho(i,j,k) + rho(i-1,j,k))/2.;
     const double eps_face = ( (eps(i,j,k) + eps(i-1,j,k))/2. < 1. ) ? 0. : 1.;
 
-    u(i,j,k) = (std::abs(rho_face > 0.) ) ? xmom(i,j,k) / rho_face * eps_face : 0.;
+    u(i,j,k) = std::abs(rho_face) > 0.  ? xmom(i,j,k) / rho_face * eps_face : 0.;
 
   });
 
@@ -161,9 +161,9 @@ void UFromRhoU::compute_velocities( const Patch* patch, ArchesTaskInfoManager* t
     });
   }
 
-  IntVector low_fy_patch_range = cell_lo; 
+  IntVector low_fy_patch_range = cell_lo;
   IntVector high_fy_patch_range = cell_hi;
-  
+
   GET_WALL_BUFFERED_PATCH_RANGE(low_fy_patch_range,high_fy_patch_range,-1,1,0,1,-1,1);
   Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
   Uintah::parallel_for( y_range, [&](int i, int j, int k){
@@ -171,7 +171,7 @@ void UFromRhoU::compute_velocities( const Patch* patch, ArchesTaskInfoManager* t
     const double rho_face = (rho(i,j,k) + rho(i,j-1,k))/2.;
     const double eps_face = ( (eps(i,j,k) + eps(i,j-1,k))/2. < 1. ) ? 0. : 1.;
 
-    v(i,j,k) = (std::abs(rho_face>0.)) ? ymom(i,j,k) / rho_face * eps_face : 0.;
+    v(i,j,k) = std::abs(rho_face) > 0. ? ymom(i,j,k) / rho_face * eps_face : 0.;
 
   });
 
@@ -187,18 +187,18 @@ void UFromRhoU::compute_velocities( const Patch* patch, ArchesTaskInfoManager* t
     });
   }
 
-  IntVector low_fz_patch_range = cell_lo; 
+  IntVector low_fz_patch_range = cell_lo;
   IntVector high_fz_patch_range = cell_hi;
-  
+
   GET_WALL_BUFFERED_PATCH_RANGE(low_fz_patch_range,high_fz_patch_range,-1,1,-1,1,0,1);
- 
+
   Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
   Uintah::parallel_for( z_range, [&](int i, int j, int k){
 
     const double rho_face = (rho(i,j,k) + rho(i,j,k-1))/2.;
     const double eps_face = ( (eps(i,j,k) + eps(i,j,k-1))/2. < 1. ) ? 0. : 1.;
 
-    w(i,j,k) = (std::abs(rho_face)>0) ? zmom(i,j,k) / rho_face * eps_face : 0.;
+    w(i,j,k) = std::abs(rho_face) > 0. ? zmom(i,j,k) / rho_face * eps_face : 0.;
 
   });
 

@@ -30,6 +30,7 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 //#include <Core/Grid/Task.h>
 #include <Core/Parallel/Parallel.h>
+#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 
 
 //--------------------------------------------------------------------------------------------------
@@ -53,6 +54,7 @@
 //--------------------------------------------------------------------------------------------------
 
 namespace Uintah {
+
 class ProcessorGroup;
 class ApplicationCommon;
 class ArchesBCHelper;
@@ -111,27 +113,78 @@ public:
   /** @brief Return the initial dt **/
   inline double get_initial_dt(){ return d_initial_dt; }
 
+  /** @brief Clear master ghost list **/
+  void clear_max_ghost_list(){
+    m_total_variable_ghost_info.clear();
+  }
+
   /** @brief Potentially insert a new variable to the max ghost list **/
-  void insert_max_ghost(const std::map<std::string, int>& the_map, const bool newdw ){
+  void insert_max_ghost(const std::map<std::string, TaskFactoryBase::GhostHelper>& the_map ){
 
     //Store max ghost information per variable across all possible tasks and factories
     for (auto ivar = the_map.begin(); ivar != the_map.end(); ivar++ ){
-      if ( newdw ){
-        auto iter = m_newdw_variable_max_ghost.find(ivar->first);
-        if ( iter == m_newdw_variable_max_ghost.end() ){
-          m_newdw_variable_max_ghost.insert(std::make_pair(ivar->first, ivar->second));
-        } else {
-          if ( iter->second < ivar->second ){
-            iter->second = ivar->second;
+
+      auto iter = m_total_variable_ghost_info.find(ivar->first);
+
+      if ( iter == m_total_variable_ghost_info.end() ){
+
+        m_total_variable_ghost_info.insert( std::make_pair(ivar->first, ivar->second));
+
+      } else {
+
+        const int old_newdw_num = iter->second.numTasksNewDW;
+        const int old_olddw_num = iter->second.numTasksOldDW;
+
+        iter->second.numTasksNewDW += ivar->second.numTasksNewDW;
+        iter->second.numTasksOldDW += ivar->second.numTasksOldDW;
+
+        const int newdw_diff = iter->second.numTasksNewDW - old_newdw_num;
+        const int olddw_diff = iter->second.numTasksOldDW - old_olddw_num;
+
+        if ( newdw_diff > 0 ){
+          //Its already in here...so check if the new instance has gt or lt ghosts:
+          if ( ivar->second.max_newdw_ghost > iter->second.max_newdw_ghost &&
+               ivar->second.numTasksNewDW > 0 ){
+            iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
+          }
+          if ( ivar->second.min_newdw_ghost < iter->second.min_newdw_ghost &&
+               ivar->second.numTasksNewDW > 0 ){
+            iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
+          }
+        } else if ( iter->second.numTasksNewDW == ivar->second.numTasksNewDW ){
+          //first time for this DW so just set the ghosts count to the new incoming record
+          if ( ivar->second.numTasksNewDW > 0 ){
+            iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
+            iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
           }
         }
-      } else {
-        auto iter = m_olddw_variable_max_ghost.find(ivar->first);
-        if ( iter == m_olddw_variable_max_ghost.end() ){
-          m_olddw_variable_max_ghost.insert(std::make_pair(ivar->first, ivar->second));
-        } else {
-          if ( iter->second < ivar->second ){
-            iter->second = ivar->second;
+        if ( olddw_diff > 0 ){
+          //Its already in here...so check if the new instance has gt or lt ghosts:
+          if ( ivar->second.max_olddw_ghost > iter->second.max_olddw_ghost &&
+               ivar->second.numTasksOldDW > 0 ){
+            iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
+          }
+          if ( ivar->second.min_olddw_ghost < iter->second.min_olddw_ghost &&
+               ivar->second.numTasksOldDW > 0 ){
+            iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
+          }
+        } else if ( iter->second.numTasksOldDW == ivar->second.numTasksOldDW ){
+          if ( ivar->second.numTasksOldDW > 0 ){
+            iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
+            iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
+          }
+        }
+        if ( iter->second.numTasksNewDW > 0 ){
+          //first time for this DW so just set the ghosts count to the new incoming record
+          for (auto niter = ivar->second.taskNamesNewDW.begin();
+                niter != ivar->second.taskNamesNewDW.end(); niter++ ){
+             iter->second.taskNamesNewDW.push_back(*niter);
+           }
+        }
+        if ( iter->second.numTasksOldDW > 0 ){
+          for (auto niter = ivar->second.taskNamesOldDW.begin();
+                niter != ivar->second.taskNamesOldDW.end(); niter++ ){
+            iter->second.taskNamesOldDW.push_back(*niter);
           }
         }
       }
@@ -139,18 +192,7 @@ public:
   }
 
   /** @brief Print ghost cell requirements for all variables in this task **/
-  void print_variable_max_ghost(){
-    proc0cout << " :: Reporting max ghost cells across all tasks :: " << std::endl;
-    proc0cout << " :: :: NewDW :: :: " << std::endl;
-    for ( auto i = m_newdw_variable_max_ghost.begin(); i != m_newdw_variable_max_ghost.end(); i++ ){
-      proc0cout << "     variable: " << i->first << " with max ghosts of " << i->second << std::endl;
-    }
-    proc0cout << " :: :: OldDW :: :: " << std::endl;
-    for ( auto i = m_olddw_variable_max_ghost.begin(); i != m_olddw_variable_max_ghost.end(); i++ ){
-      proc0cout << "     variable: " << i->first << " with max ghosts of " << i->second << std::endl;
-    }
-    proc0cout << " :: End report of max ghost cells for across all tasks :: " << std::endl;
-  }
+  void print_variable_max_ghost();
 
 protected:
 
@@ -162,8 +204,8 @@ protected:
    typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
    BCHelperMapT _bcHelperMap;
    ProblemSpecP m_arches_spec;
-   std::map <std::string, int> m_newdw_variable_max_ghost;
-   std::map <std::string, int> m_olddw_variable_max_ghost;
+
+   std::map <std::string, TaskFactoryBase::GhostHelper> m_total_variable_ghost_info;
 
 private:
 

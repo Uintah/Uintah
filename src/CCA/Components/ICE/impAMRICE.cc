@@ -349,8 +349,8 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
   const PatchSet * perprocPatches = m_loadBalancer->getPerProcessorPatchSet( grid );
 
   sched->addTask(t, perprocPatches, all_matls);
-  cout << d_myworld->myRank() << " proc_patches are " << *perprocPatches << "\n";
 
+  cout << d_myworld->myRank() << " proc_patches are " << *perprocPatches << "\n";
 }
 /*___________________________________________________________________ 
  Function~  impAMRICE::multiLevelPressureSolve-- 

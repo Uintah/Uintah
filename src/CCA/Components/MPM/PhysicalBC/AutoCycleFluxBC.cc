@@ -148,13 +148,11 @@ void AutoCycleFluxBC::scheduleApplyExternalScalarFlux(SchedulerP& sched, const P
   t->requires(Task::OldDW, d_mpm_lb->simulationTimeLabel);
 
   t->requires(Task::OldDW, d_mpm_lb->pXLabel,                 Ghost::None);
-  t->requires(Task::OldDW, d_mpm_lb->pSizeLabel,              Ghost::None);
   if(d_mpm_flags->d_doScalarDiffusion){
     // JBH -- Fixme -- TODO -- Fold into diffusion sublabel?
     t->requires(Task::OldDW, d_mpm_lb->diffusion->pArea,            Ghost::None);
   }
   t->requires(Task::OldDW, d_mpm_lb->pVolumeLabel,            Ghost::None);
-  t->requires(Task::OldDW, d_mpm_lb->pDeformationMeasureLabel,Ghost::None);
   if(d_mpm_flags->d_autoCycleUseMinMax){
     t->requires(Task::OldDW, d_mpm_lb->diffusion->rMaxConcentration,    gnone);
     t->requires(Task::OldDW, d_mpm_lb->diffusion->rMinConcentration,    gnone);
@@ -261,8 +259,6 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
       constParticleVariable<Point>   px;
       constParticleVariable<Vector>  parea;
       constParticleVariable<double>  pvol;
-      constParticleVariable<Matrix3> psize;
-      constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<double> pExternalScalarFlux;
       ParticleVariable<double> pExternalScalarFlux_pR;
       ParticleVariable<double> pAvgConc;
@@ -273,8 +269,6 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
         old_dw->get(parea, d_mpm_lb->diffusion->pArea, pset);
       }
       old_dw->get(pvol,  d_mpm_lb->pVolumeLabel, pset);
-      old_dw->get(psize, d_mpm_lb->pSizeLabel, pset);
-      old_dw->get(pDeformationMeasure, d_mpm_lb->pDeformationMeasureLabel, pset);
       // JBH -- FIXME -- Why are we doing this if we're not doing scalar diffusion in the first place (see above fixme)
       new_dw->allocateAndPut(pExternalScalarFlux,
                                        d_mpm_lb->diffusion->pExternalScalarFlux_preReloc,  pset);

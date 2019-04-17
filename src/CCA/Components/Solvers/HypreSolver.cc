@@ -1330,8 +1330,10 @@ namespace Uintah {
 
     task->setType(Task::Hypre);
 
-    task->computes( VarLabel::find(abortTimeStep_name) );
-    task->computes( VarLabel::find(recomputeTimeStep_name) );
+    if( m_params->getRecomputeTimeStepOnFailure() ){
+      task->computes( VarLabel::find(abortTimeStep_name) );
+      task->computes( VarLabel::find(recomputeTimeStep_name) );
+    }
     
     LoadBalancer * lb = sched->getLoadBalancer();
 

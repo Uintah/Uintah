@@ -149,7 +149,9 @@
    <DataArchiver>
       <filebase>performanceTest.uda</filebase>
       <outputTimestepInterval>0</outputTimestepInterval>
+<!--
       <checkpoint cycle = "2" interval = "0.1"/>
+-->
    </DataArchiver>
 
     <!--____________________________________________________________________-->

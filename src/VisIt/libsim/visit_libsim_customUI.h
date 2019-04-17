@@ -26,28 +26,28 @@
 #define UINTAH_VISIT_LIBSIM_CUSTOMUI_H
 
 /**************************************
-        
+
 CLASS
    visit_init
-        
+
    Short description...
-        
+
 GENERAL INFORMATION
-        
+
    visit_init
-        
+
    Allen R. Sanderson
    Scientific Computing and Imaging Institute
    University of Utah
-        
+
 KEYWORDS
    VisIt, libsim, in-situ
-        
+
 DESCRIPTION
    Long description...
-        
+
 WARNING
-        
+
 
 ****************************************/
 
@@ -78,6 +78,7 @@ namespace Uintah {
   void visit_SetDouts             ( visit_simulation_data *sim );
   
   void visit_SetDatabase          ( visit_simulation_data *sim );
+  void visit_SetVariables         ( visit_simulation_data *sim );
 
   void visit_SetStripChartValue   ( visit_simulation_data *sim,
                                     std::string name,

@@ -98,11 +98,9 @@ WARNING
     virtual Regridder *getRegridder() { return m_regridder; }
     virtual Output    *getOutput()    { return m_output; }
 
-    virtual void setReductionVariables( UintahParallelComponent *comp );
-    virtual void resetReductionVariables();
-    
     // Top level problem set up called by sus.
     virtual void problemSetup( const ProblemSpecP &prob_spec );
+    virtual void problemSetupDeltaT( const ProblemSpecP &prob_spec );
     
     // Top level problem set up called by simulation controller.
     virtual void problemSetup( const ProblemSpecP     & params,
@@ -281,11 +279,11 @@ WARNING
     {
       m_appReductionVars[name] = new ApplicationReductionVariable( name, varType, varActive );
     }
-    
+
     virtual void activateReductionVariable(std::string name, bool val) { m_appReductionVars[name]->setActive( val ); }
-    virtual bool activeReductionVariable(std::string name) {
+    virtual bool activeReductionVariable(std::string name) const {
       if( m_appReductionVars.find(name) != m_appReductionVars.end() )
-          return m_appReductionVars[name]->getActive();
+	return m_appReductionVars.find(name)->second->getActive();
       else
         return false;
     }
@@ -407,9 +405,6 @@ WARNING
     virtual void   setWallTimeMax( double val ) { m_wallTimeMax = val; }
     virtual double getWallTimeMax() const { return m_wallTimeMax; }
 
-    virtual void     outputIfInvalidNextDelT( ValidateFlag flag );
-    virtual void checkpointIfInvalidNextDelT( ValidateFlag flag );
-
   private:
     // The classes are private because only the top level application
     // should be changing them. This only really matters when there are
@@ -417,10 +412,17 @@ WARNING
     // applications will not have valid values. They should ALWAYS get
     // the values via the data warehouse.
     
+    // Flag for outputting or checkpointing if the next delta is invalid
+    virtual void         setOutputIfInvalidNextDelT( ValidateFlag flag ) { m_outputIfInvalidNextDelTFlag = flag; }
+    virtual ValidateFlag getOutputIfInvalidNextDelT() const { return m_outputIfInvalidNextDelTFlag; }
+
+    virtual void         setCheckpointIfInvalidNextDelT( ValidateFlag flag ) { m_checkpointIfInvalidNextDelTFlag = flag; }
+    virtual ValidateFlag getCheckpointIfInvalidNextDelT() const { return m_checkpointIfInvalidNextDelTFlag; }
+
     //////////
     virtual void   setDelT( double delT ) { m_delT = delT; }
     virtual double getDelT() const { return m_delT; }
-    virtual void   setDelTForAllLevels( SchedulerP& scheduler,
+    virtual void   setDelTForAllLevels(       SchedulerP& scheduler,
                                         const GridP & grid,
                                         const int totalFine );
 

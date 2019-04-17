@@ -258,9 +258,6 @@ void DDT1::problemSetup(GridP&,
       DS_ps->require("newOutputInterval",     d_adj_IO_Det->output_interval );  
       DS_ps->require("newCheckPointInterval", d_adj_IO_Det->chkPt_interval );
     }
-
-    m_application->activateReductionVariable(     outputInterval_name, d_adj_IO_Press->onOff || d_adj_IO_Det->onOff );
-    m_application->activateReductionVariable( checkpointInterval_name, d_adj_IO_Press->onOff || d_adj_IO_Det->onOff );
   }
     
   /* initialize constants */
@@ -626,7 +623,6 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   } 
   
   sched->addTask(t1, level->eachPatch(), d_mymatls);    
-    
     
   //__________________________________
   //

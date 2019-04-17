@@ -65,12 +65,11 @@ cpdiInterpolator* cpdiInterpolator::clone(const Patch* patch)
 int cpdiInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
-                                            const Matrix3& size,
-                                            const Matrix3& defgrad)
+                                            const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
-  Matrix3 dsize=defgrad*size;
+  Matrix3 dsize=size;
   Vector relative_node_location[8];
 
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
@@ -242,12 +241,11 @@ int cpdiInterpolator::findCellAndWeights(const Point& pos,
 int cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                    vector<IntVector>& ni,
                                                    vector<Vector>& d_S,
-                                                   const Matrix3& size,
-                                                   const Matrix3& defgrad)
+                                                   const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
-  Matrix3 dsize=defgrad*size;
+  Matrix3 dsize=size;
   Vector relative_node_location[8];
 
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
@@ -472,12 +470,11 @@ int cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                          vector<IntVector>& ni,
                                                          vector<double>& S,
                                                          vector<Vector>& d_S,
-                                                         const Matrix3& size,
-                                                         const Matrix3& defgrad)
+                                                         const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
-  Matrix3 dsize=defgrad*size;
+  Matrix3 dsize=size;
   Vector relative_node_location[8];
 
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),

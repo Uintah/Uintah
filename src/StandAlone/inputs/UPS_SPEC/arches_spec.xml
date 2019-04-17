@@ -113,6 +113,7 @@
                                                                           sootVolumeFrac,
                                                                           gasRadProperties,
                                                                           partRadProperties,
+                                                                          interpolation_var,
                                                                           CO,
                                                                           spectralProperties,
                                                                           constant_scalar_diffusion_coef,
@@ -316,6 +317,20 @@
                                         need_applies_to= "type constant_scalar_diffusion_coef"  />
           <D_mol                        spec="REQUIRED DOUBLE"
                                         need_applies_to= "type constant_scalar_diffusion_coef"  />
+
+          <!-- Variable grid interpolator -->
+          <variable                     spec="REQUIRED NO_DATA" 
+                                        attribute1="type REQUIRED STRING 'CC, FX, FY, FZ'"
+                                        attribute2="label REQUIRED STRING"
+                                        need_applies_to="type interpolation_var"/> <!-- variable to use for the interpolation with its grid type -->
+          <new_variable                 spec="REQUIRED NO_DATA" 
+                                        attribute1="type REQUIRED STRING 'CC, FX, FY, FZ'"
+                                        attribute2="label REQUIRED STRING"
+                                        need_applies_to="type interpolation_var"/> <!-- the new variable resulting from the interpolant with the new grid type -->
+          <interpolation                spec="REQUIRED NO_DATA"
+                                        attribute1="scheme REQUIRED STRING 'second, fourth'"
+                                        need_applies_to="type interpolation_var"/> <!-- order of the interpolant -->
+
         </model>
       </PropertyModelsV2>
 

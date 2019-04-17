@@ -67,12 +67,11 @@ fastCpdiInterpolator* fastCpdiInterpolator::clone(const Patch* patch)
 int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
-                                            const Matrix3& size,
-                                            const Matrix3& defgrad)
+                                            const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
-  Matrix3 dsize=defgrad*size;
+  Matrix3 dsize=size;
   Vector relative_node_location[8];
 
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
@@ -224,7 +223,7 @@ int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
   if(maxX-minX>1 || maxY-minY>1 || maxZ-minZ>1){
     ParticleInterpolator* interp;
     interp = scinew cpdiInterpolator(d_patch,d_lcrit);
-    int NN = interp->findCellAndWeights(pos, ni, S, size, defgrad);
+    int NN = interp->findCellAndWeights(pos, ni, S, size);
     delete interp;
     return NN;
   } else {
@@ -301,13 +300,12 @@ int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
 int fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                      vector<IntVector>& ni,
                                                      vector<Vector>& d_S,
-                                                     const Matrix3& size,
-                                                     const Matrix3& defgrad)
+                                                     const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
   Vector zero = Vector(0.0,0.0,0.0);
-  Matrix3 dsize=defgrad*size;
+  Matrix3 dsize=size;
   Vector relative_node_location[8];
 
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
@@ -439,7 +437,7 @@ int fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   if(maxX-minX>1 || maxY-minY>1 || maxZ-minZ>1){
     ParticleInterpolator* interp;
     interp = scinew cpdiInterpolator(d_patch,d_lcrit);
-    int NN = interp->findCellAndShapeDerivatives(pos, ni, d_S, size, defgrad);
+    int NN = interp->findCellAndShapeDerivatives(pos, ni, d_S, size);
     delete interp;
     return NN;
   } else {
@@ -571,13 +569,12 @@ fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                          vector<IntVector>& ni,
                                                          vector<double>& S,
                                                          vector<Vector>& d_S,
-                                                         const Matrix3& size,
-                                                         const Matrix3& defgrad)
+                                                         const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
   Vector zero = Vector(0.0,0.0,0.0);
-  Matrix3 dsize=defgrad*size;
+  Matrix3 dsize=size;
   Vector relative_node_location[8];
 
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
@@ -715,8 +712,7 @@ fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   if(maxX-minX>1 || maxY-minY>1 || maxZ-minZ>1){
     ParticleInterpolator* interp;
     interp = scinew cpdiInterpolator(d_patch,d_lcrit);
-    int NN = interp->findCellAndWeightsAndShapeDerivatives(pos, ni, S, d_S, 
-                                                           size, defgrad);
+    int NN = interp->findCellAndWeightsAndShapeDerivatives(pos,ni,S,d_S,size);
     delete interp;
     return NN;
   } else {

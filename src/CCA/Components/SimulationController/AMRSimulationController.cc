@@ -630,7 +630,7 @@ AMRSimulationController::doInitialTimeStep()
   // ARS - FIX ME - SCHEDULE INSTEAD
   ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, true );
   
-  CheckInSitu(  nullptr, nullptr, nullptr, nullptr, nullptr, true );
+  CheckInSitu( nullptr, nullptr, nullptr, nullptr, nullptr, true );
   
 } // end doInitialTimeStep()
 
@@ -659,6 +659,18 @@ AMRSimulationController::executeTimeStep( int totalFine )
     if (m_scrub_datawarehouse && m_loadBalancer->getNthRank() == 1) {
       if (m_application->activeReductionVariable( recomputeTimeStep_name )) {
         m_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+
+        static bool reported = false;
+
+        if( !reported )
+          
+          proc0cout << "The ability to recompute a time step is turned on. "
+            "This will affect the data warehouse scrubbing for all time steps "
+            "regardless if a time step is recomputed or not. "
+            "There may be a memory increase."
+                    << std::endl;
+
+        reported = true;
       }
       else {
         m_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
@@ -706,8 +718,16 @@ AMRSimulationController::executeTimeStep( int totalFine )
       success = false;
     }
     else if (m_application->getReductionVariable( abortTimeStep_name ) ) {
-      proc0cout << "Time step aborted and cannot recompute it. "
+      proc0cout << "Time step aborted and cannot recompute it, "
+                // << "outputing and checkpointing the time step. "
                 << "Ending the simulation." << std::endl;
+
+      m_application->setReductionVariable( m_scheduler->getLastDW(),
+                                           abortTimeStep_name, true );
+
+      // This should be a for the previous time step.
+      // m_output->setOutputTimeStep( true, m_current_gridP );
+      // m_output->setCheckpointTimeStep( true, m_current_gridP );
       
       success = true;
     }

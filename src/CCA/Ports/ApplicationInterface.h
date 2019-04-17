@@ -132,10 +132,9 @@ WARNING
     virtual Regridder *getRegridder() = 0;
     virtual Output    *getOutput()    = 0;
     
-    virtual void setReductionVariables( UintahParallelComponent *comp ) = 0;
-
     // Top level problem set up called by sus.
     virtual void problemSetup( const ProblemSpecP &prob_spec ) = 0;
+    virtual void problemSetupDeltaT( const ProblemSpecP &prob_spec ) = 0;
     
     // Top level problem set up called by simulation controller.
     virtual void problemSetup( const ProblemSpecP     & params,
@@ -278,7 +277,7 @@ WARNING
                                        bool varActive = false ) = 0;
     virtual unsigned int numReductionVariable() const = 0;
     virtual void activateReductionVariable(std::string name, bool val) = 0;
-    virtual bool activeReductionVariable(std::string name) = 0;
+    virtual bool activeReductionVariable(std::string name) const = 0;
     virtual bool isBenignReductionVariable( std::string name ) = 0;
     virtual void setReductionVariable(DataWarehouse* new_dw, std::string name,   bool val) = 0;
     virtual void setReductionVariable(DataWarehouse* new_dw, std::string name, double val) = 0;
@@ -344,17 +343,21 @@ WARNING
     virtual void   setWallTimeMax( double val ) = 0;
     virtual double getWallTimeMax() const = 0;
 
-    virtual void     outputIfInvalidNextDelT( ValidateFlag flag ) = 0;
-    virtual void checkpointIfInvalidNextDelT( ValidateFlag flag ) = 0;
-    
     // The member methods are private as the child application should
     // ONLY get/set these values via the data warehouse.
   private:
 
+    // Flag for outputting or checkpointing if the next delta is invalid
+    virtual void         setOutputIfInvalidNextDelT( ValidateFlag flag ) = 0;
+    virtual ValidateFlag getOutputIfInvalidNextDelT() const = 0;
+
+    virtual void         setCheckpointIfInvalidNextDelT( ValidateFlag flag ) = 0;
+    virtual ValidateFlag getCheckpointIfInvalidNextDelT() const = 0;
+
     // Delta T methods
     virtual   void setDelT( double delT ) = 0;
     virtual double getDelT() const = 0;
-    virtual   void setDelTForAllLevels( SchedulerP& scheduler,
+    virtual   void setDelTForAllLevels(       SchedulerP& scheduler,
                                         const GridP & grid,
                                         const int totalFine ) = 0;
 

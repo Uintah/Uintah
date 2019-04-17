@@ -1079,4 +1079,13 @@ void visit_SetDatabase( visit_simulation_data *sim )
   VisItUI_setValueI("LoadExtraGeometry", sim->loadExtraGeometry, 1);
 }
 
+//---------------------------------------------------------------------
+// SetVaraibles
+//    Set the variable loading behavior so they can be displayed in the Custon UI
+//---------------------------------------------------------------------
+void visit_SetVariables( visit_simulation_data *sim )
+{
+  VisItUI_setValueI("LoadVariables", sim->loadVariables, 1);
+}
+
 } // End namespace Uintah

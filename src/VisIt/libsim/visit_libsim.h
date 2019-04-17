@@ -91,6 +91,7 @@ typedef struct visit_simulation_data
 
   // UDA archive variables.
   LoadExtraGeometry loadExtraGeometry {NO_EXTRA_GEOMETRY};
+  LoadVariables     loadVariables     {LOAD_ALL_VARIABLES};
   bool forceMeshReload {true};
   std::string mesh_for_patch_data;
   

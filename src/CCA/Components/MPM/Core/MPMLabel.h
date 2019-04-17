@@ -108,6 +108,7 @@ namespace Uintah {
       const VarLabel* pParticleIDLabel_preReloc;
       const VarLabel* pSizeLabel;
       const VarLabel* pSizeLabel_preReloc;
+      const VarLabel* pCurSizeLabel;
       const VarLabel* pLocalizedMPMLabel;
       const VarLabel* pLocalizedMPMLabel_preReloc;
       const VarLabel* pRefinedLabel;

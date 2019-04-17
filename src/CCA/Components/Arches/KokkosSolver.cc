@@ -473,13 +473,16 @@ KokkosSolver::sched_initialize( const LevelP& level,
   //  TaskInterface::INITIALIZE, level, sched, matls, 0, true, true );
   //m_task_factory_map["property_models_factory"]->schedule_task( "compute_cc_velocities",
   // TaskInterface::INITIALIZE, level, sched, matls, 0, true, true );
-  
+
   for (auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
-    std::map<std::string, int> the_newdw_map = i->second->get_max_ghost_info(true);
-    std::map<std::string, int> the_olddw_map = i->second->get_max_ghost_info(false);
-    insert_max_ghost( the_newdw_map, true );
-    insert_max_ghost( the_olddw_map, false );
+    std::map<std::string, TaskFactoryBase::GhostHelper>& the_ghost_info = i->second->get_max_ghost_info();
+    insert_max_ghost( the_ghost_info );
+    //SCI_DEBUG for printing information per task.
+    i->second->print_variable_max_ghost();
   }
+
+  //SCI_DEBUG for printing across ALL tasks.
+  print_variable_max_ghost();
 
 }
 
@@ -500,6 +503,13 @@ KokkosSolver::sched_nonlinearSolve( const LevelP & level,
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
   BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
   BFM::iterator i_particle_model_fac = m_task_factory_map.find("particle_model_factory");
+
+  //clear the factory ghost lists from information inserted from scheduleInitialize
+  for ( auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
+    (*i->second).clear_max_ghost_list();
+  }
+  //also clear the master ghost list
+  clear_max_ghost_list();
 
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
 
@@ -549,13 +559,14 @@ KokkosSolver::sched_nonlinearSolve( const LevelP & level,
   }
 
   for (auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
-    std::map<std::string, int> the_newdw_map = i->second->get_max_ghost_info(true);
-    std::map<std::string, int> the_olddw_map = i->second->get_max_ghost_info(false);
-    insert_max_ghost( the_newdw_map, true );
-    insert_max_ghost( the_olddw_map, false );
+    std::map<std::string, TaskFactoryBase::GhostHelper>& the_ghost_info = i->second->get_max_ghost_info();
+    insert_max_ghost( the_ghost_info );
+    //SCI_DEBUG for printing across tasks per factory
+    i->second->print_variable_max_ghost();
   }
 
-  //print_variable_max_ghost();
+  //SCI_DEBUG for printing across all tasks
+  print_variable_max_ghost();
 
   return 0;
 

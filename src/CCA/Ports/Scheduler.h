@@ -26,6 +26,8 @@
 #define CCA_PORTS_SCHEDULER_H
 
 #include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
 
 #include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
@@ -94,8 +96,9 @@ class Scheduler : public UintahParallelPort {
     virtual void getComponents() = 0;
     virtual void releaseComponents() = 0;
 
-    // TEMPORARY
     virtual ApplicationInterface *getApplication() = 0;
+    virtual LoadBalancer * getLoadBalancer() = 0;
+    virtual Output       * getOutput() = 0;
   
     virtual void problemSetup( const ProblemSpecP     & prob_spec
                                                , const MaterialManagerP & materialManager
@@ -148,8 +151,6 @@ class Scheduler : public UintahParallelPort {
 
     virtual const std::set<std::string>&                        getNotCheckPointVars() const = 0;    
 
-    virtual LoadBalancer * getLoadBalancer() = 0;
-
     virtual DataWarehouse* get_dw( int idx ) = 0;
 
     virtual DataWarehouse* getLastDW() = 0;
@@ -165,8 +166,6 @@ class Scheduler : public UintahParallelPort {
     virtual void fillDataWarehouses( const GridP& grid) = 0;
 
     virtual void replaceDataWarehouse( int index, const GridP & grid, bool initialization = false ) = 0;
-
-    virtual bool isRestartInitTimestep() = 0;
 
 //        protected:
 
@@ -252,6 +251,7 @@ class Scheduler : public UintahParallelPort {
     virtual void setInitTimestep( bool ) = 0;
 
     virtual void setRestartInitTimestep( bool ) = 0;
+    virtual bool isRestartInitTimestep() const  = 0;
 
     virtual void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) = 0;
 

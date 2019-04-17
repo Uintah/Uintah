@@ -163,7 +163,7 @@ void VarInterpolation<T,IT>::register_timestep_eval(
   variable_registry, const int time_substep , const bool packed_tasks)
 {
 
-  register_variable( m_inter_var_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
+  register_variable( m_inter_var_name, ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
   register_variable( m_var_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
 }

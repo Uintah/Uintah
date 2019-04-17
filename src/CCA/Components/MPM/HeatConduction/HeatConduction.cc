@@ -81,11 +81,10 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::OldDW, d_lb->pXLabel,                         gan, NGP);
-  t->requires(Task::OldDW, d_lb->pSizeLabel,                      gan, NGP);
+  t->requires(Task::NewDW, d_lb->pCurSizeLabel,                   gan, NGP);
   t->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
   t->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
   t->requires(Task::OldDW, d_lb->pTemperatureGradientLabel,       gan, NGP);
-  t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
   t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
   t->computes(d_lb->gdTdtLabel);
 
@@ -112,8 +111,7 @@ void HeatConduction::scheduleComputeNodalHeatFlux(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::OldDW, d_lb->pXLabel,             gan, NGP);
-  t->requires(Task::OldDW, d_lb->pSizeLabel,          gan, NGP);
-  t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, gan, NGP);
+  t->requires(Task::NewDW, d_lb->pCurSizeLabel,       gan, NGP);
   t->requires(Task::OldDW, d_lb->pMassLabel,          gan, NGP);
   t->requires(Task::NewDW, d_lb->gTemperatureLabel,   gac, 2*NGP);
   t->requires(Task::NewDW, d_lb->gMassLabel,          gnone);
@@ -220,8 +218,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
       old_dw->get(px,           d_lb->pXLabel,                         pset);
       old_dw->get(pvol,         d_lb->pVolumeLabel,                    pset);
-      old_dw->get(psize,        d_lb->pSizeLabel,                      pset);
-      old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+      new_dw->get(psize,        d_lb->pCurSizeLabel,                   pset);
       old_dw->get(pTempGrad,    d_lb->pTemperatureGradientLabel,       pset);
       new_dw->get(gMass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
       new_dw->allocateAndPut(gdTdt, d_lb->gdTdtLabel,    dwi, patch);
@@ -236,7 +233,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
   
         // Get the node indices that surround the cell
         int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                          psize[idx], deformationGradient[idx]);
+                                                           psize[idx]);
 
         // Calculate k/(rho*Cv)
         double alpha = kappa*pvol[idx]/Cv; 
@@ -320,8 +317,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
       new_dw->get(gMass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
       old_dw->get(px,           d_lb->pXLabel,           pset);
       old_dw->get(pMass,        d_lb->pMassLabel,        pset);
-      old_dw->get(psize,        d_lb->pSizeLabel,        pset);
-      old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+      new_dw->get(psize,        d_lb->pCurSizeLabel,     pset);
       
       new_dw->allocateAndPut(gHeatFlux, d_lb->gHeatFluxLabel,  dwi, patch);  
       gHeatFlux.initialize(Vector(0.0));
@@ -343,7 +339,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         pdTdx[idx] = Vector(0,0,0);
         
         int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                           psize[idx],deformationGradient[idx]);
+                                                           psize[idx]);
 
         for (int k = 0; k < NN; k++){
           for (int j = 0; j<3; j++) {
@@ -358,8 +354,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
-                                         deformationGradient[idx]);
+        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
                                                             
         Vector pdTdx_massWt = pdTdx[idx] * pMass[idx];
         
