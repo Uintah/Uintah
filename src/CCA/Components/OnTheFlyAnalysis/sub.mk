@@ -37,6 +37,7 @@ SRCS += \
         $(SRCDIR)/AnalysisModule.cc          \
         $(SRCDIR)/1stLawThermo.cc            \
         $(SRCDIR)/containerExtract.cc        \
+        $(SRCDIR)/findFragments.cc           \
         $(SRCDIR)/flatPlate_heatFlux.cc      \
         $(SRCDIR)/lineExtract.cc             \
         $(SRCDIR)/MinMax.cc                  \
