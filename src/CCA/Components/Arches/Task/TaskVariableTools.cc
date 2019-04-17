@@ -163,6 +163,8 @@ namespace Uintah {
 
       ArchesFieldContainer::VariableInformation info;
 
+      //nGhost = 2; //HARD CODED FIX GHOST CELL
+
       info.name   = name;
       info.depend = dep;
       info.dw     = dw;
@@ -225,7 +227,9 @@ namespace Uintah {
 
       info.ghost_type = Ghost::None;
 
-      if ( dep == ArchesFieldContainer::REQUIRES || dep == ArchesFieldContainer::COMPUTESCRATCHGHOST ) {
+      // if ( dep == ArchesFieldContainer::REQUIRES || dep == ArchesFieldContainer::COMPUTESCRATCHGHOST ||
+      //      dep == ArchesFieldContainer::MODIFIES || dep == ArchesFieldContainer::COMPUTES ) {
+      if ( dep == ArchesFieldContainer::REQUIRES || dep == ArchesFieldContainer::COMPUTESCRATCHGHOST){
 
         if ( nGhost > 0 ){
           if ( type_desc == CCVariable<int>::getTypeDescription() ) {

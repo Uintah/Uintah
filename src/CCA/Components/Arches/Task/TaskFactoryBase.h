@@ -215,10 +215,10 @@ namespace Uintah{
       int numTasksOldDW{0};
       std::vector<std::string> taskNamesOldDW{};
       std::vector<std::string> taskNamesNewDW{};
-      int max_newdw_ghost{0};
-      int max_olddw_ghost{0};
-      int min_newdw_ghost{0};
-      int min_olddw_ghost{0};
+      int max_newdw_ghost{-99};
+      int max_olddw_ghost{-99};
+      int min_newdw_ghost{99};
+      int min_olddw_ghost{99};
     };
 
     /** @brief Clean out the list of max ghost cells **/
@@ -289,28 +289,14 @@ namespace Uintah{
           }
         }
       }
-
     }
 
     /** @brief Print ghost cell requirements for all variables in this task **/
-    void print_variable_max_ghost(){
-      proc0cout << " :: Reporting max ghost cells for Factory " << _factory_name << " :: " << std::endl;
-      for ( auto i = m_variable_ghost_info.begin(); i != m_variable_ghost_info.end(); i++ ){
-
-        proc0cout << "   Variable: " << i->first << std::endl;
-        proc0cout << "      Min NewDW Ghost: " << i->second.min_newdw_ghost << " Max NewDW Ghost: " << i->second.max_newdw_ghost << std::endl;
-        proc0cout << "      Min OldDW Ghost: " << i->second.min_olddw_ghost << " Max OldDW Ghost: " << i->second.max_olddw_ghost << std::endl;
-        proc0cout << "      Num. Tasks in with newDW requirements: " << i->second.numTasksNewDW << std::endl;
-        proc0cout << "      Num. Tasks in with oldDW requirements: " << i->second.numTasksOldDW << std::endl;
-
-      }
-      proc0cout << " :: End report of max ghost cells for Factory " << _factory_name << " :: " << std::endl;
-    }
-
     /** @brief Get the ghost cell information **/
     std::map<std::string, GhostHelper>& get_max_ghost_info(){
       return m_variable_ghost_info;
     }
+    void print_variable_max_ghost();
 
   protected:
 

@@ -113,6 +113,11 @@ public:
   /** @brief Return the initial dt **/
   inline double get_initial_dt(){ return d_initial_dt; }
 
+  /** @brief Clear master ghost list **/
+  void clear_max_ghost_list(){
+    m_total_variable_ghost_info.clear();
+  }
+
   /** @brief Potentially insert a new variable to the max ghost list **/
   void insert_max_ghost(const std::map<std::string, TaskFactoryBase::GhostHelper>& the_map ){
 
@@ -122,33 +127,55 @@ public:
       auto iter = m_total_variable_ghost_info.find(ivar->first);
 
       if ( iter == m_total_variable_ghost_info.end() ){
+
         m_total_variable_ghost_info.insert( std::make_pair(ivar->first, ivar->second));
+
       } else {
+
+        const int old_newdw_num = iter->second.numTasksNewDW;
+        const int old_olddw_num = iter->second.numTasksOldDW;
+
         iter->second.numTasksNewDW += ivar->second.numTasksNewDW;
         iter->second.numTasksOldDW += ivar->second.numTasksOldDW;
-        if ( iter->second.numTasksNewDW > 1 ){
-          if ( ivar->second.max_newdw_ghost > iter->second.max_newdw_ghost ){
+
+        const int newdw_diff = iter->second.numTasksNewDW - old_newdw_num;
+        const int olddw_diff = iter->second.numTasksOldDW - old_olddw_num;
+
+        if ( newdw_diff > 0 ){
+          //Its already in here...so check if the new instance has gt or lt ghosts:
+          if ( ivar->second.max_newdw_ghost > iter->second.max_newdw_ghost &&
+               ivar->second.numTasksNewDW > 0 ){
             iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
           }
-          if ( ivar->second.min_newdw_ghost < iter->second.min_newdw_ghost ){
+          if ( ivar->second.min_newdw_ghost < iter->second.min_newdw_ghost &&
+               ivar->second.numTasksNewDW > 0 ){
             iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
           }
-        } else {
-          iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
-          iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
+        } else if ( iter->second.numTasksNewDW == ivar->second.numTasksNewDW ){
+          //first time for this DW so just set the ghosts count to the new incoming record
+          if ( ivar->second.numTasksNewDW > 0 ){
+            iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
+            iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
+          }
         }
-        if ( iter->second.numTasksOldDW > 1 ){
-          if ( ivar->second.max_olddw_ghost > iter->second.max_olddw_ghost ){
+        if ( olddw_diff > 0 ){
+          //Its already in here...so check if the new instance has gt or lt ghosts:
+          if ( ivar->second.max_olddw_ghost > iter->second.max_olddw_ghost &&
+               ivar->second.numTasksOldDW > 0 ){
             iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
           }
-          if ( ivar->second.min_olddw_ghost > iter->second.min_olddw_ghost ){
+          if ( ivar->second.min_olddw_ghost < iter->second.min_olddw_ghost &&
+               ivar->second.numTasksOldDW > 0 ){
             iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
           }
-        } else {
-          iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
-          iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost; 
+        } else if ( iter->second.numTasksOldDW == ivar->second.numTasksOldDW ){
+          if ( ivar->second.numTasksOldDW > 0 ){
+            iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
+            iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
+          }
         }
         if ( iter->second.numTasksNewDW > 0 ){
+          //first time for this DW so just set the ghosts count to the new incoming record
           for (auto niter = ivar->second.taskNamesNewDW.begin();
                 niter != ivar->second.taskNamesNewDW.end(); niter++ ){
              iter->second.taskNamesNewDW.push_back(*niter);
@@ -160,7 +187,6 @@ public:
             iter->second.taskNamesOldDW.push_back(*niter);
           }
         }
-
       }
     }
   }
