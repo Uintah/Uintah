@@ -291,15 +291,13 @@ TransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patches,
         computeDeformationGradientFromTotalDisplacement(gdisplacement,
                                                         pset, px,
                                                         deformationGradient_new,
-                                                        deformationGradient,
                                                         dx, psize,interpolator);
       }
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, 
-                                       psize[idx],deformationGradient[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, psize[idx]);
         int dof[24];
         loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
 
@@ -881,7 +879,6 @@ TransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patches,
         computeDeformationGradientFromTotalDisplacement(gdisplacement,
                                                         pset, px,
                                                         deformationGradient_new,
-                                                        deformationGradient,
                                                         dx, psize,interpolator);
      }
      for(ParticleSubset::iterator iter = pset->begin();

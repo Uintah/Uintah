@@ -72,7 +72,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _materialManager );
         register_task( name, tsk );
 
-      } else if ( type == "Interpolation_var" ){
+      } else if ( type == "interpolation_var" ){
 
         std::string grid_type="NA";
         std::string grid_type2="NA";
@@ -128,6 +128,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         register_task( name, tsk );
         _pre_update_property_tasks.push_back( name );
+
       } else if ( type == "constant_scalar_diffusion_coef" ){
 
         TaskInterface::TaskBuilder* tsk = scinew ConsScalarDiffusion::Builder(name, 0);
@@ -210,7 +211,6 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         _pre_table_post_iv_update.push_back(name);
         //_finalize_property_tasks.push_back( name );
         check_for_radiation=true;
-
 
       } else if ( type == "constant_property"){
 
@@ -406,7 +406,6 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
     register_task("compute_cc_velocities", cc_u );
 
   }
-
 }
 
 void

@@ -150,12 +150,10 @@ void FluxBCModel::scheduleApplyExternalScalarFlux(SchedulerP& sched, const Patch
   t->requires(Task::OldDW, d_mpm_lb->simulationTimeLabel);
 
   t->requires(Task::OldDW, d_mpm_lb->pXLabel,                 Ghost::None);
-  t->requires(Task::OldDW, d_mpm_lb->pSizeLabel,              Ghost::None);
   if(d_mpm_flags->d_doScalarDiffusion){
     t->requires(Task::OldDW, d_mpm_lb->diffusion->pArea,                Ghost::None);
   }
   t->requires(Task::OldDW, d_mpm_lb->pVolumeLabel,            Ghost::None);
-  t->requires(Task::OldDW, d_mpm_lb->pDeformationMeasureLabel,Ghost::None);
 #if defined USE_FLUX_RESTRICTION
   if(d_mpm_flags->d_doScalarDiffusion){
     t->requires(Task::OldDW, d_mpm_lb->diffusion->pConcentration,     gnone);
@@ -219,7 +217,6 @@ void FluxBCModel::applyExternalScalarFlux(const ProcessorGroup* , const PatchSub
       constParticleVariable<Vector>  parea;
       constParticleVariable<double>  pvol;
       constParticleVariable<Matrix3> psize;
-      constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<double> pExternalScalarFlux;
       ParticleVariable<double> pExternalScalarFlux_pR;
 
@@ -228,8 +225,6 @@ void FluxBCModel::applyExternalScalarFlux(const ProcessorGroup* , const PatchSub
         old_dw->get(parea, d_mpm_lb->diffusion->pArea, pset);
       }
       old_dw->get(pvol,  d_mpm_lb->pVolumeLabel, pset);
-      old_dw->get(psize, d_mpm_lb->pSizeLabel, pset);
-      old_dw->get(pDeformationMeasure, d_mpm_lb->pDeformationMeasureLabel, pset);
       new_dw->allocateAndPut(pExternalScalarFlux,
                                        d_mpm_lb->diffusion->pExternalScalarFlux_preReloc,  pset);
 

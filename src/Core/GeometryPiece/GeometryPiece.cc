@@ -29,17 +29,22 @@ using namespace Uintah;
 
 DebugStream GeometryPiece::gp_dbg( "GeometryPiece", "GeometryPiece", "Geometry piece debug stream", false );
 
-
+//______________________________________________________________________
+//
 GeometryPiece::GeometryPiece() :
   nameSet_( false ),
   firstOutput_( true )
 {
 }
 
+//______________________________________________________________________
+//
 GeometryPiece::~GeometryPiece()
 {
 }
 
+//______________________________________________________________________
+//
 void
 GeometryPiece::outputProblemSpec( ProblemSpecP & ps ) const
 {

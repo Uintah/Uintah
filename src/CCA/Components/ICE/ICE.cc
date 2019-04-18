@@ -123,9 +123,6 @@ ICE::ICE(const ProcessorGroup* myworld,
   d_BC_globalVars->mms      =  scinew mms_globalVars();                
   d_BC_globalVars->sine     =  scinew sine_globalVars();               
   d_BC_globalVars->inletVel =  scinew inletVel_globalVars();           
-  
-  activateReductionVariable( recomputeTimeStep_name, true);
-  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 //______________________________________________________________________

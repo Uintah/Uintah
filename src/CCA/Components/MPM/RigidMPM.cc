@@ -239,9 +239,9 @@ void RigidMPM::scheduleComputeParticleGradients(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                         gnone);
   t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
-  t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
+  t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
+//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
 //  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
 
   t->computes(lb->pVolumeLabel_preReloc);
@@ -297,8 +297,7 @@ void RigidMPM::computeParticleGradients(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
       old_dw->get(px,           lb->pXLabel,                         pset);
-      old_dw->get(psize,        lb->pSizeLabel,                      pset);
-      old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
+      new_dw->get(psize,        lb->pCurSizeLabel,                   pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
 
@@ -338,7 +337,7 @@ void RigidMPM::computeParticleGradients(const ProcessorGroup*,
           if(!flags->d_axisymmetric){
            // Get the node indices that surround the cell
            NN =interpolator->findCellAndShapeDerivatives(px[idx],ni,
-                                                    d_S,psize[idx],pFOld[idx]);
+                                                    d_S,psize[idx]);
            for (int k = 0; k < NN; k++){
             for (int j = 0; j<3; j++) {
               pTempGrad[idx][j] += gTempStar[ni[k]] * d_S[k][j]*oodx[j];
@@ -348,7 +347,7 @@ void RigidMPM::computeParticleGradients(const ProcessorGroup*,
            // Get the node indices that surround the cell
            cout << "Fix the pTempGradient calc for axisymmetry" << endl;
 //           NN =interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,
-//                                                 S,d_S,psize[idx],pFOld[idx]);
+//                                                 S,d_S,psize[idx]);
           }
         }
       } // Explicit Heat Conduction
@@ -395,8 +394,8 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
-  t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::None);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->pCurSizeLabel,          Ghost::None);
+//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -453,7 +452,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
-   
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -484,7 +482,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
-      constParticleVariable<Matrix3> pFOld;
 
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew;       
@@ -502,7 +499,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
       old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
-      old_dw->get(pFOld,                 lb->pDeformationMeasureLabel,    pset);
 
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
       new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
@@ -513,7 +509,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
 
       pids_new.copyData(pids);
-      old_dw->get(psize,               lb->pSizeLabel,                 pset);
+      new_dw->get(psize,               lb->pCurSizeLabel,              pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
       psizeNew.copyData(psize);
 
@@ -550,7 +546,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // Get the node indices that surround the cell
         int NN = 
            interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                         psize[idx],pFOld[idx]);
+                                                               psize[idx]);
 
         double tempRate = 0.0;
         Vector acc(0.0,0.0,0.0);

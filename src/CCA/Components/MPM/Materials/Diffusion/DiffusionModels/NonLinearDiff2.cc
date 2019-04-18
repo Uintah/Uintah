@@ -195,10 +195,9 @@ void NonLinearDiff2::scheduleComputeDivergence(       Task         * task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, d_lb->delTLabel);
   task->requires(Task::OldDW, d_lb->pXLabel,                   gan, NGP);
-  task->requires(Task::OldDW, d_lb->pSizeLabel,                gan, NGP);
+  task->requires(Task::NewDW, d_lb->pCurSizeLabel,             gan, NGP);
   task->requires(Task::OldDW, d_lb->pMassLabel,                gan, NGP);
   task->requires(Task::OldDW, d_lb->pVolumeLabel,              gan, NGP);
-  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  gan, NGP);
 
   task->requires(Task::NewDW, d_lb->pPosChargeFluxLabel_preReloc, gan, NGP);
   task->requires(Task::NewDW, d_lb->pNegChargeFluxLabel_preReloc, gan, NGP);
@@ -247,8 +246,7 @@ void NonLinearDiff2::computeDivergence(
   old_dw->get(px,                  d_lb->pXLabel,                  pset);
   old_dw->get(pvol,                d_lb->pVolumeLabel,             pset);
   old_dw->get(pMass,               d_lb->pMassLabel,               pset);
-  old_dw->get(psize,               d_lb->pSizeLabel,               pset);
-  old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+  new_dw->get(psize,               d_lb->pCurSizeLabel,            pset);
 
   new_dw->get(pPosChargeFlux,      d_lb->pPosChargeFluxLabel_preReloc, pset);
   new_dw->get(pNegChargeFlux,      d_lb->pNegChargeFluxLabel_preReloc, pset);
@@ -270,7 +268,7 @@ void NonLinearDiff2::computeDivergence(
 
     // Get the node indices that surround the cell
     int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                           psize[idx],deformationGradient[idx]);
+                                                       psize[idx]);
 
     Vector PosJ = pPosChargeFlux[idx];
     Vector NegJ = pNegChargeFlux[idx];

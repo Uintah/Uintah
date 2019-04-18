@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -837,7 +837,7 @@
          <x>340</x>
          <y>20</y>
          <width>311</width>
-         <height>211</height>
+         <height>141</height>
         </rect>
        </property>
        <property name="title">
@@ -849,7 +849,7 @@
           <x>10</x>
           <y>30</y>
           <width>291</width>
-          <height>171</height>
+          <height>101</height>
          </rect>
         </property>
         <column>
@@ -907,7 +907,7 @@
         </column>
        </widget>
       </widget>
-      <widget class="QGroupBox" name="groupBox">
+      <widget class="QGroupBox" name="LoadExtraGeometryGroupBox">
        <property name="geometry">
         <rect>
          <x>340</x>
@@ -999,6 +999,57 @@
           <string>Overridden</string>
          </property>
         </column>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="VariableGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>340</x>
+         <y>170</y>
+         <width>311</width>
+         <height>71</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Variables</string>
+       </property>
+       <widget class="QLabel" name="LoadVariablesLabel">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>40</y>
+          <width>131</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Load variables</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="LoadVariables">
+        <property name="geometry">
+         <rect>
+          <x>160</x>
+          <y>30</y>
+          <width>105</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>All</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string notr="true">Output</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Checkpoint</string>
+         </property>
+        </item>
        </widget>
       </widget>
      </widget>

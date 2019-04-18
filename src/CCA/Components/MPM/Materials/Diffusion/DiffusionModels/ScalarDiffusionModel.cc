@@ -156,10 +156,9 @@ void ScalarDiffusionModel::scheduleComputeDivergence(      Task         * task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, d_lb->delTLabel);
   task->requires(Task::OldDW, d_lb->pXLabel,                   gan, NGP);
-  task->requires(Task::OldDW, d_lb->pSizeLabel,                gan, NGP);
+  task->requires(Task::NewDW, d_lb->pCurSizeLabel,             gan, NGP);
   task->requires(Task::OldDW, d_lb->pMassLabel,                gan, NGP);
   task->requires(Task::OldDW, d_lb->pVolumeLabel,              gan, NGP);
-  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  gan, NGP);
 
   task->requires(Task::NewDW, d_lb->diffusion->pFlux_preReloc, gan, NGP);
 
@@ -198,9 +197,8 @@ void ScalarDiffusionModel::computeDivergence(
   old_dw->get(px,                  d_lb->pXLabel,                  pset);
   old_dw->get(pvol,                d_lb->pVolumeLabel,             pset);
   old_dw->get(pMass,               d_lb->pMassLabel,               pset);
-  old_dw->get(psize,               d_lb->pSizeLabel,               pset);
-  old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
-  new_dw->get(pFlux,               d_lb->diffusion->pFlux_preReloc,      pset);
+  new_dw->get(psize,               d_lb->pCurSizeLabel,            pset);
+  new_dw->get(pFlux,               d_lb->diffusion->pFlux_preReloc,pset);
 
   new_dw->allocateAndPut(gConcRate,  d_lb->diffusion->gConcentrationRate,dwi,patch);
 
@@ -215,7 +213,7 @@ void ScalarDiffusionModel::computeDivergence(
   
     // Get the node indices that surround the cell
     int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                           psize[idx],deformationGradient[idx]);
+                                                       psize[idx]);
 
     Vector J = pFlux[idx];
     double Cdot_cond = 0.0;
@@ -257,9 +255,8 @@ void ScalarDiffusionModel::scheduleComputeDivergence_CFI(      Task         * t,
     // cells but somehow it works.
     t->requires(Task::NewDW, d_lb->gZOILabel,     d_one_matl, Ghost::None,0);
     t->requires(Task::OldDW, d_lb->pXLabel,       allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
-    t->requires(Task::OldDW, d_lb->pSizeLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::NewDW, d_lb->pCurSizeLabel, allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, d_lb->pMassLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
-    t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::NewDW, d_lb->diffusion->pFlux_preReloc,      allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
 
     t->modifies(d_lb->diffusion->gConcentrationRate, matlset);

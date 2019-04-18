@@ -217,22 +217,24 @@ namespace Uintah{
       int numTasksOldDW{0};
       std::vector<std::string> taskNamesOldDW{};
       std::vector<std::string> taskNamesNewDW{};
-      int max_newdw_ghost{0};
-      int max_olddw_ghost{0};
-      int min_newdw_ghost{0};
-      int min_olddw_ghost{0};
+      int max_newdw_ghost{-99};
+      int max_olddw_ghost{-99};
+      int min_newdw_ghost{99};
+      int min_olddw_ghost{99};
     };
+
+    /** @brief Clean out the list of max ghost cells **/
+    void clear_max_ghost_list(){
+      m_variable_ghost_info.clear();
+    }
 
     /** @brief Potentially insert a new variable to the max ghost list **/
     void insert_max_ghost(const ArchesFieldContainer::VariableInformation& var_info,
                           const std::string task_group_name ){
       //Store max ghost information per variable:
       bool in_new_dw = false;
-      bool in_old_dw = false;
       if ( var_info.dw == ArchesFieldContainer::NEWDW ){
         in_new_dw = true;
-      } else {
-        in_old_dw = true;
       }
       auto iter = m_variable_ghost_info.find(var_info.name);
       if ( iter == m_variable_ghost_info.end() ){
@@ -248,6 +250,7 @@ namespace Uintah{
           ghelp.taskNamesOldDW.push_back(task_group_name);
           ghelp.numTasksOldDW = 1;
           ghelp.min_olddw_ghost = var_info.nGhost;
+          ghelp.max_olddw_ghost = var_info.nGhost;
         }
         m_variable_ghost_info.insert(std::make_pair(var_info.name, ghelp));
 
@@ -257,45 +260,45 @@ namespace Uintah{
         if ( in_new_dw ){
           iter->second.taskNamesNewDW.push_back(task_group_name);
           iter->second.numTasksNewDW += 1;
-          if ( var_info.nGhost > iter->second.max_newdw_ghost ){
+          if ( iter->second.numTasksNewDW == 1 ){
+            //This is the first time this variable is encountered for
+            // this DW so set max and min ghosts equal
             iter->second.max_newdw_ghost = var_info.nGhost;
-          }
-          if ( var_info.nGhost < iter->second.min_newdw_ghost ){
             iter->second.min_newdw_ghost = var_info.nGhost;
+          } else {
+            if ( var_info.nGhost > iter->second.max_newdw_ghost ){
+              iter->second.max_newdw_ghost = var_info.nGhost;
+            }
+            if ( var_info.nGhost < iter->second.min_newdw_ghost ){
+              iter->second.min_newdw_ghost = var_info.nGhost;
+            }
           }
         } else {
           iter->second.taskNamesOldDW.push_back(task_group_name);
           iter->second.numTasksOldDW += 1;
-          if ( var_info.nGhost > iter->second.max_olddw_ghost ){
+          if ( iter->second.numTasksOldDW == 1 ){
+            //This is the first time this variable is encountered for
+            // this DW so set max and min ghosts equal
             iter->second.max_olddw_ghost = var_info.nGhost;
-          }
-          if ( var_info.nGhost < iter->second.min_olddw_ghost ){
             iter->second.min_olddw_ghost = var_info.nGhost;
+          } else {
+            if ( var_info.nGhost > iter->second.max_olddw_ghost ){
+              iter->second.max_olddw_ghost = var_info.nGhost;
+            }
+            if ( var_info.nGhost < iter->second.min_olddw_ghost ){
+              iter->second.min_olddw_ghost = var_info.nGhost;
+            }
           }
         }
       }
-
     }
 
     /** @brief Print ghost cell requirements for all variables in this task **/
-    void print_variable_max_ghost(){
-      proc0cout << " :: Reporting max ghost cells for Factory " << _factory_name << " :: " << std::endl;
-      for ( auto i = m_variable_ghost_info.begin(); i != m_variable_ghost_info.end(); i++ ){
-
-        proc0cout << "   Variable: " << i->first << std::endl;
-        proc0cout << "      Min NewDW Ghost: " << i->second.min_newdw_ghost << " Max NewDW Ghost: " << i->second.max_newdw_ghost << std::endl;
-        proc0cout << "      Min OldDW Ghost: " << i->second.min_olddw_ghost << " Max OldDW Ghost: " << i->second.max_olddw_ghost << std::endl;
-        proc0cout << "      Num. Tasks in with newDW requirements: " << i->second.numTasksNewDW << std::endl;
-        proc0cout << "      Num. Tasks in with oldDW requirements: " << i->second.numTasksOldDW << std::endl;
-
-      }
-      proc0cout << " :: End report of max ghost cells for Factory " << _factory_name << " :: " << std::endl;
-    }
-
     /** @brief Get the ghost cell information **/
     std::map<std::string, GhostHelper>& get_max_ghost_info(){
       return m_variable_ghost_info;
     }
+    void print_variable_max_ghost();
 
   protected:
 

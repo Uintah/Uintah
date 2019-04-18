@@ -33,9 +33,10 @@ using namespace std;
 
 //______________________________________________________________________
 //
-GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
-                               list<DataItem>& data) :
-  d_piece(piece)
+GeometryObject::GeometryObject(GeometryPieceP   geom_piece, 
+                               ProblemSpecP   & ps,
+                               list<DataItem> & data) :
+  d_geom_pieceP( geom_piece )
 {
    for (list<DataItem>::iterator it = data.begin(); it != data.end();it++)
    {
@@ -106,7 +107,7 @@ void
 GeometryObject::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP geom_obj_ps = ps->appendChild("geom_object");
-  d_piece->outputProblemSpec(geom_obj_ps);
+  d_geom_pieceP->outputProblemSpec(geom_obj_ps);
   
   for (map<string,double>::iterator it = d_double_data.begin(); 
        it != d_double_data.end(); it++) {

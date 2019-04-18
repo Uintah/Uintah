@@ -45,8 +45,6 @@
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
-
-
 namespace Uintah {
 
 class ThermalContact;
@@ -54,7 +52,6 @@ class HeatConduction;
 class AnalysisModule;
 class SDInterfaceModel;
 class FluxBCModel;
-
 
 /**************************************
 
@@ -335,6 +332,12 @@ protected:
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
 
+  void computeCurrentParticleSize(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* ,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
   void addNewParticles(const ProcessorGroup*,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
@@ -496,6 +499,9 @@ protected:
                                                  
   void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
                                   const MaterialSet*);
+
+  void scheduleComputeCurrentParticleSize(SchedulerP&, const PatchSet*,
+                                          const MaterialSet*);
 
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                        const PatchSet*,

@@ -64,9 +64,6 @@ class NonlinearSolver {
 
 public:
 
-  Uintah::Dout dbg_vartask_dep{"Arches_Variable_Task_Dep", "Arches::NonlinearSolver",
-          "Prints variable ghost req. across all tasks.", false };
-
   NonlinearSolver( const ProcessorGroup* myworld,
                    ApplicationCommon* arches );
 
@@ -116,6 +113,11 @@ public:
   /** @brief Return the initial dt **/
   inline double get_initial_dt(){ return d_initial_dt; }
 
+  /** @brief Clear master ghost list **/
+  void clear_max_ghost_list(){
+    m_total_variable_ghost_info.clear();
+  }
+
   /** @brief Potentially insert a new variable to the max ghost list **/
   void insert_max_ghost(const std::map<std::string, TaskFactoryBase::GhostHelper>& the_map ){
 
@@ -125,23 +127,55 @@ public:
       auto iter = m_total_variable_ghost_info.find(ivar->first);
 
       if ( iter == m_total_variable_ghost_info.end() ){
+
         m_total_variable_ghost_info.insert( std::make_pair(ivar->first, ivar->second));
+
       } else {
+
+        const int old_newdw_num = iter->second.numTasksNewDW;
+        const int old_olddw_num = iter->second.numTasksOldDW;
+
         iter->second.numTasksNewDW += ivar->second.numTasksNewDW;
         iter->second.numTasksOldDW += ivar->second.numTasksOldDW;
-        if ( ivar->second.max_newdw_ghost > iter->second.max_newdw_ghost ){
-          iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
+
+        const int newdw_diff = iter->second.numTasksNewDW - old_newdw_num;
+        const int olddw_diff = iter->second.numTasksOldDW - old_olddw_num;
+
+        if ( newdw_diff > 0 ){
+          //Its already in here...so check if the new instance has gt or lt ghosts:
+          if ( ivar->second.max_newdw_ghost > iter->second.max_newdw_ghost &&
+               ivar->second.numTasksNewDW > 0 ){
+            iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
+          }
+          if ( ivar->second.min_newdw_ghost < iter->second.min_newdw_ghost &&
+               ivar->second.numTasksNewDW > 0 ){
+            iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
+          }
+        } else if ( iter->second.numTasksNewDW == ivar->second.numTasksNewDW ){
+          //first time for this DW so just set the ghosts count to the new incoming record
+          if ( ivar->second.numTasksNewDW > 0 ){
+            iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
+            iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
+          }
         }
-        if ( ivar->second.max_olddw_ghost > iter->second.max_olddw_ghost ){
-          iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
-        }
-        if ( ivar->second.min_newdw_ghost < iter->second.min_newdw_ghost ){
-          iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
-        }
-        if ( ivar->second.min_olddw_ghost > iter->second.min_olddw_ghost ){
-          iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
+        if ( olddw_diff > 0 ){
+          //Its already in here...so check if the new instance has gt or lt ghosts:
+          if ( ivar->second.max_olddw_ghost > iter->second.max_olddw_ghost &&
+               ivar->second.numTasksOldDW > 0 ){
+            iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
+          }
+          if ( ivar->second.min_olddw_ghost < iter->second.min_olddw_ghost &&
+               ivar->second.numTasksOldDW > 0 ){
+            iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
+          }
+        } else if ( iter->second.numTasksOldDW == ivar->second.numTasksOldDW ){
+          if ( ivar->second.numTasksOldDW > 0 ){
+            iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
+            iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
+          }
         }
         if ( iter->second.numTasksNewDW > 0 ){
+          //first time for this DW so just set the ghosts count to the new incoming record
           for (auto niter = ivar->second.taskNamesNewDW.begin();
                 niter != ivar->second.taskNamesNewDW.end(); niter++ ){
              iter->second.taskNamesNewDW.push_back(*niter);
@@ -153,41 +187,12 @@ public:
             iter->second.taskNamesOldDW.push_back(*niter);
           }
         }
-
       }
     }
   }
 
   /** @brief Print ghost cell requirements for all variables in this task **/
-  void print_variable_max_ghost(){
-    std::stringstream msg;
-    msg << " :: Reporting max ghost cells :: " << std::endl;
-    for ( auto i = m_total_variable_ghost_info.begin(); i != m_total_variable_ghost_info.end(); i++ ){
-
-      msg << "   Variable: " << i->first << std::endl;
-      if ( i->second.numTasksNewDW > 0 ){
-        msg << "        Min NewDW Ghost: " << i->second.min_newdw_ghost << " Max NewDW Ghost: " << i->second.max_newdw_ghost <<
-        " across " << i->second.numTasksNewDW << " tasks. " << std::endl;
-        msg << "        In the following tasks: " << std::endl;
-        for (auto niter = i->second.taskNamesNewDW.begin();
-             niter != i->second.taskNamesNewDW.end(); niter++ ){
-          msg << "         " << *niter << std::endl;
-        }
-      }
-        if ( i->second.numTasksOldDW > 0 ){
-          msg << "      Min OldDW Ghost: " << i->second.min_olddw_ghost << " Max OldDW Ghost: " << i->second.max_olddw_ghost <<
-          " across " << i->second.numTasksOldDW << " tasks. " << std::endl;
-          msg << "      In the following tasks: " << std::endl;
-       for (auto niter = i->second.taskNamesOldDW.begin();
-             niter != i->second.taskNamesOldDW.end(); niter++ ){
-          msg << "         " << *niter << std::endl;
-        }
-      }
-
-    }
-    msg << " :: End report of max ghost cells :: " << std::endl;
-    DOUT( dbg_vartask_dep, msg.str());
-  }
+  void print_variable_max_ghost();
 
 protected:
 

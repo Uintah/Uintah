@@ -133,13 +133,6 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   d_arches->setComponents( this );
   dynamic_cast<ApplicationInterface*>(d_arches)->problemSetup( prob_spec );
 
-  // Must be set here rather than the constructor because ARCHES sets
-  // the value based on the solver being requested in the problem setup.
-  activateReductionVariable( recomputeTimeStep_name,
-                             d_arches->activeReductionVariable( recomputeTimeStep_name ) );
-  activateReductionVariable( abortTimeStep_name,
-                             d_arches->activeReductionVariable( abortTimeStep_name ) );
-  
   ProblemSpecP restart_mat_ps = 0;
   if (materials_ps){
     restart_mat_ps = materials_ps;

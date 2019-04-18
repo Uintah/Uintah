@@ -326,11 +326,11 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
 
     Vector Dx = patch->dCell();
 
-    auto u   = new_dw->getConstGridVariable<constSFCXVariable<double>, double, MemSpace>(  m_uLabel    ,  indx, patch, Ghost::None, 0 );
-    auto v   = new_dw->getConstGridVariable<constSFCYVariable<double>, double, MemSpace>(  m_vLabel    ,  indx, patch, Ghost::None, 0 );
-    auto w   = new_dw->getConstGridVariable<constSFCZVariable<double>, double, MemSpace>(  m_wLabel    ,  indx, patch, Ghost::None, 0 );
-    auto rho = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace>(  m_rhoLabel  ,  indx, patch, Ghost::None, 0 );
-    auto mu  = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace>(  m_tot_muLabel, indx, patch, Ghost::None, 0 );
+    auto u   = new_dw->getConstGridVariable<constSFCXVariable<double>, double, MemSpace>( m_uLabel     , indx, patch, Ghost::None, 0 );
+    auto v   = new_dw->getConstGridVariable<constSFCYVariable<double>, double, MemSpace>( m_vLabel     , indx, patch, Ghost::None, 0 );
+    auto w   = new_dw->getConstGridVariable<constSFCZVariable<double>, double, MemSpace>( m_wLabel     , indx, patch, Ghost::None, 0 );
+    auto rho = new_dw->getConstGridVariable<constCCVariable<double>,   double, MemSpace>( m_rhoLabel   , indx, patch, Ghost::None, 0 );
+    auto mu  = new_dw->getConstGridVariable<constCCVariable<double>,   double, MemSpace>( m_tot_muLabel, indx, patch, Ghost::None, 0 );
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -476,8 +476,11 @@ KokkosSolver::sched_initialize( const LevelP& level,
   for (auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
     std::map<std::string, TaskFactoryBase::GhostHelper>& the_ghost_info = i->second->get_max_ghost_info();
     insert_max_ghost( the_ghost_info );
+    //SCI_DEBUG for printing information per task.
+    i->second->print_variable_max_ghost();
   }
-  
+
+  //SCI_DEBUG for printing across ALL tasks.
   print_variable_max_ghost();
 
 }
@@ -499,6 +502,13 @@ KokkosSolver::sched_nonlinearSolve( const LevelP & level,
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
   BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
   BFM::iterator i_particle_model_fac = m_task_factory_map.find("particle_model_factory");
+
+  //clear the factory ghost lists from information inserted from scheduleInitialize
+  for ( auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
+    (*i->second).clear_max_ghost_list();
+  }
+  //also clear the master ghost list
+  clear_max_ghost_list();
 
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
 
@@ -550,8 +560,11 @@ KokkosSolver::sched_nonlinearSolve( const LevelP & level,
   for (auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
     std::map<std::string, TaskFactoryBase::GhostHelper>& the_ghost_info = i->second->get_max_ghost_info();
     insert_max_ghost( the_ghost_info );
+    //SCI_DEBUG for printing across tasks per factory
+    i->second->print_variable_max_ghost();
   }
 
+  //SCI_DEBUG for printing across all tasks
   print_variable_max_ghost();
 
   return 0;

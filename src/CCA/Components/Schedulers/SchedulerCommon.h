@@ -97,8 +97,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual void getComponents();
     virtual void releaseComponents();
 
-    // TEMPORARY
-    virtual ApplicationInterface *getApplication() { return m_application; };
+    virtual ApplicationInterface *getApplication()   { return m_application; };
+    virtual LoadBalancer         * getLoadBalancer() { return m_loadBalancer; };
+    virtual Output               * getOutput()       { return m_output; };
   
     virtual void problemSetup( const ProblemSpecP     & prob_spec,
                                const MaterialManagerP & materialManager );
@@ -151,8 +152,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual const std::vector<const Task::Dependency*>&         getInitialRequires()     const { return m_init_requires; }
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const { return m_init_required_vars; }
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars()        const { return m_computed_vars; }
-
-    virtual LoadBalancer * getLoadBalancer() { return m_loadBalancer; };
 
     virtual DataWarehouse* get_dw( int idx );
 
@@ -289,7 +288,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     void setRestartInitTimestep( bool isRestartInitTimestep ) { m_is_restart_init_timestep = isRestartInitTimestep; }
 
-    virtual bool isRestartInitTimestep() { return m_is_restart_init_timestep; }
+    bool isRestartInitTimestep() const { return m_is_restart_init_timestep; }
 
     const VarLabel* m_reloc_new_pos_label{nullptr};
 

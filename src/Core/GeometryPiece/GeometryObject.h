@@ -104,7 +104,7 @@ public:
   //__________________________________
   //
   GeometryPieceP getPiece() const {
-    return d_piece;
+    return d_geom_pieceP;
   }
 
   //______________________________________________________________________
@@ -169,7 +169,7 @@ public:
 //______________________________________________________________________
 //
 private:
-  GeometryPieceP     d_piece;
+  GeometryPieceP     d_geom_pieceP;
   std::map<std::string,int>               d_int_data;
   std::map<std::string,double>            d_double_data;
   std::map<std::string,Uintah::Vector>    d_vector_data;

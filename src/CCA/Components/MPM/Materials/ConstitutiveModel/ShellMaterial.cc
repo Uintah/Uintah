@@ -377,8 +377,7 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Get the node indices that surround the cell
-      int NN = interpolator->findCellAndWeights(pX[idx], ni, S,pSize[idx],
-                                            deformationGradient[idx]);
+      int NN = interpolator->findCellAndWeights(pX[idx], ni, S,pSize[idx]);
 
       // Calculate momentum
       pMom = pRotRate[idx]*pMass[idx];
@@ -565,9 +564,8 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
 
       // Find the surrounding nodes, interpolation functions and derivatives
-
       int NN = interpolator->findCellAndShapeDerivatives(pX[idx],ni,d_S,
-                                              pSize[idx],pDefGrad[idx]);
+                                                         pSize[idx]);
 
       // Calculate the spatial gradient of the velocity and the 
       // normal rotation rate
@@ -834,7 +832,7 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
       // Get the node indices that surround the cell and the derivatives
       // of the interpolation functions
       int NN = interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,
-                                                  d_S,pSize[idx],pDefGrad[idx]);
+                                                                d_S,pSize[idx]);
 
       // Loop thru nodes
       for (int k = 0; k < NN; k++){
@@ -929,7 +927,7 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
       // of the interpolation functions
       
       interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,
-                                                  d_S,pSize[idx],pDefGrad[idx]);
+                                                          d_S,pSize[idx]);
       // Calculate the in-surface identity tensor
       Matrix3 nn(pNormal[idx], pNormal[idx]);
       Matrix3 Is = One - nn;

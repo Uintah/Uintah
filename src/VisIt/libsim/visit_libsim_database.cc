@@ -110,6 +110,9 @@ void visit_SimGetCustomUIData(void *cbdata)
 
   // Set the custom UI database behavior
   visit_SetDatabase( sim );
+
+  // Set the custom UI variable loading behavior
+  visit_SetVariables( sim );
 }
 
 
@@ -145,7 +148,8 @@ visit_handle visit_SimGetMetaData(void *cbdata)
   if( sim->stepInfo )
     delete sim->stepInfo;
   
-  sim->stepInfo = getTimeStepInfo(schedulerP, gridP, sim->loadExtraGeometry);
+  sim->stepInfo = getTimeStepInfo(schedulerP, gridP,
+				  sim->loadExtraGeometry, sim->loadVariables);
 
   unsigned int addMachineData = (sim->switchNodeList.size() &&
                                  (int) sim->switchIndex != -1 &&

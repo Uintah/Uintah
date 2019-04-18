@@ -10,6 +10,9 @@ namespace {
   Uintah::Dout dbg_arches_task{"Arches_Task_DBG", "Arches::TaskFactoryBase",
     "Scheduling and execution information of Arches tasks.", false };
 
+  Uintah::Dout dbg_fac_vartask_dep{"Arches_Fac_Var_Task_Dep", "Arches::TaskFactoryBase",
+    "Prints variable ghost req. for tasks per factory.", false };
+
 
   std::string get_task_exec_str( TaskInterface::TASK_TYPE type ){
 
@@ -400,13 +403,36 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         {
           if ( time_substep == 0 ) {
             if ( reinitialize ){
+              // const Uintah::PatchSet* const allPatches =
+              //  sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+              // const Uintah::PatchSubset* const localPatches =
+              //  allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+              // DOUT( dbg_arches_task, "[TaskFactoryBase]  modifying (wsg): " << ivar.name );
+              // tsk->modifiesWithScratchGhost( ivar.label,
+              //                                localPatches,
+              //                                Uintah::Task::ThisLevel,
+              //                                matls->getSubset(0), Uintah::Task::NormalDomain,
+              //                                ivar.ghost_type, ivar.nGhost );
               DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
               tsk->modifies( ivar.label );   // was computed upstream
             } else {
               DOUT( dbg_arches_task, "[TaskFactoryBase]      computing: " << ivar.name );
+              // tsk->computesWithScratchGhost( ivar.label, matls->getSubset(0),
+              //                                Uintah::Task::NormalDomain, ivar.ghost_type,
+              //                                ivar.nGhost );
               tsk->computes( ivar.label );   //only compute on the zero time substep
             }
           } else {
+            // const Uintah::PatchSet* const allPatches =
+            //  sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+            // const Uintah::PatchSubset* const localPatches =
+            //  allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+            // DOUT( dbg_arches_task, "[TaskFactoryBase]  modifying (wsg): " << ivar.name );
+            // tsk->modifiesWithScratchGhost( ivar.label,
+            //                                localPatches,
+            //                                Uintah::Task::ThisLevel,
+            //                                matls->getSubset(0), Uintah::Task::NormalDomain,
+            //                                ivar.ghost_type, ivar.nGhost );
             DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
             tsk->modifies( ivar.label );
         }}
@@ -434,6 +460,16 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       break;
     case ArchesFieldContainer::MODIFIES:
       {
+        // const Uintah::PatchSet* const allPatches =
+        //     sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+        // const Uintah::PatchSubset* const localPatches =
+        //     allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+        // DOUT( dbg_arches_task, "[TaskFactoryBase]  modifying (wsg): " << ivar.name );
+        // tsk->modifiesWithScratchGhost( ivar.label,
+        //                                 localPatches,
+        //                                 Uintah::Task::ThisLevel,
+        //                                 matls->getSubset(0), Uintah::Task::NormalDomain,
+        //                                 ivar.ghost_type, ivar.nGhost );\
         DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
         tsk->modifies( ivar.label );
       }
@@ -557,12 +593,12 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
           break;
         case (TaskInterface::RESTART_INITIALIZE):
           {
-            (*i_task)->restart_initialize( patch, tsk_info_mngr, execObj  );
+            (*i_task)->restart_initialize( patch, tsk_info_mngr, execObj );
           }
           break;
         case (TaskInterface::TIMESTEP_INITIALIZE):
           {
-            (*i_task)->timestep_init( patch, tsk_info_mngr, execObj  );
+            (*i_task)->timestep_init( patch, tsk_info_mngr, execObj );
             time_substep = 0;
           }
           break;
@@ -592,4 +628,38 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
     delete field_container;
 
   }
+}
+
+//--------------------------------------------------------------------------------------------------
+void TaskFactoryBase::print_variable_max_ghost(){
+
+  std::stringstream msg;
+  msg << " :: Reporting max ghost cells per Factory :: " << std::endl;
+  msg << "       Factory = " << _factory_name << std::endl;
+
+  for ( auto i = m_variable_ghost_info.begin(); i != m_variable_ghost_info.end(); i++ ){
+    msg << "   Variable: " << i->first << std::endl;
+    if ( i->second.numTasksNewDW > 0 ){
+      msg << "        Min NewDW Ghost: " << i->second.min_newdw_ghost << " Max NewDW Ghost: " << i->second.max_newdw_ghost <<
+      " across " << i->second.numTasksNewDW << " tasks. " << std::endl;
+      msg << "        In the following tasks: " << std::endl;
+      for (auto niter = i->second.taskNamesNewDW.begin();
+           niter != i->second.taskNamesNewDW.end(); niter++ ){
+        msg << "         " << *niter << std::endl;
+      }
+    }
+    if ( i->second.numTasksOldDW > 0 ){
+      msg << "        Min OldDW Ghost: " << i->second.min_olddw_ghost << " Max OldDW Ghost: " << i->second.max_olddw_ghost <<
+      " across " << i->second.numTasksOldDW << " tasks. " << std::endl;
+      msg << "        In the following tasks: " << std::endl;
+      for (auto niter = i->second.taskNamesOldDW.begin();
+         niter != i->second.taskNamesOldDW.end(); niter++ ){
+           msg << "         " << *niter << std::endl;
+      }
+    }
+  }
+
+  msg << " :: End report of max ghost cells :: " << std::endl;
+  DOUT( dbg_fac_vartask_dep, msg.str());
+
 }

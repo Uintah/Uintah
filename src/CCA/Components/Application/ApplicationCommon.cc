@@ -193,23 +193,6 @@ void ApplicationCommon::getComponents()
   }
 }
 
-void ApplicationCommon::setReductionVariables( UintahParallelComponent *comp )
-{
-  ApplicationCommon * child = dynamic_cast<ApplicationCommon*>( comp );
-
-  // Get the reduction active flags from the child;
-  for ( auto & var : m_appReductionVars ) {
-    var.second->setActive( child->m_appReductionVars[ var.first ]->getActive() );
-  }
-}
-
-void ApplicationCommon::resetReductionVariables()
-{
-  for ( auto & var : m_appReductionVars ) {
-    var.second->reset();
-  }
-}
-
 void ApplicationCommon::releaseComponents()
 {
   releasePort( "scheduler" );
@@ -277,11 +260,36 @@ void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
     m_simTimeClampToOutput = false;
   }
 
+  // Time step limit
+  if (!time_ps->get("max_Timesteps", m_timeStepsMax)) {
+    m_timeStepsMax = 0;
+  }
+
+  // Wall time limit
+  if (!time_ps->get("max_wall_time", m_wallTimeMax)) {
+    m_wallTimeMax = 0;
+  }
+
+  // Delta T values - also used by the Switcher.
+  problemSetupDeltaT( prob_spec );
+}
+
+void ApplicationCommon::problemSetupDeltaT( const ProblemSpecP &prob_spec )
+{
+  ProblemSpecP time_ps = prob_spec->findBlock("Time");
+
+  if (!time_ps) {
+    throw ProblemSetupException("ERROR SimulationTime \n"
+                                "Can not find the <Time> block.",
+                                __FILE__, __LINE__);
+  }
+
   // Delta T limits
   ProblemSpecP tmp_ps;
   std::string flag;
 
-  ValidateFlag output = 0, checkpoint = 0;
+  m_outputIfInvalidNextDelTFlag = 0;
+  m_checkpointIfInvalidNextDelTFlag = 0;
 
   // When restarting use this delta T value
   if (!time_ps->get("override_restart_delt", m_delTOverrideRestart)) {
@@ -300,12 +308,12 @@ void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
     tmp_ps = time_ps->findBlock("max_delt_increase");
     tmp_ps->getAttribute("output", flag);
     if (flag == std::string("true")) {
-      output |= DELTA_T_MAX_INCREASE;
+      m_outputIfInvalidNextDelTFlag |= DELTA_T_MAX_INCREASE;
     }
 
     tmp_ps->getAttribute("checkpoint", flag);
     if (!flag.empty() && flag == std::string("true")) {
-      checkpoint |= DELTA_T_MAX_INCREASE;
+      m_checkpointIfInvalidNextDelTFlag |= DELTA_T_MAX_INCREASE;
     }
   }
 
@@ -319,12 +327,12 @@ void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
     tmp_ps = time_ps->findBlock("delt_init");
     tmp_ps->getAttribute("output", flag);
     if (flag == std::string("true")) {
-      output |= DELTA_T_INITIAL_MAX;
+      m_outputIfInvalidNextDelTFlag |= DELTA_T_INITIAL_MAX;
     }
 
     tmp_ps->getAttribute("checkpoint", flag);
     if (!flag.empty() && flag == std::string("true")) {
-      checkpoint |= DELTA_T_INITIAL_MAX;
+      m_checkpointIfInvalidNextDelTFlag |= DELTA_T_INITIAL_MAX;
     }
   }
 
@@ -339,12 +347,12 @@ void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
   tmp_ps = time_ps->findBlock("delt_min");
   tmp_ps->getAttribute("output", flag);
   if (flag == std::string("true")) {
-    output |= DELTA_T_MIN;
+    m_outputIfInvalidNextDelTFlag |= DELTA_T_MIN;
   }
 
   tmp_ps->getAttribute("checkpoint", flag);
   if (flag == std::string("true")) {
-    checkpoint |= DELTA_T_MIN;
+    m_checkpointIfInvalidNextDelTFlag |= DELTA_T_MIN;
   }
 
   // The maximum delta T value
@@ -353,38 +361,19 @@ void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
   tmp_ps = time_ps->findBlock("delt_max");
   tmp_ps->getAttribute("output", flag);
   if (flag == std::string("true")) {
-    output |= DELTA_T_MAX;
+    m_outputIfInvalidNextDelTFlag |= DELTA_T_MAX;
   }
 
   tmp_ps->getAttribute("checkpoint", flag);
   if (!flag.empty() && flag == std::string("true")) {
-    checkpoint |= DELTA_T_MAX;
-  }
-
-  // If output or checkpoint files are requested for an invalid delta
-  // T set the flag.
-  if (output) {
-    outputIfInvalidNextDelT(output);
-  }
-
-  if (checkpoint) {
-    checkpointIfInvalidNextDelT(checkpoint);
-  }
-
-  // Time step limit
-  if (!time_ps->get("max_Timesteps", m_timeStepsMax)) {
-    m_timeStepsMax = 0;
-  }
-
-  // Wall time limit
-  if (!time_ps->get("max_wall_time", m_wallTimeMax)) {
-    m_wallTimeMax = 0;
+    m_checkpointIfInvalidNextDelTFlag |= DELTA_T_MAX;
   }
 }
 
+
 void
 ApplicationCommon::scheduleTimeAdvance(const LevelP&,
-                                       SchedulerP&)
+                                             SchedulerP&)
 {
   throw InternalError( "scheduleTimeAdvance is not implemented for this application", __FILE__, __LINE__ );
 }
@@ -392,11 +381,12 @@ ApplicationCommon::scheduleTimeAdvance(const LevelP&,
 void
 ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
                                             const PatchSet* perProcPatchSet,
-                                            SchedulerP& scheduler)
+                                                  SchedulerP& scheduler)
 {
   // Reduce the system vars which are on a per patch basis to a per
   // rank basis.
-  Task* task = scinew Task("ApplicationCommon::reduceSystemVars", this, &ApplicationCommon::reduceSystemVars);
+  Task* task = scinew Task("ApplicationCommon::reduceSystemVars", this,
+                           &ApplicationCommon::reduceSystemVars);
 
   task->setType(Task::OncePerProc);
   task->usesMPI(true);
@@ -412,17 +402,33 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   for (int i = 0; i < grid->numLevels(); i++) {
     task->requires(Task::NewDW, m_delTLabel, grid->getLevel(i).get_rep());
   }
+  
+  // These are the application reduction variables. An application may
+  // also request that the time step be recomputed, aborted, and/or the
+  // simulation end early.
 
-  // An application may adjust the output interval or the checkpoint
-  // interval during a simulation.  For example in deflagration ->
-  // detonation simulations
-
-  // An application may also request that the time step be recomputed
-  // or aborted or the simulation end early.
+  // Check for a task computing the reduction variable, if found add
+  // in a requires and activate the variable it will be tested.
   for (auto & var : m_appReductionVars) {
-    if (var.second->getActive()) {
+    if( scheduler->getComputedVars().find( var.second->getLabel() ) !=
+        scheduler->getComputedVars().end() ) {
+      activateReductionVariable(var.first, true);
+
       task->requires(Task::NewDW, var.second->getLabel());
     }
+  }
+
+  // These two reduction vars may be set by the application via a
+  // compute in which case a requires is needed (done above). Or if
+  // the flag is set by ApplicationCommon, no requires is needed but
+  // the reduction var needs to be active for the reduction and
+  // subsequent test.
+  if( m_outputIfInvalidNextDelTFlag ) {
+    activateReductionVariable(outputTimeStep_name, true);
+  }
+
+  if( m_checkpointIfInvalidNextDelTFlag ) {
+    activateReductionVariable(checkpointTimeStep_name, true);
   }
 
   // The above three tasks are on a per proc basis any rank can make
@@ -592,7 +598,7 @@ ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
 void
 ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
                                             const PatchSet* perProcPatchSet,
-                                            SchedulerP& scheduler)
+                                                  SchedulerP& scheduler)
 {
   // Update the system vars which are on a per rank basis.
   Task* task = scinew Task("ApplicationCommon::updateSystemVars", this,
@@ -648,8 +654,8 @@ ApplicationCommon::scheduleRefine(const PatchSet*, SchedulerP&)
 //
 void
 ApplicationCommon::scheduleRefineInterface(const LevelP&,
-                                           SchedulerP&,
-                                           bool, bool)
+                                                 SchedulerP&,
+                                                 bool, bool)
 {
   throw InternalError( "scheduleRefineInterface is not implemented for this application\n", __FILE__, __LINE__ );
 }
@@ -658,7 +664,7 @@ ApplicationCommon::scheduleRefineInterface(const LevelP&,
 //
 void
 ApplicationCommon::scheduleCoarsen(const LevelP&,
-                                   SchedulerP&)
+                                         SchedulerP&)
 {
   throw InternalError( "scheduleCoarsen is not implemented for this application\n", __FILE__, __LINE__ );
 }
@@ -667,7 +673,7 @@ ApplicationCommon::scheduleCoarsen(const LevelP&,
 //
 void
 ApplicationCommon::scheduleErrorEstimate( const LevelP&,
-                                          SchedulerP& )
+                                                SchedulerP& )
 {
   throw InternalError( "scheduleErrorEstimate is not implemented for this application", __FILE__, __LINE__ );
 }
@@ -676,7 +682,7 @@ ApplicationCommon::scheduleErrorEstimate( const LevelP&,
 //
 void
 ApplicationCommon::scheduleInitialErrorEstimate(const LevelP& /*coarseLevel*/,
-                                                SchedulerP& /*sched*/)
+                                                      SchedulerP& /*sched*/)
 {
   throw InternalError("scheduleInitialErrorEstimate is not implemented for this application", __FILE__, __LINE__);
 }
@@ -755,13 +761,15 @@ ApplicationCommon::prepareForNextTimeStep()
   m_delT = delt_var;
 
   // Clear the time step based reduction variables.
-  resetReductionVariables();
+  for ( auto & var : m_appReductionVars ) {
+    var.second->reset();
+  }
 }
 
 //______________________________________________________________________
 //
 void
-ApplicationCommon::setDelTForAllLevels( SchedulerP& scheduler,
+ApplicationCommon::setDelTForAllLevels(       SchedulerP& scheduler,
                                         const GridP & grid,
                                         const int totalFine )
 {
@@ -1096,30 +1104,6 @@ ApplicationCommon::validateNextDelT( double & delTNext, unsigned int level )
 
   return invalid;
 }
-
-//______________________________________________________________________
-//
-// Flag for outputting or checkpointing if the next delta is invalid
-void
-ApplicationCommon::outputIfInvalidNextDelT( ValidateFlag flag )
-{
-  m_outputIfInvalidNextDelTFlag = flag;
-
-  if (flag) {
-    activateReductionVariable(outputTimeStep_name, (bool)flag);
-  }
-}
-
-void
-ApplicationCommon::checkpointIfInvalidNextDelT( ValidateFlag flag )
-{
-  m_checkpointIfInvalidNextDelTFlag = flag;
-
-  if (flag) {
-    activateReductionVariable(checkpointTimeStep_name, (bool)flag);
-  }
-}
-
 
 //______________________________________________________________________
 //

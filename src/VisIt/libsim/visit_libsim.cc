@@ -33,7 +33,6 @@
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
 #include <CCA/Ports/ApplicationInterface.h>
-#include <CCA/Ports/Output.h>
 
 #include <Core/Grid/Material.h>
 #include <Core/Parallel/Parallel.h>
@@ -853,6 +852,8 @@ void visit_Initialize( visit_simulation_data *sim )
 
   VisItUI_valueChanged("LoadExtraGeometry",
                        visit_LoadExtraGeometryCallback, (void*) sim);        
+  VisItUI_valueChanged("LoadVariables",
+                       visit_LoadVariablesCallback, (void*) sim);        
 }
   
 } // End namespace Uintah

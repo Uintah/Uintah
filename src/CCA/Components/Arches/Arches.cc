@@ -74,14 +74,6 @@ Arches::Arches(const ProcessorGroup* myworld,
   m_particlesHelper = scinew ArchesParticlesHelper();
   m_particlesHelper->sync_with_arches(this);
 
-#ifdef OUTPUT_WITH_BAD_DELTA_T
-  // The other reduciton vars are set in the problem setup because the
-  // UPS file needs to be read first.
-  activateReductionVariable(     outputTimeStep_name, true );
-  activateReductionVariable( checkpointTimeStep_name, true );
-  activateReductionVariable(      endSimulation_name, true );
-#endif
-
   // One can also output or checkpoint if one of the validate
   // thresholds are met. This setting has the same affect as the above
   // along with the puts in the data warehouse (see ExplicitSolve.cc).
@@ -175,12 +167,6 @@ Arches::problemSetup( const ProblemSpecP     & params,
   delete builder;
 
   m_nlSolver->problemSetup( db, m_materialManager, grid );
-
-  // Must be set here rather than the constructor because the value
-  // is based on the solver being requested in the problem setup.
-  bool mayRecompute = m_nlSolver->mayRecomputeTimeStep();
-  activateReductionVariable( recomputeTimeStep_name, mayRecompute );
-  activateReductionVariable(     abortTimeStep_name, mayRecompute );
 
   //__________________________________
   // On the Fly Analysis. The belongs at bottom

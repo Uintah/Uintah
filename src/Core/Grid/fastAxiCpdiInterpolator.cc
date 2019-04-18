@@ -32,13 +32,13 @@ using namespace Uintah;
 
 fastAxiCpdiInterpolator::fastAxiCpdiInterpolator()
 {
-  d_size = 27;
+  d_size = 64;
   d_patch = 0;
 }
 
 fastAxiCpdiInterpolator::fastAxiCpdiInterpolator(const Patch* patch):fastCpdiInterpolator(patch)
 {
-  d_size = 27;
+  d_size = 64;
   d_patch = patch;
 }
 
@@ -54,26 +54,18 @@ fastAxiCpdiInterpolator* fastAxiCpdiInterpolator::clone(const Patch* patch)
 int fastAxiCpdiInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni,
                                             vector<double>& S,
-                                            const Matrix3& size,
-                                            const Matrix3& defgrad)
+                                            const Matrix3& size)
 {
-  Matrix3 defgrad1=Matrix3(defgrad(0,0),defgrad(0,1),defgrad(0,2),
-                           defgrad(1,0),defgrad(1,1),defgrad(1,2),
-                           defgrad(2,0),defgrad(2,1),1);
-  fastCpdiInterpolator::findCellAndWeights(pos,ni,S,size,defgrad1);
+  fastCpdiInterpolator::findCellAndWeights(pos,ni,S,size);
   return 27;
 }
 
 int fastAxiCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                      vector<IntVector>& ni,
                                                      vector<Vector>& d_S,
-                                                     const Matrix3& size,
-                                                     const Matrix3& defgrad)
+                                                     const Matrix3& size)
 {
-  Matrix3 defgrad1=Matrix3(defgrad(0,0),defgrad(0,1),defgrad(0,2),
-                           defgrad(1,0),defgrad(1,1),defgrad(1,2),
-                           defgrad(2,0),defgrad(2,1),1);
-  fastCpdiInterpolator::findCellAndShapeDerivatives(pos,ni,d_S,size,defgrad1);
+  fastCpdiInterpolator::findCellAndShapeDerivatives(pos,ni,d_S,size);
   return 27;
 }
 
@@ -81,14 +73,9 @@ int fastAxiCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& 
                                                           vector<IntVector>& ni,
                                                           vector<double>& S,
                                                           vector<Vector>& d_S,
-                                                          const Matrix3& size,
-                                                          const Matrix3& defgrad)
+                                                          const Matrix3& size)
 {
-  Matrix3 defgrad1=Matrix3(defgrad(0,0),defgrad(0,1),defgrad(0,2),
-                           defgrad(1,0),defgrad(1,1),defgrad(1,2),
-                           defgrad(2,0),defgrad(2,1),1);
-  fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(pos,ni,S,d_S,
-                                                          size,defgrad1);
+  fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(pos,ni,S,d_S,size);
   return 27;
 }
 
