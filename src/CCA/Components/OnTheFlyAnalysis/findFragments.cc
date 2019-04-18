@@ -50,9 +50,14 @@
 
 using namespace Uintah;
 using namespace std;
+//______________________________________________________________________
+//    Reference:  P. Yang, Y. Liu, X. Zhang, X. Zhou, Y. Zhao, 
+//    Simulation of Fragmentation with Material Point Method Based on 
+//    Gurson Model and Random Failure, CMES, Vol. 85, no.3, pp207-236, 2012
+//______________________________________________________________________
 
 
-Dout dbg_OTF_FS("findFragments", false);
+static DebugStream dbg("findFragments", false);
 //______________________________________________________________________
 findFragments::findFragments(ProblemSpecP     & module_spec,
                              SimulationStateP & sharedState,
@@ -62,15 +67,17 @@ findFragments::findFragments(ProblemSpecP     & module_spec,
   d_sharedState  = sharedState;
   d_prob_spec    = module_spec;
   d_dataArchiver = dataArchiver;
-  d_matl_set     = 0;
+  d_matl         = nullptr;
+  d_matl_set     = nullptr;
   d_lb           = scinew findFragmentsLabel();
   d_lb->prevAnalysisTimeLabel = VarLabel::create( "prevAnalysisTime", max_vartype::getTypeDescription() );
+  d_lb->gMassLabel =  VarLabel::find( "g.mass" );
 }
 
 //__________________________________
 findFragments::~findFragments()
 {
-  DOUT(dbg_OTF_FS , " Doing: destorying findFragments " );
+  dbg << " Doing: destorying findFragments \n";
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
@@ -87,7 +94,9 @@ void findFragments::problemSetup(const ProblemSpecP & prob_spec,
                                  GridP              & grid,
                                  SimulationStateP   & sharedState)
 {
-  DOUT(dbg_OTF_FS , "Doing problemSetup \t\t\t\tfindFragments" );
+
+  cout << "HERE \n";
+  dbg << "Doing problemSetup \t\t\t\tfindFragments\n";
 
   if(!d_dataArchiver){
     throw InternalError("findFragments:couldn't get output port", __FILE__, __LINE__);
@@ -106,13 +115,11 @@ void findFragments::problemSetup(const ProblemSpecP & prob_spec,
 
   // find the material.
   //  <material>   atmosphere </material>
+  d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
 
-  const Material* matl = nullptr;
-  matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
-
-  int defaultMatl = matl->getDWIndex();
+  int indx   = d_matl->getDWIndex();
   d_matl_set = scinew MaterialSet();
-  d_matl_set->add( defaultMatl );
+  d_matl_set->add( indx );
   d_matl_set->addReference();
 
   d_matl_subSet = d_matl_set->getUnion();
@@ -155,7 +162,7 @@ void findFragments::problemSetup(const ProblemSpecP & prob_spec,
 void findFragments::scheduleInitialize( SchedulerP   & sched,
                                         const LevelP & level)
 {
-  printSchedule(level,dbg_OTF_FS, "findFragments::scheduleInitialize " );
+  printSchedule(level,dbg, "findFragments::scheduleInitialize " );
 
   Task* t = scinew Task("findFragments::initialize",
                   this, &findFragments::initialize);
@@ -174,7 +181,7 @@ void findFragments::initialize(const ProcessorGroup *,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask( patch, dbg_OTF_FS,"Doing  planeExtract::initialize" );
+    printTask( patch, dbg,"Doing  findFragments::initialize" );
 
     double tminus = -1.0/d_analysisFreq;
     new_dw->put(max_vartype(tminus), d_lb->prevAnalysisTimeLabel);
@@ -206,7 +213,7 @@ void findFragments::scheduleRestartInitialize(SchedulerP   & sched,
 void findFragments::scheduleDoAnalysis(SchedulerP   & sched,
                                        const LevelP & level)
 {
-  printSchedule(level,dbg_OTF_FS, "findFragments::scheduleDoAnalysis");
+  printSchedule(level,dbg, "findFragments::scheduleDoAnalysis");
 
   Task* t = scinew Task("findFragments::doAnalysis",
                    this,&findFragments::doAnalysis);
@@ -258,7 +265,7 @@ void findFragments::doAnalysis(const ProcessorGroup * pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask( patch, dbg_OTF_FS,"Doing findFragments::doAnalysis" );
+    printTask( patch, dbg,"Doing findFragments::doAnalysis" );
 
     int proc = lb->getPatchwiseProcessorAssignment(patch);
 
@@ -267,6 +274,61 @@ void findFragments::doAnalysis(const ProcessorGroup * pg,
     new_dw->put(max_vartype(prevAnalysisTime), d_lb->prevAnalysisTimeLabel);
   }  // patches
 }
+
+//______________________________________________________________________
+//
+void findFragments::sched_identifyFragments(SchedulerP   & sched,
+                                            const LevelP & level)
+{
+    Task* t = scinew Task("findFragments::identifyFragments",
+                      this,&findFragments::identifyFragments);
+                      
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    int indx = d_matl->getDWIndex();
+    
+    t->requires(Task::NewDW, d_lb->gMassLabel, d_matl_subSet, gac,1);
+    
+    sched->addTask(t, level->eachPatch(), d_matl_set);
+}
+
+//______________________________________________________________________
+//  See Reference, pg 224 for pseudo code
+void findFragments::identifyFragments(const ProcessorGroup * pg,
+                                      const PatchSubset    * patches,
+                                      const MaterialSubset *,
+                                      DataWarehouse        *,
+                                      DataWarehouse        * new_dw)
+{
+  //__________________________________
+  //
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+
+    printTask( patch, dbg,"Doing findFragments::identifyFragments" );
+
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    constNCVariable<double> gmass;
+    
+    int indx = d_matl->getDWIndex();
+    
+    new_dw->get(gmass, d_lb->gMassLabel, indx,patch,gac,1);    
+    
+    int nb_groups = 0;
+    
+    IntVector nodeIdx[8];
+    
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      const IntVector& c = *iter;
+      
+      patch->findNodesFromCell(c,nodeIdx);
+      for (int in=0;in<8;in++){
+        gmass[nodeIdx[in]];
+      }
+    }
+  }  // patches
+}
+
 
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header

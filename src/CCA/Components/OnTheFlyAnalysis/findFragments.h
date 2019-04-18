@@ -82,6 +82,15 @@ namespace Uintah {
                      DataWarehouse        *,
                      DataWarehouse        * new_dw );
 
+    void sched_identifyFragments(SchedulerP   & sched,
+                                 const LevelP & level);
+
+    void identifyFragments(const ProcessorGroup * pg,
+                           const PatchSubset    * patches,
+                           const MaterialSubset *,
+                           DataWarehouse        *,
+                           DataWarehouse        * new_dw);
+
     void createFile( const std::string  & filename,
                      const VarLabel     * varLabel,
                      const int matl,
@@ -97,6 +106,7 @@ namespace Uintah {
     public:
       VarLabel* prevAnalysisTimeLabel;
       VarLabel* fileVarsStructLabel;
+      VarLabel* gMassLabel;
     };
 
     findFragmentsLabel* d_lb;
@@ -113,7 +123,8 @@ namespace Uintah {
     Output*          d_dataArchiver;
     ProblemSpecP     d_prob_spec;
     std::set<std::string> d_isDirCreated;
-
+    
+    const Material*  d_matl;
     MaterialSet*     d_matl_set;
     const MaterialSubset*  d_matl_subSet;
   };

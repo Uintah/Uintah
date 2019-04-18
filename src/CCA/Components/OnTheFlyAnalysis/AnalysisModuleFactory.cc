@@ -27,6 +27,8 @@
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
 #include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
+#include <CCA/Components/OnTheFlyAnalysis/findFragments.h>
+
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/momentumAnalysis.h>
 #include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
@@ -92,6 +94,9 @@ AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
       }
       else if ( module == "flatPlate_heatFlux" ) {
         modules.push_back ( scinew flatPlate_heatFlux(  module_ps, sharedState, dataArchiver) );
+      }
+      else if ( module == "findFragments" ) {
+        modules.push_back ( scinew findFragments(       module_ps, sharedState, dataArchiver) );
       }
       else if ( module == "firstLawThermo" ) {
         modules.push_back ( scinew FirstLawThermo(      module_ps, sharedState, dataArchiver) );
