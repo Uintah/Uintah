@@ -62,14 +62,16 @@
 
 namespace {
 
-Uintah::Dout g_sim_stats(       "SimulationStats"           , "SimulationController", "Simulation general stats"    , true  );
-Uintah::Dout g_sim_stats_mem(   "SimulationStatsMem"        , "SimulationController", "Simulation memory stats"     , true  );
+Uintah::Dout g_sim_stats(       "SimulationStats"           , "SimulationController", "Simulation general stats"         , true  );
+Uintah::Dout g_sim_stats_mem(   "SimulationStatsMem"        , "SimulationController", "Simulation memory stats"          , true  );
 
-Uintah::Dout g_comp_stats(      "ComponentStats"            , "SimulationController", "Aggregated component stats"  , false );
-Uintah::Dout g_comp_indv_stats( "ComponentIndividualStats"  , "SimulationController", "Individual component stats"  , false );
+Uintah::Dout g_comp_stats(      "ComponentStats"            , "SimulationController", "Aggregated component stats"       , false );
+Uintah::Dout g_comp_node_stats( "ComponentNodeStats"        , "SimulationController", "Aggregated node component stats"  , false );
+Uintah::Dout g_comp_indv_stats( "ComponentIndividualStats"  , "SimulationController", "Individual component stats"       , false );
 
-Uintah::Dout g_app_stats(       "ApplicationStats"          , "SimulationController", "Aggregated application stats", false );
-Uintah::Dout g_app_indv_stats(  "ApplicationIndividualStats", "SimulationController", "Individual application stats", false );
+Uintah::Dout g_app_stats(       "ApplicationStats"          , "SimulationController", "Aggregated application stats"     , false );
+Uintah::Dout g_app_node_stats(  "ApplicationNodeStats"      , "SimulationController", "Aggregated node application stats", false );
+Uintah::Dout g_app_indv_stats(  "ApplicationIndividualStats", "SimulationController", "Individual application stats"     , false );
 
 }
 
@@ -153,8 +155,16 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   m_runtime_stats.insert( MemoryUsed,                std::string("MemoryUsed"),            bytesStr );
   m_runtime_stats.insert( MemoryResident,            std::string("MemoryResident"),        bytesStr );
 
-  m_runtime_stats.calculateMinimum(true);
-  m_runtime_stats.calculateStdDev (true);
+  m_runtime_stats.calculateRankMinimum(true);
+  m_runtime_stats.calculateRankStdDev (true);
+
+  if( g_comp_node_stats ) {
+    m_runtime_stats.calculateNodeSum    ( true );
+    m_runtime_stats.calculateNodeMinimum( true );
+    m_runtime_stats.calculateNodeAverage( true );
+    m_runtime_stats.calculateNodeMaximum( true );
+    m_runtime_stats.calculateNodeStdDev ( true );
+  }
 
 #ifdef HAVE_VISIT
   m_visitSimData = scinew visit_simulation_data();
@@ -623,7 +633,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
 #endif
   
   // Reductions are only need if these are true.
-  if ((m_regridder && m_regridder->useDynamicDilation()) || g_sim_stats_mem || g_comp_stats || reduce) {
+  if ((m_regridder && m_regridder->useDynamicDilation()) || g_sim_stats_mem || g_comp_stats || g_comp_node_stats || reduce) {
 
     m_runtime_stats.reduce(m_regridder && m_regridder->useDynamicDilation(), d_myworld);
 
@@ -635,7 +645,13 @@ SimulationController::ReportStats(const ProcessorGroup*,
     }
   }
 
-  if (g_app_stats || reduce) {
+  if (g_app_stats || g_app_node_stats || reduce) {
+    m_application->getApplicationStats().calculateNodeSum    ( true );
+    m_application->getApplicationStats().calculateNodeMinimum( true );
+    m_application->getApplicationStats().calculateNodeAverage( true );
+    m_application->getApplicationStats().calculateNodeMaximum( true );
+    m_application->getApplicationStats().calculateNodeStdDev ( true );
+
     m_application->reduceApplicationStats(m_regridder && m_regridder->useDynamicDilation(), d_myworld);
   }
   
@@ -777,12 +793,12 @@ SimulationController::ReportStats(const ProcessorGroup*,
   // Ignore the first sample as that is for initialization.
   if (reportStats && m_num_samples) {
 
-    // Infrastructure average proc runtime performance stats.
+    // Infrastructure proc runtime performance stats.
     if (g_comp_stats && d_myworld->myRank() == 0 ) {
-      m_runtime_stats.reportSummaryStats( "Runtime",
-                                          m_application->getTimeStep(),
-                                          m_application->getSimTime(),
-                                          true );
+      m_runtime_stats.reportRankSummaryStats( "Runtime",
+                                              m_application->getTimeStep(),
+                                              m_application->getSimTime(),
+                                              true );
 
       // Report the overhead percentage.
       if (!std::isnan(overheadAverage)) {
@@ -793,6 +809,14 @@ SimulationController::ReportStats(const ProcessorGroup*,
       }
     }
 
+    // Infrastructure per node runtime performance stats.
+    if (g_comp_node_stats && d_myworld->myNode_myRank() == 0 ) {
+      m_runtime_stats.reportNodeSummaryStats( ("Runtime Node " + d_myworld->myNodeName()).c_str(),
+                                              m_application->getTimeStep(),
+                                              m_application->getSimTime(),
+                                              true );
+    }
+    
     // Infrastructure per proc runtime performance stats
     if (g_comp_indv_stats) {
       m_runtime_stats.reportIndividualStats( "Runtime",
@@ -801,13 +825,22 @@ SimulationController::ReportStats(const ProcessorGroup*,
                                              m_application->getSimTime() );
     }
 
-    // Application average proc runtime performance stats.
+    // Application proc runtime performance stats.
     if (g_app_stats && d_myworld->myRank() == 0) {      
       m_application->getApplicationStats().
-        reportSummaryStats( "Application",
-                            m_application->getTimeStep(),
-                            m_application->getSimTime(),
-                            false );
+        reportRankSummaryStats( "Application",
+                                m_application->getTimeStep(),
+                                m_application->getSimTime(),
+                                false );
+    }
+
+    // Application per node runtime performance stats.
+    if (g_app_node_stats && d_myworld->myNode_myRank() == 0 ) {
+      m_application->getApplicationStats().
+        reportNodeSummaryStats( ("Application Node " + d_myworld->myNodeName()).c_str(),
+                                m_application->getTimeStep(),
+                                m_application->getSimTime(),
+                                false );
     }
 
     // Application per proc runtime performance stats
