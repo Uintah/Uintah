@@ -858,8 +858,7 @@ AMRSimulationController::compileTaskGraph( int totalFine )
 
   taskGraphTimer.start();
 
-  std::string plural = ( (m_scheduler->getNumTaskGraphs() == 1) ? "" : "s" );
-  proc0cout << "Compiling taskgraph" << plural << "..." << std::endl;
+  proc0cout << "Compiling taskgraph(s)" << "..." << std::endl;
 
   m_output->recompile( m_current_gridP );
   
