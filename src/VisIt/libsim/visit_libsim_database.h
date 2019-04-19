@@ -149,6 +149,141 @@ void addVectorStats( visit_handle md, VectorInfoMapper< ENUM, T > stats,
   }
 }
 
+template< class ENUM, class T >
+void addVectorReductionStats( visit_handle md, VectorInfoMapper< ENUM, T > stats,
+			      std::string statName, std::string meshName )
+{
+  const unsigned int nReductions = 4;
+  std::string reduction[nReductions] =
+    {"/Average", "/Minimum", "/Maximum", "/StdDev"};
+
+  for( unsigned j=0; j<nReductions; ++j )
+  {
+    if( (j == 0 && stats.calculateAverage()) ||
+	(j == 1 && stats.calculateMinimum()) ||
+	(j == 2 && stats.calculateMaximum()) ||
+	(j == 3 && stats.calculateStdDev() ) )
+    {  
+      for( unsigned int i=0; i<stats[0].size(); ++i )
+      {
+	visit_handle vmd = VISIT_INVALID_HANDLE;
+	
+	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+	{
+	  std::string tmp_name =
+	    statName + stats[0].getName( i ) + reduction[j];
+	  std::string units = stats[0].getUnits( i );
+      
+	  VisIt_VariableMetaData_setName(vmd, tmp_name.c_str());
+	  VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
+	  VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+	  VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+	  VisIt_VariableMetaData_setNumComponents(vmd, 1);
+	  VisIt_VariableMetaData_setUnits(vmd, units.c_str());
+      
+	  // ARS - FIXME
+	  //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+	  VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+      
+	  VisIt_SimulationMetaData_addVariable(md, vmd);
+	}
+      }
+    }
+  }
+}
+
+template< class KEY, class ENUM, class T >
+void addMapStats( const visit_handle md, MapInfoMapper< KEY, ENUM, T > stats,
+		  std::string statName, std::string statIndex,
+		  std::string meshName )
+{
+  if( stats.size() == 0 )
+    return;
+  
+  KEY key = stats.getKey(0);
+
+  for( unsigned int i=0; i<stats[key].size(); ++i )
+  {
+    visit_handle vmd = VISIT_INVALID_HANDLE;
+    
+    if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+    {
+      std::string tmp_name = statName + stats[key].getName( i );
+
+      if( statIndex.size() )
+	tmp_name += statIndex;
+
+      std::string units = stats[key].getUnits( i );
+      
+      VisIt_VariableMetaData_setName(vmd, tmp_name.c_str());
+      VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
+      VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+      VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+      VisIt_VariableMetaData_setNumComponents(vmd, 1);
+      VisIt_VariableMetaData_setUnits(vmd, units.c_str());
+      
+      // ARS - FIXME
+      //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+      VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+      
+      VisIt_SimulationMetaData_addVariable(md, vmd);
+    }
+  }
+}
+
+template< class KEY, class ENUM, class T >
+void addMapReductionStats( visit_handle md, MapInfoMapper< KEY, ENUM, T > stats,
+			   std::string statName, std::string statIndex,
+			   std::string meshName )
+{
+  if( stats.size() == 0 )
+    return;
+  
+  KEY key = stats.getKey(0);
+
+  const unsigned int nReductions = 4;
+  std::string reduction[nReductions] =
+    {"/Average", "/Minimum", "/Maximum", "/StdDev"};
+
+  for( unsigned j=0; j<nReductions; ++j )
+  {
+    if( (j == 0 && stats.calculateAverage()) ||
+	(j == 1 && stats.calculateMinimum()) ||
+	(j == 2 && stats.calculateMaximum()) ||
+	(j == 3 && stats.calculateStdDev() ) )
+    {  
+      for( unsigned int i=0; i<stats[key].size(); ++i )
+      {
+	visit_handle vmd = VISIT_INVALID_HANDLE;
+	
+	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+	{
+	  std::string tmp_name =
+	    statName + stats[key].getName( i ) + reduction[j];;
+
+	  if( statIndex.size() )
+	    tmp_name += statIndex;
+
+	  std::string units = stats[key].getUnits( i );
+      
+	  VisIt_VariableMetaData_setName(vmd, tmp_name.c_str());
+	  VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
+	  VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+	  VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+	  VisIt_VariableMetaData_setNumComponents(vmd, 1);
+	  VisIt_VariableMetaData_setUnits(vmd, units.c_str());
+      
+	  // ARS - FIXME
+	  //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+	  VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+      
+	  VisIt_SimulationMetaData_addVariable(md, vmd);
+	}
+      }
+    }
+  }
+}
+
 } // End namespace Uintah
 
 #endif
