@@ -739,18 +739,18 @@ void reportStats( const char* statsName,
         {
           VisItUI_setTableValueS(tableName, row, col++, name.c_str(), 0);
           VisItUI_setTableValueS(tableName, row, col++, units.c_str(), 0);
-          if( runtimeStats.calculateMinimum() ) {
+          if( runtimeStats.calculateRankMinimum() ) {
             VisItUI_setTableValueS(tableName, row, col++,
                                    ProcessInfo::toHumanUnits(minimum).c_str(), 0);
             VisItUI_setTableValueI(tableName, row, col++, minRank, 0);
           }
-          if( runtimeStats.calculateAverage() )
+          if( runtimeStats.calculateRankAverage() )
             VisItUI_setTableValueS(tableName, row, col++,
                                    ProcessInfo::toHumanUnits(average).c_str(), 0);
-          if( runtimeStats.calculateStdDev() )
+          if( runtimeStats.calculateRankStdDev() )
             VisItUI_setTableValueS(tableName, row, col++,
                                    ProcessInfo::toHumanUnits(stdDev).c_str(), 0);
-          if( runtimeStats.calculateMaximum() ) {
+          if( runtimeStats.calculateRankMaximum() ) {
             VisItUI_setTableValueS(tableName, row, col++,
                                    ProcessInfo::toHumanUnits(maximum).c_str(), 0);
             VisItUI_setTableValueI(tableName, row, col++, maxRank, 0);
@@ -761,15 +761,15 @@ void reportStats( const char* statsName,
         {
           VisItUI_setTableValueS(tableName, row, col++, name.c_str(), 0);
           VisItUI_setTableValueS(tableName, row, col++, units.c_str(), 0);
-          if( runtimeStats.calculateMinimum() ) {
+          if( runtimeStats.calculateRankMinimum() ) {
             VisItUI_setTableValueD(tableName, row, col++, minimum, 0);
             VisItUI_setTableValueI(tableName, row, col++, minRank, 0);
           }
-          if( runtimeStats.calculateAverage() )
+          if( runtimeStats.calculateRankAverage() )
             VisItUI_setTableValueD(tableName, row, col++, average, 0);
-          if( runtimeStats.calculateStdDev() )
+          if( runtimeStats.calculateRankStdDev() )
             VisItUI_setTableValueD(tableName, row, col++, stdDev, 0);
-          if( runtimeStats.calculateMaximum() ) {
+          if( runtimeStats.calculateRankMaximum() ) {
             VisItUI_setTableValueD(tableName, row, col++, maximum, 0);
             VisItUI_setTableValueI(tableName, row, col++, maxRank, 0);
           }
@@ -789,13 +789,13 @@ void reportStats( const char* statsName,
       
       std::string menuName = std::string(statsName) + "Stats/" + name;
 
-      if( runtimeStats.calculateMinimum() )
+      if( runtimeStats.calculateRankMinimum() )
         visit_SetStripChartValue( sim, menuName+"/Minimum", minimum );
-      if( runtimeStats.calculateAverage() )
+      if( runtimeStats.calculateRankAverage() )
         visit_SetStripChartValue( sim, menuName+"/Average", average );
-      if( runtimeStats.calculateStdDev() )
+      if( runtimeStats.calculateRankStdDev() )
         visit_SetStripChartValue( sim, menuName+"/StdDev",  stdDev  );
-      if( runtimeStats.calculateMaximum() )
+      if( runtimeStats.calculateRankMaximum() )
         visit_SetStripChartValue( sim, menuName+"/Maximum", maximum );
     }
   }
