@@ -85,8 +85,8 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   nonconstDelT->allowMultipleComputes();
   m_delTLabel = nonconstDelT;
 
-  m_application_stats.calculateMinimum( true );
-  m_application_stats.calculateStdDev( true );
+  m_application_stats.calculateRankMinimum( true );
+  m_application_stats.calculateRankStdDev ( true );
 
   // Reduction vars local to the application.
   
