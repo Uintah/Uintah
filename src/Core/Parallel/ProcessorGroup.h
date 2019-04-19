@@ -99,9 +99,9 @@ public:
   void setGlobalComm( int num_comms ) const;
 
   // Utilities for getting node based information.
-  int         getNodeIndexFromRank( int rank ) const;
-  std::string getNodeNameFromRank( int rank ) const;
-  std::string getNodeName( int node ) const;
+  int         getNodeIndexFromRank( unsigned int rank ) const;
+  std::string getNodeNameFromRank( unsigned int rank ) const;
+  std::string getNodeName( unsigned int node ) const;
 
 private:
 
