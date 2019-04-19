@@ -392,7 +392,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
 
     VAR<T> cvar;
     const T *cp = nullptr;
-    IntVector clow, chigh, cvardims;
+    IntVector clow, chigh, cvardims(0);
 
     const Level *level = patch->getLevel();
     const IntVector rRatio = level->getRefinementRatio();
