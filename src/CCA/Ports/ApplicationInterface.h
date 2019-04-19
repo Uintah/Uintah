@@ -98,6 +98,7 @@ WARNING
     friend class DynamicMPIScheduler;
     friend class MPIScheduler;
     friend class UnifiedScheduler;
+    friend class DetailedTasks;
 
     friend class LoadBalancersCommon;
     friend class DynamicLoadBalancer;
