@@ -858,15 +858,18 @@ SchedulerCommon::addTask(       Task        * task
   // Save the DW map
   task->setMapping(m_dwmap);
 
+  bool is_init = m_is_init_timestep || m_is_restart_init_timestep;
+
   DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " adding Task: " << task->getName()
                                       << ",  # patches: "    << (patches ? patches->size() : 0)
                                       << ",    # matls: "    << (matls ? matls->size() : 0)
-                                      << ", task-graph: "    << ((tg_num < 0) ? (m_is_init_timestep ? "init-tg" : "all") : std::to_string(tg_num)));
+                                      << ", task-graph: "    << ((tg_num < 0) ? (is_init ? "init-tg" : "all") : std::to_string(tg_num)));
 
-  // bulletproofing
-  if (tg_num >= m_num_task_graphs){
+  // bulletproofing - ignore during initialization, the first and only
+  // task graph is used regardless.
+  if (!is_init && tg_num >= (int) m_task_graphs.size()){
     std::ostringstream msg;
-    msg << task->getName() <<"::addTask(),  taskgraph index ("<< tg_num << ") >= num_taskgraphs ("<< m_num_task_graphs << ")";
+    msg << task->getName() <<"::addTask(),  taskgraph index ("<< tg_num << ") >= num_taskgraphs ("<< m_task_graphs.size() << ")";
     throw InternalError(msg.str(), __FILE__, __LINE__);
   }
 
@@ -1012,20 +1015,20 @@ void SchedulerCommon::addTask(       std::shared_ptr<Task>   task
                              , const int                     tg_num
                              )
 {
-  // During initialization, use only one task graph
-  if (m_is_init_timestep) {
+  // During initialization or restart, there is only one task graph.
+  if (m_is_init_timestep || m_is_restart_init_timestep) {
     m_task_graphs[m_task_graphs.size() - 1]->addTask(task, patches, matls);
     m_num_tasks++;
   }
   else {
-    // add it to all "Normal" task graphs (default value == -1, from public addTask() method)
+    // Add it to all "Normal" task graphs (default value == -1, from public addTask() method).
     if (tg_num < 0) {
-      for (int i = 0; i < m_num_task_graphs; ++i) {
+      for (int i = 0; i < m_task_graphs.size(); ++i) {
         m_task_graphs[i]->addTask(task, patches, matls);
         m_num_tasks++;
       }
     }
-    // otherwise, add this task to a specific task graph
+    // Otherwise, add this task to a specific task graph.
     else {
       m_task_graphs[tg_num]->addTask(task, patches, matls);
       m_num_tasks++;
@@ -1080,8 +1083,10 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */
 
   m_reduction_tasks.clear();
 
+  // During initialization or restart, use only one task graph
   bool is_init = m_is_init_timestep || m_is_restart_init_timestep;
   size_t num_task_graphs = (is_init) ? 1 : m_num_task_graphs;
+
   for (size_t i = 0; i < num_task_graphs; ++i) {
     addTaskGraph(NormalTaskGraph, i);
   }
@@ -1361,6 +1366,7 @@ SchedulerCommon::compile()
     DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " SchedulerCommon starting compile");
 
     const auto num_task_graphs = m_task_graphs.size();
+
     for (auto i = 0u; i < num_task_graphs; i++) {
       if (num_task_graphs > 1) {
         DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << "  Compiling task graph: " << i+1 << " of " << m_task_graphs.size() << " with " << m_num_tasks << " tasks.");
@@ -1377,8 +1383,10 @@ SchedulerCommon::compile()
 
       double compile_time = tg_compile_timer().seconds();
 
+      bool is_init = m_is_init_timestep || m_is_restart_init_timestep;
+
       DOUT(g_task_graph_compile, "Rank-" << std::left << std::setw(5) << d_myworld->myRank() << " time to compile TG-" << std::setw(4)
-                                         << (m_is_init_timestep ? "INIT" : std::to_string(m_task_graphs[i]->getIndex())) << ": " << compile_time << " (sec)");
+                                         << (is_init ? "init-tg" : std::to_string(m_task_graphs[i]->getIndex())) << ": " << compile_time << " (sec)");
     }
 
     // check scheduler at runtime, that all ranks are executing the same size TG (excluding spatial tasks)
@@ -1735,14 +1743,14 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 
   this->compile();
 
-  (*d_runtimeStats)[RegriddingCompilationTime] += timer().seconds();
+  (*m_runtimeStats)[RegriddingCompilationTime] += timer().seconds();
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
-  double exec_time   = (*d_runtimeStats)[TaskExecTime];
-  double local_time  = (*d_runtimeStats)[TaskLocalCommTime];
-  double wait_time   = (*d_runtimeStats)[TaskWaitCommTime];
-  double reduce_time = (*d_runtimeStats)[TaskReduceCommTime];
-  double thread_time = (*d_runtimeStats)[TaskWaitThreadTime];
+  double exec_time   = (*m_runtimeStats)[TaskExecTime];
+  double local_time  = (*m_runtimeStats)[TaskLocalCommTime];
+  double wait_time   = (*m_runtimeStats)[TaskWaitCommTime];
+  double reduce_time = (*m_runtimeStats)[TaskReduceCommTime];
+  double thread_time = (*m_runtimeStats)[TaskWaitThreadTime];
 
   timer.reset( true );
   this->execute();
@@ -1799,14 +1807,14 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 
   newDataWarehouse->refinalize();
 
-  (*d_runtimeStats)[RegriddingCopyDataTime] += timer().seconds();
+  (*m_runtimeStats)[RegriddingCopyDataTime] += timer().seconds();
 
   // restore values from before the regrid and data copy
-  (*d_runtimeStats)[TaskExecTime]       = exec_time;
-  (*d_runtimeStats)[TaskLocalCommTime]  = local_time;
-  (*d_runtimeStats)[TaskWaitCommTime]   = wait_time;
-  (*d_runtimeStats)[TaskReduceCommTime] = reduce_time;
-  (*d_runtimeStats)[TaskWaitThreadTime] = thread_time;
+  (*m_runtimeStats)[TaskExecTime]       = exec_time;
+  (*m_runtimeStats)[TaskLocalCommTime]  = local_time;
+  (*m_runtimeStats)[TaskWaitCommTime]   = wait_time;
+  (*m_runtimeStats)[TaskReduceCommTime] = reduce_time;
+  (*m_runtimeStats)[TaskWaitThreadTime] = thread_time;
 
   m_is_copy_data_timestep = false;
 }

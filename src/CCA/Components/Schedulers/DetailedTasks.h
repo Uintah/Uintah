@@ -132,7 +132,9 @@ public:
     return m_tasks[i];
   }
 
-  void assignMessageTags( int me );
+  void assignMessageTags( unsigned int index );
+
+  MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > & getCommInfo() { return m_comm_info; }
 
   void initializeScrubs( std::vector<OnDemandDataWarehouseP> & dws, int dwmap[] );
 
@@ -157,7 +159,7 @@ public:
 
   void initTimestep();
 
-  void computeLocalTasks( int me );
+  void computeLocalTasks();
 
   int numLocalTasks() const
   {
@@ -382,6 +384,9 @@ private:
 
   ScrubCountTable m_scrub_count_table;
 
+  // A mapper to keep track of point to point MPI calls.
+  MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > m_comm_info;
+  
   // eliminate copy, assignment and move
   DetailedTasks(const DetailedTasks &)            = delete;
   DetailedTasks& operator=(const DetailedTasks &) = delete;
@@ -414,4 +419,3 @@ private:
 }  // namespace Uintah
 
 #endif // CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
-

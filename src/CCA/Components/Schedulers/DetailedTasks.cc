@@ -149,10 +149,18 @@ DetailedTasks::~DetailedTasks()
 //_____________________________________________________________________________
 //
 void
-DetailedTasks::assignMessageTags( int me )
+DetailedTasks::assignMessageTags( unsigned int index )
 {
-  // maps from, to (process) pairs to indices for each batch of that pair
-  std::map<std::pair<int, int>, int> perPairBatchIndices;
+  int me = m_proc_group->myRank();
+  
+  m_comm_info.clear();
+  m_comm_info.setKeyName( "Rank" );
+  
+  // Insert the stats to be collected. In this case collect stats for
+  // this rank only for both messages passed to it and recieved from
+  // other ranks.
+  m_comm_info.insert( CommPTPMsgTo,   std::string("ToRank")  , "messages" );
+  m_comm_info.insert( CommPTPMsgFrom, std::string("FromRank"), "messages" );
 
   for (size_t i = 0; i < m_dep_batches.size(); i++) {
     DependencyBatch* batch = m_dep_batches[i];
@@ -164,22 +172,31 @@ DetailedTasks::assignMessageTags( int me )
     ASSERTRANGE(to, 0, m_proc_group->nRanks());
 
     if (from == me || to == me) {
-      // Easier to go in reverse order now, instead of reinitializing perPairBatchIndices.
-      std::pair<int, int> fromToPair = std::make_pair(from, to);
-      m_dep_batches[i]->m_message_tag = ++perPairBatchIndices[fromToPair];  // start with one
-      DOUT(g_message_tags_dbg, "Rank-" << me << " assigning message tag " << batch->m_message_tag << " from task " << batch->m_from_task->getName()
-                               << " to task " << batch->m_to_tasks.front()->getName() << ", rank-" << from << " to rank-" << to);
+
+      // Start the message tag with one.
+      if( from == me )
+        m_dep_batches[i]->m_message_tag = ++m_comm_info[ to ][CommPTPMsgTo];
+      
+      if( to == me )
+        m_dep_batches[i]->m_message_tag = ++m_comm_info[ from ][CommPTPMsgFrom];
+
+      DOUT(g_message_tags_dbg, "Rank-" << me
+           << " assigning message tag " << batch->m_message_tag
+           << " from task " << batch->m_from_task->getName()
+           << " to task " << batch->m_to_tasks.front()->getName()
+           << ", rank-" << from << " to rank-" << to);
     }
   }
 
+  // Dump both the summary and individual stats. 
   if (g_message_tags_dbg) {
-    for (auto iter = perPairBatchIndices.begin(); iter != perPairBatchIndices.end(); ++iter) {
-      int from = iter->first.first;
-      int to   = iter->first.second;
-      int num  = iter->second;
-
-      DOUT(true, num << " messages from rank-" << from << " to rank-" << to);;
-    }
+    unsigned int timeStep = m_sched_common->getApplication()->getTimeStep();
+    double simTime = m_sched_common->getApplication()->getSimTime();
+    std::string title = "Communication TG [" + std::to_string(index) + "]";
+    m_comm_info.calculateMinimum( true );
+    m_comm_info.reduce();
+    m_comm_info.reportSummaryStats   ( title.c_str(), me, timeStep, simTime, false );
+    m_comm_info.reportIndividualStats( title.c_str(), me, timeStep, simTime );
   }
 }  // end assignMessageTags()
 
@@ -226,8 +243,10 @@ DetailedTasks::makeDWKeyDatabase()
 //_____________________________________________________________________________
 //
 void
-DetailedTasks::computeLocalTasks( int me )
+DetailedTasks::computeLocalTasks()
 {
+  int me = m_proc_group->myRank();
+
   if (m_local_tasks.size() != 0) {
     return;
   }
@@ -1692,5 +1711,3 @@ DetailedDep* DetailedTasks::findMatchingInternalDetailedDep(DependencyBatch     
 }
 
 #endif
-
-

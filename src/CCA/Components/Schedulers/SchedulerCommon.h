@@ -132,8 +132,17 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     /// For more complicated models
     virtual void addTaskGraph( tgType type, int index /* == -1 */ );
 
-    virtual int getNumTaskGraphs() { return m_num_task_graphs; }
+    virtual TaskGraph* getTaskGraph( unsigned int index )
+    {
+      ASSERT( 0 <= index && index < m_task_graphs.size() );
+      return m_task_graphs[index];
+    }
 
+    virtual int getNumTaskGraphs() { return m_task_graphs.size(); }
+
+    // The number of task graphs is the number of task graphs that
+    // will be used for all time steps excdept the initial time step,
+    // where there is only one task graph.
     virtual void setNumTaskGraphs( const int num_task_graphs ) {
       ASSERT( num_task_graphs  >= 1 );
       m_num_task_graphs = num_task_graphs;
@@ -291,7 +300,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     const VarLabel* m_reloc_new_pos_label{nullptr};
 
-    void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { d_runtimeStats = runtimeStats; };
+    void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { m_runtimeStats = runtimeStats; };
 
   protected:
 
@@ -382,7 +391,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // do not checkpoint these variables
     std::set<std::string> m_no_checkpoint_vars;
 
-    ReductionInfoMapper< RuntimeStatsEnum, double > *d_runtimeStats{nullptr};
+    ReductionInfoMapper< RuntimeStatsEnum, double > *m_runtimeStats{nullptr};
 
   private:
 

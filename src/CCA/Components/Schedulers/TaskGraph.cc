@@ -629,10 +629,10 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
   }
 
   if (m_proc_group->nRanks() > 1) {
-    m_detailed_tasks->assignMessageTags(m_proc_group->myRank());
+    m_detailed_tasks->assignMessageTags( m_index );
   }
 
-  m_detailed_tasks->computeLocalTasks(m_proc_group->myRank());
+  m_detailed_tasks->computeLocalTasks();
   m_detailed_tasks->makeDWKeyDatabase();
 
   return m_detailed_tasks;
