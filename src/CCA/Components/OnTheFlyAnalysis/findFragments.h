@@ -28,6 +28,7 @@
 
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Ports/Output.h>
+#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -81,6 +82,15 @@ namespace Uintah {
                      const MaterialSubset *,
                      DataWarehouse        *,
                      DataWarehouse        * new_dw );
+                     
+    void sched_sumLocalizedParticles(SchedulerP   & sched,
+                                     const LevelP & level);
+
+    void sumLocalizedParticles(const ProcessorGroup * pg,
+                               const PatchSubset    * patches,
+                               const MaterialSubset *,
+                               DataWarehouse        *,
+                               DataWarehouse        * new_dw);
 
     void sched_identifyFragments(SchedulerP   & sched,
                                  const LevelP & level);
@@ -90,6 +100,13 @@ namespace Uintah {
                            const MaterialSubset *,
                            DataWarehouse        *,
                            DataWarehouse        * new_dw);
+                           
+    void checkNeighborCells( const std::string    & level,
+                             const IntVector      & cell, 
+                             const Patch          * patch,
+                             const int              fragID,
+                             constCCVariable<int> & numLocalized,
+                             CCVariable<int>      & fragmentID );
 
     void createFile( const std::string  & filename,
                      const VarLabel     * varLabel,
@@ -106,7 +123,13 @@ namespace Uintah {
     public:
       VarLabel* prevAnalysisTimeLabel;
       VarLabel* fileVarsStructLabel;
+      VarLabel* fragmentIDLabel;
       VarLabel* gMassLabel;
+      VarLabel* pMassLabel;
+      VarLabel* pLocalizedLabel;
+      VarLabel* pXLabel;
+      
+      VarLabel* numLocalized_CCLabel;
     };
 
     findFragmentsLabel* d_lb;

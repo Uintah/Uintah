@@ -33,8 +33,8 @@
 #include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -55,8 +55,17 @@ using namespace std;
 //    Simulation of Fragmentation with Material Point Method Based on 
 //    Gurson Model and Random Failure, CMES, Vol. 85, no.3, pp207-236, 2012
 //______________________________________________________________________
-
-
+//    To Do
+//    - Read variables (Q) from ups to compute mean quantities
+//    - Interpolate Q from particles to nodes and then to cell centers.
+//    - Identify fragments.  What is the criteria???
+//    - Find data structure for mean quantities (Q), doubles and vectors and matrix3??
+//    - MPI code for summing each Q for each fragment
+//    - compute mass weighted average for each Q and each fragment
+//    - output mean quantites for each fragment
+//
+//______________________________________________________________________
+//
 static DebugStream dbg("findFragments", false);
 //______________________________________________________________________
 findFragments::findFragments(ProblemSpecP     & module_spec,
@@ -70,8 +79,15 @@ findFragments::findFragments(ProblemSpecP     & module_spec,
   d_matl         = nullptr;
   d_matl_set     = nullptr;
   d_lb           = scinew findFragmentsLabel();
+  
   d_lb->prevAnalysisTimeLabel = VarLabel::create( "prevAnalysisTime", max_vartype::getTypeDescription() );
-  d_lb->gMassLabel =  VarLabel::find( "g.mass" );
+  d_lb->fragmentIDLabel      = VarLabel::create(  "fragmentID",       CCVariable<int>::getTypeDescription() );
+  d_lb->numLocalized_CCLabel  = VarLabel::create( "sumLocalized_CC",  CCVariable<int>::getTypeDescription() );
+  
+  d_lb->gMassLabel            = VarLabel::find( "g.mass" );
+  d_lb->pMassLabel            = VarLabel::find( "p.mass" );
+  d_lb->pLocalizedLabel       = VarLabel::find( "p.localizedMPM+" );
+  d_lb->pXLabel               = VarLabel::find( "p.x+" );
 }
 
 //__________________________________
@@ -83,7 +99,13 @@ findFragments::~findFragments()
   }
 
   VarLabel::destroy( d_lb->prevAnalysisTimeLabel );
-  VarLabel::destroy( d_lb->fileVarsStructLabel );
+  VarLabel::destroy( d_lb->fragmentIDLabel );
+  VarLabel::destroy( d_lb->gMassLabel );
+  VarLabel::destroy( d_lb->numLocalized_CCLabel );
+  
+  VarLabel::destroy( d_lb->pLocalizedLabel );
+  VarLabel::destroy( d_lb->pMassLabel );
+  VarLabel::destroy( d_lb->pXLabel );
   delete d_lb;
 }
 
@@ -218,6 +240,11 @@ void findFragments::scheduleDoAnalysis(SchedulerP   & sched,
   Task* t = scinew Task("findFragments::doAnalysis",
                    this,&findFragments::doAnalysis);
 
+
+  sched_sumLocalizedParticles( sched, level);
+  sched_identifyFragments(     sched, level);
+
+
   t->requires(Task::OldDW, d_lb->prevAnalysisTimeLabel);
   Ghost::GhostType gac = Ghost::AroundCells;
 
@@ -239,8 +266,6 @@ void findFragments::doAnalysis(const ProcessorGroup * pg,
 {
   UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>( d_dataArchiver );
   LoadBalancerPort        * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer") );
-
-  const Level* level = getLevel(patches);
 
   // the user may want to restart from an uda that wasn't using the DA module
   // This logic allows that.
@@ -277,16 +302,78 @@ void findFragments::doAnalysis(const ProcessorGroup * pg,
 
 //______________________________________________________________________
 //
+void findFragments::sched_sumLocalizedParticles(SchedulerP   & sched,
+                                                const LevelP & level)
+{
+  Task* t = scinew Task("findFragments::sumLocalizedParticles",      
+                    this,&findFragments::sumLocalizedParticles); 
+  
+  printSchedule(level,dbg, "findFragments::sched_sumLocalizedParticles " );    
+                                                                     
+  Ghost::GhostType  gn = Ghost::None;                        
+                                               
+  t->requires(Task::NewDW, d_lb->pLocalizedLabel, d_matl_subSet, gn,0);
+  t->requires(Task::NewDW, d_lb->pXLabel,         d_matl_subSet, gn,0); 
+  t->computes( d_lb->numLocalized_CCLabel,        d_matl_subSet );        
+                                                                     
+  sched->addTask(t, level->eachPatch(), d_matl_set);                 
+}
+
+//______________________________________________________________________
+//  Loop over all cells and count the number of particles that are localized
+// in a cell
+void findFragments::sumLocalizedParticles(const ProcessorGroup * pg,
+                                          const PatchSubset    * patches,
+                                          const MaterialSubset *,
+                                          DataWarehouse        * old_dw,
+                                          DataWarehouse        * new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    
+    printTask( patch, dbg,"Doing findFragments::sumLocalizedParticles" );
+    
+    int dwi = d_matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset( dwi, patch );
+
+    constParticleVariable<int>   pLocalized;
+    constParticleVariable<Point> px;
+    CCVariable<int>  numLoc_CC;
+    
+    new_dw->get(pLocalized, d_lb->pLocalizedLabel, pset);
+    new_dw->get(px,         d_lb->pXLabel,         pset);
+    new_dw->allocateAndPut( numLoc_CC, d_lb->numLocalized_CCLabel, dwi, patch );
+
+    numLoc_CC.initialize(0);
+
+    for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
+      particleIndex idx = *iter;
+      
+      IntVector c = patch->getLevel()->getCellIndex( px[idx] );
+      
+      // disable for testing
+      // if( pLocalized[idx] > 0 )
+        numLoc_CC[c] += 1;
+      // }
+    }
+  }
+}
+
+//______________________________________________________________________
+//
 void findFragments::sched_identifyFragments(SchedulerP   & sched,
                                             const LevelP & level)
 {
     Task* t = scinew Task("findFragments::identifyFragments",
                       this,&findFragments::identifyFragments);
+                 
+    printSchedule(level,dbg, "findFragments::sched_identifyFragments " );
                       
     Ghost::GhostType  gac = Ghost::AroundCells;
-    int indx = d_matl->getDWIndex();
+    t->requires(Task::NewDW, d_lb->gMassLabel,           d_matl_subSet, gac,1);
+    t->requires(Task::NewDW, d_lb->numLocalized_CCLabel, d_matl_subSet, gac,1);
     
-    t->requires(Task::NewDW, d_lb->gMassLabel, d_matl_subSet, gac,1);
+    t->computes( d_lb->fragmentIDLabel, d_matl_subSet);
     
     sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -308,25 +395,91 @@ void findFragments::identifyFragments(const ProcessorGroup * pg,
     printTask( patch, dbg,"Doing findFragments::identifyFragments" );
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    constNCVariable<double> gmass;
-    
     int indx = d_matl->getDWIndex();
     
-    new_dw->get(gmass, d_lb->gMassLabel, indx,patch,gac,1);    
+    CCVariable<int>         fragmentID;
+    constNCVariable<double> gmass;
+    constCCVariable<int>    numLocalized;
+
+    new_dw->get( numLocalized, d_lb->numLocalized_CCLabel,indx,patch, gac,1);
     
-    int nb_groups = 0;
+    new_dw->allocateAndPut( fragmentID, d_lb->fragmentIDLabel, indx, patch);
+    fragmentID.initialize(0.0);
     
-    IntVector nodeIdx[8];
+    int fragID = 0;
     
+    
+    
+    //__________________________________
+    //  Loop over all cells
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
-      
-      patch->findNodesFromCell(c,nodeIdx);
-      for (int in=0;in<8;in++){
-        gmass[nodeIdx[in]];
+    
+      if (fragmentID[c] != 0 ){
+        continue;
       }
-    }
+      
+      // cell is fragmented
+      if ( numLocalized[c] != 0 ){
+        
+        fragmentID[c] = fragID;
+        cout << "Top Level c: " << c << " is a fragment" << endl;
+        checkNeighborCells( "  cell-neighbor",c, patch, fragID, numLocalized, fragmentID );
+        
+      }  // if: is cellfragmented
+      fragID ++;
+    }  // cellIterator
   }  // patches
+}
+
+//______________________________________________________________________
+//  Loop over all neighboring cells that share a node with cells node
+void findFragments::checkNeighborCells( const std::string    & level,
+                                        const IntVector      & cell, 
+                                        const Patch          * patch,
+                                        const int             fragID,
+                                        constCCVariable<int> & numLocalized,
+                                        CCVariable<int>      & fragmentID )
+{
+  // Loop over all nodes
+  IntVector nodeIdx[8];
+  
+  patch->findNodesFromCell( cell, nodeIdx );
+  for (int ni=0; ni<8; ni++){
+
+    const IntVector n = nodeIdx[ni];
+
+    // Loop over neighbor cells
+    IntVector neighborCells[8];
+    patch->findCellsFromNode( n, neighborCells);        // There's overlapping cells
+    
+    
+/*`==========TESTING==========*/
+    cout << "  neighborCells: ";
+    for (int ci=0; ci<8; ci++){
+      cout << neighborCells[ci] << ", ";
+    }
+    cout << "\n"; 
+/*===========TESTING==========`*/
+    
+    
+    for (int ci=0; ci<8; ci++){
+      IntVector nc = neighborCells[ci];
+
+      if (fragmentID[nc] != 0 ){
+        continue;
+      }
+
+      // cell is fragmented
+      if ( numLocalized[nc] != 0 ){
+        fragmentID[nc] = fragID;
+        cout << level << " " << nc << " is a fragment"<< endl;
+        checkNeighborCells( "    cell-neighbor-neighbor: ",nc, patch, fragID, numLocalized, fragmentID );
+        
+      }
+      //cout << cnt << "  parent Cell: " << c << " node: " << n << " neighorCell: " << nc << endl;
+    }  // neighborCell loop
+  }
 }
 
 
