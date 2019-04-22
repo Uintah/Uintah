@@ -113,14 +113,16 @@ namespace Uintah {
           typedef std::tuple<double,double> interpPoint;
           interpPoint leftPoint, rightPoint;
           if (regionType == EAM_AlNi_Region::AlRich) {
-            liqConc = getLiquidusAl(TinC);
-            solConc = getSolidusAl(TinC);
+            liqConc = 0.01*getLiquidusAl(TinC);
+            solConc = 0.01*getSolidusAl(TinC);
+            // HACK FIXME TAKE ME OUT TODO JBH 4-22-19
+            //solConc = 0.10;
             leftPoint = std::make_tuple(liqConc,D_liq);
             rightPoint = std::make_tuple(solConc, D_sol);
           } else // Ni rich
           {
-            solConc = getSolidusNi(TinC);
-            liqConc = getLiquidusNi(TinC);
+            solConc = 0.01*getSolidusNi(TinC);
+            liqConc = 0.01*getLiquidusNi(TinC);
             rightPoint = std::make_tuple(liqConc, D_liq);
 
             // TODO FIXME JBH:  We should probably invert the concentration (from C_Ni to C_Al) and then
@@ -131,9 +133,12 @@ namespace Uintah {
               leftPoint = std::make_tuple(solConc, D_sol);
             }
           }
+
+          //std::cerr << "RegionType: " << (regionType==EAM_AlNi_Region::AlRich?"AlRich":"NiRich") << " C_l: " << liqConc << " D_l: " << D_liq << " C_s: " << solConc << " D_s: " << D_sol;
           minConcReached = (minGuestConc > liqConc);
           double D_out, C_out;
           std::tie(C_out,D_out) = interpolator->interpolate(leftPoint,rightPoint,C, gradC, minConcReached);
+          //std::cerr << " C_i: " << C << " D_i: " << D_out << "\n";
           return(D_out);
       }
   };

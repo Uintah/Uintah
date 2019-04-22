@@ -120,8 +120,11 @@ void NiAl2Process::computeFlux(
   ParticleVariable<Vector> pFluxNew;
   new_dw->allocateAndPut(pFluxNew, d_lb->pFluxLabel_preReloc, pSubset);
 
+  size_t numParticles = pSubset->numParticles();
+  if (numParticles == 0) return;
+
   double diffMax = -1e99;
-  for (size_t pIdx = 0; pIdx < pSubset->numParticles(); ++pIdx) {
+  for (size_t pIdx = 0; pIdx < numParticles; ++pIdx) {
     double minConc;
     EAM_AlNi_Region regionType;
     if (pRegionType[pIdx] == EAM_AlNi_Region::NiRich) {
@@ -146,8 +149,10 @@ void NiAl2Process::computeFlux(
   // Because we know that the smallest timestep is when diffusivity is
   //   largest...
   double delT_local = computeStableTimeStep(diffMax,dx);
+  if (delT_local < 1e-30) {
+    std::cerr << "DelT local being poisoned in 2 ProcessNiAlDiffusion.cc  -- Value: " << delT_local << " diffMax: " << diffMax << "\n";
+  }
   new_dw->put(delt_vartype(delT_local), d_lb->delTLabel, patch->getLevel());
-
 }
 
 void NiAl2Process::initializeSDMData( const Patch         * patch
@@ -279,11 +284,11 @@ void NiAl2Process::trackConcentrationThreshold(const Patch          * patch
   for (size_t pIdx = 0; pIdx < pSubset->numParticles(); ++pIdx) {
     // Set the region type dependent upon the conentration:
     if (pConcentrationNew[pIdx] < 0.50) {
-      pRegionType_Update[pIdx] = EAM_AlNi_Region::AlRich;
+//      pRegionType_Update[pIdx] = EAM_AlNi_Region::AlRich;
     } else {
-      pRegionType_Update[pIdx] = EAM_AlNi_Region::NiRich;
+//      pRegionType_Update[pIdx] = EAM_AlNi_Region::NiRich;
     }
-//    pRegionType_Update[pIdx] = pRegionType[pIdx];
+    pRegionType_Update[pIdx] = pRegionType[pIdx];
     if (pRegionType[pIdx] == EAM_AlNi_Region::AlRich) {
       if (pConcentrationNew[pIdx] < localMinNiConc) {
         localMinNiConc = pConcentrationNew[pIdx];

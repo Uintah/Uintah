@@ -45,6 +45,8 @@ namespace Uintah {
     // Function is 1.0 until x_switch, then 0.0 after that.
     double y_out = (((x_in-xl)*xRangeInv < m_switchLocation) ? yl : yr);
 
+    //std::cerr << " Interp: xl - " << xl << " xr - " << xr << " s: " << m_switchLocation << "x_in - " << x_in << " y_out - " << y_out;
+
     return (std::make_tuple(x_in,y_out));
 
 
