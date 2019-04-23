@@ -52,6 +52,8 @@ NiAl2Process::~NiAl2Process()
   VarLabel::destroy(m_globalMinAlConc);
   VarLabel::destroy(m_pRegionType);
   VarLabel::destroy(m_pRegionType_preReloc);
+
+  delete m_phaseInterpolator;
 }
 
 void NiAl2Process::addInitialComputesAndRequires(       Task        * task
