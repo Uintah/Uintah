@@ -57,12 +57,14 @@ using namespace std;
 //______________________________________________________________________
 //    To Do
 //    - Read variables (Q) from ups to compute mean quantities
-//    - Interpolate Q from particles to nodes and then to cell centers.
+//    - Interpolate Q from the particles to nodes and then to cell centers.
 //    - Identify fragments.  What is the criteria???
 //    - Find data structure for mean quantities (Q), doubles and vectors and matrix3??
 //    - MPI code for summing each Q for each fragment
 //    - compute mass weighted average for each Q and each fragment
 //    - output mean quantites for each fragment
+//    Optimization:
+//      - use a vector of neighbor cells in checkNeighborCells()
 //
 //______________________________________________________________________
 //
@@ -404,15 +406,15 @@ void findFragments::identifyFragments(const ProcessorGroup * pg,
     new_dw->get( numLocalized, d_lb->numLocalized_CCLabel,indx,patch, gac,1);
     
     new_dw->allocateAndPut( fragmentID, d_lb->fragmentIDLabel, indx, patch);
-    fragmentID.initialize(0.0);
+    fragmentID.initialize( 0 );
     
-    int fragID = 0;
+    int fragID = 1;
     
     
     
     //__________________________________
     //  Loop over all cells
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
     
       if (fragmentID[c] != 0 ){
@@ -423,11 +425,12 @@ void findFragments::identifyFragments(const ProcessorGroup * pg,
       if ( numLocalized[c] != 0 ){
         
         fragmentID[c] = fragID;
-        cout << "Top Level c: " << c << " is a fragment" << endl;
+        cout << "Top Level c: " << c << " is a fragment: " << fragmentID[c] << ".  Patch limits: " << patch->getExtraCellLowIndex() << " " << patch->getExtraCellHighIndex() << endl;
         checkNeighborCells( "  cell-neighbor",c, patch, fragID, numLocalized, fragmentID );
         
+        fragID ++;
       }  // if: is cellfragmented
-      fragID ++;
+      
     }  // cellIterator
   }  // patches
 }
@@ -451,11 +454,11 @@ void findFragments::checkNeighborCells( const std::string    & level,
 
     // Loop over neighbor cells
     IntVector neighborCells[8];
-    patch->findCellsFromNode( n, neighborCells);        // There's overlapping cells
+    patch->findCellsFromNode( n, neighborCells );        // There's overlapping cells
     
     
 /*`==========TESTING==========*/
-    cout << "  neighborCells: ";
+    cout << "      cell: " << cell <<"  nodeIndx: " << ni << " node: " << n << " neighborCells: ";
     for (int ci=0; ci<8; ci++){
       cout << neighborCells[ci] << ", ";
     }
@@ -465,15 +468,20 @@ void findFragments::checkNeighborCells( const std::string    & level,
     
     for (int ci=0; ci<8; ci++){
       IntVector nc = neighborCells[ci];
-
+      
+      if ( !patch->containsCell(nc) ){
+        continue;
+      }
+      
       if (fragmentID[nc] != 0 ){
+        cout << "        BBB cell: "<< nc << " is a fragment: "<< fragmentID[nc] << endl;
         continue;
       }
 
       // cell is fragmented
       if ( numLocalized[nc] != 0 ){
         fragmentID[nc] = fragID;
-        cout << level << " " << nc << " is a fragment"<< endl;
+        cout << level << " " << nc << " is a fragment: "<< fragmentID[nc] << endl;
         checkNeighborCells( "    cell-neighbor-neighbor: ",nc, patch, fragID, numLocalized, fragmentID );
         
       }
