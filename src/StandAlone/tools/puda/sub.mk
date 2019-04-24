@@ -30,6 +30,7 @@ PROGRAM := StandAlone/tools/puda/puda
 SRCS := \
         $(SRCDIR)/AA_MMS.cc       \
         $(SRCDIR)/asci.cc         \
+        $(SRCDIR)/aveParticleQ.cc \
         $(SRCDIR)/ER_MMS.cc       \
         $(SRCDIR)/GV_MMS.cc       \
         $(SRCDIR)/ICE_momentum.cc \
