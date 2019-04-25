@@ -68,7 +68,7 @@ namespace Uintah {
     ProblemSpecP interpPS = ps;
     if (doOutput) {
       interpPS=ps->appendChild("function_interp");
-      interpPS->setAttribute("type",d_interpType);
+      interpPS->setAttribute("interp",d_interpType);
       interpPS->appendElement("switch_point",m_switchLocation);
       interpPS->appendElement("min_grad_norm", m_minGradNorm);
     }
