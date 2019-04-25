@@ -33,7 +33,6 @@
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
-
 using namespace std;
 
 

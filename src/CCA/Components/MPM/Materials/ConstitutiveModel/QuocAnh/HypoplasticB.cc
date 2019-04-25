@@ -329,21 +329,21 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 
 ///////////// NON - LOCAL PROBLEM IMPLEMENTED BY JAKUB KRZYZANOWSKI, 02.2019
 
-    //Okreslam wartosc, od ktorej bedzie startowal itercoord
+    //I determined the value from which itercoord would start
     int itercoordB=0;
 
-    //iNLB - wykona sie tyle razy, ile jest czastek w analizie
+    //iNLB - will be done as many times as there are particles in the analysis
     iNLB=0;
 
-    // Petla "for" wykona sie tyle razy, ile jest wszystkich czastek w analizie, w kazdym kroku czasowym
+    // Petla "for" will be performed as many times as there are all particles in the analysis, at each time step
 
     for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
     {
       particleIndex idx = *iter;
 
-      //Kazda wspolrzedna "x" oraz "y" oraz objetosc czastki zostaje zapisana. Petla wykona sie
-      //tyle razy, ile jest czastek - wiec wszystkie wspolrzedne sa zapisywane z kazdej czastki
-      //w danej chwili czasowej
+      //Each co-ordinates "x" and "y" and the volume of the particle is saved. 
+	  //Petla will be done as many times as there are particles - 
+	  //so all coordinates are saved from each particle at a given moment of time
       coordXB[0][itercoordB]=px[idx].x();
       coordYB[0][itercoordB]=px[idx].y();
       //coordZ[0][itercoord]=px[idx].z();
@@ -351,7 +351,6 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 
               Matrix3 D=(velGrad[idx]+velGrad[idx].Transpose())*.5;
 
-              Matrix3 tensorR, tensorU;
               double Darray[6];
               Darray[0]=D(0,0)*delT;
               Darray[1]=D(1,1)*delT;
@@ -360,27 +359,26 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
               Darray[4]=D(1,2)*delT;
               Darray[5]=D(2,0)*delT;
 
-      //Wartosc ponizej jest to wartosc pod pierwiastkiem
+      //The value below is the value under the root
 	      double dlooocB=pow(((1.0/delT)*Darray[0]),2)+pow(((1.0/delT)*Darray[1]),2)+pow(((1.0/delT)*Darray[2]),2)+2.0*pow(((1.0/delT)*Darray[3]),2)+2.0*pow(((1.0/delT)*Darray[4]),2)+2.0*pow(((1.0/delT)*Darray[5]),2);
 
       double dlocB;
 
-      //Jezeli wartosc pod pierwiastkiem bylaby mniejsza od 0, to wiadomo - przyjmij 0
+      //If the value under the element would be less than 0, then you know - accept 0
       if (dlooocB<=0)
       {
       dlocB=0;
       }
       else
       {
-      dlocB=sqrt(dlooocB);
+		  dlocB =sqrt(dlooocB);
       }
 
-      //Przykladowo - tutaj dla pierwszej czastki, okreslam modul lokalny potrzebny do dalszych obliczen
+      //For example - here for the first particle, I determined the local module needed for further calculations
       dlocMB[0][itercoordB]=dlocB;
 
-      //Petla wykona sie tyle razy ile jest czastek, a ponizej okreslam jak maja zmieniac sie kolejne
-      //szufladki, tzn. dlocM[0][0] - oznacza szufladka dla 1. czastki, dlocM[0][1] - dla 2. itd
-      //Petla sie przerwie - jezeli wszystkie czastki beda mialy przypisany modul lokalny
+      //Petla will be done as many times as there are particles, and below I have determined how to change the next drawers, ie dlocM [0] [0]
+	  //- means a drawer for the first particle, for [0] [1] - for 2 etc. Petla sie break - if all particles are assigned to a local module
       itercoordB=itercoordB+1;
     }
 
@@ -402,14 +400,14 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 
 
 
-	   //Ta petla ponizej dziala tak, ze wezmie najpierw czastke [0][0][0] i do niej
-	   //odniesie wszystkie wszystkie punkty wokol zgodnie z itercoord3. Jak itercoord
-	   //przeleci wszystkie czastki, to dopiero sie przerywa i dla tej czastki jest 
-	   //okreslany modul nielokalny,ktory wedruje bezposrednio do obliczenia dla niej stresu
-	   //w dziale CalculateStress. Dla kazdej czastki okreslany jest tu modul nielokalny.
-	   //Za zmiane rozwazanej w nadej chwili czastki odpowiada itercoord2, natomiast
-	   //itercoord3 - tez zmienia kazdy punkcik, ale w sensie, bierze wszystkie czastki
-	   //z calego ciala i odnosi je do aktualnie rozpatrywanej.
+	   //This loop below works so that it will first take the particle [0] [0] [0] and into it
+	   //will refer all the points around iteratorordord3. Like itercoord
+	   //it will fly all particles, it just breaks and it is for this particle
+	   //defined non-local modulus, which he visits directly to calculate stress for her
+	   //in the CalculateStress department. For each particle, a non-local module is defined here.
+	   //For changing the part considered at the moment, itercoord2 responds, while
+	   //itercoord3 - also changes each point, but in a sense, takes all particles
+	   //from the whole body and refers them to the currently considered.
 	   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
            {
 	     distxB=coordXB[0][itercoord3B]-coordXB[0][itercoord2B];
@@ -417,7 +415,7 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 	     //distz=coordZ[0][itercoord3]-coordZ[0][itercoord2];
 	     rdistB=distxB*distxB+distyB*distyB;//+distz*distz;
 
-	     //Ten "if" jest po to, zeby uwzglednic, ze wplyw nielokalnosci na polu (3l)^2=9l^2
+	     //This "if" is to take into account the influence of non-locality in the field (3l) ^ 2 = 9l ^ 2
 	     if (rdistB<=dziewlkwB)
 	     {
 	     wwB=stalaB*exp(-(rdistB/lcharB));
@@ -427,8 +425,8 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 	     itercoord3B=itercoord3B+1;
 	   }
 
-	   //Tutaj zapisywany jest dla danej czastki rozpatrzonej modul nielokalny.
-	   //Co warto zauwazyc - jezeli nl=0, to zapisywany modul jest tak naprawde lokalnym
+	   //Here, the non-local modulus is recorded for a given particle.
+	   //What is worth noting - if nl = 0, then the module being written is really local
 	   dnonlocMB[0][itercoord2B]=(1-nlbetaB)*dlocMB[0][itercoord2B]+nlbetaB*sumaB/sumB;
 
 	   itercoord2B=itercoord2B+1;

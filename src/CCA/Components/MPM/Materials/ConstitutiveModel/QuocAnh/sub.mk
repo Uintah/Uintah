@@ -36,5 +36,6 @@ SRCS   += \
 		$(SRCDIR)/ClassicMohrCoulomb.cc                \
 		$(SRCDIR)/ShengMohrCoulomb.cc                \
 		$(SRCDIR)/BBMMatrix.cc                \
+		$(SRCDIR)/QADamage.cc                \
 		$(SRCDIR)/BBMPoint.cc                
 		

@@ -77,7 +77,6 @@
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 
-
 #include <iostream>
 #include <fstream>
 #include <cmath>

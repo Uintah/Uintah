@@ -70,6 +70,7 @@
 
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/HypoplasticB.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/MohrCoulomb.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/QADamage.h>
 
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -120,6 +121,16 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
  else if (cm_type == "MohrCoulomb")
 	  return(scinew MohrCoulomb(child, flags));
 
+
+ else if (cm_type == "QADamage") {
+	  if (flags->d_integrator_type == "explicit" ||
+		  flags->d_integrator_type == "fracture") {
+		  return(scinew QADamage(child, flags, false, false));
+	  }
+	  else if (flags->d_integrator_type == "implicit") {
+		  return(scinew QADamage(child, flags, false, false));
+	  }
+  }
 
   else if (cm_type == "comp_mooney_rivlin") {
     return(scinew CompMooneyRivlin(child,flags));

@@ -36,13 +36,12 @@
                                                                              Arenisca3, 
                                                                              Arenisca4, 
                                                                              ArenaSoil,
-																			 HypoplasticB,
                                                                              camclay, 
                                                                              TongeRameshPTR, 
                                                                              rf_elastic_plastic,
                                                                              ArrudaBoyce8,
 																			 MohrCoulomb,
-																			 HypoplasticB'">
+																			 HypoplasticB">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
@@ -697,25 +696,20 @@
 	
 	    <!--______________________________________________________________________ -->
 
-    <ei0_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-    <ed0_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-    <ec0_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-    <phic_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<hs_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<beta_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<n_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<alpha_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<E_B         spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<v_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<epocz_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-
-<lchar_nl_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<nlON_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<init_x_stress_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<init_y_stress_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<init_z_stress_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-<init_xy_stress_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-
+    <ei0_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <ed0_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <ec0_B        spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <phic_B         spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<hs_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<beta_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<n_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<alpha_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<E_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<v_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<epocz_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <nl_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <lchar_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <stress_x_pocz          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
 
 
 	 <!--______________________________________________________________________ -->
@@ -760,9 +754,12 @@
 	<tFE       		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
 	<tShear		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
 	
+	<n_nonlocal		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	<l_nonlocal		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	
     <UseWaterRetention spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
     <PhiB  spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type MohrCoulomb"/>
-    <suction  spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type MohrCoulomb BBM"/>
+    <suction  spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type MohrCoulomb"/>
     <SpecVol  spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type MohrCoulomb"/>
     <WR_Param1 spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
     <WR_Param2 spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
@@ -960,21 +957,6 @@
     <p7             spec="REQUIRED DOUBLE 'positive'" need_applies_to="type soil_foam"/>
     <p8             spec="REQUIRED DOUBLE 'positive'" need_applies_to="type soil_foam"/>
     <p9             spec="REQUIRED DOUBLE 'positive'" need_applies_to="type soil_foam"/>
-
-	
-	<!--______________________________________________________________________ -->
-    <!--            hypoplasticB               -->
-    <ei0_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-    <ed0_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-    <ec0_B        spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-    <phic_B         spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-	<hs_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-	<beta_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-	<n_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-	<alpha_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-	<E_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-	<v_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
-	<epocz_B          spec="REQUIRED DOUBLE" need_applies_to="HypoplasticB"/>
 
     <!--______________________________________________________________________ -->
     <!-- For CamClay and related models developed by Biswajit for ONR_MURI -->

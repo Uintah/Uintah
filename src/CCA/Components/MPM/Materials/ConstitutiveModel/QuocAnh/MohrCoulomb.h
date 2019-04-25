@@ -70,7 +70,7 @@ namespace Uintah {
 
     void CalculateStress (int &nblk, int &ninsv, double &dt,
                                     double UI[], double stress[], double D[],
-                                    double svarg[], double &USM);
+                                    double svarg[], double &USM, double shear_strain_nonlocal);
 
     void CheckModel(double UI[]);
 

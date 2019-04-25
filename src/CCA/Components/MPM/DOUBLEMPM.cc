@@ -3429,8 +3429,6 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 
 				pPorePressurenew[idx] = pPorePressure[idx] + pBulkModulLiquid[idx] * (VolumeRateSolid + VolumeRateLiquid);
 
-				//std::cerr << pPorePressurenew[idx] << std::endl;
-
 				// Update porosity
 				pPorositynew[idx] = 1 - (1 - mpm_matl->getInitialPorosity()) / J;
 			}
@@ -3559,10 +3557,13 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 		const Patch* patch = patches->get(p);
 		printTask(patches, patch, cout_doing, "Doing InterpolatePorePresureToGrid");
 
-		ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-		vector<IntVector> ni(interpolator->size());
-		vector<double> S(interpolator->size());
-		string interp_type = flags->d_interpolator_type;
+		//ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+		//vector<IntVector> ni(interpolator->size());
+		//vector<double> S(interpolator->size());
+
+		ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
+		vector<IntVector> ni(linear_interpolator->size());
+		vector<double> S(linear_interpolator->size());
 
 		unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
 
@@ -3650,7 +3651,7 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 					particleIndex idx = *iter;
 
 					// Get the node indices that surround the cell
-					int  NN = interpolator->findCellAndWeights(px[idx], ni, S,
+					int  NN = linear_interpolator->findCellAndWeights(px[idx], ni, S,
 						psize[idx], pFOld[idx]);
 
 					// Liquid pressure
@@ -3699,7 +3700,7 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 			gStressglobal[c] /= gvolumeglobal[c];
 			gPorosityglobal[c] /= gvolumeglobal[c];
 		}
-		delete interpolator;
+		delete linear_interpolator;
 	}
 }
 
@@ -3750,9 +3751,13 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 		printTask(patches, patch, cout_doing,
 			"Doing InterpolatePorePresureToParticle");
 
-		ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-		vector<IntVector> ni(interpolator->size());
-		vector<double> S(interpolator->size());
+		//ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+		//vector<IntVector> ni(interpolator->size());
+		//vector<double> S(interpolator->size());
+
+		ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
+		vector<IntVector> ni(linear_interpolator->size());
+		vector<double> S(linear_interpolator->size());
 
 		unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
 
@@ -3793,7 +3798,7 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 				particleIndex idx = *iter;
 
 				// Get the node indices that surround the cell
-				int NN = interpolator->findCellAndWeights(px[idx], ni, S,
+				int NN = linear_interpolator->findCellAndWeights(px[idx], ni, S,
 					psize[idx], pFOld[idx]);
 
 				double PorePressure = 0;
@@ -3816,7 +3821,7 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 				}
 
 		}  // loop over materials
-		delete interpolator;
+		delete linear_interpolator;
 	}
 }
 

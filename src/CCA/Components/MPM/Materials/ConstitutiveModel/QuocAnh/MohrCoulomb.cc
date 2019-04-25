@@ -263,18 +263,10 @@ C        Host codes that don't change basis can ignore ITYPE.
 ////////////////////////////////////////////////////////////////////////////////
 using std::cerr; using namespace Uintah;
 
-
-//double MohrCoulomb::cohesion =0; // linh 20.4.2016
-//double MohrCoulomb::returnCohesion(){ // linh 20.4.2016
-   // return cohesion;                    // linh 20.4.2016
-//}
-//MohrCoulomb::MohrCoulomb(){ // linh 20.4.2016
-  //  return;                 // linh 20.4.2016
-//}                           // linh 20.4.2016
 MohrCoulomb::MohrCoulomb(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
-  d_NBASICINPUTS=46;
+  d_NBASICINPUTS=48;
   d_NMGDC=0;
 
 // Total number of properties
@@ -403,6 +395,9 @@ void MohrCoulomb::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps->appendElement("tShear",UI[44]);
 
     cm_ps->appendElement("s_xy",UI[45]);
+
+	cm_ps->appendElement("n_nonlocal", UI[46]);
+	cm_ps->appendElement("l_nonlocal", UI[47]);
 
 }
 
@@ -595,13 +590,13 @@ double rho_orig = matl->getInitialDensity();
       D=(tensorR.Transpose())*(D*tensorR);
 
       // Load into 1-D array for the fortran code
-      double Darray[6];
-      Darray[0]=D(0,0);
-      Darray[1]=D(1,1);
-      Darray[2]=D(2,2);
-      Darray[3]=D(0,1);
-      Darray[4]=D(1,2);
-      Darray[5]=D(2,0);
+      double Dlocal[6];
+	  Dlocal[0]=D(0,0);
+	  Dlocal[1]=D(1,1);
+	  Dlocal[2]=D(2,2);
+	  Dlocal[3]=D(0,1);
+	  Dlocal[4]=D(1,2);
+	  Dlocal[5]=D(2,0);
       double svarg[d_NINSV];
       double USM=9e99;
       double dt = delT;
@@ -612,32 +607,132 @@ double rho_orig = matl->getInitialDensity();
         svarg[i]=ISVs[i][idx];
       }
 
-        double n=svarg[38];
+	  // Undrained increase linearly with depth
+	  double n = svarg[38];
 
-     for(int i=0;i<n;i++){
-         svarg[37]=px[idx](1);
-         n=n-1;
-     }
-        svarg[38]=n;
+	  for (int i = 0; i < n; i++) {
+		  svarg[37] = px[idx](1);
+		  n = n - 1;
+	  }
+	  svarg[38] = n;
 
-        double s_xx=sigarg[0];
-        double s_yy=sigarg[1];
-        double s_xy=sigarg[3];
+	  // Compute Ko
+	  double s_xx = sigarg[0];
+	  double s_yy = sigarg[1];
+	  double s_xy = sigarg[3];
 
-        svarg[39]=s_xx;
-        svarg[40]=s_yy;
-        svarg[45]=s_xy;
+	  svarg[39] = s_xx;
+	  svarg[40] = s_yy;
+	  svarg[45] = s_xy;
+	  double Ko = s_xx / s_yy;
+	  svarg[41] = Ko;
 
-        double Ko=s_xx/s_yy;
-        svarg[41]=Ko;
+	  // SHear strain
+	  double shear_strain_local = 0;
 
-        // idx is the particle id ***********************VERY IMPORTANT
-      //cerr<<px[idx](1)<<endl;
+	  double strain11 = svarg[28];
+	  double strain22 = svarg[29];
+	  double strain33 = svarg[30];
+	  double strain12 = svarg[31];
+	  double strain23 = svarg[32];
+	  double strain13 = svarg[33];
 
+	  strain11 = strain11 + Dlocal[0] * dt;
+	  strain22 = strain22 + Dlocal[1] * dt;
+	  strain33 = strain33 + Dlocal[2] * dt;
+	  strain12 = strain12 + Dlocal[3] * dt;
+	  strain23 = strain23 + Dlocal[4] * dt;
+	  strain13 = strain13 + Dlocal[5] * dt;
+
+	  shear_strain_local = 1.0 / 2.0*sqrt(2 * (pow((strain11 - strain22), 2.0) + pow((strain11 - strain33), 2.0) + pow((strain22 - strain33), 2.0)) + 3.0*(pow(strain12, 2.0) + pow(strain13, 2.0) + pow(strain23, 2.0)));
+
+	  svarg[24] = shear_strain_local;
+	  svarg[28] = strain11;
+	  svarg[29] = strain22;
+	  svarg[30] = strain33;
+	  svarg[31] = strain12;
+	  svarg[32] = strain23;
+	  svarg[33] = strain13;
+
+	  /*
+
+	  // Non-local regularization
+
+	  double n_nonlocal = UI[46];
+	  double l_nonlocal = UI[47];
+
+	  double domain_nonlocal = l_nonlocal * l_nonlocal;
+	  double Up = 0;
+	  double Up0 = 0;
+	  double Up1 = 0;
+	  double Up2 = 0;
+	  double Up3 = 0;
+	  double Up4 = 0;
+	  double Up5 = 0;
+	  double Down = 0;
+	  double weight = 0;
+	  double rx = 0;
+	  double ry = 0;
+	  double rz = 0;
+	  double r2 = 0;
+	  double cout = 0;
+
+	  for (ParticleSubset::iterator iter1 = pset->begin();
+		  iter1 != pset->end(); iter1++) {
+		  particleIndex idx1 = *iter1;
+
+		  rx = px[idx1].x() - px[idx].x();
+		  ry = px[idx1].y() - px[idx].y();
+		  rz = px[idx1].z() - px[idx].z();
+
+		  r2 = rx*rx + ry*ry + rz*rz;
+
+		  if (r2 <= (9*domain_nonlocal) ) {
+
+			  if (domain_nonlocal == 0) {
+				  weight = 1;
+			  }
+			  else {
+				  weight = exp(-r2/domain_nonlocal);
+			  }
+
+			  //Up0 = Up0 + Dlocal[0] * weight*pvolume[idx1];
+			  //Up1 = Up1 + Dlocal[1] * weight*pvolume[idx1];
+			  //Up2 = Up2 + Dlocal[2] * weight*pvolume[idx1];
+			  //Up3 = Up3 + Dlocal[3] * weight*pvolume[idx1];
+			  //Up4 = Up4 + Dlocal[4] * weight*pvolume[idx1];
+			  //Up5 = Up5 + Dlocal[5] * weight*pvolume[idx1];
+
+			  Up = Up + (shear_strain_local * weight * pvolume[idx1]);
+			  Down = Down + (weight * pvolume[idx1]);
+			  //cout = cout + 1;			  
+		  }
+	  }
+
+	  //double Dnonlocal[6];
+	  //Dnonlocal[0] = (1 - n_nonlocal) * Dlocal[0] + (n_nonlocal * Up0 / Down);
+	  //Dnonlocal[1] = (1 - n_nonlocal) * Dlocal[1] + (n_nonlocal * Up1 / Down);
+	  //Dnonlocal[2] = (1 - n_nonlocal) * Dlocal[2] + (n_nonlocal * Up2 / Down);
+	  //Dnonlocal[3] = (1 - n_nonlocal) * Dlocal[3] + (n_nonlocal * Up3 / Down);
+	  //Dnonlocal[4] = (1 - n_nonlocal) * Dlocal[4] + (n_nonlocal * Up4 / Down);
+	  //Dnonlocal[5] = (1 - n_nonlocal) * Dlocal[5] + (n_nonlocal * Up5 / Down);
+
+	  double shear_strain_nonlocal = 0;
+	  shear_strain_nonlocal = ((1 - n_nonlocal) * shear_strain_local) + (n_nonlocal * Up / Down);
+	 
+	  double test = shear_strain_nonlocal-shear_strain_local;
+
+	  if (test > 0.001) {
+		  cerr << test << endl;
+	  }
+
+	  //cerr << domain_nonlocal << endl;
+	  */
+
+	
 
 // Calling the external model here
-      //DIAMM_CALC(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
-      CalculateStress (nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
+      CalculateStress (nblk, d_NINSV, dt, UI, sigarg, Dlocal, svarg, USM, shear_strain_local);
 
       // Unload ISVs from 1D array into ISVs_new
       for(int i=0;i<d_NINSV;i++){
@@ -878,6 +973,9 @@ MohrCoulomb::getInputParameters(ProblemSpecP& ps)
     ps->getWithDefault("tShear",UI[44],0.0);
 
     ps->getWithDefault("s_xy",UI[45],0.0);
+
+	ps->getWithDefault("n_nonlocal", UI[46], 0.0);
+	ps->getWithDefault("l_nonlocal", UI[47], 0.0);
 }
 
 void
@@ -943,6 +1041,11 @@ MohrCoulomb::initializeLocalMPMLabels()
   ISVNames.push_back("tShear");
     ISVNames.push_back("s_xy");
 
+	ISVNames.push_back("n_nonlocal");
+	ISVNames.push_back("l_nonlocal");
+
+	
+
   for(int i=0;i<d_NINSV;i++){
     ISVLabels.push_back(VarLabel::create(ISVNames[i],
                           ParticleVariable<double>::getTypeDescription()));
@@ -954,7 +1057,7 @@ MohrCoulomb::initializeLocalMPMLabels()
 //CODE ADDED BY WTS FOR SHENGMOHRCOULOMB BELOW
 void MohrCoulomb::CalculateStress (int &nblk, int &ninsv, double &dt,
                                     double UI[], double stress[], double D[],
-                                    double svarg[], double &USM)
+                                    double svarg[], double &USM, double shear_strain_nonlocal)
 
 
 /*
@@ -1028,16 +1131,7 @@ int Flavour=int(UI[5]);
 	double e23=D[4];
 	double e13=D[5];
     double shear_strain_rate=UI[20];
-    double shear_strain=UI[24];
-
-    double strain11=svarg[28];
-    double strain22=svarg[29];
-    double strain33=svarg[30];
-    double strain12=svarg[31];
-    double strain23=svarg[32];
-    double strain13=svarg[33];
-
-
+    
     double Use_softening=UI[34];
     double St=UI[35];
     double strain_95=UI[36];
@@ -1051,7 +1145,6 @@ int Flavour=int(UI[5]);
     double tFE=UI[43];
     double tShear=UI[44];
 
-    //cerr<<strain11<<strain22<<strain33<<strain12<<strain23<<strain13<<endl;
 /*
 Flavour
 1- classic Mohr - Coulomb,
@@ -1097,14 +1190,6 @@ for (int i=0; i<6; i++)
     InitialPoint.stress[i]=-stress[i];
     StrainIncrement[i]=-D[i]*dt;
 }
-    strain11=strain11+e11*dt;
-    strain22=strain22+e22*dt;
-    strain33=strain33+e33*dt;
-    strain12=strain12+e12*dt;
-    strain23=strain23+e23*dt;
-    strain13=strain13+e13*dt;
-
-	shear_strain=1.0/2.0*sqrt(2*(pow((strain11-strain22),2.0)+pow((strain11-strain33),2.0)+pow((strain22-strain33),2.0))+3.0*(pow(strain12,2.0)+pow(strain13,2.0)+pow(strain23,2.0)));
 
 double Usetransition=UI[14];
 if (Usetransition>0)
@@ -1119,8 +1204,7 @@ if (Usetransition>0)
 	    }
 }
 
-//double time = d_sharedState->getElapsedTime();
-
+// Shear strength linear with depth
 if(Use_linear>0)
 {
     c = c + a * (y-y_ref);
@@ -1132,26 +1216,16 @@ if(Usemodul>0)
 
     G=m_modul*c/2.0/(1.0+nuy);
     K=m_modul*c/3.0/(1.0-2*nuy);
-    //G=167.7852348*c;
-    //K=2*G*(1.0+nuy)/3/(1-2*nuy);
 }
 
 
 if(Use_softening>0)
 {
-    if(shear_strain>c/G)
+    if(shear_strain_nonlocal>c/G)
     {
-        c = c * (1.0/St+(1.0-1.0/St)*pow(2.71,(-3.0*shear_strain/strain_95)));
+        c = c * (1.0/St+(1.0-1.0/St)*pow(2.71,(-3.0*shear_strain_nonlocal /strain_95)));
     }
 }
-
-//if (time<10)
-//{
-//Phi=30;
-//nuy=0.33;
-//}
-
-//cerr << strain_95 << endl;
 
 if (UseWaterRetention>0)
 {
@@ -1167,14 +1241,9 @@ double Suction;
 double SpecVol;
 Suction=svarg[6];
 SpecVol=svarg[12];
-//if (svarg[6]>0) Suction=svarg[6]; else Suction=UI[6];
-//if (svarg[12]>0) SpecVol=svarg[12]; else SpecVol=UI[12];
 
 
     double Sr=GetSr(UseWaterRetention,Suction, WTRParam);   //get from current suction value
-    //double SuctionNew=GetSuction(UseWaterRetention,Sr,WTRParam);
-    //cerr<<Suction<<" "<<SpecVol<<" "<<SuctionNew<<" "<<Sr<<endl;
-
     double dVolStrain=StrainIncrement[0]+StrainIncrement[1]+StrainIncrement[2];
     double SpecVolNew=SpecVol-dVolStrain*SpecVol; //1/(1-TotalVolume);  //adjustment due to
     double VolWater=Sr*(SpecVol-1)/SpecVol; //constant volume of water - thus we use initial specific volume
@@ -1189,25 +1258,13 @@ SpecVol=svarg[12];
 
     svarg[6]=SuctionNew;
     svarg[12]=SpecVolNew;
-    // to save: New Specific Volume, New Suction
-    //to compute: new c (by tank PhiB)
-  //  cerr<<Suction<<" "<<SuctionNew<<" "<<Sr<<" "<<SrNew<<" "<<SpecVol<<endl;
 }
 svarg[0]=G;
 svarg[1]=K;
 svarg[2]=c;
 svarg[20]=shear_strain_rate;
 
-svarg[24]=shear_strain;
 
-svarg[28]=strain11;
-svarg[29]=strain22;
-svarg[30]=strain33;
-svarg[31]=strain12;
-svarg[32]=strain23;
-svarg[33]=strain13;
-
-//svarg[40]=deviatoric_stress_max;
 int Region;
 
 switch (Flavour)
@@ -1274,24 +1331,11 @@ D[5]=Temp;
 
 double Factor=5.0; //factor is  a quick fix, as otherwise the USM is too low and predicted stable time step is way too high
 
-/*
-for (int i=0; i<6; i++)
-{
-    if (fabs(InitialPoint.plastic_strain[i])>0.0)
-        if (Factor<fabs(StrainIncrement[i]/InitialPoint.plastic_strain[i]))
-                Factor=fabs(StrainIncrement[i]/InitialPoint.plastic_strain[i]);
-}
-*/
-
-//copied from diamm
-
 USM=Factor*(G+0.3*K)/3.0;
 //without Factor it
 //seems that the USM is too low and the analysis fails. Not sure why
 //as the elastic wave should be the quickest and it apparently work in diamm
 //maybe I missed something important there
-
-
 }
 
 
