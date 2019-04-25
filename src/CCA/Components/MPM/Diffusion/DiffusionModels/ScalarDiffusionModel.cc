@@ -75,7 +75,7 @@ ScalarDiffusionModel::ScalarDiffusionModel(
     NGN=2;
   }
 
-  diffusion_type = diff_type;
+  m_diffusionModelType = diff_type;
   include_hydrostress = false;
 
   d_one_matl = scinew MaterialSubset();
@@ -117,7 +117,7 @@ Matrix3 ScalarDiffusionModel::getStressFreeExpansionMatrix() const
 // Common functions for all diffusion models
 std::string ScalarDiffusionModel::getDiffusionType() const
 {
-  return diffusion_type;
+  return m_diffusionModelType;
 }
 
 double ScalarDiffusionModel::getClampedMaxConc() const
@@ -514,14 +514,17 @@ void ScalarDiffusionModel::baseInitializeSDMData(
 
 void ScalarDiffusionModel::baseOutputSDMProbSpec(
                                                  ProblemSpecP & probSpec  ,
-                                                 bool           /* do_output */
+                                                 bool           outputSDM_Info
                                                 ) const
 {
-  probSpec->appendElement("diffusivity",d_D0);
-  probSpec->appendElement("max_concentration",d_MaxConcentration);
-  probSpec->appendElement("min_concentration",d_MinConcentration);
-  probSpec->appendElement("conc_tolerance", d_concTolerance);
-  probSpec->appendElement("initial_concentration", d_InitialConcentration);
+
+  if(outputSDM_Info) {
+    probSpec->appendElement("diffusivity",d_D0);
+    probSpec->appendElement("max_concentration",d_MaxConcentration);
+    probSpec->appendElement("min_concentration",d_MinConcentration);
+    probSpec->appendElement("conc_tolerance", d_concTolerance);
+    probSpec->appendElement("initial_concentration", d_InitialConcentration);
+  }
 
   return;
 }

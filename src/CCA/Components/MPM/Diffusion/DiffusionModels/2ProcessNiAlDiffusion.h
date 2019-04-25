@@ -76,9 +76,8 @@ namespace Uintah
                                                   ,       DataWarehouse         * newDW
                                                   );
 
-      void    virtual outputProblemSpec(
-                                                ProblemSpecP  & ps
-                                       ,        bool            output_rdm_tag = true
+      void    virtual outputProblemSpec(ProblemSpecP  & ps
+                                       ,bool            output_rdm_tag = true
                                        ) const;
 
       // Concentration here is a function of temperature, so we need to

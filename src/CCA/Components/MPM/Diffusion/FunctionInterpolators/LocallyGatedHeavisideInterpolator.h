@@ -13,9 +13,10 @@
 namespace Uintah {
   class LocallyGatedHeavisideInterpolator : public FunctionInterpolator {
     public:
-               LocallyGatedHeavisideInterpolator( ProblemSpecP      & probSpec
+               LocallyGatedHeavisideInterpolator(  ProblemSpecP      & probSpec
                                                  , SimulationStateP  & simState
-                                                 , MPMFlags          * mFlags   );
+                                                 , MPMFlags          * mFlags
+                                                 , std::string         interpType);
 
       virtual ~LocallyGatedHeavisideInterpolator();
 
@@ -26,9 +27,13 @@ namespace Uintah {
                                        , const bool          /* minConcSaturation */
                                        ) const;
 
+      virtual void outputProblemSpec(ProblemSpecP & ps
+                                    ,bool           do_output) const;
     private:
       double m_switchLocation;
       double m_minGradNorm;
+
+
   };
 }
 

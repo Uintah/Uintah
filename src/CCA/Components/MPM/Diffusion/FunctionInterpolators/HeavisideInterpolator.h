@@ -15,7 +15,8 @@ namespace Uintah {
     public:
                HeavisideInterpolator( ProblemSpecP      & probSpec
                                     , SimulationStateP  & simState
-                                    , MPMFlags          * mFlags   );
+                                    , MPMFlags          * mFlags
+                                    , std::string         interpType );
 
       virtual ~HeavisideInterpolator();
 
@@ -26,8 +27,11 @@ namespace Uintah {
                                        , const bool          /* interp flag */
                                        ) const;
 
+      virtual void outputProblemSpec(ProblemSpecP & ps
+                                    ,bool           do_output) const;
     private:
       double m_switchLocation;
+
   };
 }
 

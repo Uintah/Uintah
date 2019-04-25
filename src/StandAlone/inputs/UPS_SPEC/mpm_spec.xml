@@ -244,8 +244,10 @@
         <cz_filename                       spec="REQUIRED STRING" />
         <do_rotation                       spec="OPTIONAL BOOLEAN" />
       </cohesive_zone>
-      <thermal_contact                   spec="OPTIONAL NO_DATA"
-      										attribute1="type OPTIONAL STRING" />
+      <thermal_contact                   spec="OPTIONAL NO_DATA">
+        <type                            spec="OPTIONAL STRING" />
+      </thermal_contact>
+        
       <include href="diffusion_interface.xml" />
     </MPM>
   </MaterialProperties>

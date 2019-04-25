@@ -13,7 +13,9 @@ namespace Uintah {
 
   LinearFnInterpolator::LinearFnInterpolator( ProblemSpecP      & probSpec
                                             , SimulationStateP  & simState
-                                            , MPMFlags          * mFlags    )
+                                            , MPMFlags          * mFlags
+                                            , std::string         interpType
+                                            ):FunctionInterpolator(interpType)
   {
 
   }
@@ -37,6 +39,16 @@ namespace Uintah {
 
     double y_out = y_l + ((x_in - x_l)/delta_x)*delta_y;
     return (std::make_tuple(x_in,y_out));
+  }
+
+  void LinearFnInterpolator::outputProblemSpec(ProblemSpecP & ps
+                                              ,bool           doOutput) const
+  {
+    ProblemSpecP interpPS = ps;
+    if (doOutput) {
+      interpPS=ps->appendChild("function_interp");
+      interpPS->setAttribute("type",d_interpType);
+    }
   }
 }
 

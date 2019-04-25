@@ -15,7 +15,8 @@ namespace Uintah {
     public:
                GloballyGatedHeavisideInterpolator( ProblemSpecP      & probSpec
                                                  , SimulationStateP  & simState
-                                                 , MPMFlags          * mFlags   );
+                                                 , MPMFlags          * mFlags
+                                                 , std::string         interpType);
 
       virtual ~GloballyGatedHeavisideInterpolator();
 
@@ -26,9 +27,12 @@ namespace Uintah {
                                        , const bool          minConcSaturation
                                        ) const;
 
+      virtual void outputProblemSpec(ProblemSpecP & probSpec
+                                    ,bool           doOutput ) const;
     private:
       double m_switchLocation;
   };
+
 }
 
 

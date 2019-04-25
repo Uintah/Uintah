@@ -25,17 +25,17 @@ namespace Uintah {
     }
 
     if (interpType == "linear") {
-      return(scinew LinearFnInterpolator(probSpec, simState, flags));
+      return(scinew LinearFnInterpolator(probSpec, simState, flags, interpType));
     }
     if (interpType == "heaviside") {
-      return(scinew HeavisideInterpolator(probSpec, simState, flags));
+      return(scinew HeavisideInterpolator(probSpec, simState, flags, interpType));
     }
     if (interpType == "heaviside_global") {
-      return(scinew GloballyGatedHeavisideInterpolator(probSpec, simState, flags));
+      return(scinew GloballyGatedHeavisideInterpolator(probSpec, simState, flags, interpType));
     }
 
     if (interpType == "heaviside_local") {
-      return(scinew LocallyGatedHeavisideInterpolator(probSpec, simState, flags));
+      return(scinew LocallyGatedHeavisideInterpolator(probSpec, simState, flags, interpType));
     }
 
     throw ProblemSetupException("Unknown function interpolator:  \""+interpType

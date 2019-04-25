@@ -216,7 +216,7 @@ namespace Uintah {
     ConductivityEquation* d_conductivity_equation;
 
     int NGP, NGN;
-    std::string diffusion_type;
+    std::string m_diffusionModelType;
     bool include_hydrostress;
 
     ScalarDiffusionModel(const ScalarDiffusionModel&);
@@ -230,6 +230,7 @@ namespace Uintah {
     double d_InverseMaxConcentration;
 
     Matrix3 d_StrainFreeExpansion;
+
 
     MaterialSubset* d_one_matl;         // matlsubset for zone of influence
   };

@@ -20,7 +20,7 @@ namespace Uintah {
     public:
       typedef std::tuple<double,double> functionPoint;
 
-               FunctionInterpolator();
+               FunctionInterpolator(std::string interpType);
 
       virtual ~FunctionInterpolator();
 
@@ -30,6 +30,15 @@ namespace Uintah {
                                        , const Vector        gradient = Vector(0)
                                        , const bool          externalFlag = false
                                        ) const = 0;
+
+      virtual void outputProblemSpec(ProblemSpecP & probSpec
+                                    ,bool           do_output = true) const = 0;
+    protected:
+      void baseOutputInterpProblemSpec(ProblemSpecP & probSpec
+                                      ,bool           doOutput) const;
+
+      std::string   d_interpType;
+
   };
 }
 

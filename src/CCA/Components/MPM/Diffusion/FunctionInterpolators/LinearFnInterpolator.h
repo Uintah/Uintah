@@ -15,7 +15,8 @@ namespace Uintah {
     public:
                LinearFnInterpolator(  ProblemSpecP      & probSpec
                                    ,  SimulationStateP  & simState
-                                   ,  MPMFlags          * mFlags  );
+                                   ,  MPMFlags          * mFlags
+                                   ,  std::string         interpType );
 
       virtual ~LinearFnInterpolator();
 
@@ -25,6 +26,9 @@ namespace Uintah {
                                        ,  const Vector        /* gradient */
                                        ,  const bool          /* input flag */
                                        ) const;
+
+      virtual void outputProblemSpec(ProblemSpecP & ps
+                                    ,bool           do_output) const;
 
   };
 }

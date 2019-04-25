@@ -14,7 +14,8 @@ namespace Uintah {
   LocallyGatedHeavisideInterpolator::LocallyGatedHeavisideInterpolator( ProblemSpecP      & probSpec
                                                            , SimulationStateP  & simState
                                                            , MPMFlags          * mFlags
-                                                           )
+                                                           , std::string         interpType
+                                                           ):FunctionInterpolator(interpType)
   {
     probSpec->require("switch_point",m_switchLocation);
     if (m_switchLocation < 0.0 || m_switchLocation > 1.0) {
@@ -59,6 +60,18 @@ namespace Uintah {
     return (std::make_tuple(x_in,y_out));
 
 
+  }
+
+  void LocallyGatedHeavisideInterpolator::outputProblemSpec(ProblemSpecP & ps
+                                                           ,bool           doOutput) const
+  {
+    ProblemSpecP interpPS = ps;
+    if (doOutput) {
+      interpPS=ps->appendChild("function_interp");
+      interpPS->setAttribute("type",d_interpType);
+      interpPS->appendElement("switch_point",m_switchLocation);
+      interpPS->appendElement("min_grad_norm", m_minGradNorm);
+    }
   }
 }
 
