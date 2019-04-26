@@ -62,7 +62,7 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
   findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
 
   ostringstream fnum;
-  string filename("time_meanvel_KE.dat");
+  string filename("Time_meanDisp.dat");
   ofstream outfile(filename.c_str());
 
   for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
@@ -70,8 +70,7 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
     cout << "time = " << time << endl;
     GridP grid = da->queryGrid(t);
 
-    Vector mean_vel(0.,0.,0.);
-    double KE = 0.;
+    Vector mean_disp(0.,0.,0.);
     double total_mass=0.;
       LevelP level = grid->getLevel(grid->numLevels()-1);
       cout << "Level: " << grid->numLevels() - 1 <<  endl;
@@ -82,29 +81,25 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
         //__________________________________
         //   P A R T I C L E   V A R I A B L E
         ParticleVariable<Point> value_pos;
-        ParticleVariable<Vector> value_vel;
+        ParticleVariable<Vector> value_disp;
         ParticleVariable<double> value_mass;
-        da->query(value_pos, "p.x",        matl, patch, t);
-        da->query(value_vel, "p.velocity", matl, patch, t);
-        da->query(value_mass,"p.mass",     matl, patch, t);
+        da->query(value_pos, "p.x",            matl, patch, t);
+        da->query(value_disp,"p.displacement", matl, patch, t);
+        da->query(value_mass,"p.volume",       matl, patch, t);
 
         ParticleSubset* pset = value_pos.getParticleSubset();
         if(pset->numParticles() > 0){
           ParticleSubset::iterator piter = pset->begin();
           for(;piter != pset->end(); piter++){
-            double vel_mag_sq = value_vel[*piter].length2();
-            mean_vel+=value_vel[*piter]*value_mass[*piter];
-            KE+=value_mass[*piter]*vel_mag_sq;
+            mean_disp+=value_disp[*piter]*value_mass[*piter];
             total_mass+=value_mass[*piter];
           } // for
         }  //if
       }  // for patches
-    mean_vel/=total_mass;
-    KE*=.5;
+    mean_disp/=total_mass;
 
    outfile.precision(15);
-   outfile << time << " " << mean_vel.y() << " " << total_mass << " " << KE << endl; 
-
+   outfile << time << " " << mean_disp.z() << endl; 
   }
 } // end jim2()
 
