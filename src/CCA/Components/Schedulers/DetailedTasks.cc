@@ -174,11 +174,13 @@ DetailedTasks::assignMessageTags( unsigned int index )
     if (from == me || to == me) {
 
       // Start the message tag with one.
-      if( from == me )
+      if( from == me ) {
         m_dep_batches[i]->m_message_tag = ++m_comm_info[ to ][CommPTPMsgTo];
+      }
       
-      if( to == me )
+      if( to == me ) {
         m_dep_batches[i]->m_message_tag = ++m_comm_info[ from ][CommPTPMsgFrom];
+      }
 
       DOUT(g_message_tags_dbg, "Rank-" << me
            << " assigning message tag " << batch->m_message_tag
