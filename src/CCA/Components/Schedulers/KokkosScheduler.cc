@@ -511,8 +511,8 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
 
   m_num_tasks = m_detailed_tasks->numLocalTasks();
 
-  if( d_runtimeStats )
-    (*d_runtimeStats)[NumTasks] += m_num_tasks;
+  if( m_runtimeStats )
+    (*m_runtimeStats)[RuntimeStatsEnum::NumTasks] += m_num_tasks;
                    
   for (int i = 0; i < m_num_tasks; i++) {
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
@@ -625,7 +625,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   m_exec_timer.stop();
 
   // compute the net timings
-  if( d_runtimeStats ) {
+  if( m_runtimeStats ) {
     MPIScheduler::computeNetRuntimeStats();
   }
 

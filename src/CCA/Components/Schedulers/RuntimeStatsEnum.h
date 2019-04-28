@@ -91,6 +91,12 @@ namespace Uintah {
 
   };
 
+  // timing statistics for Uintah infrastructure overhead
+  enum CommunicationStatsEnum {
+      CommPTPMsgTo
+    , CommPTPMsgFrom
+  };
+
 } // end namespace Uintah
 
 #endif // CCA_COMPONENTS_SCHEDULERS_RUNTIMESTATSENUMS_H

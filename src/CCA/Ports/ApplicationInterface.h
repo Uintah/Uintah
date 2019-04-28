@@ -99,6 +99,7 @@ WARNING
     friend class MPIScheduler;
     friend class KokkosScheduler;
     friend class UnifiedScheduler;
+    friend class DetailedTasks;
 
     friend class LoadBalancersCommon;
     friend class DynamicLoadBalancer;

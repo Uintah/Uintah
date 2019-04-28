@@ -51,6 +51,7 @@ namespace Uintah {
 
   class UintahParallelComponent;
   class LoadBalancer;
+  class TaskGraph;
   class Task;
 
 /**************************************
@@ -134,6 +135,7 @@ class Scheduler : public UintahParallelPort {
     enum tgType { NormalTaskGraph, IntermediateTaskGraph };
 
     virtual void addTaskGraph( tgType type, int index = -1 ) = 0;
+    virtual TaskGraph* getTaskGraph( unsigned int index ) = 0;
 
     virtual int getNumTaskGraphs() = 0;
 

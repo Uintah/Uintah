@@ -484,13 +484,14 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
   // Setup the thread info mapper
   if( g_thread_stats || g_thread_indv_stats ) {
-    thread_info_.resize( Impl::g_num_threads );
-    thread_info_.insert( WaitTime  , std::string("WaitTime")  , "seconds" );
-    thread_info_.insert( NumTasks  , std::string("NumTasks")  , "tasks"   );
-    thread_info_.insert( NumPatches, std::string("NumPatches"), "patches" );
+    m_thread_info.resize( Impl::g_num_threads );
+    m_thread_info.setIndexName( "Threads" );
+    m_thread_info.insert( WaitTime  , std::string("WaitTime")  , "seconds" );
+    m_thread_info.insert( NumTasks  , std::string("NumTasks")  , "tasks"   );
+    m_thread_info.insert( NumPatches, std::string("NumPatches"), "patches" );
 
-    thread_info_.calculateMinimum(true);
-    thread_info_.calculateStdDev (true);
+    m_thread_info.calculateMinimum(true);
+    m_thread_info.calculateStdDev (true);
   }
 }
 
@@ -517,11 +518,11 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
     Impl::g_runners[thread_id]->stopWaitTime();
 
     if( g_thread_stats || g_thread_indv_stats ) {
-      thread_info_[thread_id][NumTasks] += 1;
+      m_thread_info[thread_id][NumTasks] += 1;
 
       const PatchSubset *patches = dtask->getPatches();
       if (patches)
-        thread_info_[thread_id][NumPatches] += patches->size();
+        m_thread_info[thread_id][NumPatches] += patches->size();
     }
   }
 
@@ -644,7 +645,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
         m_parent_scheduler->mpi_info_[i] += mpi_info_[i];
       }
       mpi_info_.reset(0);
-      thread_info_.reset( 0 );
+      m_thread_info.reset( 0 );
     }
   }
 
@@ -697,8 +698,8 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   m_num_tasks = m_detailed_tasks->numLocalTasks();
 
-  if( d_runtimeStats )
-    (*d_runtimeStats)[NumTasks] += m_num_tasks;
+  if( m_runtimeStats )
+    (*m_runtimeStats)[RuntimeStatsEnum::NumTasks] += m_num_tasks;
                    
   for (int i = 0; i < m_num_tasks; i++) {
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
@@ -710,7 +711,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   makeTaskGraphDoc(m_detailed_tasks, my_rank);
 
   mpi_info_.reset( 0 );
-  thread_info_.reset( 0 );
+  m_thread_info.reset( 0 );
 
   m_num_tasks_done = 0;
   m_abort = false;
@@ -820,14 +821,14 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   m_exec_timer.stop();
 
   // compute the net timings
-  if( d_runtimeStats ) {
+  if( m_runtimeStats ) {
 
     // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
     for (int i = 1; i < Impl::g_num_threads; ++i) {
-      (*d_runtimeStats)[TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
+      (*m_runtimeStats)[TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
 
       if( g_thread_stats || g_thread_indv_stats )
-        thread_info_[i][WaitTime] = Impl::g_runners[i]->getWaitTime();
+        m_thread_info[i][WaitTime] = Impl::g_runners[i]->getWaitTime();
     }
 
     MPIScheduler::computeNetRuntimeStats();
@@ -835,21 +836,21 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   // Thread average runtime performance stats.
   if (g_thread_stats ) {
-    thread_info_.reduce( true ); // true == skip the first entry.
+    m_thread_info.reduce( true ); // true == skip the first entry.
 
-    thread_info_.reportSummaryStats( "Thread",
-                                     d_myworld->myRank(),
-                                     m_application->getTimeStep(),
-                                     m_application->getSimTime(),
-                                     false );
+    m_thread_info.reportSummaryStats( "Thread",
+				      d_myworld->myRank(),
+				      m_application->getTimeStep(),
+				      m_application->getSimTime(),
+				      false );
   }
 
   // Per thread runtime performance stats
   if (g_thread_indv_stats) {
-    thread_info_.reportIndividualStats( "Thread",
-                                        d_myworld->myRank(),
-                                        m_application->getTimeStep(),
-                                        m_application->getSimTime() );
+    m_thread_info.reportIndividualStats( "Thread",
+					 d_myworld->myRank(),
+					 m_application->getTimeStep(),
+					 m_application->getSimTime() );
   }
 
   // only do on toplevel scheduler
