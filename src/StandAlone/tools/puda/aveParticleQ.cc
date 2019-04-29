@@ -25,6 +25,7 @@
 #include <StandAlone/tools/puda/aveParticleQ.h>
 #include <StandAlone/tools/puda/util.h>
 #include <Core/DataArchive/DataArchive.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <iomanip>
 #include <fstream>
 #include <vector>
@@ -36,98 +37,209 @@ using namespace std;
 //  Compute the mass weight averages for each timestep
 
 void
-Uintah::aveParticleQuanties( DataArchive      * da, 
+Uintah::aveParticleQuanties( DataArchive      * da,
                              CommandLineFlags & clf )
 {
-  vector<string> vars;
+
   vector<const Uintah::TypeDescription*> types;
-  
-  da->queryVariables(vars, types);
-  ASSERTEQ(vars.size(), types.size());
-  
+  vector<string> vars;
+  da->queryVariables( vars, types );
+  ASSERTEQ( vars.size(), types.size() );
+
   cout << "There are " << vars.size() << " variables:\n";
-  
-  for(int i=0;i< (int)vars.size(); i++) {
+  for(int i=0;i<(int)vars.size();i++){
     cout << vars[i] << ": " << types[i]->getName() << endl;
-  }
-      
+  }  
+
+  //__________________________________
+  //
   vector<int>     index;
   vector<double>  times;
-  da->queryTimesteps(index, times);
+  da->queryTimesteps( index, times );
   cout << "There are " << index.size() << " timesteps:\n";
-  
-  ASSERTEQ(index.size(), times.size());
-  
-  for( int i = 0; i < (int)index.size(); i++ ) {
-    cout << index[i] << ": " << times[i] << endl;
-  }
-      
+
+ 
   //__________________________________
-  //  Open file
-  ostringstream fnum;
-  string filename( "aveParticleQ.dat" );
-  ofstream outfile( filename.c_str() ); 
-  outfile.setf(ios::scientific,ios::floatfield);
-  outfile.precision(15);
-  outfile << "# time                 meanVel.x            meanVel.y             meanVel.z             totalMass              KE " << endl;
+  //  Bulletproofing  Do all the variables exist
+  int n = 0;
+  n += std::count( vars.begin(), vars.end(), "p.x" );
+  n += std::count( vars.begin(), vars.end(), "p.mass" );
+  n += std::count( vars.begin(), vars.end(), "p.velocity" );
+  n += std::count( vars.begin(), vars.end(), "p.temperature" );
+  n += std::count( vars.begin(), vars.end(), "p.localizedMPM" );
+
+  if( n != 5 ){
+    ostringstream err;
+    cout << " n: " << n << endl;
+    err<< "\n  ERROR: One of variables (p.x, p.mass, p.velocity, p.temperature, p.localizedMPM) was not found in the uda\n";
+    throw ProblemSetupException( err.str(), __FILE__, __LINE__ );
+  }
+
+  //__________________________________
+  //  Open files and write out the headers
+  // Two files per MPM material
+  
+  unsigned long timestep0 = 0;
+  GridP grid    = da->queryGrid( timestep0 );
+  LevelP level  = grid->getLevel( grid->numLevels()-1 );
+  const Patch* patch0 = level->getPatch(0);
+  ConsecutiveRangeSet matls = da->queryMaterials( "p.x", patch0, timestep0 );
+
+  // maps for each matl
+  std::map<int, std::ofstream> fileMap;    // non-failed particles
+  std::map<int, std::ofstream> f_fileMap;  // failed particles
+
+  for( auto m_iter = matls.begin(); m_iter != matls.end(); m_iter++ ){
+    int matl = *m_iter;
+
+    ofstream& strm = fileMap[matl];
+    ostringstream fname0;
+    fname0 << "aveParticleQ_" << matl << ".dat";
+    strm.open( fname0.str() );
+    
+    ofstream& f_strm = f_fileMap[matl];
+    ostringstream fname1;
+    fname1 << "FailedAveParticleQ_" << matl << ".dat";
+    f_strm.open( fname1.str() );
+
+    strm.setf(ios::scientific,ios::floatfield);
+    strm.precision(15);
+    f_strm.setf(ios::scientific,ios::floatfield);
+    f_strm.precision(15);
+    
+    strm   << "# uda: " << da->name() << "\n";
+    f_strm << "# uda: " << da->name() << "\n";
+    
+    strm   << "# Material: " << matl << "\n";
+    f_strm << "# Material: " << matl << "\n";    
+    
+    strm   << "# This file contains averaged quantities of particles that have NOT failed.\n";
+    f_strm << "# This file contains averaged quantities of particles that have failed.\n";
+
+    strm   << "# time                 meanVel.x            meanVel.y             meanVel.z             meanMagVel            totalMass             avgTemperature        KE                    nParticles" << endl;
+    f_strm << "# time                 meanVel.x            meanVel.y             meanVel.z             meanMagVel            totalMass             avgTemperature        KE                    nParticles" << endl;
+  }
+
+  
   //__________________________________
   //  Loop over timesteps
   findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
 
   for(unsigned long t=clf.time_step_lower; t<=clf.time_step_upper; t+=clf.time_step_inc){
     double time = times[t];
-    cout << "time = " << time << endl;
-    
+    cout << "Working on timestep : " << t << " time: " << time << endl;
+
     GridP grid = da->queryGrid(t);
     LevelP level = grid->getLevel(grid->numLevels()-1);
-    cout << "Level: " << grid->numLevels() - 1 <<  endl;
 
-    Vector total_mom(0.,0.,0.);
-    double KE        = 0.;
-    double total_mass=0.;
-    
     //__________________________________
-    //  Loop over patches
-    for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
-      const Patch* patch = *iter;
-      
-      int matl = clf.matl;
+    // loop over materials
+    ConsecutiveRangeSet matls = da->queryMaterials( "p.x", patch0, t );
+
+    for( auto m_iter = matls.begin(); m_iter != matls.end(); m_iter++ ){
+      int matl = *m_iter;
+
+
       //__________________________________
-      //  retrieve variables
-      ParticleVariable<Point>  pPos;
-      ParticleVariable<Vector> pVel;
-      ParticleVariable<double> pMass;
-      
-      da->query( pPos, "p.x",        matl, patch, t );
-      da->query( pVel, "p.velocity", matl, patch, t );
-      da->query( pMass,"p.mass",     matl, patch, t );
+      //  Initialized summed quantities
+      Vector f_total_mom(0.,0.,0.);       // failed particles
+      double f_total_mass  = 0.;
+      double f_total_intE  = 0.;
+      double f_KE          = 0.;
+      long int f_pCount    = 0.;
 
-      ParticleSubset* pset = pPos.getParticleSubset();
 
-      if(pset->numParticles() > 0){
-      
+      Vector total_mom(0.,0.,0.);         // not failed
+      double total_mass = 0.;
+      double total_intE = 0.;
+      double KE         = 0.;
+      long int pCount   = 0.;
+
+
+      //__________________________________
+      //  Loop over patches
+      for( auto iter = level->patchesBegin(); iter != level->patchesEnd(); iter++ ){
+        const Patch* patch = *iter;
+
         //__________________________________
-        //  Compute sums 
-        ParticleSubset::iterator piter = pset->begin();
-        
-        for(;piter != pset->end(); piter++){
-          particleIndex idx = *piter;
-          
-          double mass       = pMass[idx];
-          double vel_mag_sq = pVel[idx].length2();
+        //  retrieve variables
+        ParticleVariable<Point>  pPos;
+        ParticleVariable<Vector> pVel;
+        ParticleVariable<double> pMass;
+        ParticleVariable<double> pTemp;
+        ParticleVariable<int>    pLocalized;
 
-          total_mass += mass;
-          total_mom  += mass * pVel[idx]; 
-          KE         += 0.5 * mass * vel_mag_sq;
-          
-        } // for
-      }  // if
-    }  // for patches
-    
-    Vector mean_vel = total_mom/total_mass;
-   
+        da->query( pPos,       "p.x",            matl, patch, t );
+        da->query( pMass,      "p.mass",         matl, patch, t );
+        da->query( pVel,       "p.velocity",     matl, patch, t );
+        da->query( pTemp,      "p.temperature",  matl, patch, t );
+        da->query( pLocalized, "p.localizedMPM", matl, patch, t );
 
-   outfile << time << " " << mean_vel.x() << " " << mean_vel.y() << " " << mean_vel.z() <<" " << total_mass << " " << KE << endl; 
+        ParticleSubset* pset = pPos.getParticleSubset();
+
+        if(pset->numParticles() > 0){
+
+          //__________________________________
+          //  Compute sums
+          ParticleSubset::iterator piter = pset->begin();
+
+          for(;piter != pset->end(); piter++){
+            particleIndex idx = *piter;
+
+            double mass       = pMass[idx];
+            double vel_mag_sq = pVel[idx].length2();
+
+            if( pLocalized[idx] ){        // particle has failed.
+              f_pCount     += 1;
+              f_total_mass += mass;
+              f_total_mom  += mass * pVel[idx];
+              f_total_intE += mass * pTemp[idx];              //  cp is a constant so don't need to add it
+              f_KE         += 0.5 * mass * vel_mag_sq;
+            }
+            else{
+              pCount     += 1;
+              total_mass += mass;
+              total_mom  += mass * pVel[idx];
+              total_intE += mass * pTemp[idx];              //  cp is a constant so don't need to add it
+              KE         += 0.5 * mass * vel_mag_sq;
+            }
+          } // particle loop
+        }  // if pset >0
+      }  // patches
+
+
+      //__________________________________
+      //  Compute means
+      Vector mean_vel   = total_mom/total_mass;
+      double avg_temp   = total_intE/total_mass;
+      double mag_vel    = mean_vel.length();
+      
+      Vector f_mean_vel = f_total_mom/f_total_mass;
+      double f_avg_temp = f_total_intE/f_total_mass;
+      double f_mag_vel  = f_mean_vel.length();
+
+      
+      if( isnan(f_mean_vel.length()) || f_total_mass == 0){
+        f_mean_vel = Vector(0,0,0);
+        f_mag_vel  = 0;
+        f_avg_temp = 0;
+      }
+      
+      fileMap[matl]   << time << " " <<   mean_vel.x() << " " <<   mean_vel.y() << " " <<   mean_vel.z() << " " <<   mag_vel << " " <<   total_mass << " " <<   avg_temp << " " <<   KE << " " << pCount << endl;
+      f_fileMap[matl] << time << " " << f_mean_vel.x() << " " << f_mean_vel.y() << " " << f_mean_vel.z() << " " << f_mag_vel << " " << f_total_mass << " " << f_avg_temp << " " << f_KE << " " << f_pCount << endl;
+    }  //  matls
+  }  // time
+  
+  //__________________________________
+  //  flush and close files
+  for( auto m_iter = matls.begin(); m_iter != matls.end(); m_iter++ ){
+    int matl = *m_iter;
+    fileMap[matl].flush();
+    fileMap[matl].close();
+  
+    f_fileMap[matl].flush();
+    f_fileMap[matl].close();  
   }
+  
 } // end
 
