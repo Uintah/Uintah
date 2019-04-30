@@ -66,12 +66,13 @@ Uintah::aveParticleQuanties( DataArchive      * da,
   n += std::count( vars.begin(), vars.end(), "p.mass" );
   n += std::count( vars.begin(), vars.end(), "p.velocity" );
   n += std::count( vars.begin(), vars.end(), "p.temperature" );
+  n += std::count( vars.begin(), vars.end(), "p.stress" );
   n += std::count( vars.begin(), vars.end(), "p.localizedMPM" );
 
-  if( n != 5 ){
+  if( n != 6 ){
     ostringstream err;
     cout << " n: " << n << endl;
-    err<< "\n  ERROR: One of variables (p.x, p.mass, p.velocity, p.temperature, p.localizedMPM) was not found in the uda\n";
+    err<< "\n  ERROR: One of variables (p.x, p.mass, p.velocity, p.temperature, p.stress, p.localizedMPM) was not found in the uda\n";
     throw ProblemSetupException( err.str(), __FILE__, __LINE__ );
   }
 
@@ -113,11 +114,17 @@ Uintah::aveParticleQuanties( DataArchive      * da,
     strm   << "# Material: " << matl << "\n";
     f_strm << "# Material: " << matl << "\n";    
     
+    strm   << "# Stress: signed von Mises (equivalent stress)";
+    f_strm << "# Stress: signed von Mises (equivalent stress)";
+    
     strm   << "# This file contains averaged quantities of particles that have NOT failed.\n";
     f_strm << "# This file contains averaged quantities of particles that have failed.\n";
 
-    strm   << "# time                 meanVel.x            meanVel.y             meanVel.z             meanMagVel            totalMass             avgTemperature        KE                    nParticles" << endl;
-    f_strm << "# time                 meanVel.x            meanVel.y             meanVel.z             meanMagVel            totalMass             avgTemperature        KE                    nParticles" << endl;
+    strm   << "# time                 meanVel.x            meanVel.y             meanVel.z             meanMagVel            "
+           << "  totalMass            avgTemperature       stress                KE                    nParticles" << endl;
+           
+    f_strm << "# time                 meanVel.x            meanVel.y             meanVel.z             meanMagVel            "
+           << "  totalMass            avgTemperature       stress                KE                    nParticles" << endl;
   }
 
   
@@ -143,17 +150,19 @@ Uintah::aveParticleQuanties( DataArchive      * da,
       //__________________________________
       //  Initialized summed quantities
       Vector f_total_mom(0.,0.,0.);       // failed particles
-      double f_total_mass  = 0.;
-      double f_total_intE  = 0.;
-      double f_KE          = 0.;
-      long int f_pCount    = 0.;
+      double f_total_mass   = 0.;
+      double f_total_intE   = 0.;
+      double f_total_stress =0.;
+      double f_KE           = 0.;
+      long int f_pCount     = 0.;
 
 
       Vector total_mom(0.,0.,0.);         // not failed
-      double total_mass = 0.;
-      double total_intE = 0.;
-      double KE         = 0.;
-      long int pCount   = 0.;
+      double total_mass   = 0.;
+      double total_intE   = 0.;
+      double total_stress = 0.;
+      double KE           = 0.;
+      long int pCount     = 0.;
 
 
       //__________________________________
@@ -163,15 +172,17 @@ Uintah::aveParticleQuanties( DataArchive      * da,
 
         //__________________________________
         //  retrieve variables
-        ParticleVariable<Point>  pPos;
-        ParticleVariable<Vector> pVel;
-        ParticleVariable<double> pMass;
-        ParticleVariable<double> pTemp;
-        ParticleVariable<int>    pLocalized;
+        ParticleVariable<Point>   pPos;
+        ParticleVariable<Vector>  pVel;
+        ParticleVariable<double>  pMass;
+        ParticleVariable<double>  pTemp;
+        ParticleVariable<Matrix3> pStress;
+        ParticleVariable<int>     pLocalized;
 
         da->query( pPos,       "p.x",            matl, patch, t );
         da->query( pMass,      "p.mass",         matl, patch, t );
         da->query( pVel,       "p.velocity",     matl, patch, t );
+        da->query( pStress,    "p.stress",       matl, patch, t );
         da->query( pTemp,      "p.temperature",  matl, patch, t );
         da->query( pLocalized, "p.localizedMPM", matl, patch, t );
 
@@ -188,20 +199,40 @@ Uintah::aveParticleQuanties( DataArchive      * da,
 
             double mass       = pMass[idx];
             double vel_mag_sq = pVel[idx].length2();
+            
+            // signed von Mises Stress
+            Matrix3 I;
+            I.Identity();
 
+            double sigMean      = pStress[idx].Trace()/3.0;
+            double plusMinusOne = sigMean/abs( sigMean );
+
+            Matrix3 sig_deviatoric   = pStress[idx] - I*sigMean;
+            double sigEquivalent     = sqrt( (sig_deviatoric.NormSquared())*1.5 );
+            double signedEquivStress = plusMinusOne * sigEquivalent;
+            
+            if (isnan( signedEquivStress ) ) {
+              signedEquivStress = 0.;
+            }
+
+            
+            //__________________________________
+            //  
             if( pLocalized[idx] ){        // particle has failed.
-              f_pCount     += 1;
-              f_total_mass += mass;
-              f_total_mom  += mass * pVel[idx];
-              f_total_intE += mass * pTemp[idx];              //  cp is a constant so don't need to add it
-              f_KE         += 0.5 * mass * vel_mag_sq;
+              f_pCount        += 1;
+              f_total_mass    += mass;
+              f_total_mom     += mass * pVel[idx];
+              f_total_intE    += mass * pTemp[idx];              //  cp is a constant so don't need to add it
+              f_total_stress  += mass * signedEquivStress;
+              f_KE            += 0.5 * mass * vel_mag_sq;
             }
             else{
-              pCount     += 1;
-              total_mass += mass;
-              total_mom  += mass * pVel[idx];
-              total_intE += mass * pTemp[idx];              //  cp is a constant so don't need to add it
-              KE         += 0.5 * mass * vel_mag_sq;
+              pCount         += 1;
+              total_mass     += mass;
+              total_mom      += mass * pVel[idx];
+              total_intE     += mass * pTemp[idx];              //  cp is a constant so don't need to add it
+              total_stress   += mass * signedEquivStress;
+              KE             += 0.5 * mass * vel_mag_sq;
             }
           } // particle loop
         }  // if pset >0
@@ -213,20 +244,24 @@ Uintah::aveParticleQuanties( DataArchive      * da,
       Vector mean_vel   = total_mom/total_mass;
       double avg_temp   = total_intE/total_mass;
       double mag_vel    = mean_vel.length();
+      double avg_stress = total_stress/total_mass;
       
-      Vector f_mean_vel = f_total_mom/f_total_mass;
-      double f_avg_temp = f_total_intE/f_total_mass;
-      double f_mag_vel  = f_mean_vel.length();
+      Vector f_mean_vel   = f_total_mom/f_total_mass;
+      double f_avg_temp   = f_total_intE/f_total_mass;
+      double f_mag_vel    = f_mean_vel.length();
+      double f_avg_stress = f_total_stress/f_total_mass;
 
       
       if( isnan(f_mean_vel.length()) || f_total_mass == 0){
-        f_mean_vel = Vector(0,0,0);
-        f_mag_vel  = 0;
-        f_avg_temp = 0;
+        f_mean_vel   = Vector(0,0,0);
+        f_mag_vel    = 0;
+        f_avg_temp   = 0;
+        f_avg_stress = 0;
       }
       
-      fileMap[matl]   << time << " " <<   mean_vel.x() << " " <<   mean_vel.y() << " " <<   mean_vel.z() << " " <<   mag_vel << " " <<   total_mass << " " <<   avg_temp << " " <<   KE << " " << pCount << endl;
-      f_fileMap[matl] << time << " " << f_mean_vel.x() << " " << f_mean_vel.y() << " " << f_mean_vel.z() << " " << f_mag_vel << " " << f_total_mass << " " << f_avg_temp << " " << f_KE << " " << f_pCount << endl;
+      
+      fileMap[matl]   << time << " " <<   mean_vel.x() << " " <<   mean_vel.y() << " " <<   mean_vel.z() << " " <<   mag_vel << " " <<   total_mass   << " " <<   avg_temp   << " " << avg_stress   << " " <<   KE   << " " << pCount   << endl;
+      f_fileMap[matl] << time << " " << f_mean_vel.x() << " " << f_mean_vel.y() << " " << f_mean_vel.z() << " " << f_mag_vel << " " <<   f_total_mass << " " <<   f_avg_temp << " " << f_avg_stress << " " <<   f_KE << " " << f_pCount << endl;
     }  //  matls
   }  // time
   
