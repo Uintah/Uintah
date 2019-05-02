@@ -29,5 +29,5 @@ namespace Uintah {
 
   class DataArchive;
 
-  void jim3( DataArchive * da, CommandLineFlags & clf );
+  void pStressHistogram( DataArchive * da, CommandLineFlags & clf );
 }

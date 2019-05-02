@@ -58,6 +58,7 @@
 #include <StandAlone/tools/puda/jacquie.h>
 #include <StandAlone/tools/puda/jim1.h>
 #include <StandAlone/tools/puda/jim2.h>
+#include <StandAlone/tools/puda/pStressHistogram.h>
 #include <StandAlone/tools/puda/PIC.h>
 #include <StandAlone/tools/puda/POL.h>
 #include <StandAlone/tools/puda/pressure.h>
@@ -106,6 +107,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -aveParticles        ( computes averages over all localized and non-localized particles)\n";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
+  cerr << "  -pStressHistogram    ( Computes a histogram of particle stresses for a material)\n";
   cerr << "  -todd1               ( 1st Law of thermo. control volume analysis) \n";
   cerr << "  -ICE_momentum        ( momentum control volume analysis) \n";
   cerr << "  -jacquie             (finds burn rate vs pressure)\n";
@@ -273,6 +275,8 @@ main(int argc, char** argv)
       clf.do_jim1 = true;
     } else if(s == "-jim2"){
       clf.do_jim2 = true;
+    } else if(s == "-pStressHistogram"){
+      clf.do_pStressHstgrm = true;
     } else if(s == "-todd1"){
       clf.do_todd1 = true;
     } else if(s == "-ICE_momentum"){
@@ -533,6 +537,10 @@ main(int argc, char** argv)
       jim2( da, clf );
     }
 
+    if( clf.do_pStressHstgrm ){
+      pStressHistogram( da, clf );
+    }
+    
     if( clf.do_todd1 ){
       todd1( da, clf );
     }

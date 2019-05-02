@@ -39,13 +39,13 @@ namespace Uintah {
     bool do_pressure    {false};
     bool do_jacquie     {false};
     bool do_jim1        {false};
+    bool do_jim2        {false};
     bool do_PIC         {false};
     bool do_POL         {false};
     bool do_AA_MMS_1    {false};
     bool do_AA_MMS_2    {false};
     bool do_GV_MMS      {false};
     bool do_ER_MMS      {false};
-    bool do_jim2        {false};
     bool do_aveParticles {false};
     bool do_partvar         {false};
     bool do_asci            {false};
@@ -63,6 +63,7 @@ namespace Uintah {
     bool do_PTvar           {false};
     bool do_PTvar_all       {false};
     bool do_patch           {false};
+    bool do_pStressHstgrm   {false};
     bool do_material        {false};
     bool do_verbose         {false};
     bool do_all_ccvars      {false};

@@ -45,14 +45,17 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
   vector<const Uintah::TypeDescription*> types;
   da->queryVariables(vars, types);
   ASSERTEQ(vars.size(), types.size());
+  
   cout << "There are " << vars.size() << " variables:\n";
-  for(int i=0;i<(int)vars.size();i++)
+  for(int i=0;i<(int)vars.size();i++) {
     cout << vars[i] << ": " << types[i]->getName() << endl;
-      
+  }
+  
   vector<int> index;
   vector<double> times;
   da->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
+  
   cout << "There are " << index.size() << " timesteps:\n";
   for( int i = 0; i < (int)index.size(); i++ ) {
     cout << index[i] << ": " << times[i] << endl;
