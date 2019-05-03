@@ -37,7 +37,6 @@ SRCS := \
         $(SRCDIR)/jacquie.cc           \
         $(SRCDIR)/jim1.cc              \
         $(SRCDIR)/jim2.cc              \
-        $(SRCDIR)/jim3.cc              \
         $(SRCDIR)/PIC.cc               \
         $(SRCDIR)/POL.cc               \
         $(SRCDIR)/printCellStresses.cc \
