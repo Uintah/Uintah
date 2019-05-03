@@ -49,6 +49,7 @@ namespace Uintah {
     bool do_PIC;
     bool do_POL;
     bool do_pressure;
+    bool do_pStressHstgrm;
     bool do_timesteps;
     bool do_todd1;
     bool do_varsummary;
@@ -85,6 +86,7 @@ namespace Uintah {
       do_PIC           = false;
       do_POL           = false;
       do_pressure      = false;
+      do_pStressHstgrm = false;
       do_timesteps     = false;
       do_todd1         = false;
       do_varsummary    = false;

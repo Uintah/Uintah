@@ -43,6 +43,7 @@ SRCS := \
         $(SRCDIR)/printCellStresses.cc \
         $(SRCDIR)/printParticleVar.cc  \
         $(SRCDIR)/pressure.cc          \
+        $(SRCDIR)/pStressHistogram.cc  \
         $(SRCDIR)/puda.cc              \
         $(SRCDIR)/todd1.cc             \
         $(SRCDIR)/util.cc              \

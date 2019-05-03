@@ -55,6 +55,7 @@
 #include <StandAlone/tools/puda/pressure.h>
 #include <StandAlone/tools/puda/printCellStresses.h>
 #include <StandAlone/tools/puda/printParticleVar.h>
+#include <StandAlone/tools/puda/pStressHistogram.h>
 #include <StandAlone/tools/puda/todd1.h>
 #include <StandAlone/tools/puda/util.h>
 #include <StandAlone/tools/puda/varsummary.h>
@@ -198,6 +199,9 @@ main( int argc, char *argv[] )
     } 
     else if(s == "-ICE_momentum"){
       clf.do_ice_momentum = true;
+    }
+    else if(s == "-pStressHistogram"){
+      clf.do_pStressHstgrm = true;
     }
     else if(s == "-pic"){
       clf.do_PIC = true;
@@ -412,7 +416,11 @@ main( int argc, char *argv[] )
     if( clf.do_POL ){
       POL( da, clf, axis, ortho1, ortho2, doPOLAverage, doPOLStressSplit );
     }
-
+    
+    if( clf.do_pStressHstgrm ){
+      pStressHistogram( da, clf );
+    }
+    
     if( clf.do_AA_MMS_1 || clf.do_AA_MMS_2 ){
       AA_MMS( da, clf );
     }
