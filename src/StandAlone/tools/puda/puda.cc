@@ -37,21 +37,14 @@
 
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Math/Matrix3.h>
 #include <Core/Parallel/Parallel.h>
 
 #include <StandAlone/tools/puda/AA_MMS.h>
 #include <StandAlone/tools/puda/asci.h>
 #include <StandAlone/tools/puda/ER_MMS.h>
+#include <StandAlone/tools/puda/gridStats.h>
 #include <StandAlone/tools/puda/GV_MMS.h>
 #include <StandAlone/tools/puda/ICE_momentum.h>
 #include <StandAlone/tools/puda/jacquie.h>
@@ -60,31 +53,20 @@
 #include <StandAlone/tools/puda/PIC.h>
 #include <StandAlone/tools/puda/POL.h>
 #include <StandAlone/tools/puda/pressure.h>
+#include <StandAlone/tools/puda/printCellStresses.h>
+#include <StandAlone/tools/puda/printParticleVar.h>
 #include <StandAlone/tools/puda/todd1.h>
 #include <StandAlone/tools/puda/util.h>
 #include <StandAlone/tools/puda/varsummary.h>
 
-#include <algorithm>
-#include <cstdio>
-#include <cmath>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <vector>
 
 using namespace std;
 using namespace Uintah;
 
-/////////////////////////////////////////////////////////////////
-// Pre-declarations:
-//
-void printParticleVariable(DataArchive* da, 
-                           string particleVariable,
-                           unsigned long time_step_lower,
-                           unsigned long time_step_upper,
-                           int mat);
 
 /////////////////////////////////////////////////////////////////
 
@@ -117,9 +99,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -no_extra_cells      (Excludes extra cells when iterating over cells.\n";
   cerr << "                        Default is to include extra cells.)\n";
   cerr << "  -cell_stresses\n";
-  cerr << "  -PTvar\n";
   cerr << "  -ptonly              (prints out only the point location)\n";
-  cerr << "  -patch               (outputs patch id with data)\n";
   cerr << "  -material            (outputs material number with data)\n";
   cerr << "  -NCvar               (double | float | point | vector)\n";
   cerr << "  -CCvar               (double | float | point | vector)\n";
@@ -140,78 +120,13 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "                       if the particle variable is p.stress, and splits the stress\n";
   cerr << "                       into hydrostatic and deviatoric parts.)\n";
   cerr << "*NOTE* to use -PTvar or -NVvar must be used\n";
-  cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh "
+  cerr << "*NOTE* ptonly, material, timesteplow, timestephigh "
        << "are used in conjuntion with -PTvar.\n\n";
     
   cerr << "USAGE IS NOT FINISHED\n\n";
   exit( 1 );
 }
 //______________________________________________________________________
-//
-void
-gridstats( DataArchive* da,
-           const bool tslow_set, 
-           const bool tsup_set,
-           unsigned long & time_step_lower,
-           unsigned long & time_step_upper )
-{
-  vector<int> index;
-  vector<double> times;
-  da->queryTimesteps( index, times );
-  ASSERTEQ(index.size(), times.size());
-      
-  findTimestep_loopLimits(tslow_set, tsup_set,times, time_step_lower, time_step_upper);
-           
-  for( unsigned long t = time_step_lower; t <= time_step_upper; t++ ) {
-    double time = times[t];
-    cout << "__________________________________\n";
-    cout << "Timestep " << t << ": " << time << "\n";
-    GridP grid = da->queryGrid( t );
-    grid->performConsistencyCheck();
-    grid->printStatistics();
-
-    Vector domainLength;
-    grid->getLength(domainLength, "minusExtraCells");
-    cout << "Domain Length:        " << domainLength << "\n";
-
-    BBox box;
-    grid->getInteriorSpatialRange( box );
-    cout << "\nInterior Spatial Range: " << box << "\n";
-
-    grid->getSpatialRange( box );
-    cout << "Spatial Range:          " << box << "\n\n";
-  
-    for(int l=0;l<grid->numLevels();l++){
-      LevelP level = grid->getLevel(l);
-      cout << "Level: index " << level->getIndex() << ", id " << level->getID() << "\n";
-      
-      IntVector rr(level->getRefinementRatio());
-      cout << "       refinement ratio: " << rr << "\n";
-      
-      BBox lbox;
-      level->getInteriorSpatialRange( lbox );
-      cout << "       Interior Spatial Range: " << lbox << "\n";
-      
-      level->getSpatialRange( lbox );
-      cout << "       Spatial Range:          " << lbox << "\n\n";
-
-      IntVector lo, hi;
-      level->findInteriorCellIndexRange(lo,hi);
-      cout << "Total Number of Cells:" << hi-lo << "\n";
-      cout << "dx:                   " << level->dCell() << "\n";
-
-      for(Level::const_patch_iterator iter = level->patchesBegin();
-          iter != level->patchesEnd(); iter++){
-        const Patch* patch = *iter;
-        cout << *patch << "\n"; 
-        cout << "\t   BC types: x- " << patch->getBCType(Patch::xminus) << ", x+ "<<patch->getBCType(Patch::xplus)
-             << ", y- "<< patch->getBCType(Patch::yminus) << ", y+ "<< patch->getBCType(Patch::yplus)
-             << ", z- "<< patch->getBCType(Patch::zminus) << ", z+ "<< patch->getBCType(Patch::zplus) << "\n";
-      }
-    }
-  }
-} // end gridstats()
-
 //______________________________________________________________________
 //
 int
@@ -239,9 +154,10 @@ main( int argc, char *argv[] )
   // set defaults for cout.
   cout.setf(ios::scientific,ios::floatfield);
   cout.precision(8);
-  /*
-   * Parse arguments
-   */
+
+  //______________________________________________________________________
+  //   Parse arguments
+
   for(int i=1;i<argc;i++){
     string s=argv[i];
     if(s == "-timesteps"){
@@ -374,21 +290,15 @@ main( int argc, char *argv[] )
         else
           usage("-CCvar", argv[0]);
       }
-      else
+      else{
         usage("-CCvar", argv[0]);
-    } else if(s == "-PTvar") {
-      clf.do_PTvar = true;
-    } else if (s == "-ptonly") {
-      clf.do_PTvar_all = false;
-    } else if (s == "-patch") {
-      clf.do_patch = true;
+      }
     } else if (s == "-material" ||
                s == "-matl" || s == "-mat") {
       if(i+1 >= argc){
         usage("-mat", argv[0]);
       }
       clf.matl = strtoul(argv[++i],(char**)nullptr,10);
-      clf.do_material = true;
       material_of_interest = clf.matl;
 
     } else if (s == "-verbose") {
@@ -440,6 +350,7 @@ main( int argc, char *argv[] )
   //
   try {
     DataArchive* da = scinew DataArchive( clf.filebase );
+    
     //__________________________________
     //  LIST TIMESTEPS
     if(clf.do_timesteps){
@@ -458,11 +369,6 @@ main( int argc, char *argv[] )
         cout << index[i] << ": " << times[i] << "\n";
       }
     }
-    //__________________________________
-    //    DO GRIDSTATS
-    if( clf.do_gridstats ){
-      gridstats( da, clf.tslow_set, clf.tsup_set, clf.time_step_lower, clf.time_step_upper );
-    }
     
     //__________________________________
     //  LIST VARIABLES
@@ -479,34 +385,15 @@ main( int argc, char *argv[] )
     }
 
     //__________________________________
-    // Print a particular particle variable
+    // 
+    if( clf.do_gridstats ){
+      gridstats( da, clf );
+    }
+    
     if ( clf.do_partvar && !clf.do_POL ) {
-      vector<int> index;
-      vector<double> times;
-      da->queryTimesteps( index, times );
-      ASSERTEQ(index.size(), times.size());
-      
-      if( !clf.tslow_set ) {
-        clf.time_step_lower =0;
-      }
-      else if (clf.time_step_lower >= times.size()) {
-        cerr << "timesteplow must be between 0 and " << times.size()-1 << "\n";
-        abort();
-      }
-      if( !clf.tsup_set ) {
-        clf.time_step_upper = times.size() - 1;
-      }
-      else if( clf.time_step_upper >= times.size() ) {
-        cerr << "timestephigh must be between 0 and " << times.size()-1 << "\n";
-        abort();
-      }
-      printParticleVariable( da, clf.particleVariable,
-                             clf.time_step_lower, clf.time_step_upper, material_of_interest );
+      printParticleVariable( da, clf, material_of_interest );
     }
 
-    //__________________________________
-    //
-   
     if( clf.do_varsummary ){
       varsummary( da, clf, material_of_interest );
     }
@@ -543,15 +430,14 @@ main( int argc, char *argv[] )
       POL( da, clf, axis, ortho1, ortho2, doPOLAverage, doPOLStressSplit );
     }
 
-
     if( clf.do_AA_MMS_1 || clf.do_AA_MMS_2 ){
       AA_MMS( da, clf );
     }
 
-//MMS
     if( clf.do_GV_MMS ){
       GV_MMS( da, clf );
     }
+    
     if( clf.do_ER_MMS ){
       ER_MMS( da, clf );
     }
@@ -560,137 +446,10 @@ main( int argc, char *argv[] )
       asci( da, clf.tslow_set, clf.tsup_set, clf.time_step_lower, clf.time_step_upper );
     }
 
-    //______________________________________________________________________
-    //         DO CELL STRESSES 
-    if (clf.do_cell_stresses){
-      vector<string> vars;
-      vector<int> num_matls;
-      vector<const Uintah::TypeDescription*> types;
-      da->queryVariables( vars, num_matls, types );
-      ASSERTEQ(vars.size(), types.size());
-      
-      cout << "There are " << vars.size() << " variables:\n";
-      vector<int> index;
-      vector<double> times;
-      da->queryTimesteps( index, times );
-      ASSERTEQ(index.size(), times.size());
-      
-      cout << "There are " << index.size() << " timesteps:\n";
-      
-      findTimestep_loopLimits( clf.tslow_set, clf.tsup_set,times, clf.time_step_lower, clf.time_step_upper );
-      
-      // obtain the desired timesteps
-      unsigned long t = 0, start_time, stop_time;
+    if ( clf.do_cell_stresses ){
+      printCellStresses( da, clf, material_of_interest );
+    } 
 
-      cout << "Time Step       Value\n";
-      
-      for(t = clf.time_step_lower; t <= clf.time_step_upper; t++){
-        double time = times[t];
-        cout << "    " << t + 1 << "        "  << time << "\n";
-      }
-      cout << "\n";
-      if (t != (clf.time_step_lower +1)){
-        cout << "Enter start time-step (1 - " << t << "): ";
-        cin >> start_time;
-        start_time--;
-        cout << "Enter stop  time-step (1 - " << t << "): ";
-        cin >> stop_time;
-        stop_time--;
-      }
-      else 
-        if(t == (clf.time_step_lower + 1)){
-          start_time = t-1;
-          stop_time  = t-1;
-        }
-      // end of timestep acquisition
-      
-      for(t=start_time;t<=stop_time;t++){
-        
-        double time = times[t];
-        cout << "time = " << time << "\n";
-        GridP grid = da->queryGrid( t );
-        for(int v=0;v<(int)vars.size();v++){
-          std::string var = vars[ v ];
-          
-          // Only dumps out data if it is variable g.stressFS
-          if (var == "g.stressFS"){
-            const Uintah::TypeDescription* td = types[v];
-            const Uintah::TypeDescription* subtype = td->getSubType();
-            cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
-            for(int l=0;l<grid->numLevels();l++){
-              LevelP level = grid->getLevel(l);
-              for( Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++ ){
-                const Patch* patch = *iter;
-                cout << "\t\tPatch: " << patch->getID() << "\n";
-                ConsecutiveRangeSet matls = da->queryMaterials( var, patch, t );
-
-                // Loop over materials:
-                for( ConsecutiveRangeSet::iterator matlIter = matls.begin(); matlIter != matls.end(); matlIter++ ){
-                  int matl = *matlIter;
-                  if( material_of_interest != -1 && matl != material_of_interest ) {
-                    continue;
-                  }
- 
-                  // dumps header and variable info to file
-                  ostringstream fnum, pnum, matnum; 
-                  string filename;
-                  unsigned long timestepnum=t+1;
-                  fnum << setw(4) << setfill('0') << timestepnum;
-                  pnum << setw(4) << setfill('0') << patch->getID();
-                  matnum << setw(4) << setfill('0') << matl;
-                  
-                  string partroot("stress.t");
-                  string partextp(".p"); 
-                  string partextm(".m");
-                  
-                  filename = partroot+fnum.str()+partextp+pnum.str()+partextm+matnum.str();
-                  ofstream partfile(filename.c_str());
-                  partfile << "# x, y, z, st11, st12, st13, st21, st22, st23, st31, st32, st33\n";
-                  
-                  cout << "\t\t\tMaterial: " << matl << "\n";
-                  switch(td->getType()){
-                  case Uintah::TypeDescription::NCVariable:
-                    switch(subtype->getType()){
-                    case Uintah::TypeDescription::Matrix3:{
-                      NCVariable<Matrix3> value;
-                      da->query( value, var, matl, patch, t );
-                      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex()
-                           << " to " << value.getHighIndex() << "\n";
-                      IntVector dx(value.getHighIndex()-value.getLowIndex());
-                      if(dx.x() && dx.y() && dx.z()){
-                        NodeIterator iter = patch->getNodeIterator();
-                        for(;!iter.done(); iter++){
-                          partfile << (*iter).x() << " " << (*iter).y() << " " << (*iter).z()
-                                   << " " << (value[*iter])(0,0) << " " << (value[*iter])(0,1) << " " 
-                                   << (value[*iter])(0,2) << " " << (value[*iter])(1,0) << " "
-                                   << (value[*iter])(1,1) << " " << (value[*iter])(1,2) << " "
-                                   << (value[*iter])(2,0) << " " << (value[*iter])(2,1) << " "
-                                   << (value[*iter])(2,2) << "\n";
-                        }
-                      }
-                    }
-                      break;
-                    default:
-                      cerr << "No Matrix3 Subclass avaliable." << subtype->getType() << "\n";
-                      break;
-                    }
-                    break;
-                  default:
-                    cerr << "No NC Variables avaliable." << td->getType() << "\n";
-                    break;
-                  }
-                }
-              }
-            }
-          }
-          else
-            cout << "No g.stressFS variables avaliable at time " << t << ".\n";
-        }
-        if (start_time == stop_time)
-          t++;   
-      }
-    } // end do_cell_stresses
-    
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << "\n";
     abort();
@@ -702,274 +461,3 @@ main( int argc, char *argv[] )
   return 0;
 
 } // end main()
-
-////////////////////////////////////////////////////////////////////////////
-//
-// Print ParticleVariable
-//
-void
-printParticleVariable( DataArchive* da, 
-                       string particleVariable,
-                       unsigned long time_step_lower,
-                       unsigned long time_step_upper, int mat)
-{
-  // Check if the particle variable is available
-  vector<string> vars;
-  vector<int> num_matls;
-  vector<const Uintah::TypeDescription*> types;
-  da->queryVariables( vars, num_matls, types );
-  ASSERTEQ(vars.size(), types.size());
-  bool variableFound = false;
-  for(unsigned int v=0;v<vars.size();v++){
-    std::string var = vars[v];
-    if (var == particleVariable) variableFound = true;
-  }
-  if (!variableFound) {
-    cerr << "Variable " << particleVariable << " not found\n"; 
-    exit(1);
-  }
-
-  // Now that the variable has been found, get the data for all 
-  // available time steps // from the data archive
-  vector<int> index;
-  vector<double> times;
-  da->queryTimesteps(index, times);
-  ASSERTEQ(index.size(), times.size());
-  //cout << "There are " << index.size() << " timesteps:\n";
-      
-  bool useParticleID = true;
-
-  // Loop thru all time steps and store the volume and variable (stress/strain)
-  for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
-    double time = times[t];
-    //cout << "Time = " << time << "\n";
-    GridP grid = da->queryGrid(t);
-
-    // Loop thru all the levels
-    for(int l=0;l<grid->numLevels();l++){
-      LevelP level = grid->getLevel(l);
-
-      // Loop thru all the patches
-      Level::const_patch_iterator iter = level->patchesBegin(); 
-      int patchIndex = 0;
-      for(; iter != level->patchesEnd(); iter++){
-        const Patch* patch = *iter;
-        ++patchIndex; 
-
-        // Loop thru all the variables 
-        for(int v=0;v<(int)vars.size();v++){
-          std::string var = vars[v];
-          const Uintah::TypeDescription* td = types[v];
-          const Uintah::TypeDescription* subtype = td->getSubType();
-
-          // Check if the variable is a ParticleVariable
-          if(td->getType() == Uintah::TypeDescription::ParticleVariable) { 
-
-            // loop thru all the materials
-            ConsecutiveRangeSet matls = da->queryMaterials(var, patch, t);
-            ConsecutiveRangeSet::iterator matlIter = matls.begin(); 
-            for(; matlIter != matls.end(); matlIter++){
-              int matl = *matlIter;
-              if (mat != -1 && matl != mat) continue;
-
-              // Find the name of the variable
-              if (var == particleVariable) {
-                //cout << "Material: " << matl << "\n";
-                switch(subtype->getType()){
-                case Uintah::TypeDescription::double_type:
-                  {
-                    ParticleVariable<double> value;
-                    da->query( value, var, matl, patch, t) ;
-                    ParticleVariable<long64> pid;
-                    if( useParticleID ) {
-                      try {
-                        // If particleID wasn't saved, just move on...
-                        da->query( pid, "p.particleID", matl, patch, t );
-                      } catch( Exception & e ) {
-                        useParticleID = false;
-                      }
-                    }
-                    ParticleSubset* pset = value.getParticleSubset();
-                    if(pset->numParticles() > 0){
-                      ParticleSubset::iterator iter = pset->begin();
-                      for(;iter != pset->end(); iter++){
-                        cout << time << " " << patchIndex << " " << matl; 
-                        if( useParticleID ) {
-                          cout << " " << pid[*iter];
-                        }
-                        cout << " " << value[*iter] << "\n";
-                      }
-                    }
-                  }
-                break;
-                case Uintah::TypeDescription::float_type:
-                  {
-                    ParticleVariable<float> value;
-                    da->query( value, var, matl, patch, t );
-                    ParticleVariable<long64> pid;
-                    if( useParticleID ) {
-                      try {
-                        // If particleID wasn't saved, just move on...
-                        da->query( pid, "p.particleID", matl, patch, t );
-                      }
-                      catch( Exception & e ) {
-                        useParticleID = false;
-                      }
-                    }
-                    ParticleSubset* pset = value.getParticleSubset();
-                    if(pset->numParticles() > 0){
-                      ParticleSubset::iterator iter = pset->begin();
-                      for(;iter != pset->end(); iter++){
-                        cout << time << " " << patchIndex << " " << matl ;
-                        if( useParticleID ) {
-                          cout << " " << pid[*iter];
-                        }
-                        cout << " " << value[*iter] << "\n";
-                      }
-                    }
-                  }
-                break;
-                case Uintah::TypeDescription::int_type:
-                  {
-                    ParticleVariable<int> value;
-                    da->query( value, var, matl, patch, t );
-                    ParticleSubset* pset = value.getParticleSubset();
-                    ParticleVariable<long64> pid;
-                    if( useParticleID ) {
-                      try {
-                        // If particleID wasn't saved, just move on...
-                        da->query( pid, "p.particleID", matl, patch, t );
-                      }
-                      catch( Exception & e ) {
-                        useParticleID = false;
-                      }
-                    }
-                    if(pset->numParticles() > 0){
-                      ParticleSubset::iterator iter = pset->begin();
-                      for(;iter != pset->end(); iter++){
-                        cout << time << " " << patchIndex << " " << matl;
-                        if( useParticleID ) {
-                          cout << " " << pid[*iter];
-                        }
-                        cout << " " << value[*iter] << "\n";
-                      }
-                    }
-                  }
-                break;
-                case Uintah::TypeDescription::Point:
-                  {
-                    ParticleVariable<Point> value;
-                    da->query( value, var, matl, patch, t );
-                    ParticleSubset* pset = value.getParticleSubset();
-                    ParticleVariable<long64> pid;
-                    if( useParticleID ) {
-                      try {
-                        // If particleID wasn't saved, just move on...
-                        da->query( pid, "p.particleID", matl, patch, t );
-                      }
-                      catch( Exception & e ) {
-                        useParticleID = false;
-                      }
-                    }
-                    if(pset->numParticles() > 0){
-                      ParticleSubset::iterator iter = pset->begin();
-                      for(;iter != pset->end(); iter++){
-                        cout << time << " " << patchIndex << " " << matl ;
-                        if( useParticleID ) {
-                          cout << " " << pid[*iter];
-                        }
-                        cout << " " << value[*iter](0) 
-                             << " " << value[*iter](1)
-                             << " " << value[*iter](2) << "\n";
-                      }
-                    }
-                  }
-                break;
-                case Uintah::TypeDescription::Vector:
-                  {
-                    ParticleVariable<Vector> value;
-                    da->query( value, var, matl, patch, t );
-                    ParticleVariable<long64> pid;
-                    if( useParticleID ) {
-                      try {
-                        // If particleID wasn't saved, just move on...
-                        da->query( pid, "p.particleID", matl, patch, t );
-                      }
-                      catch( Exception & e ) {
-                        useParticleID = false;
-                      }
-                    }
-                    ParticleSubset* pset = value.getParticleSubset();
-                    if(pset->numParticles() > 0){
-                      ParticleSubset::iterator iter = pset->begin();
-                      for(;iter != pset->end(); iter++){
-                        if( useParticleID ) {
-                          cout << time << " " << patchIndex << " " << matl ;
-                        }
-                        cout << " " << pid[*iter];
-                        cout << " " << value[*iter][0] 
-                             << " " << value[*iter][1]
-                             << " " << value[*iter][2] << "\n";
-                      }
-                    }
-                  }
-                break;
-                case Uintah::TypeDescription::Matrix3:
-                  {
-                    ParticleVariable<Matrix3> value;
-                    da->query( value, var, matl, patch, t );
-                    ParticleVariable<long64> pid;
-                    if( useParticleID ) {
-                      try {
-                        // If particleID wasn't saved, just move on...
-                        da->query( pid, "p.particleID", matl, patch, t );
-                      }
-                      catch( Exception & e ) {
-                        useParticleID = false;
-                      }
-                    }
-                    ParticleSubset* pset = value.getParticleSubset();
-                    if(pset->numParticles() > 0){
-                      ParticleSubset::iterator iter = pset->begin();
-                      for(;iter != pset->end(); iter++){
-                        cout << time << " " << patchIndex << " " << matl ;
-                        if( useParticleID ) {
-                          cout << " " << pid[*iter];
-                        }
-                        for (int ii = 0; ii < 3; ++ii) {
-                          for (int jj = 0; jj < 3; ++jj) {
-                            cout << " " << value[*iter](ii,jj) ;
-                          }
-                        }
-                        cout << "\n";
-                      }
-                    }
-                  }
-                break;
-                case Uintah::TypeDescription::long64_type:
-                  {
-                    ParticleVariable<long64> value;
-                    da->query( value, var, matl, patch, t );
-                    ParticleSubset* pset = value.getParticleSubset();
-                    if( pset->numParticles() > 0 ){
-                      ParticleSubset::iterator iter = pset->begin();
-                      for(;iter != pset->end(); iter++){
-                        cout << time << " " << patchIndex << " " << matl;
-                        cout << " " << value[*iter] << "\n";
-                      }
-                    }
-                  }
-                break;
-                default:
-                  cerr << "Particle Variable of unknown type: " 
-                       << subtype->getType() << "\n";
-                  break;
-                }
-              } // end of var compare if
-            } // end of material loop
-          } // end of ParticleVariable if
-        } // end of variable loop
-      } // end of patch loop
-    } // end of level loop
-  } // end of time step loop
-} // end printParticleVariable()

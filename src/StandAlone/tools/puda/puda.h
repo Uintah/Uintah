@@ -59,10 +59,6 @@ namespace Uintah {
     bool do_CCvar_point;
     bool do_CCvar_vector;
     bool do_CCvar_matrix3;
-    bool do_PTvar;
-    bool do_PTvar_all;
-    bool do_patch;
-    bool do_material;
     bool do_verbose;
     bool do_all_ccvars;
     bool do_todd1;
@@ -111,10 +107,6 @@ namespace Uintah {
       do_CCvar_point   = false;
       do_CCvar_vector  = false;
       do_CCvar_matrix3 = false;
-      do_PTvar         = false;
-      do_PTvar_all     = true;
-      do_patch         = false;
-      do_material      = false;
       do_verbose       = false;
       do_all_ccvars    = false;
       do_todd1         = false;

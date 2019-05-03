@@ -28,22 +28,26 @@ SRCDIR  := StandAlone/tools/puda
 PROGRAM := StandAlone/tools/puda/puda
 
 SRCS := \
-        $(SRCDIR)/AA_MMS.cc       \
-        $(SRCDIR)/asci.cc         \
-        $(SRCDIR)/ER_MMS.cc       \
-        $(SRCDIR)/GV_MMS.cc       \
-        $(SRCDIR)/ICE_momentum.cc \
-        $(SRCDIR)/jacquie.cc      \
-        $(SRCDIR)/jim1.cc         \
-        $(SRCDIR)/jim2.cc         \
-        $(SRCDIR)/jim3.cc         \
-        $(SRCDIR)/PIC.cc          \
-        $(SRCDIR)/POL.cc          \
-        $(SRCDIR)/pressure.cc     \
-        $(SRCDIR)/puda.cc         \
-        $(SRCDIR)/todd1.cc        \
-        $(SRCDIR)/util.cc         \
-        $(SRCDIR)/varsummary.cc   
+        $(SRCDIR)/AA_MMS.cc            \
+        $(SRCDIR)/asci.cc              \
+        $(SRCDIR)/ER_MMS.cc            \
+        $(SRCDIR)/gridStats.cc         \
+        $(SRCDIR)/GV_MMS.cc            \
+        $(SRCDIR)/ICE_momentum.cc      \
+        $(SRCDIR)/jacquie.cc           \
+        $(SRCDIR)/jim1.cc              \
+        $(SRCDIR)/jim2.cc              \
+        $(SRCDIR)/jim3.cc              \
+        $(SRCDIR)/PIC.cc               \
+        $(SRCDIR)/POL.cc               \
+        $(SRCDIR)/printCellStresses.cc \
+        $(SRCDIR)/printParticleVar.cc  \
+        $(SRCDIR)/pressure.cc          \
+        $(SRCDIR)/puda.cc              \
+        $(SRCDIR)/todd1.cc             \
+        $(SRCDIR)/util.cc              \
+        $(SRCDIR)/varsummary.cc 
+  
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := $(ALL_STATIC_PSE_LIBS)
