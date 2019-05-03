@@ -31,39 +31,28 @@ namespace Uintah {
 
   struct CommandLineFlags 
   {
-    bool do_timesteps;
-    bool do_gridstats;
-    bool do_listvars;
-    bool do_varsummary;
     bool be_brief;
-    bool do_pressure;
-    bool do_jacquie;
-    bool do_jim1;
-    bool do_PIC;
-    bool do_POL;
     bool do_AA_MMS_1;
     bool do_AA_MMS_2;
-    bool do_GV_MMS;
-    bool do_ER_MMS;
-    bool do_jim2;
-    bool do_partvar;
+    bool do_all_ccvars;
     bool do_asci;
     bool do_cell_stresses;
-    bool do_NCvar_double;
-    bool do_NCvar_float;
-    bool do_NCvar_point;
-    bool do_NCvar_vector;
-    bool do_NCvar_matrix3;
-    bool do_CCvar_double;
-    bool do_CCvar_float;
-    bool do_CCvar_point;
-    bool do_CCvar_vector;
-    bool do_CCvar_matrix3;
-    bool do_verbose;
-    bool do_all_ccvars;
-    bool do_todd1;
+    bool do_ER_MMS;
+    bool do_gridstats;
+    bool do_GV_MMS;
     bool do_ice_momentum;
-
+    bool do_jacquie;
+    bool do_jim1;
+    bool do_jim2;
+    bool do_listvars;
+    bool do_partvar;
+    bool do_PIC;
+    bool do_POL;
+    bool do_pressure;
+    bool do_timesteps;
+    bool do_todd1;
+    bool do_varsummary;
+    bool do_verbose;
     bool use_extra_cells;
 
     unsigned long time_step_lower;
@@ -73,46 +62,34 @@ namespace Uintah {
     bool tsup_set;
     int tskip;
     int matl;
-    std::string i_xd;
+
     std::string filebase;
     std::string particleVariable;
-    std::string ccVarInput;
 
     CommandLineFlags() {
-      do_timesteps  = false;
-      do_gridstats  = false;
-      do_listvars   = false;
-      do_varsummary = false;
-      be_brief      = false;
-      do_jim1       = false;
-      do_AA_MMS_1   = false;
-      do_AA_MMS_2   = false;
-      do_GV_MMS     = false; //MMS
-      do_ER_MMS     = false;
-      do_jim2       = false;
-      do_PIC        = false;
-      do_POL        = false;
-      do_pressure   = false;
-      do_jacquie    = false;
-      do_partvar    = false;
-      do_asci       = false;
-      do_cell_stresses = false;
-      do_NCvar_double  = false;
-      do_NCvar_float   = false;
-      do_NCvar_point   = false;
-      do_NCvar_vector  = false;
-      do_NCvar_matrix3 = false;
-      do_CCvar_double  = false;
-      do_CCvar_float   = false;
-      do_CCvar_point   = false;
-      do_CCvar_vector  = false;
-      do_CCvar_matrix3 = false;
-      do_verbose       = false;
+      be_brief         = false;
+      do_AA_MMS_1      = false;
+      do_AA_MMS_2      = false;
       do_all_ccvars    = false;
-      do_todd1         = false;
+      do_asci          = false;
+      do_cell_stresses = false;
+      do_ER_MMS        = false;
+      do_gridstats     = false;
+      do_GV_MMS        = false;
       do_ice_momentum  = false;
-
-      use_extra_cells = true;
+      do_jacquie       = false;
+      do_jim1          = false;
+      do_jim2          = false;
+      do_listvars      = false;
+      do_partvar       = false;
+      do_PIC           = false;
+      do_POL           = false;
+      do_pressure      = false;
+      do_timesteps     = false;
+      do_todd1         = false;
+      do_varsummary    = false;
+      do_verbose       = false;
+      use_extra_cells  = true;
 
       time_step_lower = 0;
       time_step_upper = 1;

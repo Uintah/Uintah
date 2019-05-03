@@ -82,7 +82,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -timesteps\n";
   cerr << "  -gridstats\n";
   cerr << "  -listvariables\n";
-  cerr << "  -varsummary\n";
+  cerr << "  -varsummary          (output min/max of all variables for each patch) \n";
   cerr << "  -brief               (Makes varsummary print out a subset of information.)\n";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
@@ -98,15 +98,11 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -asci\n";
   cerr << "  -no_extra_cells      (Excludes extra cells when iterating over cells.\n";
   cerr << "                        Default is to include extra cells.)\n";
-  cerr << "  -cell_stresses\n";
-  cerr << "  -ptonly              (prints out only the point location)\n";
-  cerr << "  -material            (outputs material number with data)\n";
-  cerr << "  -NCvar               (double | float | point | vector)\n";
-  cerr << "  -CCvar               (double | float | point | vector)\n";
+  cerr << "  -cell_stresses       (output nodal stresses )\n";
   cerr << "  -verbose             (prints status of output)\n";
-  cerr << "  -timesteplow <int>   (only outputs timestep from int)\n";
+  cerr << "  -timesteplow  <int>  (only outputs timestep from int)\n";
   cerr << "  -timestephigh <int>  (only outputs timesteps upto int)\n";
-  cerr << "  -matl,mat <int>      (only outputs data for matl)\n";
+  cerr << "  -matl         <int>  (only outputs data for matl)\n";
   cerr << "  -pic                 (prints particle ids of all particles  in cell\n";
   cerr << "                        <i> <j> <k> [ints] on the specified timesteps)\n";
   cerr << "  -pol                 (prints out average of all particles in a cell over an\n";
@@ -119,9 +115,6 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "                       particle encountered.  'stressSplitting' only takes affect\n";
   cerr << "                       if the particle variable is p.stress, and splits the stress\n";
   cerr << "                       into hydrostatic and deviatoric parts.)\n";
-  cerr << "*NOTE* to use -PTvar or -NVvar must be used\n";
-  cerr << "*NOTE* ptonly, material, timesteplow, timestephigh "
-       << "are used in conjuntion with -PTvar.\n\n";
     
   cerr << "USAGE IS NOT FINISHED\n\n";
   exit( 1 );
@@ -141,14 +134,15 @@ main( int argc, char *argv[] )
 
   CommandLineFlags clf;
 
+  // defaults
   int material_of_interest = -1; //not part of clf
-  int cellx = -1; 
-  int celly = -1; 
-  int cellz = -1;
-  char axis = 'n';
-  int ortho1 = -1;
-  int ortho2 = -1;
-  bool doPOLAverage = true;
+  int cellx   = -1; 
+  int celly   = -1; 
+  int cellz   = -1;
+  char axis   = 'n';
+  int ortho1  = -1;
+  int ortho2  = -1;
+  bool doPOLAverage     = true;
   bool doPOLStressSplit = false;
 
   // set defaults for cout.
@@ -159,40 +153,53 @@ main( int argc, char *argv[] )
   //   Parse arguments
 
   for(int i=1;i<argc;i++){
-    string s=argv[i];
+    string s = argv[i];
+    
     if(s == "-timesteps"){
       clf.do_timesteps=true;
-    } else if( s == "-no_extra_cells" ||
+    } 
+    else if( s == "-no_extra_cells" ||
              s == "-no_extracells" ||
              s == "-no_ExtraCells" ) {
       clf.use_extra_cells = false;
-    } else if(s == "-gridstats" ||
+    } 
+    else if(s == "-gridstats" ||
               s == "-gridStats" ||
               s == "-grid_stats"){
       clf.do_gridstats=true;
-    } else if(s == "-listvariables" || 
+    } 
+    else if(s == "-listvariables" || 
               s == "-listVariables" || 
               s == "-list_variables"){
       clf.do_listvars=true;
-    } else if(s == "-varsummary" ||
-              s == "-varSummary" ||
-              s == "-var_summary"){
+    } 
+    else if(s == "-varsummary" ||
+            s == "-varSummary" ||
+            s == "-var_summary"){
       clf.do_varsummary = true;
-    } else if(s == "-brief" ) {
+    } 
+    else if(s == "-brief" ) {
       clf.be_brief = true;
-    } else if(s == "-jacquie"){
+    } 
+    else if(s == "-jacquie"){
       clf.do_jacquie = true;
-    } else if(s == "-pressure"){
+    } 
+    else if(s == "-pressure"){
       clf.do_pressure = true;
-    } else if(s == "-jim1"){
+    } 
+    else if(s == "-jim1"){
       clf.do_jim1 = true;
-    } else if(s == "-jim2"){
+    } 
+    else if(s == "-jim2"){
       clf.do_jim2 = true;
-    } else if(s == "-todd1"){
+    } 
+    else if(s == "-todd1"){
       clf.do_todd1 = true;
-    } else if(s == "-ICE_momentum"){
+    } 
+    else if(s == "-ICE_momentum"){
       clf.do_ice_momentum = true;
-    }else if(s == "-pic"){
+    }
+    else if(s == "-pic"){
       clf.do_PIC = true;
 
       if(i+3 >= argc){
@@ -202,7 +209,8 @@ main( int argc, char *argv[] )
       cellx = strtoul(argv[++i],(char**)nullptr,10);
       celly = strtoul(argv[++i],(char**)nullptr,10);
       cellz = strtoul(argv[++i],(char**)nullptr,10);
-    } else if(s == "-pol") {
+    } 
+    else if(s == "-pol") {
       if(i+3 >= argc){
         usage("-pol", argv[0]);
       } 
@@ -235,15 +243,20 @@ main( int argc, char *argv[] )
           i++;
         }
       }
-    } else if(s == "-AA_MMS_1"){
+    }
+    else if(s == "-AA_MMS_1"){
       clf.do_AA_MMS_1 = true;
-    } else if(s == "-AA_MMS_2"){
+    } 
+    else if(s == "-AA_MMS_2"){
       clf.do_AA_MMS_2 = true;
-    } else if(s == "-GV_MMS"){ //MMS
+    } 
+    else if(s == "-GV_MMS"){
       clf.do_GV_MMS = true;
-    } else if(s == "-ER_MMS"){
+    } 
+    else if(s == "-ER_MMS"){
       clf.do_ER_MMS = true;
-    } else if(s == "-partvar"){
+    } 
+    else if(s == "-partvar"){
       clf.do_partvar = true;
       if(i+1 >= argc){
         usage("-partvar",argv[0]);
@@ -252,71 +265,40 @@ main( int argc, char *argv[] )
       if (clf.particleVariable[0] == '-') {
         usage("-partvar <particle variable name>", argv[0]);
       }
-    } else if(s == "-asci"){
+    } 
+    else if(s == "-asci"){
       clf.do_asci=true;
-    } else if(s == "-cell_stresses"){
+    } 
+    else if(s == "-cell_stresses"){
       clf.do_cell_stresses=true;
-    } else if(s == "-NCvar") {
-      if (++i < argc) {
-        s = argv[i];
-        if (s == "double")
-          clf.do_NCvar_double = true;
-        else if (s == "float")
-          clf.do_NCvar_float = true;
-        else if (s == "point")
-          clf.do_NCvar_point = true;
-        else if (s == "vector")
-          clf.do_NCvar_vector = true;
-        else if (s == "matrix3")
-          clf.do_NCvar_matrix3 = true;
-        else
-          usage("-NCvar", argv[0]);
-      }
-      else
-        usage("-NCvar", argv[0]);
-    } else if(s == "-CCvar") {
-      if (++i < argc) {
-        s = argv[i];
-        if (s == "double")
-          clf.do_CCvar_double = true;
-        else if (s == "float")
-          clf.do_CCvar_float = true;
-        else if (s == "point")
-          clf.do_CCvar_point = true;
-        else if (s == "vector")
-          clf.do_CCvar_vector = true;
-        else if (s == "matrix3")
-          clf.do_CCvar_matrix3 = true;
-        else
-          usage("-CCvar", argv[0]);
-      }
-      else{
-        usage("-CCvar", argv[0]);
-      }
-    } else if (s == "-material" ||
-               s == "-matl" || s == "-mat") {
+    } 
+    else if (s == "-material" ||
+             s == "-matl"     || 
+             s == "-mat") {
       if(i+1 >= argc){
         usage("-mat", argv[0]);
       }
       clf.matl = strtoul(argv[++i],(char**)nullptr,10);
       material_of_interest = clf.matl;
 
-    } else if (s == "-verbose") {
+    } 
+    else if (s == "-verbose") {
       clf.do_verbose = true;
-    } else if (s == "-timesteplow" ||
-               s == "-timeStepLow" ||
-               s == "-timestep_low") {
+    } 
+    else if (s == "-timesteplow" ||
+             s == "-timeStepLow" ||
+             s == "-timestep_low") {
       if(i+1 >= argc){
-         usage("-timesteplow", argv[0]);
+        usage("-timesteplow", argv[0]);
       }
       clf.time_step_lower = strtoul(argv[++i],(char**)nullptr,10);
       clf.tslow_set = true;
-    } else if (s == "-timestephigh" ||
-               s == "-timeStepHigh" ||
-               s == "-timestep_high") {
-      if(i+1 >= argc)
-      {
-         usage("-timestephigh", argv[0]);
+    } 
+    else if (s == "-timestephigh" ||
+             s == "-timeStepHigh" ||
+             s == "-timestep_high") {
+      if(i+1 >= argc){
+        usage("-timestephigh", argv[0]);
       }
       clf.time_step_upper = strtoul(argv[++i],(char**)nullptr,10);
       clf.tsup_set = true;
@@ -324,10 +306,11 @@ main( int argc, char *argv[] )
                s == "-timestepInc" ||
                s == "-timestep_inc") {
       if(i+1 >= argc) {
-         usage("-timestepinc", argv[0]);
+        usage("-timestepinc", argv[0]);
       }
       clf.time_step_inc = strtoul(argv[++i],(char**)nullptr,10);
-    } else if( (s == "-help") || (s == "-h") ) {
+    } else if( s == "-help" || 
+               s == "-h" ) {
       usage( "", argv[0] );
     } else if( clf.filebase == "") {
 
