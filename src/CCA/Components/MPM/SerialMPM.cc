@@ -2314,7 +2314,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       new_dw->get(psize,          lb->pCurSizeLabel,       pset);
-//      old_dw->get(pFOld,          lb->pDeformationMeasureLabel,pset);
 
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
       constParticleVariable<IntVector> pLoadCurveID;
@@ -2542,7 +2541,6 @@ void SerialMPM::computeSSPlusVp(const ProcessorGroup*,
 
       old_dw->get(px,       lb->pXLabel,                         pset);
       new_dw->get(psize,    lb->pCurSizeLabel,                   pset);
-//      old_dw->get(pFOld,    lb->pDeformationMeasureLabel,        pset);
 
       new_dw->allocateAndPut(pvelSSPlus,lb->pVelocitySSPlusLabel,    pset);
 
@@ -2607,7 +2605,6 @@ void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
       old_dw->get(px,         lb->pXLabel,                         pset);
       old_dw->get(pmass,      lb->pMassLabel,                      pset);
       new_dw->get(psize,      lb->pCurSizeLabel,                   pset);
-//      old_dw->get(pFOld,      lb->pDeformationMeasureLabel,        pset);
       new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
       new_dw->get(gmass,      lb->gMassLabel,         dwi,patch,gac,NGP);
       new_dw->allocateAndPut(gvelSPSSP,   lb->gVelSPSSPLabel,   dwi,patch);
@@ -2681,7 +2678,6 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
       constParticleVariable<Point> czx;
       constParticleVariable<Vector> czforce;
       constParticleVariable<int> czTopMat, czBotMat;
-//      constParticleVariable<Matrix3> pDeformationMeasure;
 
       old_dw->get(czx,          lb->pXLabel,                          pset);
       new_dw->get(czforce,      lb->czForceLabel_preReloc,            pset);
@@ -2927,7 +2923,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(pvol,    lb->pVolumeLabel,                 pset);
       old_dw->get(pstress, lb->pStressLabel,                 pset);
       new_dw->get(psize,   lb->pCurSizeLabel,                pset);
-//      old_dw->get(pFOld,   lb->pDeformationMeasureLabel,     pset);
 
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
 
@@ -3847,7 +3842,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
-//      old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       if(flags->d_XPIC2){
         new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
@@ -5676,8 +5670,8 @@ void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
   t->requires(Task::OldDW, lb->pDispLabel,               particle_ghost_type, particle_ghost_layer);
   t->requires(Task::OldDW, lb->pVolumeLabel,             particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::NewDW, lb->pSurfLabel_preReloc,      particle_ghost_type, particle_ghost_layer);
   t->requires(Task::OldDW, lb->pStressLabel,             particle_ghost_type, particle_ghost_layer);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
@@ -5740,7 +5734,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
       new_dw->get(gvolume[m],              lb->gVolumeLabel, dwi,patch,gnone,0);
 
       new_dw->allocateAndPut(gsurfnorm[m],    lb->gSurfNormLabel,    dwi,patch);
-      new_dw->allocateAndPut(gposition[m],    lb->gPositionLabel,    dwi,patch);
+//      new_dw->allocateAndPut(gposition[m],    lb->gPositionLabel,    dwi,patch);
       new_dw->allocateAndPut(gdisp[m],        lb->gDisplacementLabel,dwi,patch);
       new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
       new_dw->allocateAndPut(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
@@ -5760,20 +5754,18 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
       old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
       new_dw->get(psize,               lb->pCurSizeLabel,            pset);
       old_dw->get(pstress,             lb->pStressLabel,             pset);
-//      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
-      gposition[m].initialize(Point(0.0,0.0,0.0));
+//      gposition[m].initialize(Point(0.0,0.0,0.0));
       gdisp[m].initialize(Vector(0.0,0.0,0.0));
       gnormtraction[m].initialize(0.0);
       gstress[m].initialize(Matrix3(0.0));
 
-      int NN = flags->d_8or27;
       if(flags->d_axisymmetric){
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 
-          NN = interpolator->findCellAndWeightsAndShapeDerivatives(
+          int NN = interpolator->findCellAndWeightsAndShapeDerivatives(
                                                    px[idx],ni,S,d_S,psize[idx]);
           double rho = pmass[idx]/pvolume[idx];
           Matrix3 stressvol  = pstress[idx]*pvolume[idx];
@@ -5781,7 +5773,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
             if (patch->containsNode(ni[k])){
               Vector G(d_S[k].x(),d_S[k].y(),0.0);
               gsurfnorm[m][ni[k]] += rho * G;
-              gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
+//              gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
               gstress[m][ni[k]]   += stressvol * S[k];
               gdisp[m][ni[k]]     += pdisp[idx]*pmass[idx] * S[k];
             }
@@ -5791,7 +5783,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 
-          NN = interpolator->findCellAndWeightsAndShapeDerivatives(
+          int NN = interpolator->findCellAndWeightsAndShapeDerivatives(
                           px[idx],ni,S,d_S,psize[idx]);
           Matrix3 stressvol  = pstress[idx]*pvolume[idx];
           for(int k = 0; k < NN; k++) {
@@ -5799,7 +5791,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
               Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                           d_S[k].z()*oodx[2]);
               gsurfnorm[m][ni[k]] += pmass[idx] * grad;
-              gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
+//              gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
               gstress[m][ni[k]]   += stressvol * S[k];
               gdisp[m][ni[k]]     += pdisp[idx]*pmass[idx] * S[k];
             }
@@ -5852,9 +5844,87 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
          }
          Vector norm = gsurfnorm[m][c];
          gnormtraction[m][c] = Dot((norm*gstress[m][c]),norm);
-         gposition[m][c]    /= gmass[m][c];
+//         gposition[m][c]    /= gmass[m][c];
          gdisp[m][c]        /= gmass[m][c];
       }
+
+      // Compute gposition as the particle corner with the most prominence
+      // in the direction of the normal at a node.  This is a start on Nairn's
+      // latest method.  Also, to get started, use the particle centroid, then
+      // go to the particle corners.
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
+
+      constParticleVariable<Point> px;
+      constParticleVariable<Matrix3> pcursize;
+      constParticleVariable<double> psurf;
+
+      old_dw->get(px,                       lb->pXLabel,               pset);
+      new_dw->get(pcursize,                 lb->pCurSizeLabel,         pset);
+      new_dw->get(psurf,                    lb->pSurfLabel_preReloc,   pset);
+      new_dw->allocateAndPut(gposition[m],  lb->gPositionLabel,    dwi,patch);
+
+      gposition[m].initialize(Point(0.0,0.0,0.0));
+
+      NCVariable<double> projMax;
+      new_dw->allocateTemporary(projMax,                  patch,    gnone);
+      projMax.initialize(-9.e99);
+
+      for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+        particleIndex idx = *it;
+
+      if(psurf[idx]>0.9){
+        int NN = interpolator->findCellAndWeights(px[idx],ni,S,pcursize[idx]);
+
+        Matrix3 dsize = pcursize[idx]*Matrix3(dx[0],0,0,
+                                              0,dx[1],0,
+                                              0,0,dx[2]);
+
+        // Compute R-vectors from particle center to the corners
+        Vector RNL[8];
+        RNL[0] = Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                        -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                        -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+        RNL[1] = Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                         dsize(1,0)-dsize(1,1)+dsize(1,2),
+                         dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+        RNL[2] = Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                         dsize(1,0)+dsize(1,1)+dsize(1,2),
+                         dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+        RNL[3] = Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                        -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                        -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+        RNL[4] = Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                        -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                        -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+        RNL[5] = Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                         dsize(1,0)-dsize(1,1)-dsize(1,2),
+                         dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+        RNL[6] = Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                         dsize(1,0)+dsize(1,1)-dsize(1,2),
+                         dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+        RNL[7] = Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                        -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                        -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+
+        for(int k = 0; k < NN; k++) {
+          if (patch->containsNode(ni[k])){
+            if(S[k] > 0.){
+              Point xi = patch->getNodePosition(ni[k]);
+              for(int ic=0;ic<8;ic++){
+                Vector xp_xi = (px[idx]+RNL[ic]) - xi;
+                double proj = Dot(xp_xi, gsurfnorm[m][ni[k]]);
+                if(proj>projMax[ni[k]]){
+                   projMax[ni[k]]=proj;
+                   gposition[m][ni[k]]=px[idx] + RNL[ic];
+                }
+              } // Loop over all 8 particle corners
+            }  // Only deal with nodes that this particle affects
+          }  // If node is on the patch
+        } // Loop over nodes near this particle
+       } // Is a surface particle
+      } // end Particle loop
+
     }  // loop over matls
 
     delete interpolator;
@@ -5874,7 +5944,6 @@ void SerialMPM::scheduleFindSurfaceParticles(SchedulerP   & sched,
   Ghost::GhostType  gp;
   int ngc_p;
   getParticleGhostLayer(gp, ngc_p);
-  printSchedule(patches,cout_doing,"SerialMPM::scheduleConcInterpolated");
 
   t->requires(Task::OldDW, lb->timeStepLabel);
   t->requires(Task::OldDW, lb->pXLabel,                  gp, ngc_p);

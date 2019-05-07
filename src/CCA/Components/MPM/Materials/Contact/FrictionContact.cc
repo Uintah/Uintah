@@ -135,7 +135,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel, dwi,patch);
     }  // loop over matls
 
-    double sepDis=d_sepFac*cbrt(cell_vol);
+//    double sepDis=d_sepFac*cbrt(cell_vol);
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
       Vector centerOfMassMom(0.,0.,0.);
@@ -208,9 +208,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
               Vector normal = gsurfnorm[n][c];
               Vector sepvec = (centerOfMassMass/(centerOfMassMass - mass))*
                               (centerOfMassPos - gposition[n][c]);
-//              double sepscal= Dot(sepvec,normal);
-              double sepscal= sepvec.length();
-              if(sepscal < sepDis){
+              double sepscal= Dot(sepvec,normal);
+//              double sepscal= sepvec.length();
+              if(sepscal <= 0.0){
 //              if(sepscal < sepDis || totalNodalVol/cell_vol >= 1.0){
                double normalDeltaVel=Dot(deltaVelocity,normal);
                Vector Dv(0.,0.,0.);
@@ -324,7 +324,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     double epsilon_max_max=0.0;
 
-    double sepDis=d_sepFac*cbrt(cell_vol);
+//    double sepDis=d_sepFac*cbrt(cell_vol);
 
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
@@ -399,11 +399,11 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
               Vector normal = gsurfnorm[n][c];
               Vector sepvec = (centerOfMassMass/(centerOfMassMass - mass))*
                               (centerOfMassPos - gposition[n][c]);
-//              double sepscal= Dot(sepvec,normal);
-              double sepscal= sepvec.length();
+              double sepscal= Dot(sepvec,normal);
+//              double sepscal= sepvec.length();
 
-              if(sepscal < sepDis){
-
+              if(sepscal <= 0.0){
+//              if(sepscal < sepDis){
 //              if(sepscal < sepDis || totalNodalVol/cell_vol >= 1.0){
               double normalDeltaVel=Dot(deltaVelocity,normal);
 
