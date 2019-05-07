@@ -43,7 +43,7 @@ WALE::problemSetup( ProblemSpecP& db ){
 
   db->getWithDefault("Cs", m_Cs, .5);
 
-  m_total_vis_name = m_task_name;
+  //m_total_vis_name = m_task_name;
 
   // Use the production velocity name to signal if this is being used in the ExplicitSolver.
   if (m_u_vel_name == "uVelocitySPBC") {
