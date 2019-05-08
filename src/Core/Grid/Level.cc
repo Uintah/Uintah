@@ -767,11 +767,6 @@ Level::finalizeLevel()
   // determines and sets the boundary conditions for the patches
   setBCTypes();
 
-  // finalize the patches - Currently, finalizePatch() does nothing... empty method - APH 09/10/15
-  for (patch_iterator iter = m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); ++iter) {
-    (*iter)->finalizePatch();
-  }
-
   // compute the number of cells in the level
   m_total_cells = 0;
   for (size_t i = 0; i < m_real_patches.size(); ++i) {
@@ -874,12 +869,8 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
   std::sort(m_real_patches.begin(), m_real_patches.end(), Patch::Compare());
   std::sort(m_virtual_and_real_patches.begin(), m_virtual_and_real_patches.end(), Patch::Compare());
 
+  // defind boundary conditions
   setBCTypes();
-
-  //finalize the patches
-  for (patch_iterator iter = m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); ++iter) {
-    (*iter)->finalizePatch();
-  }
 
   //compute the number of cells in the level
   m_total_cells = 0;

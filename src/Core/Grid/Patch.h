@@ -1036,13 +1036,7 @@ namespace Uintah {
       ci = getLevel()->getCellIndex( pos );
       return containsCell( ci );
     }
-    
-    /**
-     * Must be called prior to using certain patch features.
-     * Currently this sets the gridIndex.
-     */
-    void finalizePatch();
-    
+
     /**
      * sets the array cellIndex equal to the 8 cells
      * that contribute to the node nodeIndex.
