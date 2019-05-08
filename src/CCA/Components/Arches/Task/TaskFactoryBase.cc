@@ -403,6 +403,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         {
           if ( time_substep == 0 ) {
             if ( reinitialize ){
+              // Uncomment this code to fix all ghost cells.
               // const Uintah::PatchSet* const allPatches =
               //  sched->getLoadBalancer()->getPerProcessorPatchSet(level);
               // const Uintah::PatchSubset* const localPatches =
@@ -413,6 +414,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
               //                                Uintah::Task::ThisLevel,
               //                                matls->getSubset(0), Uintah::Task::NormalDomain,
               //                                ivar.ghost_type, ivar.nGhost );
+              // end uncomment
               DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
               tsk->modifies( ivar.label );   // was computed upstream
             } else {
@@ -423,16 +425,18 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
               tsk->computes( ivar.label );   //only compute on the zero time substep
             }
           } else {
+            // Uncomment this code to fix all ghost cells.
             // const Uintah::PatchSet* const allPatches =
-            //  sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+            //   sched->getLoadBalancer()->getPerProcessorPatchSet(level);
             // const Uintah::PatchSubset* const localPatches =
-            //  allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+            //    allPatches->getSubset( Uintah::Parallel::getMPIRank() );
             // DOUT( dbg_arches_task, "[TaskFactoryBase]  modifying (wsg): " << ivar.name );
             // tsk->modifiesWithScratchGhost( ivar.label,
             //                                localPatches,
             //                                Uintah::Task::ThisLevel,
             //                                matls->getSubset(0), Uintah::Task::NormalDomain,
             //                                ivar.ghost_type, ivar.nGhost );
+            // end ucomment
             DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
             tsk->modifies( ivar.label );
         }}
@@ -460,6 +464,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       break;
     case ArchesFieldContainer::MODIFIES:
       {
+        // Uncomment this code to fix all ghost cells.
         // const Uintah::PatchSet* const allPatches =
         //     sched->getLoadBalancer()->getPerProcessorPatchSet(level);
         // const Uintah::PatchSubset* const localPatches =
@@ -469,7 +474,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         //                                 localPatches,
         //                                 Uintah::Task::ThisLevel,
         //                                 matls->getSubset(0), Uintah::Task::NormalDomain,
-        //                                 ivar.ghost_type, ivar.nGhost );\
+        //                                 ivar.ghost_type, ivar.nGhost );
+        // end uncomment
         DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
         tsk->modifies( ivar.label );
       }

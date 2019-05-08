@@ -28,6 +28,5 @@
 namespace Uintah {
 
   class DataArchive;
-
-  void jim3( DataArchive * da, CommandLineFlags & clf );
+  void gridstats( DataArchive   * da, CommandLineFlags & clf );
 }
