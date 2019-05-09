@@ -102,10 +102,15 @@ namespace WasatchCore{
                                     Uintah::ProblemSpecP params )
   : WasatchCore::TransportEquation( gc,
                                 thisPhiName,
-                                get_staggered_location<FieldT>(),
-                                true),   // always constant density
+                                get_staggered_location<FieldT>() ),
     params_( params )
   {
+    // always constant density
+    if(!this->isConstDensity_){
+      std::ostringstream msg;
+      msg << "ERROR: specifying 'ScalabilityTest' requires running with CONSTANT density " << endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
     setup();
   }
 

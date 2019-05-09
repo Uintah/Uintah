@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -57,8 +57,8 @@ namespace TNT
 
 /**
  <b>[Deprecatred]</b>  Value-based vector class from pre-1.0
- 	TNT version.  Kept here for backward compatiblity, but should
-	use the newer TNT::Array1D classes instead.
+        TNT version.  Kept here for backward compatiblity, but should
+        use the newer TNT::Array1D classes instead.
 
 */
 

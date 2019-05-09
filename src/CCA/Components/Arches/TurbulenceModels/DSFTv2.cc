@@ -21,6 +21,11 @@ DSFTv2::problemSetup( ProblemSpecP& db ){
   m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
   m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
   m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );
+  
   m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
   m_rhou_vel_name = "x-mom";
@@ -28,9 +33,6 @@ DSFTv2::problemSetup( ProblemSpecP& db ){
   m_rhow_vel_name = "z-mom" ;
 
   m_volFraction_name = "volFraction";
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );//;m_u_vel_name + "_cc";
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
 
   if (m_u_vel_name == "uVelocitySPBC") { // this is production code
     m_create_labels_IsI_t_viscosity = false;
@@ -88,7 +90,7 @@ DSFTv2::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
                                        variable_registry , const bool packed_tasks){
 
 
-  register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
+  register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry,  m_task_name, packed_tasks);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -140,31 +142,31 @@ DSFTv2::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInform
   register_variable( m_ref_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cell_type_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
 
-  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta11", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta12", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta13", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta22", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta23", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "Beta33", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta11", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta12", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta13", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta22", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta23", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "Beta33", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
 
-  register_variable( "s11", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "s12", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "s13", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "s22", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "s23", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
-  register_variable( "s33", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  register_variable( "s11", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "s12", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "s13", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "s22", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "s23", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
+  register_variable( "s33", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
 
-  register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
-  register_variable( "rhoUU", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
-  register_variable( "rhoVV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
-  register_variable( "rhoWW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoUV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoUW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoVW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoU", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
-  register_variable( "rhoW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
+  register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , m_task_name, packed_tasks);
+  register_variable( "rhoUU", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , m_task_name, packed_tasks);
+  register_variable( "rhoVV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , m_task_name, packed_tasks);
+  register_variable( "rhoWW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoUV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoUW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoVW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoU", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
+  register_variable( "rhoW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks );
 
 }
 

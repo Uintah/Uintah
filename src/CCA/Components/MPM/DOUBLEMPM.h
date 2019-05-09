@@ -220,6 +220,15 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
  
   // MPM algorithm ___________________________________________________________________
 
+  void scheduleComputeCurrentParticleSize(SchedulerP&, const PatchSet*,
+	  const MaterialSet*);
+
+  void computeCurrentParticleSize(const ProcessorGroup*,
+	  const PatchSubset* patches,
+	  const MaterialSubset*,
+	  DataWarehouse* old_dw,
+	  DataWarehouse* new_dw);
+
   // Apply external load
   void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
 	  const MaterialSet*);

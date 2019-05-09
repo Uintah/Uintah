@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -407,7 +407,7 @@ int main(int argc, char *argv[])
               x[2] = pt.z();
 
               //points outside the cylinder are ignored.
-              if (do_cylinder && !cylinder->inside(pt)) continue;
+              if (do_cylinder && !cylinder->inside(pt,true)) continue;
 
               // FIXME: should have way of specifying endiness
               if(binmode) {

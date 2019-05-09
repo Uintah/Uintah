@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -94,7 +94,6 @@ namespace Uintah {
    
    typedef ReductionVariable<Vector, Reductions::Sum<Vector> > sumvec_vartype;
 
-//   typedef ReductionVariable<long, Reductions::Sum<long> > sumlong_vartype;
    typedef ReductionVariable<long64, Reductions::Sum<long64> > sumlong_vartype;
 
    typedef ReductionVariable<long64, Reductions::Sum<long long> > sumlonglong_vartype;

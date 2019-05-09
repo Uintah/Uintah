@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -123,7 +123,7 @@ CylinderGeometryPiece::clone() const
 }
 
 bool
-CylinderGeometryPiece::inside(const Point &p) const
+CylinderGeometryPiece::inside(const Point &p, const bool defVal=false) const
 {
   Vector axis = d_top-d_bottom;  
   double height2 = axis.length2();

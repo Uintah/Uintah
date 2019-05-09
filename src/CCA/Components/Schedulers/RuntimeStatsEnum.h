@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,8 +24,6 @@
 
 #ifndef CCA_COMPONENTS_SCHEDULERS_RUNTIMESTATSENUMS_H
 #define CCA_COMPONENTS_SCHEDULERS_RUNTIMESTATSENUMS_H
-
-#include <sci_defs/papi_defs.h>
 
 
 namespace Uintah {
@@ -69,15 +67,15 @@ namespace Uintah {
 
     , XMLIOTime
     , OutputIOTime
-    , ReductionIOTime
+    , OutputGlobalIOTime
     , CheckpointIOTime
-    , CheckpointReductionIOTime
+    , CheckpointGlobalIOTime
     , TotalIOTime
 
     , OutputIORate
-    , ReductionIORate
+    , OutputGlobalIORate
     , CheckpointIORate
-    , CheckpointReductionIORate
+    , CheckpointGlobalIORate
 
     , SCIMemoryUsed
     , SCIMemoryMaxUsed
@@ -91,13 +89,12 @@ namespace Uintah {
     , NumCells
     , NumParticles
 
-#ifdef USE_PAPI_COUNTERS
-    , TotalFlops            // Floating point operations executed
-    , TotalVFlops           // Floating point operations executed; optimized to count scaled DP vector ops
-    , L2Misses              // L2 cache misses
-    , L3Misses              // L3 cache misses
-    , TLBMisses             // Total translation lookaside buffer misses
-#endif
+  };
+
+  // timing statistics for Uintah infrastructure overhead
+  enum CommunicationStatsEnum {
+      CommPTPMsgTo
+    , CommPTPMsgFrom
   };
 
 } // end namespace Uintah

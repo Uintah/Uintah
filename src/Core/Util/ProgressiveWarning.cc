@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,8 +35,8 @@ namespace {
 }
 
 ProgressiveWarning::ProgressiveWarning(const std::string & message,
-				       int multiplier /* = -1 */, 
-				       std::ostream & stream /* = cerr */)
+                                       int multiplier /* = -1 */, 
+                                       std::ostream & stream /* = cerr */)
 {
   d_message = message;
   d_multiplier = multiplier;
@@ -89,5 +89,5 @@ void
 ProgressiveWarning::showWarning()
 {
   (*d_out) << d_message << "\n";
-  (*d_out) << "  This warning has occurred " << d_numOccurences << " times.\n";
+  (*d_out) << "  This warning has occurred " << d_numOccurences << ((d_numOccurences == 1) ? " time.\n" : " times.\n");
 }

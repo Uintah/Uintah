@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,8 +23,8 @@
  */
 
 /*
- *  insituUtils.cc: Provides an interface between the Uintah data warehouse 
- *                  and VisIt's libsim in situ interface.
+ *  warehouseInterface.cc: Provides an interface between Uintah's data
+ *                         warehouse and VisIt's libsim in situ interface.
  *
  *  Written by:
  *   Scientific Computing and Imaging Institute
@@ -69,10 +69,12 @@ namespace Uintah {
 // This uses the scheduler for in-situ.
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP gridP,
-                              LoadExtra loadExtraElements)
+                              LoadExtraGeometry loadExtraGeometry,
+                              LoadVariables     loadVariables)
 {
   DataWarehouse* dw = schedulerP->getLastDW();
   LoadBalancer * lb = schedulerP->getLoadBalancer();
+  Output       * output = schedulerP->getOutput();
 
   int numLevels = gridP->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();
@@ -84,73 +86,94 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
 
   std::set<const VarLabel*, VarLabel::Compare> varLabels;
   std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
-  
-  // Loop through all of the required and computed variables.
-  for (int i=0; i<2; ++i )
+
+  // Loop through all of the required or computed variables.
+  if( schedulerP->isRestartInitTimestep() ||
+      loadVariables == LOAD_CHECKPOINT_VARIABLES )
+    varLabels = schedulerP->getInitialRequiredVars();
+  else
+    varLabels = schedulerP->getComputedVars();
+
+  for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter )
   {
-    if( i == 0 )
-        varLabels = schedulerP->getInitialRequiredVars();
-    else
-        varLabels = schedulerP->getComputedVars();
+    const VarLabel *varLabel = *varIter;
 
-    for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter )
-    {      
-      const VarLabel *varLabel = *varIter;
+    if( // Toss out variables not being saved.
+        (loadVariables == LOAD_OUTPUT_VARIABLES &&
+         !output->isLabelSaved( varLabel->getName() )) ||
 
-      VariableInfo varInfo;
-      varInfo.name = varLabel->getName();
-      varInfo.type = varLabel->typeDescription()->getName();
+        // Toss out variables not being checkpointed.
+        (loadVariables == LOAD_CHECKPOINT_VARIABLES &&
+         schedulerP->getNotCheckPointVars().find( varLabel->getName() ) !=
+         schedulerP->getNotCheckPointVars().end() ) )
+      continue;
 
-      // Loop through all of the materials for this variable
-      Scheduler::VarLabelMaterialMap::iterator matMapIter =
-        pLabelMatlMap->find( varInfo.name );
+    VariableInfo varInfo;
+    varInfo.name = varLabel->getName();
+    varInfo.type = varLabel->typeDescription()->getName();
 
-      if( matMapIter != pLabelMatlMap->end() )
+    // Loop through all of the materials for this variable
+    Scheduler::VarLabelMaterialMap::iterator matMapIter =
+      pLabelMatlMap->find( varInfo.name );
+
+    if( matMapIter != pLabelMatlMap->end() )
+    {
+      std::list< int > &materials = matMapIter->second;
+      std::list< int >::iterator matIter;
+
+      for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
       {
-        std::list< int > &materials = matMapIter->second;
-        std::list< int >::iterator matIter;
+        const int material = *matIter;
 
-        for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
+        // Check to make sure the variable exists on at least one patch
+        // for at least one level.
+        bool exists = false;
+
+        for (int l=0; l<numLevels; ++l)
         {
-          const int material = *matIter;
+          const LevelP &level = gridP->getLevel(l);
+          int numPatches = level->numPatches();
 
-          // Check to make sure the variable exists on at least one patch
-          // for at least one level.
-          bool exists = false;
-          
-          for (int l=0; l<numLevels; ++l)
+          for (int p=0; p<numPatches; ++p)
           {
-            LevelP level = gridP->getLevel(l);
-            int numPatches = level->numPatches();
-            
-            for (int p=0; p<numPatches; ++p)
+            const Patch* patch = level->getPatch(p);
+
+            if( dw->exists( varLabel, material, patch ) )
             {
-              const Patch* patch = level->getPatch(p);
-              
-              if( dw->exists( varLabel, material, patch ) )
-              {
-                // The variable exists on this level and patch.
-                varInfo.materials.push_back( material );
-                exists = true;
-                break;
-              }
-            }
-            
-            if( exists == true )
+              // The variable exists on this level and patch.
+              varInfo.materials.push_back( material );
+              exists = true;
               break;
+            }
           }
+
+          if( exists == true )
+            break;
         }
-        
-        stepInfo->varInfo.push_back( varInfo );
       }
+      
+      stepInfo->varInfo.push_back( varInfo );
     }
   }
   
+  delete pLabelMatlMap;
+  
+  const std::string meshTypes[5] = { "NC_MESH", "CC_MESH", 
+                                     "SFCX_MESH", "SFCY_MESH", "SFCZ_MESH" };
+  
+  const Patch::VariableBasis basis[5] = { Patch::NodeBased,
+                                          Patch::CellBased,
+                                          Patch::XFaceBased,
+                                          Patch::YFaceBased,
+                                          Patch::ZFaceBased };
+
+  std::map< std::string, std::pair< IntVector, IntVector > > extraPatches;
+
   // Get the level information
   for (int l=0; l<numLevels; ++l)
   {
     LevelInfo &levelInfo = stepInfo->levelInfo[l];
-    LevelP level = gridP->getLevel(l);
+    const LevelP &level = gridP->getLevel(l);
 
     copyIntVector(levelInfo.refinementRatio, level->getRefinementRatio());
     copyVector(   levelInfo.spacing,         level->dCell());
@@ -166,71 +189,139 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
       const Patch* patch = level->getPatch(p);
       PatchInfo &patchInfo = levelInfo.patchInfo[p];
 
-      // If the user wants to see extra cells, just include them and
-      // let VisIt believe they are part of the original data. This is
-      // accomplished by setting <meshtype>_low and <meshtype>_high to
-      // the extra cell boundaries so that VisIt is none the wiser.
-      if (loadExtraElements == NONE)
+      for( unsigned int m=0; m<5; ++m )
       {
-        patchInfo.setBounds(&patch->getCellLowIndex()[0],
-                            &patch->getCellHighIndex()[0], "CC_Mesh");
-        patchInfo.setBounds(&patch->getNodeLowIndex()[0],
-                            &patch->getNodeHighIndex()[0], "NC_Mesh");
-        patchInfo.setBounds(&patch->getSFCXLowIndex()[0],
-                            &patch->getSFCXHighIndex()[0], "SFCX_Mesh");
-        patchInfo.setBounds(&patch->getSFCYLowIndex()[0],
-                            &patch->getSFCYHighIndex()[0], "SFCY_Mesh");
-        patchInfo.setBounds(&patch->getSFCZLowIndex()[0],
-                            &patch->getSFCZHighIndex()[0], "SFCZ_Mesh");
-      }
-      else if (loadExtraElements == CELLS)
-      {
-        patchInfo.setBounds(&patch->getExtraCellLowIndex()[0],
-                            &patch->getExtraCellHighIndex()[0], "CC_Mesh");
-        patchInfo.setBounds(&patch->getExtraNodeLowIndex()[0],
-                            &patch->getExtraNodeHighIndex()[0], "NC_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCXLowIndex()[0],
-                            &patch->getExtraSFCXHighIndex()[0], "SFCX_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCYLowIndex()[0],
-                            &patch->getExtraSFCYHighIndex()[0], "SFCY_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCZLowIndex()[0],
-                            &patch->getExtraSFCZHighIndex()[0], "SFCZ_Mesh");
-      }
-      else if (loadExtraElements == PATCHES)
-      {
-        IntVector ilow(patch->getCellLowIndex()[0],
-                       patch->getCellLowIndex()[1],
-                       patch->getCellLowIndex()[2]);
+        IntVector iLow, iHigh, iExtraLow, iExtraHigh;
 
-        IntVector ihigh(patch->getCellHighIndex()[0],
-                        patch->getCellHighIndex()[1],
-                        patch->getCellHighIndex()[2]);
+        // If the user wants to see extra cells, just include them and
+        // let VisIt believe they are part of the original data. This is
+        // accomplished by setting <meshtype>_low and <meshtype>_high to
+        // the extra cell boundaries so that VisIt is none the wiser.
+        if (loadExtraGeometry == NO_EXTRA_GEOMETRY)
+        {
+          iLow  = patch->getLowIndex (basis[m]);
+          iHigh = patch->getHighIndex(basis[m]);
+        }
+        else if (loadExtraGeometry == CELLS)
+        {
+          iLow  = patch->getExtraLowIndex (basis[m], IntVector(0,0,0));
+          iHigh = patch->getExtraHighIndex(basis[m], IntVector(0,0,0));
+        }
+        else if (loadExtraGeometry == PATCHES)
+        {
+          iLow  = patch->getLowIndex (basis[m]);
+          iHigh = patch->getHighIndex(basis[m]);
 
-        // Test code to extend the patch when extra cells are
-        // present. In this case if extra cells are present instead of
-        // just adding the extra cell add in additional cells to make
-        // up a complete patch.
-        for (int i=0; i<3; ++i) {
+          iExtraLow  = patch->getExtraLowIndex (basis[m], IntVector(0,0,0));
+          iExtraHigh = patch->getExtraHighIndex(basis[m], IntVector(0,0,0));
 
-          // Check for extra cells.
-          if( patch->getExtraCellLowIndex()[i] != patch->getCellLowIndex()[i] )
-            ilow[i] -= level->getRefinementRatio()[i];
+          // if( m == 1 & l == 0 && p == 0 )
+          //   std::cerr << iLow << "    " << iHigh << "    "
+          //          << iExtraLow << "    " << iExtraHigh << std::endl;
 
-          if( patch->getExtraCellHighIndex()[i] != patch->getCellHighIndex()[i] )
-            ihigh[i] -= level->getRefinementRatio()[i];
+          // IntVector iLowBase, iHighBase;
+          
+          // for( int k=-1; k<2; ++k )
+          // {
+          //   if( (k == -1 && iLow[2]  == iExtraLow[2]) ||
+          //    (k ==  1 && iHigh[2] == iExtraHigh[2]) )
+          //     continue;
+
+          //   if( k == -1 ) {
+          //     iLowBase[2] = iLow[2] - level->getRefinementRatio()[2];
+          //     iHighBase[2] = iLow[2];
+          //   } else if( k == 0 ) {
+          //     iLowBase[2] = iLow[2];
+          //     iHighBase[2] = iHigh[2];
+          //   } else if( k == 1 ) {
+          //     iLowBase[2] = iHigh[2];
+          //     iHighBase[2] = iHigh[2] + level->getRefinementRatio()[2];
+          //   }
+            
+          //   for( int j=-1; j<2; ++j )
+          //   {
+          //     if( (j == -1 && iLow[1]  == iExtraLow[1]) ||
+          //      (j ==  1 && iHigh[1] == iExtraHigh[1]) )
+          //    continue;
+              
+          //     if( j == -1 ) {
+          //    iLowBase[1] = iLow[1] - level->getRefinementRatio()[1];
+          //    iHighBase[1] = iLow[1];
+          //     } else if( j == 0 ) {
+          //    iLowBase[1] = iLow[1];
+          //    iHighBase[1] = iHigh[1];
+          //     } else if( j == 1 ) {
+          //    iLowBase[1] = iHigh[1];
+          //    iHighBase[1] = iHigh[1] + level->getRefinementRatio()[1];
+          //     }
+              
+          //     for( int i=-1; i<2; ++i )
+          //     {
+          //    if( (i == -1 && iLow[0]  == iExtraLow[0]) ||
+          //        (i ==  1 && iHigh[0] == iExtraHigh[0]) )
+          //      continue;
+
+          //    if( k == 0 && j == 0 && i == 0 )
+          //      continue;
+
+          //    if( i == -1 ) {
+          //      iLowBase[0] = iLow[0] - level->getRefinementRatio()[0];
+          //      iHighBase[0] = iLow[0];
+          //    } else if( i == 0 ) {
+          //      iLowBase[0] = iLow[0];
+          //      iHighBase[0] = iHigh[0];
+          //    } else if( i == 1 ) {
+          //      iLowBase[0] = iHigh[0];
+          //      iHighBase[0] = iHigh[0] + level->getRefinementRatio()[0];
+          //    }
+                  
+          //    std::stringstream hash;
+          //    hash << iLowBase[0] << iLowBase[1] << iLowBase[2] << iHighBase[0] << iHighBase[1] << iHighBase[2];
+
+          //    extraPatches[hash.str()] = std::pair< IntVector, IntVector >( iLowBase, iHighBase );
+
+          //    if( m == 1 & l == 0 && p == 0 )
+          //      std::cerr << iLowBase << "    " << iHighBase << "    " << i << "  " << j << "  " << k << std::endl;
+          //     }
+          //   }
+          // }
+
+          // Extend the patch when extra elements are present. In this
+          // case if extra elements are present instead of just adding
+          // the extra element add in additional elements to make up a
+          // complete patch.
+          for (int i=0; i<3; ++i) {
+            
+            if( iLow[i] != iExtraLow[i] )
+              iLow[i] -= level->getRefinementRatio()[i];
+            
+            if( iHigh[i] != iExtraHigh[i] )
+              iHigh[i] += level->getRefinementRatio()[i];
+          }
+
+          // Clamp: don't exceed the limits
+          // IntVector lLow, lHigh;
+        
+          // if( basis[m] == Patch::NodeBased ) {         
+          //   level->findNodeIndexRange( lLow, lHigh );
+          // }
+          // else if( basis[m] == Patch::CellBased ) {
+          //   level->findCellIndexRange( lLow, lHigh );
+          // }
+          // else {
+          //   lLow  = iLow;
+          //   lHigh = iHigh;
+          // }
+        
+          // iLow  = Uintah::Max(lLow,  iLow);
+          // iHigh = Uintah::Min(lHigh, iHigh);
         }
 
-        patchInfo.setBounds(&ilow[0], &ihigh[0], "CC_Mesh");
+        patchInfo.setBounds(&iLow[0], &iHigh[0], meshTypes[m]);
 
-        // Test code not implemented for these meshes.        
-        patchInfo.setBounds(&patch->getExtraNodeLowIndex()[0],
-                            &patch->getExtraNodeHighIndex()[0], "NC_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCXLowIndex()[0],
-                            &patch->getExtraSFCXHighIndex()[0], "SFCX_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCYLowIndex()[0],
-                            &patch->getExtraSFCYHighIndex()[0], "SFCY_Mesh");
-        patchInfo.setBounds(&patch->getExtraSFCZLowIndex()[0],
-                            &patch->getExtraSFCZHighIndex()[0], "SFCZ_Mesh");
+        // if( m == 1 && l == 0 && p == 0 )
+        //   for( const auto & extraPatch : extraPatches )
+        //     std::cerr << extraPatch.second.first << "  " << extraPatch.second.second << std::endl;
       }
 
       patchInfo.setBounds(&patch->neighborsLow()[0],
@@ -241,14 +332,9 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
 
       // Set the processor id
       patchInfo.setProcId( lb->getPatchwiseProcessorAssignment(patch) );
-      
-      // Set the number of nodes
-      patchInfo.setNumNodes( 0 );
     }
   }
 
-  delete pLabelMatlMap;
-  
   return stepInfo;
 }
 
@@ -307,6 +393,30 @@ int GetGlobalDomainNumber(TimeStepInfo* stepInfo,
   return g;
 }
 
+// ****************************************************************************
+//  Method: mapIndexToCoarser
+//
+//  Purpose: Map a cell from the current mesh to the coarse mesh
+//      
+//  
+// ****************************************************************************
+IntVector
+mapIndexToCoarser( const IntVector & idx, const IntVector & refinementRatio )
+{
+  // If the fine cell index is negative it must be made positive first,
+  // then an offset must be subtracted to get the right coarse cell.
+  IntVector index = idx;;
+  IntVector offset(0, 0, 0);
+
+  for( unsigned int i=0; i<3; ++i ) {
+    while( index[i] < 0 ) {
+      index[i] += refinementRatio[i];
+      ++offset[i];
+    }
+  }
+
+  return index / refinementRatio - offset;
+}
 
 // ****************************************************************************
 //  Method: CheckNaNs
@@ -381,133 +491,209 @@ void CheckNaNs(double *data, const int num,
 template<template <typename> class VAR, typename T>
 static GridDataRaw* readGridData(DataWarehouse *dw,
                                  const Patch *patch,
-                                 const LevelP level,
                                  const VarLabel *varLabel,
                                  int material,
                                  int low[3],
                                  int high[3],
-                                 LoadExtra loadExtraElements)
+                                 LoadExtraGeometry loadExtraGeometry)
 {
-  if( dw->exists( varLabel, material, patch ) )
+  if( !dw->exists( varLabel, material, patch ) )
+    return nullptr;
+  
+  GridDataRaw *gd = new GridDataRaw;
+  gd->components = numComponents<T>();
+  
+  IntVector ilow(  low[0],  low[1],  low[2]);
+  IntVector ihigh(high[0], high[1], high[2]);
+  IntVector dims = ihigh - ilow;
+  
+  for (int i=0; i<3; ++i) {
+    gd->low[i]  =  low[i];
+    gd->high[i] = high[i];
+  }
+  
+  gd->num = dims[0] * dims[1] * dims[2];
+  gd->data = new double[gd->num*gd->components];
+  
+  // This queries just the patch
+  if( loadExtraGeometry == NO_EXTRA_GEOMETRY )
   {
-    GridDataRaw *gd = new GridDataRaw;
-    gd->components = numComponents<T>();
+    VAR<T> var;  
+    dw->getRegion( var, varLabel, material, patch->getLevel(), ilow, ihigh );
+    const T *p = var.getPointer();
     
-    int dims[3];
-    for (int i=0; i<3; ++i) {
-      gd->low[i]  =  low[i];
-      gd->high[i] = high[i];
-      
-      dims[i] = high[i] - low[i];
-    }
-    
-    gd->num = dims[0] * dims[1] * dims[2];
-    gd->data = new double[gd->num*gd->components];
-    
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], p[i]);
+  }
+  // This queries the entire patch, including extra cells and boundary cells
+  else if( loadExtraGeometry == CELLS )
+  {
     VAR<T> var;
-
-    // This queries just the patch
-    if( loadExtraElements == NONE )
-    {
-      IntVector ilow(  low[0],  low[1],  low[2]);
-      IntVector ihigh(high[0], high[1], high[2]);
-
-      dw->getRegion( var, varLabel, material, level.get_rep(), ilow, ihigh );
-    }
-    // This queries the entire patch, including extra cells and boundary cells
-    else if( loadExtraElements == CELLS )
-    {
-      dw->get( var, varLabel, material, patch, Ghost::None, 0 );
-    }
-    else if( loadExtraElements == PATCHES )
-    {
-      // This call does not work properly as it will return garbage
-      // where the cells do not exists.
-      
-      // IntVector ilow(  low[0],  low[1],  low[2]);
-      // IntVector ihigh(high[0], high[1], high[2]);
-
-      // dw->getRegion( var, varLabel, material, level.get_rep(), ilow, ihigh );
-
-      // This queries the entire patch, including extra cells and
-      // boundary cells which is smaller than the requeste region.
-      dw->get( var, varLabel, material, patch, Ghost::None, 0 );
-    }
-    
+    dw->get( var, varLabel, material, patch, Ghost::None, 0 );
     const T *p = var.getPointer();
 
-    IntVector tmplow = var.getLowIndex();
-    IntVector tmphigh = var.getHighIndex();
-    IntVector size;
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], p[i]);
+  }
+  else if( loadExtraGeometry == PATCHES )
+  {
+    for (int i=0; i<gd->num*gd->components; ++i)
+      gd->data[i] = 0;
 
-    for (int i=0; i<3; ++i) {
-      size[i] = tmphigh[i] - tmplow[i];
+    // This queries the entire patch, including extra cells and
+    // boundary cells which may be smaller than the requested
+    // region. But the missing cells will get filled in below.
+    VAR<T> var;
+    dw->get( var, varLabel, material, patch, Ghost::None, 0 );
+    const T *p = var.getPointer();
+
+    IntVector varlow  = var.getLowIndex();
+    IntVector varhigh = var.getHighIndex();
+    IntVector vardims = varhigh - varlow;
+
+    VAR<T> cvar;
+    const T *cp = nullptr;
+    IntVector clow, chigh, cvardims(0);
+
+    const Level *level = patch->getLevel();
+    const IntVector rRatio = level->getRefinementRatio();
+    
+    // If cells are missing get the values from the coarser level
+    if( varlow != ilow || varhigh != ihigh )
+    {
+      const Level *coarserLevel = level->getCoarserLevel().get_rep();
+      
+      clow  = mapIndexToCoarser( ilow,  rRatio );
+      chigh = mapIndexToCoarser( ihigh, rRatio );
+
+      // Clamp: don't exceed coarse level limits
+      IntVector lLow, lHigh;
+      coarserLevel->findCellIndexRange( lLow, lHigh );
+      
+      clow  = Uintah::Max(lLow,  clow);
+      chigh = Uintah::Min(lHigh, chigh); 
+
+      // Get the data from the coarser level.
+      dw->getRegion( cvar, varLabel, material, coarserLevel,
+                     clow, chigh, true );
+      cp = cvar.getPointer();
+        
+      cvardims = cvar.getHighIndex() - cvar.getLowIndex();
+      
+      // Copy the coarse level data to all points on the fine level.
+      // for (int k=low[2]; k<high[2]; ++k) {
+
+      //   int kd = (k-low[2]) * dims[1] * dims[0];
+      
+      //   for (int j=low[1]; j<high[1]; ++j) {
+
+      //     int jd = kd + (j-low[1]) * dims[0];
+            
+      //     for (int i=low[0]; i<high[0]; ++i) {
+
+      //       int id = jd + (i-low[0]);
+
+      //       IntVector tmp = mapIndexToCoarser( IntVector( i, j, k ), rRatio );
+
+      //       int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
+      //       int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
+      //       int iv = jv + (tmp[0]-clow[0]);
+
+      //       if( clow <= tmp && tmp < chigh )
+      //         copyComponents<T>(&gd->data[id*gd->components], cp[iv]);
+      //     }
+      //   }
+      // }
+
     }
 
-    // Fail safe option if the data returned does match the data requested.
-    if(  low[0] !=  tmplow[0] ||  low[1] !=  tmplow[1] ||  low[2] !=  tmplow[2] ||
-        high[0] != tmphigh[0] || high[1] != tmphigh[1] || high[2] != tmphigh[2] )
+    // Copy the coarse and fine level data
+    for (int k=low[2]; k<high[2]; ++k)
     {
-      // std::cerr << __LINE__ << "  " << varLabel->getName() << "  "
-      //           << dims[0] << "  " << dims[1] << "  " << dims[2] << "     "
-      //           << size[0] << "  " << size[1] << "  " << size[2] << "     "
+      int kd = (k-low[2]) * dims[1] * dims[0];
       
-      //           << low[0] << "  " << tmplow[0] << "  "
-      //           << low[1] << "  " << tmplow[1] << "  "
-      //           << low[2] << "  " << tmplow[2] << "    "
-      
-      //           << high[0] << "  " << tmphigh[0] << "  "
-      //           << high[1] << "  " << tmphigh[1] << "  "
-      //           << high[2] << "  " << tmphigh[2] << "  "
-      //           << std::endl;
-      
-      for (int i=0; i<gd->num*gd->components; ++i)
-        gd->data[i] = 0;
-      
-      int kd = 0, jd = 0, id;
-      int ks = 0, js = 0, is;
-      
-      for (int k=low[2]; k<high[2]; ++k)
+      if( varlow[2] <= k && k < varhigh[2] )
       {
-        if( tmplow[2] <= k && k < tmphigh[2] )
-        {
-          kd = (k-   low[2]) * dims[1] * dims[0];
-          ks = (k-tmplow[2]) * size[1] * size[0];
+        int kv = (k-varlow[2]) * vardims[1] * vardims[0];
         
-          for (int j=low[1]; j<high[1]; ++j)
-          {
-            if( tmplow[1] <= j && j < tmphigh[1] )
-            {
-              jd = kd + (j-   low[1]) * dims[0];
-              js = ks + (j-tmplow[1]) * size[0];
+        for (int j=low[1]; j<high[1]; ++j)
+        {
+          int jd = kd + (j-low[1]) * dims[0];
           
-              for (int i=low[0]; i<high[0]; ++i)
-              {
-                if( tmplow[0] <= i && i < tmphigh[0] )
-                {
-                  id = jd + (i-   low[0]);
-                  is = js + (i-tmplow[0]);
+          if( varlow[1] <= j && j < varhigh[1] )
+          {
+            int jv = kv + (j-varlow[1]) * vardims[0];
             
-                  copyComponents<T>(&gd->data[id*gd->components], p[is]);
-                }
+            for (int i=low[0]; i<high[0]; ++i)
+            {
+              int id = jd + (i-low[0]);
+
+              // Copy the fine level data to a point on the fine level.
+              if( varlow[0] <= i && i < varhigh[0] )
+              {
+                int iv = jv + (i-varlow[0]);
+            
+                copyComponents<T>(&gd->data[id*gd->components], p[iv]);
               }
+              // Copy the coarse level data to a point on the fine level.
+              else
+              {
+                IntVector tmp = mapIndexToCoarser( IntVector( i, j, k ), rRatio );
+
+                int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
+                int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
+                int iv = jv + (tmp[0]-clow[0]);
+            
+                if( clow <= tmp && tmp < chigh )
+                  copyComponents<T>(&gd->data[id*gd->components], cp[iv]);
+              }
+            }
+          }
+          // Copy the coarse level data to each point on the fine level.
+          else
+          {
+            for (int i=low[0]; i<high[0]; ++i)
+            {
+              int id = jd + (i-low[0]);
+
+              IntVector tmp = mapIndexToCoarser( IntVector( i, j, k ), rRatio );
+
+              int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
+              int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
+              int iv = jv + (tmp[0]-clow[0]);
+            
+              if( clow <= tmp && tmp < chigh )
+                copyComponents<T>(&gd->data[id*gd->components], cp[iv]);
             }
           }
         }
       }
+      // Copy the coarse level data to each point on the fine level.
+      else
+      {
+        for (int j=low[1]; j<high[1]; ++j) {
+
+          int jd = kd + (j-low[1]) * dims[0];
+            
+          for (int i=low[0]; i<high[0]; ++i) {
+
+            int id = jd + (i-low[0]);
+
+            IntVector tmp = mapIndexToCoarser( IntVector( i, j, k ), rRatio );
+
+            int kv =      (tmp[2]-clow[2]) * cvardims[1] * cvardims[0];
+            int jv = kv + (tmp[1]-clow[1]) * cvardims[0];
+            int iv = jv + (tmp[0]-clow[0]);
+            
+            if( clow <= tmp && tmp < chigh )
+              copyComponents<T>(&gd->data[id*gd->components], cp[iv]);
+          }
+        }
+      }
     }
-    else
-    {
-      for (int i=0; i<gd->num; ++i)
-        copyComponents<T>(&gd->data[i*gd->components], p[i]);
-    }
+  }
   
-    return gd;
-  }
-  else
-  {
-    return nullptr;
-  }
+  return gd;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -516,62 +702,57 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
 template<template <typename> class VAR, typename T>
 static GridDataRaw* readPatchData(DataWarehouse *dw,
                                   const Patch *patch,
-                                  const LevelP level,
                                   const VarLabel *varLabel,
                                   int material)
 {
-  if( dw->exists( varLabel, material, patch ) )
-  {
-    GridDataRaw *gd = new GridDataRaw;
-    gd->components = numComponents<T>();
-
-    gd->num = 1;
-    gd->data = new double[gd->num*gd->components];
-    
-    if (varLabel->getName() == "refinePatchFlag")
-    {
-      VAR< PatchFlagP > refinePatchFlag;
-
-      // This queries the entire patch, including extra cells and boundary cells
-      dw->get(refinePatchFlag, varLabel, material, patch);
-      
-      const T p = refinePatchFlag.get().get_rep()->flag;
-
-      for (int i=0; i<gd->num; ++i)
-        copyComponents<T>(&gd->data[i*gd->components], p);
-    }
-
-    else if (varLabel->getName().find("FileInfo") == 0 ||
-             varLabel->getName().find("CellInformation") == 0 ||
-             varLabel->getName().find("CutCellInfo") == 0)
-    {
-      for (int i=0; i<gd->num*gd->components; ++i)
-        gd->data[i] = 0;
-    }
-    else
-    {
-      VAR<T> var;
-      PerPatchBase* patchVar = dynamic_cast<PerPatchBase*>(&var);
-
-      // This queries the entire patch, including extra cells and boundary cells
-      dw->get(*patchVar, varLabel, material, patch);
-
-      const T *p = (T*) patchVar->getBasePointer();
-
-      for (int i=0; i<gd->num; ++i)
-        copyComponents<T>(&gd->data[i*gd->components], *p);
-
-      // std::cerr << *p << " ************* "
-      // 		<< gd->data[0] << " ************* " 
-      // 		<< std::endl;
-    }
+  if( !dw->exists( varLabel, material, patch ) )
+    return nullptr;
   
-    return gd;
+  GridDataRaw *gd = new GridDataRaw;
+  gd->components = numComponents<T>();
+  
+  gd->num = 1;
+  gd->data = new double[gd->num*gd->components];
+  
+  if (varLabel->getName() == "refinePatchFlag")
+  {
+    VAR< PatchFlagP > refinePatchFlag;
+    
+    // This queries the entire patch, including extra cells and boundary cells
+    dw->get(refinePatchFlag, varLabel, material, patch);
+      
+    const T p = refinePatchFlag.get().get_rep()->flag;
+
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], p);
+  }
+
+  else if (varLabel->getName().find("FileInfo") == 0 ||
+           varLabel->getName().find("CellInformation") == 0 ||
+           varLabel->getName().find("CutCellInfo") == 0)
+  {
+    for (int i=0; i<gd->num*gd->components; ++i)
+      gd->data[i] = 0;
   }
   else
   {
-    return nullptr;
+    VAR<T> var;
+    PerPatchBase* patchVar = dynamic_cast<PerPatchBase*>(&var);
+
+    // This queries the entire patch, including extra cells and boundary cells
+    dw->get(*patchVar, varLabel, material, patch);
+
+    const T *p = (T*) patchVar->getBasePointer();
+
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], *p);
+
+    // std::cerr << *p << " ************* "
+    //                << gd->data[0] << " ************* " 
+    //                << std::endl;
   }
+  
+  return gd;
 }
 
 
@@ -581,37 +762,36 @@ static GridDataRaw* readPatchData(DataWarehouse *dw,
 template<template<typename> class VAR>
 GridDataRaw* getGridDataMainType(DataWarehouse *dw,
                                  const Patch *patch,
-                                 const LevelP level,
                                  const VarLabel *varLabel,
                                  int material,
                                  int low[3],
                                  int high[3],
-                                 LoadExtra loadExtraElements,
+                                 LoadExtraGeometry loadExtraGeometry,
                                  const TypeDescription *subtype)
 {  
   switch (subtype->getType())
   {
   case TypeDescription::double_type:
-    return readGridData<VAR, double>(dw, patch, level, varLabel,
-                                     material, low, high, loadExtraElements);
+    return readGridData<VAR, double>(dw, patch, varLabel,
+                                     material, low, high, loadExtraGeometry);
   case TypeDescription::float_type:
-    return readGridData<VAR, float>(dw, patch, level, varLabel,
-                                    material, low, high, loadExtraElements);
+    return readGridData<VAR, float>(dw, patch, varLabel,
+                                    material, low, high, loadExtraGeometry);
   case TypeDescription::int_type:
-    return readGridData<VAR, int>(dw, patch, level, varLabel,
-                                  material, low, high, loadExtraElements);
+    return readGridData<VAR, int>(dw, patch, varLabel,
+                                  material, low, high, loadExtraGeometry);
   case TypeDescription::Vector:
-    return readGridData<VAR, Vector>(dw, patch, level, varLabel,
-                                     material, low, high, loadExtraElements);
+    return readGridData<VAR, Vector>(dw, patch, varLabel,
+                                     material, low, high, loadExtraGeometry);
   case TypeDescription::Stencil7:
-    return readGridData<VAR, Stencil7>(dw, patch, level, varLabel,
-                                       material, low, high, loadExtraElements);
+    return readGridData<VAR, Stencil7>(dw, patch, varLabel,
+                                       material, low, high, loadExtraGeometry);
   case TypeDescription::Stencil4:
-    return readGridData<VAR, Stencil4>(dw, patch, level, varLabel,
-                                       material, low, high, loadExtraElements);
+    return readGridData<VAR, Stencil4>(dw, patch, varLabel,
+                                       material, low, high, loadExtraGeometry);
   case TypeDescription::Matrix3:
-    return readGridData<VAR, Matrix3>(dw, patch, level, varLabel,
-                                      material, low, high, loadExtraElements);
+    return readGridData<VAR, Matrix3>(dw, patch, varLabel,
+                                      material, low, high, loadExtraGeometry);
   case TypeDescription::bool_type:
   case TypeDescription::short_int_type:
   case TypeDescription::long_type:
@@ -634,21 +814,18 @@ GridDataRaw* getGridDataMainType(DataWarehouse *dw,
 template<template<typename> class VAR>
 GridDataRaw* getPatchDataMainType(DataWarehouse *dw,
                                   const Patch *patch,
-                                  const LevelP level,
                                   const VarLabel *varLabel,
                                   int material,
                                   const TypeDescription *subtype)
 {
-  // printTask( patch, dbgOut, "getPatchDataMainType" );
-  
   switch (subtype->getType())
   {
   case TypeDescription::double_type:
-    return readPatchData<VAR, double>(dw, patch, level, varLabel, material);
+    return readPatchData<VAR, double>(dw, patch, varLabel, material);
   case TypeDescription::float_type:
-    return readPatchData<VAR,  float>(dw, patch, level, varLabel, material);
+    return readPatchData<VAR,  float>(dw, patch, varLabel, material);
   case TypeDescription::int_type:
-    return readPatchData<VAR,    int>(dw, patch, level, varLabel, material);
+    return readPatchData<VAR,    int>(dw, patch, varLabel, material);
   case TypeDescription::Vector:
   case TypeDescription::Stencil7:
   case TypeDescription::Stencil4:
@@ -681,15 +858,15 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                          int material,
                          int low[3],
                          int high[3],
-                         LoadExtra loadExtraElements)
+                         LoadExtraGeometry loadExtraGeometry)
 {
   DataWarehouse *dw = schedulerP->getLastDW();
   
-  LevelP level = gridP->getLevel(level_i);
+  const LevelP &level = gridP->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
   // Get variable type from the scheduler.
-  const VarLabel* varLabel                = nullptr;
+  const VarLabel* varLabel        = nullptr;
   const TypeDescription* maintype = nullptr;
   const TypeDescription* subtype  = nullptr;
 
@@ -730,28 +907,22 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
   switch(maintype->getType())
   {
   case TypeDescription::CCVariable:
-    return getGridDataMainType<constCCVariable>(dw, patch, level,
-                                                varLabel, material,
-                                                low, high, loadExtraElements, subtype);
+    return getGridDataMainType<constCCVariable>(dw, patch, varLabel, material,
+                                                low, high, loadExtraGeometry, subtype);
   case TypeDescription::NCVariable:
-    return getGridDataMainType<constNCVariable>(dw, patch, level,
-                                                varLabel, material,
-                                                low, high, loadExtraElements, subtype);
+    return getGridDataMainType<constNCVariable>(dw, patch, varLabel, material,
+                                                low, high, loadExtraGeometry, subtype);
   case TypeDescription::SFCXVariable:
-    return getGridDataMainType<constSFCXVariable>(dw, patch, level,
-                                                  varLabel, material,
-                                                  low, high, loadExtraElements, subtype);
+    return getGridDataMainType<constSFCXVariable>(dw, patch, varLabel, material,
+                                                  low, high, loadExtraGeometry, subtype);
   case TypeDescription::SFCYVariable:
-    return getGridDataMainType<constSFCYVariable>(dw, patch, level,
-                                                  varLabel, material,
-                                                  low, high, loadExtraElements, subtype);
+    return getGridDataMainType<constSFCYVariable>(dw, patch, varLabel, material,
+                                                  low, high, loadExtraGeometry, subtype);
   case TypeDescription::SFCZVariable:
-    return getGridDataMainType<constSFCZVariable>(dw, patch, level,
-                                                  varLabel, material,
-                                                  low, high, loadExtraElements, subtype);
+    return getGridDataMainType<constSFCZVariable>(dw, patch, varLabel, material,
+                                                  low, high, loadExtraGeometry, subtype);
   case TypeDescription::PerPatch:
-    return getPatchDataMainType<PerPatch>(dw, patch, level,
-                                          varLabel, material, subtype);
+    return getPatchDataMainType<PerPatch>(dw, patch, varLabel, material, subtype);
   default:
     std::cerr << "Uintah/VisIt Libsim Error: unknown type: "
               << maintype->getName() << " for variable: "
@@ -764,32 +935,60 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
 /////////////////////////////////////////////////////////////////////
 // Read all the particle data for a given patch.
 // This uses the scheduler for in-situ.
-template<typename T>
-ParticleDataRaw* readParticleData(SchedulerP schedulerP,
-                                  const Patch *patch,
-                                  const VarLabel *varLabel,
-                                  int material)
+unsigned int getNumberParticles(SchedulerP schedulerP,
+                                GridP gridP,
+                                int level_i,
+                                int patch_i,
+                                int material)
 {
   DataWarehouse *dw = schedulerP->getLastDW();
 
-  std::string variable_name = varLabel->getName();
+  const LevelP &level = gridP->getLevel(level_i);
+  const Patch *patch = level->getPatch(patch_i);
 
-  ParticleDataRaw *pd = new ParticleDataRaw;
-  pd->components = numComponents<T>();
-  pd->num = 0;
+  const std::string &variable_name =
+    Uintah::VarLabel::getParticlePositionName();
+  
+  // get the variable information
+  const VarLabel* varLabel = nullptr;
+  
+  std::set<const VarLabel*, VarLabel::Compare> varLabels;
+  std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
+  
+  // Loop through all of the required and computed variables
+  for (int i=0; i<2; ++i )
+  {
+    if( i == 0 )
+      varLabels = schedulerP->getInitialRequiredVars();
+    else
+      varLabels = schedulerP->getComputedVars();
+    
+    for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter)
+    {
+      varLabel = *varIter;
+      
+      if (varLabel->getName() == variable_name)
+      {
+        break;
+      }
+    }
+  }
 
+  // if( dw->exists( varLabel, material, patch ) )
+  //   return 0;
+  
   // get the material information for all variables
   Scheduler::VarLabelMaterialMap* pLabelMatlMap =
     schedulerP->makeVarLabelMaterialMap();
-
+    
   // get the materials for this variable
   Scheduler::VarLabelMaterialMap::iterator matMapIter =
     pLabelMatlMap->find( variable_name );
-
+    
   // figure out which material we're interested in
   std::list< int > &allMatls = matMapIter->second;
   std::list< int > matlsForVar;
-
+    
   if (material < 0)
   {
     matlsForVar = allMatls;
@@ -808,88 +1007,130 @@ ParticleDataRaw* readParticleData(SchedulerP schedulerP,
       }
     }
   }
-
-  // first get all the particle subsets so that we know how many total
-  // particles we'll have
-  std::vector<constParticleVariable<T>*> particle_vars;
-
+    
+  // Get all the particle subsets and the total number of particles.
+  unsigned int numParticles = 0;
+  
   for( std::list< int >::iterator matIter = matlsForVar.begin();
        matIter != matlsForVar.end(); matIter++ )
   {
     const int material = *matIter;
+      
+    constParticleVariable<Point> *var = new constParticleVariable<Point>;
+      
+    dw->get( *var, varLabel, material, patch);
 
-    constParticleVariable<T> *var = new constParticleVariable<T>;
+    numParticles += var->getParticleSubset()->numParticles();
 
-    if( dw->exists( varLabel, material, patch ) )
-      dw->get( *var, varLabel, material, patch);
-
-    //archive->query(*var, variable_name, matl, patch, timestep);
-
-    particle_vars.push_back(var);
-    pd->num += var->getParticleSubset()->numParticles();
-  }
-
-  // figure out which material we're interested in
-  // ConsecutiveRangeSet allMatls =
-  //   archive->queryMaterials(variable_name, patch, timestep);
-
-  // ConsecutiveRangeSet matlsForVar;
-
-  // if (material < 0)
-  // {
-  //   matlsForVar = allMatls;
-  // }
-  // else
-  // {
-       // make sure the patch has the variable - use empty material set
-       // if it doesn't
-  //   if (0 < allMatls.size() && allMatls.find(material) != allMatls.end())
-  //     matlsForVar.addInOrder(material);
-  // }
-
-  // first get all the particle subsets so that we know how many total
-  // particles we'll have
-  // std::vector<ParticleVariable<T>*> particle_vars;
-
-  // for( ConsecutiveRangeSet::iterator matlIter = matlsForVar.begin();
-  //      matlIter != matlsForVar.end(); matlIter++ )
-  // {
-  //   int matl = *matlIter;
-
-  //   ParticleVariable<T> *var = new ParticleVariable<T>;
-  //   archive->query(*var, variable_name, matl, patch, timestep);
-
-  //   particle_vars.push_back(var);
-  //   pd->num += var->getParticleSubset()->numParticles();
-  // }
-
-  // copy all the data
-  int pi = 0;
-
-  pd->data = new double[pd->components * pd->num];
-
-  for (unsigned int i=0; i<particle_vars.size(); ++i)
-  {
-    ParticleSubset *pSubset = particle_vars[i]->getParticleSubset();
-
-    for (ParticleSubset::iterator p = pSubset->begin();
-         p != pSubset->end(); ++p)
-    {
-
-      //TODO: need to be able to read data as array of longs for
-      //particle id, but copyComponents always reads double
-      copyComponents<T>(&pd->data[pi*pd->components],
-                        (*particle_vars[i])[*p]);
-      ++pi;
-    }
+    delete var;
   }
 
   // cleanup
+  delete pLabelMatlMap;
+  
+  return numParticles;
+}
+
+
+/////////////////////////////////////////////////////////////////////
+// Read all the particle data for a given patch.
+// This uses the scheduler for in-situ.
+template<typename T>
+ParticleDataRaw* readParticleData(SchedulerP schedulerP,
+                                  const Patch *patch,
+                                  const VarLabel *varLabel,
+                                  int material)
+{
+  DataWarehouse *dw = schedulerP->getLastDW();
+
+  // if( !dw->exists( varLabel, material, patch ) )
+  //   return nullptr;
+  
+  std::string variable_name = varLabel->getName();
+        
+  // get the material information for all variables
+  Scheduler::VarLabelMaterialMap* pLabelMatlMap =
+    schedulerP->makeVarLabelMaterialMap();
+    
+  // get the materials for this variable
+  Scheduler::VarLabelMaterialMap::iterator matMapIter =
+    pLabelMatlMap->find( variable_name );
+    
+  // figure out which material we're interested in
+  std::list< int > &allMatls = matMapIter->second;
+  std::list< int > matlsForVar;
+    
+  if (material < 0)
+  {
+    matlsForVar = allMatls;
+  }
+  else
+  {
+    // make sure the patch has the variable - use empty material set
+    // if it doesn't
+    for (std::list< int >::iterator matIter = allMatls.begin();
+         matIter != allMatls.end(); matIter++)
+    {
+      if( *matIter == material )
+      {
+        matlsForVar.push_back(material);
+        break;
+      }
+    }
+  }
+ 
+  // Get all the particle subsets and the total number of particles.
+  std::vector<constParticleVariable<T>*> particle_vars;
+    
+  unsigned int numParticles = 0;
+  
+  for( std::list< int >::iterator matIter = matlsForVar.begin();
+       matIter != matlsForVar.end(); matIter++ )
+  {
+    const int material = *matIter;
+      
+    constParticleVariable<T> *var = new constParticleVariable<T>;
+      
+    dw->get( *var, varLabel, material, patch);
+
+    particle_vars.push_back(var);
+    numParticles += var->getParticleSubset()->numParticles();
+  }
+
+  ParticleDataRaw *pd = nullptr;
+
+  // Copy all the data
+  if( numParticles )
+  {
+    pd = new ParticleDataRaw;
+    pd->components = numComponents<T>();
+    pd->num = numParticles;
+    pd->data = new double[pd->components * pd->num];
+
+    int pi = 0;
+
+    for (unsigned int i=0; i<particle_vars.size(); ++i)
+    {
+        ParticleSubset *pSubset = particle_vars[i]->getParticleSubset();
+        
+        for (ParticleSubset::iterator p = pSubset->begin();
+             p != pSubset->end(); ++p)
+        {       
+          // TODO: need to be able to read data as array of longs for
+          // particle id, but copyComponents always reads double
+          copyComponents<T>(&pd->data[pi*pd->components],
+                            (*particle_vars[i])[*p]);
+          ++pi;
+        }
+      }
+  }
+    
+  // cleanup
   for (unsigned int i=0; i<particle_vars.size(); ++i)
     delete particle_vars[i];
-
+  
   delete pLabelMatlMap;
-
+  
   return pd;
 }
 
@@ -904,13 +1145,11 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
                                  std::string variable_name,
                                  int material)
 {
-  LevelP level = gridP->getLevel(level_i);
+  const LevelP &level = gridP->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
-  // printTask( patch, dbgOut, "getParticleData variable: " + variable_name );
-  
   // get the variable information
-  const VarLabel* varLabel                = nullptr;
+  const VarLabel* varLabel        = nullptr;
   const TypeDescription* maintype = nullptr;
   const TypeDescription* subtype  = nullptr;
 

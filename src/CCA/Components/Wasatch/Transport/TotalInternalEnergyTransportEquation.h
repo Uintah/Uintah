@@ -82,7 +82,8 @@ namespace WasatchCore {
                                           const Expr::Tag& viscTag,
                                           const Expr::Tag& dilTag,
                                           const TurbulenceParameters& turbulenceParams,
-                                          WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo );
+                                          WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                                          std::set<std::string>& persistentFields );
 
     ~TotalInternalEnergyTransportEquation();
     

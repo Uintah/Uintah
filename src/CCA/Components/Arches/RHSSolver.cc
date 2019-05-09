@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -231,8 +231,7 @@ RHSSolver::explicitUpdate_stencilMatrix(CellIterator iter,
                  source[c] - A[Arches::AP][c] * old_phi[c];
 
     rhs *= volFraction[c] * volFraction[c+shift];
-
-
+    
     //Note: volume fraction use here is a hack until the momentum solver is rewritten.
     if ( std::abs(apo) > 1e-16 )
       new_phi[c] = rhs/apo;

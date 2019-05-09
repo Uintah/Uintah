@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -133,14 +133,14 @@ class CompTable {
     }
 
     Data             * m_next{nullptr};
-    DetailedTask     * m_dtask;
-    Task::Dependency * m_comp;
-    const Patch      * m_patch;
-    int                m_matl;
-    unsigned int       m_hash;
+    DetailedTask     * m_dtask{nullptr};
+    Task::Dependency * m_comp{nullptr};
+    const Patch      * m_patch{nullptr};
+    int                m_matl{};
+    unsigned int       m_hash{};
   };
 
-  FastHashTable<Data> m_data;
+  FastHashTable<Data> m_data{};
 
   void insert( Data * data );
 
@@ -236,11 +236,10 @@ class TaskGraph {
     void createDetailedDependencies();
 
     /// Connects the tasks, but does not sort them.
-    /// Used for the UnifiedScheduler, this routine has the side effect
-    /// (just like the topological sort) of adding the reduction tasks.
-    /// However, this routine leaves the tasks in the order they were
-    /// added, so that reduction tasks are hit in the correct order
-    /// by each MPI process.
+    /// This routine has the side effect (just like the topological sort)
+    /// of adding the reduction tasks. However, this routine leaves the
+    /// tasks in the order they were added, so that reduction tasks are
+    /// hit in the correct order by each MPI process.
     void nullSort( std::vector<Task*> & tasks );
 
     int getNumTasks() const;
@@ -263,7 +262,7 @@ class TaskGraph {
       m_current_iteration = iter;
     }
 
-    inline int getNumTaskPhases()
+    inline int getNumTaskPhases() const
     {
       return m_num_task_phases;
     }
@@ -271,6 +270,11 @@ class TaskGraph {
     std::vector<std::shared_ptr<Task> > & getTasks()
     {
       return m_tasks;
+    }
+
+    inline bool getDistalRequires() const
+    {
+      return m_has_distal_requires;
     }
 
     /// Makes and returns a map that associates VarLabel names with
@@ -318,10 +322,35 @@ class TaskGraph {
                             ,       int                iteration
                             );
 
-    SchedulerCommon      * m_scheduler;
-    LoadBalancer         * m_load_balancer;
-    const ProcessorGroup * m_proc_group;
-    Scheduler::tgType      m_type;
+    struct LabelLevel {
+      LabelLevel( const std::string & key
+                , const int           level
+                )
+      : m_key(key)
+      , m_level(level)
+      {}
+
+      std::string m_key{};
+      int         m_level{};
+
+      bool operator<( const LabelLevel& rhs ) const
+      {
+        if (this->m_level < rhs.m_level) {
+          return true;
+        }
+        else if ((this->m_level == rhs.m_level) && (this->m_key < rhs.m_key)) {
+          return true;
+        }
+        return false;
+      }
+    };
+
+    std::map<LabelLevel, int> max_ghost_for_varlabelmap{};
+
+    SchedulerCommon      * m_scheduler{nullptr};
+    LoadBalancer         * m_load_balancer{nullptr};
+    const ProcessorGroup * m_proc_group{nullptr};
+    Scheduler::tgType      m_type{};
     DetailedTasks        * m_detailed_tasks{nullptr};
 
     // how many times this taskgraph has executed this timestep
@@ -332,23 +361,87 @@ class TaskGraph {
 
     int m_index{-1};
 
-    std::vector<std::shared_ptr<Task> > m_tasks;
+    // does this TG contain requires with halo > MAX_HALO_DEPTH
+    bool m_has_distal_requires{false};
 
-    struct LabelLevel {
-      LabelLevel(const std::string& key, const int level) : key(key), level(level) {}
-      std::string key;
-      int level;
-      bool operator<(const LabelLevel& rhs) const {
-        if (this->level < rhs.level) {
-          return true;
-        } else if ((this->level == rhs.level) && (this->key < rhs.key)) {
-          return true;
-        }
-        return false;
-      }
+    std::vector<std::shared_ptr<Task> > m_tasks{};
+
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //
+    //  Archived code for topological sort functionality. Please leave this here - APH, 04/05/19
+    //
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  public:
+
+    //______________________________________________________________________
+    // This is so we can keep tasks independent of the task graph
+    struct GraphSortInfo {
+
+        GraphSortInfo()
+          : m_visited{false}
+          , m_sorted{false}
+        {}
+
+        bool m_visited;
+        bool m_sorted;
     };
 
-    std::map<LabelLevel, int> max_ghost_for_varlabelmap;
+    using CompMap          = std::multimap<const VarLabel*, Task::Dependency*>;
+    using GraphSortInfoMap = std::map<Task*, GraphSortInfo>;
+    using ReductionTasksMap         = std::map<VarLabelMatl<Level>, Task*>;
+
+
+  private:
+
+    /// Helper function for setupTaskConnections, adding dependency edges
+    /// for the given task for each of the require (or modify) depencies in
+    /// the list whose head is req.  If modifies is true then each found
+    /// compute will be replaced by its modifying dependency on the CompMap.
+    void addDependencyEdges( Task              * task
+                           , GraphSortInfoMap  & sortinfo
+                           , Task::Dependency  * req
+                           , CompMap           & comps
+                           , ReductionTasksMap & reductionTasks
+                           , bool                modifies
+                           );
+
+    bool overlaps( const Task::Dependency * comp
+                 , const Task::Dependency * req
+                 ) const;
+
+    /// Helper function for processTasks, processing the dependencies
+    /// for the given task in the dependency list whose head is req.
+    /// Will call processTask (recursively, as this is a helper for
+    /// processTask) for each dependent task.
+    void processDependencies( Task               * task
+                            , Task::Dependency   * req
+                            , std::vector<Task*> & sortedTasks
+                            , GraphSortInfoMap   & sortinfo
+                            ) const;
+
+    /// Called for each task, this "sorts" the taskgraph.
+    /// This sorts in topological order by calling processDependency
+    /// (which checks for cycles in the graph), which then recursively
+    /// calls processTask for each dependentTask.  After this process is
+    /// finished, then the task is added at the end of sortedTasks.
+    void processTask( Task               * task
+                    , std::vector<Task*> & sortedTasks
+                    , GraphSortInfoMap   & sortinfo
+                    ) const;
+
+    /// Adds edges in the TaskGraph between requires/modifies and their
+    /// associated computes.  Uses addDependencyEdges as a helper
+    void setupTaskConnections( GraphSortInfoMap & sortinfo );
+
+    /// sets up the task connections and puts them in a sorted order.
+    /// Calls setupTaskConnections, which has the side effect of creating
+    /// reduction tasks for tasks that compute reduction variables.
+    /// calls processTask on each task to sort them.
+    void topologicalSort( std::vector<Task*>& tasks );
+
+    std::vector<Task::Edge*>            m_edges;
 
 }; // class TaskGraph
 

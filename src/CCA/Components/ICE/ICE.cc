@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -113,27 +113,6 @@ ICE::ICE(const ProcessorGroup* myworld,
   hypre_solver_label = VarLabel::create("hypre_solver_label",
                                         SoleVariable<hypre_solver_structP>::getTypeDescription());
 #endif
-
-  d_doRefluxing           = false;
-  d_add_heat              = false;
-  d_impICE                = false;
-  d_useCompatibleFluxes   = true;
-  d_viscousFlow           = false;
-  d_applyHydrostaticPress = true;
-  
-  d_max_iter_equilibration  = 100;
-  d_delT_knob               = 1.0;
-  d_delT_diffusionKnob      = 1.0;
-  d_delT_scheme             = "aggressive";
-  d_surroundingMatl_indx    = -9;
-  d_dbgVar1                 = 0;     //inputs for debugging                 
-  d_dbgVar2                 = 0;                                    
-  d_EVIL_NUM                = -9.99e30;                                      
-  d_SMALL_NUM               = 1.0e-100;                                     
-  d_with_mpm                = false;
-  d_with_rigid_mpm          = false;
-  d_clampSpecificVolume     = false;
-  
   d_conservationTest         = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
 
@@ -144,11 +123,6 @@ ICE::ICE(const ProcessorGroup* myworld,
   d_BC_globalVars->mms      =  scinew mms_globalVars();                
   d_BC_globalVars->sine     =  scinew sine_globalVars();               
   d_BC_globalVars->inletVel =  scinew inletVel_globalVars();           
-  d_press_matl    = 0;
-  d_press_matlSet = 0;
-
-  activateReductionVariable( recomputeTimeStep_name, true);
-  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 //______________________________________________________________________
@@ -179,15 +153,12 @@ ICE::~ICE()
     delete d_WallShearStressModel;
   }
 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->releaseComponents();
-      delete am;
-    }
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->releaseComponents();
+    delete am;
   }
+
   
   if (d_press_matl && d_press_matl->removeReference()){
     delete d_press_matl;
@@ -284,7 +255,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   // Pull out implicit solver parameters
   ProblemSpecP impSolver = cfd_ice_ps->findBlock("ImplicitSolver");
   if (impSolver) {
-    d_delT_knob = 0.5;      // default value when running implicit
+    d_delT_speedSoundKnob = 0.5;      // default value when running implicit
     m_solver->readParameters(impSolver, "implicitPressure");
     
     m_solver->getParameters()->setSolveOnExtraCells(false);
@@ -334,19 +305,30 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   ProblemSpecP tsc_ps = cfd_ice_ps->findBlock("TimeStepControl");
   if (tsc_ps ) {
     tsc_ps ->require("Scheme_for_delT_calc", d_delT_scheme);
-    tsc_ps ->require("knob_for_speedSound",  d_delT_knob);
+    tsc_ps ->require("knob_for_speedSound",  d_delT_speedSoundKnob);
     tsc_ps ->get("knob_for_diffusion",       d_delT_diffusionKnob);
     
     if (d_delT_scheme != "conservative" && d_delT_scheme != "aggressive") {
      string warn="ERROR:\n Scheme_for_delT_calc:  must specify either aggressive or conservative";
      throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
-    if (d_delT_knob< 0.0 || d_delT_knob > 1.0) {
+    if (d_delT_speedSoundKnob< 0.0 || d_delT_speedSoundKnob > 1.0) {
      string warn="ERROR:\n knob_for_speedSound:  must be between 0 and 1";
      throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
   } 
   
+  //__________________________________
+  //  User defined pressure gradient
+  ProblemSpecP fpg_ps = cfd_ice_ps->findBlock("fixedPressureGradient");
+  if ( fpg_ps ) {
+    double x, y, z;
+    fpg_ps ->getWithDefault( "x_dir", x, d_EVIL_NUM );
+    fpg_ps ->getWithDefault( "y_dir", y, d_EVIL_NUM );
+    fpg_ps ->getWithDefault( "z_dir", z, d_EVIL_NUM );
+    d_fixedPressGrad = Vector(x, y, z);
+  }
+
   //__________________________________
   // Pull out Initial Conditions
   ProblemSpecP mat_ps = 0;
@@ -410,7 +392,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   //_________________________________
   // Exchange Model
   proc0cout << "numMatls " << m_materialManager->getNumMatls() << endl;
-  d_exchModel=ExchangeFactory::create( mat_ps, m_materialManager);
+  d_exchModel=ExchangeFactory::create( mat_ps, m_materialManager, d_with_mpm );
   d_exchModel->problemSetup(mat_ps);
   
   //__________________________________
@@ -544,15 +526,12 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
                                                       m_materialManager,
                                                       prob_spec);
 
-    if( d_analysisModules.size() != 0 ) {
-
-      vector<AnalysisModule*>::iterator iter;
-      for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
-        AnalysisModule* am = *iter;
-        std::vector<std::vector<const VarLabel* > > dummy;
-        am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
-        am->problemSetup(prob_spec, restart_prob_spec, grid, dummy, dummy);
-      }
+    for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
+      AnalysisModule* am = *iter;
+      std::vector<std::vector<const VarLabel* > > dummy;
+      
+      am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
+      am->problemSetup(prob_spec, restart_prob_spec, grid, dummy, dummy);
     }
   }  // mpm
   
@@ -697,9 +676,7 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
   //  output data analysis modules
   if(!d_with_mpm && d_analysisModules.size() != 0){
 
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
+    for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
 
       am->outputProblemSpec( root );
@@ -763,13 +740,9 @@ void ICE::scheduleInitialize(const LevelP & level,
   
   //__________________________________
   // dataAnalysis 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleInitialize( sched, level );
-    }
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->scheduleInitialize( sched, level );
   }
  
   //__________________________________
@@ -803,6 +776,14 @@ void ICE::scheduleRestartInitialize(const LevelP& level,
     const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
     m_solver->scheduleRestartInitialize(level, sched, ice_matls);
   }
+  
+  //__________________________________
+  // dataAnalysis 
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->scheduleRestartInitialize( sched, level);
+  }
+  
 }
 /* _____________________________________________________________________
  Function~  ICE::restartInitialize--
@@ -814,13 +795,9 @@ void ICE::restartInitialize()
   cout_doing << d_myworld->myRank() << " Doing restartInitialize "<< "\t\t\t ICE" << endl;
 
   //__________________________________
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->restartInitialize();
-    }
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->restartInitialize();
   }
   
   //__________________________________
@@ -939,6 +916,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
 
   d_exchModel->sched_PreExchangeTasks(    sched, patches, ice_matls_sub,
+                                                          mpm_matls_sub,
                                                           all_matls);
 
 
@@ -1018,6 +996,9 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
                                                           all_matls,
                                                           "afterAdvection");
+#if 0                                                          
+  scheduleComputeTaskGraphIndex(          sched, level );
+#endif
 }
 /* _____________________________________________________________________
  Function~  ICE::scheduleFinalizeTimestep--
@@ -1056,15 +1037,11 @@ ICE::scheduleAnalysis( const LevelP& level, SchedulerP& sched)
 
   //__________________________________
   //  on the fly analysis
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleDoAnalysis( sched, level);
-    }
-  }                                                          
-                                                          
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->scheduleDoAnalysis( sched, level);
+  }
+                                 
   scheduleTestConservation( sched, patches, ice_matls_sub, all_matls);
                                                           
   cout_doing << "---------------------------------------------------------"<<endl;
@@ -1083,11 +1060,7 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
              
   t = scinew Task("ICE::computeThermoTransportProperties", 
             this, &ICE::computeThermoTransportProperties); 
-            
-  //if(d_doAMR && level->getIndex() !=0){
-  // dummy variable needed to keep the taskgraph in sync
-  //t->requires(Task::NewDW,lb->AMR_SyncTaskgraphLabel,Ghost::None,0);
-  //}           
+           
   t->requires(Task::OldDW,lb->temp_CCLabel, ice_matls->getUnion(), Ghost::None, 0);  
 
   t->computes(lb->viscosityLabel);
@@ -2024,6 +1997,14 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
 }
 
 /* _____________________________________________________________________
+ Function~  ICE::scheduleComputeTaskGraphIndex--
+_____________________________________________________________________*/
+void ICE::scheduleComputeTaskGraphIndex(SchedulerP& sched,
+                                        const LevelP& level )
+{
+}
+
+/* _____________________________________________________________________
  Function~  ICE::actuallyComputeStableTimestep--
 _____________________________________________________________________*/
 void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,  
@@ -2074,10 +2055,12 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       if (d_delT_scheme == "aggressive") {     //      A G G R E S S I V E
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
-          double Mod_speed_Sound = d_delT_knob * speedSound[c];
+          double Mod_speed_Sound = d_delT_speedSoundKnob * speedSound[c];
+          
           double A = d_CFL*delX/(Mod_speed_Sound + fabs(vel_CC[c].x())+d_SMALL_NUM);
           double B = d_CFL*delY/(Mod_speed_Sound + fabs(vel_CC[c].y())+d_SMALL_NUM);
           double C = d_CFL*delZ/(Mod_speed_Sound + fabs(vel_CC[c].z())+d_SMALL_NUM);
+          
           delt_CFL = std::min(A, delt_CFL);
           delt_CFL = std::min(B, delt_CFL);
           delt_CFL = std::min(C, delt_CFL);
@@ -2169,12 +2152,12 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
                                       /dx_length;
 
             double characteristicVel_R = vel_FC_R 
-                                       + d_delT_knob * speedSound 
+                                       + d_delT_speedSoundKnob * speedSound 
                                        + relative_vel
                                        + grav_vel
                                        + diffusion_vel; 
             double characteristicVel_L = vel_FC_L 
-                                       - d_delT_knob * speedSound 
+                                       - d_delT_speedSoundKnob * speedSound 
                                        - relative_vel
                                        - grav_vel
                                        - diffusion_vel;
@@ -2321,6 +2304,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     
     double p_ref = getRefPress();
     press_CC.initialize(p_ref);
+    
     for (unsigned int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
       int indx = ice_matl->getDWIndex();
@@ -4016,9 +4000,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
 
-        right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
-        top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
-        front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
+        right    = c + IntVector(1,0,0);    left     = c;
+        top      = c + IntVector(0,1,0);    bottom   = c;
+        front    = c + IntVector(0,0,1);    back     = c;
           
         double press_src_X = ( pressX_FC[right] - pressX_FC[left] )   * vol_frac[c];
         double press_src_Y = ( pressY_FC[top]   - pressY_FC[bottom] ) * vol_frac[c]; 
@@ -4027,6 +4011,31 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         mom_source[c].x( -press_src_X * areaX ); 
         mom_source[c].y( -press_src_Y * areaY );    
         mom_source[c].z( -press_src_Z * areaZ );
+      }
+      
+      //__________________________________
+      //  Add user defined pressure gradient 
+      Vector evilNumV( d_EVIL_NUM );
+            
+      if( d_fixedPressGrad.length() != evilNumV.length() ) {
+        
+        Vector oneZero;  
+        oneZero.x(  ( d_fixedPressGrad.x() == d_EVIL_NUM) ? 1.0 : 0.0 );
+        oneZero.y(  ( d_fixedPressGrad.y() == d_EVIL_NUM) ? 1.0 : 0.0 );
+        oneZero.z(  ( d_fixedPressGrad.z() == d_EVIL_NUM) ? 1.0 : 0.0 );
+        
+        double src_X    = d_fixedPressGrad.x() * dx.x() * areaX ;
+        double src_Y    = d_fixedPressGrad.y() * dx.y() * areaY ;
+        double src_Z    = d_fixedPressGrad.z() * dx.z() * areaZ ;
+        Vector pressSrc = Vector( src_X, src_Y, src_Z );
+        Vector one( 1.0, 1.0, 1.0 );
+          
+        for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+
+          Vector fixedPressSrc = pressSrc * vol_frac[c];
+          mom_source[c] = mom_source[c] + (one - oneZero) * fixedPressSrc;
+        }
       }
       
       //__________________________________
@@ -5097,7 +5106,7 @@ void ICE::TestConservation(const ProcessorGroup*,
       }
     }
     //__________________________________
-    // conservation of momentum
+    // conservation of convective momentum 
     if(d_conservationTest->momentum){
       CCVariable<Vector> mom;
       constCCVariable<Vector> vel_CC;

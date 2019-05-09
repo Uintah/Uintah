@@ -26,6 +26,9 @@ namespace Uintah{
       if ( subset == "pre_update_property_models" ){
 
         return _pre_update_property_tasks;
+      }else if ( subset == "post_update_property_models" ){
+
+        return _post_update_property_tasks;
 
       } else if ( subset == "diffusion_property_models" ){
 
@@ -73,6 +76,7 @@ namespace Uintah{
   private:
 
     std::vector<std::string> _pre_update_property_tasks;  ///<Tasks that execute at the start of an RK step
+    std::vector<std::string> _post_update_property_tasks;  ///<Tasks that execute at the end of an RK step
     std::vector<std::string> _finalize_property_tasks;    ///<Tasks that execute at the end of the time step
     std::vector<std::string> _pre_table_post_iv_update;   ///<Tasks that execute after IV update and before table lookup
     std::vector<std::string> _rad_properties_tasks;       ///<Tasks use to compute the total absorption coefficient

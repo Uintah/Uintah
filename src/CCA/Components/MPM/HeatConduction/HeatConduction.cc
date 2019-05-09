@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,6 +30,7 @@
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/MaterialManager.h>
@@ -60,31 +61,36 @@ HeatConduction::HeatConduction(MaterialManagerP& sS,MPMLabel* labels,
   }
 }
 
+//______________________________________________________________________
+//
 HeatConduction::~HeatConduction()
 {
 }
 
+//______________________________________________________________________
+//
 void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
                                                      const PatchSet* patches,
                                                      const MaterialSet* matls)
 {  
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeInternalHeatRate");
+  
   Task* t = scinew Task("MPM::computeInternalHeatRate",
                         this, &HeatConduction::computeInternalHeatRate);
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::OldDW, d_lb->pXLabel,                         gan, NGP);
-  t->requires(Task::OldDW, d_lb->pSizeLabel,                      gan, NGP);
+  t->requires(Task::NewDW, d_lb->pCurSizeLabel,                   gan, NGP);
   t->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
   t->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
   t->requires(Task::OldDW, d_lb->pTemperatureGradientLabel,       gan, NGP);
-  t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
   t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
   t->computes(d_lb->gdTdtLabel);
 
   sched->addTask(t, patches, matls);
 }
-//__________________________________
+//______________________________________________________________________
 //
 void HeatConduction::scheduleComputeNodalHeatFlux(SchedulerP& sched,
                                                   const PatchSet* patches,
@@ -96,6 +102,8 @@ void HeatConduction::scheduleComputeNodalHeatFlux(SchedulerP& sched,
   // This task only exists to compute the diagnostic gHeatFluxLabel
   // which is not used in any of the subsequent calculations
     
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeNodalHeatFlux");
+    
   Task* t = scinew Task("MPM::computeNodalHeatFlux",
                         this, &HeatConduction::computeNodalHeatFlux);
 
@@ -103,8 +111,7 @@ void HeatConduction::scheduleComputeNodalHeatFlux(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::OldDW, d_lb->pXLabel,             gan, NGP);
-  t->requires(Task::OldDW, d_lb->pSizeLabel,          gan, NGP);
-  t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, gan, NGP);
+  t->requires(Task::NewDW, d_lb->pCurSizeLabel,       gan, NGP);
   t->requires(Task::OldDW, d_lb->pMassLabel,          gan, NGP);
   t->requires(Task::NewDW, d_lb->gTemperatureLabel,   gac, 2*NGP);
   t->requires(Task::NewDW, d_lb->gMassLabel,          gnone);
@@ -112,7 +119,8 @@ void HeatConduction::scheduleComputeNodalHeatFlux(SchedulerP& sched,
   
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void HeatConduction::scheduleSolveHeatEquations(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
@@ -120,6 +128,8 @@ void HeatConduction::scheduleSolveHeatEquations(SchedulerP& sched,
   /* solveHeatEquations
    *   in(G.MASS, G.INTERNALHEATRATE, G.EXTERNALHEATRATE)
    *   out(G.TEMPERATURERATE) */
+   
+  printSchedule(patches,cout_doing,"MPM::scheduleSolveHeatEquations");
 
   Task* t = scinew Task("MPM::solveHeatEquations",
                         this, &HeatConduction::solveHeatEquations);
@@ -134,7 +144,8 @@ void HeatConduction::scheduleSolveHeatEquations(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
                                                       const PatchSet* patches,
                                                       const MaterialSet* matls)
@@ -144,6 +155,8 @@ void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
    *   operation(t* = t + t_rate * dt)
    *   out(G.TEMPERATURE_STAR) */
 
+  printSchedule(patches,cout_doing,"MPM::scheduleIntegrateTemperatureRate");
+  
   Task* t = scinew Task("MPM::integrateTemperatureRate",
                         this, &HeatConduction::integrateTemperatureRate);
 
@@ -158,7 +171,8 @@ void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                                              const PatchSubset* patches,
                                              const MaterialSubset* ,
@@ -168,10 +182,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    if (cout_doing.active())
-      cout_doing <<"Doing computeInternalHeatRate on patch " << patch->getID()<<"\t\t MPM"<< endl;
-    if (cout_heat.active())
-      cout_heat << " Patch = " << patch->getID() << endl;
+    printTask(patches, patches->get(0),cout_doing,"Doing MPM::computeInternalHeatRate");
 
     ParticleInterpolator* interpolator = d_flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -207,8 +218,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
       old_dw->get(px,           d_lb->pXLabel,                         pset);
       old_dw->get(pvol,         d_lb->pVolumeLabel,                    pset);
-      old_dw->get(psize,        d_lb->pSizeLabel,                      pset);
-      old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+      new_dw->get(psize,        d_lb->pCurSizeLabel,                   pset);
       old_dw->get(pTempGrad,    d_lb->pTemperatureGradientLabel,       pset);
       new_dw->get(gMass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
       new_dw->allocateAndPut(gdTdt, d_lb->gdTdtLabel,    dwi, patch);
@@ -223,7 +233,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
   
         // Get the node indices that surround the cell
         int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                          psize[idx], deformationGradient[idx]);
+                                                           psize[idx]);
 
         // Calculate k/(rho*Cv)
         double alpha = kappa*pvol[idx]/Cv; 
@@ -267,11 +277,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
 
     // This task only exists to compute the diagnostic gHeatFluxLabel
     // which is not used in any of the subsequent calculations
-
-    if (cout_doing.active())
-      cout_doing <<"Doing computeNodalHeatFlux on patch " << patch->getID()<<"\t\t MPM"<< endl;
-    if (cout_heat.active())
-      cout_heat << " Patch = " << patch->getID() << endl;
+    printTask(patches, patches->get(0),cout_doing,"Doing MPM::computeNodalHeatFlux");
       
     ParticleInterpolator* interpolator = d_flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -311,8 +317,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
       new_dw->get(gMass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
       old_dw->get(px,           d_lb->pXLabel,           pset);
       old_dw->get(pMass,        d_lb->pMassLabel,        pset);
-      old_dw->get(psize,        d_lb->pSizeLabel,        pset);
-      old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+      new_dw->get(psize,        d_lb->pCurSizeLabel,     pset);
       
       new_dw->allocateAndPut(gHeatFlux, d_lb->gHeatFluxLabel,  dwi, patch);  
       gHeatFlux.initialize(Vector(0.0));
@@ -334,7 +339,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         pdTdx[idx] = Vector(0,0,0);
         
         int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                           psize[idx],deformationGradient[idx]);
+                                                           psize[idx]);
 
         for (int k = 0; k < NN; k++){
           for (int j = 0; j<3; j++) {
@@ -349,8 +354,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
-                                         deformationGradient[idx]);
+        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
                                                             
         Vector pdTdx_massWt = pdTdx[idx] * pMass[idx];
         
@@ -372,7 +376,8 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
   }  // End of loop over patches
 }
 
-
+//______________________________________________________________________
+//
 void HeatConduction::solveHeatEquations(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* ,
@@ -382,10 +387,8 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    if (cout_doing.active())
-      cout_doing <<"Doing solveHeatEquations on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
-
-
+    printTask(patches, patches->get(0),cout_doing,"Doing MPM::solveHeatEquations");
+    
     string interp_type = d_flag->d_interpolator_type;
     for(unsigned int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
@@ -419,7 +422,8 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
   }
 }
 
-
+//______________________________________________________________________
+//
 void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
                                               const PatchSubset* patches,
                                               const MaterialSubset*,
@@ -429,9 +433,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    if (cout_doing.active())
-      cout_doing <<"Doing integrateTemperatureRate on patch " << patch->getID()<< "\t\t MPM"<< endl;
-
+    printTask(patches, patches->get(0),cout_doing,"Doing MPM::integrateTemperatureRate");
 
     Ghost::GhostType  gnone = Ghost::None;
     string interp_type = d_flag->d_interpolator_type;

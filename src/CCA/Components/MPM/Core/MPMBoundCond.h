@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,14 +45,6 @@ namespace Uintah {
     void setBoundaryCondition(const Patch* patch,int dwi, const std::string& type,
                               NCVariable<double>& variable,
                               std::string interp_type="linear");
-	
-	void setBoundaryConditionLiquid(const Patch* patch, int dwi, const std::string& type,
-		NCVariable<Vector>& variable,
-		std::string interp_type = "linear");
-
-	void setBoundaryConditionLiquid(const Patch* patch, int dwi, const std::string& type,
-		NCVariable<double>& variable,
-		std::string interp_type = "linear");
 
   private:
 

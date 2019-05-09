@@ -35,13 +35,13 @@
                                                                              Arenisca, 
                                                                              Arenisca3, 
                                                                              Arenisca4, 
-                                                                             ArenaSoil,
+                                                                             ArenaSoil, 
                                                                              camclay, 
                                                                              TongeRameshPTR, 
                                                                              rf_elastic_plastic,
-                                                                             ArrudaBoyce8,
 																			 MohrCoulomb,
-																			 HypoplasticB">
+																			 HypoplasticB,
+                                                                             ArrudaBoyce8'">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
@@ -693,8 +693,7 @@
     <initial_ystress      spec="OPTIONAL DOUBLE"/>
     <initial_zstress      spec="OPTIONAL DOUBLE"/>
 	
-	
-	    <!--______________________________________________________________________ -->
+	   <!--______________________________________________________________________ -->
 
     <ei0_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
     <ed0_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>

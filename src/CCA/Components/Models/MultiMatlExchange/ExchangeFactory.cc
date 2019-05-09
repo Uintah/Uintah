@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,14 +44,15 @@ ExchangeFactory::~ExchangeFactory()
 //
 ExchangeModel*
 ExchangeFactory::create(const ProblemSpecP     & matl_ps,
-                        const MaterialManagerP & materialManager)
+                        const MaterialManagerP & materialManager,
+                        const bool with_mpm)
 {
   int numMatls = materialManager->getNumMatls();
   
   //__________________________________
   //    single matl 
   if( numMatls == 1){
-    return ( scinew ExchangeModels::ScalarExch( matl_ps, materialManager) );
+    return ( scinew ExchangeModels::ScalarExch( matl_ps, materialManager, with_mpm) );
   }
   
   ProblemSpecP exchg_ps = matl_ps->findBlock("exchange_properties");
@@ -60,7 +61,7 @@ ExchangeFactory::create(const ProblemSpecP     & matl_ps,
   //__________________________________
   //    default model
   if( model_ps == nullptr ) {
-    return ( scinew ExchangeModels::ScalarExch( matl_ps, materialManager ));
+    return ( scinew ExchangeModels::ScalarExch( matl_ps, materialManager, with_mpm ));
   }
   
   //__________________________________
@@ -70,7 +71,7 @@ ExchangeFactory::create(const ProblemSpecP     & matl_ps,
   std::string model = attributes["type"];
 
   if ( model == "slip" ) {
-    return ( scinew ExchangeModels::SlipExch( exchg_ps, materialManager ));
+    return ( scinew ExchangeModels::SlipExch( exchg_ps, materialManager, with_mpm ));
   }      
   else {
     throw ProblemSetupException("\nERROR: Unknown exchange model.  "+model,__FILE__, __LINE__);

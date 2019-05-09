@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -258,9 +258,6 @@ void DDT1::problemSetup(GridP&,
       DS_ps->require("newOutputInterval",     d_adj_IO_Det->output_interval );  
       DS_ps->require("newCheckPointInterval", d_adj_IO_Det->chkPt_interval );
     }
-
-    m_application->activateReductionVariable(     outputInterval_name, d_adj_IO_Press->onOff || d_adj_IO_Det->onOff );
-    m_application->activateReductionVariable( checkpointInterval_name, d_adj_IO_Press->onOff || d_adj_IO_Det->onOff );
   }
     
   /* initialize constants */
@@ -626,7 +623,6 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   } 
   
   sched->addTask(t1, level->eachPatch(), d_mymatls);    
-    
     
   //__________________________________
   //

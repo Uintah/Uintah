@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2018 The University of Utah
+#  Copyright (c) 1997-2019 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -46,7 +46,6 @@ PSELIBS := \
 	CCA/Components/MPM              \
 	CCA/Components/MPM/Core         \
 	CCA/Components/MPM/Materials    \
-	CCA/Components/OnTheFlyAnalysis \
 	CCA/Ports          \
 	Core/Grid          \
 	Core/Util          \

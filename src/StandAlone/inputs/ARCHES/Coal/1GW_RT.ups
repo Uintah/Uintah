@@ -1304,6 +1304,7 @@
           <ASH>0.064800</ASH>
           <H2O>0.15000</H2O>
         </ultimate_analysis>
+        <daf_volatiles_fraction>.517</daf_volatiles_fraction>  <!--dray ash free volatiles content - computed from Indonesian analysis -->
         <raw_coal_enthalpy>-2247724.62188</raw_coal_enthalpy>
         <char_enthalpy>0.0</char_enthalpy>
         <ash_enthalpy>0.0</ash_enthalpy>

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -126,14 +126,14 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     message << "   Originally needed deps (" << m_internal_dependencies.size() << "):\n";
 
     auto iter = m_internal_dependencies.begin();
-    for (auto i = 0u; iter != m_internal_dependencies.end(); ++iter, ++i) {
+    for (size_t i = 0u; iter != m_internal_dependencies.end(); ++iter, ++i) {
       message << i << ":    " << *((*iter).m_prerequisite_task->getTask()) << "\n";
     }
 
     DOUT(true, message.str());
   }
 
-  for (auto i = 0u; i < dws.size(); i++) {
+  for (size_t i = 0; i < dws.size(); ++i) {
     if (oddws[i] != nullptr) {
       oddws[i]->pushRunningTask(m_task, &oddws);
     }
@@ -169,7 +169,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 
     m_task->doit( this, event, pg, m_patches, m_matls, dws, nullptr, nullptr, nullptr, -1 );
 
-  for (auto i = 0u; i < dws.size(); i++) {
+  for (size_t i = 0u; i < dws.size(); ++i) {
     if ( oddws[i] != nullptr ) {
       oddws[i]->checkTasksAccesses( m_patches, m_matls );
       oddws[i]->popRunningTask();
@@ -413,19 +413,19 @@ DetailedTask::checkExternalDepCount()
   std::lock_guard<Uintah::MasterLock> external_ready_guard(g_external_ready_mutex);
 
   DOUT(g_external_deps_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: "
-                                    << m_external_dependency_count.load(std::memory_order_seq_cst)
+                                    << m_external_dependency_count.load(std::memory_order_acquire)
                                     << " internal deps: " << m_num_pending_internal_dependencies);
 
-  if ((m_external_dependency_count.load(std::memory_order_seq_cst) == 0) && m_task_group->m_sched_common->useInternalDeps() &&
-       m_initiated.load(std::memory_order_seq_cst) && !m_task->usesMPI()) {
+  if ((m_external_dependency_count.load(std::memory_order_acquire) == 0) && m_task_group->m_sched_common->useInternalDeps() &&
+       m_initiated.load(std::memory_order_acquire) && !m_task->usesMPI()) {
 
     DOUT(g_external_deps_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
                                       << " MPI requirements satisfied, placing into external ready queue");
 
-    if (m_externally_ready.load(std::memory_order_seq_cst) == false) {
+    if (m_externally_ready.load(std::memory_order_acquire) == false) {
       m_task_group->m_mpi_completed_tasks.push(this);
       m_task_group->m_atomic_mpi_completed_tasks_size.fetch_add(1);
-      m_externally_ready.store(true, std::memory_order_seq_cst);
+      m_externally_ready.store(true, std::memory_order_release);
     }
   }
 }
@@ -435,9 +435,9 @@ DetailedTask::checkExternalDepCount()
 void
 DetailedTask::resetDependencyCounts()
 {
-  m_external_dependency_count.store(     0, std::memory_order_seq_cst);
-  m_externally_ready.store(         false, std::memory_order_seq_cst);
-  m_initiated.store(               false, std::memory_order_seq_cst);
+  m_external_dependency_count.store(     0, std::memory_order_relaxed);
+  m_externally_ready.store(          false, std::memory_order_relaxed);
+  m_initiated.store(                 false, std::memory_order_relaxed);
 
   m_wait_timer.reset(true);
   m_exec_timer.reset(true);

@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2018 The University of Utah
+#  Copyright (c) 1997-2019 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -48,7 +48,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(BOOST_LIBRARY)                             \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)     \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)      \
-          $(PAPI_LIBRARY) $(M_LIBRARY)  $(PIDX_LIBRARY)
+          $(M_LIBRARY)  $(PIDX_LIBRARY)
 else
   LIBS := $(BOOST_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
 	  $(MPI_LIBRARY) $(XML2_LIBRARY) $(CUDA_LIBRARY) $(PIDX_LIBRARY)

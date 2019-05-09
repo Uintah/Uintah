@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -55,16 +55,11 @@ axiCpdiInterpolator* axiCpdiInterpolator::clone(const Patch* patch)
 int axiCpdiInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
-                                            const Matrix3& size,
-                                            const Matrix3& defgrad)
+                                            const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
-  Matrix3 defgrad1=Matrix3(defgrad(0,0),defgrad(0,1),0.0,
-                           defgrad(1,0),defgrad(1,1),0.0,
-                           0.0,0.0,1);
-
-  Matrix3 dsize=defgrad1*size;
+  Matrix3 dsize=size;
   vector<Vector> relative_node_location(4,Vector(0.0,0.0,0.0));
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1),
                                    -dsize(1,0)-dsize(1,1),-1.0)*0.5;
@@ -132,16 +127,11 @@ int axiCpdiInterpolator::findCellAndWeights(const Point& pos,
 int axiCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                    vector<IntVector>& ni,
                                                    vector<Vector>& d_S,
-                                                   const Matrix3& size,
-                                                   const Matrix3& defgrad)
+                                                   const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
-  Matrix3 defgrad1=Matrix3(defgrad(0,0),defgrad(0,1),0.0,
-                           defgrad(1,0),defgrad(1,1),0.0,
-                           0.0,0.0,1);
-
-  Matrix3 dsize=defgrad1*size;
+  Matrix3 dsize=size;
   vector<Vector> relative_node_location(4,Vector(0.0,0.0,0.0));
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1),
                                    -dsize(1,0)-dsize(1,1),-1.0)*0.5;
@@ -249,16 +239,11 @@ int axiCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(
                                                          vector<IntVector>& ni,
                                                          vector<double>& S,
                                                          vector<Vector>& d_S,
-                                                         const Matrix3& size,
-                                                         const Matrix3& defgrad)
+                                                         const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
-  Matrix3 defgrad1=Matrix3(defgrad(0,0),defgrad(0,1),0.0,
-                           defgrad(1,0),defgrad(1,1),0.0,
-                           0.0,0.0,1);
-
-  Matrix3 dsize=defgrad1*size;
+  Matrix3 dsize=size;
 
   vector<Vector> relative_node_location(4,Vector(0.0,0.0,0.0));
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1),

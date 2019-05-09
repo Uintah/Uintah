@@ -24,7 +24,7 @@ using namespace std;
 using namespace Uintah;
 
 RadPropertyCalculator::RadPropertyCalculator( const int matl_index ) :
-_matl_index( matl_index )
+m_matl_index( matl_index )
 {}
 
 RadPropertyCalculator::~RadPropertyCalculator(){

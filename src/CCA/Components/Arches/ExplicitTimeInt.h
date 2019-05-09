@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -320,7 +320,7 @@ private:
       //   phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
       //
       //}
-      
+
       phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
 
     }

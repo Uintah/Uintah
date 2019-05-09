@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -90,7 +90,6 @@
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPM/SingleFieldMPM.h>
-#include <CCA/Components/MPM/DOUBLEMPM.h>
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
@@ -294,16 +293,9 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   }
   else
     turned_on_options += "impm ";
+#endif
 
-  if (sim_comp == "doublempm" || sim_comp == "DOUBLEMPM") {
-	  return scinew DOUBLEMPM(myworld, materialManager);
-  }
-  else
-	  turned_on_options += "doublempm ";
-
-#endif 
   //----------------------------
-
 
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
   if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {

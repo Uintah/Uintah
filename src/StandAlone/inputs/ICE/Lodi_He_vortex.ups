@@ -167,9 +167,10 @@
         <customInitialization>
           <vortices>
               <vortex>
+                <axis>       X         </axis>
                 <origin>     [0,0,0]   </origin>
-                <strength>   10         </strength>
-                <radius>     0.5          </radius>
+                <strength>   10        </strength>
+                <radius>     0.5       </radius>
               </vortex>
           </vortices> 
         </customInitialization>

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -56,9 +56,9 @@ _____________________________________________________________________*/
 void
 SecondOrderBase::mass_massVertex_ratio(const CCVariable<double>& mass_CC,
                                        const Patch* patch,
-                                           const CCVariable<double>& mass_grad_x,
-                                           const CCVariable<double>& mass_grad_y,
-                                           const CCVariable<double>& mass_grad_z)
+                                       const CCVariable<double>& mass_grad_x,
+                                       const CCVariable<double>& mass_grad_y,
+                                       const CCVariable<double>& mass_grad_z)
 {
   Vector dx = patch->dCell();
   double dx_2 = dx.x()/2.0;  // distance from cell center to vertex

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -172,7 +172,6 @@ namespace Uintah {
     const VarLabel*  maxMach_zplusLabel;
     
     // AMR variables
-    const VarLabel* AMR_SyncTaskgraphLabel;
     const VarLabel* mag_grad_rho_CCLabel;
     const VarLabel* mag_grad_temp_CCLabel;
     const VarLabel* mag_div_vel_CCLabel;

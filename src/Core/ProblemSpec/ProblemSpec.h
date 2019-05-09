@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -104,11 +104,17 @@ public:
     COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, 
     DOCUMENT_FRAGMENT_NODE, NOTATION_NODE};
      
-  inline ProblemSpec( const xmlNode* node, bool toplevel = false ) {
+  inline ProblemSpec( const xmlNode* node, 
+                      bool  toplevel = false ) {
     d_node = const_cast<xmlNode*>(node); 
     d_documentNode = toplevel;
   }
-  inline virtual ~ProblemSpec() { if ( d_documentNode ) releaseDocument(); }
+  
+  inline virtual ~ProblemSpec() { 
+    if ( d_documentNode ){
+     releaseDocument();
+    } 
+  }
 
   // Creates a ProblemSpec object based on the XML in 'buffer'.
   ProblemSpec( const std::string & buffer );

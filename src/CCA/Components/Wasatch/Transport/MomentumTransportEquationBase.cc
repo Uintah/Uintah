@@ -620,7 +620,6 @@ namespace WasatchCore{
                                  const std::string velName,
                                  const std::string momName,
                                  const Expr::Tag densTag,
-                                 const bool isConstDensity,
                                  const Expr::Tag bodyForceTag,
                                  const Expr::Tag srcTermTag,
                                  GraphCategories& gc,
@@ -628,8 +627,7 @@ namespace WasatchCore{
                                  TurbulenceParameters turbulenceParams )
     : TransportEquation( gc,
                          momName,
-                         get_staggered_location<FieldT>(),
-                         isConstDensity ),
+                         get_staggered_location<FieldT>() ),
       momComponent_    ( momComponent),
       params_          ( params ),
       isViscous_       ( params->findBlock("Viscosity") ? true : false ),
@@ -734,7 +732,7 @@ namespace WasatchCore{
         
         Expr::Tag drhodtTag = Expr::Tag();
         if( !this->is_constant_density() ){
-          drhodtTag = tagNames.drhodtstar;
+          drhodtTag = tagNames.drhodt;
         }
         Expr::ExpressionID contID = factory.register_expression( new ContResT(contTag, drhodtTag, this->momTags_) );
         graphHelper.rootIDs.insert(contID);

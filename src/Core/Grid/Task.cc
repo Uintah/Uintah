@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -756,6 +756,18 @@ bool Task::hasModifies( const VarLabel * var
 
 //______________________________________________________________________
 //
+bool Task::hasDistalRequires() const
+{
+  for (auto dep = m_req_head; dep != nullptr; dep = dep->m_next) {
+    if (dep->m_num_ghost_cells >= MAX_HALO_DEPTH) {
+      return true;
+    }
+  }
+  return false;
+}
+
+//______________________________________________________________________
+//
 Task::Dependency*
 Task::isInDepMap( const DepMap   & depMap
                 , const VarLabel * var
@@ -998,7 +1010,7 @@ Task::display( std::ostream & out ) const
   }
 
   out << " (" << d_tasktype << ")";
-
+ 
   if ( (d_tasktype == Task::Normal || d_tasktype == Task::Output ) && m_patch_set != nullptr) {
     out << ", Level " << getLevel(m_patch_set)->getIndex();
   }

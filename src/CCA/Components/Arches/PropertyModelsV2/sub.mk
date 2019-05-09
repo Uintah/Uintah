@@ -34,6 +34,7 @@ SRCS += \
         $(SRCDIR)/DensityPredictor.cc       \
         $(SRCDIR)/ContinuityPredictor.cc    \
         $(SRCDIR)/DensityStar.cc    \
+        $(SRCDIR)/DensityRK.cc    \
         $(SRCDIR)/Drhodt.cc    \
         $(SRCDIR)/FaceVelocities.cc         \
         $(SRCDIR)/OneDWallHT.cc             \
@@ -48,6 +49,7 @@ SRCS += \
         $(SRCDIR)/sootVolumeFrac.cc         \
         $(SRCDIR)/ConsScalarDiffusion.cc         \
         $(SRCDIR)/spectralProperties.cc     \
+        $(SRCDIR)/GasKineticEnergy.cc     \
         $(SRCDIR)/sumRadiation.cc
 
 ########################################################################

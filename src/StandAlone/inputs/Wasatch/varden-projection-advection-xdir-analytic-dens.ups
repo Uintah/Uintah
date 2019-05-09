@@ -52,7 +52,7 @@
     </TransportEquation>   
     
     <ForceOnGraph tasklist="advance_solution">
-        <NameTag name="f"/>
+        <NameTag name="f" state="STATE_NP1"/>
     </ForceOnGraph>
     
     <FieldClipping tasklist="advance_solution">

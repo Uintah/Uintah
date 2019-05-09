@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,6 +32,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MersenneTwister.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/StringUtil.h>
 
 using namespace std;
 
@@ -68,15 +69,42 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
         Point origin;
         double strength;
         double radius;
+        string axis;
+
         if(vortex_ps){
           vortex_ps->require("origin",   origin);
           vortex_ps->require("strength", strength);
           vortex_ps->require("radius",   radius);
-          cib->vortex_vars.origin.push_back(origin);
-          cib->vortex_vars.strength.push_back(strength);
-          cib->vortex_vars.radius.push_back(radius);
+          vortex_ps->require( "axis",    axis);
+
+          cib->vortex_vars.origin.push_back(   origin   );
+          cib->vortex_vars.strength.push_back( strength );
+          cib->vortex_vars.radius.push_back(   radius   );
+          cib->vortex_vars.axis.push_back( string_toupper(axis) );  // upper case
+
         }
       }
+    }  // multiple vortices
+
+    //_______________________________________________
+    // vortex pairs section
+    ProblemSpecP vortexPairs_ps= c_init_ps->findBlock("vortexPairs");
+    if( vortexPairs_ps ) {
+      cib->vortexPairs_vars = vortexPairs();
+      cib->whichMethod.push_back( "vortexPairs" ) ;
+
+      double strength;
+      double nPairs;
+      string axis;
+
+      vortexPairs_ps->require("strength",       strength);
+      vortexPairs_ps->require("numVortexPairs", nPairs);
+      vortexPairs_ps->require( "axis",          axis);
+
+      cib->vortexPairs_vars.strength = strength;
+      cib->vortexPairs_vars.nPairs   = nPairs;
+      cib->vortexPairs_vars.axis     = string_toupper(axis);  // upper case
+
     }  // multiple vortices
 
     //__________________________________
@@ -96,7 +124,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     //_______________________________________________
     //  method of manufactured solutions
     ProblemSpecP mms_ps= c_init_ps->findBlock("manufacturedSolution");
-    
+
     if(mms_ps) {
       map<string,string> whichmms;
       mms_ps->getAttributes(whichmms);
@@ -104,7 +132,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       std::string whichMethod = whichmms["type"];
 
       cib->whichMethod.push_back( whichMethod );
-      
+
       if( whichMethod == "mms_1" ) {
         cib->doesComputePressure = true;
         cib->mms_vars = mms();
@@ -120,7 +148,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     //_______________________________________________
     //  2D counterflow in the x & y plane
     ProblemSpecP cf_ps= c_init_ps->findBlock("counterflow");
-    
+
     if( cf_ps ) {
       cib->whichMethod.push_back( "counterflow" );
       cib->doesComputePressure = true;
@@ -206,43 +234,112 @@ void customInitialization(const Patch* patch,
 {
   // reverse iterator
   for(auto rit = cib->whichMethod.rbegin(); rit != cib->whichMethod.rend(); ++rit) {
-    
+
     std::string whichMethod = *rit;
     //_______________________________________________
     //  multiple vortices
     // See "Boundary Conditions for Direct Simulations of Compressible Viscous
     //     Flows" by Poinsot & LeLe pg 121
-    
-    if ( whichMethod == "vortices" ){
-      for (int i = 0; i<(int) cib->vortex_vars.origin.size(); i++) {
 
-        Point origin = cib->vortex_vars.origin[i]; // vortex origin
-        double C1 = cib->vortex_vars.strength[i];  // vortex strength
-        double R = cib->vortex_vars.radius[i];     // vortex radius
+    if ( whichMethod == "vortices" ){
+      for (int v = 0; v<(int) cib->vortex_vars.origin.size(); v++) {
+
+        Point origin = cib->vortex_vars.origin[v];    // vortex origin
+        double C1    = cib->vortex_vars.strength[v];  // vortex strength
+        double R     = cib->vortex_vars.radius[v];    // vortex radius
         double R_sqr = R * R;
-        double p_ref  = 101325;        // assumed reference pressure
+        double p_ref  = 101325;                       // assumed reference pressure
+
+        // axis of vortex
+        string axis = cib->vortex_vars.axis[v];
+        int j = -1;
+        int k = -1;
+
+        if(axis == "X"){
+          j = 1;
+          k = 2;
+        }
+        else if( axis == "Y" ){
+          j = 0;
+          k = 2;
+        }
+        else if( axis == "Z" ){
+          j = 0;
+          k = 1;
+        }
 
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
           IntVector c = *iter;
           Point pt = patch->cellPosition(c);
 
-          double x = pt.x() - origin.x();
-          double y = pt.y() - origin.y();
-          double r = sqrt( x*x + y*y);
+          double y = pt(j) - origin(j);
+          double z = pt(k) - origin(k);
+          double r = sqrt( y*y + z*z);
 
           if(r <= R ) {
-            double A = exp( -((x*x) + (y*y) )/(2 * R_sqr));
+            double A = exp( -((y*y) + (z*z) )/(2 * R_sqr));
 
             press_CC[c] = p_ref + rho_CC[c] * ((C1*C1)/R_sqr) * A;
 
-            double uvel = vel_CC[c].x();
-            double vvel = vel_CC[c].y();
+            double uvel = vel_CC[c][j];
+            double vvel = vel_CC[c][k];
 
-            vel_CC[c].x(uvel - ((C1 * y)/(rho_CC[c] * R_sqr) ) * A);
-            vel_CC[c].y(vvel + ((C1 * x)/(rho_CC[c] * R_sqr) ) * A);
+            vel_CC[c][j] = ( uvel - ((C1 * z)/( rho_CC[c] * R_sqr ) ) * A );
+            vel_CC[c][k] = ( vvel + ((C1 * y)/( rho_CC[c] * R_sqr ) ) * A );
           }
         }
       }  // loop
+    } // vortices
+    
+    //__________________________________
+    //  Vortex Pairs
+    if ( whichMethod == "vortexPairs" ){
+      double vortexAmp = cib->vortexPairs_vars.strength;
+      double nPairs    = cib->vortexPairs_vars.nPairs; 
+
+      // axis of vortex
+      string axis = cib->vortexPairs_vars.axis;
+      int j = -1;
+      int k = -1;
+
+      if(axis == "X"){
+        j = 1;
+        k = 2;
+      }
+      else if( axis == "Y" ){
+        j = 0;
+        k = 2;
+      }
+      else if( axis == "Z" ){
+        j = 0;
+        k = 1;
+      }
+
+      //v->data[ijk] += -vortexamp * std::cos(vortexnpair * 2. * pi *( grid->z [j] )/grid->zsize ) * std::sin( pi * grid->yh[k]/grid->ysize );
+      //w->data[ijk] +=  vortexamp * std::sin(vortexnpair * 2. * pi *( grid->zh[j] )/grid->zsize ) * std::cos( pi * grid->y [k]/grid->ysize );
+
+   //   double vortexAmp = 2.5e-3;
+   //   double nPairs    = 2;
+
+      // geometry: computational domain
+      GridP grid = patch->getLevel()->getGrid();
+      BBox b;
+      grid->getInteriorSpatialRange(b);
+
+      Vector gridLength = ( b.max() - b.min() );
+      Vector lo   = b.min().asVector();
+      Vector dx_2 = patch->dCell()/Vector(2,2,2);
+
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+        IntVector c = *iter;
+        Vector here     = patch->cellPosition(c).asVector();
+        Vector ratio    = ( here - lo )/gridLength;
+        Vector ratio_FC = ( here + dx_2 - lo )/gridLength;
+
+        vel_CC[c][j] += -vortexAmp * std::cos(nPairs * 2. * M_PI * ratio[k] )    * std::sin( M_PI * ratio_FC[j] );
+        vel_CC[c][k] +=  vortexAmp * std::sin(nPairs * 2. * M_PI * ratio_FC[k] ) * std::cos( M_PI * ratio[j] );
+
+      }
     } // vortices
     //_______________________________________________
     // gaussian Temperature

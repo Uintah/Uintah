@@ -61,8 +61,11 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
+
 #include <cmath>
 #include <iostream>
+
+#include <unistd.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -66,13 +66,12 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/RFElasticPlastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ArrudaBoyce8Chain.h>
-
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/HypoplasticB.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/MohrCoulomb.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/QADamage.h>
 
-#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -114,15 +113,15 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   if (cm_type == "rigid")
     return(scinew RigidMaterial(child,flags));
 
- else if (cm_type == "HypoplasticB") {
+  else if (cm_type == "HypoplasticB") {
 	  return(scinew HypoplasticB(child, flags));
   }
 
- else if (cm_type == "MohrCoulomb")
+  else if (cm_type == "MohrCoulomb")
 	  return(scinew MohrCoulomb(child, flags));
 
 
- else if (cm_type == "QADamage") {
+  else if (cm_type == "QADamage") {
 	  if (flags->d_integrator_type == "explicit" ||
 		  flags->d_integrator_type == "fracture") {
 		  return(scinew QADamage(child, flags, false, false));
@@ -208,7 +207,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (cm_type ==  "p_alpha"){
     return(scinew P_Alpha(child,flags));
   }
-
   else if (cm_type ==  "water"){
     computes_pLocalizedMPM = true;
     return(scinew Water(child,flags));
@@ -292,7 +290,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 //  else if (cm_type ==  "camclay"){
 //    return(scinew CamClay(child,flags));
 //  }
-
   else if (cm_type ==  "rf_elastic_plastic"){
     computes_pLocalizedMPM = true;
     return(scinew RFElasticPlastic(child,flags));

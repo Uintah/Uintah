@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -185,7 +185,6 @@ namespace Uintah {
                                            constParticleVariable<Point> px,
                                            constParticleVariable<Matrix3> psize,
                                            ParticleVariable<Matrix3> &Fnew,
-                                           constParticleVariable<Matrix3> &Fold,
                                            Vector dx,
                                            ParticleInterpolator* interp);
 
@@ -205,7 +204,6 @@ namespace Uintah {
                                            ParticleSubset* pset,
                                            constParticleVariable<Point> px,
                                            ParticleVariable<Matrix3> &Fnew,
-                                           constParticleVariable<Matrix3> &Fold,
                                            Vector dx,
                                            constParticleVariable<Matrix3> psize,
                                            ParticleInterpolator* interp);

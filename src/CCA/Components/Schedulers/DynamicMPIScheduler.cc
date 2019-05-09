@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -73,40 +73,60 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
                                  , const MaterialManagerP& materialManager
                                  )
 {
+  // Default taskReadyQueueAlg
   std::string taskQueueAlg = "";
 
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
   if (params) {
     params->get("taskReadyQueueAlg", taskQueueAlg);
-  }
-  if (taskQueueAlg == "") {
-    taskQueueAlg = "MostMessages";  //default taskReadyQueueAlg
+    if (taskQueueAlg == "") {
+      taskQueueAlg = "MostMessages";  //default taskReadyQueueAlg
+    }
+    if (taskQueueAlg == "FCFS") {
+      m_task_queue_alg = FCFS;
+    }
+    else if (taskQueueAlg == "Stack") {
+      m_task_queue_alg = Stack;
+    }
+    else if (taskQueueAlg == "Random") {
+      m_task_queue_alg = Random;
+    }
+    else if (taskQueueAlg == "MostChildren") {
+      m_task_queue_alg = MostChildren;
+    }
+    else if (taskQueueAlg == "LeastChildren") {
+      m_task_queue_alg = LeastChildren;
+    }
+    else if (taskQueueAlg == "MostAllChildren") {
+      m_task_queue_alg = MostAllChildren;
+    }
+    else if (taskQueueAlg == "LeastAllChildren") {
+      m_task_queue_alg = LeastAllChildren;
+    }
+    else if (taskQueueAlg == "MostL2Children") {
+      m_task_queue_alg = MostL2Children;
+    }
+    else if (taskQueueAlg == "LeastL2Children") {
+      m_task_queue_alg = LeastL2Children;
+    }
+    else if (taskQueueAlg == "MostMessages") {
+      m_task_queue_alg = MostMessages;
+    }
+    else if (taskQueueAlg == "LeastMessages") {
+      m_task_queue_alg = LeastMessages;
+    }
+    else if (taskQueueAlg == "PatchOrder") {
+      m_task_queue_alg = PatchOrder;
+    }
+    else if (taskQueueAlg == "PatchOrderRandom") {
+      m_task_queue_alg = PatchOrderRandom;
+    }
+    else {
+      throw ProblemSetupException("Unknown task ready queue algorithm", __FILE__, __LINE__);
+    }
   }
 
-  if (taskQueueAlg == "FCFS") {
-    m_task_queue_alg = FCFS;
-  }
-  else if (taskQueueAlg == "Random") {
-    m_task_queue_alg = Random;
-  }
-  else if (taskQueueAlg == "Stack") {
-    m_task_queue_alg = Stack;
-  }
-  else if (taskQueueAlg == "MostMessages") {
-    m_task_queue_alg = MostMessages;
-  }
-  else if (taskQueueAlg == "LeastMessages") {
-    m_task_queue_alg = LeastMessages;
-  }
-  else if (taskQueueAlg == "PatchOrder") {
-    m_task_queue_alg = PatchOrder;
-  }
-  else if (taskQueueAlg == "PatchOrderRandom") {
-    m_task_queue_alg = PatchOrderRandom;
-  }
-  else {
-    throw ProblemSetupException("Unknown task ready queue algorithm", __FILE__, __LINE__);
-  }
+  proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   SchedulerCommon::problemSetup(prob_spec, materialManager);
 }
@@ -177,16 +197,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
     m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, m_loadBalancer, m_reloc_new_pos_label, iteration);
   }
 
-#if 0
-  // hook to post all the messages up front
-  if (!m_is_copy_data_timestep) {
-    // post the receives in advance
-    for (int i = 0; i < ntasks; i++) {
-      initiateTask( dts->localTask(i), abort, abort_point, iteration );
-    }
-  }
-#endif
-
   int currphase = 0;
   std::map<int, int> phaseTasks;
   std::map<int, int> phaseTasksDone;
@@ -214,6 +224,16 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
   bool abort       = false;
   int  abort_point = 987654;
   int i            = 0;
+
+#if 0
+  // hook to post all the messages up front
+  if (!m_is_copy_data_timestep) {
+    // post the receives in advance
+    for (int i = 0; i < ntasks; i++) {
+      initiateTask( dts->localTask(i), abort, abort_point, iteration );
+    }
+  }
+#endif
 
   while( numTasksDone < ntasks ) {
 
@@ -346,9 +366,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
       abort = true;
       abort_point = task->getTask()->getSortedOrder();
 
-      DOUT(g_dbg,  "Rank-" << d_myworld->myRank()
-	                   << "  WARNING: Aborting time step after task: "
-                           << task->getTask()->getName());
+      DOUT(g_dbg,  "Rank-" << d_myworld->myRank() << "  WARNING: Aborting time step after task: " << task->getTask()->getName());
     }
   } // end while( numTasksDone < ntasks )
 

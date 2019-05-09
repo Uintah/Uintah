@@ -46,16 +46,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index , int Nenv ) : _task_name(task_name), _matl_index(matl_index), _Nenv(Nenv){}
+      Builder( std::string task_name, int matl_index , int Nenv ) : m_task_name(task_name), m_matl_index(matl_index), _Nenv(Nenv){}
       ~Builder(){}
 
       CharOxidationps* build()
-      { return scinew CharOxidationps<T>( _task_name, _matl_index, _Nenv ); }
+      { return scinew CharOxidationps<T>( m_task_name, m_matl_index, _Nenv ); }
 
       private:
 
-      std::string _task_name;
-      int         _matl_index;
+      std::string m_task_name;
+      int         m_matl_index;
       int _Nenv;
     };
 
@@ -206,19 +206,19 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
   std::string surfAreaF_root    = "surfaceAreaFraction";
 
   // Create a label for this model
-  m_modelLabel = _task_name;
+  m_modelLabel = m_task_name;
 
   // Create the gas phase source term associated with this model
-  m_gasLabel =  _task_name + "_gasSource";
+  m_gasLabel =  m_task_name + "_gasSource";
 
   // Create the particle temperature source term associated with this model
-  m_particletemp = _task_name +  "_particletempSource" ;
+  m_particletemp = m_task_name +  "_particletempSource" ;
 
   // Create the particle size source term associated with this model
-  m_particleSize =  _task_name + "_particleSizeSource" ;
+  m_particleSize =  m_task_name + "_particleSizeSource" ;
 
   // Create the char oxidation surface rate term associated with this model
-  m_surfacerate = _task_name + "_surfacerate";
+  m_surfacerate = m_task_name + "_surfacerate";
 
   // Create the char oxidation PO2 surf term associated with this model
   //std::string PO2surf_temp = modelName + "_PO2surf";
@@ -232,9 +232,10 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
   // gas variables
   m_density_gas_name = ArchesCore::parse_ups_for_role( ArchesCore::DENSITY,   db, "density" );
 
-  m_cc_u_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::CCUVELOCITY, db, "CCUVelocity" );
-  m_cc_v_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::CCVVELOCITY, db, "CCVVelocity" );
-  m_cc_w_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::CCWVELOCITY, db, "CCWVelocity" );
+  m_cc_u_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::UVELOCITY, db, ArchesCore::default_uVel_name ) + "_cc";
+  m_cc_v_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::VVELOCITY, db, ArchesCore::default_vVel_name ) + "_cc";
+  m_cc_w_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::WVELOCITY, db, ArchesCore::default_wVel_name ) + "_cc";
+  
   m_volFraction_name = "volFraction";
 
   m_gas_temperature_label = "temperature";
@@ -340,7 +341,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
   db_coal_props->getAttribute( "type", particleType );
 
   if ( particleType != "coal" ) {
-    throw InvalidValue( "ERROR: CharOxidationSmith2016: Can't use particles of type: " + particleType, __FILE__, __LINE__ );
+    throw InvalidValue( "ERROR: CharOxidationSmith: Can't use particles of type: " + particleType, __FILE__, __LINE__ );
   }
 
   if ( db_coal_props->findBlock( "FOWYDevol" ) ) {
@@ -348,7 +349,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
     db_BT->require( "v_hiT", _v_hiT ); //
   }
   else {
-    throw ProblemSetupException( "Error: CharOxidationSmith2016 requires FOWY v_hiT.", __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error: CharOxidationSmith requires FOWY v_hiT.", __FILE__, __LINE__ );
   }
 
   ProblemSpecP db_part_properties = params_root->findBlock( "CFD" )->findBlock( "ARCHES" )->findBlock( "ParticleProperties" );
@@ -357,16 +358,16 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
   db_part_properties->getWithDefault( "void_fraction", _p_void0,      0.3 );
 
   if ( _p_void0 == 1. ) {
-    throw ProblemSetupException( "Error: CharOxidationSmith2016, Given initial conditions for particles p_void0 is 1!! This will give NaN.", __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error: CharOxidationSmith, Given initial conditions for particles p_void0 is 1!! This will give NaN.", __FILE__, __LINE__ );
   }
 
   if ( _p_void0 <= 0. ) {
-    throw ProblemSetupException( "Error: CharOxidationSmith2016, Given initial conditions for particles p_void0 <= 0 !! ", __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error: CharOxidationSmith, Given initial conditions for particles p_void0 <= 0 !! ", __FILE__, __LINE__ );
   }
 
-  if ( db_coal_props->findBlock( "SmithChar2016" ) ) {
+  if ( db_coal_props->findBlock( "SmithChar" ) ) {
 
-    ProblemSpecP db_Smith = db_coal_props->findBlock( "SmithChar2016" );
+    ProblemSpecP db_Smith = db_coal_props->findBlock( "SmithChar" );
 
     db_Smith->getWithDefault( "Sg0",     _Sg0, 9.35e5 ); // UNCERTAIN initial specific surface area [m^2/kg], range [1e3,1e6]
     db_Smith->getWithDefault( "char_MW", _Mh,  12.0 );   // kg char / kmole char
@@ -840,8 +841,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
       const double p_volume = M_PI / 6. * CUBE( p_diam );          // particle volme [m^3]
       const double p_void   = std::fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / m_rho_org_bulk + m_mass_ash / _rho_ash_bulk ) ); // current porosity. (-) required due to sign convention of char.
 
-      const double Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * std::sqrt( 1 - std::fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
-      const double rp  = 2 * p_void * (1. - p_void ) / ( p_rho * Sj * _Sg0 ); // average particle radius [m]
+      const double Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * std::sqrt( 1 - std::fmin( 1.0, ( 1. / (-log(1. - _p_void0) * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
+      const double rp  = -2 * log(1. - p_void) * (1. - p_void ) / ( p_rho * Sj * _Sg0 ); // average particle radius [m]
 
       // Calculate oxidizer diffusion coefficient
       // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)

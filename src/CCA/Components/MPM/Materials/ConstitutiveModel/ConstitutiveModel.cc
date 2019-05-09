@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -289,7 +289,6 @@ ConstitutiveModel::computeDeformationGradientFromDisplacement(
                                            constParticleVariable<Point> px,
                                            constParticleVariable<Matrix3> psize,
                                            ParticleVariable<Matrix3> &Fnew,
-                                           constParticleVariable<Matrix3> &Fold,
                                            Vector dx,
                                            ParticleInterpolator* interp) 
 {
@@ -304,7 +303,7 @@ ConstitutiveModel::computeDeformationGradientFromDisplacement(
     particleIndex idx = *iter;
                                                                             
     // Get the node indices that surround the cell
-    interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+    interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
                                                                             
     computeGrad(dispGrad, ni, d_S, oodx, gDisp);
 
@@ -347,7 +346,7 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
       particleIndex idx = *iter;
 
       // Get the node indices that surround the cell
-      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
       computeGrad(velGrad, ni, d_S, oodx, gVel);
 
@@ -386,7 +385,6 @@ ConstitutiveModel::computeDeformationGradientFromTotalDisplacement(
                                            ParticleSubset* pset,
                                            constParticleVariable<Point> px,
                                            ParticleVariable<Matrix3> &Fnew,
-                                           constParticleVariable<Matrix3>& Fold,
                                            Vector dx,
                                            constParticleVariable<Matrix3> psize,
                                            ParticleInterpolator* interp)
@@ -403,7 +401,7 @@ ConstitutiveModel::computeDeformationGradientFromTotalDisplacement(
     particleIndex idx = *iter;
                                                                                 
     // Get the node indices that surround the cell
-    interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+    interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
                                                                                 
     computeGrad(dispGrad, ni, d_S, oodx, gDisp);
                                                                                 
@@ -437,7 +435,7 @@ ConstitutiveModel::computeDeformationGradientFromIncrementalDisplacement(
       particleIndex idx = *iter;
                                                                                 
       // Get the node indices that surround the cell
-      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
                                                                                 
       computeGrad(IncDispGrad, ni, d_S, oodx, gDisp);
                                                                                 

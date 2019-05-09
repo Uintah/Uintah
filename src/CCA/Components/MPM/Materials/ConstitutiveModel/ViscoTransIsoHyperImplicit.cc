@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -442,7 +442,6 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
         computeDeformationGradientFromTotalDisplacement(gdisplacement,
                                                         pset, px,
                                                         deformationGradient_new,
-                                                        deformationGradient,
                                                         dx, psize,interpolator);
       }
 
@@ -450,8 +449,7 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,
-                                        psize[idx],deformationGradient[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, psize[idx]);
         int dof[24];
         loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
 
@@ -936,7 +934,6 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
         computeDeformationGradientFromTotalDisplacement(gdisplacement,
                                                         pset, px,
                                                         deformationGradient_new,
-                                                        deformationGradient,
                                                         dx, psize,interpolator);
      }
 

@@ -29,9 +29,9 @@
     <save label="x-mom_z_flux"/>
     <save label="phi"/>
     <save label="pressure"/>
-    <save label="uVel"/>
-    <save label="vVel"/>
-    <save label="wVel"/>
+    <save label="uVelocity"/>
+    <save label="vVelocity"/>
+    <save label="wVelocity"/>
     <save label="ucell_yvel"/>
     <save label="ucell_zvel"/>
     <save label="ucell_xvel"/>
@@ -277,12 +277,6 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
       <VarID>
-        <var role="uvelocity" label="uVel"/>
-        <var role="vvelocity" label="vVel"/>
-        <var role="wvelocity" label="wVel"/>
-        <var role="ccuvelocity" label="uVel_cc"/>
-        <var role="ccvvelocity" label="vVel_cc"/>
-        <var role="ccwvelocity" label="wVel_cc"/>
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
@@ -359,6 +353,7 @@
           <ASH>0.0786348668</ASH>
           <H2O>0.0578784552</H2O>
         </ultimate_analysis>
+        <daf_volatiles_fraction>.45</daf_volatiles_fraction>  <!--dray ash free volatiles content - computed from SUFCO analysis -->
         <raw_coal_enthalpy>-1064549.81069</raw_coal_enthalpy>
         <char_enthalpy>0.0</char_enthalpy>
         <ash_enthalpy>-9.5686e7</ash_enthalpy>
@@ -380,7 +375,7 @@
           <Es> 45.5e3 </Es>
           <n> 0.18 </n>
         </ShaddixChar>
-        <SmithChar2016>
+        <SmithChar>
           <char_MW>12.0</char_MW>
           <Sg0>6.7e5</Sg0>
           <surface_area_mult_factor>1.0</surface_area_mult_factor>
@@ -415,7 +410,7 @@
             <heat_of_reaction_constant>172459</heat_of_reaction_constant>
             <use_co2co>false</use_co2co>
           </reaction>
-        </SmithChar2016>
+        </SmithChar>
         <ksi>0.97266</ksi>
         <LinearSwelling>
           <Fsw>1.05</Fsw>
@@ -460,9 +455,9 @@
       <DQMOM>
         <number_quad_nodes>5</number_quad_nodes>
         <kokkos_translate/>
-        <velocity xlabel="uVel"
-                  ylabel="vVel"
-                  zlabel="wVel"/>
+        <velocity xlabel="uVelocity"
+                  ylabel="vVelocity"
+                  zlabel="wVelocity"/>
         <diffusion  scheme="central" D_label="gamma"/>
         <convection scheme="upwind"/>
         <Models/>

@@ -26,28 +26,28 @@
 #define UINTAH_VISIT_LIBSIM_CUSTOMUI_H
 
 /**************************************
-        
+
 CLASS
    visit_init
-        
+
    Short description...
-        
+
 GENERAL INFORMATION
-        
+
    visit_init
-        
+
    Allen R. Sanderson
    Scientific Computing and Imaging Institute
    University of Utah
-        
+
 KEYWORDS
    VisIt, libsim, in-situ
-        
+
 DESCRIPTION
    Long description...
-        
+
 WARNING
-        
+
 
 ****************************************/
 
@@ -59,28 +59,30 @@ class visit_simulation_data;
 
 namespace Uintah {
  
-  void visit_SetTimeValues       ( visit_simulation_data *sim );
-  void visit_SetDeltaTValues     ( visit_simulation_data *sim );
-  void visit_SetWallTimes        ( visit_simulation_data *sim );
-  void visit_SetOutputIntervals  ( visit_simulation_data *sim );
-  void visit_SetAnalysisVars     ( visit_simulation_data *sim );
-  void visit_SetUPSVars          ( visit_simulation_data *sim );
-  void visit_SetImageVars        ( visit_simulation_data *sim );
+  void visit_SetTimeValues        ( visit_simulation_data *sim );
+  void visit_SetDeltaTValues      ( visit_simulation_data *sim );
+  void visit_SetWallTimes         ( visit_simulation_data *sim );
+  void visit_SetReductionVariables( visit_simulation_data *sim );
+  void visit_SetOutputIntervals   ( visit_simulation_data *sim );
+  void visit_SetAnalysisVars      ( visit_simulation_data *sim );
+  void visit_SetUPSVars           ( visit_simulation_data *sim );
+  void visit_SetImageVars         ( visit_simulation_data *sim );
   
-  void visit_SetGridInfo         ( visit_simulation_data *sim );
-  void visit_SetRuntimeStats     ( visit_simulation_data *sim );
-  void visit_SetMPIStats         ( visit_simulation_data *sim );
-  void visit_SetApplicationStats ( visit_simulation_data *sim );
+  void visit_SetGridInfo          ( visit_simulation_data *sim );
+  void visit_SetRuntimeStats      ( visit_simulation_data *sim );
+  void visit_SetMPIStats          ( visit_simulation_data *sim );
+  void visit_SetApplicationStats  ( visit_simulation_data *sim );
   
-  void visit_SetStateVars        ( visit_simulation_data *sim );
-  void visit_SetDebugStreams     ( visit_simulation_data *sim );
-  void visit_SetDouts            ( visit_simulation_data *sim );
+  void visit_SetStateVars         ( visit_simulation_data *sim );
+  void visit_SetDebugStreams      ( visit_simulation_data *sim );
+  void visit_SetDouts             ( visit_simulation_data *sim );
   
-  void visit_SetDatabase         ( visit_simulation_data *sim );
+  void visit_SetDatabase          ( visit_simulation_data *sim );
+  void visit_SetVariables         ( visit_simulation_data *sim );
 
-  void visit_SetStripChartValue  ( visit_simulation_data *sim,
-                                   std::string name,
-                                   double value );
+  void visit_SetStripChartValue   ( visit_simulation_data *sim,
+                                    std::string name,
+                                    double value );
 } // End namespace Uintah
 
 #endif

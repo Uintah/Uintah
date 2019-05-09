@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -62,6 +62,8 @@
  *
  */
 class MTRand; // forward declaration for use in updateSumI
+
+class ApplicationInterface;
 
 namespace Uintah{
 
@@ -223,6 +225,8 @@ namespace Uintah{
       const VarLabel* d_ROI_HiCellLabel;
       const VarLabel* d_PPTimerLabel;        // perPatch timer
 
+      ApplicationInterface* m_application{nullptr};
+    
       // const VarLabel* d_divQFiltLabel;
       // const VarLabel* d_boundFluxFiltLabel;
 

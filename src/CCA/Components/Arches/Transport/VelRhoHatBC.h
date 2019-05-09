@@ -65,7 +65,9 @@ private:
     std::string m_xmom;
     std::string m_ymom;
     std::string m_zmom;
-
+    std::string m_uVel;
+    std::string m_vVel;
+    std::string m_wVel;
 
   };
 } // namespace Uintah

@@ -73,6 +73,13 @@ public:
   /** @brief  Initialize variables during a restart */
   virtual void sched_restartInitialize( const LevelP& level, SchedulerP& sched ){};
 
+  // An optional call for the application to check their reduction vars.
+  virtual void checkReductionVars( const ProcessorGroup * pg,
+                                   const PatchSubset    * patches,
+                                   const MaterialSubset * matls,
+                                         DataWarehouse  * old_dw,
+                                         DataWarehouse  * new_dw ) {};
+    
   /** @brief Work to be performed after properties are setup */
   virtual void extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* table_lookup ){ }
 

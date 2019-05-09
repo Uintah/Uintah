@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -41,17 +41,23 @@
 #include <iostream>
 #include <climits>
 
-typedef enum loadExtra {
-    NONE    = 0,
-    CELLS   = 1,
-    PATCHES = 2,
-  } LoadExtra;
+typedef enum loadExtraGeometry {
+    NO_EXTRA_GEOMETRY = 0,
+    CELLS             = 1,
+    PATCHES           = 2,
+  } LoadExtraGeometry;
+    
+typedef enum loadVariables {
+    LOAD_ALL_VARIABLES = 0,
+    LOAD_OUTPUT_VARIABLES = 1,
+    LOAD_CHECKPOINT_VARIABLES = 2,
+  } LoadVariables;
     
 class PatchInfo {
 public:
 
   // GridType
-  enum GridType { UNKNOWN=-1, CC, NC, SFCX, SFCY, SFCZ, NEIGHBORS };
+  enum GridType { UNKNOWN=-1, CC, NC, SFCX, SFCY, SFCZ, NEIGHBORS, PATCH };
 
   // str2GridType
   static GridType str2GridType(const std::string &type)
@@ -62,7 +68,7 @@ public:
     if (type.find("CC")        != std::string::npos) return CC;
     if (type.find("NC")        != std::string::npos) return NC;
     if (type.find("NEIGHBORS") != std::string::npos) return NEIGHBORS;
-    if (type.find("PerPatch")  != std::string::npos) return CC;
+    if (type.find("Patch")     != std::string::npos) return PATCH;
     return UNKNOWN;
   }
 
@@ -116,6 +122,12 @@ public:
       low[2] = neighbors_low[2];
       break;
 
+    case PATCH:
+      low[0] = patch_id;
+      low[1] = patch_id;
+      low[2] = patch_id;
+      break;
+
     default:
       low[0] = low[1] = low[2] = -1000000;
     }
@@ -162,21 +174,15 @@ public:
       high[2] = neighbors_high[2];
       break;
 
+    case PATCH:
+      high[0] = patch_id + 1;
+      high[1] = patch_id + 1;
+      high[2] = patch_id + 1;
+      break;
+
     default:
       high[0] = high[1] = high[2] = -1000000;
     }
-  }
-
-  // getNumNodes
-  int getNumNodes() const
-  {
-    return num_nodes;
-  }
-
-  // setNumNodes
-  void setNumNodes(const int new_num_nodes)
-  {
-    num_nodes = new_num_nodes;
   }
 
   // getProcId
@@ -321,7 +327,6 @@ private:
 
   int patch_id;
   int proc_id;
-  unsigned int num_nodes;
 };
 
 
@@ -333,18 +338,18 @@ public:
   double anchor[3];
   int periodic[3];
 
-  // extents are the same for all meshes
+  // The extents are the same for all meshes
   void getExtents(double box_min[3], double box_max[3]) const
   {
     int low[3], high[3];
     getBounds(low, high, "CC_Mesh");
     
     box_min[0] = anchor[0] + low[0] * spacing[0];
-    box_min[0] = anchor[1] + low[1] * spacing[1];
-    box_min[0] = anchor[2] + low[2] * spacing[2];
+    box_min[1] = anchor[1] + low[1] * spacing[1];
+    box_min[2] = anchor[2] + low[2] * spacing[2];
     box_max[0] = anchor[0] + high[0] * spacing[0];
-    box_max[0] = anchor[1] + high[1] * spacing[1];
-    box_max[0] = anchor[2] + high[2] * spacing[2];
+    box_max[1] = anchor[1] + high[1] * spacing[1];
+    box_max[2] = anchor[2] + high[2] * spacing[2];
   }
 
   // Get the bounds for a specific patch of a given mesh. If the

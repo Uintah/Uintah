@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,6 +35,7 @@
 #endif
 
 #include <Core/Containers/OffsetArray1.h>
+#include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
@@ -90,7 +91,7 @@ DataArchive::DataArchive( const string & filebase,
     d_types_initialized = true;
     // For static builds, sometimes the Uintah types (CCVariable, etc) do not get automatically
     // registered to the Uintah type system... this call forces that to happen.
-    proc0cout << "Loading Uintah var types into type system (static build).\n";
+    // proc0cout << "Loading Uintah var types into type system (static build).\n";
     instantiateVariableTypes();
   }
 #endif  
@@ -176,8 +177,8 @@ DataArchive::queryAndSetFileFormat( FILE * doc )
 
       // bulletproofing
       if( d_fileFormat == NOT_SPECIFIED ) {
-        proc0cout << "Warning: Reading in an UDA that is missing the <outputFormat> tag... "
-                  << "defaulting to type old 'UDA'.\n";
+        // proc0cout << "Warning: Reading in an UDA that is missing the <outputFormat> tag... "
+        //           << "defaulting to type old 'UDA'.\n";
         d_fileFormat = UDA;
       }
       return;
@@ -227,6 +228,36 @@ DataArchive::queryEndiannessAndBits(  FILE * doc, string & endianness, int & num
     }
   }
 }
+
+//______________________________________________________________________
+//
+void
+DataArchive::queryProcessors( unsigned int & nProcs )
+{
+  rewind( d_indexFile ); // Start looking from the top of the file.
+
+  bool found = ProblemSpec::findBlock( "<Uintah_DataArchive>", d_indexFile );
+
+  if( !found ) {
+    throw InternalError( "DataArchive::queryProcessors 'Uintah_DataArchive' node not found in index.xml", __FILE__, __LINE__ );
+  }
+  
+  while( true ) {
+    
+    string line = UintahXML::getLine( d_indexFile );
+    if( line == "" || line == "</Uintah_DataArchive>" ) {
+      return;
+    }
+    else {
+      vector<string> pieces = UintahXML::splitXMLtag( line );
+      if( pieces[0] == "<numberOfProcessors>" ) {
+        nProcs = atoi( pieces[1].c_str() );
+        return;
+      }
+    }
+  }
+}
+
 //______________________________________________________________________
 //
 void
@@ -874,7 +905,7 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
                              patch->getBox().lower().y(),
                              patch->getBox().lower().z());
 
-    ret = PIDX_variable_read_particle_data_layout( varDesc, physical_local_offset, physical_local_size, (void**)&(data->buffer), &(data->size), PIDX_row_major );
+    ret = PIDX_variable_read_particle_data_layout( varDesc, physical_local_offset, physical_local_size, (void**)&(data->buffer), (uint64_t*)&(data->size), PIDX_row_major );
     PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDX() - PIDX_variable_read_particle_data_layout failure", __FILE__, __LINE__ );
   }
   else {
@@ -998,9 +1029,11 @@ DataArchive::queryPIDXSerial(       Variable     & var,
     (static_cast<ParticleVariableBase*>(&var))->allocate( psubset );
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
   }
-  else if (td->getType() == TypeDescription::PerPatch) {
+  else if (td->getType() == TypeDescription::PerPatch ||
+           td->getType() == TypeDescription::SoleVariable ||
+           td->getType() == TypeDescription::ReductionVariable) {
   }
-  else if (td->getType() != TypeDescription::ReductionVariable) {
+  else { // Grid Var
     const IntVector bl( 0, 0, 0 );
     var.allocate( patch, bl );
   }
@@ -1084,8 +1117,9 @@ DataArchive::query(       Variable     & var,
     data_filename = ostr.str();
   }
   else {
-    varType = REDUCTION_VAR;
-    // reference reduction file 'global.data' will a null patch
+    varType = GLOBAL_VAR;
+    // reference reduction and sole var in the file 'global.data' with
+    // a null patch
     patchid = -1;
     data_filename = timedata.d_ts_directory + timedata.d_globaldata;
   }
@@ -1146,9 +1180,11 @@ DataArchive::query(       Variable     & var,
     (static_cast<ParticleVariableBase*>(&var))->allocate( psubset );
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
   }
-  else if (td->getType() == TypeDescription::PerPatch) {
+  else if (td->getType() == TypeDescription::PerPatch ||
+           td->getType() == TypeDescription::SoleVariable ||
+           td->getType() == TypeDescription::ReductionVariable) {
   }
-  else if (td->getType() != TypeDescription::ReductionVariable) {
+  else { // Grid Var
     var.allocate( patch, varinfo.boundaryLayer );
   }
 
@@ -1156,7 +1192,7 @@ DataArchive::query(       Variable     & var,
 
   //__________________________________
   // open data file Standard Uda Format
-  if( d_fileFormat == UDA || varType == REDUCTION_VAR) {
+  if( d_fileFormat == UDA || varType == GLOBAL_VAR) {
     int fd = open( data_filename.c_str(), O_RDONLY );
 
     if(fd == -1) {
@@ -1483,7 +1519,8 @@ DataArchive::restartInitialize( const int                timestep_index,
       VarnameMatlPatch & key  = *iter;
       DataFileInfo     & data = timedata.d_datafileInfoValue[ pos ];
       
-      // Get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
+      // Get the Patch from the Patch ID. An ID of -1 = nullptr is for
+      // reduction and sole vars.
       const Patch* patch = key.patchid_ == -1 ? nullptr : grid->getPatchByID( key.patchid_, 0 );
       int matl = key.matlIndex_;
 
@@ -1513,6 +1550,7 @@ DataArchive::restartInitialize( const int                timestep_index,
             ASSERTEQ(dw->getParticleSubset(matl, patch), particles->getParticleSubset());
           }
         }
+
         dw->put( var, label, matl, patch );
         delete var; // should have been cloned when it was put
       }
@@ -1542,10 +1580,11 @@ DataArchive::restartInitialize( const int                timestep_index,
         const string            var_name = varMapIter->first;
         int                     number_of_materials;
 
-        if( type->isReductionVariable() ) {
+        if( type->getType() == TypeDescription::ReductionVariable ||
+            type->getType() == TypeDescription::SoleVariable ) {
           number_of_materials = 0;
 
-          // read in the reduction var data here
+          // read in the reduction and sole var data here
             
           // FIXME: should this happen here or outside of the level loop?
 
@@ -1583,7 +1622,9 @@ DataArchive::restartInitialize( const int                timestep_index,
           PIDX_variable varDesc;
           PIDX_access   access;
 
-          if( !type->isReductionVariable() ) {
+          // Non-reduction and non-sole variables:
+          if( type->getType() != TypeDescription::ReductionVariable &&
+              type->getType() != TypeDescription::SoleVariable ) {
             // cout << Uintah::Parallel::getMPIRank() << ": calling setupQueryPIDX()\n";
             bool found = setupQueryPIDX( access, idxFile, varDesc, level, type, var_name, matl, timestep_index );
             // cout << Uintah::Parallel::getMPIRank() << ": done calling setupQueryPIDX()\n";
@@ -1609,7 +1650,9 @@ DataArchive::restartInitialize( const int                timestep_index,
 
               // cout << Uintah::Parallel::getMPIRank() << ":         is my patch.\n";
 
-              if( !type->isReductionVariable() ) { // Non-reduction variables:
+              // Non-reduction and non-sole variables:
+              if( type->getType() != TypeDescription::ReductionVariable &&
+                  type->getType() != TypeDescription::SoleVariable ) {
 
                 // cout << Uintah::Parallel::getMPIRank() << ":         create buffer\n";
                 BufferAndSizeTuple * data = new BufferAndSizeTuple();
@@ -1649,7 +1692,9 @@ DataArchive::restartInitialize( const int                timestep_index,
           } // end for patch
 
 
-          if( !type->isReductionVariable() ) {
+          // Non-reduction and non-sole variables:
+          if( type->getType() != TypeDescription::ReductionVariable &&
+              type->getType() != TypeDescription::SoleVariable ) {
 
             // Finish up reading in the PIDX data... in the above loop in the queryPIDX() calls, we provided PIDX with a list
             // of all the patches that we need... Now we call PIDX_close() to tell PIDX to actually read that data.
@@ -1785,7 +1830,7 @@ DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
   }
   dw->setID( timeIndex );
   
-  proc0cout << "   DataArchive:postProcess_ReadUda: udaTimestep " << timesteps[timeIndex] << " timeIndex: " << timeIndex << " dw ID: " << dw->getID() << endl;
+  // proc0cout << "   DataArchive:postProcess_ReadUda: udaTimestep " << timesteps[timeIndex] << " timeIndex: " << timeIndex << " dw ID: " << dw->getID() << endl;
 
   TimeData& timedata = getTimeData( timeIndex );
   // Make sure to load all the data so we can iterate through it

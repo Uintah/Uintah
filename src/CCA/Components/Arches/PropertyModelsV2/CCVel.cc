@@ -16,9 +16,9 @@ void CCVel::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
 
   m_u_vel_name_cc = m_u_vel_name + "_cc";
   m_v_vel_name_cc = m_v_vel_name + "_cc";
@@ -44,7 +44,7 @@ void CCVel::problemSetup( ProblemSpecP& db ){
       std::string turb_closure_model;
       std::string conv_scheme;
       db->findBlock("TurbulenceModels")->findBlock("model")->getAttribute("type", turb_closure_model);
-      if ( turb_closure_model == "multifractal" ){ 
+      if ( turb_closure_model == "multifractal" ){
         if (db->findBlock("KMomentum")->findBlock("convection")){
           std::stringstream msg;
           msg << "ERROR: Cannot use KMomentum->convection if you are using the multifracal nles closure." << std::endl;
@@ -73,12 +73,12 @@ void CCVel::register_initialize( AVarInfo& variable_registry , const bool pack_t
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_u_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, _task_name );
-  register_variable( m_v_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, _task_name );
-  register_variable( m_w_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, _task_name );
-  register_variable( m_u_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
+  register_variable( m_u_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, m_task_name );
+  register_variable( m_v_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, m_task_name );
+  register_variable( m_w_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, m_task_name );
+  register_variable( m_u_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
 
 }
 
@@ -94,13 +94,13 @@ void CCVel::register_timestep_init( AVarInfo& variable_registry , const bool pac
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_u_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
+  register_variable( m_u_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
 
-  register_variable( m_u_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, _task_name );
-  register_variable( m_v_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, _task_name );
-  register_variable( m_w_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, _task_name );
+  register_variable( m_u_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, m_task_name );
+  register_variable( m_v_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, m_task_name );
+  register_variable( m_w_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, m_task_name );
 
 }
 
@@ -126,13 +126,13 @@ void CCVel::register_timestep_eval( VIVec& variable_registry, const int time_sub
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_u_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,_task_name );
-  register_variable( m_v_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,_task_name );
-  register_variable( m_w_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,_task_name );
+  register_variable( m_u_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
+  register_variable( m_v_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
+  register_variable( m_w_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
 
-  register_variable( m_u_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , _task_name );
-  register_variable( m_v_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , _task_name );
-  register_variable( m_w_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , _task_name );
+  register_variable( m_u_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , m_task_name );
+  register_variable( m_v_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , m_task_name );
+  register_variable( m_w_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , m_task_name );
 
 }
 

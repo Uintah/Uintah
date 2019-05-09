@@ -17,14 +17,14 @@
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
+      <x>0</x>
+      <y>0</y>
       <width>681</width>
       <height>781</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -144,20 +144,20 @@
         </rect>
        </property>
        <property name="text">
-        <string>End execution at max sim time</string>
+        <string>End at max sim time exactly</string>
        </property>
       </widget>
-      <widget class="QCheckBox" name="ClampTimeToOutput">
+      <widget class="QCheckBox" name="SimTimeClampToOutput">
        <property name="geometry">
         <rect>
          <x>440</x>
          <y>30</y>
-         <width>181</width>
+         <width>211</width>
          <height>20</height>
         </rect>
        </property>
        <property name="text">
-        <string>Clamp time to output</string>
+        <string>Clamp sim time to output times</string>
        </property>
       </widget>
       <widget class="QLabel" name="StopATimeStepLabel">
@@ -554,7 +554,22 @@
        </column>
        <column>
         <property name="text">
+         <string>Minimum</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Rank</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
          <string>Average</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Std. Dev.</string>
         </property>
        </column>
        <column>
@@ -565,11 +580,6 @@
        <column>
         <property name="text">
          <string>Rank</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>%</string>
         </property>
        </column>
       </widget>
@@ -782,9 +792,9 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>460</y>
+         <y>480</y>
          <width>641</width>
-         <height>201</height>
+         <height>181</height>
         </rect>
        </property>
        <property name="title">
@@ -796,7 +806,7 @@
           <x>10</x>
           <y>30</y>
           <width>621</width>
-          <height>161</height>
+          <height>141</height>
          </rect>
         </property>
         <column>
@@ -827,7 +837,7 @@
          <x>340</x>
          <y>20</y>
          <width>311</width>
-         <height>211</height>
+         <height>141</height>
         </rect>
        </property>
        <property name="title">
@@ -839,7 +849,7 @@
           <x>10</x>
           <y>30</y>
           <width>291</width>
-          <height>171</height>
+          <height>101</height>
          </rect>
         </property>
         <column>
@@ -858,9 +868,9 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>240</y>
+         <y>300</y>
          <width>641</width>
-         <height>211</height>
+         <height>181</height>
         </rect>
        </property>
        <property name="title">
@@ -872,7 +882,7 @@
           <x>10</x>
           <y>30</y>
           <width>621</width>
-          <height>171</height>
+          <height>141</height>
          </rect>
         </property>
         <column>
@@ -897,11 +907,11 @@
         </column>
        </widget>
       </widget>
-      <widget class="QGroupBox" name="groupBox">
+      <widget class="QGroupBox" name="LoadExtraGeometryGroupBox">
        <property name="geometry">
         <rect>
-         <x>10</x>
-         <y>170</y>
+         <x>340</x>
+         <y>240</y>
          <width>311</width>
          <height>61</height>
         </rect>
@@ -909,7 +919,7 @@
        <property name="title">
         <string>Database</string>
        </property>
-       <widget class="QComboBox" name="LoadExtraElements">
+       <widget class="QComboBox" name="LoadExtraGeometry">
         <property name="geometry">
          <rect>
           <x>160</x>
@@ -934,7 +944,7 @@
          </property>
         </item>
        </widget>
-       <widget class="QLabel" name="LoadExtraElementsLabel">
+       <widget class="QLabel" name="LoadExtraGeometryLabel">
         <property name="geometry">
          <rect>
           <x>10</x>
@@ -944,8 +954,102 @@
          </rect>
         </property>
         <property name="text">
-         <string>Load extra elements</string>
+         <string>Load extra geometry</string>
         </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="ReductionVariableGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>160</y>
+         <width>311</width>
+         <height>141</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Reduction variables</string>
+       </property>
+       <widget class="QTableWidget" name="ReductionVariableTable">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>291</width>
+          <height>101</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>Variable</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Value</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Count</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Overridden</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="VariableGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>340</x>
+         <y>170</y>
+         <width>311</width>
+         <height>71</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Variables</string>
+       </property>
+       <widget class="QLabel" name="LoadVariablesLabel">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>40</y>
+          <width>131</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Load variables</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="LoadVariables">
+        <property name="geometry">
+         <rect>
+          <x>160</x>
+          <y>30</y>
+          <width>105</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>All</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string notr="true">Output</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Checkpoint</string>
+         </property>
+        </item>
        </widget>
       </widget>
      </widget>
@@ -970,7 +1074,6 @@
   <tabstop>TimeStepsMax</tabstop>
   <tabstop>SimTime</tabstop>
   <tabstop>SimTimeMax</tabstop>
-  <tabstop>ClampTimeToOutput</tabstop>
   <tabstop>SimTimeEndAtMax</tabstop>
   <tabstop>StopAtTimeStep</tabstop>
   <tabstop>StopAtLastTimeStep</tabstop>
@@ -988,7 +1091,7 @@
   <tabstop>ImageWidth</tabstop>
   <tabstop>ImageFormat</tabstop>
   <tabstop>StateVariableTable</tabstop>
-  <tabstop>LoadExtraElements</tabstop>
+  <tabstop>LoadExtraGeometry</tabstop>
   <tabstop>OutputIntervalVariableTable</tabstop>
   <tabstop>DoutTable</tabstop>
   <tabstop>DebugStreamTable</tabstop>

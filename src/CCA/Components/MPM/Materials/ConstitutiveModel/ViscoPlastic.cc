@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -58,9 +58,10 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 
-#include <math.h>
-
 #include <iostream>
+
+#include <math.h>
+#include <unistd.h>
 
 
 using namespace std;
@@ -1150,8 +1151,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
 
 //     Calculate the displacement gradient
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                                   psize[idx],pDeformGrad[idx]);
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
       computeGrad(DispGrad, ni, d_S, oodx, gDisp);
 
 //       Compute the deformation gradient increment
@@ -1526,8 +1526,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Calculate the displacement gradient
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                                   psize[idx],pDeformGrad[idx]);
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
       computeGradAndBmats(DispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
 
       // Compute the deformation gradient increment

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1598,7 +1598,7 @@ ProblemSpecP
 ProblemSpec::getParent() 
 {
   xmlNode* d = d_node->parent;
-  if( d ) {
+  if( d->content != nullptr) {
     return scinew ProblemSpec( d, false );
   }
   else {
@@ -1753,10 +1753,14 @@ ProblemSpec::print()
 
   string nextSibling = "(none)";
   string parent      = "(none)";
+  string child       = "(none)";
   string nextBlock   = "(none)";
   
   if ( ps->getNextSibling() ){
     nextSibling = ps->getNextSibling()->getNodeName();
+  }
+  if ( ps->getFirstChild() ){
+    child       = ps->getFirstChild()->getNodeName();
   }
   if ( ps->getParent() ){
     parent      = ps->getParent()->getNodeName();
@@ -1765,6 +1769,7 @@ ProblemSpec::print()
     nextBlock   = ps->findNextBlock()->getNodeName();
   }
    cout<< "\n getNextSibling():  " << nextSibling
+       << "\n getFirstChild():   " << child
        << "\n getParent():       " << parent
        << "\n findNextBlock():   " << nextBlock << "\n";
 }

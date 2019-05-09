@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -161,6 +161,8 @@ public:
   void queryTimesteps( std::vector<int>                      & index,
                        std::vector<double>                   & times );
 
+  void queryProcessors( unsigned int & nProcs );
+  
   //! The ups is for the assignBCS that needs to happen if we are reading the simulation grid from the uda,
   //! and thus is only necessary on a true restart.
   GridP queryGrid( int index, const ProblemSpecP & ups = nullptr, bool assignBCs = true );
@@ -444,7 +446,7 @@ private:
   enum FileFormatType { UDA, PIDX, NOT_SPECIFIED };
   FileFormatType d_fileFormat; 
       
-  enum VarType { BLANK, REDUCTION_VAR, PATCH_VAR };
+  enum VarType { BLANK, GLOBAL_VAR, PATCH_VAR };
  
   bool isPIDXEnabled(){
 #if HAVE_PIDX
@@ -767,4 +769,3 @@ private:
 } // end namespace Uintah
 
 #endif
-

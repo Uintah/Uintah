@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -385,7 +385,7 @@ private:
         input_db->findBlock("diffusion_coef")->getAttribute("label",m_D_name);
       } else {
         std::stringstream msg;
-        msg << "Error: Diffusion specified for task " << _task_name << std::endl
+        msg << "Error: Diffusion specified for task " << m_task_name << std::endl
         << "but no diffusion coefficient label specified." << std::endl;
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
       }
@@ -402,11 +402,9 @@ private:
     int iend = m_eqn_names.size();
     for (int i = istart; i < iend; i++ ){
       register_new_variable<T>( m_eqn_names[i] );
-      //if ( m_premultiplier_name != "none" )
-      //if ( m_transported_eqn_names[i] != "NA" )
-      if ( m_transported_eqn_names[i] != m_eqn_names[i] )
-        //register_new_variable<T>( m_premultiplier_name+m_eqn_names[i] );
+      if ( m_transported_eqn_names[i] != m_eqn_names[i] ){
         register_new_variable<T>( m_transported_eqn_names[i] );
+      }
       register_new_variable<T>(   m_transported_eqn_names[i]+"_RHS" );
       register_new_variable<FXT>( m_eqn_names[i]+"_x_flux" );
       register_new_variable<FYT>( m_eqn_names[i]+"_y_flux" );
@@ -423,24 +421,24 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
       //if ( m_premultiplier_name != "none" )
       //if ( m_transported_eqn_names[ieqn] != "NA" )
         //register_variable( m_premultiplier_name+m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
-      register_variable(  m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
-      register_variable(  m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      register_variable(  m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      register_variable(  m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      register_variable(  m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      register_variable(  m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
     }
 
-    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, _task_name  );
+    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, m_task_name   );
     //for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
-    //  register_variable( i->first+"_unscaled", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+    //  register_variable( i->first+"_unscaled", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
     //}
 
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
-      register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+      register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
     }
   }
 
@@ -448,8 +446,7 @@ private:
   template <typename T, typename PT> void
   KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    constCCVariable<double>& vol_fraction =
-    tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+    CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -486,7 +483,7 @@ private:
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
       Uintah::parallel_for( range, [&](int i, int j, int k){
-        phi_unscaled(i,j,k) = phi(i,j,k) * info.constant * vol_fraction(i,j,k)  ;
+        phi_unscaled(i,j,k) = phi(i,j,k) * info.constant * eps(i,j,k)  ;
 
       });
     }
@@ -500,13 +497,13 @@ private:
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, _task_name );
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
-      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, _task_name  );
-      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
-      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
-      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, m_task_name );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name  );
+      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name  );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, m_task_name  );
+      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
     }
   }
 
@@ -553,30 +550,30 @@ private:
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
-      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
-      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
-      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
-      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
       if ( m_do_diff[ieqn] ){
-        register_variable( m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
-        register_variable( m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
-        register_variable( m_eqn_names[ieqn]+"_z_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
+        register_variable( m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+        register_variable( m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+        register_variable( m_eqn_names[ieqn]+"_z_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
       }
 
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator i = m_source_info[ieqn].begin(); i != m_source_info[ieqn].end(); i++){
-        register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
+        register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
       }
 
     }
 
     //globally common variables
-    register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
-    register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
-    register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
-    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 2 , ArchesFieldContainer::OLDDW, variable_registry, time_substep, _task_name );
+    register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+    register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+    register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 2 , ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
 
   }
 
@@ -843,10 +840,10 @@ private:
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }
 
-    std::vector<std::string> bc_dep;
+    ArchesCore::FunctorDepList bc_dep;
     m_boundary_functors->get_bc_dependencies( m_eqn_names_BC, m_bcHelper, bc_dep );
     for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW,
+      register_variable( (*i).variable_name, ArchesFieldContainer::REQUIRES, (*i).n_ghosts , (*i).dw,
                          variable_registry );
     }
 

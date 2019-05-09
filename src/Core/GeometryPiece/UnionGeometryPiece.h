@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,28 +31,28 @@
 
 namespace Uintah {
 /**************************************
-	
+        
 CLASS
    UnionGeometryPiece
-	
+        
    Creates a collection of geometry pieces from the xml input 
    file description. 
-	
+        
 GENERAL INFORMATION
-	
+        
    UnionGeometryPiece.h
-	
+        
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
-	
+        
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
+        
  
-	
+        
 KEYWORDS
    UnionGeometryPiece BoundingBox inside
-	
+        
 DESCRIPTION
    Creates a union of different geometry pieces from the xml input 
    file description.
@@ -62,18 +62,18 @@ DESCRIPTION
    The input form looks like this:
    <union>
      <box>
-	     <min>[0.,0.,0.]</min>
-	     <max>[1.,1.,1.]</max>
-	   </box>
-	   <sphere>
-	     <origin>[.5,.5,.5]</origin>
-	     <radius>1.5</radius>
-	   </sphere>
+             <min>[0.,0.,0.]</min>
+             <max>[1.,1.,1.]</max>
+           </box>
+           <sphere>
+             <origin>[.5,.5,.5]</origin>
+             <radius>1.5</radius>
+           </sphere>
    </union>
-	
-	
+        
+        
 WARNING
-	
+        
 ****************************************/
 
   class UnionGeometryPiece : public GeometryPiece {
@@ -104,7 +104,7 @@ WARNING
     
     //////////
     // Determines whether a point is inside the intersection piece.
-    virtual bool inside(const Point &p) const;
+    virtual bool inside(const Point &p, const bool defVal) const;
     
     //////////
     // Returns the bounding box surrounding the union piece.

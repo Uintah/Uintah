@@ -76,6 +76,7 @@ GPU Related:
 __________________________________
 GPUStats          SCI_DEBUG     Reports detailed GPU statistics from within the UnififedScheudler on "H2D" and "D2H" data movement.
 GPUDataWarehouse  SCI_DEBUG     Reports detailed statistics from within the GPUDW on GPUDataWarehouse activity.
+GPUIDs            SCI_DEBUG     Reports detailed information to identify GPU(s) used when using multiple per node.
 
 
 

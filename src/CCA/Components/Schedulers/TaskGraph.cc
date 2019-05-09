@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,18 +46,22 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <sstream>
 
 
 using namespace Uintah;
 
 
 namespace {
-  Dout g_tg_phase_dbg(          "TaskGraphPhases"       , "TaskGraph", "task phase assigned to each task by the task graph"  , false);
-  Dout g_proc_neighborhood_dbg( "ProcNeighborhood"      , "TaskGraph", "info on local or distal patch neighborhoods"         , false);
-  Dout g_find_computes_dbg(     "FindComputes"          , "TaskGraph", "info on computing task for particular requires"      , false);
-  Dout g_add_task_dbg(          "TaskGraphAddTask"      , "TaskGraph", "report task name, computes and requires: every task" , false);
-  Dout g_detailed_task_dbg(     "TaskGraphDetailedTasks", "TaskGraph", "high-level info on creation of DetailedTasks"        , false);
-  Dout g_detailed_deps_dbg(     "TaskGraphDetailedDeps" , "TaskGraph", "detailed dep info for each DetailedTask"             , false);
+
+  Dout g_tg_phase_dbg(          "TaskGraphPhases"        , "TaskGraph", "task phase assigned to each task by the task graph"  , false);
+  Dout g_proc_neighborhood_dbg( "ProcNeighborhood"       , "TaskGraph", "info on local or distal patch neighborhoods"         , false);
+  Dout g_find_computes_dbg(     "FindComputes"           , "TaskGraph", "info on computing task for particular requires"      , false);
+  Dout g_add_task_dbg(          "TaskGraphAddTask"       , "TaskGraph", "report task name, computes and requires: every task" , false);
+  Dout g_detailed_task_dbg(     "TaskGraphDetailedTasks" , "TaskGraph", "high-level info on creation of DetailedTasks"        , false);
+  Dout g_detailed_deps_dbg(     "TaskGraphDetailedDeps"  , "TaskGraph", "detailed dep info for each DetailedTask"             , false);
+  Dout g_topological_deps_dbg(  "TopologicalDetailedDeps", "TaskGraph", "topologiocal sort detailed dependnecy info"          , false);
+
 }
 
 //______________________________________________________________________
@@ -162,6 +166,12 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
     }
 #endif
   }
+
+  // does this TG contain requires with halo > MAX_HALO_DEPTH
+  if (task->hasDistalRequires()) {
+    m_has_distal_requires = true;
+  }
+
 }
 
 //______________________________________________________________________
@@ -199,10 +209,12 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
 
   nullSort(sorted_tasks);
 
+//  topologicalSort(sorted_tasks);
+
   ASSERT(grid != nullptr);
 
   // Create two neighborhoods.  One that keeps track of patches and procs within just a few ghost cells
-  // and another that keeps track of patches and procs to within the maximum known ghost cell among all
+  // and another that keeps track of patches and procs to within the maximum known ghost cells among all
   // tasks in the task graph.
   //
   // The idea is that if a DetailedTask only has simulation variables which
@@ -261,11 +273,10 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
     int levelID = 0;
     const PatchSet* ps = task->getPatchSet();
     // Reduction tasks don't have patches, filter them out.
-    if (ps && ps->size()) {
+    if ( (ps != nullptr) && (ps->size() > 0) ) {
       const PatchSubset* pss = ps->getSubset(0);
       if (pss && pss->size()) {
-        const Level * level = pss->get(0)->getLevel();
-        levelID = level->getID();
+        levelID = pss->get(0)->getLevel()->getID();
       }
     }
 
@@ -281,7 +292,7 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       // If a task's patches are on the coarse level and the offset is 1, then the offset is positive.
       // If a task's patches are on the fine level and the offset is 1, then the offset is negative.
 
-      int levelOffset = req->m_level_offset;
+      const int levelOffset = req->m_level_offset;
       int trueLevel = levelID;
       if (req->m_patches_dom == Task::CoarseLevel) {
         trueLevel -= levelOffset;
@@ -345,7 +356,7 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
 
   if (g_proc_neighborhood_dbg) {
     for (auto kv : max_ghost_for_varlabelmap) {
-      DOUT(g_proc_neighborhood_dbg, "For varlabel " << kv.first.key << " on level: " << kv.first.level << " the max ghost cell is: " << kv.second);
+      DOUT(g_proc_neighborhood_dbg, "For varlabel " << kv.first.m_key << " on level: " << kv.first.m_level << " the max ghost cell is: " << kv.second);
     }
   }
   
@@ -485,7 +496,18 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       // OncePerProc tasks - only create OncePerProc tasks and output tasks once on each processor.
       if (task->getType() == Task::OncePerProc || task->getType() == Task::Hypre) {
         // only schedule this task on processors in the neighborhood
-        const std::unordered_set<int> neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
+
+        // NOTE THE MAP::AT METHOD NEEDS TO BE SAFEGUARDED.
+        // Is it reasonable to set neighborhood_procs = local_procs when it fails??
+        std::unordered_set<int> neighborhood_procs;
+        if( task->m_max_ghost_cells.find(levelID) != task->m_max_ghost_cells.end() ) {
+          neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
+        } else {
+          DOUTALL( true, "*********** Bad level ID " << levelID );
+
+          neighborhood_procs = local_procs;
+        }
+
         for (auto p = neighborhood_procs.begin(); p != neighborhood_procs.end(); ++p) {
           const PatchSubset* pss = ps->getSubset(*p);
           for (int m = 0; m < ms->size(); m++) {
@@ -520,37 +542,47 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
         for (int ps_index = 0; ps_index < ps_size; ps_index++) {
           const PatchSubset* pss = ps->getSubset(ps_index);
 
-          // Make tasks in our neighborhood.  If there are multiple levels involved in the reqs of
-          // a task, then the levelID should be the fine level
-          DOUT(g_proc_neighborhood_dbg, "For task: " << task->getName() << " looking for max ghost cells for level: " << levelID);
+          if( pss->size() > 0 ) {
+            
+            // Make tasks in our neighborhood.  If there are multiple levels involved in the reqs of
+            // a task, then the levelID should be the fine level
+            DOUT(g_proc_neighborhood_dbg, "For task: " << task->getName() << " looking for max ghost cells for level: " << levelID);
 
-          // Still make sure we have an entry for this task on this level.
-          // Some tasks can go into the task graph without any requires, modifies, or computes.
-          bool search_distal_requires = false;
-          for (auto kv : task->m_max_ghost_cells) {
-            int levelIDTemp = kv.first;
-            search_distal_requires = (task->m_max_ghost_cells.at(levelIDTemp) >= MAX_HALO_DEPTH);
+            // Still make sure we have an entry for this task on this level. Some tasks can go into
+            // the task graph without any requires, modifies, or computes.
+            bool search_distal_requires = false;
 
-            DOUT(g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " for: " << task->getName() << " on level: " << levelIDTemp
-                                                  << " with task max ghost cells: "<< task->m_max_ghost_cells.at(levelIDTemp) << " Seeing if patch subset: "
-                                                  << *pss << " is in neighborhood with search_distal_requires: " << search_distal_requires);
+            for (const auto kv : task->m_max_ghost_cells) {
+              int levelIDTemp = kv.first;
 
-            if (search_distal_requires) {
-              break;
+              search_distal_requires = (kv.second >= MAX_HALO_DEPTH);
+            
+              DOUT(g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " for: " << task->getName() << " on level: " << levelIDTemp
+                   << " with task max ghost cells: "<< kv.second << " Seeing if patch subset: "
+                   << *pss << " is in neighborhood with search_distal_requires: " << search_distal_requires);
+
+              if (search_distal_requires) {
+                break;
+              }
+            }
+
+            if (m_load_balancer->inNeighborhood(pss, search_distal_requires)) {
+              DOUT(g_proc_neighborhood_dbg, "Yes, it was in the neighborhood");
+              for (int m = 0; m < ms->size(); m++) {
+                const MaterialSubset* mss = ms->getSubset(m);
+                createDetailedTask(task, pss, mss);
+                ++num_detailed_tasks;
+                ++tot_normal_tasks;
+              }
             }
           }
-
-          if (pss->size() > 0 && m_load_balancer->inNeighborhood(pss, search_distal_requires)) {
-            DOUT(g_proc_neighborhood_dbg, "Yes, it was in the neighborhood");
-            for (int m = 0; m < ms->size(); m++) {
-              const MaterialSubset* mss = ms->getSubset(m);
-              createDetailedTask(task, pss, mss);
-              ++num_detailed_tasks;
-              ++tot_normal_tasks;
-            }
+          else {
+            DOUT(g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " for: " << task->getName()
+                 << " SKipping patch subset: " << *pss << " because it has no patches");
           }
         }
-        DOUT( g_detailed_task_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_detailed_tasks << " (" << task->getType()  << ") DetailedTasks for: " << task->getName() << " on level: " << levelID);
+        DOUT( g_detailed_task_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_detailed_tasks << " (" << task->getType()
+              << ") DetailedTasks for: " << task->getName() << " on level: " << levelID);
       }
     } // end valid patch and matl sets
 
@@ -597,10 +629,10 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
   }
 
   if (m_proc_group->nRanks() > 1) {
-    m_detailed_tasks->assignMessageTags(m_proc_group->myRank());
+    m_detailed_tasks->assignMessageTags( m_index );
   }
 
-  m_detailed_tasks->computeLocalTasks(m_proc_group->myRank());
+  m_detailed_tasks->computeLocalTasks();
   m_detailed_tasks->makeDWKeyDatabase();
 
   return m_detailed_tasks;
@@ -831,7 +863,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
     int levelID = 0;
     const Patch* origPatch = nullptr;
     const Level* origLevel = nullptr;
-    bool uses_SHRT_MAX = (req->m_num_ghost_cells == SHRT_MAX);
+    const bool uses_SHRT_MAX = (req->m_num_ghost_cells == SHRT_MAX);
     if ((dtask->m_patches) && (dtask->getTask()->getType() != Task::OncePerProc) && (dtask->getTask()->getType() != Task::Hypre)) {
       origPatch = dtask->m_patches->get(0);
       origLevel = origPatch->getLevel();
@@ -877,7 +909,6 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       }
       else {  //This covers when req->m_patches_dom == Task::ThisLevel (single level problems)
               //or when req->m_patches_dom == Task::OtherGridDomain. (AMR problems)
-        //TODO: Change this to req->m_num_ghost_cells >= MAX_HALO_DEPTH Brad P. 11/5/2016
         if (uses_SHRT_MAX) {
           //Finer patches probably shouldn't be using SHRT_MAX ghost cells, but just in case they do, at least compute the low and high correctly...
           origLevel->computeVariableExtents(req->m_var->typeDescription()->getType(), otherLevelLow, otherLevelHigh);
@@ -896,11 +927,11 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
     if (patches && !patches->empty() && matls && !matls->empty()) {
 
-      // ARS - Treat sole vars the same as reduction vars??
-      if (vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable) {
+      // Skip reduction and sole vars as they are not patch based.
+      if (vartype == TypeDescription::ReductionVariable ||
+          vartype == TypeDescription::SoleVariable) {
         continue;
       }
-
 
       //------------------------------------------------------------------------
       //           for all patches - find & store valid neighbors
@@ -961,7 +992,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
         ASSERT(std::is_sorted(neighbors.begin(), neighbors.end(), Patch::Compare()));
 
-        auto num_neighbors = neighbors.size();
+        size_t num_neighbors = neighbors.size();
 
         DOUT(g_detailed_deps_dbg, "Rank-" << my_rank << "    Creating detailed dependency on " << num_neighbors
                                           << " neighboring patch" << (num_neighbors > 1 ? "es " : "   ") << neighbors
@@ -977,7 +1008,25 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
           // if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor
           DOUT(g_proc_neighborhood_dbg, "    In detailed task: " << dtask->getName() << " checking if " << *req << " is in neighborhood on level: " << trueLevel);
 
-          const bool search_distal_reqs = (dtask->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
+          // NOTE THE MAP::AT METHOD NEEDS TO BE SAFEGUARDED. Is it
+          // reasonable to set search_distal_requires = false when it
+          // fails??
+
+          // The map::at will fail after an AMR regridding when using
+          // more than 24 ranks (it works with 23 ranks). The question
+          // is why is the variable 'trueLevel' not valid????
+
+          bool search_distal_reqs;
+          if( (dtask->getTask()->m_max_ghost_cells.find(trueLevel) != dtask->getTask()->m_max_ghost_cells.end()) ) {
+            search_distal_reqs = (dtask->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
+          } else {
+            search_distal_reqs = false;
+
+            DOUTALL( true, "*********** Bad true level " << trueLevel 
+                     << " levelID " << levelID
+                     << " levelOffset " << levelOffset );
+          }
+
           if (!m_load_balancer->inNeighborhood(neighbor->getRealPatch(), search_distal_reqs)) {
             DOUT(g_proc_neighborhood_dbg, "    No");
             continue;
@@ -1017,7 +1066,25 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
             const Patch* fromNeighbor = fromNeighbors[j];
 
             // only add the requirements if fromNeighbor is in my neighborhood
-            const bool search_distal_requires = (dtask->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
+
+            // NOTE THE MAP::AT METHOD NEEDS TO BE SAFEGUARDED. Is it
+            // reasonable to set search_distal_requires = false when it
+            // fails??
+            
+            // The map::at will fail after an AMR regridding when using
+            // more than 24 ranks (it works with 23 ranks). The question
+            // is why is the variable 'trueLevel' not valid????     
+            bool search_distal_requires;
+            if( (dtask->getTask()->m_max_ghost_cells.find(trueLevel) != dtask->getTask()->m_max_ghost_cells.end()) ) {
+              search_distal_requires = (dtask->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
+            } else {
+              search_distal_requires = false;
+
+              DOUTALL( true, "*********** Bad true level " << trueLevel 
+                       << " levelID " << levelID
+                       << " levelOffset " << levelOffset );
+            }
+
             if (!m_load_balancer->inNeighborhood(fromNeighbor, search_distal_requires)) {
               continue;
             }
@@ -1340,9 +1407,8 @@ TaskGraph::makeVarLabelMaterialMap( Scheduler::VarLabelMaterialMap * result )
           matls.push_back(msubset->get(mm));
         }
       }
-      // ARS - Treat sole vars the same as reduction vars??
-      else if (vartype == TypeDescription::ReductionVariable /* ||
-               vartype == TypeDescription::SoleVariable */) {
+      else if (vartype == TypeDescription::ReductionVariable ||
+               vartype == TypeDescription::SoleVariable ) {
         // Default to material -1 (global)
         matls.push_back(-1);
       }
@@ -1358,7 +1424,6 @@ TaskGraph::makeVarLabelMaterialMap( Scheduler::VarLabelMaterialMap * result )
     }
   }
 }
-
 
 //______________________________________________________________________
 //
@@ -1526,4 +1591,492 @@ CompTable::findReductionComps(       Task::Dependency           * req
     }
   }
   return (creators.size() > 0);
+}
+
+
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//
+//  Archived code for topological sort functionality. Please leave this here - APH, 04/05/19
+//
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+//______________________________________________________________________
+//
+void
+TaskGraph::addDependencyEdges( Task              * task
+                             , GraphSortInfoMap  & sortinfo
+                             , Task::Dependency  * req
+                             , CompMap           & comps
+                             , ReductionTasksMap & reductionTasks
+                             , bool                modifies
+                             )
+{
+  for (; req != nullptr; req = req->m_next) {
+
+    DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << ": Checking edge for req: " << *req << ", task: " << *req->m_task << ", domain: " << req->m_patches_dom);
+
+    if (req->m_whichdw == Task::NewDW) {
+
+      // If DW is finalized, we assume that we already have it, or that we will get it sent to us.
+      // Otherwise, we set up an edge to connect this req to a comp
+
+      std::pair<CompMap::iterator, CompMap::iterator> iters = comps.equal_range(static_cast<const Uintah::VarLabel*>(req->m_var));
+      int count = 0;
+      for (CompMap::iterator compiter = iters.first; compiter != iters.second; ++compiter) {
+
+        if (req->m_var->typeDescription() != compiter->first->typeDescription()) {
+          SCI_THROW(TypeMismatchException("Type mismatch for variable: "+req->m_var->getName(), __FILE__, __LINE__));
+        }
+
+        // determine if we need to add a dependency edge
+        bool add = false;
+        bool requiresReductionTask = false;
+        DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << ": Checking edge from comp: " << *compiter->second << ", task: " << *compiter->second->m_task << ", domain: " << compiter->second->m_patches_dom);
+        if (req->mapDataWarehouse() == compiter->second->mapDataWarehouse()) {
+          if (req->m_var->typeDescription()->isReductionVariable()) {
+            // Match the level first
+            if (compiter->second->m_reduction_level == req->m_reduction_level) {
+              add = true;
+            }
+            // with reduction variables, you can modify them up to the Reduction Task, which also modifies
+            // those who don't modify will get the reduced value.
+            if (!modifies && !req->m_var->allowsMultipleComputes()) {
+              requiresReductionTask = true;
+            }
+          }
+          else if (overlaps(compiter->second, req)) {
+            add = true;
+          }
+        }
+
+        if (!add) {
+          DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << "       did NOT create dependency");
+        }
+        else {
+          Task::Dependency* comp;
+          if (requiresReductionTask) {
+            VarLabelMatl<Level> key(req->m_var, req->mapDataWarehouse(), req->m_reduction_level);
+            Task* redTask = reductionTasks[key];
+            ASSERT(redTask != nullptr);
+            // reduction tasks should have exactly 1 require, and it should be a modify
+            // assign the requiring task's require to it
+            comp = redTask->getModifies();
+            ASSERT(comp != nullptr);
+            DOUT(g_topological_deps_dbg,"  Using Reduction task: " << *redTask);
+          }
+          else {
+            comp = compiter->second;
+          }
+
+          if (modifies) {
+            // Add dependency edges to each task that requires the data before it is modified.
+            for (Task::Edge* otherEdge = comp->m_req_head; otherEdge != nullptr; otherEdge = otherEdge->m_req_next) {
+              Task::Dependency* priorReq = const_cast<Task::Dependency*>(otherEdge->m_req);
+              if (priorReq != req) {
+                ASSERT(priorReq->m_var->equals(req->m_var));
+                if (priorReq->m_task != task) {
+                  Task::Edge* edge = scinew Task::Edge(priorReq, req);
+                  m_edges.push_back(edge);
+                  req->addComp(edge);
+                  priorReq->addReq(edge);
+                  if (g_topological_deps_dbg) {
+                    std::ostringstream message;
+                    message << m_proc_group->myRank() << " Creating edge from task: " << *priorReq->m_task << " to task: " << *req->m_task << "\n";
+                    message << m_proc_group->myRank() << " Prior Req=" << *priorReq << "\n";
+                    message << m_proc_group->myRank() << " Modify=" << *req << "\n";
+                    DOUT(true, message.str());
+                  }
+                }
+              }
+            }
+          }
+
+          // add the edge between the require/modify and compute
+          Task::Edge* edge = scinew Task::Edge(comp, req);
+          m_edges.push_back(edge);
+          req->addComp(edge);
+          comp->addReq(edge);
+
+          if (!sortinfo.find(edge->m_comp->m_task)->second.m_visited && !edge->m_comp->m_task->isReductionTask()) {
+            std::cout << "\nWARNING: The task, '" << task->getName() << "', that ";
+            if (modifies) {
+              std::cout << "modifies '";
+            }
+            else {
+              std::cout << "requires '";
+            }
+            std::cout << req->m_var->getName() << "' was added before the computing task";
+            std::cout << ", '" << edge->m_comp->m_task->getName() << "'\n";
+            std::cout << "  Required/modified by: " << *task << "\n";
+            std::cout << "  req: " << *req << "\n";
+            std::cout << "  Computed by: " << *edge->m_comp->m_task << "\n";
+            std::cout << "  comp: " << *comp << "\n";
+            std::cout << std::endl;
+          }
+          count++;
+          task->m_child_tasks.insert(comp->m_task);
+          if (g_topological_deps_dbg) {
+            std::ostringstream message;
+            message << m_proc_group->myRank() << "       Creating edge from task: " << *comp->m_task << " to task: " << *task << "\n";
+            message << m_proc_group->myRank() << "         Req=" << *req << "\n";
+            message << m_proc_group->myRank() << "         Comp=" << *comp << "\n";
+            DOUT(true, message.str());
+          }
+        }
+      }
+
+      // if we cannot find the required variable, throw an exception
+      if (count == 0 && (!req->m_matls || req->m_matls->size() > 0) && (!req->m_patches || req->m_patches->size() > 0)
+          && !(req->m_look_in_old_tg && m_type == Scheduler::IntermediateTaskGraph)) {
+        // if this is an Intermediate TG and the requested data is done from another TG,
+        // we need to look in this TG first, but don't worry if you don't find it
+
+        std::ostringstream mesg;
+
+        mesg << "ERROR: Cannot find the task that computes the variable (" << req->m_var->getName() << ")\n";
+        mesg << "The task (" << task->getName() << ") is requesting data from:\n";
+        mesg << "  Level:           " << getLevel(task->getPatchSet())->getIndex() << "\n";
+        mesg << "  Task:PatchSet    " << *(task->getPatchSet()) << "\n";
+        mesg << "  Task:MaterialSet " << *(task->getMaterialSet()) << "\n \n";
+        mesg << "The variable (" << req->m_var->getName() << ") is requiring data from:\n";
+
+        if (req->m_patches) {
+          mesg << "  Level: " << getLevel(req->m_patches)->getIndex() << "\n";
+          mesg << "  Patches': " << *(req->m_patches) << "\n";
+        }
+        else {
+          mesg << "  Patches:  All \n";
+        }
+
+        if (req->m_matls) {
+          mesg << "  Materials: " << *(req->m_matls) << "\n";
+        }
+        else {
+          mesg << "  Materials:  All \n";
+        }
+
+        mesg << "\nTask Details:\n";
+        task->display(std::cout);
+        mesg << "\nRequirement Details:\n" << *req << "\n";
+
+        DOUT(true, mesg.str());
+
+        SCI_THROW(
+            InternalError("Scheduler could not find  production for variable: "+req->m_var->getName()+", required for task: "+task->getName(), __FILE__, __LINE__));
+      }
+
+      if (modifies) {
+        // not just requires, but modifies, so the comps map must be
+        // updated so future modifies or requires will link to this one.
+        comps.insert(std::make_pair(req->m_var, req));
+        DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << " Added modified comp for: " << *req);
+      }
+    }
+  }
+}
+
+//______________________________________________________________________
+//
+bool
+TaskGraph::overlaps( const Task::Dependency * comp
+                   , const Task::Dependency * req
+                   ) const
+{
+  constHandle<PatchSubset> saveHandle2;
+  const PatchSubset* ps1 = comp->m_patches;
+  if (!ps1) {
+    if (!comp->m_task->getPatchSet()) {
+      return false;
+    }
+    ps1 = comp->m_task->getPatchSet()->getUnion();
+    if (comp->m_patches_dom == Task::CoarseLevel || comp->m_patches_dom == Task::FineLevel) {
+      SCI_THROW(InternalError("Should not compute onto another level!", __FILE__, __LINE__));
+      // This may not be a big deal if it were needed, but I didn't think that it should be allowed - Steve
+      // saveHandle1 = comp->getPatchesUnderDomain(ps1);
+      // ps1 = saveHandle1.get_rep();
+    }
+  }
+
+  const PatchSubset* ps2 = req->m_patches;
+  if (!ps2) {
+    if (!req->m_task->getPatchSet()) {
+      return false;
+    }
+    ps2 = req->m_task->getPatchSet()->getUnion();
+    if (req->m_patches_dom == Task::CoarseLevel || req->m_patches_dom == Task::FineLevel) {
+      saveHandle2 = req->getPatchesUnderDomain(ps2);
+      ps2 = saveHandle2.get_rep();
+    }
+  }
+
+  if (!PatchSubset::overlaps(ps1, ps2)) {  // && !(ps1->size() == 0 && (!req->patches || ps2->size() == 0) && comp->task->getType() == Task::OncePerProc))
+    return false;
+  }
+
+  const MaterialSubset* ms1 = comp->m_matls;
+  if (!ms1) {
+    if (!comp->m_task->getMaterialSet()) {
+      return false;
+    }
+    ms1 = comp->m_task->getMaterialSet()->getUnion();
+  }
+  const MaterialSubset* ms2 = req->m_matls;
+  if (!ms2) {
+    if (!req->m_task->getMaterialSet()) {
+      return false;
+    }
+    ms2 = req->m_task->getMaterialSet()->getUnion();
+  }
+  if (!MaterialSubset::overlaps(ms1, ms2)) {
+    return false;
+  }
+  return true;
+}
+
+//______________________________________________________________________
+//
+void TaskGraph::processDependencies( Task               * task
+                                   , Task::Dependency   * req
+                                   , std::vector<Task*> & sortedTasks
+                                   , GraphSortInfoMap   & sortinfo
+                                   ) const
+
+{
+  for (; req != nullptr; req = req->m_next) {
+
+    DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << " processDependencies for req: " << *req);
+
+    if (req->m_whichdw == Task::NewDW) {
+      Task::Edge* edge = req->m_comp_head;
+
+      for (; edge != nullptr; edge = edge->m_comp_next) {
+        Task* vtask = edge->m_comp->m_task;
+        GraphSortInfo& gsi = sortinfo.find(vtask)->second;
+
+        if (!gsi.m_sorted) {
+          try {
+            // this try-catch mechanism will serve to print out the entire TG cycle
+            if (gsi.m_visited) {
+              std::cout << m_proc_group->myRank() << " Cycle detected in task graph\n";
+              SCI_THROW(InternalError("Cycle detected in task graph", __FILE__, __LINE__));
+            }
+            // recursively process the dependencies of the computing task
+            processTask(vtask, sortedTasks, sortinfo);
+          }
+          catch (InternalError& e) {
+            std::cout << m_proc_group->myRank() << "   Task " << task->getName() << " requires " << req->m_var->getName() << " from " << vtask->getName() << std::endl;
+            throw;
+          }
+        }
+      }
+    }
+  }
+}
+
+//______________________________________________________________________
+//
+void TaskGraph::processTask( Task               * task
+                           , std::vector<Task*> & sortedTasks
+                           , GraphSortInfoMap   & sortinfo
+                           ) const
+{
+  DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << " Looking at task: " << task->getName());
+
+  GraphSortInfo& gsi = sortinfo.find(task)->second;
+  // we throw an exception before calling processTask if this task has already been visited
+  gsi.m_visited = true;
+
+  processDependencies(task, task->getRequires(), sortedTasks, sortinfo);
+  processDependencies(task, task->getModifies(), sortedTasks, sortinfo);
+
+  // All prerequisites are done - add this task to the list
+  sortedTasks.push_back(task);
+  gsi.m_sorted = true;
+
+  DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << " Sorted task: " << task->getName());
+}  // end processTask()
+
+//______________________________________________________________________
+//
+// setupTaskConnections also adds Reduction Tasks to the graph...
+void
+TaskGraph::setupTaskConnections( GraphSortInfoMap & sortinfo )
+{
+  // Initialize variables on the tasks
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+    sortinfo[iter->get()] = GraphSortInfo();
+  }
+
+  if (m_edges.size() > 0) {
+    return; // already been done
+  }
+
+  // Look for all of the reduction variables - we must treat those special.  Create a fake task that performs the reduction
+  // While we are at it, ensure that we aren't producing anything into an "old" data warehouse
+  ReductionTasksMap reductionTasks;
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+    Task* task = iter->get();
+    if (task->isReductionTask()) {
+      continue; // already a reduction task so skip it
+    }
+
+    for (Task::Dependency* comp = task->getComputes(); comp != nullptr; comp = comp->m_next) {
+      if(m_scheduler->isOldDW(comp->mapDataWarehouse())) {
+
+        DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << " which = " << comp->m_whichdw << ", mapped to " << comp->mapDataWarehouse());
+
+        SCI_THROW(InternalError("Variable produced in old datawarehouse: " + comp->m_var->getName(), __FILE__, __LINE__));
+      } else if(comp->m_var->typeDescription()->isReductionVariable()){
+        int levelidx = comp->m_reduction_level ? comp->m_reduction_level->getIndex() : -1;
+        // Look up this variable in the reductionTasks map
+        int dw = comp->mapDataWarehouse();
+        // for reduction var allows multi computes such as delT
+        // do not generate reduction task each time it computes,
+        // instead computes it in a system wide reduction task
+        if (comp->m_var->allowsMultipleComputes()) {
+          DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << " Skipping Reduction task for variable: " << comp->m_var->getName() << " on level " << levelidx << ", DW " << dw);
+          continue;
+        }
+        ASSERT(comp->m_patches == nullptr);
+
+        // use the dw as a 'material', just for the sake of looking it up.
+        // it should only differentiate on AMR W-cycle graphs...
+        VarLabelMatl<Level> key(comp->m_var, dw, comp->m_reduction_level);
+        const MaterialSet* ms = task->getMaterialSet();
+        const Level* level = comp->m_reduction_level;
+
+        ReductionTasksMap::iterator it = reductionTasks.find(key);
+        if (it == reductionTasks.end()) {
+          // No reduction task yet, create one
+          DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << " creating Reduction task for variable: " << comp->m_var->getName() << " on level " << levelidx << ", DW " << dw);
+          std::ostringstream taskname;
+          taskname << "Reduction: " << comp->m_var->getName() << ", level: " << levelidx << ", dw: " << dw;
+          Task* newtask = scinew Task(taskname.str(), Task::Reduction);
+
+          sortinfo[newtask] = GraphSortInfo();
+
+          int dwmap[Task::TotalDWs];
+          for (int i = 0; i < Task::TotalDWs; i++) {
+            dwmap[i] = Task::InvalidDW;
+          }
+          dwmap[Task::OldDW] = Task::NoDW;
+          dwmap[Task::NewDW] = dw;
+          newtask->setMapping(dwmap);
+
+          // compute and require for all patches but some set of materials (maybe global material, but not necessarily)
+          if (comp->m_matls != nullptr) {
+            // TODO figure this out and clean up - APH 06/06/17
+            //   note: we won't even need this method if we permanently remove topological sort
+//            newtask->computes(comp->m_var, level, comp->m_matls, Task::OutOfDomain);
+//            newtask->requires(Task::NewDW, comp->m_var, level, comp->m_matls, Task::OutOfDomain);
+            newtask->modifies(comp->m_var, level, comp->m_matls, Task::OutOfDomain);
+          }
+          else {
+            for (int m = 0; m < ms->size(); m++) {
+              // TODO APH - figure this out and clean up - APH 06/06/17
+              //   note: we won't even need this method if we permanently remove topological sort
+//              newtask->computes(comp->m_var, level, ms->getSubset(m), Task::OutOfDomain);
+//              newtask->requires(Task::NewDW, comp->m_var, level, ms->getSubset(m), Task::OutOfDomain);
+              newtask->modifies(comp->m_var, level, ms->getSubset(m), Task::OutOfDomain);
+            }
+          }
+          reductionTasks[key] = newtask;
+          it = reductionTasks.find(key);
+        }
+      }
+    }
+  }
+
+  // Add the new reduction tasks to the list of tasks
+  for(auto it = reductionTasks.begin(); it != reductionTasks.end(); ++it) {
+    std::shared_ptr<Task> reduction_task_sp(it->second);
+    addTask(reduction_task_sp, nullptr, nullptr);
+  }
+
+  // Gather the comps for the tasks into a map
+  CompMap comps;
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+    Task* task = iter->get();
+    DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << " Gathering comps from task: " << *task);
+    for (Task::Dependency* comp = task->getComputes(); comp != nullptr; comp = comp->m_next) {
+      comps.insert(std::make_pair(comp->m_var, comp));
+      DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << "   Added comp for: " << *comp);
+    }
+  }
+
+  // Connect the tasks where the requires/modifies match a comp.
+  // Also, updates the comp map with each modify and doing this in task order
+  // so future modifies/requires find the modified var.  Also do a type check
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+    Task* task = iter->get();
+    DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << "   Looking at dependencies for task: " << *task);
+    addDependencyEdges(task, sortinfo, task->getRequires(), comps, reductionTasks, false);
+    addDependencyEdges(task, sortinfo, task->getModifies(), comps, reductionTasks, true);
+    // Used here just to warn if a modifies comes before its computes
+    // in the order that tasks were added to the graph.
+    sortinfo.find(task)->second.m_visited = true;
+    task->m_all_child_tasks.clear();
+    DOUT(g_topological_deps_dbg, m_proc_group->myRank() << "   Looking at dependencies for task: " << *task
+                                                     << "child task num=" << task->m_child_tasks.size());
+  }
+
+  // count the all child tasks
+  int nd_task = m_tasks.size();
+  while (nd_task > 0) {
+    nd_task = m_tasks.size();
+    for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+      Task* task = iter->get();
+      if (task->m_all_child_tasks.size() == 0) {
+        if (task->m_child_tasks.size() == 0) {     // leaf task, add itself to the set
+          task->m_all_child_tasks.insert(task);
+          break;
+        }
+        std::set<Task*>::iterator it;
+        for (it = task->m_child_tasks.begin(); it != task->m_child_tasks.end(); ++it) {
+          if ((*it)->m_all_child_tasks.size() > 0) {
+            task->m_all_child_tasks.insert((*it)->m_all_child_tasks.begin(), (*it)->m_all_child_tasks.end());
+            task->m_all_child_tasks.insert(*it);
+          }
+          // if child didn't finish computing allChildTasks
+          else {
+            task->m_all_child_tasks.clear();
+            break;
+          }
+        }
+      }
+      else {
+        nd_task--;
+      }
+    }
+  }
+
+  // Initialize variables on the tasks
+  for (auto sort_iter = sortinfo.begin(); sort_iter != sortinfo.end(); ++sort_iter) {
+    sort_iter->second.m_visited = false;
+    sort_iter->second.m_sorted  = false;
+  }
+} // end setupTaskConnections()
+
+//______________________________________________________________________
+//
+void
+TaskGraph::topologicalSort( std::vector<Task*> & sortedTasks )
+{
+  GraphSortInfoMap sortinfo;
+
+  setupTaskConnections(sortinfo);
+
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+    Task* task = iter->get();
+    if (!sortinfo.find(task)->second.m_sorted) {
+      processTask(task, sortedTasks, sortinfo);
+    }
+  }
+
+  int n = 0;
+  for (auto iter = sortedTasks.begin(); iter != sortedTasks.end(); ++iter) {
+    (*iter)->setSortedOrder(n++);
+  }
 }

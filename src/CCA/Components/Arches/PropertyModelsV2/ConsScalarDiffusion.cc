@@ -16,7 +16,7 @@ void ConsScalarDiffusion::problemSetup( ProblemSpecP& db ){
 
   m_density_name        = parse_ups_for_role( DENSITY, db, "density" );
   m_turb_viscosity_name = "turb_viscosity";
-  m_gamma_name          = _task_name;
+  m_gamma_name          = m_task_name;
   db->require("D_mol", m_Diffusivity);
   db->getWithDefault("turbulentPrandtlNumber", m_Pr, 0.4);
 }
@@ -33,9 +33,9 @@ void ConsScalarDiffusion::register_initialize( AVarInfo& variable_registry , con
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_gamma_name,          AFC::COMPUTES, variable_registry, _task_name );
-  //register_variable( m_turb_viscosity_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry ,_task_name );
-  //register_variable( m_density_name,        AFC::REQUIRES, 0, AFC::NEWDW, variable_registry ,_task_name );
+  register_variable( m_gamma_name,          AFC::COMPUTES, variable_registry, m_task_name );
+  //register_variable( m_turb_viscosity_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry ,m_task_name );
+  //register_variable( m_density_name,        AFC::REQUIRES, 0, AFC::NEWDW, variable_registry ,m_task_name );
 
 }
 
@@ -72,9 +72,9 @@ void ConsScalarDiffusion::register_timestep_eval( VIVec& variable_registry, cons
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_gamma_name,          AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_turb_viscosity_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep ,_task_name );
-  register_variable( m_density_name,        AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep ,_task_name );
+  register_variable( m_gamma_name,          AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( m_turb_viscosity_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
+  register_variable( m_density_name,        AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
 
 }
 

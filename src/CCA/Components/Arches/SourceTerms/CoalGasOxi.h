@@ -65,6 +65,10 @@ private:
   std::string m_charmass_root;
   std::string _oxi_model_name; 
   bool m_dest_flag;// flag indicating whether or not deposition mass will be added to the gas phase. 
+  const VarLabel* m_char_for_nox_src_label;
+  std::string m_char_for_nox_src_name;        ///< string name for char src used for nox 
+  const VarLabel* m_char_bd_src_label;
+  std::string m_char_bd_src_name;        ///< string name for bd src used in the nox model
 
 }; // end CoalGasOxi
 } // end namespace Uintah

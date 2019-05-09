@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -53,8 +53,7 @@ LinearInterpolator* LinearInterpolator::clone(const Patch* patch)
 int LinearInterpolator::findCellAndWeights(const Point& pos,
                                            vector<IntVector>& ni, 
                                            vector<double>& S,
-                                           const Matrix3& size,
-                                           const Matrix3& defgrad)
+                                           const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos );
   int ix = Floor(cellpos.x());
@@ -418,8 +417,7 @@ void LinearInterpolator::findCellAndWeightsAndShapeDerivatives_CFI(
 int LinearInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                     vector<IntVector>& ni,
                                                     vector<Vector>& d_S,
-                                                    const Matrix3& size,
-                                                    const Matrix3& defgrad)
+                                                    const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
@@ -455,8 +453,7 @@ LinearInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                          vector<IntVector>& ni,
                                                          vector<double>& S,
                                                          vector<Vector>& d_S,
-                                                         const Matrix3& size,
-                                                         const Matrix3& defgrad)
+                                                         const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());

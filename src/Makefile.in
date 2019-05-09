@@ -1,6 +1,6 @@
 #  The MIT License
 #
-#  Copyright (c) 1997-2018 The University of Utah
+#  Copyright (c) 1997-2019 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -129,7 +129,7 @@ ifeq ($(BUILD_MPM),yes)
 	$(MPM_DIR)/Materials         \
 	$(MPM_DIR)/MMS               \
 	$(MPM_DIR)/PhysicalBC        \
-    $(MPM_DIR)/Solver            \
+        $(MPM_DIR)/Solver            \
 	$(MPM_DIR)/Core
 
 #       $(MPM_DIR)/Crack
@@ -474,8 +474,10 @@ endif
        # This catches anything that slipped through
 	@( find CCA/           -name "*.o" -exec rm -f {} \;)
 	@( find CCA/           -name "*.d" -exec rm -f {} \;)
+ifeq ($(BUILD_UNIT_TESTS),yes)
 	@( find testprograms   -name "*.o" -exec rm -f {} \;)
 	@( find testprograms   -name "*.d" -exec rm -f {} \;)
+endif
 	@( find Core           -name "*.o" -exec rm -f {} \;)
 	@( find Core           -name "*.d" -exec rm -f {} \;)
 	@( find StandAlone     -name "*.o" -exec rm -f {} \;)

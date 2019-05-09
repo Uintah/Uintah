@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -72,12 +72,17 @@ using DepCommCond         = DetailedDep::CommCondition;
 //_____________________________________________________________________________
 //
 enum QueueAlg {
-    FCFS
+    FCFS = 0
   , Stack
   , Random
+  , MostChildren
+  , LeastChildren
+  , MostAllChildren
+  , LeastAllChildren
   , MostMessages
   , LeastMessages
-  , CritialPath
+  , MostL2Children
+  , LeastL2Children
   , PatchOrder
   , PatchOrderRandom
 };
@@ -127,7 +132,9 @@ public:
     return m_tasks[i];
   }
 
-  void assignMessageTags( int me );
+  void assignMessageTags( unsigned int index );
+
+  MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > & getCommInfo() { return m_comm_info; }
 
   void initializeScrubs( std::vector<OnDemandDataWarehouseP> & dws, int dwmap[] );
 
@@ -152,7 +159,7 @@ public:
 
   void initTimestep();
 
-  void computeLocalTasks( int me );
+  void computeLocalTasks();
 
   int numLocalTasks() const
   {
@@ -364,7 +371,7 @@ private:
   TaskQueue  m_ready_tasks;
   TaskQueue  m_initial_ready_tasks;
   TaskPQueue m_mpi_completed_tasks;
-  std::atomic<int> atomic_readyTasks_size { 0 };
+  std::atomic<int> m_atomic_initial_ready_tasks_size { 0 };
   std::atomic<int> m_atomic_mpi_completed_tasks_size { 0 };
 
   // This "generation" number is to keep track of which InternalDependency
@@ -377,6 +384,9 @@ private:
 
   ScrubCountTable m_scrub_count_table;
 
+  // A mapper to keep track of point to point MPI calls.
+  MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > m_comm_info;
+  
   // eliminate copy, assignment and move
   DetailedTasks(const DetailedTasks &)            = delete;
   DetailedTasks& operator=(const DetailedTasks &) = delete;
@@ -409,4 +419,3 @@ private:
 }  // namespace Uintah
 
 #endif // CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
-

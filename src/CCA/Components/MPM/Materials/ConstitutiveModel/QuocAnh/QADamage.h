@@ -94,6 +94,7 @@ namespace Uintah {
 			double Alpha;
 
 			double length;
+			double mesh;
 			double kRatio;
 			double tensile;
 			double Gf;

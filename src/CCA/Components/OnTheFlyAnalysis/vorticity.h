@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -84,26 +84,20 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps){};
                                   
     virtual void scheduleInitialize(SchedulerP& sched,
-                                    const LevelP& level);
+                                    const LevelP& level){};
 
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level){};
                                     
-    virtual void restartInitialize();
+    virtual void restartInitialize(){};
                                     
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
    
-    void scheduleDoAnalysis_preReloc(SchedulerP& sched,
+    virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) {};
                                       
   private:
-
-    void initialize(const ProcessorGroup*, 
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse*,
-                    DataWarehouse* new_dw);
                     
     void doAnalysis(const ProcessorGroup* pg,
                     const PatchSubset* patches,

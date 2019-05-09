@@ -67,7 +67,7 @@ DepositionEnthalpy::problemSetup( ProblemSpecP& db ){
 
 void
 DepositionEnthalpy::create_local_labels(){
-  register_new_variable<CCVariable<double> >( _task_name );
+  register_new_variable<CCVariable<double> >( m_task_name );
   register_new_variable<CCVariable<double> >( _ash_enthalpy_src );
 }
 
@@ -80,14 +80,14 @@ DepositionEnthalpy::create_local_labels(){
 void
 DepositionEnthalpy::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _ash_enthalpy_src, ArchesFieldContainer::COMPUTES, variable_registry );
 }
 
 void
 DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
+  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(m_task_name);
   CCVariable<double>& ash_enthalpy_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_enthalpy_src);
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -104,7 +104,7 @@ DepositionEnthalpy::register_timestep_eval(
   const int time_substep, const bool packed_tasks ){
 
   register_variable( _cellType_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _ash_enthalpy_src, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _gasT_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
@@ -168,7 +168,7 @@ DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
-  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
+  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(m_task_name);
   ash_enthalpy_flux.initialize(0.0);
   CCVariable<double>& ash_enthalpy_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_enthalpy_src);
   ash_enthalpy_src.initialize(0.0);

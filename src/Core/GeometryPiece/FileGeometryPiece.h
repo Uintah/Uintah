@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,9 +37,9 @@ namespace Uintah {
 
 /////////////////////////////////////////////////////////////////////////////
 /*!
-	
+        
   \class FileGeometryPiece
-	
+        
   \brief Reads in a set of points and optionally volume, external forces and 
   fiber directions for each point from an input text file.
   
@@ -47,7 +47,7 @@ namespace Uintah {
   Department of Mechanical Engineering \n
   University of Utah \n
   Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n
-	
+        
   Reads in a set of points (particle centroids) from an input file.  
 
   In addition, Convected Particle Domain Interpolation (CPDI) or the 
@@ -93,7 +93,7 @@ namespace Uintah {
   
 */
 /////////////////////////////////////////////////////////////////////////////
-	
+        
   class FileGeometryPiece : public SmoothGeomPiece {
     
   public:
@@ -120,8 +120,8 @@ namespace Uintah {
 
     //////////
     // Determines whether a point is inside the box.
-    virtual bool inside(const Point &p) const;
-	 
+    virtual bool inside(const Point &p, const bool defVal) const;
+         
     //////////
     //  Returns the bounding box surrounding the cylinder.
     virtual Box getBoundingBox() const;

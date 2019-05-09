@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -87,7 +87,7 @@ class UnifiedScheduler : public MPIScheduler  {
   public:
 
     UnifiedScheduler( const ProcessorGroup * myworld,
-		      UnifiedScheduler * parentScheduler = nullptr );
+                      UnifiedScheduler * parentScheduler = nullptr );
 
     virtual ~UnifiedScheduler();
     
@@ -110,10 +110,18 @@ class UnifiedScheduler : public MPIScheduler  {
                                            // CMAKE/configure step so that future programmers don't have to manually remember to
                                            // update this value if it ever changes.
 
+    // timing statistics for Uintah infrastructure overhead
+    enum ThreadStatsEnum {
+        WaitTime
+      , NumTasks
+      , NumPatches
+    };
+    
+    VectorInfoMapper< ThreadStatsEnum, double > m_thread_info;
+
     static std::string myRankThread();
 
     friend class UnifiedSchedulerWorker;
-
 
   private:
 
@@ -142,7 +150,6 @@ class UnifiedScheduler : public MPIScheduler  {
     int      m_num_phases{0};
     bool     m_abort{false};
     int      m_abort_point{0};
-    int      m_num_threads{-1};
 
 #ifdef HAVE_CUDA
 

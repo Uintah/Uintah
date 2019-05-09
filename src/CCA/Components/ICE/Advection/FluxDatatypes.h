@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,13 +34,20 @@ namespace Uintah {
  /*______________________________________________________________________
  *   different data types 
  *______________________________________________________________________*/ 
-  struct fflux { double d_fflux[6]; };          //face flux
+  
+  // face flux
+  struct fflux { 
+    double fflux[6]; 
+  };          
+  
   //__________________________________
   // face data
   template <class T> struct facedata {
-    T d_data[6];
+    T fdata[6];
   };
   
+  //__________________________________
+  //
   template<class T>
   MPI_Datatype makeMPI_facedata()
   {
@@ -52,6 +59,8 @@ namespace Uintah {
     return mpitype;
   }
   
+  //__________________________________
+  //
   template<class T>
   const TypeDescription* fun_getTypeDescription(facedata<T>*)
   {
@@ -73,6 +82,8 @@ namespace Uintah {
     T d_vrtx[8];
   };
   
+  //__________________________________
+  //
   template<class T>
   MPI_Datatype makeMPI_vertex()
   {
@@ -84,6 +95,8 @@ namespace Uintah {
     return mpitype;
   }
   
+  //__________________________________
+  //
   template<class T>
   const TypeDescription* fun_getTypeDescription(vertex<T>*)
   {
@@ -109,14 +122,16 @@ namespace Uintah {
 
   template<class T>
   void swapbytes( Uintah::facedata<T>& f) {
-    for(int i=0;i<6;i++)
-      swapbytes(f.d_data[i]);
+    for(int i=0;i<6;i++){
+      swapbytes(f.fdata[i]);
+    }
   }
   
   template<class T>
   void swapbytes( Uintah::vertex<T>& v) {
-    for(int i=0;i<8;i++)
+    for(int i=0;i<8;i++) {
       swapbytes(v.d_vrtx[i]);
+    }
   }
   
   void swapbytes( Uintah::fflux& );

@@ -113,60 +113,66 @@ namespace WasatchCore {
     typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, ZVolField, ZVolField >::type NeumannZ;
   };
   
-  //
+  // NOTE: The operators below don't make any sense. they are placed however to get the BC machinery (APPLY_BC Macros) to work
+  // Once the BC machinery is properly specialized for different BC types, then we can get rid of these operators
   template<>
   struct BCOpTypeSelector<FaceTypes<SVolField>::XFace>
   {
-    typedef SpatialOps::SSurfXField FieldT;
-  public:
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletX;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpX;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannX;
+  private:
+    typedef OpTypes<SVolField> Ops;
     
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletY;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpY;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannY;
-
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletZ;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpZ;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannZ;
-
+  public:
+    typedef typename Ops::InterpC2FX   DirichletX;
+    typedef typename Ops::InterpC2FY   DirichletY;
+    typedef typename Ops::InterpC2FZ   DirichletZ;
+    
+    typedef typename Ops::InterpC2FX   InterpX;
+    typedef typename Ops::InterpC2FY   InterpY;
+    typedef typename Ops::InterpC2FZ   InterpZ;
+    
+    typedef typename Ops::GradX   NeumannX;
+    typedef typename Ops::GradY   NeumannY;
+    typedef typename Ops::GradZ   NeumannZ;
   };
 
   template<>
   struct BCOpTypeSelector<FaceTypes<SVolField>::YFace>
   {
-    typedef SpatialOps::SSurfYField FieldT;
+  private:
+    typedef OpTypes<SVolField> Ops;
+    
   public:
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletX;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpX;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannX;
+    typedef typename Ops::InterpC2FX   DirichletX;
+    typedef typename Ops::InterpC2FY   DirichletY;
+    typedef typename Ops::InterpC2FZ   DirichletZ;
     
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletY;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpY;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannY;
+    typedef typename Ops::InterpC2FX   InterpX;
+    typedef typename Ops::InterpC2FY   InterpY;
+    typedef typename Ops::InterpC2FZ   InterpZ;
     
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletZ;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpZ;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannZ;
+    typedef typename Ops::GradX   NeumannX;
+    typedef typename Ops::GradY   NeumannY;
+    typedef typename Ops::GradZ   NeumannZ;
   };
   
   template<>
   struct BCOpTypeSelector<FaceTypes<SVolField>::ZFace>
   {
-    typedef SpatialOps::SSurfZField FieldT;
+  private:
+    typedef OpTypes<SVolField> Ops;
+    
   public:
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletX;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpX;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannX;
+    typedef typename Ops::InterpC2FX   DirichletX;
+    typedef typename Ops::InterpC2FY   DirichletY;
+    typedef typename Ops::InterpC2FZ   DirichletZ;
     
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletY;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpY;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannY;
+    typedef typename Ops::InterpC2FX   InterpX;
+    typedef typename Ops::InterpC2FY   InterpY;
+    typedef typename Ops::InterpC2FZ   InterpZ;
     
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletZ;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpZ;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannZ;
+    typedef typename Ops::GradX   NeumannX;
+    typedef typename Ops::GradY   NeumannY;
+    typedef typename Ops::GradZ   NeumannZ;
   };
 
 

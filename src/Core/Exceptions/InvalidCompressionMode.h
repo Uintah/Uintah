@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,7 +44,7 @@ namespace Uintah {
   class InvalidCompressionMode : public Uintah::Exception {
   public:
     InvalidCompressionMode(const std::string& invalidmode,
-			   const std::string& vartype,
+                           const std::string& vartype,
                            const char* file,
                            int line);
     InvalidCompressionMode(const InvalidCompressionMode&);

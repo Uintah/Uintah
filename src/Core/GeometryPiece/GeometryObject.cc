@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,9 +31,12 @@ using namespace Uintah;
 using namespace std;
 
 
-GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
-                               list<DataItem>& data) :
-  d_piece(piece)
+//______________________________________________________________________
+//
+GeometryObject::GeometryObject(GeometryPieceP   geom_piece, 
+                               ProblemSpecP   & ps,
+                               list<DataItem> & data) :
+  d_geom_pieceP( geom_piece )
 {
    for (list<DataItem>::iterator it = data.begin(); it != data.end();it++)
    {
@@ -42,13 +45,13 @@ GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
         case Double:
         {
           double val;
-          if(it->name == "volumeFraction")
-          {
-              ps->getWithDefault(it->name,val,-1.0);
-          } else
-          {
-              ps->require(it->name,val);
+          if(it->name == "volumeFraction"){
+            ps->getWithDefault(it->name,val,-1.0);
+          } 
+          else {
+            ps->require(it->name,val);
           }
+          
           d_double_data[it->name] = val;
           break;
         }
@@ -62,26 +65,22 @@ GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
         case Vector:
         {
           Uintah::Vector val;
-          if(it->name == "affineTransformation_A0")
-          {
-              ps->getWithDefault(it->name,val,Uintah::Vector(1.,0.,0.));
+          if(it->name == "affineTransformation_A0") {
+            ps->getWithDefault( it->name, val, Uintah::Vector(1.,0.,0.) );
+          } 
+          else if(it->name == "affineTransformation_A1") {
+            ps->getWithDefault( it->name, val, Uintah::Vector(0.,1.,0.) );
 
-          } else if(it->name == "affineTransformation_A1")
-          {
-              ps->getWithDefault(it->name,val,Uintah::Vector(0.,1.,0.));
+          } else if(it->name == "affineTransformation_A2") {
+            ps->getWithDefault( it->name, val, Uintah::Vector(0.,0.,1.) );
 
-          } else if(it->name == "affineTransformation_A2")
-          {
-              ps->getWithDefault(it->name,val,Uintah::Vector(0.,0.,1.));
+          } else if(it->name == "affineTransformation_b") {
+            ps->getWithDefault( it->name, val, Uintah::Vector(0.,0.,0.) );
 
-          } else if(it->name == "affineTransformation_b")
-          {
-              ps->getWithDefault(it->name,val,Uintah::Vector(0.,0.,0.));
-
-          } else
-          {
-              ps->require(it->name,val);
+          } else{
+            ps->require(it->name,val);
           }
+          
           d_vector_data[it->name] = val;
           break;
         }
@@ -103,25 +102,30 @@ GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
    }
 }
 
+//______________________________________________________________________
 void
 GeometryObject::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP geom_obj_ps = ps->appendChild("geom_object");
-  d_piece->outputProblemSpec(geom_obj_ps);
+  d_geom_pieceP->outputProblemSpec(geom_obj_ps);
   
   for (map<string,double>::iterator it = d_double_data.begin(); 
        it != d_double_data.end(); it++) {
-    if(!(it->first.compare("volumeFraction") == 0 && it->second == -1.0))
+    if( !(it->first.compare("volumeFraction") == 0 && it->second == -1.0) ){
       geom_obj_ps->appendElement(it->first.c_str(),it->second);
+    }
   }
+  
   for (map<string,Uintah::Vector>::iterator it = d_vector_data.begin(); 
        it != d_vector_data.end(); it++) {
     geom_obj_ps->appendElement(it->first.c_str(),it->second);
   }
+  
   for (map<string,Uintah::IntVector>::iterator it = d_intvector_data.begin(); 
        it != d_intvector_data.end(); it++) {
     geom_obj_ps->appendElement(it->first.c_str(),it->second);
   }
+  
   for (map<string,Uintah::Point>::iterator it = d_point_data.begin(); 
        it != d_point_data.end(); it++) {
     geom_obj_ps->appendElement(it->first.c_str(),it->second);

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,12 +46,12 @@ ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps,
   if (flags->d_integrator_type == "implicit") 
     return scinew ImplicitParticleCreator(mat,flags);
 
-  //else if (mat_type == "membrane")
-   // return scinew MembraneParticleCreator(mat,flags);
+//  else if (mat_type == "membrane")
+//    return scinew MembraneParticleCreator(mat,flags);
 
-  //else if (mat_type == "shell_CNH")
-    //return scinew ShellParticleCreator(mat,flags);
-
+//  else if (mat_type == "shell_CNH")
+//    return scinew ShellParticleCreator(mat,flags);
+  
   else
     return scinew ParticleCreator(mat,flags);
 

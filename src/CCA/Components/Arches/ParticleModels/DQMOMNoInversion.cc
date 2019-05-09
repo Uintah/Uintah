@@ -127,14 +127,14 @@ void DQMOMNoInversion::register_timestep_eval(
 
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
 
-    register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
+    register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
 
     std::vector<std::string> models = m_ic_model_map[*i];
     for ( auto imodel = models.begin(); imodel != models.end(); imodel++ ){
 
       register_variable( *imodel, ArchesFieldContainer::REQUIRES, 0,
                          ArchesFieldContainer::NEWDW, variable_registry,
-                         time_substep, _task_name );
+                         time_substep, m_task_name );
 
     }
 

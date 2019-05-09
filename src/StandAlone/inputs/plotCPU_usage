@@ -41,7 +41,11 @@ while ($#argv)
         exit 1
    endsw
 end
-
+unalias rm
+#__________________________________
+# remove your droppings and make a copy of the output file
+/bin/rm -rf scraps
+mkdir scraps >&/dev/null
 
 #__________________________________
 set f = `find -maxdepth $depth -type f | xargs grep -l delT= | sort`
@@ -49,13 +53,13 @@ set f = `find -maxdepth $depth -type f | xargs grep -l delT= | sort`
 echo "examining each of these output files"
 echo $f
 #__________________________________
-/bin/rm -f .procs .date .elapsedTime .data
-touch .procs .date .elapsedTime
+/bin/rm -f scraps/procs scraps/date scraps/elapsedTime scraps/data
+touch scraps/procs scraps/date scraps/elapsedTime
 
 foreach X ($f[*]:q)
- grep Date $X -m 1| cut -d":" -f2-4 >> .date
- grep "processors (using MPI)" $X | cut -d" " -f 2 >> .procs
- grep Time= $X |tail -n 1  | cut -d"=" -f4 | cut -d"," -f1 >> .elapsedTime
+ grep Date $X -m 1          | cut -d":" -f2-4            >> scraps/date
+ grep "MPI processes" $X    | cut -d" " -f 2             >> scraps/procs
+ grep Time= $X |  tail -n 1 | awk -F "=|   " '{print $7}'>> scraps/elapsedTime
 end
 
 #__________________________________
@@ -63,20 +67,23 @@ end
 # Tue Jul 10 13:23:34 2007 -> 07/10/07_13:23
 # put quotes around the date
 # use the date command to reformat it
-awk -F, '{printf("\"%s\" \n",$1)}' <.date >&.date2
-awk -F, '{time=system("date +%D_%H:%M -d"$1)}'<.date2 >& .date
+awk -F, '{printf("\"%s\" \n",$1)}'            < scraps/date  >&scraps/date2
+awk -F, '{time=system("date +%D_%H:%M -d"$1)}'< scraps/date2 >& scraps/date
+
 # sort by date
-paste -d "," .date .procs .elapsedTime |sort -t/ -n -k1.8  >& .data
+paste -d "," scraps/date scraps/procs scraps/elapsedTime |sort -t/ -n -k1.8  >& scraps/data
 
 #__________________________________
 # compute number of cpu hours
-awk -F, ' {hr=$2 * $3/3600 ; printf( "%s, %g, %g, %g \n",$1, $2, $3, hr) }' < .data >& .data.tmp
-awk -F, 'NR==1 {sum=$4; printf( "%s %g %g %g %g \n",$1, $2, $3, $4, sum )} ; NR>1 {sum=sum + $4; printf( "%s %g %g %g %g \n",$1, $2, $3, $4, sum )}' <.data.tmp >& .data
+awk -F, ' {hr=$2 * $3/3600 ;\
+           printf( "%s, %g, %g, %g \n",$1, $2, $3, hr) }' < scraps/data >& scraps/data.tmp
+           
+awk -F, 'NR==1 {sum=$4;       printf( "%s %g %g %g %g \n",$1, $2, $3, $4, sum )} ;\
+         NR>1  {sum=sum + $4; printf( "%s %g %g %g %g \n",$1, $2, $3, $4, sum )}' <scraps/data.tmp >& scraps/data
 
 echo "Extracted data"
 echo "date #procs  #elapsed Time  cpu hrs  cum cpu hrs"
-more .data
-/bin/rm .procs .date .date2 .elapsedTime .data.tmp
+more scraps/data
 
 /bin/rm -f gp
 #__________________________________
@@ -109,14 +116,14 @@ set ylabel 'CPU Hours'         textcolor lt 1
 set y2label 'Total CPU Hours'  textcolor lt 2
 set xlabel 'Date
 
-plot '.data' using 1:4 lw 3 t           'CPU hrs' with impulse,\
-     '.data' using 1:5 axis x1y2 t 'Cum. CPU hrs' with step
+plot 'scraps/data' using 1:4 lw 3 t           'CPU hrs' with impulse,\
+     'scraps/data' using 1:5 axis x1y2 t 'Cum. CPU hrs' with step
 #__________________________________
 set size 1.0,0.33 
 set origin 0.0,0.0
 unset y2label
 set ylabel 'Processors' textcolor lt 1
-plot '.data' using 1:2 lw 3 t           'CPUs' with impulse
+plot 'scraps/data' using 1:2 lw 3 t           'CPUs' with impulse
 set nomultiplot
 
 fin
@@ -131,6 +138,6 @@ if($hardcopy == "y" || $hardcopy == "Y") then
   mogrify -rotate 90 cpu_usage.jpg
 endif
 
-/bin/rm .data gp
+/bin/rm -rf scraps/ gp
 
 exit

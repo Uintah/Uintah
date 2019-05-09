@@ -32,13 +32,6 @@
 
 //====================================================================
 
-Expr::Tag turbulent_diffusivity_tag()
-{
-  return Expr::Tag( "TurbulentDiffusivity", Expr::STATE_NONE );
-}
-
-//====================================================================
-
 TurbulentDiffusivity::
 TurbulentDiffusivity( const Expr::Tag rhoTag,
                       const double tSchmidt,

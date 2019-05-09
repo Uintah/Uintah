@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -103,9 +103,9 @@ DifferenceGeometryPiece::clone() const
 }
 
 bool
-DifferenceGeometryPiece::inside(const Point &p) const 
+DifferenceGeometryPiece::inside(const Point &p, const bool defVal=false) const 
 {
-  return (left_->inside(p) && !right_->inside(p));
+  return (left_->inside(p,defVal) && !right_->inside(p,defVal));
 }
 
 Box

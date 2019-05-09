@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -79,11 +79,16 @@ WARNING
   class DebugStream;
   class Dout;
   
+  typedef unsigned char ValidateFlag;
 
+#ifdef HAVE_VISIT
+  struct visit_simulation_data;
+#endif
+  
   class ApplicationInterface : public UintahParallelPort {
 
-    // NOTE: ONLY CS infrasture should be a friend class - the actual
-    // applictions should NOT have access to private member methods as
+    // NOTE: ONLY CS infrastructure should be a friend class - the actual
+    // applications should NOT have access to private member methods as
     // they should get those values via the Data Warehouse.
     friend class SimulationController;
     friend class AMRSimulationController;
@@ -93,6 +98,7 @@ WARNING
     friend class DynamicMPIScheduler;
     friend class MPIScheduler;
     friend class UnifiedScheduler;
+    friend class DetailedTasks;
 
     friend class LoadBalancersCommon;
     friend class DynamicLoadBalancer;
@@ -102,6 +108,18 @@ WARNING
 
     friend class Switcher;
 
+#ifdef HAVE_VISIT
+    friend void visit_UpdateSimData( visit_simulation_data *sim, 
+                                     GridP currentGrid,
+                                     bool first, bool last );
+    
+    friend void visit_SetTimeValues( visit_simulation_data *sim );
+    friend void visit_SetDeltaTValues( visit_simulation_data *sim );
+    friend void visit_SetApplicationStats( visit_simulation_data *sim );
+    friend void visit_SimTimeMaxCallback(char *val, void *cbdata);
+    friend void visit_DeltaTVariableCallback(char *val, void *cbdata);
+#endif
+    
   public:
     ApplicationInterface();
     virtual ~ApplicationInterface();
@@ -115,10 +133,9 @@ WARNING
     virtual Regridder *getRegridder() = 0;
     virtual Output    *getOutput()    = 0;
     
-    virtual void setReductionVariables( UintahParallelComponent *comp ) = 0;
-
     // Top level problem set up called by sus.
     virtual void problemSetup( const ProblemSpecP &prob_spec ) = 0;
+    virtual void problemSetupDeltaT( const ProblemSpecP &prob_spec ) = 0;
     
     // Top level problem set up called by simulation controller.
     virtual void problemSetup( const ProblemSpecP     & params,
@@ -132,7 +149,7 @@ WARNING
     // Used to write parts of the problem spec.
     virtual void outputProblemSpec( ProblemSpecP & ps ) = 0;
 
-    // Schedule the inital setup of the problem.
+    // Schedule the initial setup of the problem.
     virtual void scheduleInitialize( const LevelP     & level,
                                            SchedulerP & scheduler ) = 0;
                                  
@@ -149,20 +166,19 @@ WARNING
     // is restarted.
     virtual void restartInitialize() = 0;
 
-    // Ask the application which primary task graph it wishes to
-    // execute this time step, this will be an index into the
-    // scheduler's vector of task-graphs.
-    virtual int computeTaskGraphIndex() = 0;
-    virtual int computeTaskGraphIndex( const int TimeStep ) = 0;
+    // Get the task graph the application wants to execute. Returns an
+    // index into the scheduler's list of task graphs.
+    virtual void setTaskGraphIndex( int index ) = 0;
+    virtual int  getTaskGraphIndex() = 0;
 
-    // Schedule the inital switching.
+    // Schedule the initial switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,
                                                      SchedulerP & sched ) = 0;
       
     virtual void scheduleSwitchTest( const LevelP &     level,
                                            SchedulerP & scheduler ) = 0;
 
-    // Schedule the actual time step advencement tasks.
+    // Schedule the actual time step advancement tasks.
     virtual void scheduleTimeAdvance( const LevelP     & level,
                                             SchedulerP & scheduler ) = 0;
 
@@ -243,7 +259,7 @@ WARNING
     virtual void setDynamicRegridding(bool val) = 0;
     virtual bool isDynamicRegridding() const = 0;
   
-    // Boolean for vars chanegd by the in-situ.
+    // Boolean for vars changed by the in-situ.
     virtual void haveModifiedVars( bool val ) = 0;
     virtual bool haveModifiedVars() const = 0;
      
@@ -257,13 +273,24 @@ WARNING
     virtual int  getLastRegridTimeStep() = 0;
     
     // Some applications can set reduction variables
+    virtual void addReductionVariable( std::string name,
+                                       const TypeDescription *varType,
+                                       bool varActive = false ) = 0;
+    virtual unsigned int numReductionVariable() const = 0;
     virtual void activateReductionVariable(std::string name, bool val) = 0;
-    virtual bool activeReductionVariable(std::string name) = 0;
+    virtual bool activeReductionVariable(std::string name) const = 0;
     virtual bool isBenignReductionVariable( std::string name ) = 0;
-    virtual void setReductionVariable(std::string name,   bool val) = 0;
-    virtual void setReductionVariable(std::string name, double val) = 0;
+    virtual void setReductionVariable(DataWarehouse* new_dw, std::string name,   bool val) = 0;
+    virtual void setReductionVariable(DataWarehouse* new_dw, std::string name, double val) = 0;
+    virtual void overrideReductionVariable(DataWarehouse* new_dw, std::string name,   bool val) = 0;
+    virtual void overrideReductionVariable(DataWarehouse* new_dw, std::string name, double val) = 0;
+    
     // Get application specific reduction values all cast to doubles.
-    virtual double getReductionVariable( std::string name ) = 0;
+    virtual double getReductionVariable( std::string name ) const = 0;
+    virtual double getReductionVariable( unsigned int index ) const = 0;
+    virtual std::string getReductionVariableName( unsigned int index ) const = 0;
+    virtual unsigned int getReductionVariableCount( unsigned int index ) const = 0;
+    virtual bool       overriddenReductionVariable( unsigned int index ) const = 0;
     
     // Access methods for member classes.
     virtual MaterialManagerP getMaterialManagerP() const = 0;
@@ -272,16 +299,14 @@ WARNING
     enum ApplicationStatsEnum {
       // Add additional stat enums that are used outside of the
       // infrastructure (i.e. the models or applications).
-      CarcassCount = 99
+      DummyEnum = 999
     };
 
-    virtual ReductionInfoMapper< ApplicationStatsEnum,
-                                 double > & getApplicationStats() = 0;
+    virtual ReductionInfoMapper< ApplicationStatsEnum, double > & getApplicationStats() = 0;
 
     virtual void resetApplicationStats( double val ) = 0;
       
-    virtual void reduceApplicationStats( bool allReduce,
-                                         const ProcessorGroup* myWorld ) = 0;
+    virtual void reduceApplicationStats( bool allReduce, const ProcessorGroup* myWorld ) = 0;
 
     virtual void   setDelTOverrideRestart( double val ) = 0;
     virtual double getDelTOverrideRestart() const = 0;
@@ -310,37 +335,38 @@ WARNING
     virtual void   setSimTimeMax( double val ) = 0;
     virtual double getSimTimeMax() const = 0;
 
+    virtual void   setSimTimeClampToOutput( bool val ) = 0;
+    virtual bool   getSimTimeClampToOutput() const = 0;
+    
     virtual void   setTimeStepsMax( int val ) = 0;
     virtual int    getTimeStepsMax() const = 0;
 
     virtual void   setWallTimeMax( double val ) = 0;
     virtual double getWallTimeMax() const = 0;
 
-    virtual void   setClampTimeToOutput( bool val ) = 0;
-    virtual bool   getClampTimeToOutput() const = 0;
-    
-    virtual void     outputIfInvalidNextDelT( unsigned int flag ) = 0;
-    virtual void checkpointIfInvalidNextDelT( unsigned int flag ) = 0;
-    
     // The member methods are private as the child application should
     // ONLY get/set these values via the data warehouse.
   private:
 
+    // Flag for outputting or checkpointing if the next delta is invalid
+    virtual void         setOutputIfInvalidNextDelT( ValidateFlag flag ) = 0;
+    virtual ValidateFlag getOutputIfInvalidNextDelT() const = 0;
+
+    virtual void         setCheckpointIfInvalidNextDelT( ValidateFlag flag ) = 0;
+    virtual ValidateFlag getCheckpointIfInvalidNextDelT() const = 0;
+
     // Delta T methods
     virtual   void setDelT( double delT ) = 0;
     virtual double getDelT() const = 0;
-    virtual   void setDelTForAllLevels( SchedulerP& scheduler,
+    virtual   void setDelTForAllLevels(       SchedulerP& scheduler,
                                         const GridP & grid,
                                         const int totalFine ) = 0;
 
-    virtual   void setNextDelT( double delT ) = 0;
+    virtual   void setNextDelT( double delT, bool restart = false ) = 0;
     virtual double getNextDelT() const = 0;
     
     virtual   void setSimTime( double simTime ) = 0;
     virtual double getSimTime() const = 0;
-    
-    virtual   void setSimTimeStart( double simTime ) = 0;
-    virtual double getSimTimeStart() const = 0;
     
     // Returns the integer time step index of the simulation.  All
     // simulations start with a time step number of 0.  This value is
@@ -349,7 +375,7 @@ WARNING
     // The 'set' function should only be called by the
     // SimulationController at the beginning of a simulation.  The
     // 'increment' function is called by the SimulationController at
-    // the begining of each time step.
+    // the beginning of each time step.
     virtual void setTimeStep( int timeStep ) = 0;
     virtual void incrementTimeStep() = 0;
     virtual int  getTimeStep() const = 0;

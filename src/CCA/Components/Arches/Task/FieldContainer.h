@@ -33,7 +33,7 @@ namespace Uintah{
 
     public:
 
-      enum VAR_DEPEND { COMPUTES, MODIFIES, REQUIRES };
+      enum VAR_DEPEND { COMPUTES, MODIFIES, REQUIRES, COMPUTESCRATCHGHOST };
       enum WHICH_DW { OLDDW, NEWDW, LATEST };
 
       /** @brief The variable registry information. Each task variable has one of these.
@@ -252,9 +252,9 @@ namespace Uintah{
         VariableInformation ivar = get_variable_information( name, true );
         T* field = scinew T;
         if ( ivar.dw == OLDDW ){
-          _old_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
+          _old_dw->get( *field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
         } else {
-          _new_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
+          _new_dw->get( *field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
         }
 
         ConstFieldContainer icontain;
@@ -281,9 +281,9 @@ namespace Uintah{
         VariableInformation ivar = get_variable_information( name, true, which_dw );
         T* field = scinew T;
         if ( ivar.dw == OLDDW ){
-          _old_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
+          _old_dw->get( *field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
         } else {
-          _new_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
+          _new_dw->get( *field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
         }
 
         ConstFieldContainer icontain;
@@ -316,9 +316,9 @@ namespace Uintah{
         T* field = scinew T;
 
         if ( ivar.depend == MODIFIES ){
-          _new_dw->getModifiable( *field, ivar.label, _matl_index, _patch );
+          _new_dw->getModifiable( *field, ivar.label, m_matl_index, _patch );
         } else {
-          _new_dw->allocateAndPut( *field, ivar.label, _matl_index, _patch );
+          _new_dw->allocateAndPut( *field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
         }
 
         FieldContainer icontain;
@@ -330,32 +330,32 @@ namespace Uintah{
 
       }
 
-      /** @brief Get a temporary uintah variable **/
-      template <typename T>
-      inline T* get_temporary_field( const std::string name, const int nGhosts ){
-
-        T* field = scinew T;
-
-        Ghost::GhostType ghost_type;
-        if ( field->getTypeDescription() == CCVariable<double>::getTypeDescription() ){
-          ghost_type = Ghost::AroundCells;
-        } else {
-          ghost_type = Ghost::AroundFaces;
-        }
-
-        if ( nGhosts > 0 ){
-          _new_dw->allocateTemporary( *field, _patch, ghost_type, nGhosts );
-        } else {
-          _new_dw->allocateTemporary( *field, _patch, Ghost::None, 0 );
-        }
-
-        FieldContainer icontain;
-        icontain.set_field( field );
-        //icontain.set_label( NULL );
-        this->add_variable( name, icontain );
-
-        return field;
-      }
+      // /** @brief Get a temporary uintah variable **/
+      // template <typename T>
+      // inline T* get_temporary_field( const std::string name, const int nGhosts ){
+      //
+      //   T* field = scinew T;
+      //
+      //   Ghost::GhostType ghost_type;
+      //   if ( field->getTypeDescription() == CCVariable<double>::getTypeDescription() ){
+      //     ghost_type = Ghost::AroundCells;
+      //   } else {
+      //     ghost_type = Ghost::AroundFaces;
+      //   }
+      //
+      //   if ( nGhosts > 0 ){
+      //     _new_dw->allocateTemporary( *field, _patch, ghost_type, nGhosts );
+      //   } else {
+      //     _new_dw->allocateTemporary( *field, _patch, Ghost::None, 0 );
+      //   }
+      //
+      //   FieldContainer icontain;
+      //   icontain.set_field( field );
+      //   //icontain.set_label( NULL );
+      //   this->add_variable( name, icontain );
+      //
+      //   return field;
+      // }
 
       // @brief Get a particle field spatialOps representation of the Uintah field.
       std::tuple<ParticleVariable<double>*, ParticleSubset*> get_uintah_particle_field( const std::string name ){
@@ -365,10 +365,10 @@ namespace Uintah{
 
         if ( icheck != _particle_map.end() ){
           ParticleSubset* subset;
-          if ( _new_dw->haveParticleSubset(_matl_index, _patch) ){
-            subset = _new_dw->getParticleSubset( _matl_index, _patch );
+          if ( _new_dw->haveParticleSubset(m_matl_index, _patch) ){
+            subset = _new_dw->getParticleSubset( m_matl_index, _patch );
           } else {
-            subset = _old_dw->getParticleSubset( _matl_index, _patch );
+            subset = _old_dw->getParticleSubset( m_matl_index, _patch );
           }
           return std::make_tuple(icheck->second.get_field(), subset);
         }
@@ -377,10 +377,10 @@ namespace Uintah{
         ParticleSubset* subset;
         Uintah::ParticleVariable<double>* pvar = scinew Uintah::ParticleVariable<double>;
 
-        if ( _new_dw->haveParticleSubset(_matl_index, _patch) ){
-          subset = _new_dw->getParticleSubset( _matl_index, _patch );
+        if ( _new_dw->haveParticleSubset(m_matl_index, _patch) ){
+          subset = _new_dw->getParticleSubset( m_matl_index, _patch );
         } else {
-          subset = _old_dw->getParticleSubset( _matl_index, _patch );
+          subset = _old_dw->getParticleSubset( m_matl_index, _patch );
         }
 
         if ( ivar.depend == MODIFIES ){
@@ -406,10 +406,10 @@ namespace Uintah{
 
         if ( icheck != _const_particle_map.end() ){
           ParticleSubset* subset;
-          if ( _new_dw->haveParticleSubset(_matl_index, _patch) ){
-            subset = _new_dw->getParticleSubset( _matl_index, _patch );
+          if ( _new_dw->haveParticleSubset(m_matl_index, _patch) ){
+            subset = _new_dw->getParticleSubset( m_matl_index, _patch );
           } else {
-            subset = _old_dw->getParticleSubset( _matl_index, _patch );
+            subset = _old_dw->getParticleSubset( m_matl_index, _patch );
           }
           return std::make_tuple(icheck->second.get_field(), subset);
         }
@@ -418,10 +418,10 @@ namespace Uintah{
         constParticleVariable<double>* pvar = scinew constParticleVariable<double>;
 
         if ( ivar.dw == OLDDW ){
-          ParticleSubset* subset = _old_dw->getParticleSubset( _matl_index, _patch );
+          ParticleSubset* subset = _old_dw->getParticleSubset( m_matl_index, _patch );
           _old_dw->get( *pvar, ivar.label, subset );
         } else {
-          ParticleSubset* subset = _new_dw->getParticleSubset( _matl_index, _patch );
+          ParticleSubset* subset = _new_dw->getParticleSubset( m_matl_index, _patch );
           _new_dw->get( *pvar, ivar.label, subset );
         }
 
@@ -441,9 +441,9 @@ namespace Uintah{
         VariableInformation ivar = get_variable_information( name, false );
 
         if ( ivar.depend == MODIFIES ){
-          _new_dw->getModifiable( field, ivar.label, _matl_index, _patch );
+          _new_dw->getModifiable( field, ivar.label, m_matl_index, _patch );
         } else if ( ivar.depend == COMPUTES ) {
-          _new_dw->allocateAndPut( field, ivar.label, _matl_index, _patch );
+          _new_dw->allocateAndPut( field, ivar.label, m_matl_index, _patch );
         }
 
       }
@@ -457,11 +457,11 @@ namespace Uintah{
 
         if ( ivar.dw == OLDDW ){
 
-          _old_dw->get( field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
+          _old_dw->get( field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
 
         } else {
 
-          _new_dw->get( field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
+          _new_dw->get( field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
 
         }
       }
@@ -484,7 +484,7 @@ namespace Uintah{
       ConstUintahParticleMap _const_particle_map;
       const Patch* _patch;
 
-      const int _matl_index;
+      const int m_matl_index;
       DataWarehouse* _old_dw;
       DataWarehouse* _new_dw;
       VariableRegistry _variable_reg;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -156,7 +156,7 @@ MembraneParticleCreator::createParticles(MPMMaterial* matl,
               long64 cellID = ((long64)cell_idx.x() << 16) |
                 ((long64)cell_idx.y() << 32) |
                 ((long64)cell_idx.z() << 48);
-              if(piece->inside(p)){
+              if(piece->inside(p,false)){
                 pvars.position[start+count]=p;
                 pvars.pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
                 pvars.pvelocity[start+count]=(*obj)->getInitialData_Vector("velocity");

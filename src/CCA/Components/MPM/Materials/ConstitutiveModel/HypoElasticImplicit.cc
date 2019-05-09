@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -202,7 +202,7 @@ HypoElasticImplicit::computeStressTensorImplicit(const PatchSubset* patches,
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
         int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
-                                     psize[idx],deformationGradient[idx]);
+                                     psize[idx]);
 
         for(int k = 0; k < NN; k++) {
           const Vector& disp = dispNew[ni[k]];
@@ -380,7 +380,7 @@ HypoElasticImplicit::computeStressTensorImplicit(const PatchSubset* patches,
 
         // Get the node indices that surround the cell
         int NN = interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,
-                                           psize[idx],deformationGradient[idx]);
+                                           psize[idx]);
         for(int k = 0; k < NN; k++) {
           const Vector& disp = dispNew[ni[k]];
           

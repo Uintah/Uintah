@@ -7,7 +7,7 @@
 
 set scriptsDir = $argv
 set svn_path   = https://gforge.sci.utah.edu/svn/uintah/trunk/src/R_Tester/toplevel/
-set files      = "startTester killTester svn_checkout_scripts cleanup"
+set files      = (startTester killTester svn_checkout_scripts cleanup)
 
 if( ! -d $scriptsDir ) then
   echo " The directory $scriptsDir does not exist."  

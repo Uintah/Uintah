@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -118,14 +118,14 @@ class LoadBalancer;
                                const bool     removeOldDir );
 
     //! Call this after problemSetup it will copy the data and
-    //! checkpoint files ignore dumping reduction variables.
+    //! checkpoint files ignore dumping reduction/sole variables.
     virtual void postProcessUdaSetup( Dir& fromDir );
 
     //! Copy a section between udas .
     void copySection( const Dir & fromDir, const Dir & toDir, const std::string & file, const std::string & section );
 
     //! Copy a section from another uda's to our index.xml.
-    void copySection( Dir & fromDir, const std::string & section ) { copySection( fromDir, m_dir, "index.xml", section ); }
+    void copySection( Dir & fromDir, const std::string & section ) { copySection( fromDir, m_outputDir, "index.xml", section ); }
 
     //! Checks to see if this is an output time step. 
     //! If it is, setup directories and xml files that we need to output.
@@ -140,15 +140,14 @@ class LoadBalancer;
                                        SchedulerP & /* scheduler */,
                                        bool         recompile = false );
                                       
-    //! Call this after a time step recompute where delt is adjusted to
-    //! make sure there still will be output and/or checkpoint time step
-    virtual void reevaluate_OutputCheckPointTimeStep(const double simTime,
-                                                     const double delT);
-
     //! Call this after the time step has been executed to find the
     //! next time step to output
     virtual void findNext_OutputCheckPointTimeStep( const bool restart,
                                                     const GridP& grid );
+
+    //! Called after a time step recompute where delta t is adjusted
+    //! to make sure an output and/or checkpoint time step is needed.
+    virtual void recompute_OutputCheckPointTimeStep();
 
     //! write meta data to xml files 
     //! Call after time step has completed.
@@ -161,7 +160,12 @@ class LoadBalancer;
     //! Returns as a string the name of the top of the output directory.
     virtual const std::string getOutputLocation() const;
 
-    //! Asks if we need to recompile the task graph.
+    //! Normally saved vars are scrubbed if not needed for the next
+    //! time step. By pass scubbing when running in situ or if wanting
+    //! to save the previous time step.
+    virtual void setScrubSavedVariables( bool val ) { scrubSavedVariables = val; };
+
+    //! Asks if the task graph needs to be recompiled.
     virtual bool needRecompile( const GridP & grid );
 
     virtual void recompile(const GridP& grid);
@@ -177,13 +181,13 @@ class LoadBalancer;
                           DataWarehouse  * new_dw, 
                           int              type );
 
-    //! Task that handles outputting non-checkpoint reduction variables.
-    //! Scheduled in finalizeTimeStep.
-    void outputReductionVars( const ProcessorGroup *,
-                              const PatchSubset    * patch,
-                              const MaterialSubset * matls,
-                              DataWarehouse  * old_dw,
-                              DataWarehouse  * new_dw );
+    //! Task that handles outputting non-checkpoint global
+    //! reduction/sole variables.  Scheduled in finalizeTimeStep.
+    void outputGlobalVars( const ProcessorGroup *,
+                           const PatchSubset    * patch,
+                           const MaterialSubset * matls,
+                                 DataWarehouse  * old_dw,
+                                 DataWarehouse  * new_dw );
 
     //! Get the time the next output will occur
     virtual double getNextOutputTime() const { return m_nextOutputTime; }
@@ -231,12 +235,14 @@ class LoadBalancer;
     void   setSaveAsUDA()  { m_outputFileFormat = UDA; }
     void   setSaveAsPIDX() { m_outputFileFormat = PIDX; }
 
-    //! Called by In-situ VisIt to force the dump of a time step's data.
+    //! Called by in situ VisIt to force the dump of a time step's data.
     void outputTimeStep( const GridP& grid,
-                         SchedulerP& sched );
+                         SchedulerP& sched,
+                         bool previous );
 
     void checkpointTimeStep( const GridP& grid,
-                             SchedulerP& sched );
+                             SchedulerP& sched,
+                             bool previous );
 
     void maybeLastTimeStep( bool val ) { m_maybeLastTimeStep = val; };
     bool maybeLastTimeStep() { return m_maybeLastTimeStep; };
@@ -255,8 +261,10 @@ class LoadBalancer;
      
     void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { m_runtimeStats = runtimeStats; };
      
-  public:
-
+    // Returns trus if an output or checkpoint exists for the time step
+    bool outputTimeStepExists( unsigned int ts );
+    bool checkpointTimeStepExists( unsigned int ts );
+    
     //! problemSetup parses the ups file into a list of these
     //! (m_saveLabelNames)
     struct SaveNameItem {
@@ -351,11 +359,12 @@ class LoadBalancer;
                                        SchedulerP            & sched,
                                        bool                    isThisACheckpoint );
 
-    // Timestep # of the last time we saved "timestep.xml". -1 == not yet saved...
-    // We only save timestep.xml as needed (ie, when a regrid occurs), otherwise
-    // a given timestep will refer (symlink) to the last time it was saved.
-    // Note, this is in reference to IO timesteps.  We always generate and
-    // save timestep.xml for Checkpoint output.
+    // Timestep # of the last time we saved "timestep.xml". -1 == not
+    // yet saved. Only save timestep.xml as needed (ie, when a
+    // regrid occurs), otherwise a given timestep will refer (symlink)
+    // to the last time it was saved.  Note, this is in reference to
+    // IO timesteps.  We always generate and save timestep.xml for
+    // Checkpoint output.
 #endif
     int m_lastOutputOfTimeStepXML = -1; 
 
@@ -387,7 +396,7 @@ class LoadBalancer;
                         const bool   removeOld,
                         const bool   areCheckpoints = false );
 
-    //! helper for restartSetup - copies the reduction dat files to 
+    //! helper for restartSetup - copies the global dat files to 
     //! new uda dir (from startTimeStep to maxTimeStep)
     void copyDatFiles( const Dir & fromDir,
                        const Dir & toDir,
@@ -395,16 +404,17 @@ class LoadBalancer;
                        const int   maxTimeStep,
                        const bool  removeOld );
 
-    //! add saved global (reduction) variables to index.xml
+    //! add saved global (reduction/sole) variables to index.xml
     void indexAddGlobals();
 
-    // setupLocalFileSystems() and setupSharedFileSystem() are used to 
-    // create the UDA (versioned) directory.  setupLocalFileSystems() is
-    // old method of determining which ranks should output UDA
-    // metadata and handles the case when each node has its own local file system
-    // (as opposed to a shared file system across all nodes). setupLocalFileSystems()
-    // will only be used if specifically turned on via a
-    // command line arg to sus when running using MPI.
+    // setupLocalFileSystems() and setupSharedFileSystem() are used to
+    // create the UDA (versioned) directory.  setupLocalFileSystems()
+    // is old method of determining which ranks should output UDA
+    // metadata and handles the case when each node has its own local
+    // file system (as opposed to a shared file system across all
+    // nodes). setupLocalFileSystems() will only be used if
+    // specifically turned on via a command line arg to sus when
+    // running using MPI.
     void setupLocalFileSystems();
     void setupSharedFileSystem(); // Verifies that all ranks see a shared FS.
     void saveSVNinfo();
@@ -429,8 +439,7 @@ class LoadBalancer;
 
     bool   m_outputLastTimeStep {false}; // Output the last time step.
      
-    //int m_currentTimeStep;
-    Dir    m_dir;                    //!< top of uda dir
+    Dir    m_outputDir;                    //!< top of uda dir
 
     //! Represents whether this proc will output non-processor-specific
     //! files
@@ -441,6 +450,10 @@ class LoadBalancer;
 
     //! last timestep dir (filebase.000/t#)
     std::string m_lastTimeStepLocation {"invalid"};
+
+    //! List of current output dirs
+    std::list<std::string> m_outputTimeStepDirs;
+    
     bool m_isOutputTimeStep {false};      //!< set if an output time step
     bool m_isCheckpointTimeStep {false};  //!< set if a checkpoint time step
 
@@ -466,11 +479,11 @@ class LoadBalancer;
     //! m_saveLabelNames is a temporary list containing VarLabel
     //! names to be saved and the materials to save them for.  The
     //! information will be basically transferred to m_saveLabels or
-    //! m_saveReductionLabels after mapping VarLabel names to their
+    //! m_saveGlobalLabels after mapping VarLabel names to their
     //! actual VarLabel*'s.
     std::list< SaveNameItem > m_saveLabelNames;
     std::vector< SaveItem >   m_saveLabels;
-    std::vector< SaveItem >   m_saveReductionLabels;
+    std::vector< SaveItem >   m_saveGlobalLabels;
 
     // for efficiency of SaveItem's
     ConsecutiveRangeSet m_prevMatls;
@@ -479,7 +492,7 @@ class LoadBalancer;
     //! m_checkpointLabelNames is a temporary list containing
     //! the names of labels to save when checkpointing
     std::vector< SaveItem > m_checkpointLabels;
-    std::vector< SaveItem > m_checkpointReductionLabels;
+    std::vector< SaveItem > m_checkpointGlobalLabels;
 
     // Only one of these should be non-zero.
     double m_checkpointInterval {0};        // In seconds.
@@ -501,12 +514,19 @@ class LoadBalancer;
 
     //! List of current checkpoint dirs
     std::list<std::string> m_checkpointTimeStepDirs;
+    
     //!< used when m_checkpointInterval != 0. Simulation time in seconds.
     double m_nextCheckpointTime {0};
     //!< used when m_checkpointTimeStepInterval != 0.  Integer - time step
     int    m_nextCheckpointTimeStep {0};
     //!< used when m_checkpointWallTimeInterval != 0.  Integer seconds.
     int    m_nextCheckpointWallTime {0};
+
+    // 
+    bool m_outputPreviousTimeStep     {false};
+    bool m_checkpointPreviousTimeStep {false};
+    
+    MaterialSubset *m_tmpMatSubset {nullptr};
 
     //-----------------------------------------------------------
     // RNJ - 
@@ -545,10 +565,10 @@ class LoadBalancer;
     std::map< int, ProblemSpecP > m_XMLDataDocs;
     std::map< int, ProblemSpecP > m_CheckpointXMLDataDocs;
 
-
-    // Hacky variable to ensure that PIDX checkpoint and IO tasks that happen to fall on the
-    // same time step run in a serialized manner (as it appears that PIDX is not thread safe).
-    // If there was a better way to synchronize tasks, we should do that...
+    // Hacky variable to ensure that PIDX checkpoint and IO tasks that
+    // happen to fall on the same time step run in a serialized manner
+    // (as it appears that PIDX is not thread safe).  If there was a
+    // better way to synchronize tasks, we should do that...
     VarLabel * m_sync_io_label;
 
     //__________________________________
@@ -560,10 +580,15 @@ class LoadBalancer;
     Dir m_fromDir {""};              // keep track of the original uda
     void copy_outputProblemSpec(Dir& fromDir, Dir& toDir);
        
-    // returns either the top level time step or if postProcessUda is used
+    // Returns either the top level time step or if postProcessUda is used
     // a value from the index.xml file
     int getTimeStepTopLevel();
 
+    //! Normally saved vars are scrubbed if not needed for the next
+    //! time step. By pass scubbing when running in situ or if wanting
+    //! to save the previous time step.
+    bool scrubSavedVariables { true };
+    
     //-----------------------------------------------------------
     // RNJ - 
     //
@@ -580,8 +605,22 @@ class LoadBalancer;
 
     bool m_outputDoubleAsFloat {false};
 
-    std::string TranslateVariableType( std::string type, bool isThisCheckpoint );
+    //-----------------------------------------------------------
 
+    // These four variables affect the global var output only.
+    
+    // For outputing the sim time and/or time step with the global vars
+    bool m_outputGlobalVarsTimeStep {false};
+    bool m_outputGlobalVarsSimTime  {true};
+    
+    // For modulating the output frequency global vars. By default
+    // they are output every time step. Note: Frequency > OnTimeStep
+    unsigned int m_outputGlobalVarsFrequency {1};
+    unsigned int m_outputGlobalVarsOnTimeStep {0};
+
+    
+    //-----------------------------------------------------------
+    std::string TranslateVariableType( std::string type, bool isThisCheckpoint );
 
     //-----------------------------------------------------------
     // RNJ - 
@@ -592,7 +631,6 @@ class LoadBalancer;
     //-----------------------------------------------------------
 
     int m_fileSystemRetrys {10};
-
 
     //! This is if you want to pass in the uda extension on the command line
     int m_udaSuffix {-1};
@@ -614,7 +652,7 @@ class LoadBalancer;
     //! double-check to make sure that DA::output is only called once per level per processor per type
     std::vector<bool> m_outputCalled;
     std::vector<bool> m_checkpointCalled;
-    bool m_checkpointReductionCalled {false};
+    bool m_checkpointGlobalCalled {false};
 #endif
     Uintah::MasterLock m_outputLock;
 

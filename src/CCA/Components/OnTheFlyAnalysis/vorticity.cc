@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -113,25 +113,7 @@ void vorticity::problemSetup(const ProblemSpecP& ,
 }
 
 //______________________________________________________________________
-void vorticity::scheduleInitialize(SchedulerP& sched,
-                                   const LevelP& level)
-{
-}
-
-void vorticity::initialize(const ProcessorGroup*, 
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse*,
-                           DataWarehouse* new_dw)
-{  
-}
-
-void vorticity::restartInitialize()
-{
-}
-
-//______________________________________________________________________
-void vorticity::scheduleDoAnalysis(SchedulerP& sched,
+void vorticity::scheduleDoAnalysis(SchedulerP  & sched,
                                    const LevelP& level)
 {
   cout_doing << "vorticity::scheduleDoAnalysis " << endl;
@@ -156,11 +138,11 @@ void vorticity::scheduleDoAnalysis(SchedulerP& sched,
 
 //______________________________________________________________________
 // Compute the vorticity field.
-void vorticity::doAnalysis(const ProcessorGroup* pg,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matl_sub ,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw)
+void vorticity::doAnalysis(const ProcessorGroup * pg,
+                           const PatchSubset    * patches,
+                           const MaterialSubset * matl_sub ,
+                           DataWarehouse        * old_dw,
+                           DataWarehouse        * new_dw)
 {       
   const Level* level = getLevel(patches);
   

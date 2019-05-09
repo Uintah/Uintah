@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -125,17 +125,16 @@ WARNING
                                              bool         recompile = false ) = 0;
 
     //////////
-    // Call this after a time step restart where delt is adjusted to
-    // make sure there still will be output and/or checkpoint time step
-    virtual void reevaluate_OutputCheckPointTimeStep( const double simTime,
-                                                      const double delT ) = 0;
-
-    //////////
     // Call this after the time step has been executed to find the
     // next time step to output
     virtual void findNext_OutputCheckPointTimeStep( const bool    restart,
                                                     const GridP & grid ) = 0;
     
+    //////////
+    //! Called after a time step recompute where delta t is adjusted
+    //! to make sure an output and/or checkpoint time step is needed.
+    virtual void recompute_OutputCheckPointTimeStep() = 0;
+
     //////////
     // update or write to the xml files
     virtual void writeto_xml_files( const GridP& grid ) = 0;
@@ -147,6 +146,8 @@ WARNING
     //////////
     // Insert Documentation Here:
     virtual const std::string getOutputLocation() const = 0;
+
+    virtual void setScrubSavedVariables( bool val ) = 0;
 
     // Get the time/time step the next output will occur
     virtual double getNextOutputTime() const = 0;
@@ -192,12 +193,15 @@ WARNING
     virtual void   setSaveAsUDA() = 0;
     virtual void   setSaveAsPIDX() = 0;
 
-    //! Called by In-situ VisIt to force the dump of a time step's data.
+    //! Called by the in situ VisIt to output and chaeckpoint on
+    //! demand.
     virtual void outputTimeStep( const GridP& grid,
-                                 SchedulerP& sched ) = 0;
+                                 SchedulerP& sched,
+                                 bool previous ) = 0;
 
     virtual void checkpointTimeStep( const GridP& grid,
-                                     SchedulerP& sched ) = 0;
+                                     SchedulerP& sched,
+                                     bool previous ) = 0;
 
     virtual void maybeLastTimeStep( bool val ) = 0;
     virtual bool maybeLastTimeStep() = 0;
@@ -220,6 +224,10 @@ WARNING
     
     virtual void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) = 0;
 
+    // Returns trus if an output or checkpoint exists for the time step
+    virtual bool outputTimeStepExists( unsigned int ts ) = 0;
+    virtual bool checkpointTimeStepExists( unsigned int ts ) = 0;
+    
   private:
     
     Output( const Output& );

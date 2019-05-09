@@ -21,7 +21,7 @@ public:
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels(){
-      register_new_variable<T>( _task_name );
+      register_new_variable<T>( m_task_name );
     }
 
     void register_initialize( VIVec& variable_registry , const bool pack_tasks);
@@ -50,16 +50,16 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index )
-        : _task_name(task_name), _matl_index(matl_index){}
+        : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       ConstantProperty* build()
-      { return scinew ConstantProperty( _task_name, _matl_index ); }
+      { return scinew ConstantProperty( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
     };
 
@@ -134,14 +134,14 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void ConstantProperty<T>::register_initialize( AVarInfo& variable_registry , const bool pack_tasks){
-    register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void ConstantProperty<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& property = tsk_info->get_uintah_field_add<T>( _task_name );
+    T& property = tsk_info->get_uintah_field_add<T>( m_task_name );
     property.initialize(0.0);
 
     if ( m_has_regions ){
@@ -187,14 +187,14 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void ConstantProperty<T>::register_restart_initialize( AVarInfo& variable_registry , const bool packed_tasks){
-    register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void ConstantProperty<T>::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& property = tsk_info->get_uintah_field_add<T>( _task_name );
+    T& property = tsk_info->get_uintah_field_add<T>( m_task_name );
     property.initialize(0.0);
 
     if ( m_has_regions ){
@@ -240,8 +240,8 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void ConstantProperty<T>::register_timestep_init( AVarInfo& variable_registry , const bool packed_tasks){
-    register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( _task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
+    register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( m_task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
                       variable_registry );
   }
 
@@ -250,8 +250,8 @@ private:
   void ConstantProperty<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-    T& property = tsk_info->get_uintah_field_add<T>( _task_name );
-    CT& old_property = tsk_info->get_const_uintah_field_add<CT>( _task_name );
+    T& property = tsk_info->get_uintah_field_add<T>( m_task_name );
+    CT& old_property = tsk_info->get_const_uintah_field_add<CT>( m_task_name );
 
     property.copyData(old_property);
 

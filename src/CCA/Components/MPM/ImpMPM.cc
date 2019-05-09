@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -112,9 +112,6 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld,
   NGP     = 1;
   NGN     = 1;
   d_loadCurveIndex=0;
-
-  activateReductionVariable( recomputeTimeStep_name, true);
-  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 ImpMPM::~ImpMPM()
@@ -2269,7 +2266,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx], ni, S, psize[idx],pDeformationMeasure[idx]);
+        interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
 
         pmassacc    = pacceleration[idx]*pmass[idx];
         pmom        = pvelocity[idx]*pmass[idx];
@@ -2362,16 +2359,12 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         old_dw->get(px,             lb->pXLabel,                 pset);
         old_dw->get(pTemperature,   lb->pTemperatureLabel,       pset);
         old_dw->get(psize,          lb->pSizeLabel,              pset);
-        old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
- 
 
-
-        
         for (ParticleSubset::iterator iter = pset->begin(); iter < pset->end();
              iter++) {
           vector<IntVector> ni_cell(interpolator->size());
 
-          interpolator->findCellAndWeights(px[*iter],ni_cell,S,psize[*iter],pDeformationMeasure[*iter]);
+          interpolator->findCellAndWeights(px[*iter],ni_cell,S,psize[*iter]);
         
           particleTempShape ptshape;
 
@@ -3051,7 +3044,6 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
 
         parent_old_dw->get(px,                  lb->pXLabel,           pset);
         parent_old_dw->get(psize,               lb->pSizeLabel,        pset);
-        parent_old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel,          pset);
 
         new_dw->get(pvol,        lb->pVolumeDeformedLabel,  pset);
         new_dw->get(pstress,     lb->pStressLabel_preReloc, pset);
@@ -3063,8 +3055,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
           particleIndex idx = *iter;
 
           // Get the node indices that surround the cell
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                    pDeformationMeasure[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
           stressvol  = pstress[idx]*pvol[idx];
 
@@ -3602,7 +3593,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pTemp,      lb->pTemperatureLabel_preReloc, pset);
       new_dw->allocateAndPut(pTempGradNew,lb->pTemperatureGradientLabel_preReloc, pset);
       new_dw->allocateAndPut(pDisp,      lb->pDispLabel_preReloc,        pset);
-      new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel_preReloc, pset);
 
 
       new_dw->get(dispNew,        lb->dispNewLabel,      dwindex,patch,gac, 1);
@@ -3630,7 +3620,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                           psize[idx],pDeformationMeasure[idx]);
+                                                            psize[idx]);
 
         disp = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
@@ -3779,8 +3769,6 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
        new_dw->get(pvol,        lb->pVolumeDeformedLabel,  pset);
        old_dw->get(psize,       lb->pSizeLabel,            pset);
        new_dw->get(pstress,     lb->pStressLabel_preReloc, pset);
-       old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
-
 
        Matrix3 stressvol;
 
@@ -3790,7 +3778,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(
-                                                   px[idx],ni,S,d_S,psize[idx],pDeformationMeasure[idx]);
+                                                   px[idx],ni,S,d_S,psize[idx]);
 
         stressvol  = pstress[idx]*pvol[idx];
 

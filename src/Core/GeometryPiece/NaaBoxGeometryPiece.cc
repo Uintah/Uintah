@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -169,7 +169,7 @@ NaaBoxGeometryPiece::clone() const
 //  to see if the Pt is in the unit cube.
 //
 bool
-NaaBoxGeometryPiece::inside( const Point& pt ) const
+NaaBoxGeometryPiece::inside( const Point& pt, const bool defVal=false) const
 {
   Vector result = toUnitCube_ * (pt - p1_);
 

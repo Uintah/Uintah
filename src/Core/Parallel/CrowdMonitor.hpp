@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,9 +38,9 @@ class CrowdMonitor
 
 public:
 
-  enum Type { READER, WRITER };
+  enum MonitorType { READER, WRITER };
 
-  CrowdMonitor( Type t)
+  CrowdMonitor( MonitorType t)
     : m_type(t)
   {
     if (m_type == READER) {
@@ -74,7 +74,7 @@ private:
 
   static Uintah::MasterLock s_mutex;
   static std::atomic<int>   s_count;
-  Type                      m_type;
+  MonitorType               m_type;
 
 };
 

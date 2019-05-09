@@ -48,6 +48,7 @@
 #include <Core/Math/Weibull.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
+#include <unistd.h>
 
 using namespace std;
 using namespace Uintah;
@@ -69,6 +70,7 @@ QADamage::QADamage(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
 
 	// Damage
 	ps->getWithDefault("length_scale", d_initialData.length, 0.0);
+	ps->getWithDefault("length_mesh", d_initialData.mesh, 0.0);
 	ps->getWithDefault("k_ratio", d_initialData.kRatio, 0.0);
 	ps->getWithDefault("tensile_strength", d_initialData.tensile, 0.0);
 	ps->getWithDefault("fracture_energy", d_initialData.Gf, 0.0);
@@ -202,6 +204,7 @@ void QADamage::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
 
 	// Damage
 	cm_ps->appendElement("length_scale", d_initialData.length);
+	cm_ps->appendElement("length_mesh", d_initialData.mesh);
 	cm_ps->appendElement("k_ratio", d_initialData.kRatio);
 	cm_ps->appendElement("tensile_strength", d_initialData.tensile);
 	cm_ps->appendElement("fracture_energy", d_initialData.Gf);
@@ -279,8 +282,8 @@ void QADamage::carryForward(const PatchSubset* patches,
 		carryForwardSharedData(pset, old_dw, new_dw, matl);
 
 		// Carry forward the data local to this constitutive model
-		StaticArray<constParticleVariable<double> > ISVs(d_INPUT+1);
-		StaticArray<ParticleVariable<double> > ISVs_new(d_INPUT+1);
+		std::vector<constParticleVariable<double> > ISVs(d_INPUT+1);
+		std::vector<ParticleVariable<double> > ISVs_new(d_INPUT+1);
 
 		for(int i=0;i< d_INPUT;i++){
 		  old_dw->get(ISVs[i],ISVLabels[i], pset);
@@ -425,7 +428,7 @@ void QADamage::initializeCMData(const Patch* patch,
 	}
 
 	// Add State variables
-	StaticArray<ParticleVariable<double> > ISVs(d_INPUT + 1);
+	std::vector<ParticleVariable<double> > ISVs(d_INPUT + 1);
 
 	for (int i = 0; i < d_INPUT; i++) {
 		new_dw->allocateAndPut(ISVs[i], ISVLabels[i], pset);
@@ -709,9 +712,10 @@ void QADamage::computeStressTensor(const PatchSubset* patches,
 	double tensile = d_initialData.tensile;
 	double length = d_initialData.length;
 	double Gf = d_initialData.Gf;
+	double mesh = d_initialData.mesh;
 	double kappa_i = tensile / Young_modul; // initial strain to trigger damage
-	double alpha_damage = 0.99;					// Damage parameter
-	double beta = tensile * length / Gf;	// Damage parameter
+	double alpha_damage = 0.99;				// Damage parameter
+	double beta = tensile*mesh/Gf;	// Damage parameter
 	double Damage;
 	double n_nonlocal = d_initialData.nNonlocal;
 
@@ -792,11 +796,11 @@ void QADamage::computeStressTensor(const PatchSubset* patches,
 		new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel, pset);
 		new_dw->allocateAndPut(p_q, lb->p_qLabel_preReloc, pset);
 
-		StaticArray<constParticleVariable<double> > ISVs(d_INPUT + 1);
+		std::vector<constParticleVariable<double> > ISVs(d_INPUT + 1);
 		for (int i = 0; i < d_INPUT; i++) {
 			old_dw->get(ISVs[i], ISVLabels[i], pset);
 		}
-		StaticArray<ParticleVariable<double> > ISVs_new(d_INPUT + 1);
+		std::vector<ParticleVariable<double> > ISVs_new(d_INPUT + 1);
 		for (int i = 0; i < d_INPUT; i++) {
 			new_dw->allocateAndPut(ISVs_new[i], ISVLabels_preReloc[i], pset);
 		}
@@ -1140,6 +1144,7 @@ void QADamage::computeStressTensorImplicit(const PatchSubset* patches,
 
 		ParticleSubset* pset = parent_old_dw->getParticleSubset(dwi, patch);
 		parent_old_dw->get(px, lb->pXLabel, pset);
+		// new_dw->get(psize,    lb->pCurSizeLabel,                   pset);
 		parent_old_dw->get(pSize, lb->pSizeLabel, pset);
 		parent_old_dw->get(pMass, lb->pMassLabel, pset);
 		parent_old_dw->get(pvolumeold, lb->pVolumeLabel, pset);
@@ -1184,7 +1189,6 @@ void QADamage::computeStressTensorImplicit(const PatchSubset* patches,
 				computeDeformationGradientFromTotalDisplacement(gdisplacement,
 					pset, px,
 					pDefGrad_new,
-					pDefGrad,
 					dx, pSize, interpolator);
 			}
 
@@ -1198,7 +1202,7 @@ void QADamage::computeStressTensorImplicit(const PatchSubset* patches,
 				// Compute the displacement gradient and B matrices
 				if (d_usePlasticity) {
 					interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,
-						pSize[idx], pDefGrad[idx]);
+						pSize[idx]);
 
 					computeGradAndBmats(pDispGrad, ni, d_S, oodx, gDisp, l2g, B, Bnl, dof);
 				}
@@ -1262,8 +1266,7 @@ void QADamage::computeStressTensorImplicit(const PatchSubset* patches,
 					double kgeo[24][24];
 
 					// Fill in the B and Bnl matrices and the dof vector
-					interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, pSize[idx],
-						pDefGrad[idx]);
+					interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, pSize[idx]);
 					loadBMats(l2g, dof, B, Bnl, d_S, ni, oodx);
 					// kmat = B.transpose()*D*B*volold
 					BtDB(B, D, kmat);
@@ -1304,7 +1307,7 @@ void QADamage::computeStressTensorImplicit(const PatchSubset* patches,
 
 					// Fill in the B and Bnl matrices and the dof vector
 					interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,
-						pSize[idx], pDefGrad[idx]);
+						pSize[idx]);
 					loadBMatsGIMP(l2g, dof, B, Bnl, d_S, ni, oodx);
 					// kmat = B.transpose()*D*B*volold
 					BtDBGIMP(B, D, kmat);
@@ -1445,7 +1448,6 @@ void QADamage::computeStressTensorImplicit(const PatchSubset* patches,
 				new_dw->get(gdisplacement, lb->gDisplacementLabel, dwi, patch, gac, 1);
 				computeDeformationGradientFromTotalDisplacement(gdisplacement, pset, pX,
 					pDefGrad_new,
-					pDefGrad,
 					dx, pSize, interpolator);
 			}
 

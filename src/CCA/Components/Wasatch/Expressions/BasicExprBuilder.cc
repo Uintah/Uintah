@@ -1441,18 +1441,28 @@ namespace WasatchCore{
       else if (x2 == "Y")  x2Tag = tagNames.ysvolcoord;
       else if (x2 == "Z")  x2Tag = tagNames.zsvolcoord;
       
-      GraphHelper* const initGraphHelper = gc[INITIALIZATION];
+      Expr::ExpressionFactory& icFactory = *gc[INITIALIZATION  ]->exprFactory;
+      Expr::ExpressionFactory& factory   = *gc[ADVANCE_SOLUTION]->exprFactory;
 
       std::string mixFracName;
       exprParams->get("Scalar", mixFracName);
-      const Expr::Tag mixFracTag( mixFracName, Expr::STATE_NONE );
+      const Expr::Tag mixFracTag     ( mixFracName        , Expr::STATE_NONE );
+      const Expr::Tag mixFracExactTag(mixFracName+"_exact", Expr::STATE_NONE );
       typedef VarDenOscillatingMMSMixFrac<SVolField>::Builder MixFracBuilder;
-      initGraphHelper->exprFactory->register_expression( scinew MixFracBuilder( mixFracTag, x1Tag, x2Tag, tagNames.time, rho0, rho1, w, k, uf, vf ) );
+      icFactory.register_expression( scinew MixFracBuilder( mixFracTag     , x1Tag, x2Tag, tagNames.time, rho0, rho1, w, k, uf, vf, false ) );
+      icFactory.register_expression( scinew MixFracBuilder( mixFracExactTag, x1Tag, x2Tag, tagNames.time, rho0, rho1, w, k, uf, vf, false ) );
+      factory  .register_expression( scinew MixFracBuilder( mixFracExactTag, x1Tag, x2Tag, tagNames.time, rho0, rho1, w, k, uf, vf, true  ) );
 
       const Expr::Tag diffCoefTag = parse_nametag(exprParams->findBlock("DiffusionCoefficient")->findBlock("NameTag"));
-      const Expr::Tag densityTag = parse_nametag( parser->findBlock("Density")->findBlock("NameTag") );
+
+      std::string densityName;
+      parser->findBlock("Density")->findBlock("NameTag")->getAttribute( "name", densityName );
+      const Expr::Tag initDensityTag = Expr::Tag(densityName, Expr::STATE_NONE);
+      const Expr::Tag densityTag     = Expr::Tag(densityName, Expr::STATE_NP1 );
+
       typedef DiffusiveConstant<SVolField>::Builder diffCoefBuilder;
-      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew diffCoefBuilder( diffCoefTag, densityTag, d ) );
+      icFactory.register_expression( scinew diffCoefBuilder( diffCoefTag, initDensityTag, d ) );
+      factory  .register_expression( scinew diffCoefBuilder( diffCoefTag , densityTag   , d ) );
     }  
     
     //___________________________________________________

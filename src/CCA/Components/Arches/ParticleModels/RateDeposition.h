@@ -47,14 +47,14 @@ namespace Uintah{
     public:
 
       Builder( std::string task_name, int matl_index, const int N ) :
-              _task_name(task_name), _matl_index(matl_index), _Nenv(N){}
+              m_task_name(task_name), m_matl_index(matl_index), _Nenv(N){}
       ~Builder(){}
 
       RateDeposition* build()
-      { return scinew RateDeposition( _task_name, _matl_index , _Nenv ); }
+      { return scinew RateDeposition( m_task_name, m_matl_index , _Nenv ); }
     private:
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
       const int _Nenv;
     };
 

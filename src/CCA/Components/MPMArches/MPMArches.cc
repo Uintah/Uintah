@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -97,8 +97,6 @@ MPMArches::MPMArches(const ProcessorGroup* myworld,
 #endif
   d_arches      = scinew Arches(myworld, m_materialManager);
   d_SMALL_NUM = 1.e-100;
-  nofTimesteps = 0;
-  d_doingRestart = false;
 }
 
 // ****************************************************************************
@@ -115,15 +113,6 @@ MPMArches::~MPMArches()
   delete d_arches;
   delete d_Alab;
 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->releaseComponents();
-      delete am;
-    }
-  }
 }
 
 // ****************************************************************************
@@ -144,13 +133,6 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   d_arches->setComponents( this );
   dynamic_cast<ApplicationInterface*>(d_arches)->problemSetup( prob_spec );
 
-  // Must be set here rather than the constructor because ARCHES sets
-  // the value based on the solver being requested in the problem setup.
-  activateReductionVariable( recomputeTimeStep_name,
-                             d_arches->activeReductionVariable( recomputeTimeStep_name ) );
-  activateReductionVariable( abortTimeStep_name,
-                             d_arches->activeReductionVariable( abortTimeStep_name ) );
-  
   ProblemSpecP restart_mat_ps = 0;
   if (materials_ps){
     restart_mat_ps = materials_ps;
@@ -213,24 +195,6 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   d_DORad = false;
   d_radiation = false;
 
-  //__________________________________
-  //  create analysis modules
-  // call problemSetup
-  d_analysisModules = AnalysisModuleFactory::create(d_myworld,
-                                                    m_materialManager,
-                                                    prob_spec);
-
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
-      am->problemSetup(prob_spec, materials_ps, grid,
-		       d_mpm->d_particleState, d_mpm->d_particleState_preReloc);
-    }
-  }
-
   // make an allowance for an enthalpy variable with a different name:
   d_enthalpy_name = "enthalpySP";
   if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Properties")->findBlock("ClassicTable") ){
@@ -246,24 +210,11 @@ void MPMArches::outputProblemSpec(ProblemSpecP& root_ps)
 {
   d_mpm->outputProblemSpec(root_ps);
   
-  //__________________________________
-  //  output data analysis modules
-  if( d_analysisModules.size() != 0 ){
-
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-
-      am->outputProblemSpec( root_ps );
-    }
-  }
 }
 
 void
 MPMArches::restartInitialize()
 {
-  d_doingRestart = true;
   d_arches->restartInitialize();
 }
 
@@ -298,16 +249,6 @@ void MPMArches::scheduleInitialize(const LevelP& level,
 
   //  cerr << "Doing Initialization \t\t\t MPMArches" <<endl;
   //  cerr << "--------------------------------\n"<<endl;
-
-  // dataAnalysis
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleInitialize( sched, level);
-    }
-  }
 
 }
 
@@ -1099,17 +1040,6 @@ void MPMArches::scheduleTimeAdvance( const LevelP & level,
   //   sched->get_dw(1)->get( simTimeVar, Mlb->simulationTimeLabel );
   // int simTime = simTimeVar;
 
-  nofTimesteps++ ;
-  // note: this counter will only get incremented each
-  // time the taskgraph is recompiled
-
-  //  //  if (nofTimesteps < 2 && !d_restart) {
-  //  if (simTime < 1.0E-10) {
-  //    m_recompile = true;
-  //  }
-  //  else
-  //    m_recompile = false;
-
   d_mpm->scheduleApplyExternalLoads(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
   d_mpm->scheduleComputeHeatExchange(       sched, patches, mpm_matls);
@@ -1155,11 +1085,6 @@ void MPMArches::scheduleTimeAdvance( const LevelP & level,
   // Arches steps are identical with those in single-material code
   // once exchange terms are determined
 
-  if ( d_doingRestart ) {
-    d_arches->MPMArchesIntrusionSetupForResart( level, sched, m_recompile, d_doingRestart );
-    d_doingRestart = false;
-  }
-
   d_arches->scheduleTimeAdvance( level, sched );
 
   // remaining MPM steps are explicitly shown here.
@@ -1183,24 +1108,6 @@ void MPMArches::scheduleTimeAdvance( const LevelP & level,
                                     d_mpm->d_particleState,
                                     Mlb->pParticleIDLabel,
                                     mpm_matls);
-}
-
-//______________________________________________________________________
-//
-
-void MPMArches::scheduleAnalysis( const LevelP & level,
-                                  SchedulerP   & sched)
-{
-  //__________________________________
-  //  on the fly analysis
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleDoAnalysis( sched, level);
-    }
-  }
 }
 
 //______________________________________________________________________
@@ -1602,18 +1509,6 @@ void MPMArches::scheduleComputeVoidFracMPM(SchedulerP& sched,
 
   int zeroGhostCells = 0;
 
-  //  double simTime = m_materialManager->getElapsedSimTime();
-
-  // simTime_vartype simTimeVar(0);
-  // if( sched->get_dw(0) && sched->get_dw(0)->exists( Mlb->simulationTimeLabel ) )
-  //   sched->get_dw(0)->get( simTimeVar, Mlb->simulationTimeLabel );
-  // else if( sched->get_dw(1) && sched->get_dw(1)->exists( Mlb->simulationTimeLabel ) )
-  //   sched->get_dw(1)->get( simTimeVar, Mlb->simulationTimeLabel );
-  // int simTime = simTimeVar;
-
-  //  bool recalculateVoidFrac = false;
-  //  if (simTime < 1.0e-10 || !d_stationarySolid) recalculateVoidFrac = true;
-
   t->requires(Task::OldDW, Mlb->simulationTimeLabel);
   
   t->requires(Task::NewDW, d_MAlb->cVolumeLabel,
@@ -1622,9 +1517,6 @@ void MPMArches::scheduleComputeVoidFracMPM(SchedulerP& sched,
               arches_matls->getUnion(), Ghost::None, zeroGhostCells);
   t->requires(Task::OldDW, d_MAlb->solid_fraction_CCLabel,
               mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
-
-  //  if (simTime < 1.0E-10)
-  //    m_recompile = true;
 
   t->computes(d_MAlb->solid_fraction_CCLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->void_frac_MPM_CCLabel, arches_matls->getUnion());
@@ -1993,18 +1885,6 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
                       this, &MPMArches::computeVoidFrac);
 
   int zeroGhostCells = 0;
-
-  //  double simTime = m_materialManager->getElapsedSimTime();
-
-  // simTime_vartype simTimeVar(0);
-  // if( sched->get_dw(0) && sched->get_dw(0)->exists( Mlb->simulationTimeLabel ) )
-  //   sched->get_dw(0)->get( simTimeVar, Mlb->simulationTimeLabel );
-  // else if( sched->get_dw(1) && sched->get_dw(1)->exists( Mlb->simulationTimeLabel ) )
-  //   sched->get_dw(1)->get( simTimeVar, Mlb->simulationTimeLabel );
-  // int simTime = simTimeVar;
-
-  // if (simTime < 1.0E-10)
-  //   m_recompile = true;
 
   if (d_useCutCell)
     t->requires(Task::NewDW, d_MAlb->void_frac_CutCell_CCLabel,

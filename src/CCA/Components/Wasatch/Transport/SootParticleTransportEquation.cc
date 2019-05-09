@@ -84,7 +84,7 @@ SootParticleTransportEquation( Uintah::ProblemSpecP params,
 : PseudospeciesTransportEquation<SVolField>( TagNames::self().sootParticleNumberDensity.name(),
                                              params, gc,
                                              densityTag,
-                                             turbulenceParams, false ),
+                                             turbulenceParams ),
   densityTag_       ( densityTag                             ),
   sootAgglomRateTag_( TagNames::self().sootAgglomerationRate )
 {

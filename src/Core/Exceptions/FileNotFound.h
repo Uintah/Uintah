@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,18 +42,18 @@
 #include <string>
 
 namespace Uintah {
-	class FileNotFound : public Exception {
-	public:
-	    FileNotFound(const std::string&, const char* file, int line);
-	    FileNotFound(const FileNotFound&);
-	    virtual ~FileNotFound();
-	    virtual const char* message() const;
-	    virtual const char* type() const;
-	protected:
-	private:
-	    std::string message_;
-	    FileNotFound& operator=(const FileNotFound&);
-	};
+        class FileNotFound : public Exception {
+        public:
+            FileNotFound(const std::string&, const char* file, int line);
+            FileNotFound(const FileNotFound&);
+            virtual ~FileNotFound();
+            virtual const char* message() const;
+            virtual const char* type() const;
+        protected:
+        private:
+            std::string message_;
+            FileNotFound& operator=(const FileNotFound&);
+        };
 } // End namespace Uintah
 
 #endif

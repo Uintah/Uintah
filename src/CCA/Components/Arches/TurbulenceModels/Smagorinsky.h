@@ -40,16 +40,16 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index ) : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       Smagorinsky* build()
-      { return scinew Smagorinsky( _task_name, _matl_index ); }
+      { return scinew Smagorinsky( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
     };
 
 private:
@@ -63,7 +63,10 @@ private:
     std::string m_cc_w_vel_name;
     double m_Cs; //Smagorinsky constant
     double m_molecular_visc;
-    std::string m_t_vis_name;
+    std::string m_total_vis_name;
+    std::string m_density_name; 
+
+    bool m_using_production{false};
 
     int Nghost_cells;
 

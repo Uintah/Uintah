@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -101,6 +101,7 @@ class Output;
     bool        d_doPressureStabilization;
     bool        d_computeNormals;
     bool        d_computeColinearNormals;
+    bool        d_restartOnLargeNodalVelocity;
     bool        d_computeNodalHeatFlux;                        // compute the auxilary nodal heat flux
     bool        d_computeScaleFactor;                          // compute the scale factor for viz 
     bool        d_doGridReset;                                 // Default is true, standard MPM
@@ -128,7 +129,7 @@ class Output;
     bool        d_withGaussSolver;
     //********** End Reactive Flow Section *********************
     
-	//Flags for DOUBLEMPM
+		//Flags for DOUBLEMPM
 	bool		d_DOUBLEMPM;
 	bool        d_insertPorePressure;                        // Prescribe Pore Pressure
 	std::string d_insertPorePressureFile;                   // File containing prescribed Pore Pressure
@@ -138,7 +139,7 @@ class Output;
 	bool        d_GeneralizedAlpha;
 	double      d_SpectralRadius;
 
-	// flags for turning on/off the reduction variable calculations
+    // flags for turning on/off the reduction variable calculations
     struct reductionVars{
      bool mass;
      bool momentum;

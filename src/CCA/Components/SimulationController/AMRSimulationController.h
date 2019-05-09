@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,7 +34,6 @@ namespace Uintah {
   CLASS
        AMRSimulationController
       
-       Short description...
       
   GENERAL INFORMATION
       
@@ -51,9 +50,6 @@ namespace Uintah {
        Simulation_Controller
       
   DESCRIPTION
-       Long description...
-     
-  WARNING
       
 ****************************************/
 

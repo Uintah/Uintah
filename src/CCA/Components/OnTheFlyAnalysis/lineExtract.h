@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -89,9 +89,9 @@ WARNING
                                     const LevelP& level);
                                     
     virtual void scheduleRestartInitialize(SchedulerP& sched,
-                                           const LevelP& level){};
+                                           const LevelP& level);
                                     
-    virtual void restartInitialize();
+    virtual void restartInitialize(){};
                                     
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
@@ -134,23 +134,17 @@ WARNING
       double  stepSize;
       int loopDir;    // direction to loop over
     };
-    
-    
-       
+
     //__________________________________
     // global constants
-    double d_writeFreq; 
-    double d_startTime;
-    double d_stopTime;
     std::vector<VarLabel*> d_varLabels;
-    std::vector<int> d_varMatl;
-    std::vector<line*> d_lines;
+    std::vector<int>       d_varMatl;
+    std::vector<line*>     d_lines;
 
-    const Material* d_matl;
-    MaterialSet* d_matl_set;
+    const Material  * d_matl;
+    MaterialSet     * d_matl_set;
+    MaterialSubset  * d_zero_matl;
     std::set<std::string> d_isDirCreated;
-    
-    MaterialSubset* d_zero_matl;  
   };
 }
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -105,7 +105,7 @@ MusilRNG::operator()()
   d12=a12;a12=b12;b12=n[point];
 
   double random=(((((((((((b12/16.0+b11)/16.0+b10)/16.0+b9)/16.0
-			+b8)/16.0+b7)/16.0+b6)/16.0+b5)/16.0+b4)/16.0
-		   +b3)/16.0+b2)/16.0+b1)/16.0;
+                        +b8)/16.0+b7)/16.0+b6)/16.0+b5)/16.0+b4)/16.0
+                   +b3)/16.0+b2)/16.0+b1)/16.0;
   return random;
 }

@@ -1602,6 +1602,7 @@
           <ASH>0.064800</ASH>
           <H2O>0.15000</H2O>
         </ultimate_analysis> <!--C+H+O+N+S+char+ash+moisture = 1 [wt fractions] -->
+        <daf_volatiles_fraction>.45</daf_volatiles_fraction>  <!--dray ash free volatiles content - computed from black thunder proximate analysis -->
          <raw_coal_enthalpy>-2247724.62188</raw_coal_enthalpy>
         <char_enthalpy>0.0</char_enthalpy><!-- char enthalpy (at inlet conditions) [J/kg] -->
         <ash_enthalpy>-9.5686e7</ash_enthalpy><!-- ash enthalpy (at inlet conditions) [J/kg] -->
@@ -1635,7 +1636,7 @@
 
         <ksi>1.00</ksi><!-- Optional Fraction of the heat released by char oxidation that goes to the particle (default=1.0) -->
 
-        <SmithChar>
+        <SmithCharConstLv0>
           <char_MW>12.0</char_MW>
           <surface_area_mult_factor>1.0</surface_area_mult_factor>
           <species>H2</species>
@@ -1662,7 +1663,7 @@
             <heat_of_reaction_constant>172459</heat_of_reaction_constant>
             <use_co2co>false</use_co2co>
           </reaction>
-        </SmithChar>
+        </SmithCharConstLv0>
 
         <ash_softening_temperature>1500.0</ash_softening_temperature>
         <ash_fluid_temperature>1400.0</ash_fluid_temperature>
@@ -1837,8 +1838,8 @@
             <low_clip>9.9999999999999995e-07</low_clip>
             <high_clip>999999</high_clip>
           </model>
-          <model label="char" type="CharOxidationSmith">
-    </model>
+          <model label="char" type="CharOxidationSmithConstLv0">
+          </model>
           <model label="max_T_rate" type="MaximumTemperature">
           </model>
           <model label="max_T_os_src" type="BirthDeath">

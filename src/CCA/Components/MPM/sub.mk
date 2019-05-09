@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2018 The University of Utah
+#  Copyright (c) 1997-2019 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -33,12 +33,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR	:= CCA/Components/MPM
 
 SRCS += $(SRCDIR)/SerialMPM.cc    \
-        $(SRCDIR)/DOUBLEMPM.cc    \
 	$(SRCDIR)/RigidMPM.cc     \
 	$(SRCDIR)/MPMCommon.cc    \
 	$(SRCDIR)/ImpMPM.cc       \
 	$(SRCDIR)/ShellMPM.cc     \
 	$(SRCDIR)/SingleFieldMPM.cc     \
+	$(SRCDIR)/DOUBLEMPM.cc     \
 	$(SRCDIR)/AMRMPM.cc       
 
 PSELIBS := \

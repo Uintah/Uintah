@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -149,10 +149,18 @@ DetailedTasks::~DetailedTasks()
 //_____________________________________________________________________________
 //
 void
-DetailedTasks::assignMessageTags( int me )
+DetailedTasks::assignMessageTags( unsigned int index )
 {
-  // maps from, to (process) pairs to indices for each batch of that pair
-  std::map<std::pair<int, int>, int> perPairBatchIndices;
+  int me = m_proc_group->myRank();
+  
+  m_comm_info.clear();
+  m_comm_info.setKeyName( "Rank" );
+  
+  // Insert the stats to be collected. In this case collect stats for
+  // this rank only for both messages passed to it and recieved from
+  // other ranks.
+  m_comm_info.insert( CommPTPMsgTo,   std::string("ToRank")  , "messages" );
+  m_comm_info.insert( CommPTPMsgFrom, std::string("FromRank"), "messages" );
 
   for (size_t i = 0; i < m_dep_batches.size(); i++) {
     DependencyBatch* batch = m_dep_batches[i];
@@ -164,22 +172,31 @@ DetailedTasks::assignMessageTags( int me )
     ASSERTRANGE(to, 0, m_proc_group->nRanks());
 
     if (from == me || to == me) {
-      // Easier to go in reverse order now, instead of reinitializing perPairBatchIndices.
-      std::pair<int, int> fromToPair = std::make_pair(from, to);
-      m_dep_batches[i]->m_message_tag = ++perPairBatchIndices[fromToPair];  // start with one
-      DOUT(g_message_tags_dbg, "Rank-" << me << " assigning message tag " << batch->m_message_tag << " from task " << batch->m_from_task->getName()
-                               << " to task " << batch->m_to_tasks.front()->getName() << ", rank-" << from << " to rank-" << to);
+
+      // Start the message tag with one.
+      if( from == me )
+        m_dep_batches[i]->m_message_tag = ++m_comm_info[ to ][CommPTPMsgTo];
+      
+      if( to == me )
+        m_dep_batches[i]->m_message_tag = ++m_comm_info[ from ][CommPTPMsgFrom];
+
+      DOUT(g_message_tags_dbg, "Rank-" << me
+           << " assigning message tag " << batch->m_message_tag
+           << " from task " << batch->m_from_task->getName()
+           << " to task " << batch->m_to_tasks.front()->getName()
+           << ", rank-" << from << " to rank-" << to);
     }
   }
 
+  // Dump both the summary and individual stats. 
   if (g_message_tags_dbg) {
-    for (auto iter = perPairBatchIndices.begin(); iter != perPairBatchIndices.end(); ++iter) {
-      int from = iter->first.first;
-      int to   = iter->first.second;
-      int num  = iter->second;
-
-      DOUT(true, num << " messages from rank-" << from << " to rank-" << to);;
-    }
+    unsigned int timeStep = m_sched_common->getApplication()->getTimeStep();
+    double simTime = m_sched_common->getApplication()->getSimTime();
+    std::string title = "Communication TG [" + std::to_string(index) + "]";
+    m_comm_info.calculateMinimum( true );
+    m_comm_info.reduce();
+    m_comm_info.reportSummaryStats   ( title.c_str(), me, timeStep, simTime, false );
+    m_comm_info.reportIndividualStats( title.c_str(), me, timeStep, simTime );
   }
 }  // end assignMessageTags()
 
@@ -226,8 +243,10 @@ DetailedTasks::makeDWKeyDatabase()
 //_____________________________________________________________________________
 //
 void
-DetailedTasks::computeLocalTasks( int me )
+DetailedTasks::computeLocalTasks()
 {
+  int me = m_proc_group->myRank();
+
   if (m_local_tasks.size() != 0) {
     return;
   }
@@ -832,10 +851,10 @@ DetailedTasks::getOldDWSendTask( int proc )
 void
 DetailedTasks::internalDependenciesSatisfied( DetailedTask * dtask )
 {
-  std::lock_guard<Uintah::MasterLock> internal_ready_guard(g_internal_ready_mutex);
+  std::lock_guard<Uintah::MasterLock> internal_deps_satisfied_guard(g_internal_ready_mutex);
 
   m_ready_tasks.push(dtask);
-  atomic_readyTasks_size.fetch_add(1, std::memory_order_relaxed);
+  m_atomic_initial_ready_tasks_size.fetch_add(1, std::memory_order_relaxed);
 }
 
 //_____________________________________________________________________________
@@ -843,15 +862,13 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask * dtask )
 DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
-
+  std::lock_guard<Uintah::MasterLock> internal_ready_guard(g_internal_ready_mutex);
 
   DetailedTask* nextTask = nullptr;
-  if (atomic_readyTasks_size.load(std::memory_order_relaxed) > 0) {
-    std::lock_guard<Uintah::MasterLock> internal_ready_guard(g_internal_ready_mutex);
+  if (m_atomic_initial_ready_tasks_size.load(std::memory_order_acquire) > 0) {
     if (!m_ready_tasks.empty()) {
-
       nextTask = m_ready_tasks.front();
-      atomic_readyTasks_size.fetch_sub(1, std::memory_order_relaxed);
+      m_atomic_initial_ready_tasks_size.fetch_sub(1, std::memory_order_relaxed);
       m_ready_tasks.pop();
     }
   }
@@ -864,9 +881,7 @@ DetailedTasks::getNextInternalReadyTask()
 int
 DetailedTasks::numInternalReadyTasks()
 {
-  //std::lock_guard<Uintah::MasterLock> internal_ready_guard(g_internal_ready_mutex);
-  //return readyTasks_.size();
-  return atomic_readyTasks_size.load(std::memory_order_relaxed);
+  return m_atomic_initial_ready_tasks_size.load(std::memory_order_seq_cst);
 }
 
 //_____________________________________________________________________________
@@ -874,11 +889,10 @@ DetailedTasks::numInternalReadyTasks()
 DetailedTask*
 DetailedTasks::getNextExternalReadyTask()
 {
-
+  std::lock_guard<Uintah::MasterLock> external_ready_guard(g_external_ready_mutex);
 
   DetailedTask* nextTask = nullptr;
-  if (m_atomic_mpi_completed_tasks_size.load(std::memory_order_relaxed) > 0) {
-    std::lock_guard<Uintah::MasterLock> external_ready_guard(g_external_ready_mutex);
+  if (m_atomic_mpi_completed_tasks_size.load(std::memory_order_acquire) > 0) {
     if (!m_mpi_completed_tasks.empty()) {
       nextTask = m_mpi_completed_tasks.top();
       m_atomic_mpi_completed_tasks_size.fetch_sub(1, std::memory_order_relaxed);
@@ -894,9 +908,7 @@ DetailedTasks::getNextExternalReadyTask()
 int
 DetailedTasks::numExternalReadyTasks()
 {
-  //std::lock_guard<Uintah::MasterLock> external_ready_guard(g_external_ready_mutex);
-  //return mpiCompletedTasks_.size();
-  return m_atomic_mpi_completed_tasks_size.load(std::memory_order_relaxed);
+  return m_atomic_mpi_completed_tasks_size.load(std::memory_order_seq_cst);
 }
 
 //_____________________________________________________________________________
@@ -905,7 +917,7 @@ void
 DetailedTasks::initTimestep()
 {
   m_ready_tasks = m_initial_ready_tasks;
-  atomic_readyTasks_size.store(m_initial_ready_tasks.size(), std::memory_order_relaxed);
+  m_atomic_initial_ready_tasks_size.store(m_initial_ready_tasks.size(), std::memory_order_release);
   incrementDependencyGeneration();
   initializeBatches();
 }
@@ -984,20 +996,46 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
     return false;               // First Come First Serve;
   }
 
-  if (alg == Stack) {
+  else if (alg == Stack) {
     return true;               // First Come Last Serve, for robust testing;
   }
 
-  if (alg == Random) {
+  else if (alg == Random) {
     return (random() % 2 == 0);   // Random;
   }
 
-  if (ltask->getTask()->getSortedOrder() > rtask->getTask()->getSortedOrder()) {
-    return true;
+  else if (alg == MostChildren) {
+    return ltask->getTask()->m_child_tasks.size() < rtask->getTask()->m_child_tasks.size();
   }
 
-  if (ltask->getTask()->getSortedOrder() < rtask->getTask()->getSortedOrder()) {
-    return false;
+  else if (alg == LeastChildren) {
+    return ltask->getTask()->m_child_tasks.size() > rtask->getTask()->m_child_tasks.size();
+  }
+
+  else if (alg == MostAllChildren) {
+    return ltask->getTask()->m_all_child_tasks.size() < rtask->getTask()->m_all_child_tasks.size();
+  }
+
+  else if (alg == LeastAllChildren) {
+    return ltask->getTask()->m_all_child_tasks.size() > rtask->getTask()->m_all_child_tasks.size();
+  }
+
+  else if (alg == MostL2Children || alg == LeastL2Children) {
+    int ll2 = 0;
+    int rl2 = 0;
+    std::set<Task*>::iterator it;
+    for (it = ltask->getTask()->m_child_tasks.begin(); it != ltask->getTask()->m_child_tasks.end(); it++) {
+      ll2 += (*it)->m_child_tasks.size();
+    }
+    for (it = rtask->getTask()->m_child_tasks.begin(); it != rtask->getTask()->m_child_tasks.end(); it++) {
+      rl2 += (*it)->m_child_tasks.size();
+    }
+    if (alg == MostL2Children) {
+      return ll2 < rl2;
+    }
+    else {
+      return ll2 > rl2;
+    }
   }
 
   else if (alg == MostMessages || alg == LeastMessages) {
@@ -1020,9 +1058,18 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
       return lmsg > rmsg;
     }
   }
+
   else if (alg == PatchOrder) {  // smaller level, larger size, smaller patchID, smaller tasksortID
     const PatchSubset* lpatches = ltask->getPatches();
     const PatchSubset* rpatches = rtask->getPatches();
+    // send_old_data task will have a nullptr PatchSubset, there will be only one per node
+    if (lpatches == nullptr) {
+      return true;
+    }
+    if (rpatches == nullptr) {
+      return false;
+    }
+    // otherwise do the standard comparison
     if (getLevel(lpatches) == getLevel(rpatches)) {
       if (lpatches->size() == rpatches->size()) {
         return lpatches->get(0)->getID() > rpatches->get(0)->getID();
@@ -1035,9 +1082,18 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
       return getLevel(lpatches) > getLevel(rpatches);
     }
   }
+
   else if (alg == PatchOrderRandom) {  // smaller level, larger size, smaller patchID, smaller tasksortID
     const PatchSubset* lpatches = ltask->getPatches();
     const PatchSubset* rpatches = rtask->getPatches();
+    // send_old_data task will have a nullptr PatchSubset, there will be only one per node
+    if (lpatches == nullptr) {
+      return true;
+    }
+    if (rpatches == nullptr) {
+      return false;
+    }
+    // otherwise do the standard comparison
     if (getLevel(lpatches) == getLevel(rpatches)) {
       if (lpatches->size() == rpatches->size()) {
         return (random() % 2 == 0);
@@ -1050,9 +1106,20 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
       return getLevel(lpatches) > getLevel(rpatches);
     }
   }
+
   else {
     return false;
   }
+
+  // Will later reincorporate this correctly, AscendingStaticOrder and DecendingStaticOrder
+//  if (ltask->getTask()->getSortedOrder() > rtask->getTask()->getSortedOrder()) {
+//    return true;
+//  }
+//
+//  if (ltask->getTask()->getSortedOrder() < rtask->getTask()->getSortedOrder()) {
+//    return false;
+//  }
+
 }
 
 
@@ -1644,5 +1711,3 @@ DetailedDep* DetailedTasks::findMatchingInternalDetailedDep(DependencyBatch     
 }
 
 #endif
-
-

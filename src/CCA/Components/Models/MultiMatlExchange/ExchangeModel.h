@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,7 +45,8 @@ namespace Uintah {
 
   public:
     ExchangeModel(const ProblemSpecP     & prob_spec,
-                  const MaterialManagerP & materialManager );
+                  const MaterialManagerP & materialManager,
+                  const bool with_mpm );
 
     virtual ~ExchangeModel();
 
@@ -55,7 +56,8 @@ namespace Uintah {
   
     virtual void sched_PreExchangeTasks(SchedulerP           & sched,
                                         const PatchSet       * patches,     
-                                        const MaterialSubset * iceMatls,    
+                                        const MaterialSubset * iceMatls,
+                                        const MaterialSubset * mpmMatls,   
                                         const MaterialSet    * allMatls) = 0;
                                         
     virtual void addExchangeModelRequires ( Task* t,
@@ -94,15 +96,17 @@ namespace Uintah {
                                       DataWarehouse        * new_dw,
                                       customBC_globalVars  * BC_globalVars) = 0;
 
-    void schedComputeSurfaceNormal( SchedulerP     & sched,
-                                    const PatchSet * patches );
+    void schedComputeSurfaceNormal( SchedulerP           & sched,
+                                    const PatchSet       * patches,
+                                    const MaterialSubset * mpmMatls );
 
     void ComputeSurfaceNormal( const ProcessorGroup *,
                                const PatchSubset    * patches,
                                const MaterialSubset *,
                                DataWarehouse        * old_dw,
                                DataWarehouse        * new_dw );
-
+    
+    protected:
     //__________________________________
     // variables & objects needed by
     // the different exchange models.
@@ -111,12 +115,13 @@ namespace Uintah {
 
     double d_SMALL_NUM = 1.0e-100;
     int    d_numMatls  = -9;
-    MaterialManagerP  d_materialManager;
+    MaterialManagerP  d_matlManager;
     MaterialSubset * d_zero_matl;
-
-  private:
+    
     MPMLabel* Mlb;
-
+    ICELabel* Ilb;
+    bool d_with_mpm;
+    
   };
 }
 

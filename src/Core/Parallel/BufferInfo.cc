@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -94,9 +94,9 @@ BufferInfo::get_type( void        *& out_buf
 
   if( !m_have_datatype ) {
     if( count() == 1 ) {
-      m_buffer             = m_start_bufs[0];
-      m_count             = m_counts[0];
-      m_datatype        = m_datatypes[0];
+      m_buffer        = m_start_bufs[0];
+      m_count         = m_counts[0];
+      m_datatype      = m_datatypes[0];
       m_free_datatype = false; // Will get freed with array
     }
     else {

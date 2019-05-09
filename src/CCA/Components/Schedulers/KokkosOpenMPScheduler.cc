@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -55,6 +55,13 @@ using namespace Uintah;
 
 //______________________________________________________________________
 //
+namespace Uintah {
+  extern Dout g_task_dbg;
+}
+
+
+//______________________________________________________________________
+//
 namespace {
   Dout g_dbg(         "KokkosOMP_DBG"        , "KokkosOpenMPScheduler", "general debugging info for KokkosOpenMPScheduler"  , false );
   Dout g_queuelength( "KokkosOMP_QueueLength", "KokkosOpenMPScheduler", "report task queue length for KokkosOpenMPScheduler", false );
@@ -90,20 +97,40 @@ KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
   m_threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
 
   // Default taskReadyQueueAlg
-  m_task_queue_alg = MostMessages;
-  std::string taskQueueAlg = "MostMessages";
+  std::string taskQueueAlg = "";
 
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
   if (params) {
     params->get("taskReadyQueueAlg", taskQueueAlg);
+    if (taskQueueAlg == "") {
+      taskQueueAlg = "MostMessages";  //default taskReadyQueueAlg
+    }
     if (taskQueueAlg == "FCFS") {
       m_task_queue_alg = FCFS;
+    }
+    else if (taskQueueAlg == "Stack") {
+      m_task_queue_alg = Stack;
     }
     else if (taskQueueAlg == "Random") {
       m_task_queue_alg = Random;
     }
-    else if (taskQueueAlg == "Stack") {
-      m_task_queue_alg = Stack;
+    else if (taskQueueAlg == "MostChildren") {
+      m_task_queue_alg = MostChildren;
+    }
+    else if (taskQueueAlg == "LeastChildren") {
+      m_task_queue_alg = LeastChildren;
+    }
+    else if (taskQueueAlg == "MostAllChildren") {
+      m_task_queue_alg = MostAllChildren;
+    }
+    else if (taskQueueAlg == "LeastAllChildren") {
+      m_task_queue_alg = LeastAllChildren;
+    }
+    else if (taskQueueAlg == "MostL2Children") {
+      m_task_queue_alg = MostL2Children;
+    }
+    else if (taskQueueAlg == "LeastL2Children") {
+      m_task_queue_alg = LeastL2Children;
     }
     else if (taskQueueAlg == "MostMessages") {
       m_task_queue_alg = MostMessages;
@@ -116,6 +143,9 @@ KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
     }
     else if (taskQueueAlg == "PatchOrderRandom") {
       m_task_queue_alg = PatchOrderRandom;
+    }
+    else {
+      throw ProblemSetupException("Unknown task ready queue algorithm", __FILE__, __LINE__);
     }
   }
 
@@ -334,7 +364,8 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
   // See if we've consumed all tasks on this phase, if so, go to the next phase.
   while (m_phase_tasks[currphase] == m_phase_tasks_done[currphase] && currphase + 1 < numPhases) {
     currphase++;
-    DOUT(g_dbg, " switched to task phase " << currphase << ", total phase " << currphase << " tasks = " << m_phase_tasks[currphase]);
+    DOUT(g_task_dbg, myRankThread() << " switched to task phase " << currphase
+                                    << ", total phase " << currphase << " tasks = " << m_phase_tasks[currphase]);
   }
 }
 
@@ -417,6 +448,7 @@ KokkosOpenMPScheduler::runTasks()
           initTask = m_detailed_tasks->getNextInternalReadyTask();
           if (initTask != nullptr) {
             if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
+              DOUT(g_task_dbg, myRankThread() <<  " Task internal ready 1 " << *initTask);
               m_phase_sync_task[initTask->getTask()->m_phase] = initTask;
               ASSERT(initTask->getRequires().size() == 0)
               initTask = nullptr;
@@ -459,12 +491,13 @@ KokkosOpenMPScheduler::runTasks()
 
     if (initTask != nullptr) {
       MPIScheduler::initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration.load(std::memory_order_relaxed));
+      DOUT(g_task_dbg, myRankThread() << " Task internal ready 2 " << *initTask << " deps needed: " << initTask->getExternalDepCount());
       initTask->markInitiated();
       initTask->checkExternalDepCount();
     }
     else if (readyTask) {
 
-      DOUT(g_dbg, " Task now external ready: " << *readyTask);
+      DOUT(g_task_dbg, myRankThread() << " Task external ready " << *readyTask);
 
       if (readyTask->getTask()->getType() == Task::Reduction) {
         MPIScheduler::initiateReduction(readyTask);
@@ -482,3 +515,19 @@ KokkosOpenMPScheduler::runTasks()
   ASSERT(g_num_tasks_done == m_num_tasks);
 }
 
+
+//______________________________________________________________________
+//  generate string   <MPI_rank>.<Thread_ID>
+std::string
+KokkosOpenMPScheduler::myRankThread()
+{
+  std::ostringstream out;
+
+#ifdef UINTAH_ENABLE_KOKKOS
+  out << Uintah::Parallel::getMPIRank()<< "." << Kokkos::OpenMP::hardware_thread_id();
+#else
+  out << Uintah::Parallel::getMPIRank();
+#endif
+
+  return out.str();
+}

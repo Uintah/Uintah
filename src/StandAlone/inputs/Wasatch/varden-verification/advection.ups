@@ -51,11 +51,7 @@
       </ConvectiveFlux>
 
     </TransportEquation>   
-    
-    <ForceOnGraph tasklist="advance_solution">
-        <NameTag name="f"/>
-    </ForceOnGraph>
-    
+
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
         <NameTag name="f"/>        
@@ -89,6 +85,11 @@
          </Parameters>
       </Pressure>
     </MomentumEquations>
+    
+    <ForceOnGraph tasklist="advance_solution">
+        <NameTag name="f" state="STATE_NONE"/>
+    </ForceOnGraph>
+
 
   </Wasatch>
 
@@ -114,11 +115,10 @@
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>
     
-    <save label="f"/>
     <save label="rhof"/>
+    <save label="f"/>
     
     <save label="pressure"/>
-    <save label="pressure_old"/>
     <save label="pressure_src"/>
   </DataArchiver> 
 

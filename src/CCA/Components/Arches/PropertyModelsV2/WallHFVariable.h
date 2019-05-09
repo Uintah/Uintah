@@ -44,16 +44,16 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index, MaterialManagerP materialManager )
-        : _task_name(task_name), _matl_index(matl_index), _materialManager(materialManager){}
+        : m_task_name(task_name), m_matl_index(matl_index), _materialManager(materialManager){}
       ~Builder(){}
 
       WallHFVariable* build()
-      { return scinew WallHFVariable( _task_name, _matl_index, _materialManager ); }
+      { return scinew WallHFVariable( m_task_name, m_matl_index, _materialManager ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
       MaterialManagerP _materialManager;
 
     };

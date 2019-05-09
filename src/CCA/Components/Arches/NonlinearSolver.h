@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,7 +28,10 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <CCA/Components/Application/ApplicationCommon.h>
+//#include <Core/Grid/Task.h>
+#include <Core/Parallel/Parallel.h>
+#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+
 
 //--------------------------------------------------------------------------------------------------
 /**
@@ -51,19 +54,18 @@
 //--------------------------------------------------------------------------------------------------
 
 namespace Uintah {
-class TimeIntegratorLabel;
-class PartVel;
-class DQMOM;
-class CQMOM;
-class CQMOM_Convection;
-class CQMOMSourceWrapper;
+
+class ProcessorGroup;
+class ApplicationCommon;
 class ArchesBCHelper;
+class DataWarehouse;
+
 class NonlinearSolver {
 
 public:
 
   NonlinearSolver( const ProcessorGroup* myworld,
-                   const ApplicationCommon* arches );
+                   ApplicationCommon* arches );
 
   virtual ~NonlinearSolver();
 
@@ -86,9 +88,12 @@ public:
 
   virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0;
 
-  virtual int getTaskGraphIndex(const int timeStep ) = 0;
-
-  virtual int taskGraphsRequested() = 0;
+  // An optional call for the application to check their reduction vars.
+  virtual void checkReductionVars( const ProcessorGroup * pg,
+                                   const PatchSubset    * patches,
+                                   const MaterialSubset * matls,
+                                         DataWarehouse  * old_dw,
+                                         DataWarehouse  * new_dw ) {};
 
   class NLSolverBuilder {
 
@@ -108,16 +113,99 @@ public:
   /** @brief Return the initial dt **/
   inline double get_initial_dt(){ return d_initial_dt; }
 
+  /** @brief Clear master ghost list **/
+  void clear_max_ghost_list(){
+    m_total_variable_ghost_info.clear();
+  }
+
+  /** @brief Potentially insert a new variable to the max ghost list **/
+  void insert_max_ghost(const std::map<std::string, TaskFactoryBase::GhostHelper>& the_map ){
+
+    //Store max ghost information per variable across all possible tasks and factories
+    for (auto ivar = the_map.begin(); ivar != the_map.end(); ivar++ ){
+
+      auto iter = m_total_variable_ghost_info.find(ivar->first);
+
+      if ( iter == m_total_variable_ghost_info.end() ){
+
+        m_total_variable_ghost_info.insert( std::make_pair(ivar->first, ivar->second));
+
+      } else {
+
+        const int old_newdw_num = iter->second.numTasksNewDW;
+        const int old_olddw_num = iter->second.numTasksOldDW;
+
+        iter->second.numTasksNewDW += ivar->second.numTasksNewDW;
+        iter->second.numTasksOldDW += ivar->second.numTasksOldDW;
+
+        const int newdw_diff = iter->second.numTasksNewDW - old_newdw_num;
+        const int olddw_diff = iter->second.numTasksOldDW - old_olddw_num;
+
+        if ( newdw_diff > 0 ){
+          //Its already in here...so check if the new instance has gt or lt ghosts:
+          if ( ivar->second.max_newdw_ghost > iter->second.max_newdw_ghost &&
+               ivar->second.numTasksNewDW > 0 ){
+            iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
+          }
+          if ( ivar->second.min_newdw_ghost < iter->second.min_newdw_ghost &&
+               ivar->second.numTasksNewDW > 0 ){
+            iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
+          }
+        } else if ( iter->second.numTasksNewDW == ivar->second.numTasksNewDW ){
+          //first time for this DW so just set the ghosts count to the new incoming record
+          if ( ivar->second.numTasksNewDW > 0 ){
+            iter->second.min_newdw_ghost = ivar->second.min_newdw_ghost;
+            iter->second.max_newdw_ghost = ivar->second.max_newdw_ghost;
+          }
+        }
+        if ( olddw_diff > 0 ){
+          //Its already in here...so check if the new instance has gt or lt ghosts:
+          if ( ivar->second.max_olddw_ghost > iter->second.max_olddw_ghost &&
+               ivar->second.numTasksOldDW > 0 ){
+            iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
+          }
+          if ( ivar->second.min_olddw_ghost < iter->second.min_olddw_ghost &&
+               ivar->second.numTasksOldDW > 0 ){
+            iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
+          }
+        } else if ( iter->second.numTasksOldDW == ivar->second.numTasksOldDW ){
+          if ( ivar->second.numTasksOldDW > 0 ){
+            iter->second.min_olddw_ghost = ivar->second.min_olddw_ghost;
+            iter->second.max_olddw_ghost = ivar->second.max_olddw_ghost;
+          }
+        }
+        if ( iter->second.numTasksNewDW > 0 ){
+          //first time for this DW so just set the ghosts count to the new incoming record
+          for (auto niter = ivar->second.taskNamesNewDW.begin();
+                niter != ivar->second.taskNamesNewDW.end(); niter++ ){
+             iter->second.taskNamesNewDW.push_back(*niter);
+           }
+        }
+        if ( iter->second.numTasksOldDW > 0 ){
+          for (auto niter = ivar->second.taskNamesOldDW.begin();
+                niter != ivar->second.taskNamesOldDW.end(); niter++ ){
+            iter->second.taskNamesOldDW.push_back(*niter);
+          }
+        }
+      }
+    }
+  }
+
+  /** @brief Print ghost cell requirements for all variables in this task **/
+  void print_variable_max_ghost();
+
 protected:
 
    const ProcessorGroup * d_myworld;
-   const ApplicationCommon* m_arches;
+   ApplicationCommon*     m_arches;
    std::string            d_timeIntegratorType;
    double                 d_initial_dt;
    bool                   d_underflow;
    typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
    BCHelperMapT _bcHelperMap;
    ProblemSpecP m_arches_spec;
+
+   std::map <std::string, TaskFactoryBase::GhostHelper> m_total_variable_ghost_info;
 
 private:
 

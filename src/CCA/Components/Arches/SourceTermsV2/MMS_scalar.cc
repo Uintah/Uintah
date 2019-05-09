@@ -69,10 +69,10 @@ MMS_scalar::problemSetup( ProblemSpecP& db ){
 
   }
 
-  m_MMS_label             = _task_name;
-  m_MMS_source_label      = _task_name + "_source";
-  m_MMS_source_diff_label = _task_name + "_source_diff";
-  m_MMS_source_t_label    = _task_name + "_source_time";
+  m_MMS_label             = m_task_name;
+  m_MMS_source_label      = m_task_name + "_source";
+  m_MMS_source_diff_label = m_task_name + "_source_diff";
+  m_MMS_source_t_label    = m_task_name + "_source_time";
 
 }
 

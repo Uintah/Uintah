@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -198,7 +198,7 @@ FileGeometryPiece::clone() const
 //______________________________________________________________________
 //
 bool
-FileGeometryPiece::inside(const Point& p) const
+FileGeometryPiece::inside(const Point& p, const bool defVal=false) const
 {
   //Check p with the lower coordinates
   if (p == Max(p,d_box.lower()) && p == Min(p,d_box.upper()) )

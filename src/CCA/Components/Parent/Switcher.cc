@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -797,7 +797,7 @@ void Switcher::carryOverVars(const ProcessorGroup *,
 //______________________________________________________________________
 // 
 void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
-                                                          const GridP            & grid )
+                                  const GridP            & grid )
 {
   // Get the initial simulation component and initialize the need components
   proc0cout << "\n------------ Switching to application (" << d_componentIndex <<") \n";
@@ -828,39 +828,7 @@ void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
   proc0cout << "  Reading the <Time> block from: "
             << Uintah::basename(subCompUps->getFile()) << "\n";
 
-  ProblemSpecP time_ps = subCompUps->findBlock("Time");
-
-  if ( !time_ps ) {
-    throw ProblemSetupException("ERROR SimulationTime \n"
-                                "Can not find the <Time> block.",
-                                __FILE__, __LINE__);
-  }
-  
-  time_ps->require( "delt_min", m_delTMin );
-  time_ps->require( "delt_max", m_delTMax );
-  time_ps->require( "timestep_multiplier", m_delTMultiplier );
-
-  if( !time_ps->get("delt_init", m_delTInitialMax) &&
-      !time_ps->get("max_initial_delt", m_delTInitialMax) ) {
-    m_delTInitialMax = 0;
-  }
-
-  if( !time_ps->get("initial_delt_range", m_delTInitialRange) ) {
-    m_delTInitialRange = 0;
-  }
-
-  if( !time_ps->get("max_delt_increase", m_delTMaxIncrease) ) {
-    m_delTMaxIncrease = 0;
-  }
-  
-  if( !time_ps->get( "override_restart_delt", m_delTOverrideRestart) ) {
-    m_delTOverrideRestart = 0;
-  }
-
-  // Set flags for checking reduction vars - done after the
-  // subcomponent problem spec is read because the values may be based
-  // on the solver being requested in the problem setup.
-  setReductionVariables( appComp );
+  problemSetupDeltaT( subCompUps );
 }
 
 //______________________________________________________________________
@@ -870,8 +838,6 @@ Switcher::needRecompile( const GridP & grid )
 {
   switcher_dbg << "  Doing Switcher::needRecompile " << std::endl;
   
-  m_recompile  = false;
-
   d_restarting = true;
   d_doSwitching.resize(grid->numLevels());
   
@@ -880,7 +846,6 @@ Switcher::needRecompile( const GridP & grid )
   }
 
   if (d_switchState == switching) {
-
     d_switchState = idle;
     d_computedVars.clear();
     d_componentIndex++;
@@ -888,8 +853,6 @@ Switcher::needRecompile( const GridP & grid )
     d_app->setupForSwitching();
     m_materialManager->clearMaterials();
 
-    m_output->setSwitchState(true);
-    
     // Reseting the GeometryPieceFactory only (I believe) will ever
     // need to be done by the Switcher component...
     GeometryPieceFactory::resetFactory();
@@ -911,15 +874,16 @@ Switcher::needRecompile( const GridP & grid )
 
     proc0cout << "__________________________________\n\n";
     
-    m_recompile = true;
+    m_output->setSwitchState(true);
+    
+    return true;
   } 
-  else {
+  else
+  {
     m_output->setSwitchState(false);
+    
+    return false;
   }
-
-  m_recompile |= d_app->needRecompile(grid);
-
-  return m_recompile;
 }
 //______________________________________________________________________
 //

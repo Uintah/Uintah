@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -50,8 +50,7 @@ namespace Uintah {
     virtual int findCellAndWeights(const Point& p,
                                     std::vector<IntVector>& ni,
                                     std::vector<double>& S,
-                                    const Matrix3& size, 
-                                    const Matrix3& defgrad) = 0;
+                                    const Matrix3& size) = 0;
 
     
     virtual int findCellAndWeights(const Point& p,
@@ -63,15 +62,13 @@ namespace Uintah {
     virtual int findCellAndShapeDerivatives(const Point& pos,
                                              std::vector<IntVector>& ni,
                                              std::vector<Vector>& d_S,
-                                             const Matrix3& size, 
-                                             const Matrix3& defgrad=Matrix3(0)) = 0;
-                                             
+                                             const Matrix3& size) = 0;
+
     virtual int findCellAndWeightsAndShapeDerivatives(const Point& pos,
-                                                       std::vector<IntVector>& ni,
-                                                       std::vector<double>& S,
-                                                       std::vector<Vector>& d_S,
-                                                       const Matrix3& size,
-                                                       const Matrix3& defgrad) = 0;
+                                                     std::vector<IntVector>& ni,
+                                                     std::vector<double>& S,
+                                                     std::vector<Vector>& d_S,
+                                                     const Matrix3& size) = 0;
 
    //__________________________________
    //  Needed for AMRMPM

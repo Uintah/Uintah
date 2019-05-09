@@ -24,6 +24,7 @@
 
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/TimeStepper.h>
+#include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/TaskInterface.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
@@ -61,7 +62,8 @@ namespace WasatchCore{
   void
   create_time_advance_expressions( const std::set< TimeStepper::FieldInfo<FieldT> >& fields,
                                    GraphHelper* gh,
-                                   const TimeIntegrator timeInt )
+                                   const TimeIntegrator timeInt,
+                                   const bool cleaveSolnVarFromChildren )
   {
     typedef typename TimeAdvance<FieldT>::Builder TimeAdvBuilder;
     typedef typename std::set< TimeStepper::FieldInfo<FieldT> > Fields;
@@ -69,7 +71,7 @@ namespace WasatchCore{
       if (!gh->exprFactory->have_entry(ifld->solnVarTag)) {
         const Expr::ExpressionID id = gh->exprFactory->register_expression( scinew TimeAdvBuilder(ifld->solnVarTag, ifld->rhsTag, timeInt ) );
         gh->rootIDs.insert(id);
-        //      gh->exprFactory->cleave_from_children(id);
+        if(cleaveSolnVarFromChildren) gh->exprFactory->cleave_from_children(id);
       }
     }
   }
@@ -128,11 +130,15 @@ namespace WasatchCore{
 
       // plug in time advance expression
       if (rkStage == 1) {
-        create_time_advance_expressions<so::SVolField>( scalarFields_  , solnGraphHelper_, timeInt_ );
-        create_time_advance_expressions<so::XVolField>( xVolFields_    , solnGraphHelper_, timeInt_ );
-        create_time_advance_expressions<so::YVolField>( yVolFields_    , solnGraphHelper_, timeInt_ );
-        create_time_advance_expressions<so::ZVolField>( zVolFields_    , solnGraphHelper_, timeInt_ );
-        create_time_advance_expressions<ParticleField>( particleFields_, solnGraphHelper_, timeInt_ );
+        // If the low-Mach method is being implemented, cleave scalars from children.
+        // This is done because some scalars at STATE_NP1 are needed to solve for density
+        // at STATE_NP1.
+        const bool cleaveScalars = Wasatch::flow_treatment() == LOWMACH;
+        create_time_advance_expressions<so::SVolField>( scalarFields_  , solnGraphHelper_, timeInt_, cleaveScalars );
+        create_time_advance_expressions<so::XVolField>( xVolFields_    , solnGraphHelper_, timeInt_, false         );
+        create_time_advance_expressions<so::YVolField>( yVolFields_    , solnGraphHelper_, timeInt_, false         );
+        create_time_advance_expressions<so::ZVolField>( zVolFields_    , solnGraphHelper_, timeInt_, false         );
+        create_time_advance_expressions<ParticleField>( particleFields_, solnGraphHelper_, timeInt_, false         );
       }
       
       TaskInterface* rhsTask = scinew TaskInterface( solnGraphHelper_->rootIDs,

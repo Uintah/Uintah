@@ -152,7 +152,7 @@ namespace Uintah{
 
       // register Velocity Delta
       for (auto iter = m_VelDelta_names.begin(); iter != m_VelDelta_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name  );
+        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name  );
       }
     }
 
@@ -249,7 +249,7 @@ namespace Uintah{
       // UPDATE USER DEFINE VARIABLES
       // register Velocity Delta
       for (auto iter = m_VelDelta_names.begin(); iter != m_VelDelta_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, time_substep,_task_name );
+        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, time_substep,m_task_name );
       }
 
     }

@@ -45,7 +45,10 @@ SGSsigma::problemSetup( ProblemSpecP& db ){
   m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
   m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
 
-  m_IsI_name = "strainMagnitudeLabel";
+  std::stringstream composite_name;
+  composite_name << "strainMagnitudeLabel_" << m_task_name;
+  m_IsI_name = composite_name.str();
+
   m_turb_viscosity_name = "turb_viscosity";
   m_volFraction_name = "volFraction";
 
@@ -59,6 +62,7 @@ SGSsigma::problemSetup( ProblemSpecP& db ){
 
   if (m_u_vel_name == "uVelocitySPBC") { // this is production code
     m_create_labels_IsI_t_viscosity = false;
+    m_IsI_name = "strainMagnitudeLabel";
   }
 
   const ProblemSpecP params_root = db->getRootNode();
@@ -176,7 +180,7 @@ SGSsigma::register_timestep_eval(
   //register_variable( "CCVelocity",      ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry);
   //register_variable( "density",         ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
   //register_variable( "volFraction",     ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
-  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
   if (m_create_labels_IsI_t_viscosity) {
     register_variable( m_t_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, AFC::COMPUTES ,  variable_registry, time_substep );

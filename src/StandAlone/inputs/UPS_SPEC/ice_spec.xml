@@ -43,11 +43,18 @@
         
         <vortices                       spec="OPTIONAL NO_DATA" >
           <vortex                       spec="MULTIPLE NO_DATA" >
+            <axis                       spec="REQUIRED STRING 'x, X, y, Y, z, Z'" />
             <origin                     spec="REQUIRED VECTOR" />
             <strength                   spec="REQUIRED DOUBLE" />
             <radius                     spec="REQUIRED DOUBLE 'positive'" />
           </vortex>                
         </vortices> 
+
+        <vortexPairs                    spec="OPTIONAL NO_DATA" >
+          <numVortexPairs               spec="REQUIRED DOUBLE" />
+          <axis                         spec="REQUIRED STRING 'x, X, y, Y, z, Z'" />
+          <strength                     spec="REQUIRED DOUBLE" />
+        </vortexPairs>
          
         <gaussianTemperature            spec="OPTIONAL NO_DATA">
           <origin                       spec="REQUIRED VECTOR "/>
@@ -73,6 +80,11 @@
           </variance>
         </powerLawProfile>
         
+        <DNS_Moser                      spec="OPTIONAL NO_DATA">
+          <verticalDirection            spec="REQUIRED INTEGER '0,2'" />
+          <dpdx                         spec="REQUIRED DOUBLE" />
+        </DNS_Moser>
+                
       </customInitialization>
       
       <ImplicitSolver                   spec="OPTIONAL NO_DATA">
@@ -90,6 +102,13 @@
         <knob_for_speedSound            spec="REQUIRED DOUBLE '0,1'" />
         <knob_for_diffusion             spec="OPTIONAL DOUBLE '0,1'" />
       </TimeStepControl>
+      
+      <fixedPressureGradient            spec="OPTIONAL NO_DATA" >
+        <x_dir                          spec="OPTIONAL DOUBLE" />
+        <y_dir                          spec="OPTIONAL DOUBLE" />
+        <z_dir                          spec="OPTIONAL DOUBLE" />
+      </fixedPressureGradient>
+      
     </ICE>        
   </CFD>
 

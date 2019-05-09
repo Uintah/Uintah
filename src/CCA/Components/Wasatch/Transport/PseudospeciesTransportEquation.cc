@@ -60,12 +60,10 @@ namespace WasatchCore{
                                   Uintah::ProblemSpecP params,
                                   GraphCategories& gc,
                                   const Expr::Tag densityTag,
-                                  const TurbulenceParameters& turbulenceParams,
-                                  const bool callSetup )
+                                  const TurbulenceParameters& turbulenceParams )
     : WasatchCore::TransportEquation( gc,
                                       "rho_" + pseudospeciesName,       // this will need changed if solving under constant density conditions is allowed
-                                      get_staggered_location<FieldT>(),
-                                      false ),
+                                      get_staggered_location<FieldT>() ),
       params_        ( params                                   ),
       psParams_      ( params->findBlock("TarAndSootEquations") ),
       solnVarName_   ( "rho_" + pseudospeciesName               ),
@@ -79,8 +77,9 @@ namespace WasatchCore{
     //_____________
     // Turbulence
     if( enableTurbulence_ ){
-      Expr::Tag turbViscTag = TagNames::self().turbulentviscosity;
-      turbDiffTag_ = turbulent_diffusivity_tag();
+      const TagNames& tagNames = TagNames::self();
+      Expr::Tag turbViscTag = tagNames.turbulentviscosity;
+      turbDiffTag_ = tagNames.turbulentdiffusivity;
 
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       if( !factory.have_entry( turbDiffTag_ ) ){
@@ -88,7 +87,6 @@ namespace WasatchCore{
         factory.register_expression( scinew TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
       }
     }
-    if( callSetup ) setup();
   }
 
   //------------------------------------------------------------------

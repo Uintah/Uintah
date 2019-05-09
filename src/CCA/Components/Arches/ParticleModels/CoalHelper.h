@@ -33,6 +33,9 @@ namespace Uintah{
         double h_ch0;
         double h_a0;
         double ksi;
+        double Tar_fraction;
+        double hhv;
+        std::string coal_rank;
         double T_hemisphere;        ///< Ash hemispherical temperature
         double T_fluid;             ///< Ash fluid temperature
         double T_soft;              ///< Ash softening temperature
@@ -84,6 +87,10 @@ namespace Uintah{
             db_coal_props->require("char_enthalpy", _coal_db.h_ch0);
             db_coal_props->require("ash_enthalpy", _coal_db.h_a0);
             db_coal_props->getWithDefault( "ksi",_coal_db.ksi,1.0); // Fraction of the heat released by char oxidation that goes to the particle
+
+
+
+
 
             if ( db_coal_props->findBlock("ultimate_analysis")){
 
@@ -142,6 +149,25 @@ namespace Uintah{
               }
               _coal_db.mw_avg = 1.0/mw_avg;
 
+              // ESTIMATEE TAR FRACTION - based on:
+              // Alexander Josephson et al. 2018-2019 Reduction of a Detailed Soot
+              // Model for Simulation of Pyrolyzing Solid Fuel Combustion
+
+              const double Oc =_coal_db.coal.O/_coal_db.coal.C*12.011/16.; // Oxygen to Carbon molar ratio
+              const double Hc =_coal_db.coal.H/_coal_db.coal.C*12.011/1.008; // Hydrogen to carbon molar ratio
+              double Vol;
+              db_coal_props->require("daf_volatiles_fraction",Vol);
+              const double Pres = 0; // log10( pressure in atmospheres) assume atmospheric
+              const double ytar = (-124.2+35.7*Pres+93.5*Oc-223.9*Oc*Oc+284.8*Hc-107.3*Hc*Hc+
+                              5.48*Vol+0.014*Vol*Vol-58.2*Pres*Hc-0.521*Pres*Vol-5.32*Hc*Vol)/
+                             (-303.8+52.4*Pres+1.55E3*Oc-2.46E3*Oc*Oc+656.9*Hc-266.3*Hc*Hc+15.9*Vol+
+                                        0.025*Vol*Vol-90.0*Pres*Hc-462.5*Oc*Hc+4.8*Oc*Vol-17.8*Hc*Vol);
+
+              db_coal_props->getWithDefault( "Tar_fraction",_coal_db.Tar_fraction,ytar);  // user can specify their own Tar_fraction
+              if  (ytar < 0.025 || ytar > .975){
+                throw ProblemSetupException("Something went terribly wrong with the empirical coal tar model.  Please notify David Lignell immediately at 801-422-1772.", __FILE__, __LINE__);
+              }
+
             } else {
               throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__);
             }
@@ -153,6 +179,32 @@ namespace Uintah{
             db_coal_props->getWithDefault("visc_pre_exponential_factor", _coal_db.visc_pre_exponential_factor, -999);
             db_coal_props->getWithDefault("visc_activation_energy", _coal_db.visc_activation_energy, -999);
             _coal_db.T_porosity = 0.5 * (_coal_db.T_soft + _coal_db.T_fluid);
+
+            // get the coal rank based on the HHV
+            if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Python_BC") ){
+              ProblemSpecP db_Python_BC = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Python_BC");
+              // NOTE: we should move HHV into the ParticleProperties section as it is now being used in the code..
+              // Python_BC is used in an external script.
+              db_Python_BC->getWithDefault("HHV", _coal_db.hhv, -999); // this is HHV as recieved in J/g
+              double hhv_btu_lb = _coal_db.hhv*453.592/1055.06/1000.0; // HHV 1000 BTU/lb
+              double coal_daf = 1.0 - _coal_db.coal.H2O - _coal_db.coal.ASH; //dry ash free fraction
+              double hhv_btu_lb_daf=hhv_btu_lb/coal_daf; // HHV 1000 BTU/lb daf
+              // thise numbers are based on a plot from Stan Harding
+              // on coal rank.
+              if ( hhv_btu_lb_daf<=12.3 ){
+                _coal_db.coal_rank = "lignite";
+              } else if ( hhv_btu_lb_daf>=14.0 ){
+                _coal_db.coal_rank = "high_volatile_bituminous";
+              } else {
+                _coal_db.coal_rank = "subbituminous";
+              };
+            } else {
+              _coal_db.coal_rank = "unknown";
+            }
+
+            proc0cout << "\n ** Coal Property Report ** " << std::endl;
+            proc0cout << " Tar_fraction set to " <<  _coal_db.Tar_fraction  << std::endl;
+            proc0cout << " Your coal rank was determined to be " << _coal_db.coal_rank << std::endl;
 
           }
         }

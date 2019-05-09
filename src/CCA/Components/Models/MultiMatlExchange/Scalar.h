@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,7 +44,8 @@ namespace ExchangeModels{
 
   public:
     ScalarExch(const ProblemSpecP     & prob_spec,
-               const MaterialManagerP & materialManager );
+               const MaterialManagerP & materialManager,
+               const bool with_mpm );
 
     virtual ~ScalarExch();
 
@@ -54,8 +55,9 @@ namespace ExchangeModels{
 
     virtual void sched_PreExchangeTasks(SchedulerP           & sched,
                                         const PatchSet       * patches,     
-                                        const MaterialSubset * iceMatls,    
-                                        const MaterialSet    * allMatls){};
+                                        const MaterialSubset * iceMatls,
+                                        const MaterialSubset * mpmMatls,    
+                                        const MaterialSet    * allMatls);
                                         
     virtual void addExchangeModelRequires ( Task* t,
                                             const MaterialSubset * zeroMatls,
@@ -116,8 +118,6 @@ namespace ExchangeModels{
     //__________________________________
     //  variables
     ExchangeCoefficients* d_exchCoeff;
-    MPMLabel* Mlb;
-    ICELabel* Ilb;
   };
 }
 }

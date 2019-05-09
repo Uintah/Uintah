@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,8 @@
 #define CCA_PORTS_SCHEDULER_H
 
 #include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
 
 #include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
@@ -49,6 +51,7 @@ namespace Uintah {
 
   class UintahParallelComponent;
   class LoadBalancer;
+  class TaskGraph;
   class Task;
 
 /**************************************
@@ -94,8 +97,9 @@ class Scheduler : public UintahParallelPort {
     virtual void getComponents() = 0;
     virtual void releaseComponents() = 0;
 
-    // TEMPORARY
     virtual ApplicationInterface *getApplication() = 0;
+    virtual LoadBalancer * getLoadBalancer() = 0;
+    virtual Output       * getOutput() = 0;
   
     virtual void problemSetup( const ProblemSpecP     & prob_spec
                                                , const MaterialManagerP & materialManager
@@ -131,6 +135,7 @@ class Scheduler : public UintahParallelPort {
     enum tgType { NormalTaskGraph, IntermediateTaskGraph };
 
     virtual void addTaskGraph( tgType type, int index = -1 ) = 0;
+    virtual TaskGraph* getTaskGraph( unsigned int index ) = 0;
 
     virtual int getNumTaskGraphs() = 0;
 
@@ -148,8 +153,6 @@ class Scheduler : public UintahParallelPort {
 
     virtual const std::set<std::string>&                        getNotCheckPointVars() const = 0;    
 
-    virtual LoadBalancer * getLoadBalancer() = 0;
-
     virtual DataWarehouse* get_dw( int idx ) = 0;
 
     virtual DataWarehouse* getLastDW() = 0;
@@ -165,8 +168,6 @@ class Scheduler : public UintahParallelPort {
     virtual void fillDataWarehouses( const GridP& grid) = 0;
 
     virtual void replaceDataWarehouse( int index, const GridP & grid, bool initialization = false ) = 0;
-
-    virtual bool isRestartInitTimestep() = 0;
 
 //        protected:
 
@@ -252,6 +253,7 @@ class Scheduler : public UintahParallelPort {
     virtual void setInitTimestep( bool ) = 0;
 
     virtual void setRestartInitTimestep( bool ) = 0;
+    virtual bool isRestartInitTimestep() const  = 0;
 
     virtual void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) = 0;
 

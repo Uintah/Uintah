@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,7 +40,7 @@ unsigned long convertSizeType(uint64_t* ssize, bool swapBytes, int nByteMode)
     if (swapBytes) swapbytes(size64);
 
     if (sizeof(unsigned long) < 8 && size64 > 0xffffffff)
-	throw InternalError("Overflow on 64 to 32 bit conversion", __FILE__, __LINE__);
+        throw InternalError("Overflow on 64 to 32 bit conversion", __FILE__, __LINE__);
   
     return (unsigned long)size64;
   }

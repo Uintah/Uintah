@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -82,13 +82,13 @@ WARNING
          // input specification and builds the triangulated surface piece.
          TriGeometryPiece(ProblemSpecP &);
          //////////
+         TriGeometryPiece(std::string filename);
 
          TriGeometryPiece(const TriGeometryPiece&);
 
-         TriGeometryPiece& operator=(const TriGeometryPiece&);
-
-         // Destructor
          virtual ~TriGeometryPiece();
+         
+         TriGeometryPiece& operator=(const TriGeometryPiece&);
 
          static const std::string TYPE_NAME;
          virtual std::string getType() const { return TYPE_NAME; }
@@ -97,8 +97,14 @@ WARNING
 
          //////////
          // Determins whether a point is inside the triangulated surface.
-         virtual bool inside(const Point &p) const;
+         virtual bool inside(const Point &p, const bool defaultValue) const;
+         
          bool insideNew(const Point &p, int& cross) const;
+
+         // A relatively newer version of the inside test that uses three
+         // nearly orthogonal rays and counts intersections in each of those
+         // directions
+         bool insideNewest(const Point &p, int& cross) const;
 
          //////////
          // Returns the bounding box surrounding the triangulated surface.
@@ -108,8 +114,11 @@ WARNING
 
          double surfaceArea() const;
 
-         inline int getNumIntersections( const Point& start, const Point& end, double& min_distance ){
+         inline int getNumIntersections( const Point & start, 
+                                         const Point & end, 
+                                         double      & min_distance ){
            int intersections = 0;
+           
            d_grid->countIntersections( start, end, intersections, min_distance );
            return intersections;
          }
@@ -125,10 +134,13 @@ WARNING
          virtual void outputHelper( ProblemSpecP & ps ) const;
 
          void readPoints(const std::string& file);
-         void readTri(const std::string& file);
+         void readTri(   const std::string& file);
          void makePlanes();
 //         void makeTriBoxes();
-         void insideTriangle(Point& p, int i, int& NCS, int& NES) const;
+         void insideTriangle( Point& p, 
+                              int i, 
+                              int& NCS, 
+                              int& NES) const;
 
          std::string d_file;
          Box d_box;

@@ -109,9 +109,9 @@ private:
     const bool packed_tasks ){
 
     register_variable( m_var_name,     AFC::MODIFIES, variable_registry );
-    register_variable( m_x_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, _task_name );
-    register_variable( m_y_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, _task_name );
-    register_variable( m_z_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, _task_name );
+    register_variable( m_x_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, m_task_name );
+    register_variable( m_y_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, m_task_name );
+    register_variable( m_z_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, m_task_name );
 
   }
 

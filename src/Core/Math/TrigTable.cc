@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,9 +43,9 @@ SinCosTable::SinCosTable(int n, double min, double max, double scale)
     cosdata=new double[n];
     double d=max-min;
     for(int i=0;i<n;i++){
-	double th=d*double(i)/double(n-1)+min;
-	sindata[i]=Sin(th)*scale;
-	cosdata[i]=Cos(th)*scale;
+        double th=d*double(i)/double(n-1)+min;
+        sindata[i]=Sin(th)*scale;
+        cosdata[i]=Cos(th)*scale;
     }
 }
 

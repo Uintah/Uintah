@@ -21,16 +21,16 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index, MaterialManagerP materialManager ) :
-        _task_name(task_name), _matl_index(matl_index), _materialManager(materialManager){}
+        m_task_name(task_name), m_matl_index(matl_index), _materialManager(materialManager){}
       ~Builder(){}
 
       MMS_mom* build()
-      { return scinew MMS_mom<T>( _task_name, _matl_index, _materialManager  ); }
+      { return scinew MMS_mom<T>( m_task_name, m_matl_index, _materialManager  ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
       MaterialManagerP _materialManager;
     };
@@ -109,10 +109,10 @@ void MMS_mom<T>::problemSetup( ProblemSpecP& db ){
         __FILE__, __LINE__);
     }
 
-  m_MMS_label             = _task_name;
-  m_MMS_source_label      = _task_name + "_source";
-  m_MMS_source_diff_label = _task_name + "_source_diff";
-  m_MMS_source_t_label    = _task_name + "_source_time";
+  m_MMS_label             = m_task_name;
+  m_MMS_source_label      = m_task_name + "_source";
+  m_MMS_source_diff_label = m_task_name + "_source_diff";
+  m_MMS_source_t_label    = m_task_name + "_source_time";
 
 }
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,8 +42,7 @@ bool lapackinvert(double *A, int n);
 
 void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT);
 
-void lapackeigen(double **A, int n, double *EigReal, double *EigImag,
-		 double **EigVect=0);
+void lapackeigen(double **A, int n, double *EigReal, double *EigImag, double **EigVect=0);
 
 } // End namespace Uintah
 

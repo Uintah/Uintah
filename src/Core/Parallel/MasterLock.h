@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,8 +40,24 @@ class MasterLock
 
   // Specific to OpenMP- and std::thread-based implementations
 
-  // This lock should be used with a scoped lock guard
-  // i.e. std::unique_lock<Lock>, std::lock_guard<Lock>
+  // This lock can be used as follows:
+  //
+  // 1.) Same functionality as std::mutex, e.g., create, lock(), and unlock()
+  //
+  //      OR
+  //
+  // 2.) std::unique_lock<MasterLock>
+  //
+  //       std::unique_lock is a general-purpose mutex ownership wrapper allowing deferred locking, time-constrained
+  //       attempts at locking, recursive locking, transfer of lock ownership, and use with condition variables.
+  //
+  //      OR
+  //
+  // 3.) std::lock_guard<MasterLock>
+  //
+  //       std::lock_guard is a mutex wrapper that provides a convenient RAII-style mechanism for
+  //       owning a mutex for the duration of a scoped block.
+
 
   public:
 
@@ -73,12 +89,17 @@ class MasterLock
     MasterLock& operator=( MasterLock && )      = delete;
 
 #if defined(_OPENMP) && defined(UINTAH_ENABLE_KOKKOS)
+
     omp_lock_t m_lock;
+
 #else
+
     std::mutex m_mutex;
+
 #endif // UINTAH_ENABLE_KOKKOS
 
 };
+
 } // end namespace Uintah
 
 #endif // end CORE_PARALLEL_MASTERLOCK_H

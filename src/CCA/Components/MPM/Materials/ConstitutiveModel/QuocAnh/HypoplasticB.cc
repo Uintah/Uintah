@@ -46,7 +46,7 @@
 #include <Core/Math/Short27.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Containers/StaticArray.h>
+//#include <Core/Containers/StaticArray.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
@@ -55,6 +55,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <unistd.h>
 
 extern "C"{
 
@@ -111,7 +112,7 @@ HypoplasticB::HypoplasticB(ProblemSpecP& ps,MPMFlags* Mflag)
 
   // DMMRXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
 
-  nx=14;
+  nx=13;
 
   for (int i=0;i<nx;i++)
     {
@@ -179,8 +180,6 @@ lchar - characterstic length
   cm_ps->appendElement("epocz_B",UI[10]);
   cm_ps->appendElement("nl_B",UI[11]);
   cm_ps->appendElement("lchar_B",UI[12]);
-  cm_ps->appendElement("stress_x_pocz",UI[13]);
-
 }
 
 HypoplasticB* HypoplasticB::clone()
@@ -199,7 +198,7 @@ void HypoplasticB::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   //StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
-  StaticArray<ParticleVariable<double> > ISVs(d_NINSV + 1);
+  std::vector<ParticleVariable<double> > ISVs(d_NINSV + 1);
 
   cout << "In initializeCMData" << endl;
   for(int i=0;i<d_NINSV;i++){
@@ -295,7 +294,7 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-	StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
+	std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
 
 
     for(int i=0;i<d_NINSV;i++){
@@ -312,127 +311,10 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
     new_dw->get(pvolume_new,     lb->pVolumeLabel_preReloc,              pset);
     new_dw->get(velGrad,         lb->pVelGradLabel_preReloc,             pset);
 
-	StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+	std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
     }
-///////////// NAPREZENIA POCZATKOWE IMPLEMENTED BY JAKUB KRZYZANOWSKI, 03.2019
-
- double stress_x_poczB=UI[13];
-
-
- Matrix3 stress_poczB(0.0);
- stress_poczB.set(0,0,stress_x_poczB);
-
-///////////// NAPREZENIA POCZATKOWE IMPLEMENTED BY JAKUB KRZYZANOWSKI, 03.2019
-
-
-///////////// NON - LOCAL PROBLEM IMPLEMENTED BY JAKUB KRZYZANOWSKI, 02.2019
-
-    //I determined the value from which itercoord would start
-    int itercoordB=0;
-
-    //iNLB - will be done as many times as there are particles in the analysis
-    iNLB=0;
-
-    // Petla "for" will be performed as many times as there are all particles in the analysis, at each time step
-
-    for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
-    {
-      particleIndex idx = *iter;
-
-      //Each co-ordinates "x" and "y" and the volume of the particle is saved. 
-	  //Petla will be done as many times as there are particles - 
-	  //so all coordinates are saved from each particle at a given moment of time
-      coordXB[0][itercoordB]=px[idx].x();
-      coordYB[0][itercoordB]=px[idx].y();
-      //coordZ[0][itercoord]=px[idx].z();
-      ElAreaB[itercoordB]=pvolume[idx];
-
-              Matrix3 D=(velGrad[idx]+velGrad[idx].Transpose())*.5;
-
-              double Darray[6];
-              Darray[0]=D(0,0)*delT;
-              Darray[1]=D(1,1)*delT;
-              Darray[2]=D(2,2)*delT;
-              Darray[3]=D(0,1)*delT;
-              Darray[4]=D(1,2)*delT;
-              Darray[5]=D(2,0)*delT;
-
-      //The value below is the value under the root
-	      double dlooocB=pow(((1.0/delT)*Darray[0]),2)+pow(((1.0/delT)*Darray[1]),2)+pow(((1.0/delT)*Darray[2]),2)+2.0*pow(((1.0/delT)*Darray[3]),2)+2.0*pow(((1.0/delT)*Darray[4]),2)+2.0*pow(((1.0/delT)*Darray[5]),2);
-
-      double dlocB;
-
-      //If the value under the element would be less than 0, then you know - accept 0
-      if (dlooocB<=0)
-      {
-      dlocB=0;
-      }
-      else
-      {
-		  dlocB =sqrt(dlooocB);
-      }
-
-      //For example - here for the first particle, I determined the local module needed for further calculations
-      dlocMB[0][itercoordB]=dlocB;
-
-      //Petla will be done as many times as there are particles, and below I have determined how to change the next drawers, ie dlocM [0] [0]
-	  //- means a drawer for the first particle, for [0] [1] - for 2 etc. Petla sie break - if all particles are assigned to a local module
-      itercoordB=itercoordB+1;
-    }
-
-    int itercoord2B=0;
-    double PI2B=2*asin(1.0);
-    double nlbetaB=UI[11];
-    double charlB=UI[12];
-    double lcharB=charlB*charlB;
-    double stalaB=1/(charlB*sqrt(PI2B));
-    double dziewlkwB=9*lcharB;
-
-    for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
-    {
-
-    int itercoord3B=0;
-    double sumaB, sumB, distxB, distyB, rdistB, wwB; //distz
-           sumaB=0;
-	   sumB=0;
-
-
-
-	   //This loop below works so that it will first take the particle [0] [0] [0] and into it
-	   //will refer all the points around iteratorordord3. Like itercoord
-	   //it will fly all particles, it just breaks and it is for this particle
-	   //defined non-local modulus, which he visits directly to calculate stress for her
-	   //in the CalculateStress department. For each particle, a non-local module is defined here.
-	   //For changing the part considered at the moment, itercoord2 responds, while
-	   //itercoord3 - also changes each point, but in a sense, takes all particles
-	   //from the whole body and refers them to the currently considered.
-	   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
-           {
-	     distxB=coordXB[0][itercoord3B]-coordXB[0][itercoord2B];
-	     distyB=coordYB[0][itercoord3B]-coordYB[0][itercoord2B];
-	     //distz=coordZ[0][itercoord3]-coordZ[0][itercoord2];
-	     rdistB=distxB*distxB+distyB*distyB;//+distz*distz;
-
-	     //This "if" is to take into account the influence of non-locality in the field (3l) ^ 2 = 9l ^ 2
-	     if (rdistB<=dziewlkwB)
-	     {
-	     wwB=stalaB*exp(-(rdistB/lcharB));
-	     sumaB=sumaB+(dlocMB[0][itercoord3B])*wwB*ElAreaB[itercoord3B];
-	     sumB=sumB+(wwB*ElAreaB[itercoord3B]);
-	     }
-	     itercoord3B=itercoord3B+1;
-	   }
-
-	   //Here, the non-local modulus is recorded for a given particle.
-	   //What is worth noting - if nl = 0, then the module being written is really local
-	   dnonlocMB[0][itercoord2B]=(1-nlbetaB)*dlocMB[0][itercoord2B]+nlbetaB*sumaB/sumB;
-
-	   itercoord2B=itercoord2B+1;
-    }
-
-///////////// NON - LOCAL PROBLEM IMPLEMENTED BY JAKUB KRZYZANOWSKI, 02.2019
 
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
@@ -471,8 +353,7 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 
       // This is the previous timestep Cauchy stress
       // unrotated tensorSig=R^T*pstress*R
-      // added initial stress ZMIANA: stress_poczB
-      Matrix3 tensorSig = (tensorR.Transpose())*((pstress[idx]+stress_poczB)*tensorR);
+      Matrix3 tensorSig = (tensorR.Transpose())*(pstress[idx]*tensorR);
 
       // Load into 1-D array for the fortran code
       double sigarg[6];
@@ -523,8 +404,8 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
       tensorSig(2,0) = sigarg[5];
       tensorSig(0,2) = sigarg[5];
 
-      // ROTATE pstress_new: S=R*tensorSig*R^T ZMIANA: stress_poczB
-      pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose())-stress_poczB;
+      // ROTATE pstress_new: S=R*tensorSig*R^T
+      pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
 
       c_dil = sqrt(USM/rho_cur);
 
@@ -538,8 +419,6 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
                   D(0,2)*AvgStress(0,2) +
                   D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
       se += e;
-
-
 
       // Compute wave speed at each particle, store the maximum
       Vector pvelocity_idx = pvelocity[idx];
@@ -585,8 +464,8 @@ void HypoplasticB::carryForward(const PatchSubset* patches,
     carryForwardSharedData(pset, old_dw, new_dw, matl);
 
     // Carry forward the data local to this constitutive model
-	StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
-	StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+	std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
+	std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
 
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],ISVLabels[i], pset);
@@ -711,7 +590,6 @@ HypoplasticB::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("epocz_B",UI[10],0.0);
   ps->getWithDefault("nl_B",UI[11],0.0);
   ps->getWithDefault("lchar_B",UI[12],0.0);
-  ps->getWithDefault("stress_x_pocz",UI[13],0.0);
 }
 
 void
@@ -732,7 +610,6 @@ HypoplasticB::initializeLocalMPMLabels()
   ISVNames.push_back("epocz_B");
   ISVNames.push_back("nl_B");
   ISVNames.push_back("lchar_B");
-  ISVNames.push_back("stress_x_pocz");
   
   for(int i=0;i<d_NINSV;i++){
     ISVLabels.push_back(VarLabel::create(ISVNames[i],
@@ -781,37 +658,28 @@ double n=UI[6];
 double alpha=UI[7];
 double E=UI[8];
 double v=UI[9];
-double epocz=UI[10];
 
-double strainInc[6];
-double InitialPointstress[6];
-for (int k=0; k<6; k++)
+double PI = 2 * asin(1.0);
+double R = PI / 180;
+double phi = phic * R;
+
+double esd = svarg[10];
+double trT = stress[0] + stress[1] + stress[2];
+
+if (stress[0]>=0.0)
 {
-    strainInc[k]=D[k]*dt;
-    InitialPointstress[k]=stress[k];	
+	stress[0]=-1.0;
+}
+if (stress[1]>=0.0)
+{
+	stress[1]=-1.0;
+}
+if (stress[2]>=0.0)
+{
+	stress[2]=-1.0;
 }
 
-if (InitialPointstress[0]>=0.0)            
-{
-	InitialPointstress[0]=-1.0;
-}
-if (InitialPointstress[1]>=0.0)            
-{
-	InitialPointstress[1]=-1.0;
-}
-if (InitialPointstress[2]>=0.0)            
-{
-	InitialPointstress[2]=-1.0;
-}
-double PI=2*asin(1.0);
-double R=PI/180;
-double phi=phic*R;
-if (svarg[10]<=0.1 || svarg[10]>=1.31 ) 
-{
-epocz=svarg[10];	
-}
-double esd=svarg[10];
-double trT=InitialPointstress[0]+InitialPointstress[1]+InitialPointstress[2];
+
 double ps=-trT/3.0;
 double a=0.375;
 double b=3.0;
@@ -826,19 +694,19 @@ double hi=(1.0/pow(c1,2.0))+c-pow(((ei0-ed0)/(ec0-ed0)),alpha)*(1.0/(c1*sqrt(b))
 double fd=pow(((esd-ed)/(ec-ed)),alpha);
 double fs=(hs/(n*hi))*pow((ei/esd),beta)*((1.0+ei)/ei)*pow((3.0*ps/hs),(1.0-n));
 
-double T11=InitialPointstress[0]/trT;
-double T22=InitialPointstress[1]/trT;
-double T33=InitialPointstress[2]/trT;
-double T1212=InitialPointstress[3]/trT;
-double T2323=InitialPointstress[4]/trT;
-double T1313=InitialPointstress[5]/trT;
+double T11= stress[0]/trT;
+double T22= stress[1]/trT;
+double T33= stress[2]/trT;
+double T1212= stress[3]/trT;
+double T2323= stress[4]/trT;
+double T1313= stress[5]/trT;
 
-double TSS1=(InitialPointstress[0]-trT/3.0)/trT;
-double TSS2=(InitialPointstress[1]-trT/3.0)/trT;
-double TSS3=(InitialPointstress[2]-trT/3.0)/trT;
-double TSS12=InitialPointstress[3]/trT;
-double TSS23=InitialPointstress[4]/trT;
-double TSS13=InitialPointstress[5]/trT;
+double TSS1=(stress[0]-trT/3.0)/trT;
+double TSS2=(stress[1]-trT/3.0)/trT;
+double TSS3=(stress[2]-trT/3.0)/trT;
+double TSS12= stress[3]/trT;
+double TSS23= stress[4]/trT;
+double TSS13= stress[5]/trT;
 
 double tr1=pow(TSS1,2.0)+pow(TSS12,2.0)+pow(TSS13,2.0);
 double tr2=pow(TSS12,2.0)+pow(TSS2,2.0)+pow(TSS23,2.0);
@@ -874,26 +742,25 @@ double cos3o;
 	a1=1/(c1+(c2*(1.0+cos3o)*PtsI));
 	}
 
-double trTTD=T11*(1.0/dt)*strainInc[0]+T22*(1.0/dt)*strainInc[1]+T33*(1.0/dt)*strainInc[2]+2.0*T1212*(1.0/dt)*strainInc[3]+2.0*T2323*(1.0/dt)*strainInc[4]+2.0*T1313*(1.0/dt)*strainInc[5];
+	double trTTD = T11 * D[0] + T22 * D[1] + T33 * D[2] + 2.0*T1212*D[3] + 2.0*T2323*D[4] + 2.0*T1313*D[5];
 
-double LTD1=pow(a1,2.0)*(1.0/dt)*strainInc[0]+T11*trTTD;			
-double LTD2=pow(a1,2.0)*(1.0/dt)*strainInc[1]+T22*trTTD;		
-double LTD3=pow(a1,2.0)*(1.0/dt)*strainInc[2]+T33*trTTD; 
-double LTD12=pow(a1,2.0)*(1.0/dt)*strainInc[3]+T1212*trTTD;
-double LTD23=pow(a1,2.0)*(1.0/dt)*strainInc[4]+T2323*trTTD;
-double LTD13=pow(a1,2.0)*(1.0/dt)*strainInc[5]+T1313*trTTD;
+	double LTD1 = pow(a1, 2.0)*D[0] + T11 * trTTD;
+	double LTD2 = pow(a1, 2.0)*D[1] + T22 * trTTD;
+	double LTD3 = pow(a1, 2.0)*D[2] + T33 * trTTD;
+	double LTD12 = pow(a1, 2.0)*D[3] + T1212 * trTTD;
+	double LTD23 = pow(a1, 2.0)*D[4] + T2323 * trTTD;
+	double LTD13 = pow(a1, 2.0)*D[5] + T1313 * trTTD;
 
-double NT1=a1*((2.0*InitialPointstress[0]-trT/3.0)/(trT));
-double NT2=a1*((2.0*InitialPointstress[1]-trT/3.0)/(trT));
-double NT3=a1*((2.0*InitialPointstress[2]-trT/3.0)/(trT));
-double NT12=a1*(2.0*InitialPointstress[3]/(trT));
-double NT23=a1*(2.0*InitialPointstress[4]/(trT));
-double NT13=a1*(2.0*InitialPointstress[5]/(trT));
+double NT1=a1*((2.0*stress[0]-trT/3.0)/(trT));
+double NT2=a1*((2.0*stress[1]-trT/3.0)/(trT));
+double NT3=a1*((2.0*stress[2]-trT/3.0)/(trT));
+double NT12=a1*(2.0*stress[3]/(trT));
+double NT23=a1*(2.0*stress[4]/(trT));
+double NT13=a1*(2.0*stress[5]/(trT));
 
-double dloc=dnonlocMB[0][iNLB];
-
-//To na dole jest OK, jezeli nie ma nielokalnosci-zeby uaktywnic usunac nielokalnosc
-//double Ds=(1.0/dt)*sqrt(pow(strainInc[0],2.0)+pow(strainInc[1],2.0)+pow(strainInc[2],2.0)+2.0*pow(strainInc[3],2.0)+2.0*pow(strainInc[4],2.0)+2.0*pow(strainInc[5],2.0));
+//The value below is the value under the root
+double dlooocB = pow(D[0], 2) + pow(D[1], 2) + pow(D[2], 2) + 2.0*pow(D[3], 2) + 2.0*pow(D[4], 2) + 2.0*pow(D[5], 2);
+double dloc = sqrt(dlooocB);
 
 double dT1=fs*(LTD1+fd*NT1*dloc); 		
 double dT2=fs*(LTD2+fd*NT2*dloc);
@@ -902,50 +769,19 @@ double dT12=fs*(LTD12+fd*NT12*dloc);
 double dT23=fs*(LTD23+fd*NT23*dloc);
 double dT13=fs*(LTD13+fd*NT13*dloc);
 
-InitialPointstress[0]=InitialPointstress[0]+dT1*dt;
-InitialPointstress[1]=InitialPointstress[1]+dT2*dt;
-InitialPointstress[2]=InitialPointstress[2]+dT3*dt;
-InitialPointstress[3]=InitialPointstress[3]+dT12*dt;
-InitialPointstress[4]=InitialPointstress[4]+dT23*dt;
-InitialPointstress[5]=InitialPointstress[5]+dT13*dt;
+stress[0]+= dT1*dt;
+stress[1]+= dT2*dt;
+stress[2]+= dT3*dt;
+stress[3]+= dT12*dt;
+stress[4]+= dT23*dt;
+stress[5]+= dT13*dt;
 
 iNLB=iNLB+1;
 
-double de=(1.0+esd)*(1.0/dt)*(strainInc[0]+strainInc[1]+strainInc[2]);
+double de = (1.0 + esd)*(D[0] + D[1] + D[2]);
 
 //Zeby pokazac porowatosc, musi ona byc jednoczesnie UI oraz svarg
 svarg[10]=svarg[10]+de*dt;
-
-//double edd=ed*1.001;
-//	if (stateN<=edd)
-//	{
-//	stateN=edd;
-//	}
-//double eii=ei*0.999;
-//	if (stateN>=eii)
-//	{
-//	stateN=eii;
-//	}
-// state variable void ratio save
-
-//svarg[1]=stateN;
-
-//if (stepTimeB<dt+0.000000001)
-//{
-//    svarg[0]=epocz;
-//}
-//else
-//{
-//     svarg[0]=stateN;
-//}
-
-//cerr << iNLB  << endl;
-//cerr << dnonlocMB[0][iNLB] << endl;
-
-for (int k=0; k<6; k++)
-{
-    stress[k]=InitialPointstress[k];
-}
 
 /////////////////////////////////////
 double Kmod=(E)/(3*(1-2*v));

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,15 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef SCI_GPERFTOOLS_DEFS_H
-#define SCI_GPERFTOOLS_DEFS_H
+#ifndef UINTAH_GPERFTOOLS_DEFS_H
+#define UINTAH_GPERFTOOLS_DEFS_H
 
 @DEF_GPERFTOOLS@
 
 #ifdef USE_GPERFTOOLS
-#  include <google/profiler.h>
-#  include <google/heap-profiler.h>
-#  include <google/heap-checker.h>
+#  include <gperftools/profiler.h>
+#  include <gperftools/heap-profiler.h>
+#  include <gperftools/heap-checker.h>
 #endif
 
 #endif

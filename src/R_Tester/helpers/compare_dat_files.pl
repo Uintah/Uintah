@@ -1,9 +1,16 @@
 #! /usr/bin/perl
+#______________________________________________________________________
+#   script that performs the <uda>/*.dat 
+#   exit return values:
+#      0:   The dat files are withn allowable errors
+#      1:   The dat files exceed tolerances
+#      2:   Error
+
 
 if (@ARGV <= 4) {
   print "Usage: compare_dat_files {abs error allowed} {rel error allowed} {uda directory 1} {uda directory 2} {dat file names}\n";
   print "  Now exiting...\n";
-  exit(1);
+  exit(2);
 }
 
 $allowable_abs_error = $ARGV[0];
@@ -57,12 +64,14 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
 
   if (!open(IN1, $datfilename1)) {
     print "Could not open " . $datfilename1 . "\n";
+    $failed = 1;
   }
   if (!open(IN2, $datfilename2)) {
     print "Could not open " . $datfilename2 . "\n";
+    $failed = 1;
   }
 
-  print "Comparing " . $datfile . "...\n";
+  print "Comparing " . $datfile . "...";
   $detected_rel_error = 0;
   $detected_abs_error = 0;
   $max_rel_error = 0;
@@ -81,7 +90,7 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
       print " on line number " . $lineno . "\n";
 
       print "Error: the dat files do not have the same number of values per line\n";
-      exit(1);
+      exit(2);
     }
     
     # prepend the time onto the value list to be compared as values
@@ -149,7 +158,7 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
 
   #__________________________________
   if ($detected_rel_error != 0 || $detected_abs_error != 0) {
-    print "*** failed\n";
+    print "FAILED\n";
 
     if ($detected_rel_error != 0) {
       print "    greatest relative error (%" . $max_rel_error * 100 . ") at:\n";
@@ -184,7 +193,7 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
     $failed = 1;
   }
   else {
-    print "good\n";
+    print "PASSED\n";
   }
 
   close(IN1);
@@ -232,7 +241,7 @@ sub getTimeAndValue {
   }
   
   print "Error parsing line:\n" . @_[0] . "\n";
-  exit(1);
+  exit(2);
 }
 
 

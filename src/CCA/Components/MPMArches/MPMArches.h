@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -78,7 +78,6 @@ namespace Uintah {
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/Arches/Arches.h>
-#include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Geometry/Vector.h>
 
 #undef RIGID_MPM
@@ -86,14 +85,14 @@ namespace Uintah {
 
 namespace Uintah {
 
+  class ArchesLabel;
 
-
- const TypeDescription* fun_getTypeDescription(cutcell*);
+  const TypeDescription* fun_getTypeDescription(cutcell*);
 
 class MPMArches : public ApplicationCommon {
 public:
   MPMArches(const ProcessorGroup* myworld,
-	    const MaterialManagerP materialManager);
+            const MaterialManagerP materialManager);
   
   virtual ~MPMArches();
 
@@ -106,128 +105,128 @@ public:
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
 
-  // Set up initial conditions for MPMArches problem	 
+  // Set up initial conditions for MPMArches problem     
   virtual void scheduleInitialize(const LevelP& level,
-				  SchedulerP&);
+                                  SchedulerP&);
                               
   virtual void scheduleRestartInitialize(const LevelP& level,
                                          SchedulerP& sched);
 
   virtual void scheduleInitializeKStability(SchedulerP& sched,
-					    const PatchSet* patches,
-					    const MaterialSet* arches_matls);
+                                            const PatchSet* patches,
+                                            const MaterialSet* arches_matls);
 
   virtual void scheduleInitializeCutCells(SchedulerP& sched,
-					  const PatchSet* patches,
-					  const MaterialSet* arches_matls);
+                                          const PatchSet* patches,
+                                          const MaterialSet* arches_matls);
 
   // Interpolate particle information from particles to grid
   // for the initial condition
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP& sched,
-						  const PatchSet* patches,
-						  const MaterialSet* matls);
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls);
 
   //////////
   virtual void scheduleComputeStableTimeStep(const LevelP& level,
-					     SchedulerP&);
-	 
+                                             SchedulerP&);
+         
   //////////
   virtual void scheduleTimeAdvance( const LevelP& level, 
-				    SchedulerP&);
+                                    SchedulerP&);
 
   //////////
   virtual void scheduleAnalysis( const LevelP& level, 
-				 SchedulerP&);
+                                 SchedulerP&){};
 
   // Copy cut cell information from time step to next time step
   void scheduleCopyCutCells(SchedulerP& sched,
-			    const PatchSet* patches,
-			    const MaterialSet* arches_matls);
+                            const PatchSet* patches,
+                            const MaterialSet* arches_matls);
 
   // Interpolate Particle variables from Nodes to cell centers
   void scheduleInterpolateNCToCC(SchedulerP&,
-				 const PatchSet* patches,
-				 const MaterialSet* matls);
+                                 const PatchSet* patches,
+                                 const MaterialSet* matls);
 
   // Interpolate relevant particle variables from cell center to
   // appropriate face centers
   void scheduleInterpolateCCToFC(SchedulerP&,
-				 const PatchSet* patches,
-				 const MaterialSet* matls);
+                                 const PatchSet* patches,
+                                 const MaterialSet* matls);
 
   // Calculate gas void fraction by subtraction of solid volume
   // fraction from one
   void scheduleComputeVoidFracMPM(SchedulerP& sched,
-			       const PatchSet* patches,
-			       const MaterialSet* arches_matls,
-			       const MaterialSet* mpm_matls,
-			       const MaterialSet* all_matls);
+                               const PatchSet* patches,
+                               const MaterialSet* arches_matls,
+                               const MaterialSet* mpm_matls,
+                               const MaterialSet* all_matls);
 
   void scheduleComputeVoidFrac(SchedulerP& sched,
-			       const PatchSet* patches,
-			       const MaterialSet* arches_matls,
-			       const MaterialSet* mpm_matls,
-			       const MaterialSet* all_matls);
+                               const PatchSet* patches,
+                               const MaterialSet* arches_matls,
+                               const MaterialSet* mpm_matls,
+                               const MaterialSet* all_matls);
 
   // Calculate integrated solid temperature from individual 
   // materials in a given cell
   void scheduleComputeIntegratedSolidProps(SchedulerP& sched,
-					   const PatchSet* patches,
-					   const MaterialSet* arches_matls,
-					   const MaterialSet* mpm_matls,
-					   const MaterialSet* all_matls);
+                                           const PatchSet* patches,
+                                           const MaterialSet* arches_matls,
+                                           const MaterialSet* mpm_matls,
+                                           const MaterialSet* all_matls);
 
   // Calculate Total Heat Flux to Solid (combination of x-, y-,
   // z- and cc-fluxes) for any wall cell
 
   void scheduleComputeTotalHT(SchedulerP& sched,
-			      const PatchSet* patches,
-			      const MaterialSet* arches_matls);
+                              const PatchSet* patches,
+                              const MaterialSet* arches_matls);
 
   // Calculate momentum exchange terms for gas-solid interface
   void scheduleMomExchange(SchedulerP& sched,
-			   const PatchSet* patches,
-			   const MaterialSet* arches_matls,
-			   const MaterialSet* mpm_matls,
-			   const MaterialSet* all_matls);
+                           const PatchSet* patches,
+                           const MaterialSet* arches_matls,
+                           const MaterialSet* mpm_matls,
+                           const MaterialSet* all_matls);
 
   // Calculate heat exchange terms for gas-solid interface
   void scheduleEnergyExchange(SchedulerP& sched,
-			      const PatchSet* patches,
-			      const MaterialSet* arches_matls,
-			      const MaterialSet* mpm_matls,
-			      const MaterialSet* all_matls);
+                              const PatchSet* patches,
+                              const MaterialSet* arches_matls,
+                              const MaterialSet* mpm_matls,
+                              const MaterialSet* all_matls);
 
   // Interpolate all momentum and energy exchange sources from
   // face centers and accumulate with cell-center sources
   void schedulePutAllForcesOnCC(SchedulerP& sched,
-			        const PatchSet* patches,
-			        const MaterialSet* mpm_matls);
+                                const PatchSet* patches,
+                                const MaterialSet* mpm_matls);
 
   // Interpolate all momentum and energy sources from cell-centers
   // to node centers for MPM use
   void schedulePutAllForcesOnNC(SchedulerP& sched,
-			        const PatchSet* patches,
-			        const MaterialSet* mpm_matls);
+                                const PatchSet* patches,
+                                const MaterialSet* mpm_matls);
 
   void scheduleComputeAndIntegrateAcceleration(SchedulerP&, const PatchSet*,
-				               const MaterialSet*);
+                                               const MaterialSet*);
 
   void computeAndIntegrateAcceleration(const ProcessorGroup*,
-			               const PatchSubset* patches,
-			               const MaterialSubset* matls,
-			               DataWarehouse* old_dw,
-			               DataWarehouse* new_dw);
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
 
   void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
-				  const MaterialSet*);
+                                  const MaterialSet*);
 
   void solveHeatEquations(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw);
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
 
   
 
@@ -237,116 +236,116 @@ public:
  protected:
 
     void initializeKStability(const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset* arches_matls,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw);
+                              const PatchSubset* patches,
+                              const MaterialSubset* arches_matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw);
 
     void initializeCutCells(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* arches_matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+                            const PatchSubset* patches,
+                            const MaterialSubset* arches_matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
     void interpolateParticlesToGrid(const ProcessorGroup*,
-				  const PatchSubset* patches,
-				  const MaterialSubset* ,
-				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw);
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* ,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
 
   void copyCutCells(const ProcessorGroup*,
-		    const PatchSubset* patches,
-		    const MaterialSubset*,
-		    DataWarehouse* old_dw,
-		    DataWarehouse* new_dw);
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
 
   void interpolateNCToCC(const ProcessorGroup*,
-			 const PatchSubset* patches,
-			 const MaterialSubset* matls,
-			 DataWarehouse* old_dw,
-			 DataWarehouse* new_dw);
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw);
 
   void interpolateCCToFC(const ProcessorGroup*,
-			 const PatchSubset* patches,
-			 const MaterialSubset* matls,
-			 DataWarehouse* old_dw,
-			 DataWarehouse* new_dw);
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw);
 
   void computeVoidFracMPM(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset*,
-		       DataWarehouse* old_dw,
-		       DataWarehouse* new_dw);
+                       const PatchSubset* patches,
+                       const MaterialSubset*,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw);
 
 
   void computeVoidFrac(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset*,
-		       DataWarehouse* old_dw,
-		       DataWarehouse* new_dw);
+                       const PatchSubset* patches,
+                       const MaterialSubset*,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw);
 
   void computeIntegratedSolidProps(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset*,
-				   DataWarehouse* /*old_dw*/,
-				   DataWarehouse* new_dw);
+                                   const PatchSubset* patches,
+                                   const MaterialSubset*,
+                                   DataWarehouse* /*old_dw*/,
+                                   DataWarehouse* new_dw);
 
   void computeTotalHT(const ProcessorGroup*,
-		      const PatchSubset* patches,
-		      const MaterialSubset*,
-		      DataWarehouse* /*old_dw*/,
-		      DataWarehouse* new_dw);
+                      const PatchSubset* patches,
+                      const MaterialSubset*,
+                      DataWarehouse* /*old_dw*/,
+                      DataWarehouse* new_dw);
 
   void doMomExchange(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset*,
-		     DataWarehouse* old_dw,
-		     DataWarehouse* new_dw);
+                     const PatchSubset* patches,
+                     const MaterialSubset*,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
 
   void collectToCCGasMomExchSrcs(const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset*,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
 
   void interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* ,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw);
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* ,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
 #if 0
   void redistributeDragForceFromCCtoFC(const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* ,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw);
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* ,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
 #endif
 
   void doEnergyExchange(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset*,
-			DataWarehouse* old_dw,
-			DataWarehouse* new_dw);
+                        const PatchSubset* patches,
+                        const MaterialSubset*,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
 
   void collectToCCGasEnergyExchSrcs(const ProcessorGroup*,
-				    const PatchSubset* patches,
-				    const MaterialSubset*,
-				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw);
+                                    const PatchSubset* patches,
+                                    const MaterialSubset*,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
 
   void putAllForcesOnCC(const ProcessorGroup*,
-		        const PatchSubset* patches,
-		        const MaterialSubset*,
-		        DataWarehouse* old_dw,
-		        DataWarehouse* new_dw);
+                        const PatchSubset* patches,
+                        const MaterialSubset*,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
 
   void putAllForcesOnNC(const ProcessorGroup*,
-		        const PatchSubset* patches,
-		        const MaterialSubset*,
-		        DataWarehouse* old_dw,
-		        DataWarehouse* new_dw);
+                        const PatchSubset* patches,
+                        const MaterialSubset*,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
 
   double d_SMALL_NUM;
   // GROUP: Constructors (Private):
@@ -358,7 +357,7 @@ public:
 
   MPMArches(const MPMArches&);
   MPMArches& operator=(const MPMArches&);
-	 
+         
   MPMLabel* Mlb;
   const ArchesLabel* d_Alab;
   const MPMArchesLabel* d_MAlb;
@@ -373,14 +372,11 @@ public:
 #endif
 
   Arches*          d_arches;
-  
-  std::vector<AnalysisModule*> d_analysisModules;
 
   double d_tcond;
   bool d_calcEnergyExchange;
   bool d_DORad;
   bool d_radiation;
-  int nofTimesteps;
   double prturb;
   double cpfluid;
   bool d_useCutCell;
@@ -393,7 +389,6 @@ public:
   bool calcVolFracMPM;
   bool calcVel;
   bool d_stairstep;
-  bool d_doingRestart; 
 
   enum CENTROID {CENX=1, CENY, CENZ};    
   enum SURFNORM {NORMX=4, NORMY, NORMZ};

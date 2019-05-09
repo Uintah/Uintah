@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -52,16 +52,16 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index ) :
-        _task_name(task_name), _matl_index(matl_index){}
+        m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       TaskAlgebra* build()
-      { return scinew TaskAlgebra<T>( _task_name, _matl_index ); }
+      { return scinew TaskAlgebra<T>( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
     };
 
@@ -296,7 +296,7 @@ private:
     for ( auto iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
       if ( iter->second.create_new_variable ){
 
-        register_variable( iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+        register_variable( iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
 
       }
     }
@@ -330,7 +330,7 @@ private:
 
       if ( iter->second.create_new_variable ){
 
-        register_variable( iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+        register_variable( iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
 
       }
     }
@@ -373,13 +373,13 @@ private:
 
       if ( op_iter->second.create_new_variable ){
         if ( !use_variable(op_iter->second.dep, new_variables)){
-          register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
+          register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
           new_variables.push_back(op_iter->second.dep);
         }
       } else {
         if ( !use_variable(op_iter->second.dep, mod_variables)){
           if ( !op_iter->second.create_temp_variable ){
-            register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
+            register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
             mod_variables.push_back(op_iter->second.dep);
           }
         }
@@ -388,13 +388,13 @@ private:
       //require from newdw on everything else?
       if ( !use_variable(op_iter->second.ind1, req_variables) ){
         if ( !op_iter->second.ind1_is_temp ){
-          register_variable( op_iter->second.ind1, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
+          register_variable( op_iter->second.ind1, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
           req_variables.push_back(op_iter->second.ind1);
         }
       }
       if ( !op_iter->second.use_constant ){
         if ( !use_variable(op_iter->second.ind2, req_variables) ){
-          register_variable( op_iter->second.ind2, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
+          register_variable( op_iter->second.ind2, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
           req_variables.push_back(op_iter->second.ind2);
         }
       }
@@ -493,8 +493,8 @@ private:
           case DIVIDE_CONST_VARIABLE:
             if ( op_iter->second.sum_into_dep ){
               Uintah::parallel_for(range, [&](int i, int j, int k){
-                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + ((*ind_ptr)(i,j,k) == 0) ? 0.0
-                  : op_iter->second.constant / (*ind_ptr)(i,j,k);
+                  (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) +
+                    (((*ind_ptr)(i,j,k) == 0) ? 0.0 : op_iter->second.constant / (*ind_ptr)(i,j,k));
               });
             } else {
               Uintah::parallel_for(range, [&](int i, int j, int k){

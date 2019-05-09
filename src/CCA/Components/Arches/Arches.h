@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -66,7 +66,6 @@ namespace Uintah {
   class PhysicalConstants;
   class NonlinearSolver;
   class MPMArchesLabel;
-  class ArchesLabel;
   class ArchesParticlesHelper;
 
 class Arches : public ApplicationCommon {
@@ -77,9 +76,9 @@ public:
   enum STENCILNAME { AP, AE, AW, AN, AS, AT, AB };
   enum NUMGHOSTS {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
                   THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
-
+  
   Arches(const ProcessorGroup* myworld,
-	 const MaterialManagerP materialManager);
+         const MaterialManagerP materialManager);
 
   virtual ~Arches();
 
@@ -97,18 +96,20 @@ public:
 
   virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                              SchedulerP&);
-  void
-  MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched,
-                                    bool& recompile, bool doing_restart );
 
   virtual void scheduleTimeAdvance( const LevelP& level,
                                     SchedulerP&);
 
   virtual void scheduleAnalysis( const LevelP& level,
-				 SchedulerP&);
+                                 SchedulerP&);
 
-  virtual int computeTaskGraphIndex( const int timeStep );
-
+  // An optional call for the application to check their reduction vars.
+  virtual void checkReductionVars( const ProcessorGroup * pg,
+                                   const PatchSubset    * patches,
+                                   const MaterialSubset * matls,
+                                         DataWarehouse  * old_dw,
+                                         DataWarehouse  * new_dw );
+    
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
     m_MAlab = MAlb;
   }
@@ -118,7 +119,7 @@ public:
   void setWithMPMARCHES() {
     m_with_mpmarches = true;
   };
-
+  
   //________________________________________________________________________________________________
   //  Multi-level/AMR
   // stub functions.  Needed for multi-level RMCRT and
@@ -165,7 +166,6 @@ private:
 
   std::vector<AnalysisModule*> m_analysis_modules;
 
-  bool m_doing_restart;
   bool m_with_mpmarches;
 
   bool m_do_lagrangian_particles;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -507,12 +507,10 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
       //interpolate plastic multiplier to the grid
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
-        NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
-                                                deformationGradient[idx]);
+        NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
-        NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
-                                                deformationGradient[idx]);
+        NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
       }
       IntVector node;
       for(int k=0; k< NN; k++){
@@ -617,12 +615,10 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
           // get the interpolation data
           if(!flag->d_axisymmetric){
             // Get the node indices that surround the cell
-            NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
-                                                deformationGradient[idx]);
+            NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
           } else {  // axi-symmetric kinematics
             // Get the node indices that surround the cell
-            NN =interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
-                                               deformationGradient[idx]);
+            NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
           }
 
           //replace the old value of gdlambda with the interpolated values of the new estimate

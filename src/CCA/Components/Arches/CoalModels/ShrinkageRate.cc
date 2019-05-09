@@ -16,7 +16,6 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
 
-#include <boost/math/special_functions/erf.hpp>
 //===========================================================================
 
 using namespace std;
@@ -110,12 +109,12 @@ ShrinkageRate::problemSetup(const ProblemSpecP& params, int qn)
   ProblemSpecP db_coal_models = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Models");
   for ( ProblemSpecP db_model = db_coal_models->findBlock("model"); db_model != nullptr; db_model = db_model->findNextBlock("model")){
     db_model->getAttribute("type", modelName);
-    if( modelName == "CharOxidationSmith2016" ) {
+    if( modelName == "CharOxidationSmith" ) {
       tflag = false;
-    }
+    }   
   }
   if (tflag) {
-    throw ProblemSetupException("Error: CharOxidationSmith2016 is required for ShrinkageRate block in <DQMOM-> Models>.", __FILE__, __LINE__);
+    throw ProblemSetupException("Error: CharOxidationSmith is required for ShrinkageRate block in <DQMOM-> Models>.", __FILE__, __LINE__);
   }
 }
 

@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2019 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -226,7 +226,8 @@ private:
     std::vector<SourceInfo> eqn_srcs;
     if ( my_dir == ArchesCore::XDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" ));
+      m_vel_name.push_back(parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name ));
+
       for ( ProblemSpecP src_db = db->findBlock("src_x");
             src_db != nullptr; src_db = src_db->findNextBlock("src_x") ){
 
@@ -249,7 +250,7 @@ private:
 
     } else if ( my_dir == ArchesCore::YDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" ));
+      m_vel_name.push_back(parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name ));
       for ( ProblemSpecP src_db = db->findBlock("src_y");
             src_db != nullptr; src_db = src_db->findNextBlock("src_y") ){
 
@@ -272,7 +273,7 @@ private:
 
     } else if ( my_dir == ArchesCore::ZDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" ));
+      m_vel_name.push_back(parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name ));
       for ( ProblemSpecP src_db = db->findBlock("src_z");
             src_db != nullptr; src_db = src_db->findNextBlock("src_z") ){
 
@@ -442,9 +443,9 @@ private:
 
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep );
       register_variable( m_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
-      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
-      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
+      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
 
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator i = m_source_info[ieqn].begin(); i != m_source_info[ieqn].end(); i++){
@@ -464,8 +465,8 @@ private:
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
-    register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    //register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    //register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   }
 
@@ -648,10 +649,11 @@ private:
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }
 
-    std::vector<std::string> bc_dep;
+    ArchesCore::FunctorDepList bc_dep;
     m_boundary_functors->get_bc_dependencies( m_eqn_names, m_bcHelper, bc_dep );
     for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW,
+
+      register_variable( (*i).variable_name, ArchesFieldContainer::REQUIRES, (*i).n_ghosts , (*i).dw,
                          variable_registry );
     }
 
