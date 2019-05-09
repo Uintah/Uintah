@@ -1,0 +1,2465 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Uintah_specification>
+  <Meta>
+    <title>OFC_Utah_Mono</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>100</maxTime>
+    <max_Timesteps>10000000</max_Timesteps>
+    <initTime>0.0</initTime>
+    <delt_min>1e-9</delt_min>
+    <delt_max>1e-3</delt_max>
+    <timestep_multiplier>0.2</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>ofc_Mono.uda</filebase>
+    <outputInterval>1.0</outputInterval>
+    <save label="residence_time"/>
+    <save label="Tar"/>
+    <save label="Ysoot"/>
+    <save label="Nsoot"/>
+    <save label="O2_running_sum"/>
+    <save label="res_source"/>
+    <save label="coal_gas_momentum"/>
+    <save label="eta_source1"/>
+    <save label="eta_source2"/>
+    <save label="eta_source3"/>
+    <save label="heat_source"/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="cellType"/>
+    <save label="radiationVolq"/>
+    <save label="radiation_temperature"/>
+    <save label="radiationFluxN"/>
+    <save label="radiationFluxS"/>
+    <save label="radiationFluxB"/>
+    <save label="radiationFluxT"/>
+    <save label="radiationFluxE"/>
+    <save label="radiationFluxW"/>
+    <save label="divQ"/>
+    <save label="abskp"/>
+    <save label="abskg"/>
+    <save label="gas_abskg"/>
+    <save label="enthalpy"/>
+    <save label="length_0"/>
+    <save label="length_1"/>
+    <save label="length_2"/>
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="w_2"/>
+    <save label="w_qn0"/>
+    <save label="w_qn1"/>
+    <save label="w_qn2"/>
+    <save label="ux_0"/>
+    <save label="ux_1"/>
+    <save label="ux_2"/>
+    <save label="uy_0"/>
+    <save label="uy_1"/>
+    <save label="uy_2"/>
+    <save label="uz_0"/>
+    <save label="uz_1"/>
+    <save label="uz_2"/>
+    <save label="ux_qn0"/>
+    <save label="ux_qn1"/>
+    <save label="ux_qn2"/>
+    <save label="uy_qn0"/>
+    <save label="uy_qn1"/>
+    <save label="uy_qn2"/>
+    <save label="uz_qn0"/>
+    <save label="uz_qn1"/>
+    <save label="uz_qn2"/>
+    <save label="RCmass_0"/>
+    <save label="RCmass_1"/>
+    <save label="RCmass_2"/>
+    <save label="RCmass_qn0"/>
+    <save label="RCmass_qn1"/>
+    <save label="RCmass_qn2"/>
+    <save label="max_particle_temp_0"/>
+    <save label="max_particle_temp_1"/>
+    <save label="max_particle_temp_2"/>
+    <save label="max_particle_temp_qn0"/>
+    <save label="max_particle_temp_qn1"/>
+    <save label="max_particle_temp_qn2"/>
+    <save label="char_qn0_surfacerate"/>
+    <save label="char_qn1_surfacerate"/>
+    <save label="char_qn2_surfacerate"/>
+    <save label="devol_qn0"/>
+    <save label="devol_qn1"/>
+    <save label="devol_qn2"/>
+    <save label="char_qn0_PO2surf"/>
+    <save label="char_qn1_PO2surf"/>
+    <save label="char_qn2_PO2surf"/>
+    <save label="vorticity"/>
+    <save label="temperature_coal_0"/>
+    <save label="temperature_coal_1"/>
+    <save label="temperature_coal_2"/>
+    <save label="Charmass_qn0"/>
+    <save label="Charmass_qn1"/>
+    <save label="Charmass_qn2"/>
+    <save label="Charmass_0"/>
+    <save label="Charmass_1"/>
+    <save label="Charmass_2"/>
+    <save label="vorticity"/>
+    <save label="heat_qn0_Qconv"/>
+    <save label="heat_qn0_Qrad"/>
+    <save label="heat_qn1_Qconv"/>
+    <save label="heat_qn1_Qrad"/>
+    <save label="heat_qn2_Qconv"/>
+    <save label="heat_qn2_Qrad"/>
+    <save label="pE_0"/>
+    <save label="pE_1"/>
+    <save label="pE_2"/>
+    <save label="pE_qn0"/>
+    <save label="pE_qn1"/>
+    <save label="pE_qn2"/>
+    <save label="mixture_fraction_2"/>
+    <save label="heat_loss"/>
+    <save label="coal_gas_mix_frac"/>
+    <save label="dTdt_0"/>
+    <save label="dTdt_1"/>
+    <save label="dTdt_2"/>
+    <save label="RCmass_os_src_qn0"/>
+    <save label="RCmass_os_src_qn1"/>
+    <save label="RCmass_os_src_qn2"/>
+    <save label="Charmass_os_src_qn0"/>
+    <save label="Charmass_os_src_qn1"/>
+    <save label="Charmass_os_src_qn2"/>
+    <save label="pE_os_src_qn0"/>
+    <save label="pE_os_src_qn1"/>
+    <save label="pE_os_src_qn2"/>
+    <save label="ux_os_src_qn0"/>
+    <save label="ux_os_src_qn1"/>
+    <save label="ux_os_src_qn2"/>
+    <save label="uy_os_src_qn0"/>
+    <save label="uy_os_src_qn1"/>
+    <save label="uy_os_src_qn2"/>
+    <save label="uz_os_src_qn0"/>
+    <save label="uz_os_src_qn1"/>
+    <save label="uz_os_src_qn2"/>
+    <save label="weight_os_src_qn0"/>
+    <save label="weight_os_src_qn1"/>
+    <save label="weight_os_src_qn2"/>
+    <save label="temperature" table_lookup="true"/>
+    <save label="density" table_lookup="true"/>
+    <save label="CO" table_lookup="true"/>
+    <save label="CO2" table_lookup="true"/>
+    <save label="H2O" table_lookup="true"/>
+    <save label="OH" table_lookup="true"/>
+    <save label="O2" table_lookup="true"/>
+    <save label="sensibleenthalpy" table_lookup="true"/>
+    <save label="adiabaticenthalpy" table_lookup="true"/>
+    <save label="N2" table_lookup="true"/>
+    <save label="mixture_molecular_weight" table_lookup="true"/>
+    <checkpoint cycle="2" walltimeInterval="1600" walltimeStart="0"/>
+    <outputDoubleAsFloat/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <Face name="x_m_ wall" side="x-">
+        <BCType id="all" label="wall_x_m_ wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="CO_model" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="transported_adiabatic_enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="temperature" var="Dirichlet">
+          <value>1400.0</value>
+        </BCType>
+        <BCType id="all" label="residence_time" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Ysoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Nsoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Tar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn0" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn1" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn2" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+      </Face>
+      <Face name="x_p_wall" side="x+">
+        <BCType id="all" label="wall_x_p_wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="CO_model" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="transported_adiabatic_enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="temperature" var="Dirichlet">
+          <value>1400.0</value>
+        </BCType>
+        <BCType id="all" label="residence_time" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Ysoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Nsoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Tar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn0" var="Dirichlet">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn1" var="Dirichlet">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn2" var="Dirichlet">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn0" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn1" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn2" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+      </Face>
+      <Face name="y_m_wall" side="y-">
+        <BCType id="all" label="wall_y_m_wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="CO_model" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="transported_adiabatic_enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="temperature" var="Dirichlet">
+          <value>1400.0</value>
+        </BCType>
+        <BCType id="all" label="residence_time" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Ysoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Nsoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Tar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn0" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn1" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn2" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+      </Face>
+      <Face name="y_p_wall" side="y+">
+        <BCType id="all" label="wall_y_p_wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="CO_model" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="transported_adiabatic_enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="temperature" var="Dirichlet">
+          <value>1400.0</value>
+        </BCType>
+        <BCType id="all" label="residence_time" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Ysoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Nsoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Tar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn0" var="Dirichlet">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn1" var="Dirichlet">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn2" var="Dirichlet">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn0" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn1" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn2" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+      </Face>
+      <Face name="z_m_wall" side="z-">
+        <BCType id="all" label="wall_z_m_wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="CO_model" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="transported_adiabatic_enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="temperature" var="Dirichlet">
+          <value>1400.0</value>
+        </BCType>
+        <BCType id="all" label="residence_time" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Ysoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Nsoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Tar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn0" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn1" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn2" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+      </Face>
+      <Face name="z_p_all" side="z+">
+        <BCType id="all" label="wall_z_p_all" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="CO_model" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="transported_adiabatic_enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="temperature" var="Dirichlet">
+          <value>1400.0</value>
+        </BCType>
+        <BCType id="all" label="residence_time" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Ysoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Nsoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Tar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn0" var="Dirichlet">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn1" var="Dirichlet">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn2" var="Dirichlet">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn0" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn1" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn2" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+      </Face>
+      <Face circle="x-" name="primary_air" origin="0.0 0.3 0.3" radius="0.008">
+        <BCType id="all" label="mass_inlet_primary_air" var="MassFlowInlet">
+          <value>0.002557414</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
+          <value>0.466228155</value>
+        </BCType>
+        <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Dirichlet">
+          <value>0.405117224314</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Tabulated">
+          <value>table_enthalpy</value>
+        </BCType>
+        <BCType id="all" label="CO_model" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="transported_adiabatic_enthalpy" var="Tabulated">
+          <value>adiabaticenthalpy</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>366.5</value>
+        </BCType>
+        <BCType id="all" label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Ysoot" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Nsoot" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Tar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn0" var="Dirichlet">
+          <value>11.1874535386</value>
+        </BCType>
+        <BCType id="all" label="ux_qn1" var="Dirichlet">
+          <value>11.1874535386</value>
+        </BCType>
+        <BCType id="all" label="ux_qn2" var="Dirichlet">
+          <value>11.1874535386</value>
+        </BCType>
+        <BCType id="all" label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn0" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn1" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn2" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn0" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn1" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn2" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn0" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn1" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn2" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn0" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn1" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn2" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn0" var="Dirichlet">
+          <value>-1.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn1" var="Dirichlet">
+          <value>-1.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn2" var="Dirichlet">
+          <value>-1.0</value>
+        </BCType>
+      </Face>
+      <Face annulus="x-" inner_radius="0.012" name="secondary_air" origin="0.0 0.3 0.3" outer_radius="0.018">
+        <BCType id="all" label="mass_inlet_secondary_air" var="MassFlowInlet">
+          <value>0.008401757</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Tabulated">
+          <value>table_enthalpy</value>
+        </BCType>
+        <BCType id="all" label="CO_model" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="transported_adiabatic_enthalpy" var="Tabulated">
+          <value>adiabaticenthalpy</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>529.35632</value>
+        </BCType>
+        <BCType id="all" label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Ysoot" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Nsoot" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Tar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn0" var="Dirichlet">
+          <value>2.37922111951e-14</value>
+        </BCType>
+        <BCType id="all" label="ux_qn1" var="Dirichlet">
+          <value>2.37922111951e-14</value>
+        </BCType>
+        <BCType id="all" label="ux_qn2" var="Dirichlet">
+          <value>2.37922111951e-14</value>
+        </BCType>
+        <BCType id="all" label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="length_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="length_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="length_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="w_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="w_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="pE_qn0" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType id="all" label="pE_qn1" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType id="all" label="pE_qn2" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+      </Face>
+      <Face circle="y-" name="purge_C1" origin="0.555 0.0 0.3" radius="0.009">
+        <BCType id="all" label="mass_inlet_purge_C1" var="MassFlowInlet">
+          <value>0.001065</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Tabulated">
+          <value>table_enthalpy</value>
+        </BCType>
+        <BCType id="all" label="CO_model" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="transported_adiabatic_enthalpy" var="Tabulated">
+          <value>adiabaticenthalpy</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>294.23032</value>
+        </BCType>
+        <BCType id="all" label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Ysoot" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Nsoot" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Tar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn0" var="Dirichlet">
+          <value>3.0469491224e-15</value>
+        </BCType>
+        <BCType id="all" label="uy_qn1" var="Dirichlet">
+          <value>3.0469491224e-15</value>
+        </BCType>
+        <BCType id="all" label="uy_qn2" var="Dirichlet">
+          <value>3.0469491224e-15</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="length_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="length_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="length_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="w_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="w_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="pE_qn0" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType id="all" label="pE_qn1" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType id="all" label="pE_qn2" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+      </Face>
+      <Face circle="y-" name="ofa_inlet" origin="1.4 0.0 0.3" radius="0.00635">
+        <BCType id="all" label="mass_inlet_ofa_inlet" var="MassFlowInlet">
+          <value>0.002858534</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
+          <value>0.109402586</value>
+        </BCType>
+        <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Dirichlet">
+          <value>-0.112062849694</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Tabulated">
+          <value>table_enthalpy</value>
+        </BCType>
+        <BCType id="all" label="CO_model" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="transported_adiabatic_enthalpy" var="Tabulated">
+          <value>adiabaticenthalpy</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>294.23032</value>
+        </BCType>
+        <BCType id="all" label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Ysoot" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Nsoot" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Tar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn0" var="Dirichlet">
+          <value>1.87016668202e-14</value>
+        </BCType>
+        <BCType id="all" label="uy_qn1" var="Dirichlet">
+          <value>1.87016668202e-14</value>
+        </BCType>
+        <BCType id="all" label="uy_qn2" var="Dirichlet">
+          <value>1.87016668202e-14</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="length_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="length_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="length_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="w_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="w_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType id="all" label="pE_qn0" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType id="all" label="pE_qn1" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType id="all" label="pE_qn2" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+      </Face>
+      <Face circle="x+" name="outlet_circle" origin="1.7 0.3 0.3" radius="0.134">
+        <BCType id="all" label="xoutlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="CO_model" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="transported_adiabatic_enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="residence_time" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="Ysoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Nsoot" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Tar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn0" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn1" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="ux_qn2" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uz_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="uy_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="max_particle_temp_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="length_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="RCmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="Charmass_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn0" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn1" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="w_qn2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn0" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn1" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+        <BCType id="all" label="pE_qn2" var="Neumann">
+          <value>-0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="upper">
+        <lower>[0.0,0,0]</lower>
+        <upper>[1.7,0.6,0.6]</upper>
+        <resolution>[170,60,60]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[20,6,6]</patches>
+      </Box>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.000050</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <PropertyModelsV2>
+        <model label="soot" type="sootVolumeFrac">
+          <Ysoot_label>Ysoot</Ysoot_label>
+          <density_label>density</density_label>
+          <soot_density>1900</soot_density>
+        </model>
+        <model label="gas_abskg" type="gasRadProperties">
+          <calculator type="hottel_sarofim">
+            <opl>.632</opl>
+          </calculator>
+          <absorption_modifier>1</absorption_modifier>
+        </model>
+        <model label="abskp" type="partRadProperties">
+          <subModel>tabulated</subModel>
+          <TablePath>inputs/ARCHES/ClassicMixingTables/radprops/part.mix.gz</TablePath>
+          <part_temp_label>temperature_coal</part_temp_label>
+          <part_size_label>length</part_size_label>
+          <radiateAtGasTemp>false</radiateAtGasTemp>
+          <model_type>planck</model_type>
+          <const_asymmFact>1</const_asymmFact>
+        </model>
+        <model label="wall_HF" type="wall_heatflux_variable">
+          <frequency>1</frequency>
+        </model>
+        <model label="time_ave_scalars" type="variable_stats">
+          <single_variable label="O2"/>
+          <single_variable label="CO"/>
+          <single_variable label="mixture_molecular_weight"/>
+          <single_variable label="density"/>
+          <single_variable label="radiation_temperature"/>
+          <single_variable label="temperature"/>
+          <single_variable label="temperature_coal_0"/>
+          <single_variable label="temperature_coal_1"/>
+          <single_variable label="temperature_coal_2"/>
+          <single_variable label="eta_source1"/>
+          <single_variable label="eta_source2"/>
+          <single_variable label="radiationFluxN"/>
+          <single_variable label="radiationFluxS"/>
+          <single_variable label="radiationFluxT"/>
+          <single_variable label="radiationFluxB"/>
+          <single_variable label="radiationFluxE"/>
+          <single_variable label="radiationFluxW"/>
+          <single_variable label="wall_HF"/>
+          <single_variable label="wall_HF_power"/>
+        </model>
+        <model label="CO_model" type="CO">
+          <CO_defect_label>CO_model_d</CO_defect_label>
+          <CO_rate_label>CO_model_rate</CO_rate_label>
+          <density_label>density</density_label>
+          <temperature_label>temperature</temperature_label>
+          <CO_label>CO</CO_label>
+          <H2O_label>H2O</H2O_label>
+          <O2_label>O2</O2_label>
+          <MW_label>mixture_molecular_weight</MW_label>
+          <a>1.0</a>
+          <b>0.5</b>
+          <c>0.25</c>
+          <A>2.61e12</A>
+          <Ea>45566.0</Ea>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <Pr>0.4</Pr>
+          <Tcrit>1150</Tcrit>
+        </model>
+      </PropertyModelsV2>
+      <PropertyModels>
+        <model label="heat_loss" type="heat_loss">
+          <initialization type="constant">
+            <constant>0.44399159644</constant>
+          </initialization>
+          <enthalpy_label>enthalpy</enthalpy_label>
+          <sensible_enthalpy_label>sensibleenthalpy</sensible_enthalpy_label>
+          <adiabatic_enthalpy_label>adiabaticenthalpy</adiabatic_enthalpy_label>
+          <use_Ha_lookup>false</use_Ha_lookup>
+        </model>
+      </PropertyModels>
+      <ParticleProperties type="coal">
+        <diameter_distribution>[20e-6,120e-6,240e-6]</diameter_distribution>
+        <!-- [m] -->
+        <particle_weights>[0.4211,0.3056,0.2732]</particle_weights>
+        <!-- based on weibull: lambda=122.0, k=8.8 [mass fractions of each particle size] -->
+        <particle_thermal_conductivity>0.5</particle_thermal_conductivity>
+        <density>1300.0</density>
+        <!-- [kg/m^3] -->
+        <temperature>366.45</temperature>
+        <visc_pre_exponential_factor>1.653920826593733e-13</visc_pre_exponential_factor>
+        <visc_activation_energy>47.808431840038367</visc_activation_energy>
+        <!-- initial particle temperature [K] -->
+        <ash_softening_temperature>1433.15</ash_softening_temperature>
+        <ash_hemispherical_temperature>1449.817</ash_hemispherical_temperature>
+        <ash_fluid_temperature>1522.039</ash_fluid_temperature>
+        <ultimate_analysis>
+          <C>0.70603176</C>
+          <H>0.05050626</H>
+          <O>0.10391619</O>
+          <N>0.01416639</N>
+          <S>0.0052794</S>
+          <CHAR>0.0</CHAR>
+          <ASH>0.0883</ASH>
+          <H2O>0.0318</H2O>
+        </ultimate_analysis>
+        <raw_coal_enthalpy>-1160618.17536</raw_coal_enthalpy>
+        <!-- raw coal enthalpy (at 298.15 K) [J/kg] -->
+        <char_enthalpy>0.0</char_enthalpy>
+        <!-- char enthalpy (at inlet conditions) [J/kg] -->
+        <ash_enthalpy>0.0</ash_enthalpy>
+        <!-- ash enthalpy (at inlet conditions) [J/kg] -->
+        <FOWYDevol>
+          <v_hiT>6.641e-01</v_hiT>
+          <A>19724227.36</A>
+          <Ta>1.113e4</Ta>
+          <Tbp_graphite>3e3</Tbp_graphite>
+          <T_mu>1100.0</T_mu>
+          <T_sigma>250.0</T_sigma>
+          <T_hardened_bond>1800.0</T_hardened_bond>
+          <sigma>8.258e2</sigma>
+        </FOWYDevol>
+        <ShaddixChar>
+          <As> 344.0 </As>
+          <Es> 45.5e3 </Es>
+          <n> 0.18 </n>
+        </ShaddixChar>
+        <SmithChar2016>
+          <char_MW>12.0</char_MW>
+          <Sg0>1010.8</Sg0>
+          <surface_area_mult_factor>1.0</surface_area_mult_factor>
+          <species>O2</species>
+          <species>H2O</species>
+          <species>CO2</species>
+          <species>N2</species>
+          <reaction>
+            <oxidizer_name>O2</oxidizer_name>
+            <oxidizer_MW>32.0</oxidizer_MW>
+            <pre_exponential_factor>90.405</pre_exponential_factor>
+            <activation_energy>22305.0</activation_energy>
+            <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
+            <heat_of_reaction_constant>1.0</heat_of_reaction_constant>
+            <use_co2co>true</use_co2co>
+          </reaction>
+          <reaction>
+            <oxidizer_name>H2O</oxidizer_name>
+            <oxidizer_MW>18.0</oxidizer_MW>
+            <pre_exponential_factor>7614.3</pre_exponential_factor>
+            <activation_energy>59315.0</activation_energy>
+            <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
+            <heat_of_reaction_constant>131.3e3</heat_of_reaction_constant>
+            <use_co2co>false</use_co2co>
+          </reaction>
+          <reaction>
+            <oxidizer_name>CO2</oxidizer_name>
+            <oxidizer_MW>44.0</oxidizer_MW>
+            <pre_exponential_factor>3000.0</pre_exponential_factor>
+            <activation_energy>70099.0</activation_energy>
+            <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
+            <heat_of_reaction_constant>172459</heat_of_reaction_constant>
+            <use_co2co>false</use_co2co>
+          </reaction>
+        </SmithChar2016>
+        <ksi>0.97266</ksi>
+        <LinearSwelling>
+          <Fsw>1.0</Fsw>
+        </LinearSwelling>
+        <rho_ash_bulk>2300</rho_ash_bulk>
+        <void_fraction>0.29999999999999999</void_fraction>
+      </ParticleProperties>
+      <Python_BC>
+        <HHV>29321.0</HHV>
+        <use_HHV_est>no</use_HHV_est>
+        <!--J/g-->
+        <scaling_const_file>primary.xml</scaling_const_file>
+        <!--The input file to compute scaling constants from-->
+        <set_nominal_values>true</set_nominal_values>
+        <!--should the code compute the scaling constants-->
+      </Python_BC>
+      <EulerianParticles>
+        <ParticleVariables>
+          <variable label="RCmass" role="raw_coal"/>
+          <variable label="Charmass" role="char"/>
+          <variable label="pE" role="enthalpy"/>
+          <variable label="max_particle_temp" role="max_temperature"/>
+          <variable label="length" role="size"/>
+          <variable label="rho_coal" role="density"/>
+          <variable label="temperature_coal" role="temperature"/>
+          <variable label="dTdt" role="dTdt"/>
+          <variable label="ux" role="uvel"/>
+          <variable label="uy" role="vvel"/>
+          <variable label="uz" role="wvel"/>
+          <variable label="number_density" role="total_number_density"/>
+        </ParticleVariables>
+      </EulerianParticles>
+      <ParticleModels>
+        <model label="rho_coal" type="coal_density">
+          <model_type>dynamic_dqmom</model_type>
+        </model>
+        <model label="temperature_coal" type="coal_temperature">
+          <const_size>true</const_size>
+        </model>
+        <model label="zhou_deposition" type="rate_deposition">
+          <CaO>0.26489999999999997</CaO>
+          <MgO>0.044699999999999997</MgO>
+          <AlO>0.14990000000000001</AlO>
+          <SiO>0.38900000000000001</SiO>
+        </model>
+        <model label="dep_velocity" type="deposition_velocity">
+        </model>
+        <model label="number_density" type="total_number_density"/>
+      </ParticleModels>
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <TransportEqns>
+        <Eqn label="residence_time" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <stage value="0"/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <src label="res_source">
+            <weight>1</weight>
+          </src>
+          <scaling_const>1</scaling_const>
+        </Eqn>
+        <Eqn label="enthalpy" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <stage value="0"/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="tabulated">
+            <depend_varname>table_enthalpy</depend_varname>
+          </initialization>
+          <src label="divQ">
+            <weight>1</weight>
+          </src>
+          <src label="heat_source">
+            <weight>1</weight>
+          </src>
+          <scaling_const>1</scaling_const>
+        </Eqn>
+        <Eqn label="mixture_fraction_2" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <stage value="0"/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="constant">
+            <constant>0.160878484</constant>
+          </initialization>
+        </Eqn>
+        <Eqn label="coal_gas_mix_frac" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <stage value="0"/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="constant">
+            <constant>0.06840657</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+            <tol>1e-10</tol>
+          </Clipping>
+          <src label="eta_source1">
+            <weight>0.698</weight>
+          </src>
+          <src label="eta_source2">
+            <weight>1</weight>
+          </src>
+          <src label="eta_source3">
+            <weight>1</weight>
+          </src>
+        </Eqn>
+        <Eqn label="Tar" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <stage value="0"/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+            <tol>1e-10</tol>
+          </Clipping>
+          <src label="eta_source1">
+            <weight>0.302</weight>
+          </src>
+          <src label="MonoTar">
+            <weight>1.0</weight>
+          </src>
+        </Eqn>
+        <Eqn label="Ysoot" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <stage value="0"/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+            <tol>1e-10</tol>
+          </Clipping>
+          <src label="MonoYsoot">
+            <weight>1.0</weight>
+          </src>
+        </Eqn>
+        <Eqn label="Nsoot" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <stage value="0"/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <tol>1e-10</tol>
+            <high>1e30</high>
+          </Clipping>
+          <src label="MonoNsoot">
+            <weight>1.0</weight>
+          </src>
+        </Eqn>
+        <Sources>
+          <src label="res_source" type="constant_src">
+            <constant>1</constant>
+            <multiply_by_variable>
+              <variable_string_name>density</variable_string_name>
+              <NewDW_only>false</NewDW_only>
+            </multiply_by_variable>
+          </src>
+          <src label="divQ" type="do_radiation">
+            <calc_frequency>20</calc_frequency>
+            <abskt label="abskg"/>
+            <DORadiationModel type="sweepSpatiallyParallel">
+              <ordinates>8</ordinates>
+              <QuadratureSet>LegendreChebyshev</QuadratureSet>
+              <initialGuess>prevRadSolve</initialGuess>
+              <ScatteringOn>true</ScatteringOn>
+              <ReflectOn>false</ReflectOn>
+            </DORadiationModel>
+            <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
+            <checkForMissingIntensities>false</checkForMissingIntensities>
+          </src>
+          <src label="eta_source1" type="coal_gas_devol">
+            <devol_model_name>devol</devol_model_name>
+          </src>
+          <src label="momentum_eta_source1" type="coal_gas_devol_mom">
+            <devol_model_name>devol</devol_model_name>
+          </src>
+          <src label="eta_source2" type="coal_gas_oxi">
+            <char_oxidation_model_name>char</char_oxidation_model_name>
+          </src>
+          <src label="momentum_eta_source2" type="coal_gas_oxi_mom">
+            <char_oxidation_model_name>char</char_oxidation_model_name>
+          </src>
+          <src label="heat_source" type="coal_gas_heat">
+            <heat_model_name>heat</heat_model_name>
+          </src>
+          <src label="coal_gas_momentum" type="coal_gas_momentum">
+          </src>
+          <src label="MonoSootModel" type="mono_soot">
+            <tar_label>Tar</tar_label>
+            <Ysoot_label>Ysoot</Ysoot_label>
+            <Ns_label>Nsoot</Ns_label>
+            <mix_mol_weight_label>mixture_molecular_weight</mix_mol_weight_label>
+            <o2_label>O2</o2_label>
+            <co2_label>CO2</co2_label>
+            <oh_label>OH</oh_label>
+            <h2o_label>H2O</h2o_label>
+            <h_label>H</h_label>
+            <c2h2_label>ETHANE</c2h2_label>
+            <h2_label>H2</h2_label>
+            <density_label>density</density_label>
+            <temperature_label>radiation_temperature</temperature_label>
+            <tar_src label="MonoTar"/>
+            <num_density_src label="MonoNsoot"/>
+            <soot_mass_src label="MonoYsoot"/>
+            <mass_balance_src label="eta_source3"/>
+          </src>
+        </Sources>
+      </TransportEqns>
+      <Turbulence model="compdynamicprocedure">
+        <filter_cs_squared>false</filter_cs_squared>
+      </Turbulence>
+      <Properties>
+        <table label="a_user_generated_label" type="classic">
+          <reference_state eta="0.06840657" fp="0.160878484" hl="0.44399159644"/>
+          <temperature_label_name>temperature</temperature_label_name>
+          <cold_flow>false</cold_flow>
+          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
+          <inputfile>OFC_Doug.mix.gz</inputfile>
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </table>
+        <filter_drhodt>false</filter_drhodt>
+        <first_order_drhodt>true</first_order_drhodt>
+        <inverse_density_average>false</inverse_density_average>
+      </Properties>
+      <DQMOM type="weightedAbs">
+        <number_quad_nodes>3</number_quad_nodes>
+        <VelModel type="Dragforce">
+        </VelModel>
+        <Models>
+          <model label="shrinkage" type="ShrinkageRate">
+            </model>
+          <model label="xdragforce" type="Drag">
+            <direction>x</direction>
+          </model>
+          <model label="ydragforce" type="Drag">
+            <direction>y</direction>
+          </model>
+          <model label="zdragforce" type="Drag">
+            <direction>z</direction>
+          </model>
+          <model label="xthermophoresis" type="Thermophoresis">
+            <direction>x</direction>
+          </model>
+          <model label="ythermophoresis" type="Thermophoresis">
+            <direction>y</direction>
+          </model>
+          <model label="zthermophoresis" type="Thermophoresis">
+            <direction>z</direction>
+          </model>
+          <model label="devol" type="FOWYDevol"> 
+          </model>
+          <model label="heat" type="EnthalpyShaddix">
+            <low_clip>9.9999999999999995e-07</low_clip>
+            <high_clip>999999</high_clip>
+          </model>
+          <model label="char" type="CharOxidationSmith2016"> 
+          </model>
+          <model label="max_T_rate" type="MaximumTemperature">
+          </model>
+          <model label="length_os_src" type="BirthDeath">
+            <abscissa label="length"/>
+            <small_weight>1e-15</small_weight>
+          </model>
+          <model label="max_T_os_src" type="BirthDeath">
+            <abscissa label="max_particle_temp"/>
+            <small_weight>1e-15</small_weight>
+          </model>
+          <model label="RCmass_os_src" type="BirthDeath">
+            <abscissa label="RCmass"/>
+            <small_weight>1e-15</small_weight>
+          </model>
+          <model label="Charmass_os_src" type="BirthDeath">
+            <abscissa label="Charmass"/>
+            <small_weight>1e-15</small_weight>
+          </model>
+          <model label="pE_os_src" type="BirthDeath">
+            <abscissa label="pE"/>
+            <small_weight>1e-15</small_weight>
+          </model>
+          <model label="ux_os_src" type="BirthDeath">
+            <abscissa label="ux"/>
+            <small_weight>1e-15</small_weight>
+          </model>
+          <model label="uy_os_src" type="BirthDeath">
+            <abscissa label="uy"/>
+            <small_weight>1e-15</small_weight>
+          </model>
+          <model label="uz_os_src" type="BirthDeath">
+            <abscissa label="uz"/>
+            <small_weight>1e-15</small_weight>
+          </model>
+          <model label="weight_os_src" type="BirthDeath">
+            <small_weight>1e-15</small_weight>
+            <is_weight/>
+          </model>
+        </Models>
+        <Weights>
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="weight_os_src"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="4.33268398001e-05">
+            </env_constant>
+            <env_constant qn="1" value="1.45569828611e-07">
+            </env_constant>
+            <env_constant qn="2" value="1.62670472745e-08">
+            </env_constant>
+          </initialization>
+          <scaling_const>[43326839800.1,145569828.611,16267047.2745]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <Clipping>
+            <low>1e-20</low>
+            <high>1e100</high>
+            <tol>1e-50</tol>
+          </Clipping>
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Weights>
+        <Ic label="length">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="length_os_src"/>
+          <model label="shrinkage"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="2e-05"> </env_constant>
+            <env_constant qn="1" value="0.00012"/>
+            <env_constant qn="2" value="0.00024"> </env_constant>
+          </initialization>
+          <nominal_values>[2e-05,0.00012,0.00024]</nominal_values>
+          <scaling_const>[2e-05,0.00012,0.00024]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="RCmass">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="RCmass_os_src"/>
+          <model label="devol"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="4.94880339966e-12">
+            </env_constant>
+            <env_constant qn="1" value="1.06894153433e-09">
+            </env_constant>
+            <env_constant qn="2" value="8.55153227461e-09">
+            </env_constant>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <scaling_const>[4.94880339966e-12,1.06894153433e-09,8.55153227461e-09]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="Charmass">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="char"/>
+          <model label="Charmass_os_src"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <scaling_const>[4.94880339966e-12,1.06894153433e-09,8.55153227461e-09]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="pE">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="heat"/>
+          <model label="pE_os_src"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="-5.28291652264e-06">
+            </env_constant>
+            <env_constant qn="1" value="-0.00114110996889">
+            </env_constant>
+            <env_constant qn="2" value="-0.00912887975112">
+            </env_constant>
+          </initialization>
+          <nominal_values>[2.67192622846e-08,5.77136065347e-06,4.61708852278e-05]</nominal_values>
+          <scaling_const>[5.28291652264e-06,0.00114110996889,0.00912887975112]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="ux">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="xdragforce"/>
+          <model label="xthermophoresis"/>
+          <model label="ux_os_src"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <scaling_const>[1.0,1.0,1.0]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="uy">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="ydragforce"/>
+          <model label="ythermophoresis"/>
+          <model label="uy_os_src"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <scaling_const>[1.0,1.0,1.0]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="uz">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="zdragforce"/>
+          <model label="zthermophoresis"/>
+          <model label="uz_os_src"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <scaling_const>[1.0,1.0,1.0]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="max_particle_temp">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="max_T_rate"/>
+          <model label="max_T_os_src"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="366.45">
+            </env_constant>
+            <env_constant qn="1" value="366.45">
+            </env_constant>
+            <env_constant qn="2" value="366.45">
+            </env_constant>
+          </initialization>
+          <nominal_values>[366.45,366.45,366.45]</nominal_values>
+          <scaling_const>[366.45,366.45,366.45]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <adiabGas_nonadiabPart>false</adiabGas_nonadiabPart>
+        <save_moments>false</save_moments>
+      </DQMOM>
+      <BoundaryConditions>
+        <force_area_calc/>
+        <intrusions>
+          <intrusion label="pipe_wall">
+            <constant_temperature T="1250.0"/>
+            <geom_object>
+              <difference>
+                <cylinder label="primary_out">
+                  <bottom>[-0.01, 0.3, 0.3]</bottom>
+                  <top>   [0.02, 0.3, 0.3]</top>
+                  <radius>0.012</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+                <cylinder label="primary_inner">
+                  <bottom>[-0.01, 0.3, 0.3]</bottom>
+                  <top>   [0.02, 0.3, 0.3]</top>
+                  <radius>0.009</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+              </difference>
+            </geom_object>
+          </intrusion>
+          <intrusion label="FurnaceWall">
+            <constant_temperature T="1250.0"/>
+            <geom_object>
+              <difference>
+                <cylinder label="secondary_out">
+                  <bottom>[-0.01, 0.3, 0.3]</bottom>
+                  <top>   [0.02, 0.3, 0.3]</top>
+                  <radius>0.6</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+                <cylinder label="secondary_inner">
+                  <bottom>[-0.01, 0.3, 0.3]</bottom>
+                  <top>   [0.02, 0.3, 0.3]</top>
+                  <radius>0.018</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+              </difference>
+              <difference>
+                <cylinder label="furnace_out">
+                  <bottom>[0.02, 0.3, 0.3]</bottom>
+                  <top>   [1.22, 0.3, 0.3]</top>
+                  <radius>0.6</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+                <cylinder label="furnace_inner">
+                  <bottom>[0.02, 0.3, 0.3]</bottom>
+                  <top>   [1.22, 0.3, 0.3]</top>
+                  <radius>0.3</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+              </difference>
+              <difference>
+                <cylinder label="shrink_out">
+                  <bottom>[1.22, 0.3, 0.3]</bottom>
+                  <top>   [1.52, 0.3, 0.3]</top>
+                  <radius>0.6</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+                <union>
+                  <cone label="shrink_inner">
+                    <bottom>[1.22, 0.3, 0.3]</bottom>
+                    <bottom_radius>0.3</bottom_radius>
+                    <top>   [1.52, 0.3, 0.3]</top>
+                    <top_radius>0.132</top_radius>
+                  </cone>
+                  <cylinder label="ofa_inlet">
+                    <bottom>[1.4, 0.0, 0.3]</bottom>
+                    <top>   [1.4, 0.3, 0.3]</top>
+                    <radius>0.008</radius>
+                    <cylinder_end>false</cylinder_end>
+                    <axisymmetric_end>false</axisymmetric_end>
+                    <axisymmetric_side>false</axisymmetric_side>
+                  </cylinder>
+                </union>
+              </difference>
+              <difference>
+                <cylinder label="bottom_out">
+                  <bottom>[1.52, 0.3, 0.3]</bottom>
+                  <top>   [1.7, 0.3, 0.3]</top>
+                  <radius>0.6</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+                <cylinder label="bottom_inner">
+                  <bottom>[1.52, 0.3, 0.3]</bottom>
+                  <top>   [1.7, 0.3, 0.3]</top>
+                  <radius>0.132</radius>
+                  <cylinder_end>false</cylinder_end>
+                  <axisymmetric_end>false</axisymmetric_end>
+                  <axisymmetric_side>false</axisymmetric_side>
+                </cylinder>
+              </difference>
+            </geom_object>
+          </intrusion>
+        </intrusions>
+        <WallHT>
+          <relaxation_coef>0.8</relaxation_coef>
+          <model type="coal_region_ht">
+            <emissivity_model_type>dynamic</emissivity_model_type>
+            <thermal_cond_model_type>hadley</thermal_cond_model_type>
+            <enamel_deposit_porosity>0.6</enamel_deposit_porosity>
+            <sb_deposit_porosity>0.6</sb_deposit_porosity>
+            <coal_name>german_lignite</coal_name>
+            <frenkel_constant>1.225</frenkel_constant>
+            <deposit_velocity_name>dep_velocity</deposit_velocity_name>
+            <enamel_ash_composition>[36.25, 11.35, 14.35, 7.85, 5.90, 0.0, 0.44, 4.40]</enamel_ash_composition>
+            <sb_ash_composition>[36.25, 11.35, 14.35, 7.85, 5.90, 0.0, 0.44, 4.40]</sb_ash_composition>
+            <coal_region>
+              <k>1.3</k>
+              <wall_thickness>0.006</wall_thickness>
+              <wall_emissivity>1.0</wall_emissivity>
+              <enamel_deposit_thickness>0.002</enamel_deposit_thickness>
+              <erosion_thickness>0.1</erosion_thickness>
+              <tscale_dep>14400.0</tscale_dep>
+              <tube_side_T>696.731675872</tube_side_T>
+              <geom_object>
+                <union>
+                  <box label="glass1-1">
+                    <min>[0.114, 0.274, -0.1]</min>
+                    <max>[0.584, 0.326,  0.1]</max>
+                  </box>
+                  <box label="glass1-2">
+                    <min>[0.616, 0.274, -0.1]</min>
+                    <max>[1.086, 0.326,  0.1]</max>
+                  </box>
+                  <box label="glass3-1">
+                    <min>[0.114, 0.274,  0.5]</min>
+                    <max>[0.584, 0.326,  0.65]</max>
+                  </box>
+                  <box label="glass3-2">
+                    <min>[0.616, 0.274,  0.5]</min>
+                    <max>[1.086, 0.326,  0.65]</max>
+                  </box>
+                </union>
+              </geom_object>
+              <k_deposit_enamel>1</k_deposit_enamel>
+              <k_deposit>1</k_deposit>
+            </coal_region>
+            <coal_region>
+              <k>0.15</k>
+              <wall_thickness>0.076</wall_thickness>
+              <wall_emissivity>0.8</wall_emissivity>
+              <enamel_deposit_thickness>0.002</enamel_deposit_thickness>
+              <erosion_thickness>0.1</erosion_thickness>
+              <tscale_dep>14400.0</tscale_dep>
+              <tube_side_T>355</tube_side_T>
+              <geom_object>
+                <union>
+                  <difference>
+                    <cylinder label="upper furnace">
+                      <bottom>[-0.1, 0.3, 0.3]</bottom>
+                      <top>[0.03, 0.3, 0.3]</top>
+                      <radius>0.6</radius>
+                      <cylinder_end>false</cylinder_end>
+                      <axisymmetric_end>false</axisymmetric_end>
+                      <axisymmetric_side>false</axisymmetric_side>
+                    </cylinder>
+                    <cylinder label="upper furnace1">
+                      <bottom>[-0.1, 0.3, 0.3]</bottom>
+                      <top>[0.03, 0.3, 0.3]</top>
+                      <radius>0.02</radius>
+                      <cylinder_end>false</cylinder_end>
+                      <axisymmetric_end>false</axisymmetric_end>
+                      <axisymmetric_side>false</axisymmetric_side>
+                    </cylinder>
+                  </difference>
+                  <difference>
+                    <box label="furnace box">
+                      <min>[0.03, -0.1, -0.1]</min>
+                      <max>[1.71, 0.7, 0.7]</max>
+                    </box>
+                    <union>
+                      <box label="glass1-1"/>
+                      <box label="glass1-2"/>
+                      <box label="glass3-1"/>
+                      <box label="glass3-2"/>
+                    </union>
+                  </difference>
+                </union>
+              </geom_object>
+              <k_deposit_enamel>1</k_deposit_enamel>
+              <k_deposit>1</k_deposit>
+            </coal_region>
+            <max_it>50</max_it>
+            <initial_tol>0.001</initial_tol>
+            <tol>1.0000000000000001e-05</tol>
+          </model>
+        </WallHT>
+      </BoundaryConditions>
+      <ExplicitSolver>
+        <initial_dt>1</initial_dt>
+        <print_total_ke/>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>1.0e-10</tolerance>
+            <solver>cg</solver>
+            <preconditioner>pfmg</preconditioner>
+            <maxiterations>1500</maxiterations>
+            <relax_type>1</relax_type>
+            <setupFrequency>0</setupFrequency>
+            <jump> 0 </jump>
+            <skip> 1 </skip>
+            <npre>1</npre>
+            <npost>1</npost>
+            <logging>0</logging>
+            <updateCoefFrequency>1</updateCoefFrequency>
+            <solveFrequency>1</solveFrequency>
+          </Parameters>
+          <src label="eta_source1">
+            <weight>0.698</weight>
+          </src>
+          <src label="eta_source2">
+            <weight>1</weight>
+          </src>
+          <src label="eta_source3">
+            <weight>1</weight>
+          </src>
+          <normalize_pressure>false</normalize_pressure>
+          <do_only_last_projection>false</do_only_last_projection>
+        </PressureSolver>
+        <MomentumSolver>
+          <Re_limit>1000.0</Re_limit>
+          <convection_scheme>hybrid</convection_scheme>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+            <standoff_index>1</standoff_index>
+          </wall_closure>
+          <src label="coal_gas_momentum"/>
+          <src label="momentum_eta_source1"/>
+          <src label="momentum_eta_source2"/>
+          <filter_divergence_constraint>false</filter_divergence_constraint>
+        </MomentumSolver>
+        <turbModelCalcFreq>1</turbModelCalcFreq>
+        <turbModelCalcForAllRKSteps>true</turbModelCalcForAllRKSteps>
+        <max_ke_allowed>9.9999999999999997e+98</max_ke_allowed>
+        <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
+        <NoisyDensityGuess>false</NoisyDensityGuess>
+        <kineticEnergy_fromFC>false</kineticEnergy_fromFC>
+        <maxDensityLag>0</maxDensityLag>
+      </ExplicitSolver>
+      <recompileTaskgraph>false</recompileTaskgraph>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

@@ -990,7 +990,8 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
 
   const MaterialSubset* mpm_matls_sub = (   matls ?    matls->getUnion() : nullptr);
 
-  scheduleComputeCurrentParticleSize(sched, patches, matls);
+  scheduleComputeCurrentParticleSize(				sched, patches, matls);
+
   scheduleApplyExternalLoads(						sched, patches, matls);
 
   scheduleInterpolateParticlesToGrid_DOUBLEMPM(		sched, patches, matls);
@@ -1284,14 +1285,14 @@ void DOUBLEMPM::computeCurrentParticleSize(const ProcessorGroup*,
 			}
 			else {
 				pCurSize.copyData(pSize);
-#if 0
+
 				for (ParticleSubset::iterator iter = pset->begin();
 					iter != pset->end(); iter++) {
 					particleIndex idx = *iter;
 
 					pCurSize[idx] = pSize[idx];
 				}
-#endif
+
 			}
 		}
 	}
@@ -3000,7 +3001,7 @@ void DOUBLEMPM::scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(SchedulerP& sc
 	
 	t->requires(Task::OldDW, lb->pVolumeLabel, gnone);
 	t->requires(Task::NewDW, lb->pCurSizeLabel, gnone);
-	//t->requires(Task::OldDW, lb->pSizeLabel, gnone);
+	t->requires(Task::OldDW, lb->pSizeLabel, gnone);
 	//t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gnone);
 
 	t->computes(lb->pDispLabel_preReloc);
@@ -3111,7 +3112,7 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 			// Solid
 			constParticleVariable<Point> px;
 			constParticleVariable<Vector> pvelocity, pdisp;
-			constParticleVariable<Matrix3> psize;
+			constParticleVariable<Matrix3> pCursize,psize;
 			constParticleVariable<double> pMassSolid, pVolumeOld, pTemperature;
 			constParticleVariable<long64> pids;
 			ParticleVariable<Point> pxnew;
@@ -3148,8 +3149,8 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 
 			//Carry forward ParticleID and pSize
 			old_dw->get(pids, lb->pParticleIDLabel, pset);
-			new_dw->get(psize, lb->pCurSizeLabel, pset);
-			//old_dw->get(psize, lb->pSizeLabel, pset);
+			new_dw->get(pCursize, lb->pCurSizeLabel, pset);
+			old_dw->get(psize, lb->pSizeLabel, pset);
 			new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
 			new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc, pset);
 			pids_new.copyData(pids);
@@ -3207,7 +3208,7 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 
 				// Get the node indices that surround the cell
 				int NN = interpolator->findCellAndWeights(px[idx], ni, S,
-					psize[idx]);
+					pCursize[idx]);
 				Vector vel(0.0, 0.0, 0.0);
 				Vector acc(0.0, 0.0, 0.0);
 				Vector accLiquid(0.0, 0.0, 0.0);
@@ -4887,6 +4888,7 @@ void DOUBLEMPM::scheduleRefine(const PatchSet   * patches,
 
 	// JBH -- Add code to support these variables FIXME TODO
 	t->computes(lb->pSizeLabel);
+	t->computes(lb->pCurSizeLabel);
 	t->computes(lb->pLocalizedMPMLabel);
 	t->computes(lb->NC_CCweightLabel);
 	t->computes(lb->delTLabel, getLevel(patches));
@@ -4980,7 +4982,7 @@ DOUBLEMPM::refine(const ProcessorGroup*,
 				ParticleVariable<Point>  px;
 				ParticleVariable<double> pmass, pvolume, pTemperature;
 				ParticleVariable<Vector> pvelocity, pexternalforce, pdisp, pTempGrad;
-				ParticleVariable<Matrix3> psize, pVelGrad;
+				ParticleVariable<Matrix3> psize, pcursize, pVelGrad;
 				ParticleVariable<double> pTempPrev, p_q;
 				ParticleVariable<IntVector> pLoadCurve, pLoc;
 				ParticleVariable<long64> pID;
@@ -5004,6 +5006,7 @@ DOUBLEMPM::refine(const ProcessorGroup*,
 					new_dw->allocateAndPut(pLoadCurve, lb->pLoadCurveIDLabel, pset);
 				}
 				new_dw->allocateAndPut(psize, lb->pSizeLabel, pset);
+				new_dw->allocateAndPut(pcursize, lb->pCurSizeLabel, pset);
 
 				mpm_matl->getConstitutiveModel()->initializeCMData(patch,
 					mpm_matl, new_dw);
