@@ -25,6 +25,7 @@
 #include <CCA/Components/Arches/SourceTerms/RMCRT.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -61,7 +62,8 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
 
   //Declare the source type:
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
-  _materialManager      = labels->d_materialManager;
+  
+  _materialManager  = labels->d_materialManager;
 
   //__________________________________
   //  define the material index
@@ -100,6 +102,8 @@ void
 RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 {
 
+  DOUT( dbg, Uintah::Parallel::getMPIRank() << "Doing RMCRT_Radiation::problemSetup");
+  
   _ps = inputdb;
   _ps->getWithDefault( "calc_on_all_RKsteps",  _all_rk, false );
 
@@ -150,15 +154,25 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
       _whichAlgo = dataOnion;
       _RMCRT->setBC_onOff( true );
 
-    } else if ( type == "RMCRT_coarseLevel" ) {   // 2 LEVEL
+    } 
+    else if ( type == "RMCRT_coarseLevel" ) {   // 2 LEVEL
 
       _whichAlgo = coarseLevel;
       _RMCRT->setBC_onOff( true );
 
-    } else if ( type == "singleLevel" ) {         // 1 LEVEL
+    } 
+    else if ( type == "singleLevel" ) {         // 1 LEVEL
       _whichAlgo = singleLevel;
+
+    } 
+    else if ( type == "radiometerOnly" ) {      // Only when radiometer is used
+      _whichAlgo = radiometerOnly;
+      _stage     = 2;                           // needed to avoid Arches bulletproofing 
     }
   }
+  
+//______________________________________________________________________
+//  
 #if 0
  //Todd and Derek need to confirm if this should be used May 19th 2007
   std::string baseNameAbskp;
@@ -237,19 +251,25 @@ RMCRT_Radiation::extraSetup( GridP& grid,
 
   _boundaryCondition = bc;
 
-  // determining the temperature label
+  //__________________________________
+  // temperature label
   _tempLabel = VarLabel::find(_T_label_name);
-  proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName() << std::endl;
+  proc0cout << "RMCRT: temperature label name: " << _T_label_name << std::endl;
 
   if (_tempLabel == nullptr) {
     throw ProblemSetupException("Error: No temperature label found.", __FILE__, __LINE__);
   }
 
+  //__________________________________
+  //  abskt
   _absktLabel = VarLabel::find(_abskt_label_name);
+  proc0cout << "RMCRT: abskt label name: " << _abskt_label_name << std::endl;
+  
   if ( _absktLabel == nullptr ){
     throw InvalidValue("Error: For RMCRT Radiation source term -- Could not find the abskt label.", __FILE__, __LINE__);
   }
 
+  //__________________________________
   // create RMCRT and register the labels
   _RMCRT->registerVarLabels(_matl,
                             _absktLabel,
@@ -257,10 +277,12 @@ RMCRT_Radiation::extraSetup( GridP& grid,
                             _labels->d_cellTypeLabel,
                             _src_label);
 
+  //__________________________________
   // read in RMCRT problem spec
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
 
   _RMCRT->problemSetup(_ps, rmcrt_ps, grid);
+  
 
 //  _RMCRT->BC_bulletproofing( rmcrt_ps );
 
@@ -504,6 +526,34 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     // convert boundaryFlux<Stencil7> -> 6 doubles
     sched_stencilToDBLs( level, sched );
   }
+  
+  //______________________________________________________________________
+  //   R A D I O M E T E R  
+  //  No other calculations 
+  if ( _whichAlgo == radiometerOnly ) {
+    Radiometer* radiometer    = _RMCRT->getRadiometer(); 
+    
+    Task::WhichDW temp_dw     = Task::OldDW;
+    Task::WhichDW sigmaT4_dw  = Task::NewDW;
+    Task::WhichDW celltype_dw = Task::NewDW;
+
+    const LevelP& level = grid->getLevel(_archesLevelIndex);
+
+    _RMCRT->set_abskg_dw_perLevel ( level, Task::OldDW );
+    
+    _RMCRT->sched_CarryForward_Var ( level, sched, _RMCRT->d_sigmaT4Label,   RMCRTCommon::TG_CARRY_FORWARD ); 
+
+    _RMCRT->sched_CarryForward_Var(  level, sched, radiometer->d_VRFluxLabel, RMCRTCommon::TG_CARRY_FORWARD );
+    
+    // convert abskg:dbl -> abskg:flt if needed
+    _RMCRT->sched_DoubleToFloat( level, sched, notUsed );
+
+    _RMCRT->sched_sigmaT4( level, sched, temp_dw, includeExtraCells );
+
+
+    radiometer->sched_radiometer( level, sched, notUsed, sigmaT4_dw, celltype_dw );
+
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -523,6 +573,29 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     throw ProblemSetupException("ERROR:  RMCRT_radiation, there must be more than 1 level if you're using the Data Onion algorithm", __FILE__, __LINE__);
   }
 
+  if (_whichAlgo == radiometerOnly && maxLevels != 1){
+    throw ProblemSetupException("ERROR:  RMCRT_radiation.  The virtual radiometer only works on 1 level", __FILE__, __LINE__);
+  }
+
+
+  //__________________________________
+  // Initialize on all levels
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& myLevel = grid->getLevel(l);
+    _RMCRT->sched_initialize_sigmaT4( myLevel, sched );
+  }
+
+
+  //__________________________________
+  //  Radiometer only 
+  if( _whichAlgo == radiometerOnly ){
+    Radiometer* radiometer = _RMCRT->getRadiometer();
+    radiometer->sched_initialize_VRFlux( level, sched );
+    return;
+  }
+
+  //__________________________________
+  //   Other RMCRT algorithms
   //__________________________________
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& myLevel = grid->getLevel(l);
@@ -537,7 +610,6 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     // all levels
     tsk->computes(VarLabel::find("radiationVolq"));
     tsk->computes(VarLabel::find("RMCRTboundFlux"));
-    tsk->computes(_RMCRT->d_sigmaT4Label);
 
     // only cfd level
     if ( L_index == _archesLevelIndex) {
@@ -588,17 +660,6 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbg, "Doing RMCRT_Radiation::initialize");
-
-    if( _RMCRT->RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      CCVariable<double> sigmaT4Double;
-      new_dw->allocateAndPut( sigmaT4Double, _RMCRT->d_sigmaT4Label, _matl, patch );
-      sigmaT4Double.initialize( 0.0 );
-    }
-    else {
-      CCVariable<float> sigmaT4Float;
-      new_dw->allocateAndPut( sigmaT4Float, _RMCRT->d_sigmaT4Label, _matl, patch );
-      sigmaT4Float.initialize( 0.0 );
-    }
 
     CCVariable<double> radVolq;
     CCVariable<double> src;
@@ -903,13 +964,13 @@ RMCRT_Radiation::sched_fluxInit( const LevelP& level,
                                       SchedulerP& sched )
 {
   if( level->getIndex() != _archesLevelIndex){
-    throw InternalError("RMCRT_Radiation::sched_stencilToDBLs.  You cannot schedule this task on a non-arches level", __FILE__, __LINE__);
+    throw InternalError("RMCRT_Radiation::sched_fluxInit.  You cannot schedule this task on a non-arches level", __FILE__, __LINE__);
   }
 
   if(_RMCRT->d_solveBoundaryFlux) {
     Task* tsk = scinew Task( "RMCRT_Radiation::fluxInit", this, &RMCRT_Radiation::fluxInit );
 
-    printSchedule( level, dbg, "RMCRT_Radiation::sched_stencilToDBLs" );
+    printSchedule( level, dbg, "RMCRT_Radiation::sched_fluxInit" );
 
     tsk->computes( _radFluxE_Label );
     tsk->computes( _radFluxW_Label );
@@ -933,7 +994,7 @@ RMCRT_Radiation::fluxInit( const ProcessorGroup*,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing RMCRT_Radiation::stencilToDBLs");
+    printTask(patches,patch,dbg,"Doing RMCRT_Radiation::sched_fluxInit");
 
     CCVariable<double> East, West;
     CCVariable<double> North, South;

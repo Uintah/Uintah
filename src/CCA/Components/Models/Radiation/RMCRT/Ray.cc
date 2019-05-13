@@ -495,7 +495,7 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->computes( d_radiationVolqLabel );
   }
 
-
+#if 0
   //__________________________________
   // Radiometer
   if ( d_radiometer ){
@@ -507,6 +507,7 @@ Ray::sched_rayTrace( const LevelP& level,
 
     tsk->modifies( VRFluxLabel );
   }
+#endif
 
 #ifdef USE_TIMER 
   if( modifies_divQ ){

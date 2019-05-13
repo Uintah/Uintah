@@ -2081,6 +2081,8 @@
               <rayDirSampleAlgo          spec="OPTIONAL STRING 'naive Naive LatinHyperCube'"/>
               <cellTypeCoarsenLogic      spec="OPTIONAL STRING 'ROUNDDOWN ROUNDUP"/>
               <ignore_BC_bulletproofing  spec="OPTIONAL BOOLEAN"/>
+              
+              <include href="RMCRT_radiometer.xml" section="Radiometer" />
 
               <algorithm                 spec="OPTIONAL NO_DATA"
                                              attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">

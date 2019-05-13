@@ -235,39 +235,31 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 //
 //______________________________________________________________________
 void
-Radiometer::sched_initializeRadVars( const LevelP& level,
+Radiometer::sched_initialize_VRFlux( const LevelP& level,
                                      SchedulerP& sched )
 {
 
-  std::string taskname = "Radiometer::initializeRadVars";
+  std::string taskname = "Radiometer::initialize_VRFlux";
 
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< double > );
+    tsk= scinew Task( taskname, this, &Radiometer::initialize_VRFlux< double > );
   }else{
-    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< float > );
+    tsk= scinew Task( taskname, this, &Radiometer::initialize_VRFlux< float > );
   }
   
   printSchedule(level, g_ray_dbg, taskname);
 
-  tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
   tsk->computes( d_VRFluxLabel );
-
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
-
-  // Carry Forward d_VRFluxlabel if you're not computing it
-  sched_CarryForward_Var(level, sched, d_VRFluxLabel  , RMCRTCommon::TG_CARRY_FORWARD);
-
 }
 
 //______________________________________________________________________
-//  - Initialize the flux on all patches or move that variable forward
-//    The flux is modified downstream.
-//  - Determine if the taskgraph should be recompiled
+//
 //______________________________________________________________________
 template< class T >
 void
-Radiometer::initializeRadVars( const ProcessorGroup*,
+Radiometer::initialize_VRFlux( const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
@@ -279,7 +271,7 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::initializeVars");
+    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::initialize_VRFlux");
 
     CCVariable< T > VRFlux;
     new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
@@ -299,6 +291,14 @@ Radiometer::sched_radiometer( const LevelP& level,
                               Task::WhichDW celltype_dw )
 {
   
+  
+  //__________________________________
+  //  There has to be a value of VRFlux on all patches for output
+  sched_initialize_VRFlux( level, sched );
+  
+  
+  //__________________________________
+  //  Compute VRFlux on subset of patches
   // only schedule on the patches that contain radiometers - Spatial task scheduling
   //   we want a PatchSet like: { {19}, {22}, {25} } (singleton subsets like level->eachPatch())
   //     NOT -> { {19,22,25} }, as one proc isn't guaranteed to own the entire, 3-element subset.

@@ -200,7 +200,8 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
   tsk->requires( abskgDW,       d_compAbskgLabel, d_gn, 0 );
   tsk->computes(d_abskgLabel);
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet);
+  // shedule on all taskgraphs not just TG_RMCRT.  The output task needs d_abskgLabel
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
 //______________________________________________________________________
 //
@@ -308,7 +309,50 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
     }
   }
 }
+//______________________________________________________________________
+//
+//______________________________________________________________________
+void
+RMCRTCommon::sched_initialize_sigmaT4( const LevelP  & level,
+                                       SchedulerP    & sched )
+{
+  std::string taskname = "RMCRTCommon::initialize_sigmaT4";
 
+  Task* tsk = nullptr;
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::initialize_sigmaT4<double> );
+  } else {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::initialize_sigmaT4<float> );
+  }
+
+  printSchedule(level, g_ray_dbg, "RMCRTCommon::initialize_sigmaT4");
+
+  tsk->computes(d_sigmaT4Label);
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+}
+//______________________________________________________________________
+// Initialize sigmaT4 = 0
+//______________________________________________________________________
+template< class T>
+void
+RMCRTCommon::initialize_sigmaT4( const ProcessorGroup *,
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset *,
+                                 DataWarehouse        *,
+                                 DataWarehouse        * new_dw )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+
+    printTask(patches, patch, g_ray_dbg, "Doing RMCRTCommon::initialize_sigmaT4");
+
+    CCVariable< T > sigmaT4;
+    new_dw->allocateAndPut( sigmaT4, d_sigmaT4Label, d_matl, patch );
+    sigmaT4.initialize( 0.0 );
+  }
+}
 
 //______________________________________________________________________
 //

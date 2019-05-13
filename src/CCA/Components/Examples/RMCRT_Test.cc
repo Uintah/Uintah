@@ -327,6 +327,11 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
   task->computes( d_compAbskgLabel );
   task->computes( d_cellTypeLabel );
   sched->addTask( task, level->eachPatch(), m_materialManager->allMaterials() );
+  
+  Radiometer* radiometer = d_RMCRT->getRadiometer();
+  if( radiometer ){
+    radiometer->sched_initialize_VRFlux( level, sched );
+  }
 }
 
 //______________________________________________________________________
@@ -474,7 +479,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         }
    
         if (radiometer ){
-          radiometer->sched_initializeRadVars( level, sched );
+          d_RMCRT->sched_CarryForward_Var(level, sched, radiometer->d_VRFluxLabel, RMCRTCommon::TG_CARRY_FORWARD);
         }
 
         d_RMCRT->sched_rayTrace( level, sched, notUsed, sigmaT4_dw, celltype_dw, modifies_divQ );
@@ -513,11 +518,13 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
     d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp );
 
-    if (radiometer ){
-      radiometer->sched_initializeRadVars( level, sched );
-    }
-
     d_RMCRT->sched_rayTrace( level, sched, notUsed, sigmaT4_dw, celltype_dw, modifies_divQ );
+    
+    if (radiometer ){
+      d_RMCRT->sched_CarryForward_Var(level, sched, radiometer->d_VRFluxLabel, RMCRTCommon::TG_CARRY_FORWARD);
+      
+      radiometer->sched_radiometer( level, sched, notUsed, sigmaT4_dw, celltype_dw );
+    }
   }
   
   //______________________________________________________________________
@@ -532,7 +539,9 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
     d_RMCRT->set_abskg_dw_perLevel ( level, Task::NewDW );
     
-    d_RMCRT->sched_CarryForward_Var ( level, sched, d_RMCRT->d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD ); 
+    d_RMCRT->sched_CarryForward_Var ( level, sched, d_RMCRT->d_sigmaT4Label,    RMCRTCommon::TG_CARRY_FORWARD ); 
+    
+    d_RMCRT->sched_CarryForward_Var(  level, sched, radiometer->d_VRFluxLabel,  RMCRTCommon::TG_CARRY_FORWARD);
 
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat( level, sched, notUsed );
@@ -540,9 +549,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     d_RMCRT->sched_sigmaT4( level, sched, temp_dw, includeExtraCells );
 
     d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp );
-
-    radiometer->sched_initializeRadVars( level, sched );
-
+    
     radiometer->sched_radiometer( level, sched, notUsed, sigmaT4_dw, celltype_dw );
 
   }
