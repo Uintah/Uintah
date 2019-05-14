@@ -495,20 +495,6 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->computes( d_radiationVolqLabel );
   }
 
-#if 0
-  //__________________________________
-  // Radiometer
-  if ( d_radiometer ){
-    const VarLabel* VRFluxLabel = d_radiometer->getRadiometerLabel();
-    if (!(Uintah::Parallel::usingDevice())) {
-      // needed for carry Forward                       CUDA HACK
-      tsk->requires(Task::OldDW, VRFluxLabel, d_gn, 0);
-    }
-
-    tsk->modifies( VRFluxLabel );
-  }
-#endif
-
 #ifdef USE_TIMER 
   if( modifies_divQ ){
     tsk->modifies( d_PPTimerLabel );

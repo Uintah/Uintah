@@ -108,7 +108,6 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   //__________________________________
   //  Warnings and bulletproofing
   //
-  //the VRLocations can't exceed computational domain
   BBox compDomain;
   grid->getSpatialRange(compDomain);
   Point start = d_VRLocationsMin;
@@ -321,7 +320,7 @@ Radiometer::sched_radiometer( const LevelP& level,
 
   tsk->setType(Task::Spatial);
 
-  printSchedule(level, g_ray_dbg, "Radiometer::sched_radiometer");
+  printSchedule(level, g_ray_dbg, "Radiometer::sched_radiometer on patches ");
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
@@ -525,8 +524,27 @@ Radiometer::getPatchSet( SchedulerP& sched,
                          PatchSet* ps )
 {
   //__________________________________
-  // find patches that contain radiometers
-  std::vector<const Patch*> radiometer_patches;
+  //  bulletproofing
+  IntVector L_lo;
+  IntVector L_hi;
+  level->findInteriorCellIndexRange( L_lo, L_hi );
+  IntVector VR_posLo = level->getCellIndex(d_VRLocationsMin);
+  IntVector VR_posHi = level->getCellIndex(d_VRLocationsMax);
+      
+  if( !doesIntersect (VR_posLo, VR_posHi, L_lo, L_hi ) ){
+    std::ostringstream warn;
+    warn << "\n ERROR:Radiometer::problemSetup: The VR locations:\n"
+         << "     VR min " << d_VRLocationsMin << "  cell index: " << VR_posLo << "\n"
+         << "     VR max " << d_VRLocationsMax << "  cell index: " << VR_posHi << "\n"
+         << "     Number of cells: " << VR_posHi - VR_posLo << "\n"
+         << " do not overlap with the domain, " << L_lo << " -> " << L_hi << "\n"
+         << " There must be at least 1 cell in each direction" ;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  } 
+  
+  //__________________________________
+  // find patches that contain radiometers  
+  std::vector<const Patch*> radiometer_patches;   
   LoadBalancer * lb = sched->getLoadBalancer();
   const PatchSet * procPatches = lb->getPerProcessorPatchSet(level);
 
@@ -537,8 +555,7 @@ Radiometer::getPatchSet( SchedulerP& sched,
       const Patch* patch = patches->get(p);
       IntVector lo = patch->getCellLowIndex();
       IntVector hi = patch->getCellHighIndex();
-      IntVector VR_posLo = level->getCellIndex(d_VRLocationsMin);
-      IntVector VR_posHi = level->getCellIndex(d_VRLocationsMax);
+      
 
       if (doesIntersect(VR_posLo, VR_posHi, lo, hi)) {
         radiometer_patches.push_back(patch);
@@ -546,6 +563,9 @@ Radiometer::getPatchSet( SchedulerP& sched,
     }
   }
   size_t num_patches = radiometer_patches.size();
+
+
+
   for (size_t i = 0; i < num_patches; ++i) {
     ps->add(radiometer_patches[i]);
   }

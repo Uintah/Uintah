@@ -47,7 +47,7 @@ using namespace Uintah;
 
 // These are used externally (e.g. Radiamoter.cc), keep them visible
 // outside this unit
-Dout g_ray_dbg("Ray_dbg", "Radiation Models", "RMCRT Ray general debug stream", false);
+Dout g_ray_dbg("Ray",     "Radiation Models", "RMCRT Ray general debug stream", false);
 Dout g_ray_BC ("Ray_BC",  "Radiation Models", "RMCRT RayBC debug stream", false);
 //______________________________________________________________________
 // Static variable declarations
