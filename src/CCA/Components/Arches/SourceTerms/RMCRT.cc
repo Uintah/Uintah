@@ -733,7 +733,8 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
     Task* t1 = scinew Task("RMCRT_Radiation::restartInitializeHack", this, &RMCRT_Radiation::restartInitializeHack);
 
     //  Only schedule if radFlux*_Label are in the checkpoint uda
-    if (new_dw->exists(_radFluxE_Label, _matl, firstPatch)) {
+    
+    if ( (_whichAlgo != radiometerOnly ) && new_dw->exists(_radFluxE_Label, _matl, firstPatch)) {
       printSchedule(level, dbg, "RMCRT_Radiation::sched_restartInitializeHack");
 
       t1->computes(_radFluxE_Label);
@@ -742,13 +743,11 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
       t1->computes(_radFluxS_Label);   // there must be a compute() for that variable.
       t1->computes(_radFluxT_Label);
       t1->computes(_radFluxB_Label);
-    }
-    t1->computes(_tempLabel);          // needed by sched_sigmaT4
-    sched->addTask(t1, archesLevel->eachPatch(), _materialManager->allMaterials( "Arches" ));
+    
+      sched->addTask(t1, archesLevel->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
-    //__________________________________
-    //  convert flux from 6 doubles -> CCVarible
-    if (new_dw->exists(_radFluxE_Label, _matl, firstPatch)) {
+      //__________________________________
+      //  convert flux from 6 doubles -> CCVarible
       sched_DBLsToStencil(archesLevel, sched);
     }
 
