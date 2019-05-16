@@ -189,6 +189,9 @@ MPMLabel::MPMLabel()
 	pCurSizeLabel = VarLabel::create("p.currentsize",
 		ParticleVariable<Matrix3>::getTypeDescription());
 
+	//pCurSizeLabel_preReloc = VarLabel::create("p.currentsize+",
+	//	ParticleVariable<Matrix3>::getTypeDescription());
+
 	pLocalizedMPMLabel = VarLabel::create("p.localizedMPM",
 		ParticleVariable<int>::getTypeDescription());
 
@@ -327,6 +330,12 @@ MPMLabel::MPMLabel()
 	gAccelerationEndLabel = VarLabel::create("g.accelerationEnd",
 		NCVariable<Vector>::getTypeDescription());
 
+	pVoidRatioLabel = VarLabel::create("p.VoidRatio",
+		ParticleVariable<double>::getTypeDescription());
+
+	gVoidRatioLabel = VarLabel::create("g.VoidRatio",
+		NCVariable<double>::getTypeDescription());
+
 	// Node Centered Variables
 
 	gAccelerationLabel = VarLabel::create("g.acceleration",
@@ -463,6 +472,9 @@ MPMLabel::MPMLabel()
 		NCVariable<Vector>::getTypeDescription());
 
 	gStressLabel = VarLabel::create("g.stress",
+		NCVariable<Matrix3>::getTypeDescription());
+
+	gStressFilterLabel = VarLabel::create("g.stressFilter",
 		NCVariable<Matrix3>::getTypeDescription());
 
 	gStressF0Label = VarLabel::create("g.stressF0",
@@ -938,6 +950,7 @@ MPMLabel::~MPMLabel()
 	VarLabel::destroy(pSizeLabel);
 	VarLabel::destroy(pSizeLabel_preReloc);
 	VarLabel::destroy(pCurSizeLabel);
+	//VarLabel::destroy(pCurSizeLabel_preReloc);
 	VarLabel::destroy(pFiberDirLabel_preReloc);
 	VarLabel::destroy(pFiberDirLabel);
 	VarLabel::destroy(p_qLabel);
@@ -967,6 +980,8 @@ MPMLabel::~MPMLabel()
 	VarLabel::destroy(gAccelerationBeginNewLabel);
 	VarLabel::destroy(gAccelerationMiddleLabel);
 	VarLabel::destroy(gAccelerationEndLabel);
+	VarLabel::destroy(pVoidRatioLabel);
+	VarLabel::destroy(gVoidRatioLabel);
 
 	VarLabel::destroy(gAccelerationLabel);
 	VarLabel::destroy(gColorLabel);
@@ -998,6 +1013,7 @@ MPMLabel::~MPMLabel()
 	VarLabel::destroy(gNormTractionF0Label);
 	VarLabel::destroy(gNormTractionF1Label);
 	VarLabel::destroy(gStressLabel);
+	VarLabel::destroy(gStressFilterLabel);
 	VarLabel::destroy(gStressF0Label);
 	VarLabel::destroy(gStressF1Label);
 	VarLabel::destroy(gSurfNormLabel);

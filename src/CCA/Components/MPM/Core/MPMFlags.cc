@@ -139,6 +139,9 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   // Generalized Alpha scheme
   d_GeneralizedAlpha = false;
   d_SpectralRadius = 1;
+
+  // Hypoplasticity
+  d_Hypoplasticity = false;
 }
 
 MPMFlags::~MPMFlags()
@@ -407,6 +410,9 @@ else{
   mpm_flag_ps->get("GeneralizedAlpha", d_GeneralizedAlpha);
   mpm_flag_ps->get("SpectralRadius", d_SpectralRadius);
 
+  // Hypoplasticity
+  mpm_flag_ps->get("Hypoplasticity", d_Hypoplasticity);
+
 }
 
 void
@@ -464,6 +470,9 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
 	  ps->appendElement("SpectralRadius", d_SpectralRadius);
   }
 
+  // Hypoplasticity
+  ps->appendElement("Hypoplasticity", d_Hypoplasticity);
+  
   // PrescribeDeformation
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);

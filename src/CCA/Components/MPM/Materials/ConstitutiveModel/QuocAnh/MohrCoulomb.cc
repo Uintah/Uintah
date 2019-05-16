@@ -657,11 +657,9 @@ double rho_orig = matl->getInitialDensity();
 	  strain23 += e23 * dt;
 	  strain13 += e13 * dt;
 
-	  shear_strain_local = 1.0 / 2.0*sqrt(2 * (pow((strain11 - strain22), 2.0) + pow((strain11 - strain33), 2.0) + pow((strain22 - strain33), 2.0)) + 3.0*(pow(strain12, 2.0) + pow(strain13, 2.0) + pow(strain23, 2.0)));
-	  svarg[24] = shear_strain_local;
+	  shear_strain_local = 1.0 / 2.0*sqrt(2 * (pow((strain11 - strain22), 2.0) + pow((strain11 - strain33), 2.0) + pow((strain22 - strain33), 2.0)) + 3.0*(pow(strain12, 2.0) + pow(strain13, 2.0) + pow(strain23, 2.0)));  
 
-	  shear_strain_rate = 1.0 / 2.0*sqrt(2 * (pow((e11 - e22), 2) + pow((e11 - e33), 2) + pow((e22 - e33), 2)) + 3 * (pow(e12, 2) + pow(e13, 2) + pow(e23, 2)));
-	  svarg[20] = shear_strain_rate;
+	  shear_strain_rate = 1.0 / 2.0*sqrt(2 * (pow((e11 - e22), 2) + pow((e11 - e33), 2) + pow((e22 - e33), 2)) + 3 * (pow(e12, 2) + pow(e13, 2) + pow(e23, 2)));  
 
 	  svarg[28] = strain11;
 	  svarg[29] = strain22;
@@ -673,7 +671,7 @@ double rho_orig = matl->getInitialDensity();
 // Non local 
   double n_nonlocal = UI[46];
   double l_nonlocal = UI[47];
-
+  /*
   double domain_nonlocal = l_nonlocal * l_nonlocal;
   double Up = 0;
   double Up1 = 0;
@@ -719,6 +717,16 @@ double rho_orig = matl->getInitialDensity();
 		  shear_strain_rate_nonlocal = shear_strain_rate_nonlocal * tFE / tShear;
 	  }
   }
+  */
+
+  //cerr << shear_strain_nonlocal << ' ' << shear_strain_local << endl;
+  //cerr << shear_strain_rate_nonlocal << ' ' << shear_strain_rate << endl;
+
+  double shear_strain_nonlocal = shear_strain_local;
+  double shear_strain_rate_nonlocal = shear_strain_rate;
+
+  svarg[24] = shear_strain_local;
+  svarg[20] = shear_strain_rate;
 
 // Calling the external model here
       CalculateStress (nblk, d_NINSV, dt, UI, sigarg, Dlocal, svarg, USM, shear_strain_nonlocal, shear_strain_rate_nonlocal);

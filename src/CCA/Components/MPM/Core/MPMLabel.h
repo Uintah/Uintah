@@ -109,6 +109,7 @@ namespace Uintah {
 		const VarLabel* pSizeLabel;
 		const VarLabel* pSizeLabel_preReloc;
 		const VarLabel* pCurSizeLabel;
+		//const VarLabel* pCurSizeLabel_preReloc;
 		const VarLabel* pLocalizedMPMLabel;
 		const VarLabel* pLocalizedMPMLabel_preReloc;
 		const VarLabel* pRefinedLabel;
@@ -141,6 +142,8 @@ namespace Uintah {
 		const VarLabel* gAccelerationBeginNewLabel;
 		const VarLabel* gAccelerationMiddleLabel;
 		const VarLabel* gAccelerationEndLabel;
+		const VarLabel* gVoidRatioLabel;
+		const VarLabel* pVoidRatioLabel;
 
 		const VarLabel* gLambdaDotLabel;
 		const VarLabel* gColorLabel;
@@ -196,6 +199,7 @@ namespace Uintah {
 		const VarLabel* gSurfLabel;
 		const VarLabel* gSurfGradLabel;
 		const VarLabel* gStressLabel;
+		const VarLabel* gStressFilterLabel;
 		const VarLabel* gStressF0Label;
 		const VarLabel* gStressF1Label;
 		const VarLabel* gStressForSavingLabel;

@@ -44,6 +44,7 @@
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -80,212 +81,217 @@ static DebugStream amr_doing("AMRMPM", false);
 
 static Vector face_norm(Patch::FaceType f)
 {
-  switch(f) {
-  case Patch::xminus: return Vector(-1,0,0);
-  case Patch::xplus:  return Vector( 1,0,0);
-  case Patch::yminus: return Vector(0,-1,0);
-  case Patch::yplus:  return Vector(0, 1,0);
-  case Patch::zminus: return Vector(0,0,-1);
-  case Patch::zplus:  return Vector(0,0, 1);
-  default:            return Vector(0,0,0); // oops !
-  }
+	switch (f) {
+	case Patch::xminus: return Vector(-1, 0, 0);
+	case Patch::xplus:  return Vector(1, 0, 0);
+	case Patch::yminus: return Vector(0, -1, 0);
+	case Patch::yplus:  return Vector(0, 1, 0);
+	case Patch::zminus: return Vector(0, 0, -1);
+	case Patch::zplus:  return Vector(0, 0, 1);
+	default:            return Vector(0, 0, 0); // oops !
+	}
 }
 
-DOUBLEMPM::DOUBLEMPM( const ProcessorGroup* myworld,
-                      const MaterialManagerP materialManager) :
-  MPMCommon( myworld, materialManager )
+DOUBLEMPM::DOUBLEMPM(const ProcessorGroup* myworld,
+	const MaterialManagerP materialManager) :
+	MPMCommon(myworld, materialManager)
 {
-  flags = scinew MPMFlags(myworld);
-  double_lb = scinew DOUBLEMPMLabel();
+	flags = scinew MPMFlags(myworld);
+	double_lb = scinew DOUBLEMPMLabel();
 
-  d_nextOutputTime=0.;
-  d_SMALL_NUM_MPM=1e-200;
-  contactModel        = 0;
-  thermalContactModel = 0;
-  NGP     = 1;
-  NGN     = 1;
-  d_loadCurveIndex=0;
-  d_switchCriteria = 0;
-  d_ndim = 0;
+	d_nextOutputTime = 0.;
+	d_SMALL_NUM_MPM = 1e-200;
+	contactModel = 0;
+	thermalContactModel = 0;
+	NGP = 1;
+	NGN = 1;
+	d_loadCurveIndex = 0;
+	d_switchCriteria = 0;
+	d_ndim = 0;
 }
 
 DOUBLEMPM::~DOUBLEMPM()
 {
-  delete flags;
-  delete contactModel;
-  delete thermalContactModel;
-  delete double_lb;
+	delete flags;
+	delete contactModel;
+	delete thermalContactModel;
+	delete double_lb;
 
-  MPMPhysicalBCFactory::clean();
+	MPMPhysicalBCFactory::clean();
 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->releaseComponents();
-      delete am;
-    }
-  }
+	if (d_analysisModules.size() != 0) {
+		vector<AnalysisModule*>::iterator iter;
+		for (iter = d_analysisModules.begin();
+			iter != d_analysisModules.end(); iter++) {
+			AnalysisModule* am = *iter;
+			am->releaseComponents();
+			delete am;
+		}
+	}
 
-  if(d_switchCriteria) {
-    delete d_switchCriteria;
-  }
+	if (d_switchCriteria) {
+		delete d_switchCriteria;
+	}
 }
 
 
 
 // Read input files ___________________________________________________________________________
 void DOUBLEMPM::problemSetup(const ProblemSpecP& prob_spec,
-                             const ProblemSpecP& restart_prob_spec,
-                             GridP& grid)
+	const ProblemSpecP& restart_prob_spec,
+	GridP& grid)
 {
-  cout_doing<<"Doing MPM::problemSetup\t\t\t\t\t MPM"<<endl;
+	cout_doing << "Doing MPM::problemSetup\t\t\t\t\t MPM" << endl;
 
-  m_scheduler->setPositionVar(lb->pXLabel);
+	m_scheduler->setPositionVar(lb->pXLabel);
 
-  ProblemSpecP restart_mat_ps = 0;
-  ProblemSpecP prob_spec_mat_ps =
-    prob_spec->findBlockWithOutAttribute("MaterialProperties");
+	ProblemSpecP restart_mat_ps = 0;
+	ProblemSpecP prob_spec_mat_ps =
+		prob_spec->findBlockWithOutAttribute("MaterialProperties");
 
-  bool isRestart = false;
-  if (prob_spec_mat_ps){
-    restart_mat_ps = prob_spec;
-  } else if (restart_prob_spec){
-    isRestart = true;
-    restart_mat_ps = restart_prob_spec;
-  } else{
-    restart_mat_ps = prob_spec;
-  }
+	bool isRestart = false;
+	if (prob_spec_mat_ps) {
+		restart_mat_ps = prob_spec;
+	}
+	else if (restart_prob_spec) {
+		isRestart = true;
+		restart_mat_ps = restart_prob_spec;
+	}
+	else {
+		restart_mat_ps = prob_spec;
+	}
 
-  ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
-  if (!mpm_soln_ps){
-    ostringstream warn;
-    warn<<"ERROR:MPM:\n missing MPM section in the input file\n";
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-  }
+	ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
+	if (!mpm_soln_ps) {
+		ostringstream warn;
+		warn << "ERROR:MPM:\n missing MPM section in the input file\n";
+		throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+	}
 
-  // Read all MPM flags (look in MPMFlags.cc)
-  flags->readMPMFlags(restart_mat_ps, m_output);
-  if (flags->d_integrator_type == "implicit"){
-    throw ProblemSetupException("Can't use implicit integration with -mpm",
-                                 __FILE__, __LINE__);
-  }
+	// Read all MPM flags (look in MPMFlags.cc)
+	flags->readMPMFlags(restart_mat_ps, m_output);
+	if (flags->d_integrator_type == "implicit") {
+		throw ProblemSetupException("Can't use implicit integration with -mpm",
+			__FILE__, __LINE__);
+	}
 
-  // convert text representation of face into FaceType
-  for(std::vector<std::string>::const_iterator ftit(flags->d_bndy_face_txt_list.begin());
-      ftit!=flags->d_bndy_face_txt_list.end();ftit++) {
-      Patch::FaceType face = Patch::invalidFace;
-      for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;
-          ft=Patch::nextFace(ft)) {
-        if(Patch::getFaceName(ft)==*ftit) face =  ft;
-      }
-      if(face!=Patch::invalidFace) {
-        d_bndy_traction_faces.push_back(face);
-      } else {
-        std::cerr << "warning: ignoring unknown face '" << *ftit<< "'" << std::endl;
-      }
-  }
+	// convert text representation of face into FaceType
+	for (std::vector<std::string>::const_iterator ftit(flags->d_bndy_face_txt_list.begin());
+		ftit != flags->d_bndy_face_txt_list.end(); ftit++) {
+		Patch::FaceType face = Patch::invalidFace;
+		for (Patch::FaceType ft = Patch::startFace; ft <= Patch::endFace;
+			ft = Patch::nextFace(ft)) {
+			if (Patch::getFaceName(ft) == *ftit) face = ft;
+		}
+		if (face != Patch::invalidFace) {
+			d_bndy_traction_faces.push_back(face);
+		}
+		else {
+			std::cerr << "warning: ignoring unknown face '" << *ftit << "'" << std::endl;
+		}
+	}
 
-  // read in AMR flags from the main ups file
-  ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
-  if (amr_ps) {
-    ProblemSpecP mpm_amr_ps = amr_ps->findBlock("MPM");
-    if(!mpm_amr_ps){
-      ostringstream warn;
-      warn<<"ERROR:MPM:\n missing MPM section in the AMR section of the input file\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
+	// read in AMR flags from the main ups file
+	ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
+	if (amr_ps) {
+		ProblemSpecP mpm_amr_ps = amr_ps->findBlock("MPM");
+		if (!mpm_amr_ps) {
+			ostringstream warn;
+			warn << "ERROR:MPM:\n missing MPM section in the AMR section of the input file\n";
+			throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+		}
 
-    mpm_amr_ps->getWithDefault("min_grid_level", flags->d_minGridLevel, 0);
-    mpm_amr_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
-    ProblemSpecP refine_ps =
-                     mpm_amr_ps->findBlock("Refinement_Criteria_Thresholds");
-    //__________________________________
-    // Pull out the refinement threshold criteria 
-    if( refine_ps != nullptr ){
-      for( ProblemSpecP var_ps = refine_ps->findBlock( "Variable" ); var_ps != nullptr; var_ps = var_ps->findNextBlock( "Variable" ) ) {
-        thresholdVar data;
-        string name, value, matl;
+		mpm_amr_ps->getWithDefault("min_grid_level", flags->d_minGridLevel, 0);
+		mpm_amr_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
+		ProblemSpecP refine_ps =
+			mpm_amr_ps->findBlock("Refinement_Criteria_Thresholds");
+		//__________________________________
+		// Pull out the refinement threshold criteria 
+		if (refine_ps != nullptr) {
+			for (ProblemSpecP var_ps = refine_ps->findBlock("Variable"); var_ps != nullptr; var_ps = var_ps->findNextBlock("Variable")) {
+				thresholdVar data;
+				string name, value, matl;
 
-        map<string,string> input;
-        var_ps->getAttributes(input);
-        name  = input["name"];
-        value = input["value"];
-        matl  = input["matl"];
+				map<string, string> input;
+				var_ps->getAttributes(input);
+				name = input["name"];
+				value = input["value"];
+				matl = input["matl"];
 
-        stringstream n_ss(name);
-        stringstream v_ss(value);
-        stringstream m_ss(matl);
+				stringstream n_ss(name);
+				stringstream v_ss(value);
+				stringstream m_ss(matl);
 
-        n_ss >> data.name;
-        v_ss >> data.value;
-        m_ss >> data.matl;
+				n_ss >> data.name;
+				v_ss >> data.value;
+				m_ss >> data.matl;
 
-        if( !n_ss || !v_ss || (!m_ss && matl!="all") ) {
-          cerr << "WARNING: AMRMPM.cc: stringstream failed...\n";
-        }
+				if (!n_ss || !v_ss || (!m_ss && matl != "all")) {
+					cerr << "WARNING: AMRMPM.cc: stringstream failed...\n";
+				}
 
-        unsigned int numMatls = m_materialManager->getNumMatls();
+				unsigned int numMatls = m_materialManager->getNumMatls();
 
-        //__________________________________
-        // if using "all" matls 
-        if(matl == "all"){
-          for (unsigned int m = 0; m < numMatls; m++){
-            data.matl = m;
-            d_thresholdVars.push_back(data);
-          }
-        }else{
-          d_thresholdVars.push_back(data);
-        }
-      }
-    } // refine_ps
-  } // amr_ps
-  
-  // Interacting nodes NGP = 1 for MPM and = 2 for GIMP and CPDI
-  if(flags->d_8or27==8){
-    NGP=1;
-    NGN=1;
-  } else{
-    NGP=2;
-    NGN=2;
-  }
+				//__________________________________
+				// if using "all" matls 
+				if (matl == "all") {
+					for (unsigned int m = 0; m < numMatls; m++) {
+						data.matl = m;
+						d_thresholdVars.push_back(data);
+					}
+				}
+				else {
+					d_thresholdVars.push_back(data);
+				}
+			}
+		} // refine_ps
+	} // amr_ps
 
-  if (flags->d_prescribeDeformation){
-    readPrescribedDeformations(flags->d_prescribedDeformationFile);
-  }
-  if (flags->d_insertParticles){
-    readInsertParticlesFile(flags->d_insertParticlesFile);
-  }
+	// Interacting nodes NGP = 1 for MPM and = 2 for GIMP and CPDI
+	if (flags->d_8or27 == 8) {
+		NGP = 1;
+		NGN = 1;
+	}
+	else {
+		NGP = 2;
+		NGN = 2;
+	}
 
-  if (flags->d_insertPorePressure) {
-	  readInsertPorePressureFile(flags->d_insertPorePressureFile);
-  }
+	if (flags->d_prescribeDeformation) {
+		readPrescribedDeformations(flags->d_prescribedDeformationFile);
+	}
+	if (flags->d_insertParticles) {
+		readInsertParticlesFile(flags->d_insertParticlesFile);
+	}
 
-  setParticleGhostLayer(Ghost::AroundNodes, NGP);
+	if (flags->d_insertPorePressure) {
+		readInsertPorePressureFile(flags->d_insertPorePressureFile);
+	}
 
-  MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
+	setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
-  bool needNormals=false;
-  contactModel = ContactFactory::create(d_myworld,
-                                        restart_mat_ps,m_materialManager,lb,flags,
-                                        needNormals);
+	MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
 
-  flags->d_computeNormals=needNormals;
+	bool needNormals = false;
+	contactModel = ContactFactory::create(d_myworld,
+		restart_mat_ps, m_materialManager, lb, flags,
+		needNormals);
 
-  thermalContactModel =
-    ThermalContactFactory::create(restart_mat_ps, m_materialManager, lb,flags);
+	flags->d_computeNormals = needNormals;
 
-  materialProblemSetup(restart_mat_ps,flags, isRestart);
+	thermalContactModel =
+		ThermalContactFactory::create(restart_mat_ps, m_materialManager, lb, flags);
 
-  //__________________________________
-  //  create the switching criteria port
-  d_switchCriteria = dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
+	materialProblemSetup(restart_mat_ps, flags, isRestart);
 
-  if (d_switchCriteria) {
-    d_switchCriteria->problemSetup(restart_mat_ps,
-                                   restart_prob_spec, m_materialManager);
-  }
+	//__________________________________
+	//  create the switching criteria port
+	d_switchCriteria = dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
+
+	if (d_switchCriteria) {
+		d_switchCriteria->problemSetup(restart_mat_ps,
+			restart_prob_spec, m_materialManager);
+	}
 }
 
 void DOUBLEMPM::readPrescribedDeformations(string filename)
@@ -365,134 +371,134 @@ void DOUBLEMPM::readInsertPorePressureFile(string filename)
 
 void DOUBLEMPM::outputProblemSpec(ProblemSpecP& root_ps)
 {
-  ProblemSpecP root = root_ps->getRootNode();
+	ProblemSpecP root = root_ps->getRootNode();
 
-  ProblemSpecP flags_ps = root->appendChild("MPM");
-  flags->outputProblemSpec(flags_ps);
+	ProblemSpecP flags_ps = root->appendChild("MPM");
+	flags->outputProblemSpec(flags_ps);
 
-  ProblemSpecP mat_ps = root->findBlockWithOutAttribute( "MaterialProperties" );
+	ProblemSpecP mat_ps = root->findBlockWithOutAttribute("MaterialProperties");
 
-  if( mat_ps == nullptr ) {
-    mat_ps = root->appendChild( "MaterialProperties" );
-  }
+	if (mat_ps == nullptr) {
+		mat_ps = root->appendChild("MaterialProperties");
+	}
 
-  ProblemSpecP mpm_ps = mat_ps->appendChild("MPM");
-  for (unsigned int i = 0; i < m_materialManager->getNumMatls( "MPM" );i++) {
-    MPMMaterial* mat = (MPMMaterial*) m_materialManager->getMaterial( "MPM", i);
-    ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
-  }
+	ProblemSpecP mpm_ps = mat_ps->appendChild("MPM");
+	for (unsigned int i = 0; i < m_materialManager->getNumMatls("MPM"); i++) {
+		MPMMaterial* mat = (MPMMaterial*)m_materialManager->getMaterial("MPM", i);
+		ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
+	}
 
-  contactModel->outputProblemSpec(mpm_ps);
-  thermalContactModel->outputProblemSpec(mpm_ps);
+	contactModel->outputProblemSpec(mpm_ps);
+	thermalContactModel->outputProblemSpec(mpm_ps);
 
-  ProblemSpecP physical_bc_ps = root->appendChild("PhysicalBC");
-  ProblemSpecP mpm_ph_bc_ps = physical_bc_ps->appendChild("MPM");
-  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
-    MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->outputProblemSpec(mpm_ph_bc_ps);
-  }
+	ProblemSpecP physical_bc_ps = root->appendChild("PhysicalBC");
+	ProblemSpecP mpm_ph_bc_ps = physical_bc_ps->appendChild("MPM");
+	for (int ii = 0; ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+		MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->outputProblemSpec(mpm_ph_bc_ps);
+	}
 
 }
 
 
 // Initialize_______________________________________________________________________________
 void DOUBLEMPM::scheduleInitialize(const LevelP& level,
-                                   SchedulerP& sched)
+	SchedulerP& sched)
 {
-  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())) {
-    return;
-  }
-  Task* t = scinew Task( "MPM::actuallyInitialize", this, &DOUBLEMPM::actuallyInitialize );
+	if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())) {
+		return;
+	}
+	Task* t = scinew Task("MPM::actuallyInitialize", this, &DOUBLEMPM::actuallyInitialize);
 
-  const PatchSet* patches = level->eachPatch();
-  printSchedule(patches,cout_doing,"MPM::scheduleInitialize");
-  MaterialSubset* zeroth_matl = scinew MaterialSubset();
-  zeroth_matl->add(0);
-  zeroth_matl->addReference();
+	const PatchSet* patches = level->eachPatch();
+	printSchedule(patches, cout_doing, "MPM::scheduleInitialize");
+	MaterialSubset* zeroth_matl = scinew MaterialSubset();
+	zeroth_matl->add(0);
+	zeroth_matl->addReference();
 
-  t->computes(lb->partCountLabel);
-  t->computes(lb->pXLabel);
-  t->computes(lb->pDispLabel);
-  t->computes(lb->pFiberDirLabel);
-  t->computes(lb->pMassLabel);
-  t->computes(lb->pVolumeLabel);
-  t->computes(lb->pTemperatureLabel);
-  t->computes(lb->pTempPreviousLabel); // for therma  stresm analysis
-  t->computes(lb->pdTdtLabel);
-  t->computes(lb->pVelocityLabel);
-  t->computes(lb->pExternalForceLabel);
-  t->computes(lb->pParticleIDLabel);
-  t->computes(lb->pDeformationMeasureLabel);
-  t->computes(lb->pStressLabel);
-  t->computes(lb->pVelGradLabel);
-  t->computes(lb->pTemperatureGradientLabel);
-  t->computes(lb->pSizeLabel);
-  t->computes(lb->pLocalizedMPMLabel);
-  t->computes(lb->pRefinedLabel);
-  t->computes(lb->delTLabel,level.get_rep());
-  t->computes(lb->pCellNAPIDLabel,zeroth_matl);
-  t->computes(lb->NC_CCweightLabel,zeroth_matl);
+	t->computes(lb->partCountLabel);
+	t->computes(lb->pXLabel);
+	t->computes(lb->pDispLabel);
+	t->computes(lb->pFiberDirLabel);
+	t->computes(lb->pMassLabel);
+	t->computes(lb->pVolumeLabel);
+	t->computes(lb->pTemperatureLabel);
+	t->computes(lb->pTempPreviousLabel); // for therma  stresm analysis
+	t->computes(lb->pdTdtLabel);
+	t->computes(lb->pVelocityLabel);
+	t->computes(lb->pExternalForceLabel);
+	t->computes(lb->pParticleIDLabel);
+	t->computes(lb->pDeformationMeasureLabel);
+	t->computes(lb->pStressLabel);
+	t->computes(lb->pVelGradLabel);
+	t->computes(lb->pTemperatureGradientLabel);
+	t->computes(lb->pSizeLabel);
+	t->computes(lb->pLocalizedMPMLabel);
+	t->computes(lb->pRefinedLabel);
+	t->computes(lb->delTLabel, level.get_rep());
+	t->computes(lb->pCellNAPIDLabel, zeroth_matl);
+	t->computes(lb->NC_CCweightLabel, zeroth_matl);
 
-  // Debugging Scalar
-  if (flags->d_with_color) {
-    t->computes(lb->pColorLabel);
-  }
+	// Debugging Scalar
+	if (flags->d_with_color) {
+		t->computes(lb->pColorLabel);
+	}
 
-  if (flags->d_useLoadCurves) {
-    // Computes the load curve ID associated with each particle
-    t->computes(lb->pLoadCurveIDLabel);
-  }
+	if (flags->d_useLoadCurves) {
+		// Computes the load curve ID associated with each particle
+		t->computes(lb->pLoadCurveIDLabel);
+	}
 
-  if (flags->d_reductionVars->accStrainEnergy) {
-    // Computes accumulated strain energy
-    t->computes(lb->AccStrainEnergyLabel);
-  }
+	if (flags->d_reductionVars->accStrainEnergy) {
+		// Computes accumulated strain energy
+		t->computes(lb->AccStrainEnergyLabel);
+	}
 
-  if(flags->d_artificial_viscosity){
-    t->computes(lb->p_qLabel);
-  }
+	if (flags->d_artificial_viscosity) {
+		t->computes(lb->p_qLabel);
+	}
 
-  // Constitutive models
-  unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
-  for(unsigned int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
-    
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addInitialComputesAndRequires(t, mpm_matl, patches);
-    
-    DamageModel* dm = mpm_matl->getDamageModel();
-    dm->addInitialComputesAndRequires( t, mpm_matl );
-    
-    ErosionModel* em = mpm_matl->getErosionModel();
-    em->addInitialComputesAndRequires( t, mpm_matl );
+	// Constitutive models
+	unsigned int numMPM = m_materialManager->getNumMatls("MPM");
+	for (unsigned int m = 0; m < numMPM; m++) {
+		MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
 
-  }
+		ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+		cm->addInitialComputesAndRequires(t, mpm_matl, patches);
 
-  sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
+		DamageModel* dm = mpm_matl->getDamageModel();
+		dm->addInitialComputesAndRequires(t, mpm_matl);
 
-  schedulePrintParticleCount(level, sched);
+		ErosionModel* em = mpm_matl->getErosionModel();
+		em->addInitialComputesAndRequires(t, mpm_matl);
 
-  // The task will have a reference to zeroth_matl
-  if (zeroth_matl->removeReference())
-    delete zeroth_matl; // shouln't happen, but...
+	}
 
-  if (flags->d_useLoadCurves) {
-    // Schedule the initialization of pressure BCs per particle
-    scheduleInitializePressureBCs(level, sched);
-  }
+	sched->addTask(t, patches, m_materialManager->allMaterials("MPM"));
 
-  // dataAnalysis
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleInitialize( sched, level);
-    }
-  }
+	schedulePrintParticleCount(level, sched);
 
-  if (flags->d_deleteGeometryObjects) {
-    scheduleDeleteGeometryObjects(level, sched);
-  }
+	// The task will have a reference to zeroth_matl
+	if (zeroth_matl->removeReference())
+		delete zeroth_matl; // shouln't happen, but...
+
+	if (flags->d_useLoadCurves) {
+		// Schedule the initialization of pressure BCs per particle
+		scheduleInitializePressureBCs(level, sched);
+	}
+
+	// dataAnalysis
+	if (d_analysisModules.size() != 0) {
+		vector<AnalysisModule*>::iterator iter;
+		for (iter = d_analysisModules.begin();
+			iter != d_analysisModules.end(); iter++) {
+			AnalysisModule* am = *iter;
+			am->scheduleInitialize(sched, level);
+		}
+	}
+
+	if (flags->d_deleteGeometryObjects) {
+		scheduleDeleteGeometryObjects(level, sched);
+	}
 
 }
 
@@ -578,6 +584,7 @@ void DOUBLEMPM::actuallyInitialize(const ProcessorGroup*,
 	if (((interp_type == "gimp" ||
 		interp_type == "3rdorderBS" ||
 		interp_type == "fast_cpdi" ||
+		interp_type == "cpti" ||
 		interp_type == "cpdi") &&
 		((num_extra_cells + periodic) != IntVector(1, 1, 1) &&
 		(!((num_extra_cells + periodic) == IntVector(1, 1, 0) &&
@@ -587,6 +594,7 @@ void DOUBLEMPM::actuallyInitialize(const ProcessorGroup*,
 			<< " or <interpolator>3rdorderBS</interpolator> \n"
 			<< " or <interpolator>cpdi</interpolator> \n"
 			<< " or <interpolator>fast_cpdi</interpolator> \n"
+			<< " or <interpolator>cpti</interpolator> \n"
 			<< " you must also use extraCells and/or periodicBCs such\n"
 			<< " that the sum of the two is [1,1,1].\n"
 			<< " If using axisymmetry, the sum of the two can be [1,1,0].\n";
@@ -600,41 +608,49 @@ void DOUBLEMPM::actuallyInitialize(const ProcessorGroup*,
 
 	new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 
+	// The call below is necessary because the GeometryPieceFactory holds on to a pointer
+	// to all geom_pieces (so that it can look them up by name during initialization)
+	// The pieces are never actually deleted until the factory is destroyed at the end
+	// of the program. resetFactory() will rid of the pointer (lookup table) and
+	// allow the deletion of the unneeded pieces.  
+
+	GeometryPieceFactory::resetFactory();
+
 }
 
 void DOUBLEMPM::scheduleRestartInitialize(const LevelP& level,
-                                          SchedulerP& sched)
+	SchedulerP& sched)
 {
 }
 /* _____________________________________________________________________
  Purpose:   Set variables that are normally set during the initialization
-            phase, but get wiped clean when you restart
+			phase, but get wiped clean when you restart
 _____________________________________________________________________*/
 void DOUBLEMPM::restartInitialize()
 {
-  cout_doing<<"Doing restartInitialize\t\t\t\t\t MPM"<<endl;
+	cout_doing << "Doing restartInitialize\t\t\t\t\t MPM" << endl;
 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->restartInitialize();
-    }
-  }
+	if (d_analysisModules.size() != 0) {
+		vector<AnalysisModule*>::iterator iter;
+		for (iter = d_analysisModules.begin();
+			iter != d_analysisModules.end(); iter++) {
+			AnalysisModule* am = *iter;
+			am->restartInitialize();
+		}
+	}
 }
 
 
 // Compute total particles_______________________________________________________________________________
 void DOUBLEMPM::schedulePrintParticleCount(const LevelP& level,
-                                           SchedulerP& sched)
+	SchedulerP& sched)
 {
-  Task* t = scinew Task("MPM::printParticleCount",
-                        this, &DOUBLEMPM::printParticleCount);
-  t->requires(Task::NewDW, lb->partCountLabel);
-  t->setType(Task::OncePerProc);
-  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
-                 m_materialManager->allMaterials( "MPM" ));
+	Task* t = scinew Task("MPM::printParticleCount",
+		this, &DOUBLEMPM::printParticleCount);
+	t->requires(Task::NewDW, lb->partCountLabel);
+	t->setType(Task::OncePerProc);
+	sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
+		m_materialManager->allMaterials("MPM"));
 }
 
 void DOUBLEMPM::printParticleCount(const ProcessorGroup* pg,
@@ -678,95 +694,95 @@ void DOUBLEMPM::printParticleLabels(vector<const VarLabel*> labels,
 
 //  Diagnostic task: compute the total number of particles
 void DOUBLEMPM::scheduleTotalParticleCount(SchedulerP& sched,
-                                           const PatchSet* patches,
-                                           const MaterialSet* matls)
+	const PatchSet* patches,
+	const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels())){
-    return;
-  }
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels())) {
+		return;
+	}
 
-  Task* t = scinew Task("DOUBLEMPM::totalParticleCount",
-                  this, &DOUBLEMPM::totalParticleCount);
-  t->computes(lb->partCountLabel);
+	Task* t = scinew Task("DOUBLEMPM::totalParticleCount",
+		this, &DOUBLEMPM::totalParticleCount);
+	t->computes(lb->partCountLabel);
 
-  sched->addTask(t, patches,matls);
+	sched->addTask(t, patches, matls);
 }
 
 //  Diagnostic task: compute the total number of particles
 void DOUBLEMPM::totalParticleCount(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw)
+	const PatchSubset* patches,
+	const MaterialSubset* matls,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    long int totalParticles = 0;
+	for (int p = 0; p < patches->size(); p++) {
+		const Patch* patch = patches->get(p);
+		long int totalParticles = 0;
 
-    for(int m=0;m<matls->size();m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
-      int dwi = mpm_matl->getDWIndex();
+		for (int m = 0; m < matls->size(); m++) {
+			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+			int dwi = mpm_matl->getDWIndex();
 
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-      int numParticles  = pset->end() - pset->begin();
+			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+			int numParticles = pset->end() - pset->begin();
 
-      totalParticles+=numParticles;
-    }
-    new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
-  }
+			totalParticles += numParticles;
+		}
+		new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
+	}
 }
 
 // Compute the moving boundary for load_curve
 void DOUBLEMPM::scheduleInitializePressureBCs(const LevelP& level,
-                                              SchedulerP& sched)
+	SchedulerP& sched)
 {
-  const PatchSet* patches = level->eachPatch();
+	const PatchSet* patches = level->eachPatch();
 
-  d_loadCurveIndex = scinew MaterialSubset();
-  d_loadCurveIndex->add(0);
-  d_loadCurveIndex->addReference();
+	d_loadCurveIndex = scinew MaterialSubset();
+	d_loadCurveIndex->add(0);
+	d_loadCurveIndex->addReference();
 
-  int nofPressureBCs = 0;
-  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
-    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure"){
-      d_loadCurveIndex->add(nofPressureBCs++);
-    }
-  }
-  if (nofPressureBCs > 0) {
-    printSchedule(patches,cout_doing,"MPM::countMaterialPointsPerLoadCurve");
-    printSchedule(patches,cout_doing,"MPM::scheduleInitializePressureBCs");
-    // Create a task that calculates the total number of particles
-    // associated with each load curve.
-    Task* t = scinew Task("MPM::countMaterialPointsPerLoadCurve",
-                          this, &DOUBLEMPM::countMaterialPointsPerLoadCurve);
-    t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
-    t->computes(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
-                Task::OutOfDomain);
-    sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
+	int nofPressureBCs = 0;
+	for (int ii = 0; ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+		string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+		if (bcs_type == "Pressure") {
+			d_loadCurveIndex->add(nofPressureBCs++);
+		}
+	}
+	if (nofPressureBCs > 0) {
+		printSchedule(patches, cout_doing, "MPM::countMaterialPointsPerLoadCurve");
+		printSchedule(patches, cout_doing, "MPM::scheduleInitializePressureBCs");
+		// Create a task that calculates the total number of particles
+		// associated with each load curve.
+		Task* t = scinew Task("MPM::countMaterialPointsPerLoadCurve",
+			this, &DOUBLEMPM::countMaterialPointsPerLoadCurve);
+		t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
+		t->computes(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
+			Task::OutOfDomain);
+		sched->addTask(t, patches, m_materialManager->allMaterials("MPM"));
 
-    // Create a task that calculates the force to be associated with
-    // each particle based on the pressure BCs
-    t = scinew Task("MPM::initializePressureBC",
-                    this, &DOUBLEMPM::initializePressureBC);
-    t->requires(Task::NewDW, lb->pXLabel,                        Ghost::None);
-    t->requires(Task::NewDW, lb->pSizeLabel,                     Ghost::None);
-    t->requires(Task::NewDW, lb->pDeformationMeasureLabel,       Ghost::None);
-    t->requires(Task::NewDW, lb->pLoadCurveIDLabel,              Ghost::None);
-    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
-                            d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
-    t->modifies(lb->pExternalForceLabel);
-    if (flags->d_useCBDI) {
-       t->computes(             lb->pExternalForceCorner1Label);
-       t->computes(             lb->pExternalForceCorner2Label);
-       t->computes(             lb->pExternalForceCorner3Label);
-       t->computes(             lb->pExternalForceCorner4Label);
-    }
-    sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
-  }
+		// Create a task that calculates the force to be associated with
+		// each particle based on the pressure BCs
+		t = scinew Task("MPM::initializePressureBC",
+			this, &DOUBLEMPM::initializePressureBC);
+		t->requires(Task::NewDW, lb->pXLabel, Ghost::None);
+		t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
+		t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
+			d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
+		t->modifies(lb->pExternalForceLabel);
+		if (flags->d_useCBDI) {
+			t->requires(Task::NewDW, lb->pSizeLabel, Ghost::None);
+			t->requires(Task::NewDW, lb->pDeformationMeasureLabel, Ghost::None);
+			t->computes(lb->pExternalForceCorner1Label);
+			t->computes(lb->pExternalForceCorner2Label);
+			t->computes(lb->pExternalForceCorner3Label);
+			t->computes(lb->pExternalForceCorner4Label);
+		}
+		sched->addTask(t, patches, m_materialManager->allMaterials("MPM"));
+	}
 
-  if(d_loadCurveIndex->removeReference()) delete d_loadCurveIndex;
+	if (d_loadCurveIndex->removeReference()) delete d_loadCurveIndex;
 }
 
 // Calculate the number of material points per load curve
@@ -795,17 +811,20 @@ void DOUBLEMPM::initializePressureBC(const ProcessorGroup*,
 			constParticleVariable<Point> px;
 			constParticleVariable<Matrix3> psize;
 			constParticleVariable<Matrix3> pDeformationMeasure;
-			new_dw->get(px, lb->pXLabel, pset);
-			new_dw->get(psize, lb->pSizeLabel, pset);
-			new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
 			constParticleVariable<IntVector> pLoadCurveID;
-			new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
 			ParticleVariable<Vector> pExternalForce;
+
+			new_dw->get(px, lb->pXLabel, pset);
+			new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
 			new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
 
 			ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
 				pExternalForceCorner3, pExternalForceCorner4;
+
+
 			if (flags->d_useCBDI) {
+				new_dw->get(psize, lb->pSizeLabel, pset);
+				new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
 				new_dw->allocateAndPut(pExternalForceCorner1,
 					lb->pExternalForceCorner1Label, pset);
 				new_dw->allocateAndPut(pExternalForceCorner2,
@@ -916,13 +935,13 @@ void DOUBLEMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
 }
 
 void DOUBLEMPM::scheduleDeleteGeometryObjects(const LevelP& level,
-                                              SchedulerP& sched)
+	SchedulerP& sched)
 {
-  const PatchSet* patches = level->eachPatch();
+	const PatchSet* patches = level->eachPatch();
 
-  Task* t = scinew Task("MPM::deleteGeometryObjects",
-                  this, &DOUBLEMPM::deleteGeometryObjects);
-  sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
+	Task* t = scinew Task("MPM::deleteGeometryObjects",
+		this, &DOUBLEMPM::deleteGeometryObjects);
+	sched->addTask(t, patches, m_materialManager->allMaterials("MPM"));
 }
 
 void DOUBLEMPM::deleteGeometryObjects(const ProcessorGroup*,
@@ -943,22 +962,22 @@ void DOUBLEMPM::deleteGeometryObjects(const ProcessorGroup*,
 
 // Compute time step, do nothing here as the new time step is computed in constitutive model
 void DOUBLEMPM::scheduleComputeStableTimeStep(const LevelP& level,
-                                              SchedulerP& sched)
+	SchedulerP& sched)
 {
-  // Nothing to do here - delt is computed as a by-product of the
-  // constitutive model
-  // However, this task needs to do something in the case that MPM
-  // is being run on more than one level.
-  Task* t = 0;
-  cout_doing << d_myworld->myRank() << " MPM::scheduleComputeStableTimeStep \t\t\t\tL-" <<level->getIndex() << endl;
+	// Nothing to do here - delt is computed as a by-product of the
+	// constitutive model
+	// However, this task needs to do something in the case that MPM
+	// is being run on more than one level.
+	Task* t = 0;
+	cout_doing << d_myworld->myRank() << " MPM::scheduleComputeStableTimeStep \t\t\t\tL-" << level->getIndex() << endl;
 
-  t = scinew Task("MPM::actuallyComputeStableTimestep",
-                   this, &DOUBLEMPM::actuallyComputeStableTimestep);
+	t = scinew Task("MPM::actuallyComputeStableTimestep",
+		this, &DOUBLEMPM::actuallyComputeStableTimestep);
 
-  const MaterialSet* mpm_matls = m_materialManager->allMaterials( "MPM" );
+	const MaterialSet* mpm_matls = m_materialManager->allMaterials("MPM");
 
-  t->computes(lb->delTLabel,level.get_rep());
-  sched->addTask(t,level->eachPatch(), mpm_matls);
+	t->computes(lb->delTLabel, level.get_rep());
+	sched->addTask(t, level->eachPatch(), mpm_matls);
 }
 
 void DOUBLEMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
@@ -979,91 +998,95 @@ void DOUBLEMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 
 // MPM algorithm _______________________________________________________________________________
 void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
-                               SchedulerP   & sched)
+	SchedulerP   & sched)
 {
-  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
-    return;
+	if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+		return;
 
-  const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = m_materialManager->allMaterials( "MPM" );
-  const MaterialSet* all_matls = m_materialManager->allMaterials();
+	const PatchSet* patches = level->eachPatch();
+	const MaterialSet* matls = m_materialManager->allMaterials("MPM");
+	const MaterialSet* all_matls = m_materialManager->allMaterials();
 
-  const MaterialSubset* mpm_matls_sub = (   matls ?    matls->getUnion() : nullptr);
+	const MaterialSubset* mpm_matls_sub = (matls ? matls->getUnion() : nullptr);
 
-  scheduleComputeCurrentParticleSize(				sched, patches, matls);
+	scheduleComputeCurrentParticleSize(sched, patches, matls);
+	scheduleApplyExternalLoads(sched, patches, matls);
 
-  scheduleApplyExternalLoads(						sched, patches, matls);
+	scheduleInterpolateParticlesToGrid_DOUBLEMPM(sched, patches, matls);
+	if (flags->d_computeNormals) {
+		scheduleComputeNormals_DOUBLEMPM(sched, patches, matls);
+	}
+	scheduleExMomInterpolated(sched, patches, matls);
+	if (d_bndy_traction_faces.size() > 0) {
+		scheduleComputeContactArea(sched, patches, matls);
+	}
+	scheduleComputeInternalForce_DOUBLEMPM(sched, patches, matls);
+	scheduleComputeAndIntegrateAcceleration_DOUBLEMPM(sched, patches, matls);
 
-  scheduleInterpolateParticlesToGrid_DOUBLEMPM(		sched, patches, matls);
-  if(flags->d_computeNormals){
-    scheduleComputeNormals_DOUBLEMPM(               sched, patches, matls);
-  }
-  scheduleExMomInterpolated(						sched, patches, matls);
-  if(d_bndy_traction_faces.size()>0) {
-    scheduleComputeContactArea(           sched, patches, matls);
-  }
-  scheduleComputeInternalForce_DOUBLEMPM(			sched, patches, matls);
-  scheduleComputeAndIntegrateAcceleration_DOUBLEMPM(sched, patches, matls);
+	scheduleExMomIntegrated(sched, patches, matls);
+	scheduleSetGridBoundaryConditions_DOUBLEMPM(sched, patches, matls);
 
-  scheduleExMomIntegrated(							sched, patches, matls);
-  scheduleSetGridBoundaryConditions_DOUBLEMPM(		sched, patches, matls);
+	if (flags->d_prescribeDeformation) {
+		scheduleSetPrescribedMotion(sched, patches, matls);
+	}
+	
 
-  if (flags->d_prescribeDeformation){
-    scheduleSetPrescribedMotion(          sched, patches, matls);
-  }
-  scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(sched, patches, matls);
-  scheduleComputeParticleGradientsAndPorePressure_DOUBLEMPM(sched, patches, matls);
-  
-  scheduleComputeStressTensor(sched, patches, matls);
+	scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(sched, patches, matls);
+	scheduleComputeParticleGradientsAndPorePressure_DOUBLEMPM(sched, patches, matls);
 
-  if (flags->d_NullSpaceFilter) {
-  scheduleInterpolatePorePresureToGrid(sched, patches, matls);
-  scheduleInterpolatePorePresureToParticle(sched, patches, matls);
-  }
+	scheduleComputeStressTensor(sched, patches, matls);
 
-  scheduleFinalParticleUpdate(						sched, patches, matls);
+	/*
+	if (flags->d_NullSpaceFilter) {
+	scheduleInterpolatePorePresureToGrid(sched, patches, matls);
+	scheduleInterpolatePorePresureToParticle(sched, patches, matls);
+	}
+	*/
 
-  if (flags->d_insertParticles) {
-	  scheduleInsertParticles(						sched, patches, matls);
-  }
 
-  if (flags->d_insertPorePressure) {
-	  scheduleInsertPorePressure(					sched, patches, matls);
-  }
+	scheduleFinalParticleUpdate(sched, patches, matls);
 
-  scheduleRelocateParticle_DOUBLEMPM(				sched, patches, matls);
-  if(flags->d_computeScaleFactor){
-    scheduleComputeParticleScaleFactor(       sched, patches, matls);
-  }
-  if(flags->d_refineParticles){
-    scheduleAddParticles(                     sched, patches, matls);
-  }
+	if (flags->d_insertParticles) {
+		scheduleInsertParticles(sched, patches, matls);
+	}
 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleDoAnalysis_preReloc( sched, level);
-    }
-  }
+	if (flags->d_insertPorePressure) {
+		scheduleInsertPorePressure(sched, patches, matls);
+	}
 
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    d_particleState_preReloc,
-                                    lb->pXLabel,
-                                    d_particleState,
-                                    lb->pParticleIDLabel, matls, 1);
+	scheduleRelocateParticle_DOUBLEMPM(sched, patches, matls);
+	if (flags->d_computeScaleFactor) {
+		scheduleComputeParticleScaleFactor(sched, patches, matls);
+	}
+	if (flags->d_refineParticles) {
+		scheduleAddParticles(sched, patches, matls);
+	}
 
-  //__________________________________
-  //  on the fly analysis
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->scheduleDoAnalysis( sched, level);
-    }
-  }
+	if (d_analysisModules.size() != 0) {
+		vector<AnalysisModule*>::iterator iter;
+		for (iter = d_analysisModules.begin();
+			iter != d_analysisModules.end(); iter++) {
+			AnalysisModule* am = *iter;
+			am->scheduleDoAnalysis_preReloc(sched, level);
+		}
+	}
+
+	sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
+		d_particleState_preReloc,
+		lb->pXLabel,
+		d_particleState,
+		lb->pParticleIDLabel, matls, 1);
+
+	//__________________________________
+	//  on the fly analysis
+	if (d_analysisModules.size() != 0) {
+		vector<AnalysisModule*>::iterator iter;
+		for (iter = d_analysisModules.begin();
+			iter != d_analysisModules.end(); iter++) {
+			AnalysisModule* am = *iter;
+			am->scheduleDoAnalysis(sched, level);
+		}
+	}
 }
 
 // Be aware the MPMCommon label denote lb in constructor of MPMCommon.cc (lb = scinew MPMLabel())
@@ -1142,6 +1165,9 @@ void DOUBLEMPM::scheduleRelocateParticle_DOUBLEMPM(SchedulerP& sched,
 	t->requires(Task::OldDW, double_lb->pMassLiquidLabel, gan, NGP);
 	t->requires(Task::OldDW, double_lb->pBulkModulLiquidLabel, gan, NGP);
 
+	//t->requires(Task::NewDW, lb->pCurSizeLabel, gan, NGP);
+	//t->computes(lb->pCurSizeLabel_preReloc);
+
 	t->computes(lb->pMassLabel_preReloc);
 	t->computes(double_lb->pPermeabilityLabel_preReloc);
 	t->computes(double_lb->pMassLiquidLabel_preReloc);
@@ -1175,9 +1201,11 @@ void DOUBLEMPM::RelocateParticle_DOUBLEMPM(const ProcessorGroup*,
 																								// Create arrays for the particle data
 			constParticleVariable<double> pmass, pMassLiquid, pPermeability;
 			constParticleVariable<double> pBulkModulLiquid;
+			constParticleVariable<Matrix3> pCurSize;
 
 			ParticleVariable<double> pmassnew, pMassLiquidnew, pPermeabilitynew;
 			ParticleVariable<double> pBulkModulLiquidnew;
+			ParticleVariable<Matrix3> pCurSizenew;
 
 			// index of particle subset "pset"
 			//ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -1194,6 +1222,9 @@ void DOUBLEMPM::RelocateParticle_DOUBLEMPM(const ProcessorGroup*,
 			new_dw->allocateAndPut(pMassLiquidnew, double_lb->pMassLiquidLabel_preReloc, pset);
 			new_dw->allocateAndPut(pBulkModulLiquidnew, double_lb->pBulkModulLiquidLabel_preReloc, pset);
 
+			//new_dw->get(pCurSize, lb->pCurSizeLabel, pset);
+			//new_dw->allocateAndPut(pCurSizenew, lb->pCurSizeLabel_preReloc, pset);
+
 			//loop over all particles in the patch:
 			for (ParticleSubset::iterator iter = pset->begin();
 				iter != pset->end(); iter++) {
@@ -1203,11 +1234,13 @@ void DOUBLEMPM::RelocateParticle_DOUBLEMPM(const ProcessorGroup*,
 				pPermeabilitynew[idx] = pPermeability[idx];
 				pMassLiquidnew[idx] = pMassLiquid[idx];
 				pBulkModulLiquidnew[idx] = pBulkModulLiquid[idx];
+				//pCurSizenew[idx] = pCurSize[idx];
 			}
 		} // End of particle loop
 	}
 }
 
+// Compute current particle size
 void DOUBLEMPM::scheduleComputeCurrentParticleSize(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)
@@ -1229,7 +1262,6 @@ void DOUBLEMPM::scheduleComputeCurrentParticleSize(SchedulerP& sched,
 	sched->addTask(t, patches, matls);
 }
 
-
 void DOUBLEMPM::computeCurrentParticleSize(const ProcessorGroup*,
 	const PatchSubset* patches,
 	const MaterialSubset*,
@@ -1242,12 +1274,12 @@ void DOUBLEMPM::computeCurrentParticleSize(const ProcessorGroup*,
 		printTask(patches, patch, cout_doing,
 			"Doing DOUBLEMPM::computeCurrentParticleSize");
 
-		unsigned int numMatls = m_materialManager->getNumMatls("DOUBLEMPM");
+		unsigned int numMatls = m_materialManager->getNumMatls("MPM");
 		string interp_type = flags->d_interpolator_type;
 
 		for (unsigned int m = 0; m < numMatls; m++) {
 			MPMMaterial* mpm_matl =
-				(MPMMaterial*)m_materialManager->getMaterial("DOUBLEMPM", m);
+				(MPMMaterial*)m_materialManager->getMaterial("MPM", m);
 			int dwi = mpm_matl->getDWIndex();
 
 			// Create arrays for the particle data
@@ -1285,52 +1317,53 @@ void DOUBLEMPM::computeCurrentParticleSize(const ProcessorGroup*,
 			}
 			else {
 				pCurSize.copyData(pSize);
-
+#if 0
 				for (ParticleSubset::iterator iter = pset->begin();
 					iter != pset->end(); iter++) {
 					particleIndex idx = *iter;
 
 					pCurSize[idx] = pSize[idx];
 				}
-
+#endif
 			}
 		}
 	}
 }
 
+
 // Apply the external loads from LoadCurves
 // Flags : d_useLoadCurves, d_useCBDI
 void DOUBLEMPM::scheduleApplyExternalLoads(SchedulerP& sched,
-                                           const PatchSet* patches,
-                                           const MaterialSet* matls)
+	const PatchSet* patches,
+	const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
 
-  printSchedule(patches,cout_doing,"DOUBLEMPM::scheduleApplyExternalLoads");
+	printSchedule(patches, cout_doing, "DOUBLEMPM::scheduleApplyExternalLoads");
 
-  Task* t=scinew Task("DOUBLEMPM::applyExternalLoads",
-                    this, &DOUBLEMPM::applyExternalLoads);
+	Task* t = scinew Task("DOUBLEMPM::applyExternalLoads",
+		this, &DOUBLEMPM::applyExternalLoads);
 
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
+	t->requires(Task::OldDW, lb->simulationTimeLabel);
 
-  if (flags->d_useLoadCurves || flags->d_useCBDI) {
-    t->requires(Task::OldDW,    lb->pXLabel,                  Ghost::None);
-    t->requires(Task::OldDW,    lb->pLoadCurveIDLabel,        Ghost::None);
-    t->computes(                lb->pLoadCurveIDLabel_preReloc);
-    if (flags->d_useCBDI) {
-       t->requires(Task::OldDW, lb->pSizeLabel,               Ghost::None);
-       t->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
-       t->computes(             lb->pExternalForceCorner1Label);
-       t->computes(             lb->pExternalForceCorner2Label);
-       t->computes(             lb->pExternalForceCorner3Label);
-       t->computes(             lb->pExternalForceCorner4Label);
-    }
-  }
-  t->computes(             lb->pExtForceLabel_preReloc);
+	if (flags->d_useLoadCurves || flags->d_useCBDI) {
+		t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
+		t->requires(Task::OldDW, lb->pLoadCurveIDLabel, Ghost::None);
+		t->computes(lb->pLoadCurveIDLabel_preReloc);
+		if (flags->d_useCBDI) {
+			t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
+			t->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
+			t->computes(lb->pExternalForceCorner1Label);
+			t->computes(lb->pExternalForceCorner2Label);
+			t->computes(lb->pExternalForceCorner3Label);
+			t->computes(lb->pExternalForceCorner4Label);
+		}
+	}
+	t->computes(lb->pExtForceLabel_preReloc);
 
-  sched->addTask(t, patches, matls);
+	sched->addTask(t, patches, matls);
 }
 
 void DOUBLEMPM::applyExternalLoads(const ProcessorGroup*,
@@ -1517,8 +1550,10 @@ void DOUBLEMPM::scheduleInterpolateParticlesToGrid_DOUBLEMPM(SchedulerP& sched,
 	t->requires(Task::OldDW, lb->pXLabel, gan, NGP);
 	t->requires(Task::NewDW, lb->pExtForceLabel_preReloc, gan, NGP);
 	t->requires(Task::OldDW, lb->pTemperatureLabel, gan, NGP);
+
 	t->requires(Task::NewDW, lb->pCurSizeLabel, gan, NGP);
 	//t->requires(Task::OldDW, lb->pSizeLabel, gan, NGP);
+
 	//t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
 	if (flags->d_useCBDI) {
 		t->requires(Task::NewDW, lb->pExternalForceCorner1Label, gan, NGP);
@@ -1664,6 +1699,7 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 				old_dw->get(pVelGradLiquid, double_lb->pVelocityGradLiquidLabel, pset);
 			}
 			old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
+
 			new_dw->get(psize, lb->pCurSizeLabel, pset);
 			//old_dw->get(psize, lb->pSizeLabel, pset);
 			//old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
@@ -1857,7 +1893,7 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 				// Solid and Liquid
 				gmassglobal[c] += gmass_solid[c];				// simply let gmass = gmass_Solid
 
-				gmassglobal_solid[c] += gmass_solid[c];		
+				gmassglobal_solid[c] += gmass_solid[c];
 				gmassglobal_liquid[c] += gmass_liquid[c];
 				gvelglobal_liquid[c] += gvelocity_liquid[c];	// Total liquid momentum in grid of all materials
 				gvelocity_liquid[c] /= gmass_liquid[c];
@@ -1910,8 +1946,11 @@ void DOUBLEMPM::scheduleComputeNormals_DOUBLEMPM(SchedulerP   & sched,
 	//t->requires(Task::OldDW, lb->pMassLabel, particle_ghost_type, particle_ghost_layer);
 	t->requires(Task::OldDW, lb->pDispLabel, particle_ghost_type, particle_ghost_layer);
 	t->requires(Task::OldDW, lb->pVolumeLabel, particle_ghost_type, particle_ghost_layer);
+
 	t->requires(Task::NewDW, lb->pCurSizeLabel, particle_ghost_type, particle_ghost_layer);
 	//t->requires(Task::OldDW, lb->pSizeLabel, particle_ghost_type, particle_ghost_layer);
+
+
 	t->requires(Task::OldDW, lb->pStressLabel, particle_ghost_type, particle_ghost_layer);
 	//t->requires(Task::OldDW, lb->pDeformationMeasureLabel, particle_ghost_type, particle_ghost_layer);
 	t->requires(Task::NewDW, lb->gMassLabel, Ghost::AroundNodes, 1);
@@ -1993,8 +2032,10 @@ void DOUBLEMPM::computeNormals_DOUBLEMPM(const ProcessorGroup *,
 			//old_dw->get(pmass, lb->pMassLabel, pset);
 			old_dw->get(pMassSolid, double_lb->pMassSolidLabel, pset);
 			old_dw->get(pvolume, lb->pVolumeLabel, pset);
+
 			new_dw->get(psize, lb->pCurSizeLabel, pset);
 			//old_dw->get(psize, lb->pSizeLabel, pset);
+
 			old_dw->get(pstress, lb->pStressLabel, pset);
 			//old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
@@ -2095,15 +2136,15 @@ void DOUBLEMPM::computeNormals_DOUBLEMPM(const ProcessorGroup *,
 
 // Compute extra momentum from the contact
 void DOUBLEMPM::scheduleExMomInterpolated(SchedulerP& sched,
-                                          const PatchSet* patches,
-                                          const MaterialSet* matls)
+	const PatchSet* patches,
+	const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-  printSchedule(patches,cout_doing,"MPM::scheduleExMomInterpolated");
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
+	printSchedule(patches, cout_doing, "MPM::scheduleExMomInterpolated");
 
-  contactModel->addComputesAndRequiresInterpolated(sched, patches, matls);
+	contactModel->addComputesAndRequiresInterpolated(sched, patches, matls);
 }
 
 
@@ -2232,8 +2273,11 @@ void DOUBLEMPM::scheduleComputeInternalForce_DOUBLEMPM(SchedulerP& sched,
 	t->requires(Task::OldDW, lb->pStressLabel, gan, NGP);
 	t->requires(Task::OldDW, lb->pVolumeLabel, gan, NGP);
 	t->requires(Task::OldDW, lb->pXLabel, gan, NGP);
+
 	t->requires(Task::NewDW, lb->pCurSizeLabel, gan, NGP);
 	//t->requires(Task::OldDW, lb->pSizeLabel, gan, NGP);
+	//t->requires(Task::OldDW, lb->pCurSizeLabel, gan, NGP);
+
 	//t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
 
 	if (flags->d_artificial_viscosity) {
@@ -2334,8 +2378,11 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 			old_dw->get(px, lb->pXLabel, pset);
 			old_dw->get(pvol, lb->pVolumeLabel, pset);
 			old_dw->get(pstress, lb->pStressLabel, pset);
+
 			new_dw->get(psize, lb->pCurSizeLabel, pset);
 			//old_dw->get(psize, lb->pSizeLabel, pset);
+			//old_dw->get(psize, lb->pCurSizeLabel, pset);
+
 			//old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
 
 			new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
@@ -2354,7 +2401,7 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 			old_dw->get(pPorePressure, double_lb->pPorePressureLabel, pset);
 			//new_dw->allocateAndPut(gPorePresure, double_lb->gPorePressureLabel, dwi, patch);
 			new_dw->allocateAndPut(gInternalForceLiquid, double_lb->gInternalForceLiquidLabel, dwi, patch);
-			
+
 			gInternalForceLiquid.initialize(Vector(0, 0, 0));
 			//gPorePresure.initialize(0.0);
 
@@ -2365,7 +2412,7 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 				p_pressure_create[*it] = 0.0;
 			}
 			p_pressure = p_pressure_create; // reference created data
-			
+
 			// For vicousity
 			if (flags->d_artificial_viscosity) {
 				old_dw->get(p_q, lb->p_qLabel, pset);
@@ -2398,7 +2445,7 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 					int NN =
 						interpolator->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,
 							d_S, psize[idx]);
-					
+
 					// Solid stress
 					stressvol = pstress[idx] * pvol[idx];
 					// Consider the vicousity otherwise stresspress = pstress[idx];
@@ -2585,7 +2632,7 @@ void DOUBLEMPM::scheduleComputeAndIntegrateAcceleration_DOUBLEMPM(SchedulerP& sc
 	sched->addTask(t, patches, matls);
 }
 
-void DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM (const ProcessorGroup*,
+void DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM(const ProcessorGroup*,
 	const PatchSubset* patches,
 	const MaterialSubset*,
 	DataWarehouse* old_dw,
@@ -2640,14 +2687,14 @@ void DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM (const ProcessorGroup*
 				!iter.done(); iter++) {
 				IntVector c = *iter;
 
-				Vector acc(0., 0., 0.);			
+				Vector acc(0., 0., 0.);
 				Vector accLiquid(0., 0., 0.);
 				Vector GradientVelocity(0., 0., 0.);
 				Vector DraggingForce(0., 0., 0.);
 
 				if (gMassLiquid[c] > flags->d_min_mass_for_acceleration) {
 					GradientVelocity = gVelocityLiquid[c] - velocity[c];
-					DraggingForce = gPorosity[c] * gDragging [c] * GradientVelocity;
+					DraggingForce = gPorosity[c] * gDragging[c] * GradientVelocity;
 
 					accLiquid = (gPorosity[c] * gInternalForceLiquid[c] - DraggingForce) / gMassLiquid[c];
 					accLiquid -= damp_coef * gVelocityLiquid[c];
@@ -2660,10 +2707,10 @@ void DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM (const ProcessorGroup*
 					acc = (internalforce[c] + gInternalForceLiquid[c] + gMassLiquid[c] * (gravity - gAccelerationLiquid[c]) + externalforce[c]) / gMassSolid[c];
 					acc -= damp_coef * velocity[c];
 					//acc = 0;
-				}			
+				}
 
 				acceleration[c] = acc + gravity;
-				velocity_star[c] = velocity[c] + acceleration[c] * delT;							
+				velocity_star[c] = velocity[c] + acceleration[c] * delT;
 			}
 		}    // matls
 	}
@@ -2713,7 +2760,7 @@ void DOUBLEMPM::scheduleSetGridBoundaryConditions_DOUBLEMPM(SchedulerP& sched,
 	t->modifies(double_lb->gAccelerationLiquidLabel, mss);
 	t->modifies(double_lb->gVelocityStarLiquidLabel, mss);
 	t->requires(Task::NewDW, double_lb->gVelocityLiquidLabel, Ghost::None);
-	
+
 	sched->addTask(t, patches, matls);
 }
 
@@ -2998,8 +3045,9 @@ void DOUBLEMPM::scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(SchedulerP& sc
 	t->requires(Task::OldDW, lb->pTemperatureLabel, gnone);
 	t->requires(Task::OldDW, lb->pVelocityLabel, gnone);
 	t->requires(Task::OldDW, lb->pDispLabel, gnone);
-	
+
 	t->requires(Task::OldDW, lb->pVolumeLabel, gnone);
+
 	t->requires(Task::NewDW, lb->pCurSizeLabel, gnone);
 	t->requires(Task::OldDW, lb->pSizeLabel, gnone);
 	//t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gnone);
@@ -3107,12 +3155,15 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 		for (unsigned int m = 0; m < numMPMMatls; m++) {
 			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
 			int dwi = mpm_matl->getDWIndex();
-			// Get the arrays of particle values to be changed
 
+			// Get the arrays of particle values to be changed
 			// Solid
 			constParticleVariable<Point> px;
 			constParticleVariable<Vector> pvelocity, pdisp;
-			constParticleVariable<Matrix3> pCursize,psize;
+
+			constParticleVariable<Matrix3> pCursize, psize;
+			//constParticleVariable<Matrix3>psize;
+
 			constParticleVariable<double> pMassSolid, pVolumeOld, pTemperature;
 			constParticleVariable<long64> pids;
 			ParticleVariable<Point> pxnew;
@@ -3149,8 +3200,10 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 
 			//Carry forward ParticleID and pSize
 			old_dw->get(pids, lb->pParticleIDLabel, pset);
+
 			new_dw->get(pCursize, lb->pCurSizeLabel, pset);
 			old_dw->get(psize, lb->pSizeLabel, pset);
+
 			new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
 			new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc, pset);
 			pids_new.copyData(pids);
@@ -3194,7 +3247,7 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 			old_dw->get(pVelocityLiquid, double_lb->pVelocityLiquidLabel, pset);
 			new_dw->allocateAndPut(pvelLiquidnew, double_lb->pVelocityLiquidLabel_preReloc, pset);
 
-		  // Diffusion related - JBH
+			// Diffusion related - JBH
 			double sdmMaxEffectiveConc = -999;
 			double sdmMinEffectiveConc = 999;
 			constParticleVariable<double> pConcentration;
@@ -3209,6 +3262,7 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 				// Get the node indices that surround the cell
 				int NN = interpolator->findCellAndWeights(px[idx], ni, S,
 					pCursize[idx]);
+
 				Vector vel(0.0, 0.0, 0.0);
 				Vector acc(0.0, 0.0, 0.0);
 				Vector accLiquid(0.0, 0.0, 0.0);
@@ -3345,7 +3399,10 @@ void DOUBLEMPM::scheduleComputeParticleGradientsAndPorePressure_DOUBLEMPM(Schedu
 	t->requires(Task::OldDW, double_lb->pMassSolidLabel, gnone);
 	t->requires(Task::NewDW, double_lb->pMassSolidLabel_preReloc, gnone);
 	t->requires(Task::OldDW, lb->pVolumeLabel, gnone);
+
+	//t->requires(Task::OldDW, lb->pSizeLabel, gnone);
 	t->requires(Task::NewDW, lb->pCurSizeLabel, gnone);
+
 	//t->requires(Task::OldDW, lb->pSizeLabel, gnone);
 	//t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gnone);
 	t->requires(Task::OldDW, lb->pLocalizedMPMLabel, gnone);
@@ -3417,8 +3474,10 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
 			old_dw->get(px, lb->pXLabel, pset);
+
 			//old_dw->get(psize, lb->pSizeLabel, pset);
 			new_dw->get(psize, lb->pCurSizeLabel, pset);
+
 			old_dw->get(pMassSolid, double_lb->pMassSolidLabel, pset);
 			new_dw->get(pMassSolidNew, double_lb->pMassSolidLabel_preReloc, pset);
 			old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
@@ -3491,7 +3550,7 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 					computeAxiSymVelocityGradient(tensorLLiquid, ni, d_S, S, oodx, gVelocityStarLiquid,
 						px[idx], NN);
 				}
-				
+
 				pVelGrad[idx] = tensorL;
 				pVelocityGradLiquid[idx] = tensorLLiquid;
 				pTempGrad[idx] = Vector(0.0, 0.0, 0.0);
@@ -3528,8 +3587,8 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 				StrainRateSolid = (tensorL + tensorL.Transpose()) / 2;
 				StrainRateLiquid = (tensorLLiquid + tensorLLiquid.Transpose()) / 2;
 
-				VolumeRateSolid		= delT * StrainRateSolid.Trace() * (- pPorosity[idx]) / pPorosity[idx];
-				VolumeRateLiquid	= delT * StrainRateLiquid.Trace() * (1 - pPorosity[idx]) / pPorosity[idx];;
+				VolumeRateSolid = delT * StrainRateSolid.Trace() * (-pPorosity[idx]) / pPorosity[idx];
+				VolumeRateLiquid = delT * StrainRateLiquid.Trace() * (1 - pPorosity[idx]) / pPorosity[idx];;
 
 				pPorePressurenew[idx] = pPorePressure[idx] + pBulkModulLiquid[idx] * (VolumeRateSolid + VolumeRateLiquid);
 
@@ -3602,6 +3661,87 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 			new_dw->put(sum_vartype(partvoldef), lb->TotalVolumeDeformedLabel);
 		}
 		delete interpolator;
+	}
+}
+
+
+// Compute stress tensor
+// Flags: d_reductionVars
+void DOUBLEMPM::scheduleComputeStressTensor(SchedulerP& sched,
+	const PatchSet* patches,
+	const MaterialSet* matls)
+{
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
+
+	printSchedule(patches, cout_doing, "MPM::scheduleComputeStressTensor");
+
+	unsigned int numMatls = m_materialManager->getNumMatls("MPM");
+	Task* t = scinew Task("MPM::computeStressTensor",
+		this, &DOUBLEMPM::computeStressTensor);
+	for (unsigned int m = 0; m < numMatls; m++) {
+		MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+		const MaterialSubset* matlset = mpm_matl->thisMaterial();
+
+		ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+		cm->addComputesAndRequires(t, mpm_matl, patches);
+
+		t->computes(lb->p_qLabel_preReloc, matlset);
+	}
+
+	t->requires(Task::OldDW, lb->simulationTimeLabel);
+	t->computes(lb->delTLabel, getLevel(patches));
+
+	if (flags->d_reductionVars->accStrainEnergy ||
+		flags->d_reductionVars->strainEnergy) {
+		t->computes(lb->StrainEnergyLabel);
+	}
+
+	sched->addTask(t, patches, matls);
+
+	//__________________________________
+	//  Additional tasks
+	scheduleUpdateStress_DamageErosionModels(sched, patches, matls);
+
+	if (flags->d_reductionVars->accStrainEnergy)
+		scheduleComputeAccStrainEnergy(sched, patches, matls);
+
+}
+
+void DOUBLEMPM::computeStressTensor(const ProcessorGroup*,
+	const PatchSubset* patches,
+	const MaterialSubset* matls,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
+{
+
+	printTask(patches, patches->get(0), cout_doing,
+		"Doing computeStressTensor");
+
+	for (unsigned int m = 0; m < m_materialManager->getNumMatls("MPM"); m++) {
+
+		if (cout_dbg.active()) {
+			cout_dbg << " Patch = " << (patches->get(0))->getID();
+			cout_dbg << " Mat = " << m;
+		}
+
+		MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+
+		if (cout_dbg.active())
+			cout_dbg << " MPM_Mat = " << mpm_matl;
+
+		ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+
+		if (cout_dbg.active())
+			cout_dbg << " CM = " << cm;
+
+		cm->setWorld(d_myworld);
+		cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
+
+		if (cout_dbg.active())
+			cout_dbg << " Exit\n";
+
 	}
 }
 
@@ -3736,9 +3876,9 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 
 			gStress.initialize(Matrix3(0.0));
 
-			Matrix3 StressVol =		(0, 0, 0,
-									0, 0, 0,
-									0, 0, 0);
+			Matrix3 StressVol = (0, 0, 0,
+				0, 0, 0,
+				0, 0, 0);
 
 			// Porosity			
 			constParticleVariable<double>  pPorosity;
@@ -3750,37 +3890,35 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 			double PorosityVol = 0;
 
 			// for the non axisymmetric case:
-			if (!flags->d_axisymmetric) {
-				for (ParticleSubset::iterator iter = pset->begin();
-					iter != pset->end();
-					iter++) {
-					particleIndex idx = *iter;
+			for (ParticleSubset::iterator iter = pset->begin();
+				iter != pset->end();
+				iter++) {
+				particleIndex idx = *iter;
 
-					// Get the node indices that surround the cell
-					int  NN = linear_interpolator->findCellAndWeights(px[idx], ni, S,
-						psize[idx]);
+				// Get the node indices that surround the cell
+				int  NN = linear_interpolator->findCellAndWeights(px[idx], ni, S,
+					psize[idx]);
 
-					// Liquid pressure
-					PoreVol = pPorePressure[idx] * pvol[idx];
-					StressVol = pstress[idx] * pvol[idx];
-					PorosityVol = pPorosity[idx] * pvol[idx];
+				// Liquid pressure
+				PoreVol = pPorePressure[idx] * pvol[idx];
+				StressVol = pstress[idx] * pvol[idx];
+				PorosityVol = pPorosity[idx] * pvol[idx];
 
-					//if (PoreVol > 0) {
-					//	std::cerr << PoreVol << std::endl;
-					//}
+				//if (PoreVol > 0) {
+				//	std::cerr << PoreVol << std::endl;
+				//}
 
-					for (int k = 0; k < NN; k++) {
-						if (patch->containsNode(ni[k])) {
-							gPorePresure[ni[k]] += PoreVol * S[k];							// Scalar
-							gStress[ni[k]] += StressVol * S[k];
-							gPorosity[ni[k]] += PorosityVol * S[k];
-						}
+				for (int k = 0; k < NN; k++) {
+					if (patch->containsNode(ni[k])) {
+						gPorePresure[ni[k]] += PoreVol * S[k];							// Scalar
+						gStress[ni[k]] += StressVol * S[k];
+						gPorosity[ni[k]] += PorosityVol * S[k];
 					}
-				} // End particle loop
-			}
+				}
+			} // End particle loop
 
 			for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-				IntVector c = *iter;	
+				IntVector c = *iter;
 
 				// Liquid
 				gPorePressureglobal[c] += gPorePresure[c];
@@ -3911,9 +4049,9 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 
 				double PorePressure = 0;
 				double Porosity = 0;
-				Matrix3 Stressnew = (	0, 0, 0,
-										0, 0, 0,
-										0, 0, 0);
+				Matrix3 Stressnew = (0, 0, 0,
+					0, 0, 0,
+					0, 0, 0);
 
 				// Accumulate the contribution from each surrounding vertex
 				for (int k = 0; k < NN; k++) {
@@ -3926,91 +4064,10 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 				pPorePressurenew[idx] = PorePressure;
 				pstressnew[idx] = Stressnew;
 				pPorosityNew[idx] = Porosity;
-				}
+			}
 
 		}  // loop over materials
 		delete linear_interpolator;
-	}
-}
-
-
-// Compute stress tensor
-// Flags: d_reductionVars
-void DOUBLEMPM::scheduleComputeStressTensor(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeStressTensor");
-
-  unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
-  Task* t = scinew Task("MPM::computeStressTensor",
-                        this, &DOUBLEMPM::computeStressTensor);
-  for(unsigned int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
-    const MaterialSubset* matlset = mpm_matl->thisMaterial();
-
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addComputesAndRequires(t, mpm_matl, patches);
-
-    t->computes(lb->p_qLabel_preReloc, matlset);
-  }
-
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
-  t->computes(lb->delTLabel,getLevel(patches));
-
-  if (flags->d_reductionVars->accStrainEnergy ||
-      flags->d_reductionVars->strainEnergy) {
-    t->computes(lb->StrainEnergyLabel);
-  }
-
-  sched->addTask(t, patches, matls);
-  
-  //__________________________________
-  //  Additional tasks
-  scheduleUpdateStress_DamageErosionModels( sched, patches, matls );
-
-  if (flags->d_reductionVars->accStrainEnergy)
-    scheduleComputeAccStrainEnergy(sched, patches, matls);
-
-}
-
-void DOUBLEMPM::computeStressTensor(const ProcessorGroup*,
-	const PatchSubset* patches,
-	const MaterialSubset* matls,
-	DataWarehouse* old_dw,
-	DataWarehouse* new_dw)
-{
-
-	printTask(patches, patches->get(0), cout_doing,
-		"Doing computeStressTensor");
-
-	for (unsigned int m = 0; m < m_materialManager->getNumMatls("MPM"); m++) {
-
-		if (cout_dbg.active()) {
-			cout_dbg << " Patch = " << (patches->get(0))->getID();
-			cout_dbg << " Mat = " << m;
-		}
-
-		MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
-
-		if (cout_dbg.active())
-			cout_dbg << " MPM_Mat = " << mpm_matl;
-
-		ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-
-		if (cout_dbg.active())
-			cout_dbg << " CM = " << cm;
-
-		cm->setWorld(d_myworld);
-		cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
-
-		if (cout_dbg.active())
-			cout_dbg << " Exit\n";
-
 	}
 }
 
@@ -4887,8 +4944,9 @@ void DOUBLEMPM::scheduleRefine(const PatchSet   * patches,
 	t->computes(lb->pStressLabel);
 
 	// JBH -- Add code to support these variables FIXME TODO
-	t->computes(lb->pSizeLabel);
+	//t->computes(lb->pSizeLabel);
 	t->computes(lb->pCurSizeLabel);
+
 	t->computes(lb->pLocalizedMPMLabel);
 	t->computes(lb->NC_CCweightLabel);
 	t->computes(lb->delTLabel, getLevel(patches));
@@ -5005,7 +5063,7 @@ DOUBLEMPM::refine(const ProcessorGroup*,
 				if (flags->d_useLoadCurves) {
 					new_dw->allocateAndPut(pLoadCurve, lb->pLoadCurveIDLabel, pset);
 				}
-				new_dw->allocateAndPut(psize, lb->pSizeLabel, pset);
+				//new_dw->allocateAndPut(psize, lb->pSizeLabel, pset);
 				new_dw->allocateAndPut(pcursize, lb->pCurSizeLabel, pset);
 
 				mpm_matl->getConstitutiveModel()->initializeCMData(patch,

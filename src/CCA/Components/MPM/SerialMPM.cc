@@ -4453,7 +4453,7 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
         pTempGrad[idx] = Vector(0.0,0.0,0.0);
         if (flags->d_doExplicitHeatConduction){
          if(flags->d_axisymmetric){
-           cout << "Fix the pTempGradient calc for axisymmetry" << endl;
+           //cout << "Fix the pTempGradient calc for axisymmetry" << endl;
          }
          // Get the node indices that surround the cell
           for (int k = 0; k < NN; k++){

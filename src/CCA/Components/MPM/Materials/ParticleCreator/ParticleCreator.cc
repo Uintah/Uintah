@@ -25,7 +25,7 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>,
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/DOUBLEMPMLabel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
@@ -601,17 +601,15 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
 	  new_dw->allocateAndPut(pvars.pPorePressure, double_lb->pPorePressureLabel, subset);
 	  new_dw->allocateAndPut(pvars.pPorosity, double_lb->pPorosityLabel, subset);
 	  new_dw->allocateAndPut(pvars.pPermeability, double_lb->pPermeabilityLabel, subset);
-	  //new_dw->allocateAndPut(pvars.pVelocitySolid, double_lb->pVelocitySolidLabel, subset);
 	  new_dw->allocateAndPut(pvars.pVelocityLiquid, double_lb->pVelocityLiquidLabel, subset);
 	  new_dw->allocateAndPut(pvars.pVelocityGradLiquid, double_lb->pVelocityGradLiquidLabel, subset);
 
 	  new_dw->allocateAndPut(pvars.pMassSolid, double_lb->pMassSolidLabel, subset);
 	  new_dw->allocateAndPut(pvars.pMassLiquid, double_lb->pMassLiquidLabel, subset);
-	  //new_dw->allocateAndPut(pvars.pVolumeSolid, double_lb->pVolumeSolidLabel, subset);
-	  //new_dw->allocateAndPut(pvars.pVolumeLiquid, double_lb->pVolumeLiquidLabel, subset);
 
 	  new_dw->allocateAndPut(pvars.pBulkModulLiquid, double_lb->pBulkModulLiquidLabel, subset);
   }
+
 
   return subset;
 }
@@ -825,7 +823,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
 		pvars.pPermeability[i] = matl->getInitialPermeability();
 		pvars.pVelocityLiquid[i] = Vector(0., 0., 0.);
 		pvars.pVelocityGradLiquid[i] = Matrix3(0.0);
-
 		pvars.pMassLiquid[i] = matl->getInitialDensityLiquid()*matl->getInitialPorosity()*pvars.pvolume[i];
 		pvars.pMassSolid[i] = matl->getInitialDensity()*(1 - matl->getInitialPorosity())*pvars.pvolume[i];
 
@@ -1170,7 +1167,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   }
 
   // DOUBLEMPM
-	// Prereloc variables ????
   if (d_flags->d_DOUBLEMPM) {
 	  particle_state.push_back(double_lb->pPorePressureLabel);
 	  particle_state_preReloc.push_back(double_lb->pPorePressureLabel_preReloc);
@@ -1181,7 +1177,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 	  particle_state.push_back(double_lb->pPermeabilityLabel);
 	  particle_state_preReloc.push_back(double_lb->pPermeabilityLabel_preReloc);
 
-	  //particle_state.push_back(double_lb->pVelocitySolidLabel);
 	  particle_state.push_back(double_lb->pVelocityLiquidLabel);
 	  particle_state_preReloc.push_back(double_lb->pVelocityLiquidLabel_preReloc);
 
@@ -1197,8 +1192,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 	  particle_state.push_back(double_lb->pBulkModulLiquidLabel);
 	  particle_state_preReloc.push_back(double_lb->pBulkModulLiquidLabel_preReloc);
 
-	  //particle_state.push_back(double_lb->pVolumeSolidLabel);
-	  //particle_state.push_back(double_lb->pVolumeLiquidLabel);
+
   }
 
   matl->getConstitutiveModel()->addParticleState(particle_state,

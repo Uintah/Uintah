@@ -129,7 +129,7 @@ class Output;
     bool        d_withGaussSolver;
     //********** End Reactive Flow Section *********************
     
-		//Flags for DOUBLEMPM
+    // Flags for DOUBLEMPM
 	bool		d_DOUBLEMPM;
 	bool        d_insertPorePressure;                        // Prescribe Pore Pressure
 	std::string d_insertPorePressureFile;                   // File containing prescribed Pore Pressure
@@ -138,6 +138,9 @@ class Output;
 	// Flag for Generalized Alpha scheme
 	bool        d_GeneralizedAlpha;
 	double      d_SpectralRadius;
+
+	// Flags for Hypoplasticity
+	bool		d_Hypoplasticity;
 
     // flags for turning on/off the reduction variable calculations
     struct reductionVars{
