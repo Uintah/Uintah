@@ -506,6 +506,7 @@ protected:
 	  const MaterialSet*);
 
   // Null space filter using local method
+  
   virtual void scheduleInterpolateParticleToGrid(SchedulerP&,
 	  const PatchSet*,
 	  const MaterialSet*);
@@ -515,8 +516,8 @@ protected:
 	  const MaterialSubset* matls,
 	  DataWarehouse* old_dw,
 	  DataWarehouse* new_dw);
-
-  /*
+	  
+  
   virtual void scheduleInterpolateGridToParticle(SchedulerP&,
 	  const PatchSet*,
 	  const MaterialSet*);
@@ -526,8 +527,7 @@ protected:
 	  const MaterialSubset* matls,
 	  DataWarehouse* old_dw,
 	  DataWarehouse* new_dw);
-
-	  */
+	  
 
   virtual void scheduleRelocateParticle(SchedulerP&,
 	  const PatchSet*,

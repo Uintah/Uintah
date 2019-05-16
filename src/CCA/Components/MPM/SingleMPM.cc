@@ -1080,7 +1080,7 @@ void SingleMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
   if (flags->d_GeneralizedAlpha) {
-	  scheduleComputeAndIntegrateAccelerationGeneralizedAlpha(sched, patches, matls);
+	  //scheduleComputeAndIntegrateAccelerationGeneralizedAlpha(sched, patches, matls);
 	  //scheduleRelocateParticle(sched, patches, matls);
   }
   else {
@@ -1112,12 +1112,10 @@ void SingleMPM::scheduleTimeAdvance(const LevelP & level,
     
   if (flags->d_Hypoplasticity) {
 	  scheduleInterpolateParticleToGrid(sched, patches, matls);
-	 // scheduleInterpolateGridToParticle(sched, patches, matls);
+	  scheduleInterpolateGridToParticle(sched, patches, matls);
 	  
   }
   
-  //cerr << flags->d_GeneralizedAlpha <<' ' << flags->d_Hypoplasticity << endl;
-
   scheduleFinalParticleUpdate(            sched, patches, matls);
   scheduleInsertParticles(                    sched, patches, matls);
   if(flags->d_computeScaleFactor){
@@ -4845,6 +4843,7 @@ void SingleMPM::computeStressTensor(const ProcessorGroup*,
 	}
 }
 
+
 void SingleMPM::scheduleInterpolateParticleToGrid(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)
@@ -4871,9 +4870,15 @@ void SingleMPM::scheduleInterpolateParticleToGrid(SchedulerP& sched,
 	//t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
 
 	// Solid
-	t->requires(Task::NewDW, lb->pStressLabel_preReloc, gnone);
+	t->requires(Task::NewDW, lb->pStressLabel_preReloc,gan, NGP);
 	t->computes(lb->gStressFilterLabel);
 	t->computes(lb->gStressFilterLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+
+	// Porosity
+	t->requires(Task::NewDW, lb->pVoidRatioLabel, gan, NGP);
+	t->computes(lb->gVoidRatioLabel);
+	t->computes(lb->gVoidRatioLabel, m_materialManager->getAllInOneMatls(),
 		Task::OutOfDomain);
 
 	sched->addTask(t, patches, matls);
@@ -4903,7 +4908,13 @@ void SingleMPM::InterpolateParticleToGrid(const ProcessorGroup*,
 		NCVariable<Matrix3>       gStressglobal;
 		new_dw->allocateAndPut(gStressglobal, lb->gStressFilterLabel,
 			m_materialManager->getAllInOneMatls()->get(0), patch);
-		gStressglobal.initialize(0.0);
+		gStressglobal.initialize(Matrix3(0.0));
+
+		// Porosity
+		NCVariable<double>       gVoidRatioglobal;
+		new_dw->allocateAndPut(gVoidRatioglobal, lb->gVoidRatioLabel,
+			m_materialManager->getAllInOneMatls()->get(0), patch);
+		gVoidRatioglobal.initialize(0.0);
 
 		for (unsigned int m = 0; m < numMPMMatls; m++) {
 			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
@@ -4936,10 +4947,19 @@ void SingleMPM::InterpolateParticleToGrid(const ProcessorGroup*,
 			gStress.initialize(Matrix3(0.0));
 
 			Matrix3 StressVol = (0, 0, 0,
-				0, 0, 0,
-				0, 0, 0);
+								 0, 0, 0,
+								 0, 0, 0);
 
-			// for the non axisymmetric case:
+			// Porosity
+			constParticleVariable<double> pVoidRatio;
+			NCVariable<double>		      gVoidRatio;
+			new_dw->get(pVoidRatio, lb->pVoidRatioLabel, pset);
+			new_dw->allocateAndPut(gVoidRatio, lb->gVoidRatioLabel, dwi, patch);
+
+			gVoidRatio.initialize(0.0);
+
+			double VoidRatioVol = 0.0;
+
 			for (ParticleSubset::iterator iter = pset->begin();
 				iter != pset->end();
 				iter++) {
@@ -4950,10 +4970,12 @@ void SingleMPM::InterpolateParticleToGrid(const ProcessorGroup*,
 					psize[idx]);
 
 				StressVol = pstress_new[idx] * pvol[idx];
+				VoidRatioVol = pVoidRatio[idx] * pvol[idx];
 
 				for (int k = 0; k < NN; k++) {
 					if (patch->containsNode(ni[k])) {
 						gStress[ni[k]] += StressVol * S[k];
+						gVoidRatio[ni[k]] += VoidRatioVol * S[k];
 					}
 				}
 			} // End particle loop
@@ -4964,12 +4986,16 @@ void SingleMPM::InterpolateParticleToGrid(const ProcessorGroup*,
 				// Solid
 				gStressglobal[c] += gStress[c];
 				gStress[c] /= gvolume[c];
+				// Porosity
+				gVoidRatioglobal[c] += gVoidRatio[c];
+				gVoidRatio[c] /= gvolume[c];
 			}
 		}
 
 		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
 			IntVector c = *iter;
 			gStressglobal[c] /= gvolumeglobal[c];
+			gVoidRatioglobal[c] /= gvolumeglobal[c];
 		}
 		delete linear_interpolator;
 	}
@@ -4977,10 +5003,111 @@ void SingleMPM::InterpolateParticleToGrid(const ProcessorGroup*,
 
 
 
+void SingleMPM::scheduleInterpolateGridToParticle(SchedulerP& sched,
+	const PatchSet* patches,
+	const MaterialSet* matls)
 
+{
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
 
+	printSchedule(patches, cout_doing,
+		"SingleMPM::scheduleInterpolateGridToParticle");
 
+	Task* t = scinew Task("SingleMPM::InterpolateGridToParticle",
+		this, &SingleMPM::InterpolateGridToParticle);
 
+	Ghost::GhostType gac = Ghost::AroundCells;
+	Ghost::GhostType gnone = Ghost::None;
+	t->requires(Task::OldDW, lb->pXLabel, gnone);
+	t->requires(Task::NewDW, lb->pCurSizeLabel, gnone);
+	//t->requires(Task::OldDW, lb->pSizeLabel, gnone);
+	//t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gnone);
+
+	// Solid
+	t->requires(Task::NewDW, lb->gStressFilterLabel, gac, NGN);
+	t->modifies(lb->pStressLabel_preReloc);
+
+	// Porosity
+	t->requires(Task::NewDW, lb->gVoidRatioLabel, gac, NGN);
+	t->modifies(lb->pVoidRatioLabel);
+
+	sched->addTask(t, patches, matls);
+}
+
+void SingleMPM::InterpolateGridToParticle(const ProcessorGroup*,
+	const PatchSubset* patches,
+	const MaterialSubset*,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
+{
+	for (int p = 0; p < patches->size(); p++) {
+		const Patch* patch = patches->get(p);
+		printTask(patches, patch, cout_doing,
+			"Doing InterpolateGridToParticle");
+
+		ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
+		vector<IntVector> ni(linear_interpolator->size());
+		vector<double> S(linear_interpolator->size());
+
+		unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
+
+		for (unsigned int m = 0; m < numMPMMatls; m++) {
+			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+			int dwi = mpm_matl->getDWIndex();
+			Ghost::GhostType  gac = Ghost::AroundCells;
+			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+			constParticleVariable<Point> px;
+			constParticleVariable<Matrix3> psize;
+			old_dw->get(px, lb->pXLabel, pset);
+			//old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
+			new_dw->get(psize, lb->pCurSizeLabel, pset);
+			//old_dw->get(psize, lb->pSizeLabel, pset);
+
+			// Solid
+			constNCVariable<Matrix3> gStress;
+			ParticleVariable<Matrix3> pstressnew;
+			new_dw->get(gStress, lb->gStressFilterLabel, dwi, patch, gac, NGP);
+			new_dw->getModifiable(pstressnew, lb->pStressLabel_preReloc, pset);
+
+			// ¨Porosity
+			constNCVariable<double> gVoidRatio;
+			ParticleVariable<double> pVoidRatioNew;
+
+			new_dw->get(gVoidRatio, lb->gVoidRatioLabel, dwi, patch, gac, NGP);
+			new_dw->getModifiable(pVoidRatioNew, lb->pVoidRatioLabel, pset);
+
+			// Loop over particles
+			for (ParticleSubset::iterator iter = pset->begin();
+				iter != pset->end(); iter++) {
+				particleIndex idx = *iter;
+
+				// Get the node indices that surround the cell
+				int NN = linear_interpolator->findCellAndWeights(px[idx], ni, S,
+					psize[idx]);
+
+				double VoidRatio = 0;
+				Matrix3 Stressnew = (0, 0, 0,
+									 0, 0, 0,
+									 0, 0, 0);
+
+				// Accumulate the contribution from each surrounding vertex
+				for (int k = 0; k < NN; k++) {
+					IntVector node = ni[k];
+					Stressnew += gStress[node] * S[k];
+					VoidRatio += gVoidRatio[node] * S[k];
+				}
+
+				pstressnew[idx] = Stressnew;
+				pVoidRatioNew[idx] = VoidRatio;
+			}
+
+		}  // loop over materials
+		delete linear_interpolator;
+	}
+}
 
 
 

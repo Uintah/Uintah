@@ -519,7 +519,7 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 			// ROTATE pstress_new: S=R*tensorSig*R^T
 			pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
 
-			cerr << pstress_new[idx] << endl;
+			//cerr << pstress_new[idx] << endl;
 
 			c_dil = sqrt(USM / rho_cur);
 

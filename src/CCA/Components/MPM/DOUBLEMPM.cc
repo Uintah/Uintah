@@ -1036,12 +1036,12 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
 
 	scheduleComputeStressTensor(sched, patches, matls);
 
-	/*
+	
 	if (flags->d_NullSpaceFilter) {
 	scheduleInterpolatePorePresureToGrid(sched, patches, matls);
 	scheduleInterpolatePorePresureToParticle(sched, patches, matls);
 	}
-	*/
+	
 
 
 	scheduleFinalParticleUpdate(sched, patches, matls);
@@ -3826,7 +3826,7 @@ void DOUBLEMPM::InterpolatePorePresureToGrid(const ProcessorGroup*,
 		NCVariable<Matrix3>       gStressglobal;
 		new_dw->allocateAndPut(gStressglobal, double_lb->gStressLabel,
 			m_materialManager->getAllInOneMatls()->get(0), patch);
-		gStressglobal.initialize(0.0);
+		gStressglobal.initialize(Matrix3(0.0));
 
 		// Porosity
 		NCVariable<double>       gPorosityglobal;
