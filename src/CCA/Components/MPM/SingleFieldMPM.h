@@ -34,7 +34,6 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/Short27.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/MPMCommon.h>

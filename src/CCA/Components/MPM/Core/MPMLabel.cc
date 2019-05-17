@@ -24,7 +24,6 @@
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/Short27.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -320,6 +319,9 @@ MPMLabel::MPMLabel()
 
   gColorLabel = VarLabel::create( "g.color",
                         NCVariable<double>::getTypeDescription() );
+  
+  gMatlsOnNodeLabel = VarLabel::create( "g.matlsOnNode",
+                        NCVariable<IntVector>::getTypeDescription() );
   
   gMassLabel = VarLabel::create( "g.mass",
                         NCVariable<double>::getTypeDescription() );
@@ -638,9 +640,6 @@ MPMLabel::MPMLabel()
                   ParticleVariable<double>::getTypeDescription());
   pStrainEnergyDensityLabel_preReloc = VarLabel::create( "p.strainEnergyDensity+",
                   ParticleVariable<double>::getTypeDescription());
-
-  pgCodeLabel = VarLabel::create("p.gcode",
-                  ParticleVariable<Short27>::getTypeDescription());
 
   pKineticEnergyDensityLabel = VarLabel::create("p.kineticEnergyDensity",
                   ParticleVariable<double>::getTypeDescription());
@@ -985,6 +984,7 @@ MPMLabel::~MPMLabel()
 
   VarLabel::destroy(gAccelerationLabel);
   VarLabel::destroy(gColorLabel);
+  VarLabel::destroy(gMatlsOnNodeLabel);
   VarLabel::destroy(gMassLabel);
   VarLabel::destroy(gMassAllLabel);
   VarLabel::destroy(gMassF0Label);
@@ -1101,7 +1101,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pStrainEnergyDensityLabel_preReloc);
   VarLabel::destroy(pKineticEnergyDensityLabel);
 
-  VarLabel::destroy(pgCodeLabel);
   VarLabel::destroy(gNumPatlsLabel);
   VarLabel::destroy(GNumPatlsLabel);
   VarLabel::destroy(gDisplacementLabel);

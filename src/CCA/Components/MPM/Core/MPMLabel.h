@@ -138,6 +138,7 @@ namespace Uintah {
       
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;
+      const VarLabel* gMatlsOnNodeLabel;
       const VarLabel* gMassLabel;
       const VarLabel* gMassAllLabel;
       const VarLabel* gMassF0Label;
@@ -268,7 +269,6 @@ namespace Uintah {
       const VarLabel* pStrainEnergyDensityLabel;
       const VarLabel* pStrainEnergyDensityLabel_preReloc;
 
-      const VarLabel* pgCodeLabel;
       const VarLabel* pKineticEnergyDensityLabel;
       const VarLabel* pVelGradsLabel;
 
