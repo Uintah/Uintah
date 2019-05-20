@@ -5411,6 +5411,24 @@ BoundaryCondition::sched_create_radiation_temperature( SchedulerP       & sched,
   }
   
   //__________________________________
+  //  Return if restarting and rad temp exists
+  DataWarehouse* new_dw = sched->get_dw(1);
+  
+  // Find the first patch, on this level, that this mpi rank owns.
+  const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+  const PatchSubset* myPatches     = ps->getSubset(  Uintah::Parallel::getMPIRank() );
+  const Patch* firstPatch = myPatches->get(0);
+  
+  int archIndex = 0;
+  int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
+  
+  bool radTemp_exists = new_dw->exists( d_radiation_temperature_label,   matlIndex, firstPatch   );
+  
+  if( doing_restart && radTemp_exists ){
+    return;
+  }
+
+  //__________________________________
   //  
   // Before you can require varLabel from the new_dw
   // there must be a compute() for that variable.  This is an empty task.
