@@ -154,6 +154,7 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
   // If using RMCRT:DBL
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
+  
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type && subtype == TypeDescription::double_type ) {
     d_abskgLabel = d_compAbskgLabel;
   }

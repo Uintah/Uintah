@@ -85,8 +85,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 //  d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
 
   // Time Step
-  m_timeStepLabel =
-    VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+  m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
 
   // internal variables for RMCRT
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
@@ -187,8 +186,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   ProblemSpecP rad_ps = rmcrt_ps->findBlock("Radiometer");
   if( rad_ps ) {
     d_radiometer = scinew Radiometer( d_FLT_DBL );
-    bool getExtraInputs = false;
-    d_radiometer->problemSetup( prob_spec, rad_ps, grid, getExtraInputs );
+    d_radiometer->problemSetup( prob_spec, rad_ps, grid );
   }
 
   //__________________________________
@@ -426,10 +424,17 @@ Ray::sched_rayTrace( const LevelP& level,
     // accomplished with repeatable random numbers passed in.
 
     timeStep_vartype timeStepVar(0);
-    if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
-      sched->get_dw(0)->get( timeStepVar, m_timeStepLabel );
-    else if( sched->get_dw(1) && sched->get_dw(1)->exists( m_timeStepLabel ) )
-      sched->get_dw(1)->get( timeStepVar, m_timeStepLabel );
+    
+    DataWarehouse* old_dw = sched->get_dw(0);
+    DataWarehouse* new_dw = sched->get_dw(1);
+    
+    if( old_dw && old_dw->exists( m_timeStepLabel ) ){
+      old_dw->get( timeStepVar, m_timeStepLabel );
+    }
+    else if( new_dw && new_dw->exists( m_timeStepLabel ) ){
+      new_dw->get( timeStepVar, m_timeStepLabel );
+    }
+    
     int timeStep = timeStepVar;
     
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
@@ -854,11 +859,19 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     taskname = "Ray::rayTraceDataOnionGPU";
 
     timeStep_vartype timeStepVar(0);
-    if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
-      sched->get_dw(0)->get( timeStepVar, m_timeStepLabel );
-    else if( sched->get_dw(1) && sched->get_dw(1)->exists( m_timeStepLabel ) )
-      sched->get_dw(1)->get( timeStepVar, m_timeStepLabel );
+    
+    DataWarehouse* old_dw = sched->get_dw(0);
+    DataWarehouse* new_dw = sched->get_dw(1);
+    
+    if( old_dw && old_dw->exists( m_timeStepLabel ) ){
+      old_dw->get( timeStepVar, m_timeStepLabel );
+    }
+    else if( new_dw && new_dw->exists( m_timeStepLabel ) ){
+      new_dw->get( timeStepVar, m_timeStepLabel );
+    }
+    
     int timeStep = timeStepVar;
+    
     
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
       tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, timeStep, NotUsed, sigma_dw, celltype_dw);

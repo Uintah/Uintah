@@ -75,8 +75,7 @@ Radiometer::~Radiometer()
 void
 Radiometer::problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& radps,
-                          const GridP&        grid,
-                          const bool getExtraInputs)
+                          const GridP&        grid)
 {
   ProblemSpecP rad_ps = radps;
   Vector orient;
@@ -85,23 +84,14 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   rad_ps->getWithDefault( "nRadRays"  ,         d_nRadRays ,       1000 );
   rad_ps->get(            "VRLocationsMin" ,    d_VRLocationsMin );                    // minimum extent of the string or block of virtual radiometers in physical units
   rad_ps->get(            "VRLocationsMax" ,    d_VRLocationsMax );                    // maximum extent
-
-  if( getExtraInputs ){
-    rad_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );                // scattering coefficient
-    rad_ps->getWithDefault( "Threshold" ,       d_threshold ,      0.01 );              // When to terminate a ray
-    rad_ps->getWithDefault( "randomSeed",       d_isSeedRandom,    true );              // random or deterministic seed.
-    rad_ps->getWithDefault( "StefanBoltzmann",  d_sigma,           5.67051e-8);         // Units are W/(m^2-K)
-    rad_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
-  } else {
-                   // bulletproofing.
-    for( ProblemSpecP n = rad_ps->getFirstChild(); n != nullptr; n=n->getNextSibling() ){
-      std::string me = n->getNodeName();
-      if( ( me == "sigmaScat"  ||  me == "Threshold" || me == "randomSeed" ||  me == "StefanBoltzmann" || me == "allowReflect" ) && me !="text" ){
-        std::ostringstream warn;
-        warn << "\n ERROR:Radiometer::problemSetup: You've specified the variable (" << me << ")"
-             << " which will be ignored.  You should set the variable outside <Radiometer> section. \n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
+                 // bulletproofing.
+  for( ProblemSpecP n = rad_ps->getFirstChild(); n != nullptr; n=n->getNextSibling() ){
+    std::string me = n->getNodeName();
+    if( ( me == "sigmaScat"  ||  me == "Threshold" || me == "randomSeed" ||  me == "StefanBoltzmann" || me == "allowReflect" ) && me !="text" ){
+      std::ostringstream warn;
+      warn << "\n ERROR:Radiometer::problemSetup: You've specified the variable (" << me << ")"
+           << " which will be ignored.  You should set the variable outside <Radiometer> section. \n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
 
@@ -490,7 +480,7 @@ Radiometer::rayDirection_VR( MTRand& mTwister,
   double phi = 2 * M_PI * mTwister.randDblExc(); //azimuthal angle. Range of 0 to 2pi
 
   // This guarantees that the polar angle of the ray is within the delta_theta
-  double VRTheta = acos(cos(deltaTheta)+range*mTwister.randDblExc());
+  double VRTheta = acos( cos(deltaTheta) + range * mTwister.randDblExc());
   cosVRTheta = cos(VRTheta);
 
   // Convert to Cartesian x,y, and z represent the pre-rotated direction vector of a ray
