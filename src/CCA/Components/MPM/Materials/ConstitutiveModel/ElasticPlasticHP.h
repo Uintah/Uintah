@@ -152,6 +152,9 @@ namespace Uintah {
     // copy constructor
     ElasticPlasticHP& operator=(const ElasticPlasticHP &cm);
 
+    void bulletProofingError(const std::string methodName
+                            ,const std::string responsibleParty);
+
   public:
 
     ////////////////////////////////////////////////////////////////////////
