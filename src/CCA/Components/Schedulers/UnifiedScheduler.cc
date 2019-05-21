@@ -97,6 +97,7 @@ namespace Uintah {
 namespace {
 
   Dout g_gpu_ids( "Unified_GPU_IDs", "UnifiedScheduler", "detailed information to uniquely identify GPUs on a node", false );
+  Dout g_d2h_dbg( "Unified_D2H_DBG", "UnifiedScheduler", "detailed information to identify DW variables that may need copied from device-to-host", false );
 
   Uintah::MasterLock g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
 
@@ -1263,6 +1264,12 @@ UnifiedScheduler::runTasks( int thread_id )
         // Run the task on the GPU!
         runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::GPU);
 
+        if (g_d2h_dbg) {
+          std::ostringstream message;
+          message << "  Running GPU Task: " << *readyTask;
+          DOUT(true, message.str());
+        }
+
         // See if we're dealing with 32768 ghost cells per patch.  If so,
         // it's easier to manage them on the host for now than on the GPU.  We can issue
         // these on the same stream as runTask, and it won't process until after the GPU
@@ -1366,7 +1373,14 @@ UnifiedScheduler::runTasks( int thread_id )
 #endif
           // run CPU task.
           runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::CPU);
+
 #ifdef HAVE_CUDA
+          if (g_d2h_dbg) {
+            std::ostringstream message;
+            message << "  Running CPU Task: " << *readyTask;
+            DOUT(true, message.str());
+          }
+
           //See note above near cpuInitReady.  Some CPU tasks may internally interact
           //with GPUs without modifying the structure of the data warehouse.
           //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
@@ -3861,7 +3875,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
           hack_foundAComputes = true;
      }
 
-    // Arches hack:
+    // dqmom_example_char_no_pressure.ups hack:
     // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
     // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
     // from qn0 to qn4.  Also, the char_gas_reaction0_qn4 variable is both a computes in the newDW and a requires in the oldDW
@@ -3870,10 +3884,66 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
       hack_foundAComputes = true;
     }
 
+    // heliumKS_pressureBC.ups hack
+    if ( (varName == "A_press")            ||
+         (varName == "b_press")            ||
+         (varName == "cellType")           ||
+         (varName == "continuity_balance") ||
+         (varName == "density")            ||
+         (varName == "density_star")       ||
+         (varName == "drhodt")             ||
+         (varName == "gamma")              ||
+         (varName == "gravity_z")          ||
+         (varName == "gridX")              ||
+         (varName == "gridY")              ||
+         (varName == "gridZ")              ||
+         (varName == "phi")                ||
+         (varName == "phi_x_dflux")        ||
+         (varName == "phi_y_dflux")        ||
+         (varName == "phi_z_dflux")        ||
+         (varName == "phi_x_flux")         ||
+         (varName == "phi_y_flux")         ||
+         (varName == "phi_z_flux")         ||
+         (varName == "pressure")           ||
+         (varName == "rho_phi")            ||
+         (varName == "rho_phi_RHS")        ||
+         (varName == "t_viscosity")        ||
+         (varName == "ucellX")             ||
+         (varName == "vcellY")             ||
+         (varName == "wcellZ")             ||
+         (varName == "uVel")               ||
+         (varName == "vVel")               ||
+         (varName == "wVel")               ||
+         (varName == "volFraction")        ||
+         (varName == "volFractionX")       ||
+         (varName == "volFractionY")       ||
+         (varName == "volFractionZ")       ||
+         (varName == "x-mom")              ||
+         (varName == "x-mom_RHS")          ||
+         (varName == "x-mom_x_flux")       ||
+         (varName == "x-mom_y_flux")       ||
+         (varName == "x-mom_z_flux")       ||
+         (varName == "y-mom")              ||
+         (varName == "z-mom")              ||
+         (varName == "z-mom_RHS")          ||
+         (varName == "z-mom_x_flux")       ||
+         (varName == "z-mom_y_flux")       ||
+         (varName == "z-mom_z_flux")
+       )
+    {
+      hack_foundAComputes = true;
+    }
+
     // Poisson hack:
     if (varName == "phi" ||
         varName == "residual") {
       hack_foundAComputes = true;
+    }
+
+    if (g_d2h_dbg) {
+      std::ostringstream message;
+      message << "  " << varName << ": Device-to-Host Copy May Be Needed";
+      DOUT(true, message.str());
     }
 
     if (!hack_foundAComputes) {
@@ -3895,6 +3965,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
           case TypeDescription::SFCYVariable:
           case TypeDescription::SFCZVariable: {
 
+            if (g_d2h_dbg) {
+              std::ostringstream message;
+              message << "  " << varName << ": Checking If Device-to-Host Copy Needed";
+              DOUT(true, message.str());
+            }
+
             if (gpu_stats.active()) {
               cerrLock.lock();
               {
@@ -3908,6 +3984,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
             }
             bool performCopy = gpudw->compareAndSwapCopyingIntoCPU(varName.c_str(), patchID, matlID, levelID);
             if (performCopy) {
+
+              if (g_d2h_dbg) {
+                std::ostringstream message;
+                message << "  " << varName << ": Yes, Device-to-Host Copy Needed";
+                DOUT(true, message.str());
+              }
 
               if (gpu_stats.active()) {
                 cerrLock.lock();
@@ -3961,6 +4043,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
               host_size = host_high - host_low;
               int dwIndex = dependantVar->mapDataWarehouse();
               OnDemandDataWarehouseP dw = m_dws[dwIndex];
+
+              if (g_d2h_dbg) {
+                std::ostringstream message;
+                message << "  " << varName << ": Calling allocateAndPut";
+                DOUT(true, message.str());
+              }
 
               // Get/make the host var
               if (gpu_stats.active()) {
@@ -4066,6 +4154,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
                 host_ptr = gridVar->getBasePointer();
                 host_bytes = gridVar->getDataSize();
 
+                if (g_d2h_dbg) {
+                  std::ostringstream message;
+                  message << "  " << varName << ": Initiating Device-to-Host Copy";
+                  DOUT(true, message.str());
+                }
+
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
@@ -4140,6 +4234,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
               size_t device_bytes = gpuPerPatchVar->getMemSize();
               delete gpuPerPatchVar;
 
+              if (g_d2h_dbg) {
+                std::ostringstream message;
+                message << "  " << varName << ": Initiating Device-to-Host Copy";
+                DOUT(true, message.str());
+              }
+
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
@@ -4191,6 +4291,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
               device_ptr = gpuReductionVar->getVoidPointer();
               size_t device_bytes = gpuReductionVar->getMemSize();
               delete gpuReductionVar;
+
+              if (g_d2h_dbg) {
+                std::ostringstream message;
+                message << "  " << varName << ": Initiating Device-to-Host Copy";
+                DOUT(true, message.str());
+              }
 
               if (gpu_stats.active()) {
                 cerrLock.lock();

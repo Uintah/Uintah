@@ -99,7 +99,7 @@ PressureEqn::problemSetup( ProblemSpecP& db ){
 void
 PressureEqn::sched_Initialize( const LevelP& level, SchedulerP& sched ){
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
-   //do_custom_arches_linear_solve=true;
+
   if(!do_custom_arches_linear_solve){
     m_hypreSolver->scheduleInitialize( level, sched, matls );
   }
@@ -116,6 +116,8 @@ PressureEqn::sched_restartInitialize( const LevelP& level, SchedulerP& sched ){
 void
 PressureEqn::setup_solver( ProblemSpecP& db ){
 
+  //do_custom_arches_linear_solve = true; // Use the custom Arches linear solve instead of hypre
+
   if(!do_custom_arches_linear_solve){
     //);
     //custom_solver->sched_PreconditionerConstruction( sched, matls, level );// hard coded for level 0 
@@ -124,6 +126,11 @@ PressureEqn::setup_solver( ProblemSpecP& db ){
     if ( !db_pressure ){
       throw ProblemSetupException("Error: You must specify a <PressureSolver> block in the UPS file.",__FILE__,__LINE__);
     }
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+    printf("\nERROR: Arches does not yet support use of hypre with Kokkos::CUDA builds. Set 'do_custom_arches_linear_solve' to true.");
+    SCI_THROW(InternalError("Unsupported linear solver",__FILE__,__LINE__));
+#endif
 
     m_hypreSolver->readParameters(db_pressure, "pressure" );
 
@@ -137,6 +144,8 @@ PressureEqn::setup_solver( ProblemSpecP& db ){
     if ( db->findBlock("enforce_solvability")){
       m_enforceSolvability = true;
     }
+  } else {
+    proc0cout << "\n     WARNING: Using custom Arches linear solve instead of hypre!" << std::endl;
   }
 
 }
@@ -493,283 +502,18 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
                           ){
 
     xLabel=x_label;
-  const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
 
-  if (rk_step ==0){
-    d_residualLabel = VarLabel::create("cg_residual",  CC_double);
-    d_littleQLabel = VarLabel::create("littleQ",  CC_double);
-    d_bigZLabel    = VarLabel::create("bigZ",  CC_double);
-    d_smallPLabel  = VarLabel::create("smallP",  CC_double);
-
-    ALabel=A_label;
-    bLabel=b_label;
-    guess=guess_label;
-
-    d_blockSize=1; d_stencilWidth=(d_blockSize-1)+d_blockSize  ; // NOT TRUE FOR EVEN BLOCK SIZE 
-    cg_ghost=3;
-
-    cg_n_iter=150;
-    for (int i=0 ; i < cg_n_iter ; i++){
-      d_convMaxLabel.push_back(  VarLabel::create("convergence_check"+ std::to_string(i),   max_vartype::getTypeDescription()));
-      d_corrSumLabel.push_back(  VarLabel::create("correctionSum"+ std::to_string(i),   sum_vartype::getTypeDescription()));
-      d_resSumLabel.push_back(  VarLabel::create("residualSum"+ std::to_string(i),   sum_vartype::getTypeDescription()));
-    }
-    d_resSumLabel.push_back(  VarLabel::create("residualSum_"+ std::to_string(cg_n_iter),   sum_vartype::getTypeDescription()));
-
-    d_precMLabel.push_back(VarLabel::create("mg_A_p",  CC_double)); // mutigrid A -cetnral
-     // THese 3 are UNUSED FOR jacobi!!!!!!!!!! 
-    d_precMLabel.push_back(VarLabel::create("mg_A_w",  CC_double)); // mutigrid A - west 
-    d_precMLabel.push_back(VarLabel::create("mg_A_s",  CC_double)); // mutigrid A - north
-    d_precMLabel.push_back(VarLabel::create("mg_A_b",  CC_double)); // mutigrid A - south
-
-    d_custom_relax_type=jacobi;
-    
-    if (d_custom_relax_type==redBlack){
-      cg_ghost=1;   // number of rb iterations
-    }else if (d_custom_relax_type==jacobBlock){
-      cg_ghost=d_blockSize-1;   // Not true for even block size
-    } else{ // jacobi
-      cg_ghost=0;   
-    }
-
-  }else{
-    throw ProblemSetupException("Error: only RK 1 time integration is supported when using the custom linear solver.",__FILE__,__LINE__);
-  }
-
-////------------------ set up CG solver---------------------//
-    auto task_i1 = [&](Task* tsk) {
-      tsk->requires(Task::NewDW, guess, Ghost::AroundCells, 1);
-      tsk->requires(Task::NewDW, bLabel, Ghost::None, 0);
-      tsk->requires(Task::NewDW, ALabel, Ghost::AroundCells, 1);
+    auto taskDependencies = [&](Task* tsk) {
       tsk->modifies(xLabel);
-      if (rk_step==0){
-      tsk->computesWithScratchGhost
-          (d_residualLabel, nullptr, Uintah::Task::NormalDomain,Ghost::AroundCells,cg_ghost);
-      }else{
-      tsk->modifies(d_residualLabel);
-      }
-
-     for (unsigned int i=0;i<d_precMLabel.size();i++){
-       tsk->computesWithScratchGhost //  possibly not needed...
-          (d_precMLabel[i], nullptr, Uintah::Task::NormalDomain,Ghost::AroundCells,cg_ghost);
-     }
-
     };
 
-    create_portable_tasks(task_i1, this,
-                          "PressureEqn::cg_init1",
-                          &PressureEqn::cg_init1<UINTAH_CPU_TAG>,
-                          &PressureEqn::cg_init1<KOKKOS_OPENMP_TAG>,
-                          &PressureEqn::cg_init1<KOKKOS_CUDA_TAG>,
-                          sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT, rk_step);
-
-total_rb_switch=1;
-int final_iter=total_rb_switch-1;
-for (int rb_iter=0; rb_iter < total_rb_switch; rb_iter++){
-  auto task_i2 = [&](Task* tsk) {
-    if (rk_step==0 && rb_iter==0){
-        tsk->computesWithScratchGhost
-          (d_smallPLabel, nullptr, Uintah::Task::NormalDomain,Ghost::AroundCells,1);
-    }else{
-      tsk->modifies(d_smallPLabel);
-    }
-
-    if (rb_iter == final_iter){
-      if (rk_step==0 ){
-        tsk->computesWithScratchGhost
-          (d_bigZLabel, nullptr, Uintah::Task::NormalDomain,Ghost::AroundCells,cg_ghost);
-        tsk->computesWithScratchGhost
-          (d_littleQLabel, nullptr, Uintah::Task::NormalDomain,Ghost::AroundCells,1);
-        tsk->computes(d_resSumLabel[0]);
-      }else{
-        tsk->modifies(d_smallPLabel);
-        tsk->modifies(d_bigZLabel);
-        tsk->modifies(d_littleQLabel);
-        //task_i2->computes(d_resSumLabel_rk2[0]);   // NEED FOR RK2
-      }
-    }
-
-  tsk->requires(Task::NewDW, d_residualLabel, Ghost::AroundCells, cg_ghost); 
-
-  for (unsigned int i=0;i<d_precMLabel.size();i++){
-    tsk->requires(Task::NewDW,d_precMLabel[i],Ghost::AroundCells,cg_ghost+1); //  possibly not needed...
-    //tsk->computesWithScratchGhosts(Task::NewDW,d_precMLabel[i],Ghost::AroundCells,cg_ghost+1); //  possibly not needed...
-  }
-  };
-
-  create_portable_tasks(task_i2, this,
-                        "PressureEqn::cg_init2",
-                        &PressureEqn::cg_init2<UINTAH_CPU_TAG>,
-                        &PressureEqn::cg_init2<KOKKOS_OPENMP_TAG>,
-                        &PressureEqn::cg_init2<KOKKOS_CUDA_TAG>,
-                        sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT, rb_iter,rk_step);
-}
-
-  for (int cg_iter=0 ; cg_iter < cg_n_iter ; cg_iter++){
-  auto task1 = [&](Task* tsk) {
-  tsk->requires(Task::NewDW,ALabel,Ghost::None, 0 );
-  tsk->requires(Task::NewDW,d_smallPLabel, Ghost::AroundCells, 1);
-  tsk->modifies(d_littleQLabel);
-  tsk->computes(d_corrSumLabel[cg_iter]);
-
-  };
-  create_portable_tasks(task1, this,
-                        "PressureEqn::cg_task1",
-                        &PressureEqn::cg_task1<UINTAH_CPU_TAG>,
-                        &PressureEqn::cg_task1<KOKKOS_OPENMP_TAG>,
-                        &PressureEqn::cg_task1<KOKKOS_CUDA_TAG>,
-                        sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT, cg_iter);
-
-  auto task2 = [&](Task* tsk) {
-
-   tsk->computes(d_corrSumLabel[cg_iter]); // GPU LIMITATION ( THIS SHOULD BE REQUIRES!!!)
-   tsk->computes(d_resSumLabel[cg_iter]); 
-   
-   //tsk->requires(Task::NewDW,d_corrSumLabel[cg_iter]);
-   //tsk->requires(Task::NewDW,d_resSumLabel[cg_iter]);
-
-
-   tsk->requires(Task::NewDW,d_littleQLabel, Ghost::None, 0);
-   tsk->requires(Task::NewDW,d_smallPLabel, Ghost::None, 0);
-   tsk->modifies(xLabel);
-   tsk->modifies(d_residualLabel);
-  };
-
-  create_portable_tasks(task2, this,
-                        "PressureEqn::cg_task2",
-                        &PressureEqn::cg_task2<UINTAH_CPU_TAG>,
-                        &PressureEqn::cg_task2<KOKKOS_OPENMP_TAG>,
-                        &PressureEqn::cg_task2<KOKKOS_CUDA_TAG>,
-                        sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT, cg_iter);
-
-   auto task3 = [&](Task* tsk) {
-   for (unsigned int i=0;i<d_precMLabel.size();i++){
-     tsk->requires(Task::NewDW,d_precMLabel[i],Ghost::AroundCells,cg_ghost+1); //  possibly not needed...
+    create_portable_tasks(taskDependencies, this,
+                          "PressureEqn::blindGuessToLinearSystem",
+                          &PressureEqn::blindGuessToLinearSystem<UINTAH_CPU_TAG>,
+                          &PressureEqn::blindGuessToLinearSystem<KOKKOS_OPENMP_TAG>,
+                          &PressureEqn::blindGuessToLinearSystem<KOKKOS_CUDA_TAG>,
+                          sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT);
    }
-   tsk->requires(Task::NewDW,d_residualLabel,Ghost::AroundCells,cg_ghost);
-   tsk->requires(Task::NewDW,d_bigZLabel,Ghost::AroundCells,0);
-   tsk->computes(d_resSumLabel[cg_iter+1]);
-   tsk->computes(d_convMaxLabel[cg_iter]);
-   };
-
-
-  create_portable_tasks(task3, this,
-                        "PressureEqn::cg_task3",
-                        &PressureEqn::cg_task3<UINTAH_CPU_TAG>,
-                        &PressureEqn::cg_task3<KOKKOS_OPENMP_TAG>,
-                        &PressureEqn::cg_task3<KOKKOS_CUDA_TAG>,
-                        sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT, cg_iter);
-
-  auto task4 = [&](Task* tsk) {
-
-    tsk->computes(d_convMaxLabel[cg_iter]);// GPU reduction problem with these on GPU LIMITATION!
-    tsk->computes(d_resSumLabel[cg_iter]);
-    tsk->computes(d_resSumLabel[cg_iter+1]);
-
-    //tsk->requires(Task::NewDW,d_convMaxLabel[cg_iter]); 
-    //tsk->requires(Task::NewDW,d_resSumLabel[cg_iter]);
-    //tsk->requires(Task::NewDW,d_resSumLabel[cg_iter+1]);
-
-    tsk->modifies(d_smallPLabel);
-    tsk->requires(Task::NewDW,d_bigZLabel,Ghost::None, 0);
-  };
-
-  create_portable_tasks(task4, this,
-                        "PressureEqn::cg_task4",
-                        &PressureEqn::cg_task4<UINTAH_CPU_TAG>,
-                        &PressureEqn::cg_task4<KOKKOS_OPENMP_TAG>,
-                        &PressureEqn::cg_task4<KOKKOS_CUDA_TAG>,
-                        sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT, cg_iter);
-
-    //int maxLevels=1; // MULTIGRID OFF
-  //for (int l = maxLevels-2; l > -1; l--) { // Coarsen fine to coarse
-    //const LevelP& coarse_level = grid->getLevel(l);
-
-    //const PatchSet * level_patches=coarse_level->eachPatch();
-    //Task* task_multigrid_up = scinew Task("linSolver::cg_coarsenResidual",
-        //this, &linSolver::cg_moveResUp, cg_iter);
-
-    //task_multigrid_up->requires( Task::NewDW ,d_residualLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0 );
-    //if ( cg_iter==0){
-      //task_multigrid_up->computes(d_residualLabel);
-    //}else{
-      //task_multigrid_up->modifies(d_residualLabel);
-
-    //}
-    //sched->addTask(task_multigrid_up, level_patches,matls);
-  //}
-
-  //for (int l = 0; l < maxLevels; ++l) {
-    //const LevelP& coarse_level = grid->getLevel(l);
-    //const PatchSet * level_patches=coarse_level->eachPatch();
-
-    //Task* task_multigrid_down = scinew Task("linSolver::cg_multigridDown",
-        //this, &linSolver::cg_multigrid_down, cg_iter);
-
-    //if (l<maxLevels-1 && cg_iter==0){
-      //task_multigrid_down->computes(d_bigZLabel);
-    //}else{
-      //task_multigrid_down->modifies(d_bigZLabel);
-    //}
-
-    //if (l>0){
-        ////int offset = 1;
-        //task_multigrid_down->requires( Task::NewDW ,d_bigZLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::None, 0 );
-    //}
-    
-    //sched->addTask(task_multigrid_down, level_patches,matls);
-
-    //int smoother_iter=3;// In case user didn't set up levels
-
-    //for (int red_black_switch=smoother_iter-1; red_black_switch > -1; red_black_switch--){
-      //Task* task_multigrid_smooth = scinew Task("linSolver::cg_multigridSmooth_" +  std::to_string(coarse_level->getID()),
-          //this, &linSolver::cg_multigrid_smooth,red_black_switch, cg_iter);
-
-      //task_multigrid_smooth->requires(Task::NewDW,d_residualLabel, Ghost::AroundCells, cg_ghost);
-      //task_multigrid_smooth->requires(Task::NewDW,d_bigZLabel, Ghost::AroundCells,cg_ghost);
-      //task_multigrid_smooth->modifies(d_bigZLabel);
-
-      //for (unsigned int i=0;i<d_precMLabel.size();i++){
-        //task_multigrid_smooth->requires(Task::NewDW,d_precMLabel[i], Ghost::AroundCells,cg_ghost+1); // NOT REALLY 0 ghost cells, we are taking shortcuts upstream
-      //}
-
-
-      //if (l==maxLevels-1 && red_black_switch==0){
-        //task_multigrid_smooth->computes(d_resSumLabel [cg_iter+1]);
-        //task_multigrid_smooth->computes(d_convMaxLabel[cg_iter]);
-      //}
-      //sched->addTask(task_multigrid_smooth, level_patches,matls);
-    //}
-    
-
-  //}
-
-
-  //Task* task4 = scinew Task("linSolver::cg_task4",
-                           //this, &linSolver::cg_task4, cg_iter);
-
-  //task4->requires(Task::NewDW,d_convMaxLabel[cg_iter]);
-  //task4->requires(Task::NewDW,d_resSumLabel[cg_iter]);
-  //task4->requires(Task::NewDW,d_resSumLabel[cg_iter+1]);
-  //task4->modifies(d_smallPLabel);
-  //task4->requires(Task::NewDW,d_bigZLabel,Ghost::None, 0);
-
-  //sched->addTask(task4, fineLevel->eachPatch(),matls);
-  } // END CG_iter
-
-    //auto taskDependencies = [&](Task* tsk) {
-      //tsk->modifies(xLabel);
-    //};
-
-    //create_portable_tasks(taskDependencies, this,
-                          //"PressureEqn::blindGuessToLinearSystem",
-                          //&PressureEqn::blindGuessToLinearSystem<UINTAH_CPU_TAG>,
-                          //&PressureEqn::blindGuessToLinearSystem<KOKKOS_OPENMP_TAG>,
-                          //&PressureEqn::blindGuessToLinearSystem<KOKKOS_CUDA_TAG>,
-                          //sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT);
-
-   }
-  
 
 template <typename ExecSpace, typename MemSpace>
 void

@@ -79,6 +79,7 @@ __________________________________
 Unified_DBG                SCI_DEBUG     Prints general debugging information
 Unified_QueueLength        SCI_DEBUG     Prints the average task queue length
 Unified_GPU_IDs            SCI_DEBUG     Prints detailed information to uniquely identify GPUs on a node
+Unified_D2H_DBG            SCI_DEBUG     Prints detailed information to identify DW variables that may need copied from device-to-host
 
 
 
