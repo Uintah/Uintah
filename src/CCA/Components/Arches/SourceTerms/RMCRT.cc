@@ -728,15 +728,12 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
 
   if (level == archesLevel) {
     printSchedule(level, dbg, "RMCRT_Radiation::sched_restartInitialize");
-    //__________________________________
-    //  As the name implies this is a hack
-    Task* t1 = scinew Task("RMCRT_Radiation::restartInitializeHack", this, &RMCRT_Radiation::restartInitializeHack);
-
-    //  Only schedule if radFlux*_Label are in the checkpoint uda
     
+    //  Only schedule if radFlux*_Label are in the checkpoint uda
     if ( (_whichAlgo != radiometerOnly ) && new_dw->exists(_radFluxE_Label, _matl, firstPatch)) {
       printSchedule(level, dbg, "RMCRT_Radiation::sched_restartInitializeHack");
-
+      
+      Task* t1 = scinew Task("RMCRT_Radiation::restartInitializeHack", this, &RMCRT_Radiation::restartInitializeHack);
       t1->computes(_radFluxE_Label);
       t1->computes(_radFluxW_Label);
       t1->computes(_radFluxN_Label);   // Before you can require something from the new_dw

@@ -5413,17 +5413,24 @@ BoundaryCondition::sched_create_radiation_temperature( SchedulerP       & sched,
   //__________________________________
   //  Return if restarting and rad temp exists
   DataWarehouse* new_dw = sched->get_dw(1);
-  
-  // Find the first patch, on this level, that this mpi rank owns.
-  const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-  const PatchSubset* myPatches     = ps->getSubset(  Uintah::Parallel::getMPIRank() );
-  const Patch* firstPatch = myPatches->get(0);
-  
   int archIndex = 0;
   int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
   
-  bool radTemp_exists = new_dw->exists( d_radiation_temperature_label,   matlIndex, firstPatch   );
+  bool radTemp_exists = false;
   
+
+  const int rank = Uintah::Parallel::getMPIRank();
+  
+  // Find the patches on the arches level that this mpi rank owns.
+  const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet( level );
+  const PatchSubset* myPatches     = ps->getSubset( rank );
+  
+  // hackish way to determine if radTemp exists.
+  for( auto i=0; i<myPatches->size(); i++) {
+    const Patch* patch = myPatches->get(i);
+    radTemp_exists = new_dw->exists( d_radiation_temperature_label,   matlIndex, patch );
+  }
+
   if( doing_restart && radTemp_exists ){
     return;
   }
