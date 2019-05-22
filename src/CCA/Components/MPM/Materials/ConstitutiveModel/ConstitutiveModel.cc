@@ -143,7 +143,6 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
                                           const PatchSet* ) const
 {
   Ghost::GhostType  gnone = Ghost::None;
-  Ghost::GhostType  gac   = Ghost::AroundCells;
 
   task->requires(Task::OldDW, lb->delTLabel);
   task->requires(Task::OldDW, lb->pXLabel,                  matlset, gnone);
@@ -156,10 +155,6 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, 
                                                             matlset, gnone);
   task->requires(Task::NewDW, lb->pVelGradLabel_preReloc,   matlset, gnone);
-  if (flag->d_fracture) {
-    task->requires(Task::NewDW, lb->pgCodeLabel,            matlset, gnone); 
-    task->requires(Task::NewDW, lb->GVelocityStarLabel,     matlset, gac, NGN);
-  }
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pdTdtLabel,                        matlset);
