@@ -122,7 +122,7 @@ WARNING
 
          for (int ii = 1; ii < ntimes; ++ii) {
            if (t <= d_time[ii]) {
-             double s = (d_time[ii]-t)/(d_time[ii]-d_time[ii-1]);
+             double s = (d_time[ii]-t)/((d_time[ii]-d_time[ii-1])+1.e-100);
              return (d_load[ii-1]*s + d_load[ii]*(1.0-s));
            } 
          }
