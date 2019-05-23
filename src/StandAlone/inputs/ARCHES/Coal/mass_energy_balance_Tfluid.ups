@@ -2199,7 +2199,7 @@
             </multiply_by_variable>
           </src>
           <src label="divQ" type="do_radiation">
-            <calc_frequency>20</calc_frequency>
+            <calc_frequency>2</calc_frequency>
             <abskt label="abskg"/>
             <DORadiationModel type="sweepSpatiallyParallel">
               <ordinates>8</ordinates>
