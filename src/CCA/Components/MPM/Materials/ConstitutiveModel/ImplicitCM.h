@@ -27,7 +27,6 @@
 
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/Short27.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>

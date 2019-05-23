@@ -28,7 +28,6 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <vector>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/Short27.h>
 #include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/NCVariable.h>

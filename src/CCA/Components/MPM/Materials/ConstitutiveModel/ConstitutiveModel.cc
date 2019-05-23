@@ -158,7 +158,6 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pdTdtLabel,                        matlset);
-  //task->computes(lb->p_qLabel_preReloc,                 matlset);
 }
 
 void 
