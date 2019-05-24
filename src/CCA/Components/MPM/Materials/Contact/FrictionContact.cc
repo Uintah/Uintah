@@ -183,7 +183,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                if(normalDeltaVel > 0.0){
                  Vector normal_normaldV = normal*normalDeltaVel;
                  Vector dV_normalDV = deltaVelocity - normal_normaldV;
-                 Vector surfaceTangent = dV_normalDV/dV_normalDV.length();
+                 Vector surfaceTangent = dV_normalDV/(dV_normalDV.length()+1.e-100);
                  double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
                  double frictionCoefficient=
                          Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
@@ -311,7 +311,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
                 Vector normal_normaldV = normal*normalDeltaVel;
                 Vector dV_normalDV = deltaVelocity - normal_normaldV;
-                Vector surfaceTangent = dV_normalDV/dV_normalDV.length();
+                Vector surfaceTangent = dV_normalDV/(dV_normalDV.length()+1.e-100);
                 double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
                 double frictionCoefficient=
                         Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
