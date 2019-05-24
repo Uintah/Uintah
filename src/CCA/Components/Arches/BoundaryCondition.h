@@ -375,7 +375,18 @@ wallStressDynSmag( const Patch* p,
 void setBCHelper( std::map<int,WBCHelper*>* helper ){m_bcHelper = helper;}
 
 /** @brief Copy the temperature into a radiation temperature for use later. Also forces BCs in extra cell **/
-void sched_create_radiation_temperature( SchedulerP& sched, const LevelP& level, const MaterialSet* matls, const bool use_old_dw );
+void sched_create_radiation_temperature( SchedulerP        & sched, 
+                                         const LevelP      & level, 
+                                         const MaterialSet * matls,
+                                         const bool doing_restart, 
+                                         const bool use_old_dw );
+
+/** @brief See sched_create_radiation_temperature **/
+void create_radiation_temperatureHack( const ProcessorGroup* pc,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw){};
 
 /** @brief See sched_create_radiation_temperature **/
 void create_radiation_temperature( const ProcessorGroup* pc,

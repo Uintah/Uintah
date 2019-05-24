@@ -53,8 +53,7 @@ namespace Uintah{
       /** @brief Interface to input file information */
       void  problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrt_ps,
-                          const GridP& grid,
-                          const bool getExtraInputs );
+                          const GridP& grid );
 
       /** @brief Algorithm for tracing rays from radiometer location*/
       void sched_radiometer( const LevelP& level,
@@ -63,18 +62,18 @@ namespace Uintah{
                              Task::WhichDW sigma_dw,
                              Task::WhichDW celltype_dw );
 
-      void sched_initializeRadVars( const LevelP& level,
+      void sched_initialize_VRFlux( const LevelP& level,
                                     SchedulerP& sched );
 
       template < class T >
-      void initializeRadVars( const ProcessorGroup*,
+      void initialize_VRFlux( const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw );
 
       //__________________________________
-      //  FUNCTIONS
+      // 
       template< class T >
       void radiometerFlux( const Patch* patch,
                            const Level* level,
@@ -92,6 +91,9 @@ namespace Uintah{
       inline const VarLabel* getRadiometerLabel() const {
         return d_VRFluxLabel;
       }
+
+
+      const VarLabel* d_VRFluxLabel{nullptr};      // computed radiometer flux
 
     private:
 
@@ -111,7 +113,6 @@ namespace Uintah{
       };
 
       VR_variables d_VR;
-      const VarLabel* d_VRFluxLabel{nullptr};      // computed radiometer flux
 
       //__________________________________
       //

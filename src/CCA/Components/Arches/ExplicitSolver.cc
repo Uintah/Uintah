@@ -1442,7 +1442,7 @@ ExplicitSolver::sched_initialize( const LevelP& level,
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
-    d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false );
+    d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, doing_restart, false );
 
     // Utility Factory : Balance Terms computation
     _task_factory_map["utility_factory"]->schedule_task_group( "mass_flow_rate", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
@@ -1535,7 +1535,9 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
     // initialize hypre variables
     d_pressSolver->scheduleRestartInitialize( level, sched, matls);
 
-    d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart ,false);
+    d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart, false);
+    
+    d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, doingRestart, false );
 
     //__________________________________
     //  initialize src terms
@@ -1791,7 +1793,7 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
   }
 
   //copy the temperature into a radiation temperature variable:
-  d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, true );
+  d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false, true );
 
   if ( d_wall_ht_models != nullptr ){
     d_wall_ht_models->sched_doWallHT( level, sched, 0 );

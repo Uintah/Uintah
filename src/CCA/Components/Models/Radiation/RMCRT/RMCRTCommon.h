@@ -45,8 +45,8 @@
  * @author Todd Harman
  * @date June, 2014
  *
- * @brief Methods, functions and variables that are common to both the 
- *        radiometer() and RMCRT()  
+ * @brief Methods, functions and variables that are common to both the
+ *        radiometer() and RMCRT()
  *        The variable sigmaT4Pi and abskg can be cast as either doubles or floats
  #        This allows for a significant savings in memory and communication costs
  *
@@ -54,7 +54,6 @@
 class MTRand;
 
 namespace Uintah{
-
 
   // For the RMCRT slim version
   struct Combined_RMCRT_Required_Vars {
@@ -64,10 +63,10 @@ namespace Uintah{
 
   class RMCRTCommon  {
 
-    public: 
+    public:
 
       RMCRTCommon( TypeDescription::Type FLT_DBL );
-      ~RMCRTCommon(); 
+      ~RMCRTCommon();
 
        //__________________________________
       //  Helpers
@@ -94,7 +93,7 @@ namespace Uintah{
                          MTRand& mTwister);
 
       //__________________________________
-      /** @brief Schedule compute of blackbody intensity */ 
+      /** @brief Schedule compute of blackbody intensity */
       void sched_sigmaT4( const LevelP& level,
                           SchedulerP& sched,
                           Task::WhichDW temp_dw,
@@ -111,6 +110,19 @@ namespace Uintah{
                     Task::WhichDW which_temp_dw,
                     const bool includeEC );
 
+      //__________________________________
+      //
+      void sched_initialize_sigmaT4( const LevelP  & level,
+                                     SchedulerP    & sched );
+
+      //__________________________________
+      //
+      template< class T>
+      void initialize_sigmaT4( const ProcessorGroup *,
+                               const PatchSubset    * patches,
+                               const MaterialSubset *,
+                               DataWarehouse        *,
+                               DataWarehouse        * new_dw );
 
 
       //__________________________________
@@ -120,7 +132,7 @@ namespace Uintah{
                     SchedulerP& sched,
                     Task::WhichDW temp_dw,
                     const bool includeEC );
-      
+
       //__________________________________
       // For RMCRT slim
       template< class T>
@@ -132,7 +144,6 @@ namespace Uintah{
                     DataWarehouse* new_dw,
                     Task::WhichDW which_temp_dw );
 
-      
       //__________________________________
       //
       void reflect(double& fs,
@@ -149,11 +160,11 @@ namespace Uintah{
       void raySignStep( double sign[],
                         int cellStep[],
                         const Vector& inv_direction_vector);
-      
+
       //__________________________________
       //
       void ray_Origin( MTRand& mTwister,
-                       const Point  CC_position,  
+                       const Point  CC_position,
                        const Vector Dx,
                        const bool useCCRays,
                        Vector& rayOrigin);
@@ -174,7 +185,7 @@ namespace Uintah{
       //______________________________________________________________________
       //    Carry Foward tasks
       // transfer a variable from old_dw -> new_dw for convenience */
-      
+
       void sched_CarryForward_FineLevelLabels ( const LevelP& level,
                                                 SchedulerP& sched );
 
@@ -185,7 +196,7 @@ namespace Uintah{
                                           OnDemandDataWarehouse* new_dw,
                                           UintahParams& uintahParams,
                                           ExecutionObject<ExecSpace, MemSpace>& execObj );
-       
+
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
                                     const VarLabel* variable,
@@ -214,54 +225,54 @@ namespace Uintah{
                           Task::WhichDW which_dw );
 
       bool isDbgCell( IntVector me);
-      
-      void set_abskg_dw_perLevel ( const LevelP& level, 
+
+      void set_abskg_dw_perLevel ( const LevelP& level,
                                    Task::WhichDW which_dw );
 
       DataWarehouse* get_abskg_dw ( const int L,
                                     const VarLabel* label,
                                     DataWarehouse* new_dw );
-                                   
+
       Task::WhichDW  get_abskg_whichDW ( const int L,
                                          const VarLabel* abskg );
-                   
+
       //______________________________________________________________________
       //    Public variables that are used by Radiometer & RMCRT classes
-      enum DIR {X=0, Y=1, Z=2, NONE=-9}; 
-      
+      enum DIR {X=0, Y=1, Z=2, NONE=-9};
+
       //           -x      +x       -y       +y     -z     +z
-      enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};     
-      
+      enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
+
       enum GRAPH_TYPE {
           TG_CARRY_FORWARD = 0              // carry forward task graph
         , TG_RMCRT         = 1              // rmcrt taskgraph
         , NUM_GRAPHS
       };
-      
+
       double d_sigma_over_pi{0.0};                  // Stefan Boltzmann divided by pi (W* m-2* K-4)
       int d_flowCell{-1};                           // HARDWIRED
       Ghost::GhostType d_gn{Ghost::None};
       Ghost::GhostType d_gac{Ghost::AroundCells};
 
       TypeDescription::Type d_FLT_DBL;              // Is algorithm based on doubles or floats
-      
+
       static std::vector<IntVector> d_dbgCells;     // cells that we're interrogating when DEBUG is on
-      static std::map <std::string,Task::WhichDW> d_abskg_dw;   // map that contains level index and whichDW  
-      
+      static std::map <std::string,Task::WhichDW> d_abskg_dw;   // map that contains level index and whichDW
+
       // This will create only 1 instance for both Ray() and radiometer() classes to use
       static double d_threshold;
       static double d_sigma;
-      static double d_sigmaScat;  
+      static double d_sigmaScat;
       static double d_maxRayLength;                 // Maximum length a ray can travel
-          
+
       static bool d_isSeedRandom;                   // are seeds random
-      static bool d_allowReflect;                   // specify as false when doing DOM comparisons 
-           
+      static bool d_allowReflect;                   // specify as false when doing DOM comparisons
+
       // These are initialized once in registerVarLabels().
       static int           d_matl;
       static MaterialSet * d_matlSet;
       static std::string   d_abskgBC_tag;             // Needed by BC, manages the varLabel name change when using floats
-      
+
       // Varlabels local to RMCRT
       static const VarLabel* d_sigmaT4Label;
       static const VarLabel* d_abskgLabel;
@@ -271,14 +282,14 @@ namespace Uintah{
 
       // For RMCRT slim
       static const VarLabel* d_abskgSigmaT4CellTypeLabel;
-      
+
       // VarLabels passed to RMCRT by the component
       static const VarLabel* d_compTempLabel;       //  temperature
       static const VarLabel* d_compAbskgLabel;      //  Absorption Coefficient
       static const VarLabel* d_cellTypeLabel;       //  cell type marker
-      
+
       fastApproxExponent d_fastExp;
-      
+
 
   }; // class RMCRTCommon
 

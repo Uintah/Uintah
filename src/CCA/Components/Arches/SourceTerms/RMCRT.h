@@ -213,8 +213,9 @@ private:
   enum Algorithm{ dataOnion, 
                   dataOnionSlim,
                   coarseLevel, 
-                  singleLevel};
-
+                  singleLevel,
+                  radiometerOnly       // VRFlux is computed at radiometer locations
+                };
   int  _matl;
   int  _archesLevelIndex{-9};
   bool _all_rk{false};

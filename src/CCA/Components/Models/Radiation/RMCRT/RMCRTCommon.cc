@@ -50,7 +50,7 @@ using namespace Uintah;
 
 // These are used externally (e.g. Radiamoter.cc), keep them visible
 // outside this unit
-Dout g_ray_dbg("Ray_dbg", "Radiation Models", "RMCRT Ray general debug stream", false);
+Dout g_ray_dbg("Ray",     "Radiation Models", "RMCRT Ray general debug stream", false);
 Dout g_ray_BC ("Ray_BC",  "Radiation Models", "RMCRT RayBC debug stream", false);
 
 //______________________________________________________________________
@@ -165,6 +165,7 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
   // If using RMCRT:DBL
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
+
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type && subtype == TypeDescription::double_type ) {
     d_abskgLabel = d_compAbskgLabel;
   }
@@ -211,7 +212,8 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
   tsk->requires( abskgDW,       d_compAbskgLabel, d_gn, 0 );
   tsk->computes(d_abskgLabel);
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet);
+  // shedule on all taskgraphs not just TG_RMCRT.  The output task needs d_abskgLabel
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
 //______________________________________________________________________
 //
@@ -401,6 +403,50 @@ RMCRTCommon::combineAbskgSigmaT4CellType( const ProcessorGroup*,
       item.sigmaT4 = sigmaT4[c];
       abskgSigmaT4CellType[c] = reinterpret_cast<double&>(item);   
     }
+  }
+}
+//______________________________________________________________________
+//
+//______________________________________________________________________
+void
+RMCRTCommon::sched_initialize_sigmaT4( const LevelP  & level,
+                                       SchedulerP    & sched )
+{
+  std::string taskname = "RMCRTCommon::initialize_sigmaT4";
+
+  Task* tsk = nullptr;
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::initialize_sigmaT4<double> );
+  } else {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::initialize_sigmaT4<float> );
+  }
+
+  printSchedule(level, g_ray_dbg, "RMCRTCommon::initialize_sigmaT4");
+
+  tsk->computes(d_sigmaT4Label);
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+}
+//______________________________________________________________________
+// Initialize sigmaT4 = 0
+//______________________________________________________________________
+template< class T>
+void
+RMCRTCommon::initialize_sigmaT4( const ProcessorGroup *,
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset *,
+                                 DataWarehouse        *,
+                                 DataWarehouse        * new_dw )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+
+    printTask(patches, patch, g_ray_dbg, "Doing RMCRTCommon::initialize_sigmaT4");
+
+    CCVariable< T > sigmaT4;
+    new_dw->allocateAndPut( sigmaT4, d_sigmaT4Label, d_matl, patch );
+    sigmaT4.initialize( 0.0 );
   }
 }
 

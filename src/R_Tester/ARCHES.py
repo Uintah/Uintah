@@ -301,6 +301,7 @@ RMCRTTESTS = [
    ("rmcrt_bm1_ML"                      , "RMCRT/rmcrt_bm1_ML.ups"                , 1   , "ALL"  , ["exactComparison"]) ,
    ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                , 1   , "ALL"  , ["exactComparison"]) ,
    ("methane_rmcrt"                     , "RMCRT/methane_rmcrt.ups"               , 8   , "ALL"  , ["exactComparison"   , "no_restart"]) ,
+   ("methane_VR"                        , "RMCRT/methane_VR.ups"                  , 8   , "ALL"  , ["exactComparison"]) ,
    ("multibox_rmcrt_coal_1L"            , "RMCRT/multibox_rmcrt_coal_1L.ups"      , 8   , "ALL"  , ["exactComparison"]) ,
    ("multibox_rmcrt_coal_2L"            , "RMCRT/multibox_rmcrt_coal_2L.ups"      , 8   , "ALL"  , ["exactComparison"]) ,
    ("multibox_rmcrt_coal_DO"            , "RMCRT/multibox_rmcrt_coal_DO.ups"      , 8   , "ALL"  , ["exactComparison"]) ,

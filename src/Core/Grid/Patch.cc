@@ -1892,11 +1892,6 @@ IntVector Patch::getHighIndexWithDomainLayer(VariableBasis basis) const
   return inhigh;
 }
 
-void Patch::finalizePatch()
-{
- 
-}
-
 /**
  * Returns the index that this patch would be
  * if all of the levels were taken into account

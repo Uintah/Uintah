@@ -75,8 +75,7 @@ Radiometer::~Radiometer()
 void
 Radiometer::problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& radps,
-                          const GridP&        grid,
-                          const bool getExtraInputs)
+                          const GridP&        grid)
 {
   ProblemSpecP rad_ps = radps;
   Vector orient;
@@ -85,30 +84,20 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   rad_ps->getWithDefault( "nRadRays"  ,         d_nRadRays ,       1000 );
   rad_ps->get(            "VRLocationsMin" ,    d_VRLocationsMin );                    // minimum extent of the string or block of virtual radiometers in physical units
   rad_ps->get(            "VRLocationsMax" ,    d_VRLocationsMax );                    // maximum extent
-
-  if( getExtraInputs ){
-    rad_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );                // scattering coefficient
-    rad_ps->getWithDefault( "Threshold" ,       d_threshold ,      0.01 );              // When to terminate a ray
-    rad_ps->getWithDefault( "randomSeed",       d_isSeedRandom,    true );              // random or deterministic seed.
-    rad_ps->getWithDefault( "StefanBoltzmann",  d_sigma,           5.67051e-8);         // Units are W/(m^2-K)
-    rad_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
-  } else {
-                   // bulletproofing.
-    for( ProblemSpecP n = rad_ps->getFirstChild(); n != nullptr; n=n->getNextSibling() ){
-      std::string me = n->getNodeName();
-      if( ( me == "sigmaScat"  ||  me == "Threshold" || me == "randomSeed" ||  me == "StefanBoltzmann" || me == "allowReflect" ) && me !="text" ){
-        std::ostringstream warn;
-        warn << "\n ERROR:Radiometer::problemSetup: You've specified the variable (" << me << ")"
-             << " which will be ignored.  You should set the variable outside <Radiometer> section. \n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
+                 // bulletproofing.
+  for( ProblemSpecP n = rad_ps->getFirstChild(); n != nullptr; n=n->getNextSibling() ){
+    std::string me = n->getNodeName();
+    if( ( me == "sigmaScat"  ||  me == "Threshold" || me == "randomSeed" ||  me == "StefanBoltzmann" || me == "allowReflect" ) && me !="text" ){
+      std::ostringstream warn;
+      warn << "\n ERROR:Radiometer::problemSetup: You've specified the variable (" << me << ")"
+           << " which will be ignored.  You should set the variable outside <Radiometer> section. \n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
 
   //__________________________________
   //  Warnings and bulletproofing
   //
-  //the VRLocations can't exceed computational domain
   BBox compDomain;
   grid->getSpatialRange(compDomain);
   Point start = d_VRLocationsMin;
@@ -235,39 +224,31 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 //
 //______________________________________________________________________
 void
-Radiometer::sched_initializeRadVars( const LevelP& level,
+Radiometer::sched_initialize_VRFlux( const LevelP& level,
                                      SchedulerP& sched )
 {
 
-  std::string taskname = "Radiometer::initializeRadVars";
+  std::string taskname = "Radiometer::initialize_VRFlux";
 
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< double > );
+    tsk= scinew Task( taskname, this, &Radiometer::initialize_VRFlux< double > );
   }else{
-    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< float > );
+    tsk= scinew Task( taskname, this, &Radiometer::initialize_VRFlux< float > );
   }
   
   printSchedule(level, g_ray_dbg, taskname);
 
-  tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
   tsk->computes( d_VRFluxLabel );
-
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
-
-  // Carry Forward d_VRFluxlabel if you're not computing it
-  sched_CarryForward_Var(level, sched, d_VRFluxLabel  , RMCRTCommon::TG_CARRY_FORWARD);
-
 }
 
 //______________________________________________________________________
-//  - Initialize the flux on all patches or move that variable forward
-//    The flux is modified downstream.
-//  - Determine if the taskgraph should be recompiled
+//
 //______________________________________________________________________
 template< class T >
 void
-Radiometer::initializeRadVars( const ProcessorGroup*,
+Radiometer::initialize_VRFlux( const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
@@ -279,7 +260,7 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::initializeVars");
+    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::initialize_VRFlux");
 
     CCVariable< T > VRFlux;
     new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
@@ -299,6 +280,14 @@ Radiometer::sched_radiometer( const LevelP& level,
                               Task::WhichDW celltype_dw )
 {
   
+  
+  //__________________________________
+  //  There has to be a value of VRFlux on all patches for output
+  sched_initialize_VRFlux( level, sched );
+  
+  
+  //__________________________________
+  //  Compute VRFlux on subset of patches
   // only schedule on the patches that contain radiometers - Spatial task scheduling
   //   we want a PatchSet like: { {19}, {22}, {25} } (singleton subsets like level->eachPatch())
   //     NOT -> { {19,22,25} }, as one proc isn't guaranteed to own the entire, 3-element subset.
@@ -321,7 +310,7 @@ Radiometer::sched_radiometer( const LevelP& level,
 
   tsk->setType(Task::Spatial);
 
-  printSchedule(level, g_ray_dbg, "Radiometer::sched_radiometer");
+  printSchedule(level, g_ray_dbg, "Radiometer::sched_radiometer on patches ");
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
@@ -491,7 +480,7 @@ Radiometer::rayDirection_VR( MTRand& mTwister,
   double phi = 2 * M_PI * mTwister.randDblExc(); //azimuthal angle. Range of 0 to 2pi
 
   // This guarantees that the polar angle of the ray is within the delta_theta
-  double VRTheta = acos(cos(deltaTheta)+range*mTwister.randDblExc());
+  double VRTheta = acos( cos(deltaTheta) + range * mTwister.randDblExc());
   cosVRTheta = cos(VRTheta);
 
   // Convert to Cartesian x,y, and z represent the pre-rotated direction vector of a ray
@@ -525,8 +514,27 @@ Radiometer::getPatchSet( SchedulerP& sched,
                          PatchSet* ps )
 {
   //__________________________________
-  // find patches that contain radiometers
-  std::vector<const Patch*> radiometer_patches;
+  //  bulletproofing
+  IntVector L_lo;
+  IntVector L_hi;
+  level->findInteriorCellIndexRange( L_lo, L_hi );
+  IntVector VR_posLo = level->getCellIndex(d_VRLocationsMin);
+  IntVector VR_posHi = level->getCellIndex(d_VRLocationsMax);
+      
+  if( !doesIntersect (VR_posLo, VR_posHi, L_lo, L_hi ) ){
+    std::ostringstream warn;
+    warn << "\n ERROR:Radiometer::problemSetup: The VR locations:\n"
+         << "     VR min " << d_VRLocationsMin << "  cell index: " << VR_posLo << "\n"
+         << "     VR max " << d_VRLocationsMax << "  cell index: " << VR_posHi << "\n"
+         << "     Number of cells: " << VR_posHi - VR_posLo << "\n"
+         << " do not overlap with the domain, " << L_lo << " -> " << L_hi << "\n"
+         << " There must be at least 1 cell in each direction" ;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  } 
+  
+  //__________________________________
+  // find patches that contain radiometers  
+  std::vector<const Patch*> radiometer_patches;   
   LoadBalancer * lb = sched->getLoadBalancer();
   const PatchSet * procPatches = lb->getPerProcessorPatchSet(level);
 
@@ -537,8 +545,7 @@ Radiometer::getPatchSet( SchedulerP& sched,
       const Patch* patch = patches->get(p);
       IntVector lo = patch->getCellLowIndex();
       IntVector hi = patch->getCellHighIndex();
-      IntVector VR_posLo = level->getCellIndex(d_VRLocationsMin);
-      IntVector VR_posHi = level->getCellIndex(d_VRLocationsMax);
+      
 
       if (doesIntersect(VR_posLo, VR_posHi, lo, hi)) {
         radiometer_patches.push_back(patch);
@@ -546,6 +553,9 @@ Radiometer::getPatchSet( SchedulerP& sched,
     }
   }
   size_t num_patches = radiometer_patches.size();
+
+
+
   for (size_t i = 0; i < num_patches; ++i) {
     ps->add(radiometer_patches[i]);
   }

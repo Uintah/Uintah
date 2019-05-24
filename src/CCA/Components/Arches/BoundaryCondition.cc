@@ -5392,37 +5392,79 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void
-BoundaryCondition::sched_create_radiation_temperature( SchedulerP& sched, const LevelP& level, const MaterialSet* matls, const bool use_old_dw )
+BoundaryCondition::sched_create_radiation_temperature( SchedulerP       & sched, 
+                                                       const LevelP     & level, 
+                                                       const MaterialSet* matls,
+                                                       bool doing_restart,
+                                                       const bool use_old_dw )
 {
-  bool radiation = false;
   SourceTermFactory& srcs = SourceTermFactory::self();
-  if ( srcs.source_type_exists("do_radiation") ) {
-    radiation = true;
+  
+  bool doing_DO_rad    = srcs.source_type_exists("do_radiation");
+  bool doing_RMCRT_rad = srcs.source_type_exists( "rmcrt_radiation");
+  
+  if ( !doing_DO_rad && !doing_RMCRT_rad ){
+    return;
   }
-  if ( srcs.source_type_exists( "rmcrt_radiation") ) {
-    radiation = true;
+  
+  //__________________________________
+  //  Return if restarting and rad temp exists
+  DataWarehouse* new_dw = sched->get_dw(1);
+  int archIndex = 0;
+  int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
+  
+  bool radTemp_exists = false;
+  
+
+  const int rank = Uintah::Parallel::getMPIRank();
+  
+  // Find the patches on the arches level that this mpi rank owns.
+  const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet( level );
+  const PatchSubset* myPatches     = ps->getSubset( rank );
+  
+  // hackish way to determine if radTemp exists.
+  for( auto i=0; i<myPatches->size(); i++) {
+    const Patch* patch = myPatches->get(i);
+    radTemp_exists = new_dw->exists( d_radiation_temperature_label,   matlIndex, patch );
   }
 
-  if ( radiation ) {
-    string taskname = "BoundaryCondition::create_radiation_temperature";
-    Task* tsk = scinew Task(taskname, this, &BoundaryCondition::create_radiation_temperature, use_old_dw );
-
-    tsk->computes(d_radiation_temperature_label);
-
-    //WARNING! THIS ASSUMES WE ARE DOING RADIATION ONCE PER TIMESTEP ON RK STEP = 0
-    if ( use_old_dw ) {
-      tsk->requires(Task::OldDW, d_temperature_label, Ghost::None, 0);
-    } else {
-      tsk->requires(Task::NewDW, d_temperature_label, Ghost::None, 0);
-    }
-
-
-    sched->addTask( tsk, level->eachPatch(), matls );
+  if( doing_restart && radTemp_exists ){
+    return;
   }
+
+  //__________________________________
+  //  
+  // Before you can require varLabel from the new_dw
+  // there must be a compute() for that variable.  This is an empty task.
+  if ( doing_restart ) {
+
+    Task* t = scinew Task("BoundaryCondition::create_radiation_temperatureHack", this,
+                          &BoundaryCondition::create_radiation_temperatureHack );
+    t->computes( d_temperature_label );
+    sched->addTask(t, level->eachPatch(), matls);
+  }
+
+  //__________________________________
+  //
+  string taskname = "BoundaryCondition::create_radiation_temperature";
+  Task* tsk = scinew Task(taskname, this, &BoundaryCondition::create_radiation_temperature, use_old_dw );
+
+  tsk->computes(d_radiation_temperature_label);
+
+  //WARNING! THIS ASSUMES WE ARE DOING RADIATION ONCE PER TIMESTEP ON RK STEP = 0
+  if ( use_old_dw ) {
+    tsk->requires(Task::OldDW, d_temperature_label, Ghost::None, 0);
+  } else {
+    tsk->requires(Task::NewDW, d_temperature_label, Ghost::None, 0);
+  }
+
+  sched->addTask( tsk, level->eachPatch(), matls );
 }
-
+//______________________________________________________________________
+//
 void
 BoundaryCondition::create_radiation_temperature( const ProcessorGroup* pc,
                                                  const PatchSubset* patches,
@@ -5431,25 +5473,21 @@ BoundaryCondition::create_radiation_temperature( const ProcessorGroup* pc,
                                                  DataWarehouse* new_dw,
                                                  const bool use_old_dw )
 {
-  //patch loop
   for (int p=0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
-
     int archIndex = 0;
-
     int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> radiation_temperature;
-
     constCCVariable<double> old_temperature;
-
 
     new_dw->allocateAndPut( radiation_temperature, d_radiation_temperature_label, matlIndex, patch );
 
     if ( use_old_dw ) {
       old_dw->get( old_temperature, d_temperature_label, matlIndex, patch, Ghost::None, 0 );
-    } else {
+    } 
+    else {
       new_dw->get( old_temperature, d_temperature_label, matlIndex, patch, Ghost::None, 0 );
       d_newBC->checkForBC( pc, patch, "radiation_temperature");
     }
@@ -5457,10 +5495,10 @@ BoundaryCondition::create_radiation_temperature( const ProcessorGroup* pc,
     radiation_temperature.copyData(old_temperature);
 
     d_newBC->setExtraCellScalarValueBC<double>( pc, patch, radiation_temperature, "radiation_temperature" );
-
   }
 }
-
+//______________________________________________________________________
+//
 void
 BoundaryCondition::addIntrusionMomRHS( const Patch* patch,
                                        constSFCXVariable<double>& u,
