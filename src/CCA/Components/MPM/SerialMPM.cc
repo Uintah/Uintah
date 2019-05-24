@@ -5797,10 +5797,10 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
     }   // Node Iterator
 
     // The cheaper option... Less accurate.  See comment below.
-//    ParticleInterpolator* lin_interpolator=scinew LinearInterpolator(patch);
-//    vector<IntVector> lni(lin_interpolator->size());
-//    vector<double> lS(lin_interpolator->size());
-//    Matrix3 PH; PH.Identity(); // Placeholder for psize, not needed for linear
+    ParticleInterpolator* lin_interpolator=scinew LinearInterpolator(patch);
+    vector<IntVector> lni(lin_interpolator->size());
+    vector<double> lS(lin_interpolator->size());
+    Matrix3 PH; PH.Identity(); // Placeholder for psize, not needed for linear
 
 
     // In this section of code, we find the particles that are in the 
@@ -5834,14 +5834,14 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
       for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
         particleIndex idx = *it;
 
-//        int NN = lin_interpolator->findCellAndWeights(px[m][idx],lni,lS,PH);
-        int NN = interpolator->findCellAndWeights(px[m][idx],ni,S,cursize[idx]);
+        int NN = lin_interpolator->findCellAndWeights(px[m][idx],lni,lS,PH);
+//        int NN = interpolator->findCellAndWeights(px[m][idx],ni,S,cursize[idx]);
         
         for(int k = 0; k < NN; k++) {
-          if (patch->containsNode(ni[k]) && NumMatlsOnNode[ni[k]]>1){
-            ParticleList[m][ni[k]][ParticleList[m][ni[k]][129]]=idx;
-            ParticleList[m][ni[k]][129]++;
-            NumParticlesOnNode[ni[k]]++;
+          if (patch->containsNode(lni[k]) && NumMatlsOnNode[lni[k]]>1){
+            ParticleList[m][lni[k]][ParticleList[m][lni[k]][129]]=idx;
+            ParticleList[m][lni[k]][129]++;
+            NumParticlesOnNode[lni[k]]++;
           }
         }
       }
@@ -5854,7 +5854,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
     double lambda[4]={lam,lam,lam,0};
     double wp = 1.0;
     double RHS[4];
-    for(NodeIterator iter =patch->getExtraNodeIterator();!iter.done();iter++){
+    for(NodeIterator iter =patch->getNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
       // Only work on multi-material nodes
       if(alphaMaterial[c]>=0){
@@ -5923,7 +5923,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
           phi[i]+=RHS[i];
         }
         Vector nhat_kp1(phi[0],phi[1],phi[2]);
-        nhat_kp1.normalize();
+        nhat_kp1/=(nhat_kp1.length()+1.e-100);
         double error = 1.0 - Dot(nhat_kp1,nhat_k);
         if(error < tol || num_iters > 15){
           converged=true;
@@ -5941,7 +5941,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
     // Renormalize normal vectors after setting BCs
     for(NodeIterator iter =patch->getExtraNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
-      normAlphaToBeta[c].normalize();
+      normAlphaToBeta[c]/=(normAlphaToBeta[c].length()+1.e-100);
       if(alphaMaterial[c]==-99){
         normAlphaToBeta[c]=Vector(0.);
       }
