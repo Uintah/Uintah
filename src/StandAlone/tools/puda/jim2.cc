@@ -62,7 +62,7 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
   findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
 
   ostringstream fnum;
-  string filename("Time_meanDisp.dat");
+  string filename("Time_maxDisp.dat");
   ofstream outfile(filename.c_str());
 
   for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
@@ -71,7 +71,7 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
     GridP grid = da->queryGrid(t);
 
     Vector mean_disp(0.,0.,0.);
-    double total_mass=0.;
+//    double total_mass=0.;
       LevelP level = grid->getLevel(grid->numLevels()-1);
       cout << "Level: " << grid->numLevels() - 1 <<  endl;
       for(Level::const_patch_iterator iter = level->patchesBegin();
@@ -87,16 +87,21 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
         da->query(value_disp,"p.displacement", matl, patch, t);
         da->query(value_mass,"p.volume",       matl, patch, t);
 
+        double zmin=9e99;
         ParticleSubset* pset = value_pos.getParticleSubset();
         if(pset->numParticles() > 0){
           ParticleSubset::iterator piter = pset->begin();
           for(;piter != pset->end(); piter++){
-            mean_disp+=value_disp[*piter]*value_mass[*piter];
-            total_mass+=value_mass[*piter];
+            if(value_pos[*piter].z() < zmin){
+              zmin = value_pos[*piter].z();
+              mean_disp = value_disp[*piter];
+            }
+//            mean_disp+=value_disp[*piter]*value_mass[*piter];
+//            total_mass+=value_mass[*piter];
           } // for
         }  //if
       }  // for patches
-    mean_disp/=total_mass;
+//    mean_disp/=total_mass;
 
    outfile.precision(15);
    outfile << time << " " << mean_disp.z() << endl; 
