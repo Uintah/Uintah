@@ -378,10 +378,12 @@ KokkosSolver::sched_initialize( const LevelP& level,
                                 SchedulerP& sched,
                                 const bool doing_restart )
 {
+  using namespace Uintah::ArchesCore;
+
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
-  //bool is_restart = false;
-  const bool pack_tasks = true;
-  const bool dont_pack_tasks = false;
+
+  TaskController& tsk_controller = TaskController::self();
+  const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
 
   // Setup BCs
   setupBCs( level, sched, matls );
@@ -399,54 +401,52 @@ KokkosSolver::sched_initialize( const LevelP& level,
   m_task_factory_map["utility_factory"]->schedule_task( "vol_fraction_calc", TaskInterface::INITIALIZE, level, sched, matls );
 
   //transport factory
-  m_task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+  m_task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
   // generic field initializer
-  m_task_factory_map["initialize_factory"]->schedule_task_group( "phi_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
+  m_task_factory_map["initialize_factory"]->schedule_task_group( "phi_tasks", TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
   // boundary condition factory
-  m_task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
-  m_task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
+  m_task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
+  m_task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, packed_info.global, level, sched, matls );
 
   // tabulated factory
-  m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
+  m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
   //Need to apply BC's after everything is initialized
-  m_task_factory_map["transport_factory"]->schedule_task_group( "scalar_rhs_builders", TaskInterface::BC, pack_tasks, level, sched, matls );
+  m_task_factory_map["transport_factory"]->schedule_task_group( "scalar_rhs_builders", TaskInterface::BC, packed_info.global, level, sched, matls );
   // Need to updated table BC
-  m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
+  m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, packed_info.global, level, sched, matls );
 
-  m_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, pack_tasks, level, sched, matls );
-
-  //m_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_fe_update", TaskInterface::BC, pack_tasks, level, sched, matls );
+  m_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, packed_info.global, level, sched, matls );
 
   // variable that computed with density such as rho*u
-  m_task_factory_map["initialize_factory"]->schedule_task_group( "rho_phi_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
+  m_task_factory_map["initialize_factory"]->schedule_task_group( "rho_phi_tasks", TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
   // get phi from rho*phi :
   m_task_factory_map["property_models_factory"]->schedule_task_group("phifromrhophi",
-    TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
+    TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
   // dqmom initilization for w ic
   m_task_factory_map["transport_factory"]->schedule_task_group("dqmom_ic_from_wic",
-    TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
+    TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
   //property factory
-  m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+  m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
   //Need to apply BC's after everything is initialized
-  m_task_factory_map["transport_factory"]->schedule_task_group( "momentum_construction", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
+  m_task_factory_map["transport_factory"]->schedule_task_group( "momentum_construction", TaskInterface::BC, packed_info.global, level, sched, matls );
 
-  m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
+  m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, packed_info.global, level, sched, matls );
 
   // particle models
-  m_task_factory_map["particle_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+  m_task_factory_map["particle_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
   // turbulence model
-  m_task_factory_map["turbulence_model_factory"]->schedule_task_group( "momentum_closure", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+  m_task_factory_map["turbulence_model_factory"]->schedule_task_group( "momentum_closure", TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
   //source_term_kokkos_factory
-  m_task_factory_map["source_term_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+  m_task_factory_map["source_term_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
 
  // m_task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
@@ -491,8 +491,10 @@ int
 KokkosSolver::sched_nonlinearSolve( const LevelP & level,
                                     SchedulerP & sched )
 {
-  const bool pack_tasks = true;
-  //const bool dont_pack_tasks = false;
+  using namespace Uintah::ArchesCore;
+
+  TaskController& tsk_controller = TaskController::self();
+  const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
 
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
@@ -522,25 +524,25 @@ KokkosSolver::sched_nonlinearSolve( const LevelP & level,
     sched, matls );
 
   i_transport->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
-    pack_tasks, level, sched, matls );
+    packed_info.global, level, sched, matls );
 
   i_particle_model_fac->second->schedule_task_group("all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
-    pack_tasks, level, sched, matls );
+    packed_info.global, level, sched, matls );
 
   i_prop_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
-    pack_tasks, level, sched, matls );
+    packed_info.global, level, sched, matls );
 
   i_source_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
-    pack_tasks, level, sched, matls );
+    packed_info.global, level, sched, matls );
 
   i_turb_model_fac->second->schedule_task_group( "momentum_closure", TaskInterface::TIMESTEP_INITIALIZE,
-    pack_tasks, level, sched, matls );
+    packed_info.global, level, sched, matls );
 
   i_bc_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
-    pack_tasks, level, sched, matls );
+    packed_info.global, level, sched, matls );
 
   m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks",
-    TaskInterface::TIMESTEP_INITIALIZE, pack_tasks, level, sched, matls );
+    TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls );
 
   // --------------- Actual Solve ------------------------------------------------------------------
 
