@@ -541,15 +541,16 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
     _RMCRT->set_abskg_dw_perLevel ( level, Task::OldDW );
     
-    _RMCRT->sched_CarryForward_Var ( level, sched, _RMCRT->d_sigmaT4Label,   RMCRTCommon::TG_CARRY_FORWARD ); 
+    _RMCRT->sched_CarryForward_Var ( level, sched, _RMCRT->d_sigmaT4Label,         RMCRTCommon::TG_CARRY_FORWARD ); 
 
-    _RMCRT->sched_CarryForward_Var(  level, sched, radiometer->d_VRFluxLabel, RMCRTCommon::TG_CARRY_FORWARD );
+    _RMCRT->sched_CarryForward_Var(  level, sched, radiometer->d_VRFluxLabel,      RMCRTCommon::TG_CARRY_FORWARD );
+
+    _RMCRT->sched_CarryForward_Var(  level, sched, radiometer->d_VRIntensityLabel, RMCRTCommon::TG_CARRY_FORWARD );
     
     // convert abskg:dbl -> abskg:flt if needed
     _RMCRT->sched_DoubleToFloat( level, sched, notUsed );
 
     _RMCRT->sched_sigmaT4( level, sched, temp_dw, includeExtraCells );
-
 
     radiometer->sched_radiometer( level, sched, notUsed, sigmaT4_dw, celltype_dw );
 
@@ -721,54 +722,61 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
 
   const LevelP& archesLevel = grid->getLevel(_archesLevelIndex);
 
+  if (level != archesLevel) {
+    return;
+  }
+
+  printSchedule(level, dbg, "RMCRT_Radiation::sched_restartInitialize");
+  
   // Find the first patch, on the arches level, that this mpi rank owns.
   const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet(archesLevel);
   const PatchSubset* myPatches = ps->getSubset(_my_world->myRank());
   const Patch* firstPatch = myPatches->get(0);
 
-  if (level == archesLevel) {
-    printSchedule(level, dbg, "RMCRT_Radiation::sched_restartInitialize");
-    
-    //  Only schedule if radFlux*_Label are in the checkpoint uda
-    if ( (_whichAlgo != radiometerOnly ) && new_dw->exists(_radFluxE_Label, _matl, firstPatch)) {
-      printSchedule(level, dbg, "RMCRT_Radiation::sched_restartInitializeHack");
-      
-      Task* t1 = scinew Task("RMCRT_Radiation::restartInitializeHack", this, &RMCRT_Radiation::restartInitializeHack);
-      t1->computes(_radFluxE_Label);
-      t1->computes(_radFluxW_Label);
-      t1->computes(_radFluxN_Label);   // Before you can require something from the new_dw
-      t1->computes(_radFluxS_Label);   // there must be a compute() for that variable.
-      t1->computes(_radFluxT_Label);
-      t1->computes(_radFluxB_Label);
-    
-      sched->addTask(t1, archesLevel->eachPatch(), _materialManager->allMaterials( "Arches" ));
+  //  Only schedule if radFlux*_Label are in the checkpoint uda
+  if ( (_whichAlgo != radiometerOnly ) && new_dw->exists(_radFluxE_Label, _matl, firstPatch) ) {
+    printSchedule(level, dbg, "RMCRT_Radiation::sched_restartInitializeHack");
 
-      //__________________________________
-      //  convert flux from 6 doubles -> CCVarible
-      sched_DBLsToStencil(archesLevel, sched);
-    }
+    Task* t1 = scinew Task("RMCRT_Radiation::restartInitializeHack", this, 
+                           &RMCRT_Radiation::restartInitializeHack);
+    t1->computes( _radFluxE_Label );
+    t1->computes( _radFluxW_Label );
+    t1->computes( _radFluxN_Label );   // Before you can require something from the new_dw
+    t1->computes( _radFluxS_Label );   // there must be a compute() for that variable.
+    t1->computes( _radFluxT_Label );
+    t1->computes( _radFluxB_Label ); 
+
+    sched->addTask( t1, archesLevel->eachPatch(), _materialManager->allMaterials("Arches") );
 
     //__________________________________
-    // compute sigmaT4 if it doesn't already exist
-    // on the arches level
-    if (!new_dw->exists(_RMCRT->d_sigmaT4Label, _matl, firstPatch)) {
-      bool includeExtraCells = true;
-      _RMCRT->sched_sigmaT4(archesLevel, sched, Task::NewDW, includeExtraCells);
-    }
+    //  convert flux from 6 doubles -> CCVarible
+    sched_DBLsToStencil(archesLevel, sched);
+  }
+
+  //__________________________________
+  // compute sigmaT4 if it doesn't already exist
+  if ( !new_dw->exists(_RMCRT->d_sigmaT4Label, _matl, firstPatch) ) {
+
+    // Before you can require something from the new_dw there must be a compute() for that variable.
+    printSchedule(level, dbg, "RMCRT_Radiation::sched_restartInitializeHacks");
+    
+    Task* t2 = scinew Task( "RMCRT_Radiation::restartInitializeHack2", this, 
+                             &RMCRT_Radiation::restartInitializeHack2 );
+    t2->computes( _tempLabel );       
+    sched->addTask( t2, archesLevel->eachPatch(), _materialManager->allMaterials("Arches") );
+
+    bool includeExtraCells = true;
+    _RMCRT->sched_sigmaT4(archesLevel, sched, Task::NewDW, includeExtraCells);
+  }
+    
+  //__________________________________
+  //  Radiometer only 
+  Radiometer* radiometer = _RMCRT->getRadiometer();
+  if( _whichAlgo == radiometerOnly && !new_dw->exists( radiometer->d_VRFluxLabel, _matl, firstPatch) ){
+    radiometer->sched_initialize_VRFlux( level, sched );
   }
 }
 
-//______________________________________________________________________
-// HACK
-//______________________________________________________________________
-void
-RMCRT_Radiation::restartInitializeHack( const ProcessorGroup* , const PatchSubset*,
-                                        const MaterialSubset*, DataWarehouse*, DataWarehouse*)
-{
-  // This task is used to "fake" out the taskgraph createDetailedDependency() logic
-  // Before you can require something from the new_dw there must be a compute() for that
-  // variable.
-}
 
 //______________________________________________________________________
 // STUB

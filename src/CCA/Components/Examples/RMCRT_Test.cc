@@ -944,10 +944,12 @@ void RMCRT_Test::computeStableTimeStep (const ProcessorGroup*,
   // from the old DW.
   timeStep_vartype timeStep(0);
 
-  if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
-    old_dw->get(timeStep, VarLabel::find(timeStep_name) );
-  else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
-    new_dw->get(timeStep, VarLabel::find(timeStep_name) );
+  if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) ) {
+    old_dw->get( timeStep, VarLabel::find(timeStep_name) );
+  }
+  else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) ) {
+    new_dw->get( timeStep, VarLabel::find(timeStep_name) );
+  }
 
   const Level* level = getLevel(patches);
   double delt = level->dCell().x();

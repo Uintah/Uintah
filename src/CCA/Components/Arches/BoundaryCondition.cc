@@ -5452,7 +5452,6 @@ BoundaryCondition::sched_create_radiation_temperature( SchedulerP       & sched,
   string taskname = "BoundaryCondition::create_radiation_temperature";
   Task* tsk = scinew Task(taskname, this, &BoundaryCondition::create_radiation_temperature, use_old_dw );
 
-  tsk->computes(d_radiation_temperature_label);
 
   //WARNING! THIS ASSUMES WE ARE DOING RADIATION ONCE PER TIMESTEP ON RK STEP = 0
   if ( use_old_dw ) {
@@ -5460,6 +5459,8 @@ BoundaryCondition::sched_create_radiation_temperature( SchedulerP       & sched,
   } else {
     tsk->requires(Task::NewDW, d_temperature_label, Ghost::None, 0);
   }
+
+  tsk->computes(d_radiation_temperature_label);
 
   sched->addTask( tsk, level->eachPatch(), matls );
 }

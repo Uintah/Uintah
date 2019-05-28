@@ -263,7 +263,7 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
   printSchedule(level, g_ray_dbg, "RMCRTCommon::sched_sigmaT4");
 
   tsk->requires( temp_dw, d_compTempLabel,    d_gn, 0 );
-  tsk->computes(d_sigmaT4Label);
+  tsk->computes( d_sigmaT4Label );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }

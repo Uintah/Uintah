@@ -52,10 +52,12 @@ extern Dout g_ray_dbg;
 Radiometer::Radiometer(const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 {
   if ( FLT_DBL == TypeDescription::double_type ){
-    d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<double>::getTypeDescription() );
+    d_VRFluxLabel      = VarLabel::create( "VRFlux",      CCVariable<double>::getTypeDescription() );
+    d_VRIntensityLabel = VarLabel::create( "VRIntensity", CCVariable<double>::getTypeDescription() );
     proc0cout << "__________________________________ USING DOUBLE VERSION OF RADIOMETER" << std::endl;
   } else {
-    d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<float>::getTypeDescription() );
+    d_VRFluxLabel      = VarLabel::create( "VRFlux",      CCVariable<float>::getTypeDescription() );
+    d_VRIntensityLabel = VarLabel::create( "VRIntensity", CCVariable<float>::getTypeDescription() );
     proc0cout << "__________________________________ USING FLOAT VERSION OF RADIOMETER" << std::endl;
   }
 }
@@ -67,6 +69,7 @@ Radiometer::Radiometer(const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_
 Radiometer::~Radiometer()
 {
   VarLabel::destroy( d_VRFluxLabel );
+  VarLabel::destroy( d_VRIntensityLabel );
 }
 
 //______________________________________________________________________
@@ -240,6 +243,7 @@ Radiometer::sched_initialize_VRFlux( const LevelP& level,
   printSchedule(level, g_ray_dbg, taskname);
 
   tsk->computes( d_VRFluxLabel );
+  tsk->computes( d_VRIntensityLabel );
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 
@@ -262,9 +266,13 @@ Radiometer::initialize_VRFlux( const ProcessorGroup*,
 
     printTask(patches, patch, g_ray_dbg, "Doing Radiometer::initialize_VRFlux");
 
-    CCVariable< T > VRFlux;
-    new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
-    VRFlux.initialize( 0.0 );
+    CCVariable< T > flux;
+    CCVariable< T > intensity;
+    new_dw->allocateAndPut( flux,      d_VRFluxLabel,       d_matl, patch );
+    new_dw->allocateAndPut( intensity, d_VRIntensityLabel, d_matl, patch );
+    
+    flux.initialize( 0.0 );
+    intensity.initialize( 0.0 );
   }
 }
 
@@ -323,6 +331,7 @@ Radiometer::sched_radiometer( const LevelP& level,
   tsk->requires(celltype_dw, d_cellTypeLabel, gac, SHRT_MAX);
 
   tsk->modifies(d_VRFluxLabel);
+  tsk->modifies(d_VRIntensityLabel);
 
   sched->addTask(tsk, radiometerPatchSet, d_matlSet, RMCRTCommon::TG_RMCRT);
 
@@ -368,7 +377,6 @@ Radiometer::radiometer( const ProcessorGroup* pg,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::radiometer");
 
     bool modifiesFlux= true;
     radiometerFlux < T > ( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifiesFlux );
@@ -393,11 +401,15 @@ Radiometer::radiometerFlux( const Patch* patch,
   printTask(patch, g_ray_dbg, "Doing Radiometer::radiometerFlux");
 
   CCVariable< T > VRFlux;
+  CCVariable< T > intensity;
   if( modifiesFlux ){
-    new_dw->getModifiable( VRFlux,  d_VRFluxLabel,  d_matl, patch );
+    new_dw->getModifiable( VRFlux,     d_VRFluxLabel,      d_matl, patch );
+    new_dw->getModifiable( intensity,  d_VRIntensityLabel, d_matl, patch );
   }else{
-    new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
+    new_dw->allocateAndPut( VRFlux,    d_VRFluxLabel,      d_matl, patch );
+    new_dw->allocateAndPut( intensity, d_VRIntensityLabel, d_matl, patch );
     VRFlux.initialize( 0.0 );
+    intensity.initialize( 0.0 );
   }
 
   unsigned long int size = 0;                   // current size of PathIndex
@@ -447,8 +459,8 @@ Radiometer::radiometerFlux( const Patch* patch,
 
       //__________________________________
       //  Compute VRFlux
-      VRFlux[c] = (T) sumProjI * d_VR.sldAngl/d_nRadRays;
-
+      VRFlux[c]    = (T) sumProjI * d_VR.sldAngl/d_nRadRays;
+      intensity[c] = (T) sumProjI/d_nRadRays;
     }  // end VR cell iterator
   }  // is radiometer on this patch
 }

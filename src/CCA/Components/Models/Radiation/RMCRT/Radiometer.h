@@ -94,6 +94,7 @@ namespace Uintah{
 
 
       const VarLabel* d_VRFluxLabel{nullptr};      // computed radiometer flux
+      const VarLabel* d_VRIntensityLabel{nullptr};      // computed radiometer flux
 
     private:
 
