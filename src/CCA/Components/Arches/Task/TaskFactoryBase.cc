@@ -305,8 +305,14 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
   ArchesFieldContainer::VariableRegistry variable_registry;
 
+  std::string pack_string = "OFF";
+  if ( pack_tasks == true ){
+    pack_string = "ON";
+  }
+
   const std::string type_string = TaskInterface::get_task_type_string(type);
   DOUT( dbg_arches_task, "[TaskFactoryBase]  Scheduling the following task group with mode: " << type_string << " for factory: " << _factory_name );
+  DOUT( dbg_arches_task, "                   Note that for this scheduling, task packing is " << pack_string << std::endl );
 
   bool archesTasksMixMemSpaces = false;
   TaskAssignedExecutionSpace assignedExecutionSpace{};
