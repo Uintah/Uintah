@@ -14,19 +14,21 @@
       <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>
       <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>
       <CCRays                 spec="OPTIONAL BOOLEAN"/>
-      <viewAngle              spec="OPTIONAL DOUBLE 'positive'"/>
-      <orientation            spec="OPTIONAL VECTOR"/>
-      <locationsMin           spec="OPTIONAL VECTOR 'positive'"/>
-      <locationsMax           spec="OPTIONAL VECTOR 'positive'"/>
-      <nRays                  spec="OPTIONAL INTEGER 'positive'"/>
       <nFluxRays              spec="OPTIONAL INTEGER 'positive'"/>
       <allowReflect           spec="OPTIONAL BOOLEAN"/>
       <solveDivQ              spec="OPTIONAL BOOLEAN"/>
       <applyFilter            spec="OPTIONAL BOOLEAN"/>
       <rayDirSampleAlgo       spec="OPTIONAL STRING 'naive, Naive LatinHyperCube'"/>
+      <cellTypeCoarsenLogic   spec="OPTIONAL STRING 'ROUNDDOWN ROUNDUP"/>
       <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
 
-      <include href="RMCRT_radiometer.xml" section="Radiometer" />
+      <Radiometer             spec="OPTIONAL NO_DATA"     attribute1="type OPTIONAL STRING 'float, double'">   
+        <viewAngle            spec="REQUIRED DOUBLE  'positive'"/>                                             
+        <orientation          spec="REQUIRED VECTOR"/>                                                         
+        <locationsMin         spec="REQUIRED VECTOR  'positive'"/>                                             
+        <locationsMax         spec="REQUIRED VECTOR  'positive'"/>                                             
+        <nRays                spec="REQUIRED INTEGER 'positive'"/>                                             
+      </Radiometer>
 
       <algorithm                spec="OPTIONAL NO_DATA"
                                     attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">

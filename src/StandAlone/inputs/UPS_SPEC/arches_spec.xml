@@ -37,14 +37,14 @@
                                         attribute2="type REQUIRED STRING 'variable_math, mass_flow_rate'">
 
           <!-- mass_flow_rate -->
-          <!-- The mass_flow_rate utility computes the mass flowrate of inlet boundary conditions. 
-               To activate it, create a mass_flow_rate utility, then add "type=Inlet" to any mass flow 
+          <!-- The mass_flow_rate utility computes the mass flowrate of inlet boundary conditions.
+               To activate it, create a mass_flow_rate utility, then add "type=Inlet" to any mass flow
                inlet for which you wish to have the flow rates. This will create reduction variables
-               for saving: 
+               for saving:
                m_dot_g : Global total gas flow rate through all inlets
                m_dot_p_organics : Global total particle organic flow rate (no ash or H2O) from all inlets
-               m_dot_g_* : Gas flow rate through inlet named * (wildcard) 
-               m_dot_p_organics_ : Particle organics flow rate through inlet named * (wildcard) 
+               m_dot_g_* : Gas flow rate through inlet named * (wildcard)
+               m_dot_p_organics_ : Particle organics flow rate through inlet named * (wildcard)
                See inputs/ARCHES/Coal/1GW_MFR.ups for an example of usage. -->
 
           <!-- <grid type=...> represents the variable type. -->
@@ -330,11 +330,11 @@
                                         need_applies_to= "type constant_scalar_diffusion_coef"  />
 
           <!-- Variable grid interpolator -->
-          <variable                     spec="REQUIRED NO_DATA" 
+          <variable                     spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'CC, FX, FY, FZ'"
                                         attribute2="label REQUIRED STRING"
                                         need_applies_to="type interpolation_var"/> <!-- variable to use for the interpolation with its grid type -->
-          <new_variable                 spec="REQUIRED NO_DATA" 
+          <new_variable                 spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'CC, FX, FY, FZ'"
                                         attribute2="label REQUIRED STRING"
                                         need_applies_to="type interpolation_var"/> <!-- the new variable resulting from the interpolant with the new grid type -->
@@ -2061,60 +2061,10 @@
                                          attribute1="label REQUIRED STRING"
                                          attribute2="score_number REQUIRED INTEGER"
                                          need_applies_to="type pc_transport"/>
-
-
+                                         
             <!-- RMCRT -->
-            <RMCRT                       spec="OPTIONAL NO_DATA" attribute1="type OPTIONAL STRING 'float, double'" need_applies_to="type rmcrt_radiation" >
-              <randomSeed                spec="OPTIONAL BOOLEAN"/>
-              <Temperature               spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
-              <abskg                     spec="OPTIONAL DOUBLE  'positive'"/>
-              <sigmaScat                 spec="OPTIONAL DOUBLE  'positive'"/>
-              <nDivQRays                 spec="OPTIONAL INTEGER 'positive'"/>
-              <Threshold                 spec="OPTIONAL DOUBLE  'positive'"/>
-              <Slice                     spec="OPTIONAL DOUBLE"/>
-              <StefanBoltzmann           spec="OPTIONAL DOUBLE  'positive'"/>
-              <benchmark                 spec="OPTIONAL INTEGER 'positive'"/>
-              <solveBoundaryFlux         spec="OPTIONAL BOOLEAN"/>
-              <CCRays                    spec="OPTIONAL BOOLEAN"/>
-              <viewAngle                 spec="OPTIONAL DOUBLE 'positive'"/>
-              <orientation               spec="OPTIONAL VECTOR"/>
-              <locationsMin              spec="OPTIONAL VECTOR 'positive'"/>
-              <locationsMax              spec="OPTIONAL VECTOR 'positive'"/>
-              <nRays                     spec="OPTIONAL INTEGER 'positive'"/>
-              <nFluxRays                 spec="OPTIONAL INTEGER 'positive'"/>
-
-
-              <ScatteringOn              spec="OPTIONAL BOOLEAN" /> <!-- turn on scattering -->
-              <allowReflect              spec="OPTIONAL BOOLEAN"/>
-              <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
-              <applyFilter               spec="OPTIONAL BOOLEAN"/>
-              <rayDirSampleAlgo          spec="OPTIONAL STRING 'naive Naive LatinHyperCube'"/>
-              <cellTypeCoarsenLogic      spec="OPTIONAL STRING 'ROUNDDOWN ROUNDUP"/>
-              <ignore_BC_bulletproofing  spec="OPTIONAL BOOLEAN"/>
-              
-              <include href="RMCRT_radiometer.xml" section="Radiometer" />
-
-              <algorithm                 spec="OPTIONAL NO_DATA"
-                                             attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">
-
-                <coarsenExtraCells       spec="OPTIONAL BOOLEAN" need_applies_to="type RMCRT_coarseLevel, dataOnion" />
-
-                <orderOfInterpolation    spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
-                <haloCells               spec="OPTIONAL VECTOR  'positive'" need_applies_to="type dataOnion" />
-                <haloLength              spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dataOnion" />
-
-                <ROI_extents             spec="OPTIONAL NO_DATA"
-                                           attribute1="type REQUIRED STRING 'fixed dynamic patch_based boundedRayLength'">
-
-                  <abskg_threshold       spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
-                  <sigmaT4_threshold     spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
-
-                  <min                   spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
-                  <max                   spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
-                  <length                spec="REQUIRED DOUBLE  'positive'" need_applies_to="type boundedRayLength"/>
-                </ROI_extents>
-              </algorithm>
-            </RMCRT>
+            <include href="Models.xml"  section="Models/RMCRT/" need_applies_to="type rmcrt_radiation" />
+            
 
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
             <!-- see Turns, pg. 156-157 -->
