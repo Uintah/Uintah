@@ -65,11 +65,12 @@ namespace Uintah{
        //__________________________________
       //  Helpers
       /** @brief map the component VarLabels to RMCRT class VarLabels */
-     void registerVarLabels(int   matl,
+     void registerVariables(int   matl,
                             const VarLabel*  abskg,
                             const VarLabel* temperature,
                             const VarLabel* celltype,
-                            const VarLabel* divQ);
+                            const VarLabel* divQ,
+                            const int whichAlgo);
 
       //__________________________________
       // @brief Update the running total of the incident intensity */
@@ -232,6 +233,13 @@ namespace Uintah{
         , NUM_GRAPHS
       };
 
+      enum Algorithm{ dataOnion,            
+                      coarseLevel, 
+                      singleLevel, 
+                      radiometerOnly 
+                    };
+
+
       double d_sigma_over_pi{0.0};                  // Stefan Boltzmann divided by pi (W* m-2* K-4)
       int d_flowCell{-1};                           // HARDWIRED
       Ghost::GhostType d_gn{Ghost::None};
@@ -253,6 +261,7 @@ namespace Uintah{
 
       // These are initialized once in registerVarLabels().
       static int           d_matl;
+      static int           d_whichAlgo;
       static MaterialSet * d_matlSet;
       static std::string   d_abskgBC_tag;             // Needed by BC, manages the varLabel name change when using floats
 

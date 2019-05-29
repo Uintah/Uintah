@@ -254,7 +254,6 @@ RMCRT_Radiation::extraSetup( GridP& grid,
   //__________________________________
   // temperature label
   _tempLabel = VarLabel::find(_T_label_name);
-  proc0cout << "RMCRT: temperature label name: " << _T_label_name << std::endl;
 
   if (_tempLabel == nullptr) {
     throw ProblemSetupException("Error: No temperature label found.", __FILE__, __LINE__);
@@ -263,19 +262,23 @@ RMCRT_Radiation::extraSetup( GridP& grid,
   //__________________________________
   //  abskt
   _absktLabel = VarLabel::find(_abskt_label_name);
-  proc0cout << "RMCRT: abskt label name: " << _abskt_label_name << std::endl;
   
   if ( _absktLabel == nullptr ){
     throw InvalidValue("Error: For RMCRT Radiation source term -- Could not find the abskt label.", __FILE__, __LINE__);
   }
 
+  proc0cout << "\n __________________________________ RMCRT SETTINGS\n"
+             <<"  - Temperature label: " << _T_label_name << "\n"
+             <<"  - abkst label:       " << _abskt_label_name << "\n";
+
   //__________________________________
   // create RMCRT and register the labels
-  _RMCRT->registerVarLabels(_matl,
+  _RMCRT->registerVariables(_matl,
                             _absktLabel,
                             _tempLabel,
                             _labels->d_cellTypeLabel,
-                            _src_label);
+                            _src_label,
+                            _whichAlgo);
 
   //__________________________________
   // read in RMCRT problem spec

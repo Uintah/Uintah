@@ -14,11 +14,11 @@
       <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>
       <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>
       <CCRays                 spec="OPTIONAL BOOLEAN"/>
-      <VRViewAngle            spec="OPTIONAL DOUBLE 'positive'"/>
-      <VROrientation          spec="OPTIONAL VECTOR"/>
-      <VRLocationsMin         spec="OPTIONAL VECTOR 'positive'"/>
-      <VRLocationsMax         spec="OPTIONAL VECTOR 'positive'"/>
-      <nRadRays               spec="OPTIONAL INTEGER 'positive'"/>
+      <viewAngle              spec="OPTIONAL DOUBLE 'positive'"/>
+      <orientation            spec="OPTIONAL VECTOR"/>
+      <locationsMin           spec="OPTIONAL VECTOR 'positive'"/>
+      <locationsMax           spec="OPTIONAL VECTOR 'positive'"/>
+      <nRays                  spec="OPTIONAL INTEGER 'positive'"/>
       <nFluxRays              spec="OPTIONAL INTEGER 'positive'"/>
       <allowReflect           spec="OPTIONAL BOOLEAN"/>
       <solveDivQ              spec="OPTIONAL BOOLEAN"/>

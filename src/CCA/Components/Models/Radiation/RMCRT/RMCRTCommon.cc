@@ -63,6 +63,7 @@ double      RMCRTCommon::d_maxRayLength;               // max ray length.
 bool        RMCRTCommon::d_isSeedRandom;
 bool        RMCRTCommon::d_allowReflect;
 int         RMCRTCommon::d_matl;
+int         RMCRTCommon::d_whichAlgo{singleLevel};
 std::string RMCRTCommon::d_abskgBC_tag;
 std::map<std::string,Task::WhichDW>    RMCRTCommon::d_abskg_dw;
 
@@ -90,11 +91,11 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 {
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type){
     d_sigmaT4Label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() );
-    proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << std::endl;
+    proc0cout << "  - Using double implementation of RMCRT" << std::endl;
   } else {
     d_sigmaT4Label = VarLabel::create( "sigmaT4",    CCVariable<float>::getTypeDescription() );
     d_abskgLabel   = VarLabel::create( "abskgRMCRT", CCVariable<float>::getTypeDescription() );
-    proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << std::endl;
+    proc0cout << "  - Using float implementation of RMCRT" << std::endl;
   }
 
   d_boundFluxLabel     = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
@@ -137,17 +138,19 @@ RMCRTCommon::~RMCRTCommon()
 // Register the material index and label names
 //______________________________________________________________________
 void
-RMCRTCommon::registerVarLabels(int   matlIndex,
+RMCRTCommon::registerVariables(int   matlIndex,
                                const VarLabel* abskg,
                                const VarLabel* temperature,
                                const VarLabel* celltype,
-                               const VarLabel* divQ )
+                               const VarLabel* divQ,
+                               const int whichAlgo )
 {
   d_matl            = matlIndex;
   d_compAbskgLabel  = abskg;
   d_compTempLabel   = temperature;
   d_cellTypeLabel   = celltype;
   d_divQLabel       = divQ;
+  d_whichAlgo       = whichAlgo;
 
   d_abskgBC_tag = d_compAbskgLabel->getName(); // The label name changes when using floats.
 

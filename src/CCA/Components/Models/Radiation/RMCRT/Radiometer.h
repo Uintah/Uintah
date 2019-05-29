@@ -99,8 +99,7 @@ namespace Uintah{
     private:
 
       // Virtual Radiometer parameters
-      int    d_nRadRays{1000};                     // number of rays per radiometer used to compute radiative flux
-      double d_viewAng{180.0};
+      int    d_VR_nRays{1000};                     // number of rays per radiometer used to compute radiative flux
       Point  d_VRLocationsMin;
       Point  d_VRLocationsMax;
 

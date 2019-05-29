@@ -54,11 +54,11 @@ Radiometer::Radiometer(const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_
   if ( FLT_DBL == TypeDescription::double_type ){
     d_VRFluxLabel      = VarLabel::create( "VRFlux",      CCVariable<double>::getTypeDescription() );
     d_VRIntensityLabel = VarLabel::create( "VRIntensity", CCVariable<double>::getTypeDescription() );
-    proc0cout << "__________________________________ USING DOUBLE VERSION OF RADIOMETER" << std::endl;
+    proc0cout << "  - Using double implementation of the radiometer" << std::endl;
   } else {
     d_VRFluxLabel      = VarLabel::create( "VRFlux",      CCVariable<float>::getTypeDescription() );
     d_VRIntensityLabel = VarLabel::create( "VRIntensity", CCVariable<float>::getTypeDescription() );
-    proc0cout << "__________________________________ USING FLOAT VERSION OF RADIOMETER" << std::endl;
+    proc0cout << "  - Using float implementation of the radiometer" << std::endl;
   }
 }
 
@@ -82,11 +82,12 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 {
   ProblemSpecP rad_ps = radps;
   Vector orient;
-  rad_ps->getWithDefault( "VRViewAngle"    ,    d_viewAng,         180 );              // view angle of the radiometer in degrees
-  rad_ps->getWithDefault( "VROrientation"  ,    orient,          Vector(0,0,1) );      // Normal vector of the radiometer orientation (Cartesian)
-  rad_ps->getWithDefault( "nRadRays"  ,         d_nRadRays ,       1000 );
-  rad_ps->get(            "VRLocationsMin" ,    d_VRLocationsMin );                    // minimum extent of the string or block of virtual radiometers in physical units
-  rad_ps->get(            "VRLocationsMax" ,    d_VRLocationsMax );                    // maximum extent
+  double viewAngle;
+  rad_ps->getWithDefault( "viewAngle"    ,    viewAngle,      180 );              // view angle of the radiometer in degrees
+  rad_ps->getWithDefault( "orientation"  ,    orient,         Vector(0,0,1) );      // Normal vector of the radiometer orientation (Cartesian)
+  rad_ps->getWithDefault( "nRays"  ,          d_VR_nRays ,    1000 );
+  rad_ps->get(            "locationsMin" ,    d_VRLocationsMin );                    // minimum extent of the string or block of virtual radiometers in physical units
+  rad_ps->get(            "locationsMax" ,    d_VRLocationsMax );                    // maximum extent
                  // bulletproofing.
   for( ProblemSpecP n = rad_ps->getFirstChild(); n != nullptr; n=n->getNextSibling() ){
     std::string me = n->getNodeName();
@@ -133,37 +134,14 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
-#ifndef RAY_SCATTER
-  proc0cout<< "sigmaScat: " << d_sigmaScat << std::endl;
-  if(d_sigmaScat>0){
-    std:: ostringstream warn;
-    warn << "ERROR:  In order to run a scattering case, you must use the following in your configure line..." << std::endl;
-    warn << "--enable-ray-scatter" << std::endl;
-    warn << "If you wish to run a scattering case, please modify your configure line and re-configure and re-compile." << std::endl;
-    warn << "If you wish to run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << std::endl;
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-  }
-#endif
-
-#ifdef RAY_SCATTER
-  if(d_sigmaScat<1e-99){
-    proc0cout << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << std::endl;
-    proc0cout << "--enable-ray-scatter" << std::endl;
-    proc0cout << "As such, this task will run slower than is necessary." << std::endl;
-    proc0cout << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << std::endl;
-    proc0cout << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << std::endl;
-  }
-  proc0cout<< std::endl << "RAY_SCATTER IS DEFINED" << std::endl;
-#endif
-
-  if ( d_viewAng > 360 ){
+  if ( viewAngle > 360 ){
     std::ostringstream warn;
-    warn << "ERROR:  VRViewAngle ("<< d_viewAng <<") exceeds the maximum acceptable value of 360 degrees." << std::endl;
+    warn << "ERROR:  VRViewAngle ("<< viewAngle <<") exceeds the maximum acceptable value of 360 degrees." << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
-  if ( d_nRadRays < int(15 + pow(5.4, d_viewAng/40) ) ){
-    proc0cout << "RMCRT: WARNING Number of radiometer rays:  ("<< d_nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, d_viewAng/40) ) <<"). Errors will exceed 1%. " << std::endl;
+  if ( d_VR_nRays < int(15 + pow(5.4, viewAngle/40) ) ){
+    proc0cout << "    WARNING Number of radiometer rays:  ("<< d_VR_nRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, viewAngle/40) ) <<"). Errors will exceed 1%. " << std::endl;
   }
 
   // orient[0,1,2] represent the user specified vector normal of the radiometer.
@@ -201,7 +179,7 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   //  possible rotations can be accomplished using the other two.
   d_VR.phiRot = 0;
 
-  double deltaTheta = d_viewAng/360*M_PI;       // divides view angle by two and converts to radians
+  double deltaTheta = viewAngle/360*M_PI;       // divides view angle by two and converts to radians
   double range      = 1 - cos(deltaTheta);      // cos(0) to cos(deltaTheta) gives the range of possible vals
   d_VR.sldAngl      = 2*M_PI*range;             // the solid angle that the radiometer can view
   d_VR.deltaTheta   = deltaTheta;
@@ -437,7 +415,7 @@ Radiometer::radiometerFlux( const Patch* patch,
 
       //__________________________________
       // ray loop
-      for (int iRay=0; iRay < d_nRadRays; iRay++){
+      for (int iRay=0; iRay < d_VR_nRays; iRay++){
 
         Vector rayOrigin;
         bool useCCRays = true;
@@ -459,8 +437,8 @@ Radiometer::radiometerFlux( const Patch* patch,
 
       //__________________________________
       //  Compute VRFlux
-      VRFlux[c]    = (T) sumProjI * d_VR.sldAngl/d_nRadRays;
-      intensity[c] = (T) sumProjI/d_nRadRays;
+      VRFlux[c]    = (T) sumProjI * d_VR.sldAngl/d_VR_nRays;
+      intensity[c] = (T) sumProjI/d_VR_nRays;
     }  // end VR cell iterator
   }  // is radiometer on this patch
 }

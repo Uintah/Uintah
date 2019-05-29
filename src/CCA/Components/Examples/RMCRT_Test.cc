@@ -112,6 +112,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid )
 {
+  proc0cout << "__________________________________" << endl;
   d_material = scinew SimpleMaterial();
   m_materialManager->registerSimpleMaterial( d_material );
 
@@ -166,17 +167,8 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
       d_RMCRT = scinew Ray( TypeDescription::double_type );
     }
 
-    d_RMCRT->registerVarLabels(0,d_compAbskgLabel,
-                                 d_colorLabel,
-                                 d_cellTypeLabel,
-                                 d_divQLabel);
-    proc0cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
-    d_RMCRT->problemSetup( prob_spec, rmcrt_ps, grid );
-    
-    d_RMCRT->BC_bulletproofing( rmcrt_ps );
-
     //__________________________________
-    //  Read in the dataOnion section
+    //  Read in the algorithm
     ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
     if (alg_ps){
 
@@ -203,6 +195,18 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
         d_whichAlgo = radiometerOnly;
       }
     }
+
+    d_RMCRT->registerVariables(0,d_compAbskgLabel,
+                                 d_colorLabel,
+                                 d_cellTypeLabel,
+                                 d_divQLabel,
+                                 d_whichAlgo );
+    
+    d_RMCRT->problemSetup( prob_spec, rmcrt_ps, grid );
+    
+    d_RMCRT->BC_bulletproofing( rmcrt_ps );
+
+
   }
 
   //__________________________________
