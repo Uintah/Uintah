@@ -127,11 +127,6 @@ PressureEqn::setup_solver( ProblemSpecP& db ){
       throw ProblemSetupException("Error: You must specify a <PressureSolver> block in the UPS file.",__FILE__,__LINE__);
     }
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-    printf("\nERROR: Arches does not yet support use of hypre with Kokkos::CUDA builds. Set 'do_custom_arches_linear_solve' to true.");
-    SCI_THROW(InternalError("Unsupported linear solver",__FILE__,__LINE__));
-#endif
-
     m_hypreSolver->readParameters(db_pressure, "pressure" );
 
     m_hypreSolver->getParameters()->setSolveOnExtraCells(false);

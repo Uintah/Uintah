@@ -3875,6 +3875,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
           hack_foundAComputes = true;
      }
 
+    // almgren-mmsBC.ups hack
+    // almgren-mms_conv.ups hack
+    if ( varName == "uVelocity" ) {
+      hack_foundAComputes = true;
+    }
+
     // dqmom_example_char_no_pressure.ups hack:
     // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
     // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
@@ -3897,6 +3903,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
          (varName == "gridX")              ||
          (varName == "gridY")              ||
          (varName == "gridZ")              ||
+         (varName == "guess_press")        ||
          (varName == "phi")                ||
          (varName == "phi_x_dflux")        ||
          (varName == "phi_y_dflux")        ||
