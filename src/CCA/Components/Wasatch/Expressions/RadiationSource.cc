@@ -78,13 +78,16 @@ namespace WasatchCore {
   {
      temperature_ = create_field_request<SVolField>(temperatureTag);
      absCoef_ = create_field_request<SVolField>(absorptionTag);
-    // cellType_ = create_field_request<FieldT>(celltypeTag );        
+    // cellType_ = create_field_request<FieldT>(celltypeTag ); 
+    int whichAlgo = Uintah::RMCRTCommon::Algorithm::singleLevel;
     
-    rmcrt_->registerVarLabels( 0,
+    rmcrt_->registerVariables( 0,
                               absorptionLabel_,
                               temperatureLabel_,
                               celltypeLabel_,
-                              divqLabel_ );
+                              divqLabel_,
+                              whichAlgo
+                              );
     
     rmcrt_->problemSetup(radiationSpec, radiationSpec, grid);
     
