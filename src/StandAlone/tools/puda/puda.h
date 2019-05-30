@@ -44,6 +44,7 @@ namespace Uintah {
     bool do_jacquie;
     bool do_jim1;
     bool do_jim2;
+    bool do_DOP;
     bool do_listvars;
     bool do_partvar;
     bool do_PIC;
@@ -63,6 +64,7 @@ namespace Uintah {
     bool tsup_set;
     int tskip;
     int matl;
+    int dir;
 
     std::string filebase;
     std::string particleVariable;
@@ -81,6 +83,7 @@ namespace Uintah {
       do_jacquie       = false;
       do_jim1          = false;
       do_jim2          = false;
+      do_DOP           = false;
       do_listvars      = false;
       do_partvar       = false;
       do_PIC           = false;

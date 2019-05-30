@@ -50,6 +50,7 @@
 #include <StandAlone/tools/puda/jacquie.h>
 #include <StandAlone/tools/puda/jim1.h>
 #include <StandAlone/tools/puda/jim2.h>
+#include <StandAlone/tools/puda/DOP.h>
 #include <StandAlone/tools/puda/PIC.h>
 #include <StandAlone/tools/puda/POL.h>
 #include <StandAlone/tools/puda/pressure.h>
@@ -87,6 +88,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -brief               (Makes varsummary print out a subset of information.)\n";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
+  cerr << "  -DOP\n";
   cerr << "  -todd1               ( 1st Law of thermo. control volume analysis) \n";
   cerr << "  -ICE_momentum        ( momentum control volume analysis) \n";
   cerr << "  -jacquie             (finds burn rate vs pressure)\n";
@@ -143,6 +145,7 @@ main( int argc, char *argv[] )
   char axis   = 'n';
   int ortho1  = -1;
   int ortho2  = -1;
+  int dir = 1;
   bool doPOLAverage     = true;
   bool doPOLStressSplit = false;
 
@@ -193,6 +196,9 @@ main( int argc, char *argv[] )
     } 
     else if(s == "-jim2"){
       clf.do_jim2 = true;
+    } 
+    else if(s == "-DOP"){
+      clf.do_DOP = true;
     } 
     else if(s == "-todd1"){
       clf.do_todd1 = true;
@@ -272,6 +278,9 @@ main( int argc, char *argv[] )
     } 
     else if(s == "-asci"){
       clf.do_asci=true;
+    } 
+    else if(s == "-dir"){
+      clf.dir = atoi(argv[++i]); 
     } 
     else if(s == "-cell_stresses"){
       clf.do_cell_stresses=true;
@@ -399,6 +408,10 @@ main( int argc, char *argv[] )
 
     if( clf.do_jim2 ){
       jim2( da, clf );
+    }
+
+    if( clf.do_DOP ){
+      DOP( da, clf );
     }
 
     if( clf.do_todd1 ){
