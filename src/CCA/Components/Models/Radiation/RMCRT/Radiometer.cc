@@ -83,21 +83,11 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   ProblemSpecP rad_ps = radps;
   Vector orient;
   double viewAngle;
-  rad_ps->getWithDefault( "viewAngle"    ,    viewAngle,      180 );              // view angle of the radiometer in degrees
-  rad_ps->getWithDefault( "orientation"  ,    orient,         Vector(0,0,1) );      // Normal vector of the radiometer orientation (Cartesian)
-  rad_ps->getWithDefault( "nRays"  ,          d_VR_nRays ,    1000 );
-  rad_ps->get(            "locationsMin" ,    d_VRLocationsMin );                    // minimum extent of the string or block of virtual radiometers in physical units
-  rad_ps->get(            "locationsMax" ,    d_VRLocationsMax );                    // maximum extent
-                 // bulletproofing.
-  for( ProblemSpecP n = rad_ps->getFirstChild(); n != nullptr; n=n->getNextSibling() ){
-    std::string me = n->getNodeName();
-    if( ( me == "sigmaScat"  ||  me == "Threshold" || me == "randomSeed" ||  me == "StefanBoltzmann" || me == "allowReflect" ) && me !="text" ){
-      std::ostringstream warn;
-      warn << "\n ERROR:Radiometer::problemSetup: You've specified the variable (" << me << ")"
-           << " which will be ignored.  You should set the variable outside <Radiometer> section. \n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-  }
+  rad_ps->require( "viewAngle"    ,    viewAngle );           // view angle of the radiometer in degrees
+  rad_ps->require( "orientation"  ,    orient );              // Normal vector of the radiometer orientation (Cartesian)
+  rad_ps->require( "nRays"  ,          d_VR_nRays );
+  rad_ps->require( "locationsMin" ,    d_VRLocationsMin );    // minimum extent of the string or block of virtual radiometers in physical units
+  rad_ps->require( "locationsMax" ,    d_VRLocationsMax );    // maximum extent
 
   //__________________________________
   //  Warnings and bulletproofing
@@ -132,6 +122,23 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
          << "starting and ending points.  All of the directions must differ by one cell\n "
          << "                                start: " << start << " end: " << end << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+
+  for(int L = 0; L<grid->numLevels(); L++){
+    LevelP level = grid->getLevel(L);
+    IntVector lo = level->getCellIndex( start );
+    IntVector hi = level->getCellIndex( end );    
+    IntVector nCells = hi - lo;
+    
+    proc0cout << "  - radiometer: lower cell " << lo << " upper cell " << hi << " nCells " << nCells << "\n";
+    
+    if ( nCells.x() <= 0 || nCells.y() <= 0 || nCells.z() <= 0){
+      std::ostringstream warn;
+      warn << "\n ERROR:Radiometer::problemSetup: The specified radiometer has the same "
+           << "starting and ending points.  There must be at least 1 cell between locationMin & locationMax in each direction:\n "
+           << "                                startCell: " << lo << " endCell: " << hi;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
   }
 
   if ( viewAngle > 360 ){
@@ -520,7 +527,7 @@ Radiometer::getPatchSet( SchedulerP& sched,
          << " do not overlap with the domain, " << L_lo << " -> " << L_hi << "\n"
          << " There must be at least 1 cell in each direction" ;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-  } 
+  }
   
   //__________________________________
   // find patches that contain radiometers  
