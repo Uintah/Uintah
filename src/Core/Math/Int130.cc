@@ -104,10 +104,10 @@ void swapbytes( Uintah::Int130& s){
 namespace Uintah {
 MPI_Datatype makeMPI_Int130()
 {
-   ASSERTEQ(sizeof(Int130), sizeof(int)*130);
+   ASSERTEQ(sizeof(Int130), sizeof(int)*400);
 
    MPI_Datatype mpitype;
-   Uintah::MPI::Type_vector(1, 130, 130, MPI_SHORT, &mpitype);
+   Uintah::MPI::Type_vector(1, 400, 400, MPI_SHORT, &mpitype);
    Uintah::MPI::Type_commit(&mpitype);
 
    return mpitype;

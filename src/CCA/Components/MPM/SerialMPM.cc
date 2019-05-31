@@ -53,6 +53,7 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/Grid.h>
+#include <Core/Grid/GIMPInterpolator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/MaterialManager.h>
@@ -5797,10 +5798,10 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
     }   // Node Iterator
 
     // The cheaper option... Less accurate.  See comment below.
-    ParticleInterpolator* lin_interpolator=scinew LinearInterpolator(patch);
-    vector<IntVector> lni(lin_interpolator->size());
-    vector<double> lS(lin_interpolator->size());
-    Matrix3 PH; PH.Identity(); // Placeholder for psize, not needed for linear
+//    ParticleInterpolator* lin_interpolator=scinew GIMPInterpolator(patch);
+//    vector<IntVector> lni(lin_interpolator->size());
+//    vector<double> lS(lin_interpolator->size());
+//    Matrix3 PH; PH.Identity(); // Placeholder for psize, not needed for linear
 
 
     // In this section of code, we find the particles that are in the 
@@ -5825,7 +5826,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
       // Initialize the ParticleList
       for(NodeIterator iter =patch->getExtraNodeIterator();!iter.done();iter++){
         IntVector c = *iter;
-        for(unsigned int p = 0; p < 130; p++){
+        for(unsigned int p = 0; p < 400; p++){
           ParticleList[m][c][p]=0;
         }
       }
@@ -5834,18 +5835,37 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
       for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
         particleIndex idx = *it;
 
-        int NN = lin_interpolator->findCellAndWeights(px[m][idx],lni,lS,PH);
-//        int NN = interpolator->findCellAndWeights(px[m][idx],ni,S,cursize[idx]);
-        
+//        int NN = lin_interpolator->findCellAndWeights(px[m][idx],lni,lS,PH);
+        int NN = interpolator->findCellAndWeights(px[m][idx],ni,S,cursize[idx]);
+
+        set<IntVector> nodeList;
+
         for(int k = 0; k < NN; k++) {
-          if (patch->containsNode(lni[k]) && NumMatlsOnNode[lni[k]]>1){
-            ParticleList[m][lni[k]][ParticleList[m][lni[k]][129]]=idx;
-            ParticleList[m][lni[k]][129]++;
-            NumParticlesOnNode[lni[k]]++;
-          }
+          if (patch->containsNode(ni[k]) && 
+              NumMatlsOnNode[ni[k]]>1    && 
+              S[k]>1.e-100){
+            nodeList.insert(ni[k]);
+          } // conditional
+        }   // loop over nodes returned by interpolator
+        for (set<IntVector>::iterator it1 = nodeList.begin(); 
+                                      it1!= nodeList.end();  it1++){
+          ParticleList[m][*it1][ParticleList[m][*it1][399]]=idx;
+          ParticleList[m][*it1][399]++;
+          NumParticlesOnNode[*it1]++;
         }
+        nodeList.clear();
+      }    // Loop over Particles
+    }
+
+#if 0
+    for(NodeIterator iter =patch->getExtraNodeIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      if(NumParticlesOnNode[c] > 0) {
+        cout << "NumParticlesOnNode[" << c << "] = " 
+             << NumParticlesOnNode[c] << endl;
       }
-    } // Loop over materials
+    }
+#endif
 
     // This is the Logistic Regression code that finds the normal to the
     // plane that separates two materials.  This is as directly as possible
@@ -5881,7 +5901,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
           } else {
             cp=1.;
           }
-          for(int p=0;p<ParticleList[m][c][129];p++){
+          for(int p=0;p<ParticleList[m][c][399];p++){
             Point xp = px[m][ParticleList[m][c][p]];
             double xp4[4]={xp.x(),xp.y(),xp.z(),1.0};
             double XpDotPhi = xp4[0]*phi[0]

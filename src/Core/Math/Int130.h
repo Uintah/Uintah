@@ -40,7 +40,7 @@ namespace Uintah {
 class Int130 {
 
  private:
-  int s[130];
+  int s[400];
 
  public:
   // constructors
@@ -55,7 +55,7 @@ class Int130 {
 
 inline Int130::Int130()
 {
-  for(int i=0;i<130;i++){
+  for(int i=0;i<400;i++){
         s[i] = 0;
   }
 }
