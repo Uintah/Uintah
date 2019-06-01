@@ -41,6 +41,7 @@ TaskAssignedExecutionSpace Burnout::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &Burnout::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &Burnout::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &Burnout::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 

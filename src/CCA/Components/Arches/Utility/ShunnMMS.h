@@ -142,6 +142,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                        , &ShunnMMS<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        //, &ShunnMMS<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ShunnMMS<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 

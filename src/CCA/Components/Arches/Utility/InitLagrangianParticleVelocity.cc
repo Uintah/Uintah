@@ -44,6 +44,7 @@ TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskTimestepInitF
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &InitLagrangianParticleVelocity::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &InitLagrangianParticleVelocity::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &InitLagrangianParticleVelocity::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
