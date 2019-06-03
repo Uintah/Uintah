@@ -129,11 +129,11 @@
     <sigmaScat>         0           </sigmaScat>
 
     <Radiometer>
-      <VRViewAngle>       3                   </VRViewAngle>
-      <VROrientation>     [-1,0,0]            </VROrientation>
-      <VRLocationsMin>    [0.999, 0.0, 0.5]   </VRLocationsMin>
-      <VRLocationsMax>    [1.0,   1.0, 0.52]  </VRLocationsMax>
-      <nRadRays>          50                  </nRadRays>
+      <viewAngle>       3                   </viewAngle>
+      <orientation>     [-1,0,0]            </orientation>
+      <locationsMin>    [0.999, 0.0, 0.5]   </locationsMin>
+      <locationsMax>    [1.0,   1.0, 0.52]  </locationsMax>
+      <nRays>          50                   </nRays>
     </Radiometer>
     
   </RMCRT>

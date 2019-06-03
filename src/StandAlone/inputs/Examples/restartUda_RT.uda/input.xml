@@ -224,12 +224,6 @@
               </property_calculator>
               <ignore_BC_bulletproofing> false </ignore_BC_bulletproofing>
               <CCRays>false</CCRays>
-              <VirtRadiometer>false</VirtRadiometer>
-              <VRViewAngle>180</VRViewAngle>
-              <VROrientation>[0, 0, 1]</VROrientation>
-              <VRLocationsMin>[0, 0, 0]</VRLocationsMin>
-              <VRLocationsMax>[0, 0, 0]</VRLocationsMax>
-              <nRadRays>1000</nRadRays>
               <sigmaScat>0</sigmaScat>
               <solveDivQ>true</solveDivQ>
               <applyFilter>false</applyFilter>

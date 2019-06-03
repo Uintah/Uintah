@@ -189,11 +189,6 @@ namespace Uintah{
                                   LATIN_HYPER_CUBE
                                 };
 
-      enum Algorithm{ dataOnion,
-                      coarseLevel,
-                      singleLevel
-                    };
-
       enum ROI_algo{  fixed,                // user specifies fixed low and high point for a bounding box
                       dynamic,              // user specifies thresholds that are used to dynamically determine ROI
                       patch_based,          // The patch extents + halo are the ROI
