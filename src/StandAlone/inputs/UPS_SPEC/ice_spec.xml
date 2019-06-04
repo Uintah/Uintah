@@ -68,8 +68,7 @@
           <referenceCell                spec="REQUIRED VECTOR"/>
         </counterflow>
         
-        <powerLawProfile                spec="OPTIONAL NO_DATA">
-          <material                     spec="REQUIRED STRING" /> 
+        <powerLawProfile                spec="OPTIONAL NO_DATA"> 
           <verticalDirection            spec="REQUIRED INTEGER '0,2'" />
           <maxHeight                    spec="REQUIRED DOUBLE" />
           <U_infinity                   spec="REQUIRED VECTOR" />
@@ -79,6 +78,13 @@
             <frictionVel                spec="REQUIRED DOUBLE 'positive'"/>
           </variance>
         </powerLawProfile>
+        
+        <powerLawProfile2               spec="OPTIONAL NO_DATA">
+          <Re_tau                       spec="REQUIRED DOUBLE  'positive'"/>
+          <verticalDir                  spec="REQUIRED INTEGER '0,2'" />
+          <principalDir                 spec="REQUIRED INTEGER '0,2'" />
+          <maxHeight                    spec="OPTIONAL DOUBLE" />
+        </powerLawProfile2> 
         
         <DNS_Moser                      spec="OPTIONAL NO_DATA">
           <verticalDirection            spec="REQUIRED INTEGER '0,2'" />

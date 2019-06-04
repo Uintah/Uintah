@@ -163,11 +163,9 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     //_______________________________________________
     //  Channel Flow initialized with powerlaw velocity profile
     // and variance. the x & y plane
-    ProblemSpecP pl_ps= c_init_ps->findBlock("powerLawProfile");
-    if(pl_ps) {
+    ProblemSpecP pL_ps= c_init_ps->findBlock("powerLawProfile");
+    if(pL_ps) {
       cib->whichMethod.push_back( "powerLaw" );
-      cib->doesComputePressure = true;
-
       cib->powerLaw_vars = powerLaw();
 
       // geometry: computational domain
@@ -177,28 +175,60 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       cib->powerLaw_vars.gridMax = b.max();
 
       int vDir = -9;
-      pl_ps -> require( "U_infinity",        cib->powerLaw_vars.U_infinity );
-      pl_ps -> require( "exponent",          cib->powerLaw_vars.exponent );
-      pl_ps -> require( "verticalDirection", vDir );
+      pL_ps->require( "U_infinity",        cib->powerLaw_vars.U_infinity );
+      pL_ps->require( "exponent",          cib->powerLaw_vars.exponent );
+      pL_ps->require( "verticalDirection", vDir );
       cib->powerLaw_vars.verticalDir = vDir;
 
       Vector tmp = b.max() - b.min();
       double maxHeight = tmp[ vDir ];   // default value
 
-      pl_ps -> get( "maxHeight",  maxHeight   );
+      pL_ps->get( "maxHeight",  maxHeight   );
       Vector lo = b.min().asVector();
       cib->powerLaw_vars.maxHeight = maxHeight - lo[ vDir ];
 
       //__________________________________
       //  Add variance to the velocity profile
       cib->powerLaw_vars.addVariance = false;
-      ProblemSpecP var_ps = pl_ps->findBlock("variance");
+      ProblemSpecP var_ps = pL_ps->findBlock("variance");
       if (var_ps) {
         cib->powerLaw_vars.addVariance = true;
-        var_ps -> get( "C_mu",        cib->powerLaw_vars.C_mu );
-        var_ps -> get( "frictionVel", cib->powerLaw_vars.u_star );
+        var_ps->get( "C_mu",        cib->powerLaw_vars.C_mu );
+        var_ps->get( "frictionVel", cib->powerLaw_vars.u_star );
       }
     }  // powerLaw inputs
+
+    //_______________________________________________
+    //  Channel Flow initialized with powerlaw velocity profile
+    // and variance. the x & y plane
+    ProblemSpecP pL2_ps= c_init_ps->findBlock("powerLawProfile2");
+    if(pL2_ps) {
+      cib->whichMethod.push_back( "powerLaw2" );
+      cib->powerLaw2_vars = powerLaw2();
+
+      // geometry: computational domain
+      BBox b;
+      grid->getInteriorSpatialRange(b);
+      cib->powerLaw2_vars.gridMin = b.min();
+      cib->powerLaw2_vars.gridMax = b.max();
+
+      int vDir = -9;
+      int pDir = -9;
+      pL2_ps->require( "Re_tau",       cib->powerLaw2_vars.Re_tau );
+      pL2_ps->require( "verticalDir",  vDir );
+      pL2_ps->require( "principalDir", pDir );
+
+      cib->powerLaw2_vars.verticalDir  = vDir;
+      cib->powerLaw2_vars.principalDir = pDir;
+
+      Vector tmp = b.max() - b.min();
+      double maxHeight = tmp[ vDir ];   // default value
+
+      pL2_ps->get( "maxHeight",  maxHeight   );
+      Vector lo = b.min().asVector();
+      cib->powerLaw2_vars.maxHeight = maxHeight - lo[ vDir ];
+
+    }  // powerLaw2 inputs
 
     //_______________________________________________
     //  Channel Flow initialized according to Moser's profile
@@ -290,7 +320,7 @@ void customInitialization(const Patch* patch,
         }
       }  // loop
     } // vortices
-    
+
     //__________________________________
     //  Vortex Pairs
     if ( whichMethod == "vortexPairs" ){
@@ -314,12 +344,6 @@ void customInitialization(const Patch* patch,
         j = 0;
         k = 1;
       }
-
-      //v->data[ijk] += -vortexamp * std::cos(vortexnpair * 2. * pi *( grid->z [j] )/grid->zsize ) * std::sin( pi * grid->yh[k]/grid->ysize );
-      //w->data[ijk] +=  vortexamp * std::sin(vortexnpair * 2. * pi *( grid->zh[j] )/grid->zsize ) * std::cos( pi * grid->y [k]/grid->ysize );
-
-   //   double vortexAmp = 2.5e-3;
-   //   double nPairs    = 2;
 
       // geometry: computational domain
       GridP grid = patch->getLevel()->getGrid();
@@ -437,6 +461,8 @@ void customInitialization(const Patch* patch,
     // See:  "Code Verification by the MMS SAND2000-1444
     // This is a steady state solution
     // This has not been verifed.
+
+// This code is incomplete!!!
 
     if( whichMethod == "mms_2" ){
       double cv = ice_matl->getSpecificHeat();
@@ -574,6 +600,45 @@ void customInitialization(const Patch* patch,
           }
         }
       }  // add variance
+    }
+
+    //_______________________________________________
+    //  power law velocity profile
+    //  Ref:  Jeremy Gibbs
+    if( whichMethod == "powerLaw2" ){
+
+      int vDir          =  cib->powerLaw2_vars.verticalDir;
+      int pDir          =  cib->powerLaw2_vars.principalDir;
+      double d          =  cib->powerLaw2_vars.gridMin(vDir);
+      double gridHeight =  cib->powerLaw2_vars.gridMax(vDir);
+      double height     =  cib->powerLaw2_vars.maxHeight;
+      const Level* level = patch->getLevel();
+
+      double visc      = ice_matl->getViscosity();
+      double Re_tau    = cib->powerLaw2_vars.Re_tau;
+      double u_tau     = (visc * Re_tau/height) ;
+      double vonKarman = 0.4;
+      
+//      std::cout << "     height: " << height << " vDir: " << vDir << " pDir: " << pDir 
+//                << " visc: " << visc << " Re_tau: " << Re_tau << " u_tau: " << u_tau << endl;
+
+
+      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
+        IntVector c = *iter;
+
+        Point here   = level->getCellPosition(c);
+        double h     = here.asVector()[vDir] ;
+
+        double ratio = (h - d)/height;
+        ratio        = Clamp(ratio,0.0,1.0);
+
+        vel_CC[c][pDir] = (u_tau/vonKarman) * std::log( ratio * Re_tau );
+
+        // Clamp edge/corner values
+        if( h < d || h > gridHeight ){
+          vel_CC[c] = Vector(0,0,0);
+        }
+      }
     }
     //_______________________________________________
     //   DNS velocity profile

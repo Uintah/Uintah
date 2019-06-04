@@ -42,22 +42,26 @@ namespace Uintah {
     ~vortices() {};
   };
 
- // vortex pairs 
-  struct vortexPairs{    
+  //__________________________________
+  // vortex pairs 
+  struct vortexPairs{ 
     double nPairs;
     double strength;
     std::string axis;
     ~vortexPairs() {};
   };
 
-// method of manufactured solutions
-  struct mms{
+  //__________________________________
+  // method of manufactured solutions
+  struct mms{ 
     double A;      // mms_1
     double angle;  // mms_3
     ~mms() {};
   };
 
-  struct gaussTemp{
+  //__________________________________
+  //
+  struct gaussTemp{ 
     double spread_x;
     double spread_y;
     double amplitude;
@@ -65,13 +69,16 @@ namespace Uintah {
     ~gaussTemp() {};
   };
 
-  struct counterflow{
+  //__________________________________
+  //
+  struct counterflow{ 
     double strainRate;
     Vector domainLength;
     IntVector refCell;
     ~counterflow() {};
   };
 
+  //__________________________________
   // powerlaw profile + variance
   // u = U_infinity * pow( h/height )^n
   struct powerLaw{
@@ -89,7 +96,20 @@ namespace Uintah {
     double u_star;                // roughnes
     ~powerLaw() {};
   };
+    
+  //__________________________________
+  //
+  struct powerLaw2{ 
+    double Re_tau;                // Reynolds number based on uTau
+    int verticalDir;              // vertical direction
+    int principalDir;             // component of velocity to set
+    double maxHeight;             // max height of velocity profile before it's set to u_infinity
+    Point gridMin;
+    Point gridMax;
+    ~powerLaw2() {};
+  };
 
+  //__________________________________
   // velocity profile according to Moser
   // "Direct Numerical Simulation of turbulent channel Flow up to Re_tau=590
   // Physics of Fluids, pp:943-945, Vol 11, Number 4, 1999
@@ -103,6 +123,8 @@ namespace Uintah {
     ~DNS_Moser() {};
   };
 
+  //__________________________________
+  //
   struct customInitialize_basket{
     vortices     vortex_vars;
     vortexPairs  vortexPairs_vars;
@@ -110,6 +132,7 @@ namespace Uintah {
     gaussTemp    gaussTemp_vars;
     counterflow  counterflow_vars;
     powerLaw     powerLaw_vars;
+    powerLaw2    powerLaw2_vars;
     DNS_Moser    DNS_Moser_vars;
     bool         doesComputePressure;
     std::vector<std::string> whichMethod;
