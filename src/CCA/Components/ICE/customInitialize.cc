@@ -206,12 +206,6 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       cib->whichMethod.push_back( "powerLaw2" );
       cib->powerLaw2_vars = powerLaw2();
 
-      // geometry: computational domain
-      BBox b;
-      grid->getInteriorSpatialRange(b);
-      cib->powerLaw2_vars.gridMin = b.min();
-      cib->powerLaw2_vars.gridMax = b.max();
-
       int vDir = -9;
       int pDir = -9;
       pL2_ps->require( "Re_tau",       cib->powerLaw2_vars.Re_tau );
@@ -221,13 +215,17 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       cib->powerLaw2_vars.verticalDir  = vDir;
       cib->powerLaw2_vars.principalDir = pDir;
 
-      Vector tmp = b.max() - b.min();
-      double maxHeight = tmp[ vDir ];   // default value
-
+      // geometry: computational domain
+      BBox bb;
+      grid->getInteriorSpatialRange(bb);
+      cib->powerLaw2_vars.gridMin = bb.min();
+      cib->powerLaw2_vars.gridMax = bb.max();
+      
+      Point tmp = Point( bb.max() - bb.min() );
+      double maxHeight = tmp(vDir);
+      
       pL2_ps->get( "maxHeight",  maxHeight   );
-      Vector lo = b.min().asVector();
-      cib->powerLaw2_vars.maxHeight = maxHeight - lo[ vDir ];
-
+      cib->powerLaw2_vars.maxHeight = maxHeight;
     }  // powerLaw2 inputs
 
     //_______________________________________________
@@ -609,8 +607,8 @@ void customInitialization(const Patch* patch,
 
       int vDir          =  cib->powerLaw2_vars.verticalDir;
       int pDir          =  cib->powerLaw2_vars.principalDir;
-      double d          =  cib->powerLaw2_vars.gridMin(vDir);
-      double gridHeight =  cib->powerLaw2_vars.gridMax(vDir);
+      double gridMin    =  cib->powerLaw2_vars.gridMin(vDir);
+      double gridMax    =  cib->powerLaw2_vars.gridMax(vDir);
       double height     =  cib->powerLaw2_vars.maxHeight;
       const Level* level = patch->getLevel();
 
@@ -629,13 +627,13 @@ void customInitialization(const Patch* patch,
         Point here   = level->getCellPosition(c);
         double h     = here.asVector()[vDir] ;
 
-        double ratio = (h - d)/height;
+        double ratio = (h - gridMin)/height;
         ratio        = Clamp(ratio,0.0,1.0);
 
         vel_CC[c][pDir] = (u_tau/vonKarman) * std::log( ratio * Re_tau );
 
         // Clamp edge/corner values
-        if( h < d || h > gridHeight ){
+        if( h < gridMin || h > gridMax ){
           vel_CC[c] = Vector(0,0,0);
         }
       }
