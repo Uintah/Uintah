@@ -703,7 +703,7 @@ KokkosScheduler::runTasks( int thread_id )
     bool gpuRunReady = false;
     bool gpuPending = false;
     bool cpuInitReady = false;
-    bool cpuValidateRequiresCopies = false;
+    bool cpuValidateRequiresAndModifiesCopies = false;
     bool cpuCheckIfExecutable = false;
     bool cpuRunReady = false;
 
@@ -897,8 +897,8 @@ KokkosScheduler::runTasks( int thread_id )
          * cpuValidateRequiresCopies = true
          */
         else if (usingDevice
-            && m_detailed_tasks->getHostValidateRequiresCopiesTask(readyTask)) {
-            cpuValidateRequiresCopies = true;
+            && m_detailed_tasks->getHostValidateRequiresAndModifiesCopiesTask(readyTask)) {
+            cpuValidateRequiresAndModifiesCopies = true;
             havework = true;
             break;
         }
@@ -1117,10 +1117,10 @@ KokkosScheduler::runTasks( int thread_id )
             //for (std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator it = readyTask->getVarsBeingCopiedByTask().getMap().begin(); it != readyTask->getVarsBeingCopiedByTask().getMap().end(); ++it) {
             //}
             //Once the D2H transfer is done, we mark those vars as valid.
-            m_detailed_tasks->addHostValidateRequiresCopies(readyTask);
+            m_detailed_tasks->addHostValidateRequiresAndModifiesCopies(readyTask);
           }
-        } else if (cpuValidateRequiresCopies) {
-          markHostRequiresDataAsValid(readyTask);
+        } else if (cpuValidateRequiresAndModifiesCopies) {
+          markHostRequiresAndModifiesDataAsValid(readyTask);
           if (allHostVarsProcessingReady(readyTask)) {
             m_detailed_tasks->addHostReadyToExecute(readyTask);
             //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
@@ -2494,6 +2494,25 @@ KokkosScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
     }
   }
 
+  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+    if (patches) {
+      constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+      const int numPatches = patches->size();
+      const int numMatls = matls->size();
+      for (int i = 0; i < numPatches; i++) {
+        for (int j = 0; j < numMatls; j++) {
+          labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Modifies);
+          if (vars.find(lpmd) == vars.end()) {
+            vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
+          }
+        }
+      }
+    } else {
+      std::cout << myRankThread() << " In allHostVarsProcessingReady, no patches, task is " << dtask->getName() << std::endl;
+    }
+  }
+
   // Go through each var, see if it's valid or valid with ghosts.
   std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
   for (varIter = vars.begin(); varIter != vars.end(); ++varIter) {
@@ -2519,7 +2538,7 @@ KokkosScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
     const int dwIndex = curDependency->mapDataWarehouse();
     OnDemandDataWarehouseP dw = m_dws[dwIndex];
     GPUDataWarehouse* gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch));
-    if (curDependency->m_dep_type == Task::Requires) {
+    if (curDependency->m_dep_type == Task::Requires || curDependency->m_dep_type == Task::Modifies) {
       if (gpudw->dwEntryExistsOnCPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID)) {
         if (!(gpudw->isValidOnCPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID))) {
           return false;
@@ -2713,7 +2732,7 @@ KokkosScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
 //______________________________________________________________________
 //
 void
-KokkosScheduler::markHostRequiresDataAsValid( DetailedTask * dtask )
+KokkosScheduler::markHostRequiresAndModifiesDataAsValid( DetailedTask * dtask )
 {
   // Data has been copied from the device to the host.  The stream has completed.
   // Go through all variables that this CPU task was responsible for copying mark them as valid on the CPU
@@ -2725,7 +2744,7 @@ KokkosScheduler::markHostRequiresDataAsValid( DetailedTask * dtask )
     int whichGPU = it->second.m_whichGPU;
     int dwIndex = it->second.m_dep->mapDataWarehouse();
     GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
-    if (it->second.m_dep->m_dep_type == Task::Requires) {
+    if (it->second.m_dep->m_dep_type == Task::Requires || it->second.m_dep->m_dep_type == Task::Modifies) {
       if (!it->second.m_staging) {
         gpudw->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       }
@@ -2945,6 +2964,21 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
     }
   }
 
+  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+    const int numPatches = patches->size();
+    const int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
+        labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Modifies);
+        if (vars.find(lpmd) == vars.end()) {
+          vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
+        }
+      }
+    }
+  }
+
   for (const Task::Dependency* dependantVar = task->getComputes(); dependantVar != 0; dependantVar = dependantVar->m_next) {
     constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
@@ -3024,12 +3058,73 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
           hack_foundAComputes = true;
      }
 
-    // Arches hack:
+    // almgren-mmsBC.ups hack
+    // almgren-mms_conv.ups hack
+    if ( (varName == "uVelocity") ||
+         (varName == "vVelocity") ||
+         (varName == "wVelocity")
+       )
+    {
+      hack_foundAComputes = true;
+    }
+
+    // dqmom_example_char_no_pressure.ups hack:
     // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
     // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
     // from qn0 to qn4.  Also, the char_gas_reaction0_qn4 variable is both a computes in the newDW and a requires in the oldDW
     if ( (varName.substr(0,10) == "char_ps_qn") ||
          (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW) ){
+      hack_foundAComputes = true;
+    }
+
+    // heliumKS_pressureBC.ups hack
+    if ( (varName == "A_press")            ||
+         (varName == "b_press")            ||
+         (varName == "cellType")           ||
+         (varName == "continuity_balance") ||
+         (varName == "density")            ||
+         (varName == "density_star")       ||
+         (varName == "drhodt")             ||
+         (varName == "gamma")              ||
+         (varName == "gravity_z")          ||
+         (varName == "gridX")              ||
+         (varName == "gridY")              ||
+         (varName == "gridZ")              ||
+         (varName == "guess_press")        ||
+         (varName == "phi")                ||
+         (varName == "phi_x_dflux")        ||
+         (varName == "phi_y_dflux")        ||
+         (varName == "phi_z_dflux")        ||
+         (varName == "phi_x_flux")         ||
+         (varName == "phi_y_flux")         ||
+         (varName == "phi_z_flux")         ||
+         (varName == "pressure")           ||
+         (varName == "rho_phi")            ||
+         (varName == "rho_phi_RHS")        ||
+         (varName == "t_viscosity")        ||
+         (varName == "ucellX")             ||
+         (varName == "vcellY")             ||
+         (varName == "wcellZ")             ||
+         (varName == "uVel")               ||
+         (varName == "vVel")               ||
+         (varName == "wVel")               ||
+         (varName == "volFraction")        ||
+         (varName == "volFractionX")       ||
+         (varName == "volFractionY")       ||
+         (varName == "volFractionZ")       ||
+         (varName == "x-mom")              ||
+         (varName == "x-mom_RHS")          ||
+         (varName == "x-mom_x_flux")       ||
+         (varName == "x-mom_y_flux")       ||
+         (varName == "x-mom_z_flux")       ||
+         (varName == "y-mom")              ||
+         (varName == "z-mom")              ||
+         (varName == "z-mom_RHS")          ||
+         (varName == "z-mom_x_flux")       ||
+         (varName == "z-mom_y_flux")       ||
+         (varName == "z-mom_z_flux")
+       )
+    {
       hack_foundAComputes = true;
     }
 

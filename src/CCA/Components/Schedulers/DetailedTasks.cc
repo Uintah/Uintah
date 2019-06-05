@@ -1282,7 +1282,7 @@ DetailedTasks::getDeviceExecutionPendingTask(DetailedTask *& dtask)
 //_____________________________________________________________________________
 //
 bool
-DetailedTasks::getHostValidateRequiresCopiesTask(DetailedTask *& dtask)
+DetailedTasks::getHostValidateRequiresAndModifiesCopiesTask(DetailedTask *& dtask)
 {
   //This function should ONLY be called within runTasks() part 1.
   //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
@@ -1290,12 +1290,12 @@ DetailedTasks::getHostValidateRequiresCopiesTask(DetailedTask *& dtask)
   dtask = nullptr;
 
   auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
-  TaskPool::iterator host_validateRequiresCopies_pool_iter = host_validateRequiresCopies_pool.find_any(ready_request);
+  TaskPool::iterator host_validateRequiresAndModifiesCopies_pool_iter = host_validateRequiresAndModifiesCopies_pool.find_any(ready_request);
 
-  if (host_validateRequiresCopies_pool_iter) {
-    dtask = *host_validateRequiresCopies_pool_iter;
-    host_validateRequiresCopies_pool.erase(host_validateRequiresCopies_pool_iter);
-    //printf("host_validateRequiresCopies_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), host_validateRequiresCopies_pool.size());
+  if (host_validateRequiresAndModifiesCopies_pool_iter) {
+    dtask = *host_validateRequiresAndModifiesCopies_pool_iter;
+    host_validateRequiresAndModifiesCopies_pool.erase(host_validateRequiresAndModifiesCopies_pool_iter);
+    //printf("host_validateRequiresAndModifiesCopies_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), host_validateRequiresAndModifiesCopies_pool.size());
     retVal = true;
   }
 
@@ -1392,9 +1392,9 @@ DetailedTasks::addDeviceExecutionPending( DetailedTask * dtask )
 
 //_____________________________________________________________________________
 //
-void DetailedTasks::addHostValidateRequiresCopies(DetailedTask * dtask)
+void DetailedTasks::addHostValidateRequiresAndModifiesCopies(DetailedTask * dtask)
 {
-  host_validateRequiresCopies_pool.insert(dtask);
+  host_validateRequiresAndModifiesCopies_pool.insert(dtask);
 }
 
 //_____________________________________________________________________________

@@ -199,7 +199,7 @@ class KokkosScheduler : public MPIScheduler  {
 
     void markDeviceComputesDataAsValid( DetailedTask * dtask );
 
-    void markHostRequiresDataAsValid( DetailedTask * dtask );
+    void markHostRequiresAndModifiesDataAsValid( DetailedTask * dtask );
 
     void initiateD2HForHugeGhostCells( DetailedTask * dtask );
 

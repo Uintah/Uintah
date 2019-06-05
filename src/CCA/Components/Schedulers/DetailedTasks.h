@@ -247,7 +247,7 @@ public:
 
   void addDeviceExecutionPending( DetailedTask * dtask );
 
-  void addHostValidateRequiresCopies( DetailedTask * dtask );
+  void addHostValidateRequiresAndModifiesCopies( DetailedTask * dtask );
 
   void addHostCheckIfExecutable( DetailedTask * dtask );
 
@@ -265,7 +265,7 @@ public:
 
   bool getDeviceExecutionPendingTask( DetailedTask *& dtask );
 
-  bool getHostValidateRequiresCopiesTask( DetailedTask *& dtask );
+  bool getHostValidateRequiresAndModifiesCopiesTask( DetailedTask *& dtask );
 
   bool getHostCheckIfExecutableTask( DetailedTask *& dtask );
 
@@ -409,7 +409,7 @@ private:
   TaskPool             device_checkIfExecutable_pool{};
   TaskPool             device_readyToExecute_pool{};
   TaskPool             device_executionPending_pool{};
-  TaskPool             host_validateRequiresCopies_pool{};
+  TaskPool             host_validateRequiresAndModifiesCopies_pool{};
   TaskPool             host_checkIfExecutable_pool{};
   TaskPool             host_readyToExecute_pool{};
 
