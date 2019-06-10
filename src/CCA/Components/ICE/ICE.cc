@@ -435,25 +435,26 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   
   //__________________________________
   //  Custom BC setup
+  // ignore if the domain is periodic
   d_BC_globalVars->d_gravity    = d_gravity;
   d_BC_globalVars->materialManager  = m_materialManager;
   d_BC_globalVars->applyHydrostaticPress = d_applyHydrostaticPress;
   
-  d_BC_globalVars->usingLodi = 
-        read_LODI_BC_inputs(prob_spec,       m_materialManager, d_BC_globalVars->lodi);
-  d_BC_globalVars->usingMicroSlipBCs =
-        read_MicroSlip_BC_inputs(prob_spec,  d_BC_globalVars->slip);
-  d_BC_globalVars->using_MMS_BCs =
-        read_MMS_BC_inputs(prob_spec,        d_BC_globalVars->mms);
-  d_BC_globalVars->using_Sine_BCs =
-        read_Sine_BC_inputs(prob_spec,       d_BC_globalVars->sine);
-  d_BC_globalVars->using_inletVel_BCs =
-        read_inletVel_BC_inputs(prob_spec,   m_materialManager, d_BC_globalVars->inletVel, grid);
-        
-  //__________________________________
-  //  boundary condition warnings
-  BC_bulletproofing(prob_spec, m_materialManager, grid);
+  IntVector periodic = grid->getLevel(0)->getPeriodicBoundaries();
+  bool periodicDomain = (periodic.x() == 1 && periodic.y() == 1 && periodic.z() == 1);
   
+  if( periodicDomain == false ){
+  
+    d_BC_globalVars->usingLodi          =  read_LODI_BC_inputs(prob_spec,       m_materialManager, d_BC_globalVars->lodi);
+    d_BC_globalVars->usingMicroSlipBCs  =  read_MicroSlip_BC_inputs(prob_spec,  d_BC_globalVars->slip);
+    d_BC_globalVars->using_MMS_BCs      =  read_MMS_BC_inputs(prob_spec,        d_BC_globalVars->mms);
+    d_BC_globalVars->using_Sine_BCs     =  read_Sine_BC_inputs(prob_spec,       d_BC_globalVars->sine);
+    d_BC_globalVars->using_inletVel_BCs =  read_inletVel_BC_inputs(prob_spec,   m_materialManager, d_BC_globalVars->inletVel, grid);
+
+    //__________________________________
+    //  boundary condition warnings
+    BC_bulletproofing(prob_spec, m_materialManager, grid);
+  }  
   //__________________________________
   //  Load Model info.
   // If we are doing a restart, then use the "timestep.xml" 
