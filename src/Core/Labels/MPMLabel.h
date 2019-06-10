@@ -38,6 +38,11 @@ namespace Uintah {
       MPMLabel();
       ~MPMLabel();
 
+
+      // Labels that should be local, not global, but.. well... JBH FIXME TODO
+      const VarLabel* globalMinNiConc;
+      const VarLabel* globalMinAlConc;
+
       const VarLabel* delTLabel;
       const VarLabel* doMechLabel;
 

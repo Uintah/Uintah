@@ -133,7 +133,7 @@ namespace Uintah
             double                  m_multiplier;
             Matrix3                 m_latticeMisfit;
             FunctionInterpolator  * m_phaseInterpolator;
-            double                  m_D0Liquid, m_D0Solid;
+            double                  m_D0Liquid, m_D0Solid, m_D0LowT;
       const VarLabel              * m_globalMinNiConc;
       const VarLabel              * m_globalMinAlConc;
       const VarLabel              * m_pRegionType;

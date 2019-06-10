@@ -1547,54 +1547,143 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
  * |  Phase change - TODO Extract to own class which is part of the CM (JBH)|
  * \------------------------------------------------------------------------/
  */
+      // New Code:  6/7/2019
+      const double maxMeltTempBuffer  = 1.0; // Range within phase transition change temp
+      const double Tpc_Low            = Tm_cur - maxMeltTempBuffer;
+      const double Tpc_High           = Tm_cur + maxMeltTempBuffer;
+      const int    phaseDirection     = SignZero(pdTdt[idx]);
+      const double T_n                = pTemperature[idx];
+
+      if ((T_n < Tpc_Low) && (phaseDirection == -1)) {
+        // Below min phase-change temperature and cooling, therefore do nothing.
+      }
+      else if ((T_n > Tpc_High) && (phaseDirection == 1)) {
+        // Above max phase-change temperature and heating, therefore do nothing.
+      }
+      else {
+        const double thermalMass = pMass[idx] * Cp;
+        const double dQ_Total = pdTdt[idx] * thermalMass;
+        const double dQ_PhaseChange = pMass[idx] * d_dHFusion;
+        if (phaseDirection == 1) { // Heating
+          const double dQ_Heat = std::min(dQ_Total, (Tpc_Low - T_n)*thermalMass);
+          const double dQ_Melt = std::min((dQ_PhaseChange - pHeatBuffer[idx]),(dQ_Total - dQ_Heat));
+          pHeatBuffer_new[idx] = pHeatBuffer[idx] + dQ_Melt;
+          const double dQ_Excess = dQ_Total - dQ_Heat - dQ_Melt;
+          pdTdt[idx] = (dQ_Heat + dQ_Excess)/thermalMass/delT;
+        }
+        if (phaseDirection == -1) { // Cooling
+          const double dQ_Cool = std::max(dQ_Total, (Tpc_High - T_n)*thermalMass);
+          const double dQ_Freeze = std::max(-pHeatBuffer[idx], (dQ_Total - dQ_Cool));
+          pHeatBuffer_new[idx] = pHeatBuffer[idx] + dQ_Freeze;
+          const double dQ_Excess = dQ_Total - dQ_Cool - dQ_Freeze;
+          pdTdt[idx] = (dQ_Cool + dQ_Excess)/thermalMass/delT;
+          pMeltProgress_new[idx] = pHeatBuffer_new[idx] / dQ_PhaseChange;
+        }
+      }
+      if (pColor_new[idx] != d_reactedColor && pMeltProgress_new[idx] > 0) pColor_new[idx] = d_meltingColor;
+
+
+//      // New Code:  6/6/2019
+//      const double maxMeltTempBuffer = 1.0; // Range within phase transition change temp
+//      const double previousTemp = pTemperature[idx];
+//      const double trialTemp = previousTemp + pdTdt[idx]*delT;
+//
+//      // Current temp is close enough to our phase transition temp. value (Tm_cur) to
+//      //   begin phase chance process.
+//      double Q_store = pHeatBuffer[idx];
+//      pMeltProgress_new[idx] = pMeltProgress[idx];
+//
+//      if (abs(trialTemp - Tm_cur) <= maxMeltTempBuffer) { // Current temp is within range of our buffer value
+//        const int     phaseDirection = SignZero(pdTdt[idx]);
+//        const double  phaseOnsetTemp = Tm_cur - phaseDirection*maxMeltTempBuffer;
+//        // -max(-a,-b) = min(a,b)  Therefore this clamps to max temp on freezing, min temp on melting
+//        // Choose phase transition temp or already reached threshold temp as appropriate.
+//        const double  clampTemp      = -phaseDirection*( std::max(-phaseDirection*pTemperature[idx],
+//                                                                  -phaseDirection*phaseOnsetTemp) );
+//        const int    dropFactor     = (1 + phaseDirection)/2; //   0 for decreasing T, 1 for increasing T
+//        const double dQ_fusion      = pMass[idx] * d_dHFusion;//   heat needed for phase change of THIS material point
+//        const double thermalMass    = pMass[idx] * Cp;        //   thermal mass of THIS material point
+//
+//        //  Determine the amount of heat flow needed to actually reach the temperature we initially predicted
+//        double dQ_predicted = (trialTemp - previousTemp) * thermalMass; // dQ = dT * M_i * C_p
+//
+//        const double Q_prev = pHeatBuffer[idx];
+//        const double Q_new  = pHeatBuffer[idx] + dQ_predicted;
+//        //  Cases:  Increasing temperature, phaseDirection =  1; dropFactor = 1
+//        //          Decreasing temperature, phaseDirection = -1; dropFactor = 0
+//        double Q_intermed = Q_new - dropFactor * dQ_fusion; // Increasing: Q_new - Hf ; Decreasing:  Q_new
+//        //    1.  Increasing Temp, Q_new <  dQ_fusion (Q_intermed < 0) => Remainder: 0,                            dTdt = 0
+//        //    2.  Increasing Temp, Q_new >= dQ_fusion (Q_intermed >=0) => Remainder: Q_excess = Q_new - dQ_fusion; dTdt = Q_excess/thermal_mass
+//        //    3.  Decreasing Temp, Q_new <  0         (Q_intermed < 0) => Remainder: Q_excess = Q_new,             dTdt = Q_new/thermal_mass
+//        //    4.  Decreasing Temp, Q_new >= 0         (Q_intermed >=0) => Remainder: 0,                            dTdt = 0
+//        double Q_excess  = phaseDirection*std::max(phaseDirection*Q_intermed,0.0); // 1. phaseDirection =  1, Q_intermed < 0  -> 0.0 >  Q_intermed
+//        Q_store = phaseDirection*std::min(phaseDirection*Q_new, dropFactor*dQ_fusion);
+//        pMeltProgress_new[idx] = pHeatBuffer_new[idx]/dQ_fusion;
+//
+//        double dT_actual = Q_excess/thermalMass;
+//        pdTdt[idx] = dT_actual/delT;
+//
+//      }
+//
+//      // End New Code: 6/6/2019
+      // Figure out where we should set clamp temperature
+//      const double maxMeltTempBuffer = 1.0; // Clamp within this many K of phase temp
+//      const int phaseDirection = SignZero(pdTdt[idx]); // +1 Increasing, -1 decreasing
+//      const double phaseOnsetTemp = Tm_cur - phaseDirection*maxMeltTempBuffer; // Temp at which clamping begins
+
+//      double previousTemp = pTemperature[idx];
+//      double trialTemp    = previousTemp + pdTdt[idx]*delT;
+
+      // Determine if we're within the phase boundary:
+      //  Increasing:  T_trial > T_phaseOnset ((T_trial - T_phaseOnset) > 0)
+      //  Decreasing:  T_trial < T_phaseOnset ((T_phaseOnset - T_trial) > 0)
+      //    => phaseOnset * (T_trial - TphaseOnset) > 0
+//      double Q_store = pHeatBuffer[idx];
+//      pMeltProgress_new[idx] = pMeltProgress[idx];
+//      if (phaseDirection*(trialTemp-phaseOnsetTemp) > 0) {
+//        //   0 for decreasing T, 1 for increasing T
+//        const int    dropFactor     = (1 + phaseDirection)/2;
+//        //   heat needed for phase change of THIS material point
+//        const double dQ_fusion      = pMass[idx] * d_dHFusion;
+//        //   thermal mass of THIS material point
+//        const double thermalMass    = pMass[idx] * Cp;
+//        double dQ_predicted = (trialTemp - previousTemp) * thermalMass; // dQ = dT * M_i * C_p
+//        const double Q_prev = pHeatBuffer[idx];
+//        const double Q_new  = pHeatBuffer[idx] + dQ_predicted;
+//        //  Cases:  Increasing temperature, phaseDirection =  1; dropFactor = 1
+//        //          Decreasing temperature, phaseDirection = -1; dropFactor = 0
+//        double Q_intermed = Q_new - dropFactor * dQ_fusion; // Increasing: Q_new - Hf ; Decreasing:  Q_new
+//        //    1.  Increasing Temp, Q_new <  dQ_fusion (Q_intermed < 0) => Remainder: 0,                            dTdt = 0
+//        //    2.  Increasing Temp, Q_new >= dQ_fusion (Q_intermed >=0) => Remainder: Q_excess = Q_new - dQ_fusion; dTdt = Q_excess/thermal_mass
+//        //    3.  Decreasing Temp, Q_new <  0         (Q_intermed < 0) => Remainder: Q_excess = Q_new,             dTdt = Q_new/thermal_mass
+//        //    4.  Decreasing Temp, Q_new >= 0         (Q_intermed >=0) => Remainder: 0,                            dTdt = 0
+//        double Q_excess  = phaseDirection*std::max(phaseDirection*Q_intermed,0.0); // 1. phaseDirection =  1, Q_intermed < 0  -> 0.0 >  Q_intermed
+//        Q_store = phaseDirection*std::min(phaseDirection*Q_new, dropFactor*dQ_fusion);
+//        pMeltProgress_new[idx] = pHeatBuffer_new[idx]/dQ_fusion;
+//
+//        double dT_actual = Q_excess/thermalMass;
+//        pdTdt[idx] = dT_actual/delT;
+//
+//      }
+//      pHeatBuffer_new[idx] = Q_store;
+
       //
       // Note:  -std::max(-a,-b) = std::min(a,b)
       //
       //   Maximum offset from phase change temperature at which phase change
       //     may begin.
-      const double maxMeltTempBuffer = 1.0;
-      //   phaseDirection is +1 for increasing T, -1 for decreasing T
-      const int    phaseDirection = SignZero(pdTdt[idx]);
-      //   correct calculation of offset temperature regardless of direction
-      const double phaseOnsetTemp = Tm_cur - phaseDirection*maxMeltTempBuffer;
-      //   fixed T at which phase change is occurring
-      const double clampTemp      = -phaseDirection*(
-                                    std::max(-phaseDirection*pTemperature[idx],
-                                             -phaseDirection*phaseOnsetTemp)
-                                                    );
-      //   0 for decreasing T, 1 for increasing T
-      const int    dropFactor     = (1 + phaseDirection)/2;
-      //   heat needed for phase change of THIS material point
-      const double dQ_fusion      = pMass[idx] * d_dHFusion;
-      //   thermal mass of THIS material point
-      const double thermalMass    = pMass[idx] * Cp;
+//      const double clampTemp      = -phaseDirection*(
+//                                    std::max(-phaseDirection*pTemperature[idx],
+//                                             -phaseDirection*phaseOnsetTemp)
+//                                                    );
 
-      double trialTemp    = pTemperature_new[idx] + pdTdt[idx]*delT;
-      double previousTemp = pTemperature[idx];
-      double dQ_predicted = (trialTemp - previousTemp) * thermalMass; // dQ = dT * M_i * C_p
+//      if (pColor_new[idx] != d_reactedColor && Q_store > 0) pColor_new[idx] = d_meltingColor;
 
-      const double Q_prev = pHeatBuffer[idx];
-      const double Q_new  = pHeatBuffer[idx] + dQ_predicted;
 
-      //  Cases:  Increasing temperature, phaseDirection =  1; dropFactor = 1
-      //          Decreasing temperature, phaseDirection = -1; dropFactor = 0
-      double Q_intermed = Q_new - dropFactor * dQ_fusion; // Increasing: Q_new - Hf ; Decreasing:  Q_new
-      //    1.  Increasing Temp, Q_new <  dQ_fusion (Q_intermed < 0) => Remainder: 0,                            dTdt = 0
-      //    2.  Increasing Temp, Q_new >= dQ_fusion (Q_intermed >=0) => Remainder: Q_excess = Q_new - dQ_fusion; dTdt = Q_excess/thermal_mass
-      //    3.  Decreasing Temp, Q_new <  0         (Q_intermed < 0) => Remainder: Q_excess = Q_new,             dTdt = Q_new/thermal_mass
-      //    4.  Decreasing Temp, Q_new >= 0         (Q_intermed >=0) => Remainder: 0,                            dTdt = 0
-      double Q_excess  = phaseDirection*std::max(phaseDirection*Q_intermed,0.0); // 1. phaseDirection =  1, Q_intermed < 0  -> 0.0 >  Q_intermed
                                                                                  // 2. phaseDirection =  1, Q_intermed >= 0 ->  Q_intermed > 0.0
                                                                                  // 3. phaseDirection = -1, Q_intermed < 0  -> -Q_intermed > 0.0
                                                                                  // 4. phaseDirection = -1, Q_intermed >= 0 -> 0.0 > -Q_intermed
 
-      double Q_store = phaseDirection*std::min(phaseDirection*Q_new, dropFactor*dQ_fusion);
-
-      double dT_actual = Q_excess/thermalMass;
-      pdTdt[idx] = dT_actual/delT;
-      pHeatBuffer_new[idx] = Q_store;
-      pMeltProgress_new[idx] = pHeatBuffer_new[idx]/dQ_fusion;
-      if (pColor_new[idx] != d_reactedColor && Q_store > 0) pColor_new[idx] = d_meltingColor;
 //      double dT_actual = T_clamp - phaseDirection*oldTemp;
 //      double dQ_toClamp = dT_actual*thermalMass;
 //      double dQ_remainder = dQPredict - phaseDirection * dQ_toClamp;

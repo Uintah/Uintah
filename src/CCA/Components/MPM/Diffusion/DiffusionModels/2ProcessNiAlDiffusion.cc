@@ -27,10 +27,12 @@ namespace Uintah {
                                                    diff_type)
   {
 
+    const double lowTFactor = 1000.0;
     probSpec->getWithDefault("scaleMultiplier", m_multiplier, 1.0);
     probSpec->getWithDefault("normalized", f_isConcNormalized, true);
     probSpec->require("D0_Liquid", m_D0Liquid);
     probSpec->getWithDefault("D0_Solid", m_D0Solid, 0.0);
+    probSpec->getWithDefault("D0_LowT",m_D0LowT, m_D0Liquid/lowTFactor);
 
     ProblemSpecP interpPS = probSpec->findBlock("function_interp");
     if (!interpPS) {
@@ -149,7 +151,7 @@ namespace Uintah {
       // For now, just ignore the minimum concentration crap.  JBH Fixme
       minConc = 0.0;
       double D = EAM_AlNi::Diffusivity(Temp,Conc,gradConc,minConc,regionType,
-                                       m_phaseInterpolator,m_D0Liquid,m_D0Solid)*m_multiplier;
+                                       m_phaseInterpolator,m_D0Liquid,m_D0Solid,m_D0LowT)*m_multiplier;
       pFluxNew[pIdx] = D * pGradConcentration[pIdx];
       diffMax = std::max(diffMax, D);
     }
@@ -241,6 +243,7 @@ namespace Uintah {
       sdmPS->appendElement("normalized", f_isConcNormalized);
       sdmPS->appendElement("D0_Liquid", m_D0Liquid);
       sdmPS->appendElement("D0_Solid", m_D0Solid);
+      sdmPS->appendElement("D0_LowT", m_D0LowT);
       m_phaseInterpolator->outputProblemSpec(sdmPS, output_rdm_tag);
 
     }

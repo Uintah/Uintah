@@ -86,24 +86,31 @@ namespace Uintah {
                                       ,const EAM_AlNi_Region & regionType
                                       ,const FunctionInterpolator * interpolator
                                       ,const double & D0_liquid
-                                      ,const double & D0_solid) // Input temp & conc
+                                      ,const double & D0_solid
+                                      ,const double & D0_lowT ) // Input temp & conc
       {
+          bool LowTempSolid = true;
           bool NiAllLiquid = true;
           // Hack flag for the time being to set the Nickle rich portion of the phase
           //   diagram to always be liquid-like.
           double RTinv = 1.0/(8.3144598*T); // 1/RT with R in J/(mol*K)
           double TinC = std::max(600.0, T-273.15);
           // Value from our paper.
-          double E0_liquid = 68000.0; // Activation energy for diffusion in liquid Al state (J/mol)
+          double activationEnergy = 68000.0;
+          double activationFactor = std::exp(-activationEnergy*RTinv);
 
-          // For now, leave the same curve and just constantly depress the solid state diffusivity by a
-          //   multiplicative factor via D0_solid.
-          double E0_solid = 68000.0; // Activation energy for diffusion in solid B2 AlNi
+          double D_liq = D0_liquid * activationFactor;
+          double D_sol = D0_solid * activationFactor;
+          double D_lowT = D0_lowT * activationFactor;
 
-//          double liqConc = getLiquidus(T,regionType);
-//          double solConc = getSolidus(T,regionType);
-          double D_liq = D0_liquid * std::exp(-E0_liquid * RTinv);
-          double D_sol = D0_solid  * std::exp(-E0_solid * RTinv);
+//          double E0_liquid = 68000.0; // Activation energy for diffusion in liquid Al state (J/mol)
+//
+//          // For now, leave the same curve and just constantly depress the solid state diffusivity by a
+//          //   multiplicative factor via D0_solid.
+//          double E0_solid = 68000.0; // Activation energy for diffusion in solid B2 AlNi
+//
+//          double D_liq = D0_liquid * std::exp(-E0_liquid * RTinv);
+//          double D_sol = D0_solid  * std::exp(-E0_solid * RTinv);
           // Assuming the concentration of the guest is properly passed in, minConcReached tells
           //   us that the mininum overall system concentration is at least high enough to have
           //   reached the BEGINNING of the solidification region if it is greater than the
@@ -113,17 +120,18 @@ namespace Uintah {
           typedef std::tuple<double,double> interpPoint;
           interpPoint leftPoint, rightPoint;
           if (regionType == EAM_AlNi_Region::AlRich) {
+            if (T < 933 && LowTempSolid) return (D_lowT);
             liqConc = 0.01*getLiquidusAl(TinC);
             solConc = 0.01*getSolidusAl(TinC);
-            // HACK FIXME TAKE ME OUT TODO JBH 4-22-19
-            //solConc = 0.10;
             leftPoint = std::make_tuple(liqConc,D_liq);
             rightPoint = std::make_tuple(solConc, D_sol);
           } else // Ni rich
           {
+            if (T < 1728 && LowTempSolid) return (D_lowT);
             solConc = 0.01*getSolidusNi(TinC);
             liqConc = 0.01*getLiquidusNi(TinC);
             rightPoint = std::make_tuple(liqConc, D_liq);
+
 
             // TODO FIXME JBH:  We should probably invert the concentration (from C_Ni to C_Al) and then
             //   we could use the same type of interpolator along the Ni extrema as well.

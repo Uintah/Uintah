@@ -230,8 +230,10 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                                           psize[idx], deformationGradient[idx]);
 
         // Calculate k/(rho*Cv)
-        double alpha = kappa*pvol[idx]/(pmass[idx]*Cv);
-        double timestepThisParticle= (dx2/(2.0*alpha)).minComponent();
+        // JBH -- FIXME Looking for factor of 2
+        //        double alpha = kappa*pvol[idx]/(pmass[idx]*Cv);
+        double alpha = kappa*pvol[idx]/(Cv);
+        double timestepThisParticle= (dx2/(2.0*alpha/pmass[idx])).minComponent();
         minTimestep = std::min(minTimestep,timestepThisParticle);
         Vector dT_dx = pTempGrad[idx];
         double Tdot_cond = 0.0;
@@ -243,8 +245,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
           node = ni[k];
           if(patch->containsNode(node)){
             Vector div = d_S[k]*oodx;
-            Tdot_cond = Dot(div, dT_dx) * (alpha);
-//            Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node]);
+            // JBH FIXME Factor of two change
+//            Tdot_cond = Dot(div, dT_dx) * (alpha);
+            Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node]);
             gdTdt[node] -= Tdot_cond;
 
            if (cout_heat.active()) {

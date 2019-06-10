@@ -38,6 +38,11 @@ using namespace std;
 
 MPMLabel::MPMLabel()
 {
+  // Labels moved to global context because of expediency:  JBH FIXME TODO
+  globalMinNiConc = VarLabel::create("globalMinNiConc",min_vartype::getTypeDescription());
+  globalMinAlConc = VarLabel::create("globalMinAlConc",min_vartype::getTypeDescription());
+
+
   // Heat flux from fire
 
   heatRate_CCLabel = 
@@ -869,6 +874,10 @@ MPMLabel::MPMLabel()
 
 MPMLabel::~MPMLabel()
 {
+  // Labels that have been moved to the global space because I need stuff done.  FIXME TODO JBH
+  VarLabel::destroy(globalMinNiConc);
+  VarLabel::destroy(globalMinAlConc);
+
   VarLabel::destroy(patchThermalMassLabel);
   VarLabel::destroy(sumThermalMassLabel);
   VarLabel::destroy(patchReactedMolesLabel);

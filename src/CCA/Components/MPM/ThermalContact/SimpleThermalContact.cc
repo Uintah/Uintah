@@ -47,6 +47,7 @@ namespace Uintah
     task->requires(Task::OldDW, m_mpmLbl->delTLabel);
 
     task->requires(Task::NewDW, m_mpmLbl->gMassLabel,        Ghost::None);
+    task->requires(Task::NewDW, m_mpmLbl->gMassLabel, m_materialManager->getAllInOneMatl(), Task::OutOfDomain, Ghost::None);
     task->requires(Task::NewDW, m_mpmLbl->gTemperatureLabel, Ghost::None);
     task->computes(m_mpmLbl->gThermalContactTemperatureRateLabel);
     task->computes(m_gThermalInterfaceFlag);
@@ -77,10 +78,6 @@ namespace Uintah
   {
     int numMats = materials->size();
 
-    Ghost::GhostType  typeGhost;
-    int               numGhost;
-    m_materialManager->getParticleGhostLayer(typeGhost, numGhost);
-
     delt_vartype delT;
     old_dw->get(delT, m_mpmLbl->delTLabel, getLevel(patches));
     double delTInv = 1.0/delT;
@@ -92,7 +89,7 @@ namespace Uintah
 
       // Constant global variables for the default mass field
       constNCVariable<double>               gTotalMass;
-      new_dw->get(gTotalMass, m_mpmLbl->gMassLabel, totalDWI, patch, typeGhost, numGhost);
+      new_dw->get(gTotalMass, m_mpmLbl->gMassLabel, totalDWI, patch, Ghost::None, 0);
       // Temporary global variables for the default mass field
       NCVariable<double>                gTotalThermalMass;
       NCVariable<double>                gdTdt_interface_total;
@@ -132,7 +129,7 @@ namespace Uintah
       std::vector<NCVariable<double> >  GdTdt_interface(numMats);
 
       if (m_mpmFlags->d_fracture) {
-        new_dw->get(GTotalMass, m_mpmLbl->GMassLabel, totalDWI, patch, typeGhost, numGhost);
+        new_dw->get(GTotalMass, m_mpmLbl->GMassLabel, totalDWI, patch, Ghost::None, 0);
         new_dw->allocateTemporary(GTotalThermalMass, patch);
         GTotalThermalMass.initialize(0.0);
         new_dw->allocateAndPut(GdTdt_interface_total,
@@ -152,13 +149,13 @@ namespace Uintah
         const double specificHeat = mpm_matl->getSpecificHeat();
 
         new_dw->get(gMass[matIdx], m_mpmLbl->gMassLabel,
-                    dwi, patch, typeGhost, numGhost);
+                    dwi, patch, Ghost::None, 0);
         new_dw->get(gTemperature[matIdx], m_mpmLbl->gTemperatureLabel,
-                    dwi, patch, typeGhost, numGhost);
+                    dwi, patch, Ghost::None, 0);
 
         new_dw->allocateAndPut(gdTdt_interface[matIdx],
                                m_mpmLbl->gThermalContactTemperatureRateLabel,
-                               dwi, patch, typeGhost, numGhost);
+                               dwi, patch, Ghost::None, 0);
         gdTdt_interface[matIdx].initialize(0);
 
         new_dw->allocateTemporary(gThermalMass[matIdx], patch);
@@ -166,7 +163,7 @@ namespace Uintah
 
         new_dw->allocateAndPut(gdTdt_interface_flag[matIdx],
                                m_gThermalInterfaceFlag,
-                               dwi, patch, typeGhost, numGhost);
+                               dwi, patch, Ghost::None, 0);
         gdTdt_interface_flag[matIdx].initialize(false);
 
         for (NodeIterator nIt = patch->getNodeIterator(); !nIt.done(); ++nIt) {
@@ -178,21 +175,21 @@ namespace Uintah
 
         if (m_mpmFlags->d_fracture) {
           new_dw->get(GMass[matIdx], m_mpmLbl->GMassLabel,
-                      dwi, patch, typeGhost, numGhost);
+                      dwi, patch, Ghost::None, 0);
           new_dw->get(GTemperature[matIdx], m_mpmLbl->GTemperatureLabel,
-                      dwi, patch, typeGhost, numGhost);
+                      dwi, patch, Ghost::None, 0);
 
           new_dw->allocateTemporary(GThermalMass[matIdx], patch);
           GThermalMass[matIdx].initialize(0.0);
 
           new_dw->allocateAndPut(GdTdt_interface[matIdx],
                                  m_mpmLbl->GThermalContactTemperatureRateLabel,
-                                 dwi, patch, typeGhost, numGhost);
+                                 dwi, patch, Ghost::None, 0);
           GdTdt_interface[matIdx].initialize(0);
 
           new_dw->allocateAndPut(GdTdt_interface_flag[matIdx],
                                  m_GThermalInterfaceFlag,
-                                 dwi, patch, typeGhost, numGhost);
+                                 dwi, patch, Ghost::None, 0);
           GdTdt_interface_flag[matIdx].initialize(false);
 
 
