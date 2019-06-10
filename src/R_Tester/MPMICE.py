@@ -43,7 +43,9 @@ AMRTESTS   = [
                   ("advect_HollowSphere_amr", "advect_HollowSphere_amr.ups", 8,  "ALL", ["no_dbg"])
              ]
 
-LOCALTESTS = [   ("massX",                    "massX.ups",                 1,  "ALL", ["exactComparison"]),
+LOCALTESTS = [   ("advect",                   "advect.ups",                1,  "ALL", ["exactComparison"]),
+                 ("rmpmice_advect_periodic",  "advect_periodic.ups",       8,  "ALL", ["exactComparison"]),
+                 ("massX",                    "massX.ups",                 1,  "ALL", ["exactComparison"]),
                  ("pistonVal",                "pistonValidation.ups",      2,  "ALL", ["exactComparison"]),
                  ("pistonVal_mks",            "pistonValidation.SI.Cu.ups",2,  "ALL", ["exactComparison"]),
                  ("guni2dRT",                 "guni2dRT.ups",              4,  "ALL", ["exactComparison"]),
