@@ -90,17 +90,17 @@
        </BoundaryConditions>
        <Level>
            <Box label = "1">
-              <lower>[0.0, -1.0,-0.5]</lower>
-              <upper>[4.0,  1.0, 0.5]</upper>
-              <resolution>[80,40,20]</resolution>
-              <patches>[4,1,2]</patches>
+              <lower>[0.0, -0.5,-0.5]</lower>
+              <upper>[2.2,  1.0, 0.5]</upper>
+              <resolution>[44,30,20]</resolution>
+              <patches>[3,1,1]</patches>
               <extraCells> [1,1,1]            </extraCells>
            </Box>
            <Box label = "2">
               <lower>[0.0,1.0,-0.25]</lower>
               <upper>[0.2,1.5, 0.25]</upper>
               <resolution>[4,10,10]</resolution>
-              <patches>[1,1,1]</patches>
+              <patches>[1,1,2]</patches>
               <extraCells> [1,1,1]            </extraCells>
            </Box>
        </Level>
