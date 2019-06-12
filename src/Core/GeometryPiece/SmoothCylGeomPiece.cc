@@ -93,16 +93,20 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
   double arcStart = 0.0;
   ps->get("arc_start_angle", arcStart);
   if (arcStart > 0.0) d_arcStart = (M_PI/180.0)*arcStart;
+/*
   if (d_arcStart < 0.0 || d_arcStart > 2.0*M_PI)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Arc Start Angle < 0.0 || > 2*Pi", __FILE__, __LINE__ ));
+*/
 
   d_angle = 2.0*M_PI;
   double angle = -1.0;
   ps->get("arc_angle", angle);
   if (angle > 0.0) d_angle = (M_PI/180.0)*angle;
+/*
   if (d_angle < 0.0 || d_angle > 2.0*M_PI)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Angle < 0.0 || > 360", 
                            __FILE__, __LINE__ ));
+*/
 
   d_fileName = "none";
   ps->get("output_file", d_fileName);
