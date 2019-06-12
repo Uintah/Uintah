@@ -145,6 +145,7 @@ GENERAL INFORMATION
       VarLabel* reductionMaxLabel;
       int matl;
       int level;
+      MaterialSubset * matSubSet;
     };
      
     std::vector<varProperties> d_analyzeVars;
@@ -152,7 +153,6 @@ GENERAL INFORMATION
     const Material *  d_matl;
     MaterialSet    *  d_matl_set;
     MaterialSubset *  d_zero_matl;
-    PatchSet       *  d_zeroPatch;
     std::set<std::string> d_isDirCreated;
   };
 }
