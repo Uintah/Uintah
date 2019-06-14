@@ -2346,8 +2346,25 @@ PureMetal<VAR, DIM, STN, AMR>::error_estimate_grad_psi (
     }
 
     refine = grad_psi_norm2[id] > refine_threshold * refine_threshold;
-    refine_flag[id] = refine;
-    refine_patch |= refine;
+    if (VAR == CC) // static if
+    {
+        refine_flag[id] = refine;
+        refine_patch |= refine;
+    }
+    else
+    {
+        // loop over all cells sharing node id
+        IntVector id0 = id - get_dim<DIM>::unit_vector();
+        IntVector i;
+        for ( i[Z]=id0[Z]; i[Z]<=id[Z]; ++i[Z] )
+            for ( i[Y]=id0[Y]; i[Y]<=id[Y]; ++i[Y] )
+                for ( i[X]=id0[X]; i[X]<=id[X]; ++i[X] )
+                    if (refine_flag.is_defined_at(i))
+                    {
+                        refine_flag[i] = refine;
+                        refine_patch |= refine;
+                    }
+    }
 }
 
 } // namespace PhaseField
