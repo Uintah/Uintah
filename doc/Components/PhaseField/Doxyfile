@@ -1,0 +1,17 @@
+PROJECT_NAME         = Uintah::PhaseField
+OUTPUT_DIRECTORY     = .
+EXTRACT_ALL          = YES
+ENABLE_PREPROCESSING = YES
+MACRO_EXPANSION      = YES
+SEARCH_INCLUDES      = YES
+FULL_PATH_NAMES      = NO
+INPUT                = ../../../src/CCA/Components/PhaseField
+FILE_PATTERNS        = *.cc *.h
+EXCLUDE_PATTERNS     = _* *-bld.cc
+INCLUDE_PATH         = ../../../src
+RECURSIVE            = YES
+IMAGE_PATH           = img
+PREDEFINED           = _DOXYBDY(x)={x} \
+                       _DOXYARG(x)=x   \
+                       _DOXYIGN(x)=
+EXTRA_PACKAGES       = amsfonts
