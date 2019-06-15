@@ -1,37 +1,68 @@
-Fix failing kokkos_rt tests
-- Dbg failures hanging on exit possibly linked to --enable-sci-malloc, properly handling MasterLock in src/Core/Malloc?
+Fix failing inputs and re-enable kokkos_rt tests
 
-Update build system to add -fopenmp only when building for Kokkos::OpenMP
-- Trunk no longer adds -fopenmp
+Revisit support for task dependency type Task::Modifies on the GPU in the Unified Scheduler and Kokkos Scheduler
+- CS development for Arches builds using Kokkos::CUDA left off with support for Task::Computes and Task::Requires on the GPU
+- Revisit UnifiedScheduler::runTasks and helper function logic for Task::Modifies
+- Add helper functions as needed (e.g., UnifiedScheduler::markDeviceModifiesDataAsValid?, DetailedTasks::getDeviceValidateModifiesCopiesTask?, etc)
+- Merge Unified Scheduler changes into the Kokkos Scheduler
+- Note, changes in kokkos_dev commit r59446 may give an idea of support needed
 
-Replace --enable-kokkos with --enable-kokkos-openmp and --enable-kokkos-cuda
-- Currently limited to building and running with one back-end or the other
+Revisit support for ArchesFieldContainer::MODIFIES in Kokkos::CUDA versions of non-const Arches grid variable accessors
+- e.g., get_uintah_field_add in src/CCA/Components/Arches/Task/TaskVariableTools.h
+- CS development for Arches builds using Kokkos::CUDA left off without support for ArchesFieldContainer::MODIFIES
+- Revisit get_field logic for ArchesFieldContainer::MODIFIES in src/CCA/Components/Arches/Task/FieldContainer.h
+- Update Kokkos::CUDA-based Arches grid variable accessor logic for ArchesFieldContainer::MODIFIES as needed
+- Kokkos::CUDA equivalents needed for GPUDW->allocateAndPut and GPUDW->getModifiable?
+- Note, Kokkos::CUDA support disabled in kokkos_dev commit r59441 may be easily restored once ArchesFieldContainer::MODIFIES is supported
 
-Update build_kokkos.sh to pull the latest Kokkos release and apply Brad's latest Kokkos patch
-
-Remove code not needed to bring minimal support for running with Kokkos::Cuda into trunk
-- e.g. work-in-progress OnDemandDataWarehouse changes, slim RMCRT implementations
-- Code will be preserved in a separate branch
-- Legacy CUDA support?
-
-Cleanup loop statement options in LoopExecution.hpp
-- e.g. parallel_for_cpu_only
+Revisit src/Core/Parallel/LoopExecution.hpp
+- CS development for Arches builds using Kokkos left off with support for parallel_for, parallel_initialize, and parallel_reduce_sum
+- Revisit parallel patterns for correctness (e.g., parallel_for_unstructured, parallel_reduce_min, etc)
 - Revisit Brad's parallel_initialize implementation
+- Revisit John's parallel_reduce_min implementation
+- Revisit "Other loops that should get cleaned up"
+
+Revisit src/CCA/Components/Arches/Task/SampleTask.cc/h and src/CCA/Components/Arches/Task/TemplatedSampleTask.cc/h
+- Update portable tasks to reflect the latest infrastructure (e.g., use of auto variables templated on MemSpace, passing execObj into parallel patterns, etc)
+- Standardize existing use of this infrastructure across Arches tasks for searchability
+
+Revisit src/Core/Parallel/MasterLock.h
+- If possible, revert to using either std::mutex or omp_lock_t, but not both, in a given build (e.g., as in trunk's MasterLock.h r59176)
+- OpenMP-based locks require special handling in MasterLock constructors/destructors and implementations must not be mixed during MasterLock lifetime
+- As of MasterLock.h r59177, both std::mutex and omp_lock_t are used with builds using OpenMP
+- This mixing is intentional to avoid yet to be fixed issues with debug builds using OpenMP hanging on exit
+- Hangs were isolated to use of --enable-sci-malloc with issues believed to be attributed to nested locks in src/Core/Malloc
+- OpenMP's nestable lock, omp_nest_lock_t, is not yet supported and requires different routines (e.g., omp_set_nest_lock in place of omp_set_lock)
+- If reverted, remove changes brought in with kokkos_dev r58322 to support mixing of implementations (e.g., <get/set>CpuThreadEnvironment)
+
+Update build system support to add -fopenmp only when building for Kokkos::OpenMP
+- Trunk no longer adds -fopenmp for non-Kokkos builds
+
+Cleanup and standardize newly added macros
+- Remove use of _OPENMP and UINTAH_ENABLE_KOKKOS
+- Add/use HAVE_OPENMP and HAVE_CUDA for infrastructure needs independent of Kokkos (e.g., OpenMP locks in MasterLock.hpp)
+- Add/use HAVE_KOKKOS for generic Kokkos needs independent of Kokkos back-ends (e.g., views)
+- Add/use UINTAH_ENABLE_KOKKOS_OPENMP, UINTAH_ENABLE_KOKKOS_CUDA, and UINTAH_ENABLE_LEGACY_CUDA for build-specific needs (e.g., Arches grid variable accessors)
+- Update Kokkos build system support to define HAVE_OPENMP when Uintah picks up OpenMP
+- Update Kokkos build system support to define UINTAH_ENABLE_KOKKOS_OPENMP when both Uintah and Kokkos pick up OpenMP (Kokkos defines KOKKOS_ENABLE_OPENMP)
+- Update Kokkos build system support to define UINTAH_ENABLE_KOKKOS_CUDA when both Uintah and Kokkos pick up CUDA (Kokkos defines KOKKOS_ENABLE_CUDA)
+- Update CUDA build system support to define UINTAH_ENABLE_LEGACY_CUDA when Uintah picks up CUDA
+
+Revisit build system support for --enable-kokkos
+- Split to --enable-kokkos-openmp and --enable-kokkos-openmp-cuda
+- Necessary to support --enable-kokkos-cuda if focusing on Kokkos::OpenMP+Kokkos::CUDA for heterogeneous builds?
+- Update build_kokkos.sh to pull the latest Kokkos release and apply Brad's latest Kokkos patch for Kokkos::CUDA builds
+
+Remove code not needed to bring minimal support for running with Kokkos::CUDA into trunk
+- e.g., work-in-progress OnDemandDataWarehouse changes, slim RMCRT implementations
+- Note, removed code is preserved in branches/kokkos_dev_snapshot, which snapshotted kokkos_dev at commit r59041
 
 Cleanup newly added headers
 - Consolidate includes in src/include/sci_defs/kokkos_defs.h and/or src/Core/Parallel/KokkosTools.h?
 
-Cleanup and standardize newly added macros
-- UINTAH_ENABLE_KOKKOS necessary?
-- Replace use of UINTAH_ENABLE_KOKKOS with Kokkos-based KOKKOS_ENABLE_OPENMP and KOKKOS_ENABLE_CUDA macros?
-- Keep HAVE_CUDA?
-
-Standardize boiler plate code added for Kokkos throughout Arches tasks
+Add string arguments to Kokkos parallel pattern and view calls to ease profiling and debugging?
 
 Replace mentions of partitions with task executors
 
 Bulletproofing on the OMP_NESTED environment variable
 - Warn when the value specified doesn't match support need for the command line arguments passed
-
-Revisit MasterLock
-- Necessary to manage threading models with <get/set>CpuThreadEnvironment?
