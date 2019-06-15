@@ -2044,8 +2044,13 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     // - Initialize NC_CCweight = 0.125
     // - Find the walls with symmetry BC and double NC_CCweight
     NC_CCweight.initialize(0.125);
-    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-        face=Patch::nextFace(face)){
+    
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    
+    for( auto itr = bf.begin(); itr != bf.end(); ++itr ){
+      Patch::FaceType face = *itr;   
+        
       int mat_id = 0;
 
       if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {

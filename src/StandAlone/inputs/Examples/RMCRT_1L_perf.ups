@@ -126,7 +126,7 @@
     <CCRays>            false      </CCRays>
     
     <Radiometer>
-       <nRadRays>          20         </nRadRays>
+       <nRays>            20         </nRays>
        <VRViewAngle>      180        </VRViewAngle>
        <VROrientation>    [-1,0,0]   </VROrientation>
        <VRLocationsMin>   [0,0,0]    </VRLocationsMin>

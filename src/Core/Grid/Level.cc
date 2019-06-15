@@ -409,9 +409,10 @@ Level::getTotalCellsInRegion(const TypeDescription::Type varType,
 
   Patch::VariableBasis basis = Patch::translateTypeToBasis(varType, false);
 
-  for (size_t i = 0; i < m_real_patches.size(); ++i) {
-    IntVector patchLow = m_real_patches[i]->getExtraLowIndex(basis, boundaryLayer);
-    IntVector patchHigh = m_real_patches[i]->getExtraHighIndex(basis, boundaryLayer);
+  // scjmc - using also virtual patches to take into account periodic boundaries on non cubic levels such as refined amr levels
+  for( size_t i = 0; i < m_virtual_and_real_patches.size(); ++i ) {
+    IntVector patchLow  =  m_virtual_and_real_patches[i]->getExtraLowIndex(  basis, boundaryLayer );
+    IntVector patchHigh =  m_virtual_and_real_patches[i]->getExtraHighIndex( basis, boundaryLayer );
 
     if (doesIntersect(lowIndex, highIndex, patchLow, patchHigh)) {
 
@@ -618,7 +619,7 @@ Level::setIsNonCubicLevel()
   double levelVol = levelSides.x() * levelSides.y() * levelSides.z();
   
   m_isNonCubicDomain = false;
-  double fuzz = 100 * DBL_EPSILON;
+  double fuzz = 0.5 * cellVolume(); // 100 * DBL_EPSILON;
   if ( std::fabs( patchesVol - levelVol ) > fuzz ) {
     m_isNonCubicDomain = true;
   }

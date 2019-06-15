@@ -1106,18 +1106,6 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
               ASSERT(Min(fromNeighbor->getExtraHighIndex(basis, req->m_var->getBoundaryLayer()), h) == h);
             }
 
-#if 0
-            // This intersection returned the wrong values of from_l and from_h at the inside corner
-            // of the L-shaped domain, RMCRT_+_domain_DO.ups. Consider removing it  --Todd 07/19/17      
-            if ( req->m_patches_dom == Task::ThisLevel) {
-              // cull annoying overlapping AMR patch dependencies
-              patch->cullIntersection(basis, req->m_var->getBoundaryLayer(), fromNeighbor, from_l, from_h);
-              if (from_l == from_h) {
-                continue;
-              }
-            }
-#endif
-
 
             //------------------------------------------------------------------------
             //           for all materials

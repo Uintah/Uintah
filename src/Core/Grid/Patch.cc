@@ -1437,6 +1437,10 @@ void Patch::computeVariableExtentsWithBoundaryCheck(Uintah::TypeDescription::Typ
     
     this->getLevel()->computeVariableExtents(basis, levelLow, levelHigh);
     
+    // scjmc: we need to add ghost cells to level extents as well in order to
+    // handle periodic boundaries on non cubic levels (such as amr fine levels)
+    levelLow  -= ghostLowOffset;
+    levelHigh += ghostHighOffset;
     
     //__________________________________
     //  Clamp the a valid extent
