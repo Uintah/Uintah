@@ -3964,13 +3964,31 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
          (varName == "pressure")           ||
          (varName == "rho_phi")            ||
          (varName == "rho_phi_RHS")        ||
+         (varName == "sigma11")            ||
+         (varName == "sigma12")            ||
+         (varName == "sigma13")            ||
+         (varName == "sigma22")            ||
+         (varName == "sigma23")            ||
+         (varName == "sigma33")            ||
          (varName == "t_viscosity")        ||
+         (varName == "ucell_xvel")         ||
+         (varName == "ucell_yvel")         ||
+         (varName == "ucell_zvel")         ||
+         (varName == "vcell_xvel")         ||
+         (varName == "vcell_yvel")         ||
+         (varName == "vcell_zvel")         ||
+         (varName == "wcell_xvel")         ||
+         (varName == "wcell_yvel")         ||
+         (varName == "wcell_zvel")         ||
          (varName == "ucellX")             ||
          (varName == "vcellY")             ||
          (varName == "wcellZ")             ||
          (varName == "uVel")               ||
          (varName == "vVel")               ||
          (varName == "wVel")               ||
+         (varName == "uVel_cc")            ||
+         (varName == "vVel_cc")            ||
+         (varName == "wVel_cc")            ||
          (varName == "volFraction")        ||
          (varName == "volFractionX")       ||
          (varName == "volFractionY")       ||
@@ -3981,6 +3999,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
          (varName == "x-mom_y_flux")       ||
          (varName == "x-mom_z_flux")       ||
          (varName == "y-mom")              ||
+         (varName == "y-mom_RHS")          ||
          (varName == "z-mom")              ||
          (varName == "z-mom_RHS")          ||
          (varName == "z-mom_x_flux")       ||
