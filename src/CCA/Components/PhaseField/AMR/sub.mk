@@ -30,6 +30,20 @@
 SRCDIR := CCA/Components/PhaseField/AMR
 
 SRCS += \
+  $(SRCDIR)/AMRFDViewHeatProblemCCP5FC0-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemCCP5FC1-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemCCP5FCSimple-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemCCP5FCLinear-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemCCP5FCBilinear-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemCCP7FC0-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemCCP7FC1-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemNCP5FC0-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemNCP5FC1-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemNCP5FCSimple-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemNCP5FCLinear-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemNCP5FCBilinear-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemNCP7FC0-bld.cc \
+  $(SRCDIR)/AMRFDViewHeatProblemNCP7FC1-bld.cc \
   $(SRCDIR)/AMRFDViewPureMetalProblemCCP5FC0-bld.cc \
   $(SRCDIR)/AMRFDViewPureMetalProblemCCP5FC1-bld.cc \
   $(SRCDIR)/AMRFDViewPureMetalProblemCCP5FCSimple-bld.cc \
@@ -48,6 +62,20 @@ SRCS += \
 BLDDIR := $(SRCTOP)/$(SRCDIR)
 
 BLDSRCS += \
+  $(BLDDIR)/AMRFDViewHeatProblemCCP5FC0-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemCCP5FC1-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemCCP5FCSimple-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemCCP5FCLinear-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemCCP5FCBilinear-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemCCP7FC0-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemCCP7FC1-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemNCP5FC0-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemNCP5FC1-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemNCP5FCSimple-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemNCP5FCLinear-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemNCP5FCBilinear-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemNCP7FC0-bld.cc \
+  $(BLDDIR)/AMRFDViewHeatProblemNCP7FC1-bld.cc \
   $(BLDDIR)/AMRFDViewPureMetalProblemCCP5FC0-bld.cc \
   $(BLDDIR)/AMRFDViewPureMetalProblemCCP5FC1-bld.cc \
   $(BLDDIR)/AMRFDViewPureMetalProblemCCP5FCSimple-bld.cc \

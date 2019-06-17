@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 #  The MIT License
 #
@@ -21,15 +22,6 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
 #
-#
-#
-#
-#
-# Makefile fragment for this subdirectory
 
-SRCDIR := CCA/Components/PhaseField/Applications
-
-SRCS += \
-  $(SRCDIR)/ApplicationFactory.cc \
-  $(SRCDIR)/PureMetal.cc \
-  $(SRCDIR)/Heat.cc \
+SCRIPT="`dirname \"$0\"`"/AMRFDView-bld.sh
+${SCRIPT} -p HeatProblem -v NC -s P5 -c FCBilinear
