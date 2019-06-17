@@ -4,7 +4,7 @@ from os         import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,sta
 from os         import makedirs
 from time       import strftime,time,gmtime,asctime,localtime
 from sys        import argv,exit,stdout
-from .modUPS     import modUPS
+from modUPS     import modUPS
 from subprocess   import getoutput
 from subprocess import PIPE, Popen
 
@@ -20,8 +20,13 @@ import re         # regular expressions
 # stdout.flush() # Make sure that output (via 'tee' command (from calling script)) is actually printed...
 #______________________________________________________________________
 
+#print("000 %s %s" % (argv, len(argv) ))
+
 # default value for the inputs path
-inputpath = path.abspath( argv[2] )
+if ( len(argv) > 1 ):
+  inputpath = path.abspath( argv[2] )
+else:
+  inputpath = ""
 
 
 def getTestName(test):
@@ -37,11 +42,8 @@ def getTestOS(test):
     return test[3].upper()
 
 def setInputsDir( here ):
-    global inputpath
-    if inputpath == "":
-      inputpath = path.abspath( argv[2] )
-    else: 
-      inputpath = here
+    global inputpath 
+    inputpath = here
 
 def getInputsDir():
     global inputpath
