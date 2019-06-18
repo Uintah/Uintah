@@ -1144,7 +1144,7 @@
   </Poisson>
 
   <PhaseField spec="OPTIONAL NO_DATA"
-        attribute1="type REQUIRED STRING 'pure_metal, heat'">
+        attribute1="type REQUIRED STRING 'pure_metal, heat, benchmark01, benchmark02, benchmark03, benchmark04'">
     <delt                     spec="REQUIRED DOUBLE" />
     <dim                      spec="OPTIONAL INTEGER '1,3'"/>
     <var                      spec="OPTIONAL STRING 'cc, nc'"/>

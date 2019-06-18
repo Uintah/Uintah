@@ -33,3 +33,4 @@ SRCS += \
   $(SRCDIR)/ApplicationFactory.cc \
   $(SRCDIR)/PureMetal.cc \
   $(SRCDIR)/Heat.cc \
+  $(SRCDIR)/Benchmark.cc \

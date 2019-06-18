@@ -58,11 +58,14 @@ ApplicationFactory::create (
     var = "cc";
     probSpec->getWithDefault ( "var", var, var );
 
-    int dim = 2;
+    int dim;
+    if ( type == "benchmark03" ) dim = 1;
+    else dim = 2;
     probSpec->getWithDefault ( "dim", dim, dim );
 
     std::string stn;
-    if ( dim == 2 ) stn = "p5";
+    if ( dim == 1 ) stn = "p3";
+    else if ( dim == 2 ) stn = "p5";
     else if ( dim == 3 ) stn = "p7";
 
     probSpec->getWithDefault ( "dim", dim, dim );
