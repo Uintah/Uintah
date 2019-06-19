@@ -1,16 +1,15 @@
 <Uintah_specification>
     <Meta>
-        <title>heat_test_cc_3d_be</title>
+        <title>heat_test_cc_3d_fe</title>
     </Meta>
     <SimulationComponent type="phasefield" />
 <!--__________________________________-->
     <PhaseField type="heat">
         <var>cc</var>
         <dim>3</dim>
-        <delt>1.</delt>
+        <delt>.1</delt>
         <alpha>1.</alpha>
         <test>true</test>
-        <scheme>backward_euler</scheme>
         <verbosity>0</verbosity>
     </PhaseField>
 <!--__________________________________-->
@@ -66,28 +65,8 @@
         </BoundaryConditions>
     </Grid>
 <!--__________________________________-->
-    <Solver type="hypre">
-       <Parameters variable="u">
-          <solver>smg</solver>
-          <preconditioner>diagonal</preconditioner>
-          <tolerance>1.e-6</tolerance>
-          <maxiterations>20</maxiterations>
-          <precond_maxiters>1</precond_maxiters>
-          <precond_tolerance>0</precond_tolerance>
-          <npre>1</npre>
-          <npost>1</npost>
-          <skip>0</skip>
-          <jump>0</jump>
-          <logging>1</logging>
-          <setupFrequency>0</setupFrequency> <!-- leave to 0 to skip HYPRE_StructMatrixDestroy+Create -->
-          <updateCoefFrequency>0</updateCoefFrequency> <!-- leave to 0 to avoid update matrix coefficients -->
-          <solveFrequency>1</solveFrequency>
-          <relax_type>2</relax_type><!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
-       </Parameters>
-    </Solver>
-<!--__________________________________-->
     <DataArchiver>
-        <filebase>heat_test_cc_3d_be.uda</filebase>
+        <filebase>heat_test_cc_3d_fe.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
         <save label="u" />
         <save label="ux" />

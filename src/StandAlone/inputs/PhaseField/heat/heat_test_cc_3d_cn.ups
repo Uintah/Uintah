@@ -1,6 +1,6 @@
 <Uintah_specification>
     <Meta>
-        <title>heat_test_cc_3d_be</title>
+        <title>heat_test_cc_3d_cn</title>
     </Meta>
     <SimulationComponent type="phasefield" />
 <!--__________________________________-->
@@ -10,7 +10,7 @@
         <delt>1.</delt>
         <alpha>1.</alpha>
         <test>true</test>
-        <scheme>backward_euler</scheme>
+        <scheme>crank_nicolson</scheme>
         <verbosity>0</verbosity>
     </PhaseField>
 <!--__________________________________-->
@@ -87,7 +87,7 @@
     </Solver>
 <!--__________________________________-->
     <DataArchiver>
-        <filebase>heat_test_cc_3d_be.uda</filebase>
+        <filebase>heat_test_cc_3d_cn.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
         <save label="u" />
         <save label="ux" />

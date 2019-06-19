@@ -1,0 +1,68 @@
+<Uintah_specification>
+  <Meta>
+    <title>pure_metal_cc_3d_amr_fc0</title>
+  </Meta>
+  <SimulationComponent type="phasefield" />
+  <PhaseField type="pure_metal">
+    <var>cc</var>
+    <dim>3</dim>
+    <verbosity>0</verbosity>
+    <delt>0.075</delt>
+    <alpha>1.</alpha>
+    <R0>5.</R0>
+    <Delta>0.65</Delta>
+    <epsilon>0.05</epsilon>
+    <refine_threshold>0.04</refine_threshold>
+  </PhaseField>
+  <Time>
+    <maxTime>40.0</maxTime>
+    <initTime>0.</initTime>
+    <delt_min>0.</delt_min>
+    <delt_max>1.</delt_max>
+    <timestep_multiplier>1.</timestep_multiplier>
+  </Time>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[-40.,-40.,-40.]</lower>
+        <upper>[ 40., 40., 40.]</upper>
+        <resolution>[40,40,40]</resolution>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+    <AMR>
+        <Regridder type="Tiled">
+            <adaptive>true</adaptive>
+            <max_levels>2</max_levels>
+            <cell_refinement_ratio>[[2,2,2]]</cell_refinement_ratio>
+            <cell_stability_dilation>[0,0,0]</cell_stability_dilation>
+            <min_boundary_cells>[1,1,1]</min_boundary_cells>
+            <min_patch_size>[[8,8,8]]</min_patch_size>
+        </Regridder>
+        <FineCoarseInterfaces>
+            <FCIType id="0" label="psi" var="FC0" />
+            <FCIType id="1" label="u"   var="FC0" />
+            <FCIType id="2" label="A2"  var="FC0" />
+            <FCIType id="3" label="Bxy" var="FC0" />
+            <FCIType id="4" label="Bxz" var="FC0" />
+            <FCIType id="5" label="Byz" var="FC0" />
+        </FineCoarseInterfaces>
+    </AMR>
+  <DataArchiver>
+    <filebase>pure_metal_cc_3d_amr_fc0.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="psi" />
+    <save label="u" />
+    <save label="psi_x" />
+    <save label="psi_y" />
+    <save label="psi_z" />
+    <save label="grad_psi_norm2" />
+    <save label="A" />
+    <save label="A2" />
+    <save label="Bxy" />
+    <save label="Bxz" />
+    <save label="Byz" />
+  </DataArchiver>
+</Uintah_specification>
