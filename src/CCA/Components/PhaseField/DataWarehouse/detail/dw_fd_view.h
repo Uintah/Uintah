@@ -84,6 +84,11 @@ private: // TYPES
     /// Non const type of the field value
     using V = typename std::remove_const<T>::type;
 
+#ifdef HAVE_HYPRE
+    /// Stencil entries type
+    using S = typename get_stn<STN>::template type<T>;
+#endif
+
 public: // CONSTRUCTORS/DESTRUCTOR
 
     /// Default constructor
@@ -96,6 +101,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     dw_fd_view ( const dw_fd_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     dw_fd_view & operator= ( const dw_fd_view & ) = delete;
 
 public: // FD VIEW METHODS
@@ -135,6 +141,33 @@ public: // FD VIEW METHODS
         return res;
     }
 
+#ifdef HAVE_HYPRE
+    inline virtual std::tuple<S, typename std::remove_const<T>::type >
+    laplacian_sys_hypre (
+        const IntVector & id
+    ) const override
+    {
+        S stencil_entries ( 0 );
+        typename std::remove_const<T>::type rhs ( 0 );
+        this->add_dxx_sys_hypre ( id, stencil_entries, rhs );
+        if ( DIM > D1 ) this->add_dyy_sys_hypre ( id, stencil_entries, rhs );
+        if ( DIM > D2 ) this->add_dzz_sys_hypre ( id, stencil_entries, rhs );
+        return std::make_pair ( stencil_entries, rhs );
+    }
+
+    inline virtual typename std::remove_const<T>::type
+    laplacian_rhs_hypre (
+        const IntVector & id
+    ) const override
+    {
+        typename std::remove_const<T>::type rhs ( 0 );
+        this->add_dxx_rhs_hypre ( id, rhs );
+        if ( DIM > D1 ) this->add_dyy_rhs_hypre ( id, rhs );
+        if ( DIM > D2 ) this->add_dzz_rhs_hypre ( id, rhs );
+        return rhs;
+    }
+#endif
+
 }; // class dw_fd_view
 
 } // namespace detail
@@ -142,3 +175,6 @@ public: // FD VIEW METHODS
 } // namespace Uintah
 
 #endif // Packages_Uintah_CCA_Components_PhaseField_DataWarehouse_detail_dw_fd_view_h
+
+
+

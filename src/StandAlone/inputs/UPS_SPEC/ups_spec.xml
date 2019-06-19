@@ -960,7 +960,7 @@
     <FineCoarseInterfaces               spec="OPTIONAL NO_DATA">
       <FCIType                          spec="MULTIPLE NO_DATA"
                                         attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
-                                        attribute2="var       REQUIRED STRING 'FC0,FCSimple,FCLinear,FCBilinear,FC1'"
+                                        attribute2="var       REQUIRED STRING 'FC0,FC0New,FCSimple,FCLinear,FCBilinear,FC1,FC1New'"
                                         attribute3="label     REQUIRED STRING " />
     </FineCoarseInterfaces>
   </AMR>
@@ -1106,8 +1106,10 @@
   <SimulationComponent          spec="REQUIRED" />
 
   <Solver                     spec="OPTIONAL NO_DATA" 
-                              attribute1="type REQUIRED STRING 'CGSolver, hypre, hypreamr'" />
-     
+                              attribute1="type REQUIRED STRING 'CGSolver, hypre, hypreamr'" >
+    <include href="solver_spec.xml" section="Parameters" />
+  </Solver>
+
   <!--______________________________________________________________________-->
   <!--                 EXAMPLES                                             -->
   
@@ -1148,6 +1150,7 @@
     <delt                     spec="REQUIRED DOUBLE" />
     <dim                      spec="OPTIONAL INTEGER '1,3'"/>
     <var                      spec="OPTIONAL STRING 'cc, nc'"/>
+    <scheme                   spec="OPTIONAL STRING 'forward_euler, backward_euler, crank_nicolson'" />
     <verbosity                spec="OPTIONAL INTEGER '0,4'"/>
     <alpha                    spec="OPTIONAL DOUBLE" />
     <R0                       spec="OPTIONAL DOUBLE" />

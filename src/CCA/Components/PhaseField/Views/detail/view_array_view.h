@@ -56,6 +56,7 @@ class view_array_view
 {
 protected: // MEMBERS
 
+    /// inner container
     std::array < view<Field> *, N > m_view_ptr;
 
 protected: // CONSTRUCTOR

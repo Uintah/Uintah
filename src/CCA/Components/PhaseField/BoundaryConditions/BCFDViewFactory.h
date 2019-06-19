@@ -62,6 +62,7 @@ template<typename Field, StnType STN> using BCBaseFDView = Base< FDView<Field, S
 template<typename Problem, size_t I>
 class BCFDViewFactory
 {
+    /// Type of field
     using Field = typename Problem::template get_field<I>::type;
 
 private: // STATIC MEMBERS

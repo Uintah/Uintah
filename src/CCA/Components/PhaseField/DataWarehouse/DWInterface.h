@@ -53,6 +53,14 @@ namespace PhaseField
 template < VarType VAR, DimType DIM >
 struct DWInterface
 {
+    /**
+     * @brief get position within patch
+     *
+     * @tparam V type of variable, thus grid element (cell or node)
+     * @param p grid patch
+     * @param i grid index
+     * @return coordinates of the grid element
+     */
     template <VarType V = VAR>
     static inline Point
     get_position (
@@ -63,6 +71,14 @@ struct DWInterface
         return detail::dw_interface0<V>::get_position ( p, i );
     }
 
+    /**
+     * @brief get position within level
+     *
+     * @tparam V type of variable, thus grid element (cell or node)
+     * @param l grid level
+     * @param i grid index
+     * @return coordinates of the grid element
+     */
     template <VarType V = VAR>
     static inline Point
     get_position (
@@ -73,6 +89,13 @@ struct DWInterface
         return detail::dw_interface0<V>::get_position ( l, i );
     }
 
+    /**
+     * @brief get patch first index
+     *
+     * @tparam V type of variable, thus grid element (cell or node)
+     * @param p grid patch
+     * @return lower bound for grid elemment indices
+     */
     template <VarType V = VAR>
     static inline IntVector
     get_low (
@@ -82,6 +105,14 @@ struct DWInterface
         return detail::dw_interface0<V>::get_low ( p );
     }
 
+
+    /**
+     * @brief get patch past the end index
+     *
+     * @tparam V type of variable, thus grid element (cell or node)
+     * @param p grid patch
+     * @return upper bound for grid elemment indices
+     */
     template <VarType V = VAR>
     static inline IntVector
     get_high (
@@ -91,6 +122,13 @@ struct DWInterface
         return detail::dw_interface0<V>::get_high ( p );
     }
 
+    /**
+     * @brief get patch index range
+     *
+     * @tparam V type of variable, thus grid element (cell or node)
+     * @param p grid patch
+     * @return range for grid elemment indices
+     */
     template <VarType V = VAR>
     static inline BlockRange
     get_range (
@@ -100,6 +138,15 @@ struct DWInterface
         return { detail::dw_interface0<V>::get_low ( p ), detail::dw_interface0<V>::get_high ( p ) };
     }
 
+    /**
+     * @brief get index from position
+     *
+     * @tparam V type of variable, thus grid element (cell or node)
+     * @param p grid patch
+     * @param pt point coordinates
+     * @param[out] id grid index
+     * @return if point has been found within patch
+     */
     template <VarType V = VAR>
     static inline bool
     find_point (

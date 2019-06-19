@@ -71,5 +71,5 @@ const char * IntVectorOutOfBounds::message() const
 
 const char * IntVectorOutOfBounds::type() const
 {
-    return "ArrayIndexOutOfBounds";
+    return "IntVectorOutOfBounds";
 }

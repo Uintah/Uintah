@@ -33,35 +33,37 @@
 
 #include <CCA/Components/PhaseField/Applications/Heat.h>
 
-namespace Uintah {
-namespace PhaseField {
+namespace Uintah
+{
+namespace PhaseField
+{
 
-#ifndef _DOXY_IGNORE_
+/// @cond DOXYIGNORE
 template<> const std::string HeatProblem<CC, P5>::Name = "HeatProblem";
 template<> const std::string HeatProblem<NC, P5>::Name = "HeatProblem";
 template<> const std::string HeatProblem<CC, P7>::Name = "HeatProblem";
 template<> const std::string HeatProblem<NC, P7>::Name = "HeatProblem";
 
-template<> const std::string Heat<CC,D2,P5>::Name = "heat|cc|d2|p5";
-template<> const std::string Heat<NC,D2,P5>::Name = "heat|nc|d2|p5";
-template<> const std::string Heat<CC,D3,P7>::Name = "heat|cc|d3|p7";
-template<> const std::string Heat<NC,D3,P7>::Name = "heat|nc|d3|p7";
+template<> const std::string Heat<CC, D2, P5>::Name = "heat|cc|d2|p5";
+template<> const std::string Heat<NC, D2, P5>::Name = "heat|nc|d2|p5";
+template<> const std::string Heat<CC, D3, P7>::Name = "heat|cc|d3|p7";
+template<> const std::string Heat<NC, D3, P7>::Name = "heat|nc|d3|p7";
 
-template<> const std::string Heat<CC,D2,P5,AMR>::Name = "amr|heat|cc|d2|p5";
-template<> const std::string Heat<NC,D2,P5,AMR>::Name = "amr|heat|nc|d2|p5";
-template<> const std::string Heat<CC,D3,P7,AMR>::Name = "amr|heat|cc|d3|p7";
-template<> const std::string Heat<NC,D3,P7,AMR>::Name = "amr|heat|nc|d3|p7";
+template<> const std::string Heat<CC, D2, P5, AMR>::Name = "amr|heat|cc|d2|p5";
+template<> const std::string Heat<NC, D2, P5, AMR>::Name = "amr|heat|nc|d2|p5";
+template<> const std::string Heat<CC, D3, P7, AMR>::Name = "amr|heat|cc|d3|p7";
+template<> const std::string Heat<NC, D3, P7, AMR>::Name = "amr|heat|nc|d3|p7";
 
-template class Heat<CC,D2,P5>;
-template class Heat<NC,D2,P5>;
-template class Heat<CC,D3,P7>;
-template class Heat<NC,D3,P7>;
+template class Heat<CC, D2, P5>;
+template class Heat<NC, D2, P5>;
+template class Heat<CC, D3, P7>;
+template class Heat<NC, D3, P7>;
 
-template class Heat<CC,D2,P5,AMR>;
-template class Heat<NC,D2,P5,AMR>;
-template class Heat<CC,D3,P7,AMR>;
-template class Heat<NC,D3,P7,AMR>;
-#endif
+template class Heat<CC, D2, P5, AMR>;
+template class Heat<NC, D2, P5, AMR>;
+template class Heat<CC, D3, P7, AMR>;
+template class Heat<NC, D3, P7, AMR>;
+/// @endcond
 
 } // namespace Uintah
 } // namespace PhaseField

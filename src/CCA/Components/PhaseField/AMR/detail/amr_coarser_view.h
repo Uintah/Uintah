@@ -262,6 +262,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     amr_coarser_view ( const amr_coarser_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     amr_coarser_view & operator= ( const amr_coarser_view & ) = delete;
 
 public: // VIEW METHODS

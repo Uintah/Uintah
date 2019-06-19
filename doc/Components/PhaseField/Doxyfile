@@ -1,17 +1,36 @@
-PROJECT_NAME         = Uintah::PhaseField
-OUTPUT_DIRECTORY     = .
-EXTRACT_ALL          = YES
-ENABLE_PREPROCESSING = YES
-MACRO_EXPANSION      = YES
-SEARCH_INCLUDES      = YES
-FULL_PATH_NAMES      = NO
-INPUT                = ../../../src/CCA/Components/PhaseField
-FILE_PATTERNS        = *.cc *.h
-EXCLUDE_PATTERNS     = _* *-bld.cc
-INCLUDE_PATH         = ../../../src
-RECURSIVE            = YES
-IMAGE_PATH           = img
-PREDEFINED           = _DOXYBDY(x)={x} \
-                       _DOXYARG(x)=x   \
-                       _DOXYIGN(x)=
-EXTRA_PACKAGES       = amsfonts
+# Project related options
+PROJECT_NAME          = Uintah::PhaseField
+OUTPUT_DIRECTORY      = .
+FULL_PATH_NAMES       = NO
+
+# Build related options
+EXTRACT_ALL           = NO
+EXTRACT_PRIVATE       = YES
+EXTRACT_STATIC        = YES
+EXTRACT_LOCAL_CLASSES = YES
+SORT_MEMBER_DOCS      = NO
+
+# Options related to warning and progress messages
+WARNINGS              = YES
+WARN_IF_UNDOCUMENTED  = YES
+WARN_IF_DOC_ERROR     = YES
+WARN_NO_PARAMDOC      = YES
+
+# Input related options
+INPUT                 = ../../../src/CCA/Components/PhaseField
+FILE_PATTERNS         = *.cc *.h
+RECURSIVE             = YES
+EXCLUDE_PATTERNS      = _* *-bld.cc
+IMAGE_PATH            = img
+
+# LaTeX related options
+EXTRA_PACKAGES       = amsfonts \
+                       amsmath
+
+# Preprocessor related options
+ENABLE_PREPROCESSING  = YES
+MACRO_EXPANSION       = YES
+SEARCH_INCLUDES       = YES
+INCLUDE_PATH          = ../../../src
+PREDEFINED            = _DOXYGEN=1    \
+                        _DOXYARG(x)=x \

@@ -54,7 +54,7 @@ namespace PhaseField
  * \f]
  * where
  * \f[
- *  W (u) = \frac{1}{4} (u^2 − 1)^2
+ *  W (u) = \frac{1}{4} (u^2 - 1)^2
  * \f]
  * on \f$[0, 2\pi]^2\f$ with initial data being a compex pattern,
  *
@@ -64,7 +64,7 @@ namespace PhaseField
  * and with periodic boundary conditions.
  *
  * The model parameters are:
- * - \f$ \epsilon = \pi/100 \sqrt{2/5} \f$   interface width
+ * - \f$ \epsilon = \tfrac{\pi}{100} \sqrt{\tfrac{2}{5} \f$ interface width
  *
  * @tparam VAR type of variable representation
  * @tparam STN finite-difference stencil
@@ -95,11 +95,25 @@ public: // STATIC MEMBERS
 
 protected: // MEMBERS
 
-    /// Output streams for debugging
-    DebugStream dbg_out1, dbg_out2, dbg_out3, dbg_out4;
+    /// Output stream for debugging (verbosity level 1)
+    DebugStream dbg_out1;
 
-    // Labels for variables to be stored into the DataWarehouse
-    const VarLabel * u_label, * v_label;
+    /// Output stream for debugging (verbosity level 2)
+    DebugStream dbg_out2;
+
+    /// Output stream for debugging (verbosity level 3)
+    DebugStream dbg_out3;
+
+    /// Output stream for debugging (verbosity level 4)
+    DebugStream dbg_out4;
+
+    /// Label for u field into the DataWarehouse
+    const VarLabel * u_label;
+
+    /// Label for v field into the DataWarehouse
+    const VarLabel * v_label;
+
+    /// Label for system energy into the DataWarehouse
     const VarLabel * energy_label;
 
     /// Time step size
@@ -134,6 +148,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     Benchmark04 ( Benchmark04 const & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     Benchmark04 & operator= ( Benchmark04 const & ) = delete;
 
 protected: // SETUP

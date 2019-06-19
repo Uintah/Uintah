@@ -56,6 +56,7 @@ namespace detail
  * direction
  *
  * @tparam Field type of Field
+ * @tparam STN finite-difference stencil
  * @tparam Problem type of PhaseField problem
  * @tparam Index index_sequence of Field within Problem (first element is variable index,
  * following ones, if present, are the component index within the variable)
@@ -63,6 +64,22 @@ namespace detail
  */
 template<typename Field, StnType STN, typename Problem, typename Index, BCF ... P > class bcs_basic_fd_view;
 
+/**
+ * @brief Detail implementation of variables wrapper for both basic differential
+ * operations over both physical and amr boundaries  (ScalarField implementation)
+ *
+ * Group together multiple views (one for eatch edge the boundary belongs to,
+ * and one for accessing the DataWarehouse on internal indices) and
+ * expose the correct implementation of basic differential operations for each
+ * direction
+ *
+ * @tparam T type of the field value at each point
+ * @tparam STN finite-difference stencil
+ * @tparam Problem type of PhaseField problem
+ * @tparam Index index_sequence of Field within Problem (first element is variable index,
+ * following ones, if present, are the component index within the variable)
+ * @tparam P list of BC, FC, and Patch::Face packs
+ */
 template<typename T, StnType STN, typename Problem, typename Index, BCF ... P >
 class bcs_basic_fd_view < ScalarField<T>, STN, Problem, Index, P... >
     : virtual public basic_fd_view < ScalarField<T>, STN >
@@ -79,7 +96,10 @@ private: // STATIC MEMBERS
     /// Number of ghosts required by STN
     static constexpr int GN = get_stn<STN>::ghosts;
 
+    /// Number of boundary faces/conditions
     static constexpr size_t N = sizeof ... ( P );
+
+    /// Provides indexed access to P parameter pack
     static constexpr BCF Q[N] = { P ... };
 
 private: // TYPES
@@ -89,6 +109,11 @@ private: // TYPES
 
     /// Non const type of the field value
     using V = typename std::remove_const<T>::type;
+
+#ifdef HAVE_HYPRE
+    /// Stencil entries type
+    using S = typename get_stn<STN>::template type<T>;
+#endif
 
 private: // STATIC ASSERTIONS
 
@@ -132,7 +157,7 @@ private: // INDEXED CONSTRUCTOR
      */
     template < size_t ... J >
     bcs_basic_fd_view (
-        index_sequence<J...>,
+        index_sequence<J...> _DOXYARG ( unused ),
         const bcs_basic_fd_view * copy,
         bool deep
     ) : piecewise_view<Field> (), // copy is made in this constructor we don't want to duplicate clones
@@ -140,7 +165,7 @@ private: // INDEXED CONSTRUCTOR
         m_subproblems_label ( copy->m_subproblems_label ),
         m_material ( copy->m_material ),
         m_dw_view ( dynamic_cast < dw_basic_fd_view < Field, STN, VAR > * > ( copy->m_dw_view->clone ( deep ) ) ), m_fd_view ( DIM, m_dw_view.get () ),
-        m_bc_view { std::unique_ptr < bc_basic_fd_view < Field, STN, VAR, P > > ( dynamic_cast < bc_basic_fd_view < Field, STN, VAR, P > * > ( m_fd_view[get_face< get_bcf<P>::face >::dir] = dynamic_cast < bc_basic_fd_view<Field, STN, VAR, P> * > ( std::get<J> ( copy->m_bc_view )->clone ( deep ) ) ) ) ... }
+        m_bc_view { std::unique_ptr < bc_basic_fd_view < Field, STN, VAR, P > > ( dynamic_cast < bc_basic_fd_view < Field, STN, VAR, P > * > ( m_fd_view[get_face< get_bcf<P>::face >::dir] = dynamic_cast < bc_basic_fd_view<Field, STN, VAR, P> * > ( std::get<J> ( copy->m_bc_view )->clone ( this, deep ) ) ) ) ... }
     {
         std::array<bool, N> {{ push_back_bc<J> () ... }};
 
@@ -163,7 +188,7 @@ private: // INDEXED CONSTRUCTOR
      */
     template < size_t ... J >
     bcs_basic_fd_view (
-        index_sequence<J...>,
+        index_sequence<J...> _DOXYARG ( unused ),
         const typename Field::label_type & label,
         const VarLabel * subproblems_label,
         int material,
@@ -173,7 +198,7 @@ private: // INDEXED CONSTRUCTOR
         m_label ( label ),
         m_subproblems_label ( subproblems_label ),
         m_material ( material ),
-        m_dw_view ( scinew dw_basic_fd_view<Field, STN, VAR> { label, material, level } ),
+        m_dw_view ( scinew dw_basic_fd_view < Field, STN, VAR>  { label, material, level } ),
               m_fd_view ( DIM, m_dw_view.get () ),
     m_bc_view { std::unique_ptr< bc_basic_fd_view< Field, STN, VAR, P > > ( dynamic_cast < bc_basic_fd_view < Field, STN, VAR, P > * > ( m_fd_view[get_face< get_bcf<P>::face >::dir] = scinew bc_basic_fd_view<Field, STN, VAR, P> ( this, label, material, level, get_value<J> ( bcs ) ) ) ) ...  }
     {
@@ -203,6 +228,8 @@ private: // SINGLE INDEX METHODS
     /**
      * @brief Get BC value (non FineCoarseInterface implementation)
      * @tparam J index of the bc
+     * @tparam B (should never be specified) defaulted to the BC of the J-th BCF
+     * @param bc boundary condition info on the given field
      * @return the value to impose as BC
      */
     template<size_t J, BC B = get_bcf< Q[J] >::bc >
@@ -217,6 +244,9 @@ private: // SINGLE INDEX METHODS
     /**
      * @brief Get BC value (FineCoarseInterface implementation)
      * @tparam J index of the bc
+     * @tparam B (should never be specified) defaulted to the BC of the J-th BCF
+     * @tparam C2F (should never be specified) defaulted to the C2F of the J-th BCF
+     * @param bc boundary condition info on the given field
      * @return newly created interpolator to impose continuity across fine/coarse
      * interfaces
      */
@@ -295,6 +325,7 @@ private: // SINGLE INDEX METHODS
      * @param low lower bound of the region to retrieve
      * @param high higher bound of the region to retrieve
      * @param use_ghosts if ghosts value are to be retrieved
+     * @return to allow calls in initialization lists
      */
     template < size_t J >
     bool
@@ -331,7 +362,7 @@ private: // INDEXED VIEW METHODS
     template < size_t ... J >
     void
     set (
-        index_sequence<J...>,
+        index_sequence<J...> _DOXYARG ( unused ),
         DataWarehouse * dw,
         const Level * level,
         const IntVector & low,
@@ -420,6 +451,7 @@ public: // CONSTRUCTOR
     bcs_basic_fd_view ( const bcs_basic_fd_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     bcs_basic_fd_view & operator= ( const bcs_basic_fd_view & ) = delete;
 
 public: // VIEW METHODS
@@ -660,6 +692,65 @@ public: // BASIC FD VIEW METHODS
     {
         return m_fd_view[Z]->dzz ( id );
     }
+
+#ifdef HAVE_HYPRE
+    inline virtual void
+    add_dxx_sys_hypre (
+        const IntVector & id,
+        S & stencil_entries,
+        typename std::remove_const < T >::type & rhs
+    ) const override
+    {
+        return m_fd_view[X]->add_dxx_sys_hypre ( id, stencil_entries, rhs );
+    }
+
+    inline virtual void
+    add_dxx_rhs_hypre (
+        const IntVector & id,
+        typename std::remove_const < T >::type & rhs
+    ) const override
+    {
+        return m_fd_view[X]->add_dxx_rhs_hypre ( id, rhs );
+    }
+
+    inline virtual void
+    add_dyy_sys_hypre (
+        const IntVector & id,
+        S & stencil_entries,
+        typename std::remove_const < T >::type & rhs
+    ) const override
+    {
+        return m_fd_view[Y]->add_dyy_sys_hypre ( id, stencil_entries, rhs );
+    }
+
+    inline virtual void
+    add_dyy_rhs_hypre (
+        const IntVector & id,
+        typename std::remove_const < T >::type & rhs
+    ) const override
+    {
+        return m_fd_view[Y]->add_dyy_rhs_hypre ( id, rhs );
+    }
+
+    inline virtual void
+    add_dzz_sys_hypre (
+        const IntVector & id,
+        S & stencil_entries,
+        typename std::remove_const < T >::type & rhs
+    ) const override
+    {
+        return m_fd_view[Z]->add_dzz_sys_hypre ( id, stencil_entries, rhs );
+    }
+
+    inline virtual void
+    add_dzz_rhs_hypre (
+        const IntVector & id,
+        typename std::remove_const < T >::type & rhs
+    ) const override
+    {
+        return m_fd_view[Z]->add_dzz_rhs_hypre ( id, rhs );
+    }
+#endif
 
 }; // bcs_basic_fd_view
 

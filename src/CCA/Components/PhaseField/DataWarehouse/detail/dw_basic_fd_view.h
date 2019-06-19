@@ -91,6 +91,11 @@ private: // TYPES
     /// Non const type of the field value
     using V = typename std::remove_const<T>::type;
 
+#ifdef HAVE_HYPRE
+    /// Stencil entries type
+    using S = typename get_stn<STN>::template type<T>;
+#endif
+
 protected: // COPY CONSTRUCTOR
 
     /**
@@ -153,6 +158,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     dw_basic_fd_view ( const dw_basic_fd_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     dw_basic_fd_view & operator= ( const dw_basic_fd_view & ) = delete;
 
 public: // VIEW METHODS
@@ -315,6 +321,64 @@ public: // BASIC FD VIEW METHODS
         return this->template d2<Z> ( id );
     }
 
+#ifdef HAVE_HYPRE
+    inline virtual void
+    add_dxx_sys_hypre (
+        const IntVector & id,
+        S & stencil_entries,
+        V & rhs
+    ) const override
+    {
+        this->template add_d2_sys_hypre<X> ( id, stencil_entries, rhs );
+    }
+
+    inline virtual void
+    add_dxx_rhs_hypre (
+        const IntVector & id,
+        V & rhs
+    ) const override
+    {
+        this->template add_d2_rhs_hypre<X> ( id, rhs );
+    }
+
+    inline virtual void
+    add_dyy_sys_hypre (
+        const IntVector & id,
+        S & stencil_entries,
+        V & rhs
+    ) const override
+    {
+        this->template add_d2_sys_hypre<Y> ( id, stencil_entries, rhs );
+    }
+
+    inline virtual void
+    add_dyy_rhs_hypre (
+        const IntVector & id,
+        V & rhs
+    ) const override
+    {
+        this->template add_d2_rhs_hypre<Y> ( id, rhs );
+    }
+
+    inline virtual void
+    add_dzz_sys_hypre (
+        const IntVector & id,
+        S & stencil_entries,
+        V & rhs
+    ) const override
+    {
+        this->template add_d2_sys_hypre<Z> ( id, stencil_entries, rhs );
+    }
+
+    inline virtual void
+    add_dzz_rhs_hypre (
+        const IntVector & id,
+        V & rhs
+    ) const override
+    {
+        this->template add_d2_rhs_hypre<Z> ( id, rhs );
+    }
+#endif
 }; // class dw_basic_fd_view
 
 } // namespace detail

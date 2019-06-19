@@ -75,6 +75,11 @@ private: // TYPES
     /// Non const type of the field value
     using V = typename std::remove_const<T>::type;
 
+#ifdef HAVE_HYPRE
+    /// Type for stencil entries
+    using S = typename get_stn<STN>::template type<T>;
+#endif
+
 public: // DESTRUCTOR
 
     /// Default destructor
@@ -98,6 +103,11 @@ public: // FD VIEW METHODS
      */
     virtual V laplacian ( const IntVector & id ) const = 0;
 
+#ifdef HAVE_HYPRE
+    virtual std::tuple<S, V> laplacian_sys_hypre ( const IntVector & id ) const = 0;
+    virtual V laplacian_rhs_hypre ( const IntVector & id ) const = 0;
+#endif
+
 };
 
 /**
@@ -114,8 +124,8 @@ public: // FD VIEW METHODS
  */
 template <typename T, size_t N, StnType STN >
 class fd_view < VectorField<T, N>, STN >
-    : virtual public view_array < fd_view < ScalarField<T>, STN >, ScalarField<T>, N >
-{
+ : virtual public view_array < fd_view < ScalarField<T>, STN >, ScalarField<T>, N >
+ {
 public: // DESTRUCTOR
 
     /// Default destructor
@@ -128,3 +138,5 @@ public: // DESTRUCTOR
 } // namespace Uintah
 
 #endif // Packages_Uintah_CCA_Components_PhaseField_Views_detail_fd_view_h
+
+

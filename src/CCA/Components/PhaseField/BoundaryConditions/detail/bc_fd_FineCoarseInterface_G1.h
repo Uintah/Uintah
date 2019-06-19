@@ -86,6 +86,11 @@ private: // TYPES
     /// Non const type of the field value
     using V = typename std::remove_const<T>::type;
 
+#ifdef HAVE_HYPRE
+    /// Stencil entries type
+    using S = typename get_stn<STN>::template type<T>;
+#endif
+
 private: // MEMBERS
 
     /// View of the fine level for grid values
@@ -152,6 +157,31 @@ protected: // COPY CONSTRUCTOR
     {
     }
 
+    /**
+     * @brief Constructor
+     *
+     * Instantiate a copy of a given view using the specified fine view to
+     * access the DataWarehouse.
+     *
+     * @remark When a bc_fd is instantiated from a finer level to inforce fine/coarse
+     * interface conditions the copy fine view will not have access to the
+     * DataWarehouse after set (bc_fd::set method is not retrieving data for
+     * fine level)
+     * @param fine_view view to be used for accessing the DataWarehouse
+     * @param copy source view for copying
+     * @param deep if true inner grid variable is copied as well otherwise the
+     * same grid variable is referenced
+     */
+    bc_fd (
+        const view<Field> * fine_view,
+        const bc_fd * copy,
+        bool deep
+    ) : m_fine_view ( fine_view ),
+        m_coarse_interp ( copy->m_coarse_interp->clone ( deep ) ),
+        m_h ( copy->m_h ),
+        m_support ( copy->m_support )
+    {}
+
 protected: // CONSTRUCTORS
 
     /**
@@ -188,6 +218,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     bc_fd ( const bc_fd & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     bc_fd & operator= ( const bc_fd & ) = delete;
 
 public: // VIEW METHODS
@@ -423,10 +454,64 @@ public: // BC FD MEMBERS
                / ( m_h[D] * m_h[D] );
     }
 
+#ifdef HAVE_HYPRE
+    template<DirType DIR>
+    inline typename std::enable_if < D != DIR, void >::type
+    add_d2_sys_hypre (
+        const IntVector & _DOXYARG ( id ),
+        S & /*stencil_entries*/,
+        typename std::remove_const<T>::type & /*rhs*/
+    ) const VIRT;
+
+    template<DirType DIR>
+    inline typename std::enable_if < D == DIR, void >::type
+    add_d2_sys_hypre (
+        const IntVector & id,
+        S & stencil_entries,
+        typename std::remove_const<T>::type & rhs
+    ) const
+    {
+        if ( VAR == CC )
+        {
+            IntVector ip ( id );
+            ip[D] += SGN;
+            double h2 = m_h[D] * m_h[D];
+            stencil_entries[F - SGN] += 1. / h2;
+            stencil_entries.p += -2. / h2;
+            rhs += coarse_interp ( ip ) / h2;
+        }
+        else ASSERTFAIL ( "TODO" );
+    }
+
+    template<DirType DIR>
+    inline typename std::enable_if < D != DIR, void >::type
+    add_d2_rhs_hypre (
+        const IntVector & _DOXYARG ( id ),
+        typename std::remove_const<T>::type & /*rhs*/
+    ) const VIRT;
+
+    template<DirType DIR>
+    inline typename std::enable_if < D == DIR, void >::type
+    add_d2_rhs_hypre (
+        const IntVector & id,
+        typename std::remove_const<T>::type & rhs
+    ) const
+    {
+        if ( VAR == CC )
+        {
+            IntVector ip ( id );
+            ip[D] += SGN;
+            double h2 = m_h[D] * m_h[D];
+            rhs += coarse_interp ( ip ) / h2;
+        }
+        else ASSERTFAIL ( "TODO" );
+    }
+#endif
+
 }; // class bc_fd
 
 } // namespace detail
 } // namespace PhaseField
 } // namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_PhaseField_BoundaryConditions_detail_bc_fd_Dirichlet_G1_CCh
+#endif // Packages_Uintah_CCA_Components_PhaseField_BoundaryConditions_detail_bc_fd_FineCoarseInterface_G1_h

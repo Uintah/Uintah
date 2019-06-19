@@ -1,0 +1,60 @@
+<Uintah_specification>
+    <Meta>
+        <title>heat_cc_2d_fe_amr</title>
+    </Meta>
+    <SimulationComponent type="phasefield" />
+<!--__________________________________-->
+    <PhaseField type="heat">
+        <var>cc</var>
+        <dim>2</dim>
+        <delt>.1</delt>
+        <alpha>1.</alpha>
+        <verbosity>0</verbosity>
+        <refine_threshold>0.0475</refine_threshold>
+    </PhaseField>
+<!--__________________________________-->
+    <Time>
+        <maxTime>100.</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>0.01</delt_min>
+        <delt_max>1.</delt_max>
+        <timestep_multiplier>1.</timestep_multiplier>
+    </Time>
+<!--__________________________________-->
+    <Grid>
+        <Level>
+            <Box label="1">
+                <lower>[-32.,-32., 0.]</lower>
+                <upper>[ 32., 32., 1.]</upper>
+                <patches>[2,2,1]</patches>
+            </Box>
+            <periodic>[1,1,0]</periodic>
+            <spacing>[2.,2.,1.]</spacing>
+        </Level>
+    </Grid>
+<!--__________________________________-->
+    <AMR>
+        <Regridder type="Tiled">
+            <adaptive>true</adaptive>
+            <max_levels>2</max_levels>
+            <cell_refinement_ratio>[[2,2,1]]</cell_refinement_ratio>
+            <cell_stability_dilation>[0,0,0]</cell_stability_dilation>
+            <min_boundary_cells>[1,1,0]</min_boundary_cells>
+            <min_patch_size>[[16,16,1]]</min_patch_size>
+        </Regridder>
+        <FineCoarseInterfaces>
+            <FCIType id="0" label="u" var="FC1" />
+        </FineCoarseInterfaces>
+    </AMR>
+<!--__________________________________-->
+    <DataArchiver>
+        <filebase>heat_cc_2d_fe_amr.uda</filebase>
+        <outputTimestepInterval>1</outputTimestepInterval>
+        <save label="refineFlag" />
+        <save label="u" />
+        <save label="ux" />
+        <save label="uy" />
+        <save label="uxx" />
+        <save label="uyy" />
+    </DataArchiver>
+</Uintah_specification>

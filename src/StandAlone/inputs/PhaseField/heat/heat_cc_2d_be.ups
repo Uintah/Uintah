@@ -1,0 +1,65 @@
+<Uintah_specification>
+    <Meta>
+        <title>heat_cc_2d_be</title>
+    </Meta>
+    <SimulationComponent type="phasefield" />
+<!--__________________________________-->
+    <PhaseField type="heat">
+        <var>cc</var>
+        <dim>2</dim>
+        <delt>1.</delt>
+        <alpha>1.</alpha>
+        <scheme>backward_euler</scheme>
+        <verbosity>0</verbosity>
+    </PhaseField>
+<!--__________________________________-->
+    <Time>
+        <maxTime>100.</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>0.01</delt_min>
+        <delt_max>1.</delt_max>
+        <timestep_multiplier>1.</timestep_multiplier>
+    </Time>
+<!--__________________________________-->
+    <Grid>
+        <Level>
+            <Box label="1">
+                <lower>[-32.,-32., 0.]</lower>
+                <upper>[ 32., 32., 1.]</upper>
+                <patches>[4,4,1]</patches>
+            </Box>
+            <periodic>[1,1,0]</periodic>
+            <spacing>[1.,1.,1.]</spacing>
+        </Level>
+    </Grid>
+<!--__________________________________-->
+    <Solver type="hypre">
+       <Parameters variable="u">
+          <solver>smg</solver>
+          <preconditioner>diagonal</preconditioner>
+          <tolerance>1.e-6</tolerance>
+          <maxiterations>20</maxiterations>
+          <precond_maxiters>1</precond_maxiters>
+          <precond_tolerance>0</precond_tolerance>
+          <npre>1</npre>
+          <npost>1</npost>
+          <skip>0</skip>
+          <jump>0</jump>
+          <logging>1</logging>
+          <setupFrequency>0</setupFrequency> <!-- leave to 0 to skip HYPRE_StructMatrixDestroy+Create -->
+          <updateCoefFrequency>0</updateCoefFrequency> <!-- leave to 0 to avoid update matrix coefficients -->
+          <solveFrequency>1</solveFrequency>
+          <relax_type>2</relax_type><!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
+       </Parameters>
+    </Solver>
+<!--__________________________________-->
+    <DataArchiver>
+        <filebase>heat_cc_2d_be.uda</filebase>
+        <outputTimestepInterval>1</outputTimestepInterval>
+        <save label="u" />
+        <save label="ux" />
+        <save label="uy" />
+        <save label="uxx" />
+        <save label="uyy" />
+    </DataArchiver>
+</Uintah_specification>

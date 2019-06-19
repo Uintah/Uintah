@@ -61,8 +61,10 @@ namespace detail
  * @tparam C2F Fine/Coarse Interface conditions
  * @tparam CNEW Wheter to use new datawarehouse for retrieving corse grid data
  */
-template <typename Field, StnType STN, VarType VAR, Patch::FaceType F, BC B, int GN, FC C2F = FC::None, bool CNEW = false> class bc_fd;
-_DOXYBDY (
+template <typename Field, StnType STN, VarType VAR, Patch::FaceType F, BC B, int GN, FC C2F = FC::None, bool CNEW = false>
+class bc_fd
+#if _DOXYGEN
+{
     /// Non const type of the field value
     using V;
 
@@ -87,7 +89,9 @@ _DOXYBDY (
      * @return approximated value at id
      */
     template <DirType DIR> inline V d2 ( const IntVector & id ) const = 0;
-             );
+};
+#endif
+;
 
 } // namespace detail
 } // namespace PhaseField

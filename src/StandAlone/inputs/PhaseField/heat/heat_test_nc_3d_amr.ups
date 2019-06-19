@@ -1,6 +1,6 @@
 <Uintah_specification>
     <Meta>
-        <title>heat_test_nc_d3_p7_fe_amr</title>
+        <title>heat_test_nc_3d_fe_amr</title>
     </Meta>
     <SimulationComponent type="phasefield" />
 <!--__________________________________-->
@@ -8,10 +8,10 @@
         <var>nc</var>
         <dim>3</dim>
         <delt>.1</delt>
-        <alpha>0.19635</alpha>
+        <alpha>1.</alpha>
         <test>true</test>
         <verbosity>0</verbosity>
-        <refine_threshold>0.04</refine_threshold>
+        <refine_threshold>0.03</refine_threshold>
     </PhaseField>
 <!--__________________________________-->
     <Time>
@@ -25,50 +25,84 @@
     <Grid>
         <Level>
             <Box label="1">
-                <lower>[-32.,-32.,-32.]</lower>
+                <lower>[  0.,  0., 0.]</lower>
                 <upper>[ 32., 32., 32.]</upper>
                 <patches>[4,4,4]</patches>
             </Box>
-            <periodic>[1,1,1]</periodic>
-            <spacing>[4.,4.,4.]</spacing>
+            <spacing>[2.,2.,2.]</spacing>
         </Level>
+        <BoundaryConditions>
+            <Face side="x-">
+                <BCType id="0" label="u" var="Neumann">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+            <Face side="x+">
+                <BCType id="0" label="u" var="Dirichlet">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+            <Face side="y-">
+                <BCType id="0" label="u" var="Neumann">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+            <Face side="y+">
+                <BCType id="0" label="u" var="Dirichlet">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+            <Face side="z-">
+                <BCType id="0" label="u" var="Neumann">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+            <Face side="z+">
+                <BCType id="0" label="u" var="Dirichlet">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+        </BoundaryConditions>
     </Grid>
 <!--__________________________________-->
     <AMR>
         <Regridder type="Tiled">
+            <adaptive>true</adaptive>
             <max_levels>2</max_levels>
             <cell_refinement_ratio>[[2,2,2]]</cell_refinement_ratio>
             <cell_stability_dilation>[0,0,0]</cell_stability_dilation>
             <min_boundary_cells>[1,1,1]</min_boundary_cells>
             <min_patch_size>[[4,4,4]]</min_patch_size>
         </Regridder>
+        <FineCoarseInterfaces>
+            <FCIType id="0" label="u" var="FC1" />
+        </FineCoarseInterfaces>
     </AMR>
 <!--__________________________________-->
     <DataArchiver>
-        <filebase>heat_test_nc_d3_p7_fe_amr.uda</filebase>
+        <filebase>heat_test_nc_3d_fe_amr.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
-        <save label="u" />
         <save label="refineFlag" />
-        <save label="error_u" />
-        <save label="u_normL2" />
-        <save label="u_normH10" />
-        <save label="u_normH20" />
-        <save label="error_normL2" />
-        <save label="error_normH10" />
-        <save label="error_normH20" />
-        <!-- if defined PhaseField_Heat_DBG_DERIVATIVES -->
+        <save label="u" />
         <save label="ux" />
         <save label="uy" />
         <save label="uz" />
         <save label="uxx" />
         <save label="uyy" />
         <save label="uzz" />
+        <save label="u_normL2" />
+        <save label="u_normH10" />
+        <save label="u_normH20" />
+        <save label="delta_u" />
+        <save label="error_u" />
         <save label="error_ux" />
         <save label="error_uy" />
         <save label="error_uz" />
         <save label="error_uxx" />
         <save label="error_uyy" />
         <save label="error_uzz" />
-        <!-- end if defined -->
+        <save label="error_normL2" />
+        <save label="error_normH10" />
+        <save label="error_normH20" />
     </DataArchiver>
 </Uintah_specification>

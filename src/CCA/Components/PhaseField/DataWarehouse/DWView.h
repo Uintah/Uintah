@@ -103,6 +103,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     DWView ( const DWView & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     DWView & operator= ( const DWView & ) = delete;
 
 }; // class DWView

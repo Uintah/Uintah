@@ -131,7 +131,9 @@ public: // CONSTRUCTOR
     BCFDView ( const BCFDView & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     BCFDView & operator= ( const BCFDView & ) = delete;
+
 }; // class BCFDView
 
 } // namespace PhaseField

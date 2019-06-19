@@ -1,17 +1,16 @@
 <Uintah_specification>
     <Meta>
-        <title>heat_bc_test_cc_d2_p5_fe_amr</title>
+        <title>heat_nc_2d_fe_amr</title>
     </Meta>
     <SimulationComponent type="phasefield" />
 <!--__________________________________-->
     <PhaseField type="heat">
-        <var>cc</var>
+        <var>nc</var>
         <dim>2</dim>
         <delt>.1</delt>
-        <alpha>0.19635</alpha>
-        <test>true</test>
+        <alpha>1.</alpha>
         <verbosity>0</verbosity>
-        <refine_threshold>0.3</refine_threshold>
+        <refine_threshold>0.03</refine_threshold>
     </PhaseField>
 <!--__________________________________-->
     <Time>
@@ -25,34 +24,13 @@
     <Grid>
         <Level>
             <Box label="1">
-                <lower>[  0.,  0., 0.]</lower>
+                <lower>[-32.,-32., 0.]</lower>
                 <upper>[ 32., 32., 1.]</upper>
                 <patches>[4,4,1]</patches>
             </Box>
+            <periodic>[1,1,0]</periodic>
             <spacing>[2.,2.,1.]</spacing>
         </Level>
-        <BoundaryConditions>
-            <Face side="x-">
-                <BCType id="0" label="u" var="Neumann">
-                    <value>0.</value>
-                </BCType>
-            </Face>
-            <Face side="x+">
-                <BCType id="0" label="u" var="Dirichlet">
-                    <value>0.</value>
-                </BCType>
-            </Face>
-            <Face side="y-">
-                <BCType id="0" label="u" var="Neumann">
-                    <value>0.</value>
-                </BCType>
-            </Face>
-            <Face side="y+">
-                <BCType id="0" label="u" var="Dirichlet">
-                    <value>0.</value>
-                </BCType>
-            </Face>
-        </BoundaryConditions>
     </Grid>
 <!--__________________________________-->
     <AMR>
@@ -70,26 +48,13 @@
     </AMR>
 <!--__________________________________-->
     <DataArchiver>
-        <filebase>heat_bc_test_cc_d2_p5_fe_amr.uda</filebase>
+        <filebase>heat_nc_2d_fe_amr.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
-        <save label="u" />
         <save label="refineFlag" />
-        <save label="error_u" />
-        <save label="u_normL2" />
-        <save label="u_normH10" />
-        <save label="u_normH20" />
-        <save label="error_normL2" />
-        <save label="error_normH10" />
-        <save label="error_normH20" />
-        <!-- if defined PhaseField_Heat_DBG_DERIVATIVES -->
+        <save label="u" />
         <save label="ux" />
         <save label="uy" />
         <save label="uxx" />
         <save label="uyy" />
-        <save label="error_ux" />
-        <save label="error_uy" />
-        <save label="error_uxx" />
-        <save label="error_uyy" />
-        <!-- end if defined -->
     </DataArchiver>
 </Uintah_specification>

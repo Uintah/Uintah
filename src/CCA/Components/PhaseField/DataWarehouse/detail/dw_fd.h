@@ -57,9 +57,10 @@ namespace detail
  */
 template<typename Field, StnType STN, VarType VAR, int GN>
 class dw_fd
-    _DOXYBDY (
-        /// Non const type of the field value
-        using V;
+#if _DOXYGEN
+{
+    /// Non const type of the field value
+    using V;
 
     /**
      * @brief First order derivative
@@ -70,7 +71,7 @@ class dw_fd
      * @param id index where to evaluate the finite-difference
      * @return approximated value at id
      */
-        template <DirType DIR> inline V d ( const IntVector & id ) const = 0;
+    template <DirType DIR> inline V d ( const IntVector & id ) const = 0;
 
     /**
      * @brief Second order derivative
@@ -81,8 +82,10 @@ class dw_fd
      * @param id index where to evaluate the finite-difference
      * @return approximated value at id
      */
-        template <DirType DIR> inline V d2 ( const IntVector & id ) const = 0;
-                 );
+    template <DirType DIR> inline V d2 ( const IntVector & id ) const = 0;
+};
+#endif
+;
 
 } // namespace detail
 } // namespace PhaseField

@@ -96,6 +96,11 @@ private: // TYPES
     /// Non const type of the field value
     using V = typename std::remove_const<T>::type;
 
+#ifdef HAVE_HYPRE
+    /// Stencil entries type
+    using S = typename get_stn<STN>::template type<T>;
+#endif
+
     /// Type of rhs for the given BC
     using BV = typename get_bc< B >::template value_type< Field >;
 
@@ -114,6 +119,28 @@ protected: // COPY CONSTRUCTOR
         const bc_basic_fd_view * copy,
         bool deep
     ) : bc_fd<Field, STN, VAR, F, B, GN, C2F> ( copy, deep )
+    {}
+
+    /**
+     * @brief Constructor
+     *
+     * Instantiate a copy of a given view using the specified view to access the
+     * DataWarehouse.
+     *
+     * @remark When a bc_basic_fd_view is instantiated from a finer level to
+     * enforce fine/coarse interface conditions this view (of the coarser level)
+     * will not have access to the DataWarehouse after set
+     * (bc_basic_fd_view::set method is not retrieving data)
+     * @param view view to be used for accessing the DataWarehouse
+     * @param copy source view for copying
+     * @param deep if true inner grid variable is copied as well otherwise the
+     * same grid variable is referenced
+     */
+    bc_basic_fd_view (
+        const view<Field> * view,
+        const bc_basic_fd_view * copy,
+        bool deep
+    ) : bc_fd<Field, STN, VAR, F, B, GN, C2F> ( view, copy, deep )
     {}
 
 public: // CONSTRUCTORS/DESTRUCTOR
@@ -165,12 +192,14 @@ public: // CONSTRUCTORS/DESTRUCTOR
     ) : bc_fd<Field, STN, VAR, F, B, GN, C2F> ( view, dw, label, material, level, value, patch, use_ghosts )
     {}
 
+    /// Default destructor
     virtual ~bc_basic_fd_view() = default;
 
     /// Prevent copy (and move) constructor
     bc_basic_fd_view ( const bc_basic_fd_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     bc_basic_fd_view & operator= ( const bc_basic_fd_view & ) = delete;
 
 public: // VIEW METHODS
@@ -189,6 +218,29 @@ public: // VIEW METHODS
     ) const override
     {
         return scinew bc_basic_fd_view ( this, deep );
+    };
+
+    /**
+     * @brief Get a copy of the view
+     *
+     * @remark When a bc_basic_fd_view is cloned from a finer level to enforce
+     * fine/coarse interface conditions this view (of the coarser level)
+     * will not have access to the DataWarehouse after set
+     * (bc_basic_fd_view::set method is not retrieving data)
+     *
+     * @param view view to be used for accessing the DataWarehouse
+     * @param deep if true inner grid variable is copied as well otherwise the
+     * same grid variable is referenced
+     *
+     * @return new view instance
+     */
+    view<Field> *
+    clone (
+        const view<Field> * view,
+        bool deep
+    ) const
+    {
+        return scinew bc_basic_fd_view ( view, this, deep );
     };
 
     /**
@@ -332,6 +384,64 @@ public: // BASIC FD VIEW METHODS
     {
         return this->template d2 < Z > ( id );
     }
+
+#ifdef HAVE_HYPRE
+    virtual void
+    add_dxx_sys_hypre (
+        const IntVector & id,
+        S & stencil_entries,
+        typename std::remove_const<T>::type & rhs
+    ) const override
+    {
+        this->template add_d2_sys_hypre < X > ( id, stencil_entries, rhs );
+    }
+
+    virtual void
+    add_dxx_rhs_hypre (
+        const IntVector & id,
+        typename std::remove_const<T>::type & rhs
+    ) const override
+    {
+        this->template add_d2_rhs_hypre < X > ( id, rhs );
+    }
+
+    virtual void
+    add_dyy_sys_hypre (
+        const IntVector & id,
+        S & stencil_entries,
+        typename std::remove_const<T>::type & rhs
+    ) const override
+    {
+        this->template add_d2_sys_hypre < Y > ( id, stencil_entries, rhs );
+    }
+
+    virtual void
+    add_dyy_rhs_hypre (
+        const IntVector & id,
+        typename std::remove_const < T >::type & rhs
+    ) const override
+    {
+        this->template add_d2_rhs_hypre < Y > ( id, rhs );
+    }
+
+    virtual void
+    add_dzz_sys_hypre (
+        const IntVector & id, S & stencil_entries,
+        typename std::remove_const <T >::type & rhs
+    ) const override
+    {
+        this->template add_d2_sys_hypre < Z > ( id, stencil_entries, rhs );
+    }
+
+    virtual void
+    add_dzz_rhs_hypre (
+        const IntVector & id,
+        typename std::remove_const < T >::type & rhs
+    ) const override
+    {
+        this->template add_d2_rhs_hypre < Z > ( id, rhs );
+    }
+#endif
 
 }; // class bc_basic_fd_view
 

@@ -57,6 +57,7 @@ class dw_fd < ScalarField<T>, STN, VAR, 1 >
 {
 public: // STATIC MEMBERS
 
+    /// Default value for use_ghost when retrieving data
     static constexpr bool use_ghosts_dflt = true;
 
 private: // STATIC MEMBERS
@@ -74,6 +75,11 @@ private: // TYPES
 
     /// Non const type of the field value
     using V = typename std::remove_const<T>::type;
+
+#ifdef HAVE_HYPRE
+    /// Stencil entries type
+    using S = typename get_stn<STN>::template type<T>;
+#endif
 
 private:  // MEMBERS
 
@@ -104,6 +110,15 @@ private: // METHODS
 
 protected: // COPY CONSTRUCTOR
 
+    /**
+     * @brief Constructor
+     *
+     * Instantiate a copy of a given view
+     *
+     * @param copy source view for copying
+     * @param deep if true inner grid variable is copied as well otherwise the
+     * same grid variable is referenced
+     */
     dw_fd (
         const dw_fd * copy,
         bool deep
@@ -164,6 +179,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     dw_fd ( const dw_fd & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     dw_fd & operator= ( const dw_fd & ) = delete;
 
 public: // VIEW METHODS
@@ -331,6 +347,30 @@ public: // DW FD MEMBERS
         ip[DIR] += 1;
         return ( value ( ip ) + value ( im ) - 2. * value ( id ) ) / ( m_h[DIR] * m_h[DIR] );
     }
+
+#ifdef HAVE_HYPRE
+    template <DirType DIR>
+    inline void
+    add_d2_sys_hypre (
+        const IntVector & _DOXYARG ( id ),
+        S & stencil_entries,
+        T & /*rhs*/
+    ) const
+    {
+        double h2 = m_h[DIR] * m_h[DIR];
+        stencil_entries[2 * DIR] += 1. / h2;
+        stencil_entries[2 * DIR + 1] += 1. / h2;
+        stencil_entries.p += -2. / h2;
+    }
+
+    template <DirType DIR>
+    inline void
+    add_d2_rhs_hypre (
+        const IntVector & _DOXYARG ( id ),
+        T & /*rhs*/
+    ) const
+    {}
+#endif
 
 }; // class dw_fd_G1
 

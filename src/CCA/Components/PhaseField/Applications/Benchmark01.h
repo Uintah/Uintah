@@ -56,7 +56,7 @@ namespace PhaseField
  * \f]
  * on \f$[0, 2\pi]^2\f$ with initial data
  * \f[
- * u_{|t=0} = \tanh \frac{\sqrt{(x-\pi)^2+(y-\pi)^2}-2}{epsilon\sqrt{2}}
+ * u_{|t=0} = \tanh \frac{\sqrt{(x-\pi)^2+(y-\pi)^2}-2}{\epsilon\sqrt{2}}
  * \f]
  * with periodic boundary conditions.
  *
@@ -92,14 +92,35 @@ public: // STATIC MEMBERS
 
 protected: // MEMBERS
 
-    /// Output streams for debugging
-    DebugStream dbg_out1, dbg_out2, dbg_out3, dbg_out4;
+    /// Output stream for debugging (verbosity level 1)
+    DebugStream dbg_out1;
 
-    // Labels for variables to be stored into the DataWarehouse
+    /// Output stream for debugging (verbosity level 2)
+    DebugStream dbg_out2;
+
+    /// Output stream for debugging (verbosity level 3)
+    DebugStream dbg_out3;
+
+    /// Output stream for debugging (verbosity level 4)
+    DebugStream dbg_out4;
+
+    /// Label for u field into the DataWarehouse
     const VarLabel * u_label;
+
+    /// Label for solution value at domain center (\f$ \pi, \pi \f$) into the DataWarehouse
     const VarLabel * u0_label;
+
+    /// Label for system energy into the DataWarehouse
     const VarLabel * energy_label;
-    const VarLabel * matrix_label, * rhs_label;
+
+#ifdef HAVE_HYPRE
+    /// Label for the implicit matrix vector in the DataWarehouse
+    const VarLabel * matrix_label;
+
+    /// Label for the implicit vector in the DataWarehouse
+    const VarLabel * rhs_label;
+
+#endif // HAVE_HYPRE
 
     /// Time step size
     double delt;
@@ -133,19 +154,20 @@ public: // CONSTRUCTORS/DESTRUCTOR
     Benchmark01 ( const Benchmark01 & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     Benchmark01 & operator= ( const Benchmark01 & ) = delete;
 
 protected: // SETUP
 
-  /**
-     * @brief Setup
-     *
-     * Initialize problem parameters with values from problem specifications
-     *
-     * @param params problem specifications parsed from input file
-     * @param restart_prob_spec unused
-     * @param grid unused
-     */
+    /**
+       * @brief Setup
+       *
+       * Initialize problem parameters with values from problem specifications
+       *
+       * @param params problem specifications parsed from input file
+       * @param restart_prob_spec unused
+       * @param grid unused
+       */
     virtual void
     problemSetup (
         const ProblemSpecP & params,
@@ -155,15 +177,15 @@ protected: // SETUP
 
 protected: // SCHEDULINGS
 
-  /**
-     * @brief Schedule the initialization tasks
-     *
-     * Specify all tasks to be performed at initial timestep to initialize
-     * variables in the DataWarehouse
-     *
-     * @param level grid level to be initialized
-     * @param sched scheduler to manage the tasks
-     */
+    /**
+       * @brief Schedule the initialization tasks
+       *
+       * Specify all tasks to be performed at initial timestep to initialize
+       * variables in the DataWarehouse
+       *
+       * @param level grid level to be initialized
+       * @param sched scheduler to manage the tasks
+       */
     virtual void
     scheduleInitialize (
         const LevelP & level,

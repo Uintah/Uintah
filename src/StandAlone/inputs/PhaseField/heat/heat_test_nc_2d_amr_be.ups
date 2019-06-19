@@ -1,16 +1,18 @@
 <Uintah_specification>
     <Meta>
-        <title>heat_bc_test_cc_d2_p5_fe</title>
+        <title>heat_test_nc_2d_be_amr</title>
     </Meta>
     <SimulationComponent type="phasefield" />
 <!--__________________________________-->
     <PhaseField type="heat">
-        <var>cc</var>
+        <var>nc</var>
         <dim>2</dim>
-        <delt>.1</delt>
-        <alpha>0.19635</alpha>
+        <delt>1.</delt>
+        <alpha>1.</alpha>
         <test>true</test>
+        <scheme>backward_euler</scheme>
         <verbosity>0</verbosity>
+        <refine_threshold>0.03</refine_threshold>
     </PhaseField>
 <!--__________________________________-->
     <Time>
@@ -28,7 +30,7 @@
                 <upper>[ 32., 32., 1.]</upper>
                 <patches>[4,4,1]</patches>
             </Box>
-            <spacing>[1.,1.,1.]</spacing>
+            <spacing>[2.,2.,1.]</spacing>
         </Level>
         <BoundaryConditions>
             <Face side="x-">
@@ -54,9 +56,44 @@
         </BoundaryConditions>
     </Grid>
 <!--__________________________________-->
+    <AMR>
+        <Regridder type="Tiled">
+            <adaptive>true</adaptive>
+            <max_levels>2</max_levels>
+            <cell_refinement_ratio>[[2,2,1]]</cell_refinement_ratio>
+            <cell_stability_dilation>[0,0,0]</cell_stability_dilation>
+            <min_boundary_cells>[1,1,0]</min_boundary_cells>
+            <min_patch_size>[[4,4,1]]</min_patch_size>
+        </Regridder>
+        <FineCoarseInterfaces>
+            <FCIType id="0" label="u" var="FC1" />
+        </FineCoarseInterfaces>
+    </AMR>
+<!--__________________________________-->
+    <Solver type="hypre">
+       <Parameters variable="u">
+          <solver>smg</solver>
+          <preconditioner>diagonal</preconditioner>
+          <tolerance>1.e-6</tolerance>
+          <maxiterations>20</maxiterations>
+          <precond_maxiters>1</precond_maxiters>
+          <precond_tolerance>0</precond_tolerance>
+          <npre>1</npre>
+          <npost>1</npost>
+          <skip>0</skip>
+          <jump>0</jump>
+          <logging>1</logging>
+          <setupFrequency>0</setupFrequency> <!-- leave to 0 to skip HYPRE_StructMatrixDestroy+Create -->
+          <updateCoefFrequency>0</updateCoefFrequency> <!-- leave to 0 to avoid update matrix coefficients -->
+          <solveFrequency>1</solveFrequency>
+          <relax_type>2</relax_type><!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
+       </Parameters>
+    </Solver>
+<!--__________________________________-->
     <DataArchiver>
-        <filebase>heat_bc_test_cc_d2_p5_fe.uda</filebase>
+        <filebase>heat_test_nc_2d_be_amr.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
+        <save label="refineFlag" />
         <save label="u" />
         <save label="ux" />
         <save label="uy" />
@@ -65,6 +102,7 @@
         <save label="u_normL2" />
         <save label="u_normH10" />
         <save label="u_normH20" />
+        <save label="delta_u" />
         <save label="error_u" />
         <save label="error_ux" />
         <save label="error_uy" />

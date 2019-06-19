@@ -63,6 +63,7 @@ class amr_interpolator < ScalarField<T>, Problem, index_sequence<I...>, I1, D3 >
 {
 public: // STATIC MEMBERS
 
+    /// Default value for use_ghost when retrieving data
     static constexpr bool use_ghosts_dflt = false;
 
 private: // STATIC MEMBERS
@@ -107,6 +108,7 @@ private: // MEMBERS
     /// coarser level
     const Level * m_level_coarse;
 
+    /// Region where the view is defined
     Support m_support;
 
 private: // METHODS
@@ -200,8 +202,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     ) : m_view_coarse ( scinew amr_coarser_view<Field, Problem, Index> ( label, subproblems_label, material ) ),
         m_level_fine ( nullptr ),
         m_level_coarse ( nullptr )
-    {
-    }
+    {}
 
     /**
      * @brief construct interpolator and retrieve inner variable data from the
@@ -242,6 +243,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     amr_interpolator ( const amr_interpolator & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     amr_interpolator & operator= ( const amr_interpolator & ) = delete;
 
 public: // VIEW METHODS

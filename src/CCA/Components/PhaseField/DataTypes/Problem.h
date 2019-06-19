@@ -153,7 +153,7 @@ private: // INDEXED CONSTRUCTOR
      */
     template < size_t ... I >
     Problem (
-        index_sequence<I...>,
+        index_sequence<I...> _DOXYARG ( unused ),
         const typename Field::label_type & ... labels,
         const VarLabel * subproblems_label,
         int material,

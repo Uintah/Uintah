@@ -54,7 +54,7 @@ namespace PhaseField
  * \f]
  * where
  * \f[
- *  W (u) = \frac{1}{4} (u^2 − 1)^2
+ *  W (u) = \frac{1}{4} (u^2 - 1)^2
  * \f]
  * on \f$[0, 2\pi]^2\f$ with initial data being seven circles with different
  * centres and radii,
@@ -96,12 +96,31 @@ public: // STATIC MEMBERS
 
 protected: // MEMBERS
 
-    /// Output streams for debugging
-    DebugStream dbg_out1, dbg_out2, dbg_out3, dbg_out4;
+    /// Output stream for debugging (verbosity level 1)
+    DebugStream dbg_out1;
 
-    // Labels for variables to be stored into the DataWarehouse
-    const VarLabel * u_label, * v_label;
-    const VarLabel * u1_label, * u2_label;
+    /// Output stream for debugging (verbosity level 2)
+    DebugStream dbg_out2;
+
+    /// Output stream for debugging (verbosity level 3)
+    DebugStream dbg_out3;
+
+    /// Output stream for debugging (verbosity level 4)
+    DebugStream dbg_out4;
+
+    /// Label for u field into the DataWarehouse
+    const VarLabel * u_label;
+
+    /// Label for v field into the DataWarehouse
+    const VarLabel * v_label;
+
+    /// Label for solution value at domain point (\f$ \frac12 \pi, \frac12 \pi \f$) into the DataWarehouse
+    const VarLabel * u1_label;
+
+    /// Label for solution value at domain point (\f$ \frac32 \pi, \frac32 \pi \f$) into the DataWarehouse
+    const VarLabel * u2_label;
+
+    /// Label for system energy into the DataWarehouse
     const VarLabel * energy_label;
 
     /// Time step size
@@ -136,6 +155,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     Benchmark02 ( Benchmark02 const & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     Benchmark02 & operator= ( Benchmark02 const & ) = delete;
 
 protected: // SETUP

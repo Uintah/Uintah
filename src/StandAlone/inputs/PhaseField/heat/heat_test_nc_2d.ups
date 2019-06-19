@@ -1,6 +1,6 @@
 <Uintah_specification>
     <Meta>
-        <title>heat_test_nc_d2_p5_fe</title>
+        <title>heat_test_nc_2d_fe</title>
     </Meta>
     <SimulationComponent type="phasefield" />
 <!--__________________________________-->
@@ -8,7 +8,7 @@
         <var>nc</var>
         <dim>2</dim>
         <delt>.1</delt>
-        <alpha>0.19635</alpha>
+        <alpha>1.</alpha>
         <test>true</test>
         <verbosity>0</verbosity>
     </PhaseField>
@@ -24,17 +24,38 @@
     <Grid>
         <Level>
             <Box label="1">
-                <lower>[-32.,-32., 0.]</lower>
+                <lower>[  0.,  0., 0.]</lower>
                 <upper>[ 32., 32., 1.]</upper>
                 <patches>[4,4,1]</patches>
             </Box>
-            <periodic>[1,1,0]</periodic>
             <spacing>[1.,1.,1.]</spacing>
         </Level>
+        <BoundaryConditions>
+            <Face side="x-">
+                <BCType id="0" label="u" var="Neumann">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+            <Face side="x+">
+                <BCType id="0" label="u" var="Dirichlet">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+            <Face side="y-">
+                <BCType id="0" label="u" var="Neumann">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+            <Face side="y+">
+                <BCType id="0" label="u" var="Dirichlet">
+                    <value>0.</value>
+                </BCType>
+            </Face>
+        </BoundaryConditions>
     </Grid>
 <!--__________________________________-->
     <DataArchiver>
-        <filebase>heat_test_nc_d2_p5_fe.uda</filebase>
+        <filebase>heat_test_nc_2d_fe.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
         <save label="u" />
         <save label="ux" />
@@ -44,6 +65,7 @@
         <save label="u_normL2" />
         <save label="u_normH10" />
         <save label="u_normH20" />
+        <save label="delta_u" />
         <save label="error_u" />
         <save label="error_ux" />
         <save label="error_uy" />

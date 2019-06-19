@@ -40,7 +40,7 @@
 namespace Uintah {
 namespace PhaseField {
 
-#ifndef _DOXY_IGNORE_
+/// @cond DOXYIGNORE
 template<> const std::string Benchmark01<CC,P5>::Name = "benchmark01|cc|d2|p5";
 template<> const std::string Benchmark01<NC,P5>::Name = "benchmark01|nc|d2|p5";
 template<> const std::string Benchmark02<CC,P5>::Name = "benchmark02|cc|d2|p5";
@@ -58,7 +58,7 @@ template class Benchmark03<CC,P3>;
 template class Benchmark03<NC,P3>;
 template class Benchmark04<CC,P5>;
 template class Benchmark04<NC,P5>;
-#endif
+/// @endcond
 
 } // namespace Uintah
 } // namespace PhaseField

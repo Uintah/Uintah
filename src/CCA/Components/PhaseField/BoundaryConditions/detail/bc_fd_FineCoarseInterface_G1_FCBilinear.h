@@ -88,6 +88,11 @@ private: // TYPES
     /// Non const type of the field value
     using V = typename std::remove_const<T>::type;
 
+#ifdef HAVE_HYPRE
+    /// Stencil entries type
+    using S = typename get_stn<STN>::template type<T>;
+#endif
+
 private: // STATIC ASSERTIONS
 
     static_assert ( DIM == D2, "FCLinear must be used only for 2D problems" );
@@ -158,10 +163,47 @@ private: // METHODS
     };
 
 protected:
+
+    /**
+     * @brief Constructor
+     *
+     * Instantiate a copy of a given view
+     *
+     * @param copy source view for copying
+     * @param deep if true inner grid variable is copied as well otherwise the
+     * same grid variable is referenced
+     */
     bc_fd (
         const bc_fd * copy,
         bool deep
     ) : m_fine_view ( copy->m_fine_view ),
+        m_coarse_view ( copy->m_coarse_view->clone ( deep ) ),
+        m_level_fine ( copy->m_level_fine ),
+        m_level_coarse ( copy->m_level_coarse ),
+        m_h ( copy->m_h ),
+        m_support ( copy->m_support )
+    {}
+
+    /**
+     * @brief Constructor
+     *
+     * Instantiate a copy of a given view using the specified fine view to
+     * access the DataWarehouse.
+     *
+     * @remark When a bc_fd is instantiated from a finer level to enforce fine/coarse
+     * interface conditions the copy fine view will not have access to the
+     * DataWarehouse after set (bc_fd::set method is not retrieving data for
+     * fine level)
+     * @param fine_view view to be used for accessing the DataWarehouse
+     * @param copy source view for copying
+     * @param deep if true inner grid variable is copied as well otherwise the
+     * same grid variable is referenced
+     */
+    bc_fd (
+        const view<Field> * fine_view,
+        const bc_fd * copy,
+        bool deep
+    ) : m_fine_view ( fine_view ),
         m_coarse_view ( copy->m_coarse_view->clone ( deep ) ),
         m_level_fine ( copy->m_level_fine ),
         m_level_coarse ( copy->m_level_coarse ),
@@ -207,6 +249,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     bc_fd ( const bc_fd & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     bc_fd & operator= ( const bc_fd & ) = delete;
 
 public: // VIEW METHODS
@@ -492,6 +535,38 @@ public: // BC FD MEMBERS
         return ( fine_value ( im ) + coarse_interp ( ip ) - 2. * fine_value ( id ) )
                / ( m_h[D] * m_h[D] );
     }
+
+#ifdef HAVE_HYPRE
+    template < DirType DIR >
+    inline typename std::enable_if < D != DIR, void >::type
+    add_d2_sys_hypre (
+        const IntVector & id,
+        S & stencil_entries,
+        typename std::remove_const<T>::type & rhs
+    ) const VIRT;
+
+    template < DirType DIR >
+    inline typename std::enable_if < D == DIR, void >::type
+    add_d2_sys_hypre (
+        const IntVector &,
+        S & stencil_entries,
+        typename std::remove_const<T>::type & rhs
+    ) const VIRT;
+
+    template < DirType DIR >
+    inline typename std::enable_if < D != DIR, void >::type
+    add_d2_rhs_hypre (
+        const IntVector & id,
+        typename std::remove_const<T>::type & rhs
+    ) const VIRT;
+
+    template < DirType DIR >
+    inline typename std::enable_if < D == DIR, void >::type
+    add_d2_rhs_hypre (
+        const IntVector & id,
+        typename std::remove_const<T>::type & rhs
+    ) const VIRT;
+#endif
 
 }; // class bc_fd
 

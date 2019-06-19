@@ -50,9 +50,8 @@ namespace detail
 template<int GN, int DONE, typename... Field>
 class partition_range<X, GN, DONE, Field...>
 {
-    template<typename V> using VarLabels = VarLabel;
-
 private:
+    /// Given number of Fields
     static constexpr size_t N = sizeof... ( Field );
 
     /**
@@ -64,6 +63,7 @@ private:
      * @tparam F type of field (ScalarField < T > or VectorField < T, N >)
      * @param faces list of faces on which boundary conditions are applied
      * @param bcs BC info for each one of face of the patch for the given variable
+     * @return rearranged BCInfo vector
      */
     template<DimType DIM, typename F>
     static std::vector < BCInfo<F> >

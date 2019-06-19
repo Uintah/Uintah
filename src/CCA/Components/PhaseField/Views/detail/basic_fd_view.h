@@ -81,6 +81,11 @@ private: // TYPES
     /// Non const type of the field value
     using V = typename std::remove_const<T>::type;
 
+#ifdef HAVE_HYPRE
+    /// Stencil entries type
+    using S = typename get_stn<STN>::template type<T>;
+#endif
+
 public: // DESTRUCTOR
 
     /// Default destructor
@@ -183,6 +188,15 @@ public: // BASIC FD VIEW METHODS
      * @return approximated value at id
      */
     virtual V dzz ( const IntVector & id ) const = 0;
+
+#ifdef HAVE_HYPRE
+    virtual void add_dxx_sys_hypre ( const IntVector & id, S & stencil_entries, V & rhs ) const = 0;
+    virtual void add_dxx_rhs_hypre ( const IntVector & id, V & rhs ) const = 0;
+    virtual void add_dyy_sys_hypre ( const IntVector & id, S & stencil_entries, V & rhs ) const = 0;
+    virtual void add_dyy_rhs_hypre ( const IntVector & id, V & rhs ) const = 0;
+    virtual void add_dzz_sys_hypre ( const IntVector & id, S & stencil_entries, V & rhs ) const = 0;
+    virtual void add_dzz_rhs_hypre ( const IntVector & id, V & rhs ) const = 0;
+#endif
 
 }; // class basic_fd_view
 

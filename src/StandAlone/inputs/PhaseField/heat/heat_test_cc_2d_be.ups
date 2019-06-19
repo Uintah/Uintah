@@ -1,15 +1,16 @@
 <Uintah_specification>
     <Meta>
-        <title>heat_bc_test_nc_d3_p7_fe</title>
+        <title>heat_test_cc_2d_be</title>
     </Meta>
     <SimulationComponent type="phasefield" />
 <!--__________________________________-->
     <PhaseField type="heat">
-        <var>nc</var>
-        <dim>3</dim>
-        <delt>.1</delt>
-        <alpha>0.19635</alpha>
+        <var>cc</var>
+        <dim>2</dim>
+        <delt>1.</delt>
+        <alpha>1.</alpha>
         <test>true</test>
+        <scheme>backward_euler</scheme>
         <verbosity>0</verbosity>
     </PhaseField>
 <!--__________________________________-->
@@ -24,9 +25,9 @@
     <Grid>
         <Level>
             <Box label="1">
-                <lower>[  0.,  0.,  0.]</lower>
-                <upper>[ 32., 32., 32.]</upper>
-                <patches>[4,4,4]</patches>
+                <lower>[  0.,  0., 0.]</lower>
+                <upper>[ 32., 32., 1.]</upper>
+                <patches>[4,4,1]</patches>
             </Box>
             <spacing>[1.,1.,1.]</spacing>
         </Level>
@@ -51,39 +52,46 @@
                     <value>0.</value>
                 </BCType>
             </Face>
-            <Face side="z-">
-                <BCType id="0" label="u" var="Neumann">
-                    <value>0.</value>
-                </BCType>
-            </Face>
-            <Face side="z+">
-                <BCType id="0" label="u" var="Dirichlet">
-                    <value>0.</value>
-                </BCType>
-            </Face>
         </BoundaryConditions>
     </Grid>
 <!--__________________________________-->
+    <Solver type="hypre">
+       <Parameters variable="u">
+          <solver>smg</solver>
+          <preconditioner>diagonal</preconditioner>
+          <tolerance>1.e-6</tolerance>
+          <maxiterations>20</maxiterations>
+          <precond_maxiters>1</precond_maxiters>
+          <precond_tolerance>0</precond_tolerance>
+          <npre>1</npre>
+          <npost>1</npost>
+          <skip>0</skip>
+          <jump>0</jump>
+          <logging>1</logging>
+          <setupFrequency>0</setupFrequency> <!-- leave to 0 to skip HYPRE_StructMatrixDestroy+Create -->
+          <updateCoefFrequency>0</updateCoefFrequency> <!-- leave to 0 to avoid update matrix coefficients -->
+          <solveFrequency>1</solveFrequency>
+          <relax_type>2</relax_type><!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
+       </Parameters>
+    </Solver>
+<!--__________________________________-->
     <DataArchiver>
-        <filebase>heat_bc_test_nc_d3_p7_fe.uda</filebase>
+        <filebase>heat_test_cc_2d_be.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
         <save label="u" />
         <save label="ux" />
         <save label="uy" />
-        <save label="uz" />
         <save label="uxx" />
         <save label="uyy" />
-        <save label="uzz" />
         <save label="u_normL2" />
         <save label="u_normH10" />
         <save label="u_normH20" />
+        <save label="delta_u" />
         <save label="error_u" />
         <save label="error_ux" />
         <save label="error_uy" />
-        <save label="error_uz" />
         <save label="error_uxx" />
         <save label="error_uyy" />
-        <save label="error_uzz" />
         <save label="error_normL2" />
         <save label="error_normH10" />
         <save label="error_normH20" />

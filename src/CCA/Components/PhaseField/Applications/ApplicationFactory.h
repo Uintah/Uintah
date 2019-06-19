@@ -71,6 +71,7 @@ public:
     * @param materialManager data structure to manage materials
     * @param probSpec specifications parsed from ups input file
     * @param doAMR if adaptive mesh refinement is requsted by the input
+    * @return new instance of PhaseField Application
     */
     static UintahParallelComponent * create (
         const ProcessorGroup * myWorld,

@@ -61,6 +61,7 @@ protected: // CONSTRUCTOR/DESTRUCTOR
     dw_interface0 ( const dw_interface0 & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     dw_interface0 & operator= ( const dw_interface0 & ) = delete;
 
 public:
@@ -73,7 +74,7 @@ public:
      *
      * @param p grid patch
      * @param i grid index
-     * @return coordinates of the grid element
+     * @return coordinates of the grid cell
      */
     static inline Point
     get_position (
@@ -89,7 +90,7 @@ public:
      *
      * @param l grid level
      * @param i grid index
-     * @return coordinates of the grid element
+     * @return coordinates of the grid cell
      */
     static inline Point
     get_position (
@@ -104,7 +105,7 @@ public:
      * @brief get patch first index
      *
      * @param p grid patch
-     * @return lower bound
+     * @return lower bound for cell indices
      */
     static inline IntVector
     get_low (
@@ -118,7 +119,7 @@ public:
      * @brief get patch past the end index
      *
      * @param p grid patch
-     * @return upper bound
+     * @return upper bound for cell indices
      */
     static inline IntVector
     get_high (

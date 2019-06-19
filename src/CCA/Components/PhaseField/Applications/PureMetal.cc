@@ -39,7 +39,7 @@ namespace Uintah
 namespace PhaseField
 {
 
-#ifndef _DOXY_IGNORE_
+/// @cond DOXYIGNORE
 template<> const std::string PureMetalProblem<CC, P5>::Name = "PureMetalProblem";
 template<> const std::string PureMetalProblem<NC, P5>::Name = "PureMetalProblem";
 template<> const std::string PureMetalProblem<CC, P7>::Name = "PureMetalProblem";
@@ -64,7 +64,7 @@ template class PureMetal<CC, D2, P5, AMR>;
 template class PureMetal<NC, D2, P5, AMR>;
 template class PureMetal<CC, D3, P7, AMR>;
 template class PureMetal<NC, D3, P7, AMR>;
-#endif
+/// @endcond
 
 } // namespace Uintah
 } // namespace PhaseField
