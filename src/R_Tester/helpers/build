@@ -36,7 +36,11 @@ if [ "$OS" = "Linux" ]; then
      --with-hypre=/usr/local/hypre-2.8.0b \\
      --with-boost=/usr/local/boost-1.65.1 \\
      --with-petsc=/usr/local/petsc-3.8.4 \\
-     --enable-all-components \\
+     --enable-arches \\
+     --enable-examples \\
+     --enable-ice \\
+     --enable-mpm \\
+     --enable-wasatch \\
      --enable-wasatch_3p \\
      --enable-ray-scatter \\"
 
