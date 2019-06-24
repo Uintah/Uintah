@@ -2527,8 +2527,13 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       IntVector c = *iter;
       gtempglobal[c] /= gmassglobal[c];
       gvelglobal[c] /= gmassglobal[c];
-      if (flags->d_doScalarDiffusion) gconcglobal[c] /= gmassglobal[c];
      }
+    if (flags->d_doScalarDiffusion) {
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        gconcglobal[c] /= gmassglobal[c];
+      }
+    }
     delete interpolator;
     delete linear_interpolator;
   }  // End loop over patches
@@ -3825,30 +3830,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
         double concRate = 0.0;
-        if(flags->d_doScalarDiffusion)
-        {
+
+        if(flags->d_doScalarDiffusion) {
           pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
-//          std::cout << " X: " << px[idx] << " ";
-          for (int nIndex = 0; nIndex < numNodes; ++nIndex)
-          {
+          for (int nIndex = 0; nIndex < numNodes; ++nIndex) {
             IntVector node = ni[nIndex];
             concRate += gConcentrationRate[node]*S[nIndex];
-            for (int j = 0; j < 3; j++)
-            {
+            for (int j = 0; j < 3; j++) {
               pConcGradNew[idx][j] += gConcStar[node]*d_S[nIndex][j]*oodx[j];
             }
-//            if (gConcStar[node] > 0) {
-//              std::cout << " N:" << node
-//                        << " C: " << std::scientific << std::right
-//                        << gConcStar[node] << " ";
-//            }
           }
-//          if (pConcGradNew[idx].length() > 0.0)
-//          {
-//            std::cout << " pIdx: "  << idx
-//                      << " grad(C): " << pConcGradNew[idx];
-//          }
-//          std::cout << std::endl;
           pConcentrationNew[idx] = pConcentration[idx] + concRate * delT;
           pareanew[idx] = parea[idx];
 
@@ -3929,7 +3920,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         if(flags->d_doScalarDiffusion)
         {
           pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
-//          std::cout << " X: " << px[idx] << " ";
           for (int nIndex = 0; nIndex < numNodes; ++nIndex)
           {
             IntVector node = ni[nIndex];
@@ -3938,18 +3928,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             {
               pConcGradNew[idx][j] += gConcStar[node]*d_S[nIndex][j]*oodx[j];
             }
-//            if (gConcStar[node] > 0) {
-//              std::cout << " N:" << node
-//                        << " C: " << std::scientific << std::right
-//                        << gConcStar[node] << " ";
-//            }
           }
-//          if (pConcGradNew[idx].length() > 0.0)
-//          {
-//            std::cout << " pIdx: "  << idx
-//                      << " grad(C): " << pConcGradNew[idx];
-//          }
-//          std::cout << std::endl;
           pConcentrationNew[idx] = pConcentration[idx] + concRate * delT;
           pareanew[idx] = parea[idx];
 

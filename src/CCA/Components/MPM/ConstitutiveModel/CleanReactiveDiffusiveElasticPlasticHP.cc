@@ -1001,8 +1001,8 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
                           lb->pColorLabel_preReloc,               pset);
     // JBH - Thermodynamics
     
-    ParticleVariable<double>  pReactionHeat_temp;
-    new_dw->allocateTemporary(pReactionHeat_temp, pset);
+//    ParticleVariable<double>  pReactionHeat_temp;
+//    new_dw->allocateTemporary(pReactionHeat_temp, pset);
 
     d_flow     ->getInternalVars(pset, old_dw);
     d_devStress->getInternalVars(pset, old_dw);
@@ -1185,10 +1185,12 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
           //dH_Rxn = 0.0;
           // pReactionHeat_temp is the amount of heat energy generated presuming
           // 100% conversion of diffusant nickel into NiAl3
-          pReactionHeat_temp[idx] = -d_dHRxn * std::max(0.0,std::abs(dCdt)) * pStartingMoles[idx];
+          double pdQdt_Rxn = -d_dHRxn * std::max(0.0,std::abs(dCdt)) * pStartingMoles[idx];
+          //pReactionHeat_temp[idx] = -d_dHRxn * std::max(0.0,std::abs(dCdt)) * pStartingMoles[idx];
 //          pReactionHeat_temp[idx] = -d_dHRxn * std::abs(dCdt) *
 //                                      pStartingMoles[idx];
-          pdTdt[idx] += pReactionHeat_temp[idx] / (Cp * pMass[idx]);
+          //pdTdt[idx] += pReactionHeat_temp[idx] / (Cp * pMass[idx]);
+          pdTdt[idx] += pdQdt_Rxn / (Cp * pMass[idx]);
 
 //          // Output generated heat for specific points.  HACK FIXME TODO
 //          if (   d_writeDirectly
@@ -1562,21 +1564,21 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
       }
       else {
         const double thermalMass = pMass[idx] * Cp;
-        const double dQ_Total = pdTdt[idx] * thermalMass;
+        const double dQ_Total = pdTdt[idx] * thermalMass * delT;
         const double dQ_PhaseChange = pMass[idx] * d_dHFusion;
         if (phaseDirection == 1) { // Heating
           const double dQ_Heat = std::min(dQ_Total, (Tpc_Low - T_n)*thermalMass);
           const double dQ_Melt = std::min((dQ_PhaseChange - pHeatBuffer[idx]),(dQ_Total - dQ_Heat));
           pHeatBuffer_new[idx] = pHeatBuffer[idx] + dQ_Melt;
           const double dQ_Excess = dQ_Total - dQ_Heat - dQ_Melt;
-          pdTdt[idx] = (dQ_Heat + dQ_Excess)/thermalMass/delT;
+          pdTdt[idx] = (dQ_Heat + dQ_Excess)/(thermalMass*delT);
         }
         if (phaseDirection == -1) { // Cooling
           const double dQ_Cool = std::max(dQ_Total, (Tpc_High - T_n)*thermalMass);
           const double dQ_Freeze = std::max(-pHeatBuffer[idx], (dQ_Total - dQ_Cool));
           pHeatBuffer_new[idx] = pHeatBuffer[idx] + dQ_Freeze;
           const double dQ_Excess = dQ_Total - dQ_Cool - dQ_Freeze;
-          pdTdt[idx] = (dQ_Cool + dQ_Excess)/thermalMass/delT;
+          pdTdt[idx] = (dQ_Cool + dQ_Excess)/(thermalMass*delT);
           pMeltProgress_new[idx] = pHeatBuffer_new[idx] / dQ_PhaseChange;
         }
       }

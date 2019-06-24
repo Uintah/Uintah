@@ -175,9 +175,12 @@ AMRMPM::~AMRMPM()
 {
 //  delete lb;
 //  delete flags;
-  if(flags->d_doScalarDiffusion){
+  if (d_sdInterfaceModel) {
     delete d_sdInterfaceModel;
   }
+//  if(flags->d_doScalarDiffusion){
+//    delete d_sdInterfaceModel;
+//  }
   
   delete d_fluxbc;
 
@@ -3028,7 +3031,12 @@ void AMRMPM::normalizeNodalVelTempConc(const ProcessorGroup*,
         IntVector nIndex = *nIt;
         gTempGlobal[nIndex] /=  gMassGlobal[nIndex];
         gVelGlobal[nIndex]  /=  gMassGlobal[nIndex];
-        if (flags->d_doScalarDiffusion) gConcGlobal[nIndex] /=  gMassGlobal[nIndex];
+      }
+      if (flags->d_doScalarDiffusion) {
+        for (NodeIterator nIt = patch->getNodeIterator(); !nIt.done(); ++nIt) {
+          IntVector nIndex = *nIt;
+          gConcGlobal[nIndex] /= gMassGlobal[nIndex];
+        }
       }
       // Apply boundary conditions to the temperature and velocity (if symmetry)
       MPMBoundCond bc;
