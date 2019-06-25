@@ -1,0 +1,44 @@
+<Uintah_specification>
+    <Meta>
+        <title>heat_periodic_nc_2d_fe</title>
+    </Meta>
+    <SimulationComponent type="phasefield" />
+<!--__________________________________-->
+    <PhaseField type="heat">
+        <var>nc</var>
+        <dim>2</dim>
+        <delt>.1</delt>
+        <alpha>1.</alpha>
+        <verbosity>0</verbosity>
+    </PhaseField>
+<!--__________________________________-->
+    <Time>
+        <maxTime>100.</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>0.01</delt_min>
+        <delt_max>1.</delt_max>
+        <timestep_multiplier>1.</timestep_multiplier>
+    </Time>
+<!--__________________________________-->
+    <Grid>
+        <Level>
+            <Box label="1">
+                <lower>[-32.,-32., 0.]</lower>
+                <upper>[ 32., 32., 1.]</upper>
+                <patches>[4,4,1]</patches>
+            </Box>
+            <periodic>[1,1,0]</periodic>
+            <spacing>[1.,1.,1.]</spacing>
+        </Level>
+    </Grid>
+<!--__________________________________-->
+    <DataArchiver>
+        <filebase>heat_periodic_nc_2d_fe.uda</filebase>
+        <outputTimestepInterval>1</outputTimestepInterval>
+        <save label="u" />
+        <save label="ux" />
+        <save label="uy" />
+        <save label="uxx" />
+        <save label="uyy" />
+    </DataArchiver>
+</Uintah_specification>

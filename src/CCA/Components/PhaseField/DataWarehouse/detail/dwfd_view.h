@@ -54,6 +54,17 @@ namespace detail
  */
 template<typename Field, StnType STN, VarType VAR> class dwfd_view;
 
+/**
+ * @brief Wrapper of DataWarehouse variables for both basic and complex
+ * differential operations (ScalarField implementation)
+ *
+ * Adds to dw_view the possibility to compute finite-difference approximation of
+ * of differential operations at internal cells/points
+ *
+ * @tparam T type of the field value at each point
+ * @tparam STN finite-difference stencil
+ * @tparam VAR type of variable representation
+ */
 template<typename T, StnType STN, VarType VAR>
 class dwfd_view < ScalarField<T>, STN, VAR >
     : public dw_basic_fd_view < ScalarField<T>, STN, VAR >
@@ -76,10 +87,23 @@ public: // CONSTRUCTORS/DESTRUCTOR
     dwfd_view ( const dwfd_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     dwfd_view & operator= ( const dwfd_view & ) = delete;
 
 }; // class dwfd_view
 
+/**
+ * @brief Wrapper of DataWarehouse variables for both basic and complex
+ * differential operations (VectorField implementation)
+ *
+ * Adds to dw_view the possibility to compute finite-difference approximation of
+ * of differential operations at internal cells/points
+ *
+ * @tparam T type of each component of the field value at each point
+ * @tparam N dimension of the vetor field
+ * @tparam STN finite-difference stencil
+ * @tparam VAR type of variable representation
+ */
 template<typename T, size_t N, StnType STN, VarType VAR>
 class dwfd_view < VectorField<T, N>, STN, VAR >
     : virtual public view_array < dwfd_view < ScalarField<T>, STN, VAR >, ScalarField<T>, N >
@@ -116,7 +140,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     /**
      * @brief Constructor
      *
-     * Instantiate view components and gather info from dw
+     * Instantiate view components and gather info from dwr
      *
      * @param dw DataWarehouse from which data is retrieved
      * @param label list of variable labels for each component
@@ -147,6 +171,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     dwfd_view ( const dwfd_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     dwfd_view & operator= ( const dwfd_view & ) = delete;
 
 }; // dw_fd_view

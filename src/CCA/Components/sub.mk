@@ -95,7 +95,6 @@ SUBDIRS := \
         $(ARCHES)                      \
         $(EXAMPLES)                    \
         $(FVM)                         \
-        $(HEAT)                        \
         $(ICE)                         \
         $(MPM)                         \
         $(MPMARCHES)                   \

@@ -94,11 +94,6 @@ ifeq ($(BUILD_FVM),yes)
   FVM_LIB = $(COMPONENTS)/FVM
 endif
 
-# Heat
-ifeq ($(BUILD_HEAT),yes)
-  HEAT_LIB = $(COMPONENTS)/Heat
-endif
-
 # ICE
 ifeq ($(BUILD_ICE),yes)
   ICE_LIB = $(COMPONENTS)/ICE
@@ -207,9 +202,8 @@ ALL_PSE_LIBS =                              \
                                             \
         $(ARCHES_LIBS)                      \
         $(ARCHES_SUB_LIBS)                  \
-	$(EXAMPLES_LIB)                     \
+        $(EXAMPLES_LIB)                     \
         $(FVM_LIB)                          \
-        $(HEAT_LIB)                         \
         $(ICE_LIB)                          \
         $(ICE_SUB_LIBS)                     \
         $(MPM_LIB)                          \
@@ -248,7 +242,6 @@ ALL_STATIC_PSE_LIBS =                   \
     $(MPMICE_SUB_LIBS)                  \
     $(MPMFVM_LIB)                       \
     $(WASATCH_LIB)                      \
-    $(HEAT_LIB)                         \
     $(PHASEFIELD_LIB)                   \
                                         \
     CCA/Components/OnTheFlyAnalysis     \

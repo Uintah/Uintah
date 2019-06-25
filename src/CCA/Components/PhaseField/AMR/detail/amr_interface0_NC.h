@@ -59,6 +59,7 @@ protected: // CONSTRUCTORS/DESTRUCTOR
     amr_interface0 ( const amr_interface0 & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     amr_interface0 & operator= ( const amr_interface0 & ) = delete;
 
 public: // STATIC METHODS

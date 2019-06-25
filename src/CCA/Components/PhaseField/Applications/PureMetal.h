@@ -60,7 +60,7 @@ namespace PhaseField
 {
 
 /// Debugging stream for component schedulings
-static DebugStream cout_pure_metal_scheduling ( "PURE METAL SCHEDULING", false );
+static DebugStream cout_pure_metal_scheduling { "PURE METAL SCHEDULING", false };
 
 /**
  * @brief PureMetal PhaseField applications
@@ -123,8 +123,14 @@ class PureMetal
     /// Number of anisotropy functions B
     static constexpr size_t BSZ = combinations<DIM, 2>::value;
 
-    /// Indices for anisotropy functions B
-    static constexpr size_t XY = 0, XZ = 1, YZ = 2;
+    /// Index for anisotropy functions B
+    static constexpr size_t XY = 0;
+
+    /// Index for anisotropy functions B
+    static constexpr size_t XZ = 1;
+
+    /// Index for anisotropy functions B
+    static constexpr size_t YZ = 2;
 
     /// Number of ghost elements required by STN (on the same level)
     static constexpr int FGN = get_stn<STN>::ghosts;
@@ -161,15 +167,40 @@ public: // STATIC MEMBERS
 
 protected: // MEMBERS
 
-    /// Output streams for debugging
-    DebugStream dbg_out1, dbg_out2, dbg_out3, dbg_out4;
+    /// Output stream for debugging (verbosity level 1)
+    DebugStream dbg_out1;
 
-    // Labels for variables to be stored into the DataWarehouse
+    /// Output stream for debugging (verbosity level 2)
+    DebugStream dbg_out2;
+
+    /// Output stream for debugging (verbosity level 3)
+    DebugStream dbg_out3;
+
+    /// Output stream for debugging (verbosity level 4)
+    DebugStream dbg_out4;
+
+    /// Label for subproblems in the DataWarehouse
     const VarLabel * subproblems_label;
-    const VarLabel * psi_label, * u_label;
+
+    /// Label for phase field in the DataWarehouse
+    const VarLabel * psi_label;
+
+    /// Label for non dimensional temperature field in the DataWarehouse
+    const VarLabel * u_label;
+
+    /// Label for the norm of the phase field gradient in the DataWarehouse
     const VarLabel * grad_psi_norm2_label;
-    const VarLabel * a_label, * a2_label;
+
+    /// Label for anisotropy field A in the DataWarehouse
+    const VarLabel * a_label;
+
+    /// Label for anisotropy field A^2 in the DataWarehouse
+    const VarLabel * a2_label;
+
+    /// Label for the the phase field gradient in the DataWarehouse
     std::array<const VarLabel *, DIM> grad_psi_label;
+
+    /// Label for anisotropy fields B in the DataWarehouse
     std::array<const VarLabel *, BSZ> b_label;
 
     /// Time step size
@@ -184,8 +215,11 @@ protected: // MEMBERS
     /// Anisotropy strength
     double epsilon;
 
-    /// Initial interface widths
-    double gamma_psi, gamma_u;
+    /// Initial phase field interface width
+    double gamma_psi;
+
+    /// Initial temperature field interface width
+    double gamma_u;
 
     /// Initial seed radius
     double r0;
@@ -228,6 +262,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     PureMetal ( const PureMetal & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     PureMetal & operator= ( const PureMetal & ) = delete;
 
 protected: // SETUP
@@ -1435,7 +1470,7 @@ template<VarType VAR, DimType DIM, StnType STN, bool AMR>
 template < bool MG >
 typename std::enable_if < MG, void >::type
 PureMetal<VAR, DIM, STN, AMR>::scheduleTimeAdvance_grad_psi (
-    const LevelP & ,
+    const LevelP &,
     SchedulerP &
 )
 {
@@ -2002,8 +2037,8 @@ PureMetal<VAR, DIM, STN, AMR>::task_refine_solution
 (
     const ProcessorGroup * myworld,
     const PatchSubset * patches_fine,
-    const MaterialSubset * ,
-    DataWarehouse * ,
+    const MaterialSubset *,
+    DataWarehouse *,
     DataWarehouse * dw_new
 )
 {
@@ -2036,8 +2071,8 @@ PureMetal<VAR, DIM, STN, AMR>::task_refine_grad_psi
 (
     const ProcessorGroup * myworld,
     const PatchSubset * patches_fine,
-    const MaterialSubset * ,
-    DataWarehouse * ,
+    const MaterialSubset *,
+    DataWarehouse *,
     DataWarehouse * dw_new
 )
 {
@@ -2072,8 +2107,8 @@ void
 PureMetal<VAR, DIM, STN, AMR>::task_coarsen_solution (
     const ProcessorGroup * myworld,
     const PatchSubset * patches_coarse,
-    const MaterialSubset * ,
-    DataWarehouse * ,
+    const MaterialSubset *,
+    DataWarehouse *,
     DataWarehouse * dw_new
 )
 {
@@ -2112,8 +2147,8 @@ PureMetal<VAR, DIM, STN, AMR>::task_error_estimate_grad_psi
 (
     const ProcessorGroup * myworld,
     const PatchSubset * patches,
-    const MaterialSubset * ,
-    DataWarehouse * ,
+    const MaterialSubset *,
+    DataWarehouse *,
     DataWarehouse * dw_new
 )
 {

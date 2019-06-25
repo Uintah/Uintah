@@ -1,0 +1,38 @@
+<Uintah_specification>
+  <Meta>
+    <title>benchmark03_nc_n064_k9e-05</title>
+  </Meta>
+  <SimulationComponent type="phasefield"/>
+  <PhaseField type="benchmark03">
+    <var>nc</var>
+    <delt>9e-05</delt>
+    <epsilon>0.18</epsilon>
+    <verbosity>0</verbosity>
+  </PhaseField>
+  <Time>
+    <maxTime>8400</maxTime>
+    <initTime>0.</initTime>
+    <delt_min>0.</delt_min>
+    <delt_max>1.</delt_max>
+    <timestep_multiplier>1.</timestep_multiplier>
+  </Time>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0.]</lower>
+        <upper>[6.28318530717959,1.,1.]</upper> <!-- [2*pi,1,1] -->
+        <resolution>[64,1,1]</resolution>
+        <patches>[2,1,1]</patches>
+      </Box>
+      <periodic>[1,1,0]</periodic>
+    </Level>
+  </Grid>
+  <DataArchiver>
+    <filebase>benchmark03_nc_n064_k9e-05.uda</filebase>
+    <outputInterval>0.05</outputInterval>
+    <checkpoint cycle="1825" interval="1"/>
+    <save label="u"/>
+    <save label="u0"/>
+    <save label="energy"/>
+  </DataArchiver>
+</Uintah_specification>

@@ -208,6 +208,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     amr_restrictor ( const amr_restrictor & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     amr_restrictor & operator= ( const amr_restrictor & ) = delete;
 
 public: // VIEW METHODS

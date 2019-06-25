@@ -64,6 +64,7 @@ template<typename Field, StnType STN, typename Problem, typename Index, BCF ... 
  * Adds to dw_view the possibility to compute finite-difference approximation of
  * of differential operations at boundary cells/points
  *
+ * @tparam T type of the field value at each point
  * @tparam Problem type of PhaseField problem
  * @tparam Index index_sequence of Field within Problem (first element is variable index,
  * following ones, if present, are the component index within the variable)
@@ -92,6 +93,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     bcfd_view ( const bcfd_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     bcfd_view & operator= ( const bcfd_view & ) = delete;
 
 }; // class bcfd_view
@@ -104,6 +106,8 @@ public: // CONSTRUCTORS/DESTRUCTOR
  * Adds to dw_view the possibility to compute finite-difference approximation of
  * of differential operations at boundary cells/points
  *
+ * @tparam T type of each component of the field value at each point
+ * @tparam N dimension of the vetor field
  * @tparam Problem type of PhaseField problem
  * @tparam I variable index within Problem
  * @tparam P list of BC, FC, and Patch::Face packs
@@ -156,11 +160,13 @@ private: // SINGLE INDEX METHODS
      * Instantiate a view and gather info from dw
      *
      * @tparam J component index
+     * @param dw DataWarehouse from which data is retrieved
      * @param label label of variable in the DataWarehouse
      * @param subproblems_label label of subproblems in the DataWarehouse
      * @param material index of material in the DataWarehouse
      * @param patch grid patch on which data is retrieved
      * @param bcs vector with info on the boundary conditions
+     * @param use_ghosts if ghosts value are to be retrieved
      * @return pointer to the newly created view
      */
     template<size_t J>
@@ -197,7 +203,7 @@ private: // INDEXED CONSTRUCTOR
      */
     template<size_t... J>
     bcfd_view (
-        index_sequence<J...>,
+        index_sequence<J...> _DOXYARG ( unused ),
         const typename Field::label_type & label,
         const VarLabel * subproblems_label,
         int material,
@@ -225,7 +231,7 @@ private: // INDEXED CONSTRUCTOR
      */
     template<size_t... J>
     bcfd_view (
-        index_sequence<J...>,
+        index_sequence<J...> _DOXYARG ( unused ),
         DataWarehouse * dw,
         const typename Field::label_type & label,
         const VarLabel * subproblems_label,
@@ -298,6 +304,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     bcfd_view ( const bcfd_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     bcfd_view & operator= ( const bcfd_view & ) = delete;
 
 }; // bcfd_view

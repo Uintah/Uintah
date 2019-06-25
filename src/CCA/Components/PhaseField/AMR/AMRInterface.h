@@ -52,12 +52,40 @@ namespace PhaseField
 template <VarType VAR, DimType DIM>
 struct AMRInterface
 {
-    template <VarType V = VAR> static inline IntVector get_coarser ( const Level * l, const IntVector & i )
+    /**
+     * @brief get index of the grid element on the coarser level closest to the
+     * given index
+     *
+     * @tparam V type of variable, thus grid element (cell or node)
+     * @param l fine level
+     * @param i fine level index
+     * @return coarse level index
+     */
+    template <VarType V = VAR>
+    static inline IntVector
+    get_coarser (
+        const Level * l,
+        const IntVector & i
+    )
     {
         return detail::amr_interface0<V>::get_coarser ( l, i );
     }
 
-    template <VarType V = VAR> static inline IntVector get_finer ( const Level * l, const IntVector & i )
+    /**
+     * @brief get index of the grid element on the finer level closest to the
+     * given index
+     *
+     * @tparam V type of variable, thus grid element (cell or node)
+     * @param l coarse level
+     * @param i coarse level index
+     * @return fine level index
+     */
+    template <VarType V = VAR>
+    static inline IntVector
+    get_finer (
+        const Level * l,
+        const IntVector & i
+    )
     {
         return detail::amr_interface0<V>::get_finer ( l, i );
     }

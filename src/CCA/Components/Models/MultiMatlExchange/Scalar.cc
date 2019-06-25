@@ -107,12 +107,10 @@ void ScalarExch::sched_AddExch_VelFC( SchedulerP            & sched,
                                       customBC_globalVars   * BC_globalVars,
                                       const bool recursion )
 {
-  std::string tName = "ScalarExch::sched_AddExch_VelFC";
-
-  Task* t = scinew Task( tName, this, &ScalarExch::addExch_VelFC,
+  Task* t = scinew Task( "ScalarExch::addExch_VelFC", this, &ScalarExch::addExch_VelFC,
                          BC_globalVars, recursion);
 
-  printSchedule( patches, dbgExch, tName );
+  printSchedule( patches, dbgExch, "ScalarExch::sched_AddExch_VelFC" );
 
   if(recursion) {
     t->requires(Task::ParentOldDW, Ilb->delTLabel,getLevel(patches));
@@ -120,8 +118,10 @@ void ScalarExch::sched_AddExch_VelFC( SchedulerP            & sched,
     t->requires(Task::OldDW,       Ilb->delTLabel,getLevel(patches));
   }
 
-  Ghost::GhostType  gac = Ghost::AroundCells;
-
+  Ghost::GhostType  gac   = Ghost::AroundCells;
+  Ghost::GhostType  gaf_X = Ghost::AroundFacesX;
+  Ghost::GhostType  gaf_Y = Ghost::AroundFacesY;
+  Ghost::GhostType  gaf_Z = Ghost::AroundFacesZ;
   //__________________________________
   // define parent data warehouse
   // change the definition of parent(old/new)DW
@@ -132,11 +132,11 @@ void ScalarExch::sched_AddExch_VelFC( SchedulerP            & sched,
   }
 
   // All matls
-  t->requires( pNewDW,      Ilb->sp_vol_CCLabel,  gac, 1);
-  t->requires( pNewDW,      Ilb->vol_frac_CCLabel,gac, 1);
-  t->requires( Task::NewDW, Ilb->uvel_FCLabel,    gac, 2);
-  t->requires( Task::NewDW, Ilb->vvel_FCLabel,    gac, 2);
-  t->requires( Task::NewDW, Ilb->wvel_FCLabel,    gac, 2);
+  t->requires( pNewDW,      Ilb->sp_vol_CCLabel,  gac,   1);
+  t->requires( pNewDW,      Ilb->vol_frac_CCLabel,gac,   1);
+  t->requires( Task::NewDW, Ilb->uvel_FCLabel,    gaf_X, 1);
+  t->requires( Task::NewDW, Ilb->vvel_FCLabel,    gaf_Y, 1);
+  t->requires( Task::NewDW, Ilb->wvel_FCLabel,    gaf_Z, 1);
 
   computesRequires_CustomBCs(t, "velFC_Exchange", Ilb, ice_matls,
                              BC_globalVars, recursion);
@@ -323,17 +323,20 @@ void ScalarExch::addExch_VelFC( const ProcessorGroup * pg,
 
     d_exchCoeff->getConstantExchangeCoeff( K, junk);
 
-    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gac   = Ghost::AroundCells;
+    Ghost::GhostType  gaf_X = Ghost::AroundFacesX;
+    Ghost::GhostType  gaf_Y = Ghost::AroundFacesY;
+    Ghost::GhostType  gaf_Z = Ghost::AroundFacesZ;
 
     for(int m = 0; m < d_numMatls; m++) {
       Material* matl = d_matlManager->getMaterial( m );
       int indx = matl->getDWIndex();
 
-      pNewDW->get( sp_vol_CC[m],    Ilb->sp_vol_CCLabel,  indx, patch,gac, 1 );
-      pNewDW->get( vol_frac_CC[m],  Ilb->vol_frac_CCLabel,indx, patch,gac, 1 );
-      new_dw->get( uvel_FC[m],      Ilb->uvel_FCLabel,    indx, patch,gac, 2 );
-      new_dw->get( vvel_FC[m],      Ilb->vvel_FCLabel,    indx, patch,gac, 2 );
-      new_dw->get( wvel_FC[m],      Ilb->wvel_FCLabel,    indx, patch,gac, 2 );
+      pNewDW->get( sp_vol_CC[m],    Ilb->sp_vol_CCLabel,  indx, patch, gac,   1 );
+      pNewDW->get( vol_frac_CC[m],  Ilb->vol_frac_CCLabel,indx, patch, gac,   1 );
+      new_dw->get( uvel_FC[m],      Ilb->uvel_FCLabel,    indx, patch, gaf_X, 1 );
+      new_dw->get( vvel_FC[m],      Ilb->vvel_FCLabel,    indx, patch, gaf_Y, 1 );
+      new_dw->get( wvel_FC[m],      Ilb->wvel_FCLabel,    indx, patch, gaf_Z, 1 );
 
       new_dw->allocateAndPut( uvel_FCME[m],  Ilb->uvel_FCMELabel, indx, patch );
       new_dw->allocateAndPut( vvel_FCME[m],  Ilb->vvel_FCMELabel, indx, patch );

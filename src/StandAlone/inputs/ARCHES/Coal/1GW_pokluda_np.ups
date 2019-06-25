@@ -165,7 +165,7 @@
     <save label="adiabaticenthalpy" table_lookup="true"/>
     <save label="N2" table_lookup="true"/>
     <save label="mixture_molecular_weight" table_lookup="true"/>
-    <checkpoint cycle="2" timestepInterval="3"/>
+    <checkpoint cycle="1" timestepInterval="3"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
@@ -1563,11 +1563,14 @@
           <doConv>true</doConv>
           <model label="weight_os_src"/>
           <initialization type="env_constant">
-            <env_constant qn="0" value="5.68549425955e-05">
+            <env_constant qn="0" value="5.68549425955e+08">
+	    <!-- <env_constant qn="0" value="5.68549425955e-05"> -->
             </env_constant>
-            <env_constant qn="1" value="1.29937603906e-06">
+            <env_constant qn="1" value="1.29937603906e+07">
+	    <!-- <env_constant qn="1" value="1.29937603906e-06"> -->
             </env_constant>
-            <env_constant qn="2" value="2.88773356254e-09">
+            <env_constant qn="2" value="2.88773356254e+04">
+	    <!-- <env_constant qn="2" value="2.88773356254e-09"> -->
             </env_constant>
           </initialization>
           <scaling_const>[56854942595.5,1299376039.06,2887733.56254]</scaling_const>
@@ -1738,7 +1741,7 @@
             <thermal_cond_model_type>hadley</thermal_cond_model_type>
             <enamel_deposit_porosity>0.8</enamel_deposit_porosity>
             <sb_deposit_porosity>0.5</sb_deposit_porosity>
-            <coal_name>illinois_no6</coal_name>
+            <coal_name>indonesian</coal_name>
             <frenkel_constant>1.225</frenkel_constant>
             <deposit_velocity_name>dep_velocity</deposit_velocity_name>
             <enamel_ash_composition>[39.36,25.49, 7.89,  10.12, 2.46, 0.0, 1.09, 4.10]</enamel_ash_composition>

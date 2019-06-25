@@ -59,6 +59,7 @@ protected: // CONSTRUCTOR/DESTRUCTOR
     dw_interface1 ( const dw_interface1 & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     dw_interface1 & operator= ( const dw_interface1 & ) = delete;
 
 public:
@@ -68,10 +69,15 @@ public:
      *
      * @param p grid patch
      * @param pt point coordinates
-     * @param[out] id grid index
+     * @param[out] id node index
      * @return if point has been found within patch
      */
-    static inline bool find_point ( const Patch * p, const Point & pt, IntVector & id )
+    static inline bool
+    find_point (
+        const Patch * p,
+        const Point & pt,
+        IntVector & id
+    )
     {
         bool res = p->findCell ( pt, id );
         Vector pos = 2. * ( p->getNodePosition ( id ) - pt );

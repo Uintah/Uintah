@@ -8,7 +8,7 @@
 <Uintah_Include>
 
 <Parameters            spec="OPTIONAL NO_DATA"
-                                 attribute1="variable OPTIONAL STRING 'implicitPressure'" >
+                                 attribute1="variable OPTIONAL STRING" >
   <criteria            spec="OPTIONAL STRING 'Absolute absolute Relative relative'" />
   <initial_tolerance   spec="OPTIONAL DOUBLE 'positive'"/>
   <jump                spec="OPTIONAL INTEGER" />
@@ -18,15 +18,15 @@
   <npost               spec="OPTIONAL INTEGER" />
   <npre                spec="OPTIONAL INTEGER" />
   <outputEquations     spec="OPTIONAL BOOLEAN" />
-  <preconditioner      spec="OPTIONAL STRING 'none, pfmg, smg,, sparsemsg,jacobi,diagonal'" />
+  <preconditioner      spec="OPTIONAL STRING 'None,none,SMG,smg,PFMG,pfmg,SparseMSG,sparsemsg,Jacobi,jacobi,Diagonal,diagonal,AMG,amg,BoomerAMG,boomeramg,FAC,fac'" />
   <precond_maxiters    spec="OPTIONAL INTEGER 'positive'" />
   <precond_tolerance   spec="OPTIONAL DOUBLE" />
   <relax_type          spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric -->
   <setupFrequency      spec="OPTIONAL INTEGER" />
   <skip                spec="OPTIONAL INTEGER" />
   <solveFrequency      spec="OPTIONAL INTEGER" />
-  <solver              spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, PCG, pcg, Hybrid, hybrid, GMRES, gmres amg'" />
-  <tolerance           spec="REQUIRED DOUBLE 'positive'" />
+  <solver              spec="OPTIONAL STRING 'SMG,smg,PFMG,pfmg,SparseMSG,sparsemsg,CG,cg,PCG,pcg,conjugategradient,Hybrid,hybrid,GMRES,gmres,AMG,amg,BoomerAMG,boomeramg,FAC,fac'" />
+  <tolerance           spec="OPTIONAL DOUBLE 'positive'" />
   <updateCoefFrequency spec="OPTIONAL INTEGER" />
 
 </Parameters>

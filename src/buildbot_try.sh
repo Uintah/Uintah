@@ -7,14 +7,12 @@
 #
 # Before you can run this script, the "buildbot" package must be
 # installed on your computer.
-
 #
 # - On Debian (as root) you can run: apt-get install buildbot
 #
 #
 # Other caveats:
 #
-
 # - You can't run the try if you have new files in your tree...  The
 #     only way around this is to "svn commit" the new files first.
 #
@@ -40,63 +38,77 @@
 
 # 2. If you are adding new files they must be checked in first.
 
-# If you want the the gui to be the default uncomment out this line:
-#set argv = "gui"
-
 #______________________________________________________________________
 #
-# Have the user choose a try server(s)
 set possibleServers = ("opt-full-try" "dbg-full-try" "opt-gpu-try")
 
 set BUILDERS = ""
 set CREATE_PATCH = false
+set MY_PATCH     = false
 
 # No args so all tests
+
 if ($#argv == 0) then
   foreach server ($possibleServers )
     set BUILDERS = "$BUILDERS --builder=$server"
   end
-else
-  foreach arg ( $argv )
-    if( $arg == "patch" ) then
-      set CREATE_PATCH = true
-    else if( $arg == "all" ) then
-      foreach server ($possibleServers )
-        set BUILDERS = "$BUILDERS --builder=$server"
-      end
-    else if( $arg == "opt" ) then 
-        set BUILDERS = "$BUILDERS --builder=opt-full-try"
-    else if( $arg == "debug" ) then
-        set BUILDERS = "$BUILDERS --builder=dbg-full-try"
-    else if( $arg == "gpu" ) then
-        set BUILDERS = "$BUILDERS --builder=opt-gpu-try"
-    else # gui
-      set list = ""
-      foreach comp ( $possibleServers[*] )
-        set list="$list $comp - off,"
-      end
-      set list = "$list All - off"
-
-      set selectedServers = `dialog --stdout --separate-output --checklist "Select the buildbot server(s)" 15 40 15 $list`
-
-      # remove quotation marks
-      set selectedServers = `echo $selectedServers | tr -d '"'`
-
-      # bullet proofing
-      if ( $#selectedServers == "0" ) then
-        echo ""
-        echo "Cancel selected... Goodbye."
-        echo ""
-        exit    
-      endif
-
-      # define the builders
-      foreach server ($selectedServers )
-        set BUILDERS = "$BUILDERS --builder=$server"
-      end
-    endif
-  end
 endif
+
+#__________________________________
+# parse inputs
+while ( $#argv )
+  #echo "($1)"
+
+  # remove punctuation chars and convert to lowercase
+  set arg = `echo $1 | tr '[:upper:]' '[:lower:]' | tr -d '[:punct:]'`
+
+  switch ($arg:q)
+    case createpatch:
+      set CREATE_PATCH = true
+      shift
+      breaksw
+
+    case mypatch:
+      set MY_PATCH = true
+      set PATCHFILE = $2
+      shift; shift
+      breaksw
+
+    case opt:
+      set BUILDERS = "$BUILDERS --builder=opt-full-try"
+      shift
+      breaksw
+    case d*b*g:         # debug or dbg
+      set BUILDERS = "$BUILDERS --builder=dbg-full-try"
+      shift
+      breaksw
+
+    case gpu:
+      set BUILDERS = "$BUILDERS --builder=opt-gpu-try"
+      shift
+      breaksw
+
+    case all:
+      foreach server ($possibleServers)
+        set BUILDERS = "$BUILDERS --builder=$server"
+      end  
+      shift
+      breaksw
+    default:
+      echo " Error parsing inputs."
+      echo " Usage: buildbot_try.sh   [options]"
+      echo "             Options:"
+      echo "              opt                       run opt-full-try server"
+      echo "              debug/dbg                 run dbg-full-try server"
+      echo "              gpu                       run opt-gpu-try server"
+      echo "              all                       run opt + dbg + gpu try servers"
+      echo "              create_patch              run svn diff on src/ and submit that patch"
+      echo "              myPatch      <patchFile>  submit the patchfile to the try servers"
+      echo "   Now exiting"
+      exit(1)
+      breaksw
+  endsw
+end        
 
 #______________________________________________________________________
 #
@@ -118,6 +130,24 @@ if( $CREATE_PATCH == "true" ) then
   
   set PATCH = "--diff=buildbot_patch.txt --repository=https://gforge.sci.utah.edu/svn/uintah/trunk/src" 
 endif
+#__________________________________
+# use a user created patch
+
+if( $MY_PATCH == "true" ) then
+  if( ! -e $PATCHFILE ) then
+    echo "  Error:  Could not find the patch file $PATCHFILE"
+    exit 1
+  endif
+  
+  set PATCH = "--diff=$PATCHFILE --repository=https://gforge.sci.utah.edu/svn/uintah/trunk/src"
+endif
+
+#__________________________________
+
+echo "  PATCH $PATCH"
+echo "  BUILDERS: $BUILDERS"
+
+#__________________________________
 
 buildbot --verbose try \
          --connect=pb \
@@ -128,6 +158,8 @@ buildbot --verbose try \
          --topdir=. \
          --who=`whoami` \
          $PATCH $BUILDERS
+
+echo $status
 
 # cleanup
 if( $CREATE_PATCH == "true" ) then

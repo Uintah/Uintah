@@ -243,6 +243,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     amr_interpolator ( const amr_interpolator & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     amr_interpolator & operator= ( const amr_interpolator & ) = delete;
 
 public: // VIEW METHODS

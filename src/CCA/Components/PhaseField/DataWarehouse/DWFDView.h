@@ -108,6 +108,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     DWFDView ( const DWFDView & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     DWFDView & operator= ( const DWFDView & ) = delete;
 
 }; // class DWFDView

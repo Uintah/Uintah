@@ -80,6 +80,8 @@ private: // TYPES
 
 private: // FRIENDS
 
+    /// Allow friend base View class to constructor their virtual (with virtual
+    /// support) conterparts
     friend View;
 
 private: // MEMBERS
@@ -119,6 +121,7 @@ public: // DESTRUCTOR
     virtual_view ( const virtual_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     virtual_view & operator= ( const virtual_view & ) = delete;
 
 public: // VIEW METHODS

@@ -58,7 +58,10 @@ class get_bcs
      * identified by the given label on the given patch
      *
      * @tparam F list of faces to check
+     *
+     * @param unused to allow template argument deduction
      * @param patch grid patch to be checked
+     * @param child child index of face boundary condition (as per input file)
      * @param material problem material index
      * @param label variable label to check
      * @param c2f which fine/coarse interface conditions to use on each variable
@@ -68,7 +71,7 @@ class get_bcs
     template < size_t... F >
     inline static std::array < BCInfo<Field>, get_dim<DIM>::face_end >
     exec (
-        index_sequence<F...>,
+        index_sequence<F...> _DOXYARG ( unused ),
         const Patch * patch,
         const int & child,
         const int & material,

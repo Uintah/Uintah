@@ -156,6 +156,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     piecewise_view ( const piecewise_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     piecewise_view & operator= ( const piecewise_view & ) = delete;
 
 public: // VIEW METHODS

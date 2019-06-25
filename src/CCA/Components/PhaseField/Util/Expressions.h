@@ -49,6 +49,7 @@ namespace PhaseField
 template<typename T, T... I>
 struct integer_sequence
 {
+    /// value type
     typedef T value_type;
 
     /**
@@ -82,7 +83,11 @@ using index_sequence = integer_sequence<size_t, I...>;
  * @tparam I a non-type parameter pack representing the sequence
  */
 template<typename T, size_t N, T... I>
-struct make_integer_sequence _DOXYIGN ( : make_integer_sequence < T, N - 1, N - 1, I... > {} );
+struct make_integer_sequence
+/// @cond DOXYIGNORE
+        : make_integer_sequence < T, N - 1, N - 1, I... >
+/// @endcond
+{};
 
 /**
  * A helper alias template make_integer_sequence is defined to simplify

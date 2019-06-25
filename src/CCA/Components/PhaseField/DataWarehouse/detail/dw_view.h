@@ -97,6 +97,7 @@ private: // TYPES
 
 private: // FRIENDS
 
+    /// Grant virtual_view's (with virtual support) wrapper access
     friend virtual_view<dw_view, Field>;
 
 private: // MEMBERS
@@ -144,8 +145,7 @@ private: // COPY CONSTRUCTOR
 #else
         m_view ( m_variable ? m_variable->getKokkosView() : nullptr )
 #endif
-    {
-    }
+    {}
 
 private: // METHODS
 
@@ -158,6 +158,7 @@ private: // METHODS
      * @param dw DataWarehouse from which data is retrieved
      * @param patch grid patch to retrieve data for
      * @param use_ghosts if ghosts value are to be retrieved
+     * @return new instance of Variable
      */
     template<bool is_const>
     typename std::enable_if<is_const, Variable<VAR, T> *>::type
@@ -265,9 +266,9 @@ private: // METHODS
     typename std::enable_if < !is_const, Variable<VAR, T> * >::type
     create_region_variable (
         DataWarehouse * _DOXYARG ( dw ),
-        const Level * /*level*/,
-        const IntVector & /*low*/,
-        const IntVector & /*high*/,
+        const Level * _DOXYARG ( level ),
+        const IntVector & _DOXYARG ( low ),
+        const IntVector & _DOXYARG ( high ),
         bool _DOXYARG ( use_ghosts )
     )
     {
@@ -333,6 +334,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     dw_view ( const dw_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     dw_view & operator= ( const dw_view & ) = delete;
 
 public: // VIEW METHODS
@@ -507,6 +509,20 @@ public: // DW METHODS
 
 }; // dw_view
 
+/**
+ * @brief Class for accessing variables from the DataWarehouse
+ * (VectorField implementation)
+ *
+ * detail implementation of DataWarehouse variable wrapping
+ *
+ * @remark constant view must use fields with const value type
+ *
+ * @tparam T type of each component of the field value at each point
+ * @tparam N dimension of the vetor field
+ * @tparam VAR type of variable representation
+ * @tparam DIM problem dimension
+ * @tparam GN number of ghosts required
+ */
 template<typename T, size_t N, VarType VAR, DimType DIM, size_t GN>
 class dw_view < VectorField<T, N>, VAR, DIM, GN >
     : virtual public view < VectorField<T, N> >
@@ -602,6 +618,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     dw_view ( const dw_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     dw_view & operator= ( const dw_view & ) = delete;
 
 public: // VIEW METHODS

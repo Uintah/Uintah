@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-from .runSusTests import getTestName
+from runSusTests import getTestName
 import os
 import sys
 import importlib

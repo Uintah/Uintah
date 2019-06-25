@@ -31,22 +31,35 @@
 #ifndef Packages_Uintah_CCA_Components_PhaseField_Util_Definitions_h
 #define Packages_Uintah_CCA_Components_PhaseField_Util_Definitions_h
 
-#define _DOXYBDY(x)
-#define _DOXYARG(x)
-#define _DOXYIGN(x)
+#ifndef _DOXYGEN
+#   define _DOXYGEN 0
+#   define _DOXYARG(x)
+#endif
 
 #include <sci_defs/kokkos_defs.h>
+#include <sci_defs/hypre_defs.h>
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Ghost.h>
 
+#ifdef HAVE_HYPRE
+#   include <Core/Grid/Variables/Stencil7.h>
+#endif
+
+/// @cond DOXYIGNORE
 #define TODO { ASSERTFAIL ( "TO BE IMPLEMENTED" ); }
 #define VIRT { ASSERTFAIL ( "VIRTUAL METHOD" ); }
+/// @endcond
 
 namespace Uintah
 {
 namespace PhaseField
 {
+
+namespace detail
+{
+template <typename Field> class view;
+}
 
 /**
  * @brief Variable Type
@@ -108,8 +121,8 @@ enum FCIType : size_t
     I1 = 2  ///< Linear Interpolation in each direction (1st order: 2 DIM points stencil)
 };
 
-/// Constant to be used as template parameter to enable adptive mesh refinement
-static constexpr bool AMR = true;
+/// Constant to be used as template parameter to enable adaptive mesh refinement
+static constexpr bool AMR { true };
 
 /**
  * @brief Boundary Conditions
@@ -155,9 +168,43 @@ enum class FC : size_t
     None        = 0x00000000,       ///< Continuity across interfaces is not enforced
     FC0         = I0 * 0x00100000,  ///< Piece-wise interpolation is used to compute the value on fine levels ghosts from the old solution at coarser levels @remark to be used with HypreFACSolver @remark should be used with NC variables since no interpolation is required
     FC1         = I1 * 0x00100000,  ///< Linear interpolation in each direction is used to compute the value on fine levels ghosts from the old solution at coarser levels @remark to be used with HypreFACSolver @remark should be used with CC variables since interpolation reduces the approximation error of solution derivatives
+#ifdef HAVE_HYPRE
+    FCNew       = 0x00010000,       ///< Continuity on fine levels is enforced using the new solution computed at coarser levels
+    FC0New      = FC0 + FCNew,      ///< Piece-wise interpolation is used to compute the value on fine levels ghosts from the new solution computed at coarser levels @remark to be used with HypreSolver @remark should be used with NC variables since no interpolation is required
+    FC1New      = FC1 + FCNew,      ///< Linear interpolation in each direction is used to compute the value on fine levels ghosts from the new solution computed at coarser levels @remark to be used with HypreSolver @remark should be used with CC variables since interpolation reduces the approximation error of solution derivatives
+#endif
     FCSimple    = FC0 + 0x00020000, ///< 2 elements interpolation for 2D problems and CC variables
     FCLinear    = FC0 + 0x00030000, ///< 3 elements extrapolation for 2D problems and CC variables
     FCBilinear  = FC0 + 0x00040000  ///< 4 elements interpolation for 2D problems and CC variables
+};
+
+/**
+ * @brief Time Discretization Schemes
+ *
+ * Enumeration for different time discretization schemes.
+ * @remark They are intended to be used as masks
+ */
+enum class TS : size_t
+{
+    Unknown       = 0x00000000, ///< Unknown time scheme
+
+    Explicit      = 0x01000000, ///< Explicit time schemes mask
+    ForwardEuler  = 0x01000001, ///< Explicit forward Euler time scheme
+
+#ifdef HAVE_HYPRE
+    SemiImplicit  = 0x02000000, ///< SemiImplicit time schemes mask
+    SemiImplicit0 = 0x02000001, ///< SemiImplicit0 time scheme (Application dependent)
+    SemiImplicit1 = 0x02000002, ///< SemiImplicit1 time scheme (Application dependent)
+    SemiImplicit2 = 0x02000003, ///< SemiImplicit0 time scheme (Application dependent)
+    SemiImplicit3 = 0x02000004, ///< SemiImplicit0 time scheme (Application dependent)
+    SemiImplicit4 = 0x02000005, ///< SemiImplicit0 time scheme (Application dependent)
+    SemiImplicit5 = 0x02000006, ///< SemiImplicit0 time scheme (Application dependent)
+    SemiImplicit6 = 0x02000007, ///< SemiImplicit0 time scheme (Application dependent)
+
+    Implicit      = 0x04000000, ///< Implicit time schemes mask
+    BackwardEuler = 0x04000001, ///< Implicit backward Euler time scheme
+    CrankNicolson = 0x04000002  ///< Implicit Crank-Nicolson time scheme
+#endif
 };
 
 /**
@@ -178,10 +225,13 @@ using BCF = size_t;
  * @tparam VAR type of variable representation
  */
 template<VarType VAR> struct get_var
-_DOXYBDY (
+#if _DOXYGEN
+{
     /// GhostType to be used with given VarType VAR
     static constexpr Ghost::GhostType ghost_type;
-);
+}
+#endif
+;
 
 /**
  * @brief VarType Helper (CC Implementation)
@@ -254,7 +304,8 @@ struct get_dim
  * @tparam STN finite-differences stencil
  */
 template<StnType STN> struct get_stn
-_DOXYBDY (
+#if _DOXYGEN
+{
     /// DimType corresponding to the given stencil
     static constexpr DimType dim;
 
@@ -263,7 +314,9 @@ _DOXYBDY (
 
     /// type of the stencil to be used as template parameter for Variable
     template<typename T> using type;
-            );
+}
+#endif
+;
 
 /**
  * @brief StnType Helper (P3 implementation)
@@ -280,6 +333,11 @@ struct get_stn<P3>
 
     /// number of ghosts to be used with STN = P3
     static constexpr int ghosts = 1;
+
+#ifdef HAVE_HYPRE
+    /// type of the stencil to be used as template parameter for Variable with STN = P3
+    template<typename T> using type = typename std::conditional< std::is_same< typename std::remove_const<T>::type , double>::value, Stencil7, void * >::type;
+#endif
 };
 
 /**
@@ -297,6 +355,11 @@ struct get_stn<P5>
 
     /// number of ghosts to be used with STN = P5
     static constexpr int ghosts = 1;
+
+#ifdef HAVE_HYPRE
+    /// type of the stencil to be used as template parameter for Variable with STN = P5
+    template<typename T> using type = typename std::conditional < std::is_same< typename std::remove_const<T>::type, double>::value, Stencil7, void * >::type;
+#endif
 };
 
 /**
@@ -314,6 +377,11 @@ struct get_stn<P7>
 
     /// number of ghosts to be used with STN = P7
     static constexpr int ghosts = 1;
+
+#ifdef HAVE_HYPRE
+    /// type of the stencil to be used as template parameter for Variable with STN = P7
+    template<typename T> using type = typename std::conditional <  std::is_same< typename std::remove_const<T>::type, double>::value, Stencil7, void * >::type;
+#endif
 };
 
 /**
@@ -331,6 +399,11 @@ struct get_stn<EU>
 
     /// number of ghosts to be used with STN = EU
     static constexpr int ghosts = 1;
+
+#ifdef HAVE_HYPRE
+    /// type of the stencil to be used as template parameter for Variable with STN = EU
+    template<typename T> using type = typename std::conditional < std::is_same< typename std::remove_const<T>::type, double>::value, Stencil7, void >::type;
+#endif
 };
 
 /**
@@ -354,8 +427,10 @@ struct get_dir
     static constexpr Patch::FaceType plus_face = ( Patch::FaceType ) ( 2 * DIR + 1 );
 };
 
+/// @cond DOXYIGNORE
 template <DirType DIR> constexpr Patch::FaceType get_dir<DIR>::minus_face;
 template <DirType DIR> constexpr Patch::FaceType get_dir<DIR>::plus_face;
+/// @endcond
 
 /**
  * @brief FCIType Helper
@@ -365,10 +440,13 @@ template <DirType DIR> constexpr Patch::FaceType get_dir<DIR>::plus_face;
  * @tparam FCI order of interpolation
  */
 template <FCIType FCI> struct get_fci
-_DOXYBDY (
+#if _DOXYGEN
+{
     /// number of cells/nodes required for interpolation
     static constexpr int elems;
-);
+}
+#endif
+;
 
 /**
  * @brief FCIType Helper (I0 Implementation)
@@ -426,12 +504,15 @@ struct get_face
  * @tparam B type of boundary conditions
  */
 template<BC B> struct get_bc
-_DOXYBDY (
+#if _DOXYGEN
+{
     /// @brief type of bc rhs for the given type of boundary conditions
     /// Is the type used for handling the rhs in the boundary condition equation
     /// @tparam Field field type of the variable on which the condition is applied
     template<typename Filed> using value_type;
-            );
+}
+#endif
+;
 
 /**
  * @brief BC Helper (Dirichlet implementation)
@@ -467,11 +548,13 @@ struct get_bc<BC::Neumann>
     template<typename Field> using value_type = typename Field::value_type;
 };
 
-namespace detail
-{
-template <typename Field> class view;
-}
-
+/**
+ * @brief BC Helper (FineCoarseInterface implementation)
+ *
+ * FineCoarseInterface implementation of the helper struct to get expressions
+ * dependent on the given type of boundary conditions
+ * @implements get_bc < BC >
+ */
 template<>
 struct get_bc<BC::FineCoarseInterface>
 {
@@ -523,6 +606,8 @@ struct get_bcf
  *
  * Converts the type of variable representation to the corresponding string as
  * used by factory constructors
+ * @param var value to serialize
+ * @return serialized string
  */
 inline std::string
 var_to_str (
@@ -547,6 +632,8 @@ var_to_str (
  *
  * Converts the problem dimension to the corresponding string as used by factory
  * constructors
+ * @param dim value to serialize
+ * @return serialized string
  */
 inline std::string
 dim_to_str (
@@ -571,6 +658,8 @@ dim_to_str (
  *
  * Converts the finite-difference stencil to the corresponding string as used by
  * factory constructors
+ * @param stn value to serialize
+ * @return serialized string
  */
 inline std::string
 stn_to_str (
@@ -598,6 +687,8 @@ stn_to_str (
  *
  * Converts the type of variable representation to the corresponding string as
  * used by factory constructors
+ * @param dir value to serialize
+ * @return serialized string
  */
 inline std::string
 dir_to_str (
@@ -622,13 +713,15 @@ dir_to_str (
  *
  * Converts the type of boundary conditions to the corresponding string as
  * used by factory constructors
+ * @param bc value to serialize
+ * @return serialized string
  */
 inline std::string
 bc_to_str (
-    BC value
+    BC bc
 )
 {
-    switch ( value )
+    switch ( bc )
     {
     case BC::None:
         return "None";
@@ -650,13 +743,15 @@ bc_to_str (
  *
  * Converts the type of fine/coarse interface conditions to the corresponding
  * string as used by factory constructors
+ * @param fc value to serialize
+ * @return serialized string
  */
 inline std::string
 fc_to_str (
-    FC value
+    FC fc
 )
 {
-    switch ( value )
+    switch ( fc )
     {
     case FC::None:
         return "None";
@@ -670,6 +765,12 @@ fc_to_str (
         return "FCBilinear";
     case FC::FC1:
         return "FC1";
+#ifdef HAVE_HYPRE
+    case FC::FC0New:
+        return "FC0New";
+    case FC::FC1New:
+        return "FC1New";
+#endif
     default:
         return "Unknown";
     }
@@ -680,6 +781,8 @@ fc_to_str (
  *
  * Converts the string as used in input files to the corresponding type of
  * boundary conditions
+ * @param value value to deserialize
+ * @return parsed value
  */
 inline BC
 str_to_bc (
@@ -696,6 +799,8 @@ str_to_bc (
  *
  * Converts the string as used in input files to the corresponding type of
  * fine/coarse interface condition
+ * @param value value to deserialize
+ * @return parsed value
  */
 inline FC
 str_to_fc (
@@ -707,7 +812,39 @@ str_to_fc (
     if ( value == "FCLinear" ) return FC::FCLinear;
     if ( value == "FCBilinear" ) return FC::FCBilinear;
     if ( value == "FC1" ) return FC::FC1;
+#ifdef HAVE_HYPRE
+    if ( value == "FC0New" ) return FC::FC0New;
+    if ( value == "FC1New" ) return FC::FC1New;
+#endif
     return FC::None;
+}
+
+/**
+ * @brief std::string to TS
+ *
+ * Converts the string as used in input files to the corresponding time
+ * discretization scheme
+ * @param value value to deserialize
+ * @return parsed value
+ */
+inline TS
+str_to_ts (
+    const std::string & value
+)
+{
+    if ( value == "forward_euler" )   return TS::ForwardEuler;
+#ifdef HAVE_HYPRE
+    if ( value == "semi_implicit_0" ) return TS::SemiImplicit0;
+    if ( value == "semi_implicit_1" ) return TS::SemiImplicit1;
+    if ( value == "semi_implicit_2" ) return TS::SemiImplicit2;
+    if ( value == "semi_implicit_3" ) return TS::SemiImplicit3;
+    if ( value == "semi_implicit_4" ) return TS::SemiImplicit4;
+    if ( value == "semi_implicit_5" ) return TS::SemiImplicit5;
+    if ( value == "semi_implicit_6" ) return TS::SemiImplicit6;
+    if ( value == "backward_euler" )  return TS::BackwardEuler;
+    if ( value == "crank_nicolson" )  return TS::CrankNicolson;
+#endif
+    return TS::Unknown;
 }
 
 /**
@@ -728,6 +865,32 @@ operator & (
     return ( size_t ) a & size_t ( b );
 }
 
+/**
+ * @brief Check TS masks
+ *
+ * Evaluate if a given TS matches a required scheme or type of scheme
+ * @param a TS to check
+ * @param b TS required scheme or type of scheme
+ * @return check result
+ */
+constexpr bool
+operator & (
+    TS a,
+    TS b
+)
+{
+    return ( size_t ) a & size_t ( b );
+}
+
+/**
+ * @brief Add FC to masks
+ *
+ * Set FC bits of the given mask
+ * @tparam A mask type
+ * @param a given mask
+ * @param b FC to set
+ * @return new BCF mask
+ */
 template<typename A>
 constexpr BCF
 operator | (
@@ -738,6 +901,15 @@ operator | (
     return ( BCF ) a | ( BCF ) ( b );
 }
 
+/**
+ * @brief Add BC to masks
+ *
+ * Set BC bits of the given mask
+ * @tparam A mask type
+ * @param a given mask
+ * @param b BC to set
+ * @return new BCF mask
+ */
 template<typename A>
 constexpr BCF
 operator | (
@@ -748,6 +920,15 @@ operator | (
     return ( BCF ) a | ( BCF ) ( b );
 }
 
+/**
+ * @brief Add Patch::FaceType to masks
+ *
+ * Set Patch::FaceType bits of the given mask
+ * @tparam A mask type
+ * @param a given mask
+ * @param b Patch::FaceType to set
+ * @return new BCF mask
+ */
 template<typename A>
 constexpr BCF
 operator | (

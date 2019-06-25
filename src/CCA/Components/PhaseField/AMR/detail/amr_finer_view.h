@@ -257,6 +257,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
     amr_finer_view ( const amr_finer_view & ) = delete;
 
     /// Prevent copy (and move) assignment
+    /// @return deleted
     amr_finer_view & operator= ( const amr_finer_view & ) = delete;
 
 public: // VIEW METHODS

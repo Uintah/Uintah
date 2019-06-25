@@ -54,10 +54,22 @@ namespace detail
  */
 template<typename Field>
 class get_bc
-    _DOXYBDY (
-        /// Execute the functor
-        inline static BCInfo<Field> exec = 0;
-    );
+#if _DOXYGEN
+{
+    /// Execute the functor
+    /// @return Retrieved boundary conditions information
+    inline static BCInfo<Field> exec (
+        Patch const *,
+        const Patch::FaceType &,
+        const int &,
+        const int &,
+        const std::array<const VarLabel *, N> &,
+        const std::map<std::string, FC> *,
+        bool &
+    ) = 0;
+}
+#endif
+;
 
 /**
  * @brief Get boundary conditions on one face static functor
@@ -73,6 +85,7 @@ class get_bc
 template<typename T>
 class get_bc< ScalarField<T> >
 {
+    /// Type of field
     using Field = ScalarField<T>;
 
 public:
@@ -167,6 +180,7 @@ public:
 template<typename T, size_t N>
 class get_bc < VectorField<T, N> >
 {
+    /// Type of field
     using Field = VectorField<T, N>;
 
     /**

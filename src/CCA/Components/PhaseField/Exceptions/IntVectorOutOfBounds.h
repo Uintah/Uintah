@@ -54,6 +54,7 @@ private: // MEMBERS
 public: // CONSTRUCTORS/DESTRUCTOR
 
     /// copy assignment
+    /// @return deleted
     IntVectorOutOfBounds & operator= ( const IntVectorOutOfBounds );
 
     /// copy constructor
@@ -80,9 +81,11 @@ public: // CONSTRUCTORS/DESTRUCTOR
 public: // METHODS
 
     /// get error message
+    /// @return C style string 
     virtual const char * message() const;
 
     /// get exception name
+    /// @return C style string 
     virtual const char * type() const;
 
 }; // class IntVectorOutOfBounds

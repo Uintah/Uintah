@@ -27,12 +27,12 @@ VARs=(CC NC)
 STNs=(P5 P7)
 DIMs=(2 3)
 PPPs=(
-  "PureMetalProblem"
-  "PureMetalProblem"
+  "PureMetalProblem;HeatProblem"
+  "PureMetalProblem;HeatProblem"
 )
 NFFs=(
-  "4"
-  "4"
+  "4;1"
+  "4;1"
 )
 DIRs=(x y z)
 SIGNs=(minus plus)
