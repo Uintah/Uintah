@@ -19,16 +19,24 @@ namespace Uintah{
 
     std::vector<std::string> retrieve_task_subset( const std::string subset ) {
 
+    //SCALARS--------------------------------------------------------------------------------
       if ( subset == "scalar_rhs_builders" ){
         return _scalar_builders;
+      } else if ( subset == "prop_scalar_rhs_builders"){
+        return _prop_scalar_builders;
+      } else if ( subset == "prop_diffusion_flux_builders"){
+        return _prop_scalar_diffusion;
+      } else if ( subset == "diffusion_flux_builders"){
+        return _scalar_diffusion;
+      } else if ( subset == "prop_scalar_update"){
+        return _prop_scalar_update;
       } else if ( subset == "scalar_update" ){
-        return _scalar_up;
+        return _scalar_update;
       } else if ( subset == "rk_time_ave" ){
         return _rk_time_ave;
-      } else if ( subset == "scalar_fe_update" ){
-        return _scalar_update;
-      } else if ( subset == "scalar_ssp" ){
-        return _scalar_ssp;
+      } else if ( subset == "prop_rk_time_ave"){
+        return _prop_rk_time_ave;
+    //MOMENTUM------------------------------------------------------------------------------
       } else if ( subset == "momentum_stress_tensor" ){
         return _momentum_stress_tensor;
       } else if ( subset == "mom_rhs_builders"){
@@ -37,20 +45,27 @@ namespace Uintah{
         return _momentum_update;
       } else if ( subset == "mom_ssp"){
         return _momentum_spp;
-      } else if ( subset == "momentum_construction" ){
-        return _momentum_solve;
+      } else if ( subset == "momentum_conv" ){
+        return _momentum_conv;
+    //PRESSURE------------------------------------------------------------------------------
       } else if ( subset == "pressure_eqn" ){
         return _pressure_eqn;
-      } else if ( subset == "dqmom_eqns"){
-        return _dqmom_eqns;
+    //DQMOM---------------------------------------------------------------------------------
+      } else if ( subset == "dqmom_rhs_builders"){
+        return _dqmom_builders;
       } else if ( subset == "dqmom_diffusion_flux_builders"){
         return _dqmom_compute_diff;
-      } else if ( subset == "diffusion_flux_builders"){
-        return _scalar_diffusion;
       } else if ( subset == "dqmom_fe_update"){
         return _dqmom_fe_update;
+    //SCALING/WEIGHTING----------------------------------------------------------------------
       } else if ( subset == "dqmom_ic_from_wic" ){
         return _ic_from_w_ic;
+      } else if ( subset == "phi_from_rho_phi"){
+        return _phi_from_rho_phi;
+      } else if ( subset == "prop_phi_from_rho_phi"){
+        return _prop_phi_from_rho_phi;
+      } else if ( subset == "u_from_rhou"){
+        return _u_from_rho_u;
       } else if ( subset == _all_tasks_str ){
         return _active_tasks;
       } else {
@@ -68,7 +83,6 @@ namespace Uintah{
   private:
 
     std::vector<std::string> _momentum_stress_tensor;
-    std::vector<std::string> _scalar_up;
     std::vector<std::string> _rk_time_ave;
     std::vector<std::string> _scalar_builders;
     std::vector<std::string> _momentum_builders;
@@ -77,12 +91,24 @@ namespace Uintah{
     std::vector<std::string> _scalar_ssp;
     std::vector<std::string> _momentum_spp;
     std::vector<std::string> _pressure_eqn;
-    std::vector<std::string> _momentum_solve;
-    std::vector<std::string> _dqmom_eqns;
+    std::vector<std::string> _momentum_conv;
+    std::vector<std::string> _dqmom_builders;
     std::vector<std::string> _dqmom_fe_update;
     std::vector<std::string> _dqmom_compute_diff;
     std::vector<std::string> _scalar_diffusion;
     std::vector<std::string> _ic_from_w_ic;
+    std::vector<std::string> _u_from_rho_u;
+    std::vector<std::string> _phi_from_rho_phi;
+    std::vector<std::string> _prop_phi_from_rho_phi;
+    std::vector<std::string> _prop_rk_time_ave;
+    std::vector<std::string> _prop_scalar_update;
+    std::vector<std::string> _prop_scalar_builders;
+    std::vector<std::string> _prop_scalar_diffusion;
+
+    std::string m_u_vel_name;                             ///<Name of u velocity
+    std::string m_v_vel_name;                             ///<Name of v velocity
+    std::string m_w_vel_name;                             ///<Name of w velocity
+    std::string m_density_name;                           ///<Name of rho
 
     bool m_pack_transport_construction_tasks{false};
 

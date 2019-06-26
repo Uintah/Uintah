@@ -282,15 +282,12 @@ void BCFunctors<T>::build_bcs( ProblemSpecP db_bc, const std::vector<std::string
 
          } else if ( custom_type == "PressureOutlet" ){
            std::string vel_name;
-           if (varname == "x-mom"){
+           if (varname == ArchesCore::default_uMom_name){
              vel_name = ArchesCore::default_uVel_name;
-             //vel_name = "x-mom";
-           } else if (varname == "y-mom") {
+           } else if (varname == ArchesCore::default_vMom_name) {
              vel_name = ArchesCore::default_vVel_name;
-             //vel_name = "y-mom";
-           } else if  (varname == "z-mom") {
+           } else if  (varname == ArchesCore::default_wMom_name) {
              vel_name = ArchesCore::default_wVel_name;
-             //vel_name = "z-mom";
            } else {
              throw InvalidValue("Error: can not find velocity name "+type, __FILE__, __LINE__);
            }

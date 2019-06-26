@@ -25,18 +25,12 @@ void
 InitializeFactory::register_all_tasks( ProblemSpecP& db )
 {
 
-  /*
-
-    <Initialization>
-      <task label="my_init_task">
-        details
-      </task>
-    </Initialization>
-
-
-
-
-  */
+  _momentum_variables.push_back(ArchesCore::default_uMom_name);
+  _momentum_variables.push_back(ArchesCore::default_vMom_name);
+  _momentum_variables.push_back(ArchesCore::default_wMom_name);
+  _momentum_variables.push_back(ArchesCore::default_uVel_name);
+  _momentum_variables.push_back(ArchesCore::default_vVel_name);
+  _momentum_variables.push_back(ArchesCore::default_wVel_name);
 
   if ( db->findBlock("Initialization") ){
 
@@ -51,6 +45,8 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
       db_task->getAttribute("variable_label", eqn_name );
       db_task->getAttribute("type", type );
 
+      bool mom_variable = is_mom_var(eqn_name); 
+
       if ( type == "wave" ){
 
         std::string variable_type;
@@ -61,16 +57,16 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
 
         if ( variable_type == "CC" && indep_variable_type == "CC"){
           TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<CCVariable<double>, constCCVariable<double> >::Builder(task_name, 0, eqn_name);
-          register_task( task_name, tsk );
+          register_task( task_name, tsk, db_task );
         } else if ( variable_type == "FX" &&  indep_variable_type == "CC" ){
           TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCXVariable<double>, constCCVariable<double> >::Builder(task_name, 0, eqn_name);
-          register_task( task_name, tsk );
+          register_task( task_name, tsk, db_task );
         } else if ( variable_type == "FY" &&  indep_variable_type == "CC" ){
           TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCYVariable<double>, constCCVariable<double> >::Builder(task_name, 0, eqn_name);
-          register_task( task_name, tsk );
+          register_task( task_name, tsk, db_task );
         } else if ( variable_type == "FZ" && indep_variable_type == "CC" ){
           TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCZVariable<double>, constCCVariable<double> >::Builder(task_name, 0, eqn_name);
-          register_task( task_name, tsk );
+          register_task( task_name, tsk, db_task );
         } else {
           throw InvalidValue("Error: Grid type not valid for WaveForm initializer: "+variable_type, __FILE__, __LINE__);
         }
@@ -93,7 +89,7 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
           tsk = scinew ShunnMMS<SFCZVariable<double> >::Builder( task_name, 0, eqn_name );
         }
 
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_task );
         if (db_task ->findBlock("which_density")){
            _weighted_var_tasks.push_back(task_name);
         } else {
@@ -117,7 +113,7 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
           tsk = scinew ShunnMMSP3<SFCZVariable<double> >::Builder( task_name, 0, eqn_name );
         }
 
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_task );
         if (db_task ->findBlock("which_density")){
            _weighted_var_tasks.push_back(task_name);
         } else {
@@ -140,46 +136,46 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
           tsk = scinew AlmgrenMMS<SFCZVariable<double> >::Builder( task_name, 0, eqn_name );
         }
 
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_task );
         _unweighted_var_tasks.push_back(task_name);
 
-        } else if ( type == "taylor_green3d"){
+      } else if ( type == "taylor_green3d"){
 
-          std::string var_type;
-          db_task->findBlock("variable")->getAttribute("type", var_type);
+        std::string var_type;
+        db_task->findBlock("variable")->getAttribute("type", var_type);
 
-          TaskInterface::TaskBuilder* tsk;
+        TaskInterface::TaskBuilder* tsk;
 
-          if ( var_type == "FX" ){
-            tsk = scinew TaylorGreen3D<SFCXVariable<double> >::Builder( task_name, 0, eqn_name );
-          } else if ( var_type == "FY" ){
-            tsk = scinew TaylorGreen3D<SFCYVariable<double> >::Builder( task_name, 0, eqn_name );
-          } else {
-            tsk = scinew TaylorGreen3D<SFCZVariable<double> >::Builder( task_name, 0, eqn_name );
-          }
+        if ( var_type == "FX" ){
+          tsk = scinew TaylorGreen3D<SFCXVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else if ( var_type == "FY" ){
+          tsk = scinew TaylorGreen3D<SFCYVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else {
+          tsk = scinew TaylorGreen3D<SFCZVariable<double> >::Builder( task_name, 0, eqn_name );
+        }
 
-          register_task( task_name, tsk );
-          _unweighted_var_tasks.push_back(task_name);
+        register_task( task_name, tsk, db_task );
+        _unweighted_var_tasks.push_back(task_name);
 
 
       } else if ( type == "random_lagrangian_particles"){
 
         TaskInterface::TaskBuilder* tsk = scinew RandParticleLoc::Builder( task_name, 0 );
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_task );
         _unweighted_var_tasks.push_back(task_name);
 
       } else if ( type == "lagrangian_particle_velocity"){
 
         TaskInterface::TaskBuilder* tsk
           = scinew InitLagrangianParticleVelocity::Builder( task_name, 0 );
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_task );
         _unweighted_var_tasks.push_back(task_name);
 
       } else if ( type == "lagrangian_particle_size"){
 
         TaskInterface::TaskBuilder* tsk
           = scinew InitLagrangianParticleSize::Builder( task_name, 0 );
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_task );
         _unweighted_var_tasks.push_back(task_name);
 
       } else if ( type == "input_file" ){
@@ -201,7 +197,7 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
           throw ProblemSetupException("Error: Variable type for FileInit not recognized for variable: "+eqn_name, __FILE__, __LINE__);
         }
 
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_task );
         _unweighted_var_tasks.push_back(task_name);
 
       } else {
@@ -218,26 +214,26 @@ void
 InitializeFactory::build_all_tasks( ProblemSpecP& db )
 {
 
-  if ( db->findBlock("Initialization") ){
-
-    ProblemSpecP db_init = db->findBlock("Initialization");
-
-    for (ProblemSpecP db_task = db_init->findBlock("task"); db_task != nullptr; db_task = db_task->findNextBlock("task")){
-
-      std::string task_name;
-      std::string type;
-      db_task->getAttribute("task_label",task_name );
-      db_task->getAttribute("type", type );
-
-      print_task_setup_info( task_name, type );
-
-      TaskInterface* tsk = retrieve_task(task_name);
-      tsk->problemSetup( db_task );
-
-      tsk->create_local_labels();
-
-    }
-  }
+  // if ( db->findBlock("Initialization") ){
+  //
+  //   ProblemSpecP db_init = db->findBlock("Initialization");
+  //
+  //   for (ProblemSpecP db_task = db_init->findBlock("task"); db_task != nullptr; db_task = db_task->findNextBlock("task")){
+  //
+  //     std::string task_name;
+  //     std::string type;
+  //     db_task->getAttribute("task_label",task_name );
+  //     db_task->getAttribute("type", type );
+  //
+  //     print_task_setup_info( task_name, type );
+  //
+  //     TaskInterface* tsk = retrieve_task(task_name);
+  //     tsk->problemSetup( db_task );
+  //
+  //     tsk->create_local_labels();
+  //
+  //   }
+  // }
 }
 
 //--------------------------------------------------------------------------------------------------

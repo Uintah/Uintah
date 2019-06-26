@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/TurbulenceModels/DSFT.h>
+#include <math.h>
 
 namespace Uintah{
 
@@ -27,9 +28,9 @@ DSFT::problemSetup( ProblemSpecP& db ){
 
   m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
-  m_rhou_vel_name = "x-mom";
-  m_rhov_vel_name = "y-mom";
-  m_rhow_vel_name = "z-mom" ;
+  m_rhou_vel_name = default_uMom_name;
+  m_rhov_vel_name = default_vMom_name;
+  m_rhow_vel_name = default_wMom_name;
 
 
   m_volFraction_name = "volFraction";
@@ -121,10 +122,8 @@ void
 DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
                                           variable_registry, const int time_substep , const bool packed_tasks){
   int nG = 1;
-  int nG2 = 1;
   if (packed_tasks ){
    nG = 3;
-   nG2 = 2;
   }
   int nGrho = nG + 1;
 
@@ -140,38 +139,35 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
   register_variable( m_cc_v_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_w_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
 
-  //register_variable( m_ref_density_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep);
-  //register_variable( m_cell_type_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( "rhoBC", AFC::COMPUTESCRATCHGHOST, nGrho, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( "rhoBC",    AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( m_IsI_name, AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "Beta11",   AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "Beta12",   AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "Beta13",   AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "Beta22",   AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "Beta23",   AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "Beta33",   AFC::COMPUTES, variable_registry, time_substep , m_task_name );
 
-  register_variable( m_IsI_name, AFC::COMPUTESCRATCHGHOST,  nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "Beta11", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
-  register_variable( "Beta12", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
-  register_variable( "Beta13", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
-  register_variable( "Beta22", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
-  register_variable( "Beta23", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
-  register_variable( "Beta33", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
+  register_variable( "s11", AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "s12", AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "s13", AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "s22", AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "s23", AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "s33", AFC::COMPUTES, variable_registry, time_substep , m_task_name );
 
-  register_variable( "s11", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
-  register_variable( "s12", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
-  register_variable( "s13", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
-  register_variable( "s22", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
-  register_variable( "s23", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
-  register_variable( "s33", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep , m_task_name );
-
-  register_variable( "Filterrho", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW,  variable_registry, time_substep, m_task_name );
-  register_variable( "Filterrhou", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "Filterrhov", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "Filterrhow", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "rhoUU", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "rhoVV", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "rhoWW", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "rhoUV", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "rhoUW", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "rhoVW", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "rhoU", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "rhoV", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( "rhoW", AFC::COMPUTESCRATCHGHOST, nG2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( "Filterrho",  AFC::COMPUTES,  variable_registry, time_substep, m_task_name );
+  register_variable( "Filterrhou", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "Filterrhov", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "Filterrhow", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "rhoUU",      AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "rhoVV",      AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "rhoWW",      AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "rhoUV",      AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "rhoUW",      AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "rhoVW",      AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "rhoU",       AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "rhoV",       AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "rhoW",       AFC::COMPUTES, variable_registry, time_substep, m_task_name );
 
 }
 
@@ -179,42 +175,17 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
 void
 DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constSFCXVariable<double>& uVel = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(m_u_vel_name));
-  constSFCYVariable<double>& vVel = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(m_v_vel_name));
-  constSFCZVariable<double>& wVel = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >(m_w_vel_name));
-  constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
-  //constCCVariable<double>& ref_rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_ref_density_name));
-  //constCCVariable<int>& cell_type = *(tsk_info->get_const_uintah_field<constCCVariable<int> >(m_cell_type_name));
-
+  constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
+  constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_density_name);
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
-  constCCVariable<double>& CCuVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_u_vel_name));
-  constCCVariable<double>& CCvVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_v_vel_name));
-  constCCVariable<double>& CCwVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_w_vel_name));
+  constCCVariable<double>& CCuVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_u_vel_name);
+  constCCVariable<double>& CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_v_vel_name);
+  constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
 
-  const Vector Dx = patch->dCell(); //
-  int nG1 = 0;
-  int nG2 = 0;
-  // Compute IsI and Beta
-
-  int nGhosts2 = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)
-  int nGhosts1 = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)
-  //int nGrho = 2;
-
-  if ( tsk_info->packed_tasks() ){
-    nGhosts2 = 2;
-    nGhosts1 = 1;
-    nG1 = nGhosts1;
-    nG2 = nGhosts2;
-    //nGrho = 4;
-  }
-
-  IntVector low_filter = patch->getCellLowIndex() + IntVector(-nG1,-nG1,-nG1);
-  IntVector high_filter = patch->getCellHighIndex() + IntVector(nG1,nG1,nG1);
-  IntVector low_filter2 = patch->getCellLowIndex() + IntVector(-nG2,-nG2,-nG2);
-  IntVector high_filter2 = patch->getCellHighIndex() + IntVector(nG2,nG2,nG2);
-  Uintah::BlockRange range2(low_filter2, high_filter2 );
-  Uintah::BlockRange range1(low_filter, high_filter );
-  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex( ));
+  const Vector Dx = patch->dCell();
+  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >( m_IsI_name );
   CCVariable<double>& s11 = tsk_info->get_uintah_field_add< CCVariable<double> >( "s11" );
@@ -231,26 +202,81 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& Beta23 = tsk_info->get_uintah_field_add< CCVariable<double> >( "Beta23" );
   CCVariable<double>& Beta33 = tsk_info->get_uintah_field_add< CCVariable<double> >( "Beta33" );
 
-  IsI.initialize(0.0);
-  s11.initialize(0.0);
-  s12.initialize(0.0);
-  s13.initialize(0.0);
-  s22.initialize(0.0);
-  s23.initialize(0.0);
-  s33.initialize(0.0);
-  Beta11.initialize(0.0);
-  Beta12.initialize(0.0);
-  Beta13.initialize(0.0);
-  Beta22.initialize(0.0);
-  Beta23.initialize(0.0);
-  Beta33.initialize(0.0);
+  Uintah::parallel_for( range, [&](int i, int j, int k){
 
-  Uintah::ArchesCore::computeIsInsij get_IsIsij( IsI, s11, s22, s33, s12, s13, s23,
-                                                 uVel, vVel, wVel,
-                                                 CCuVel, CCvVel, CCwVel, Dx);
-  Uintah::parallel_for(range2,get_IsIsij);
+    double uep = 0.0;
+    double uwp = 0.0;
+    double vep = 0.0;
+    double vwp = 0.0;
+    double wep = 0.0;
+    double wwp = 0.0;
+    double unp = 0.0;
+    double usp = 0.0;
+    double vnp = 0.0;
+    double vsp = 0.0;
+    double wnp = 0.0;
+    double wsp = 0.0;
+    double utp = 0.0;
+    double ubp = 0.0;
+    double vtp = 0.0;
+    double vbp = 0.0;
+    double wtp = 0.0;
+    double wbp = 0.0;
 
-  Uintah::parallel_for( range2, [&](int i, int j, int k){
+    // x-dir
+    {
+      STENCIL3_1D(0);
+      uep = uVel(IJK_P_);
+      uwp = uVel(IJK_);
+
+      vep = 0.50 * CCvVel(IJK_P_);
+      vwp = 0.50 * CCvVel(IJK_M_);
+
+      wep = 0.50 * CCwVel(IJK_P_);
+      wwp = 0.50 * CCwVel(IJK_M_);
+    }
+
+    // y-dir
+    {
+      STENCIL3_1D(1);
+      unp = 0.50 * CCuVel(IJK_P_);
+      usp = 0.50 * CCuVel(IJK_M_);
+
+      vnp = vVel(IJK_P_);
+      vsp = vVel(IJK_);
+
+      wnp = 0.50 * CCwVel(IJK_P_);
+      wsp = 0.50 * CCwVel(IJK_M_);
+    }
+
+    // z-dir
+    {
+      STENCIL3_1D(2);
+      utp = 0.50 * CCuVel(IJK_P_);
+      ubp = 0.50 * CCuVel(IJK_M_);
+
+      vtp = 0.50 * CCvVel(IJK_P_);
+      vbp = 0.50 * CCvVel(IJK_M_);
+
+      wtp = wVel(IJK_P_);
+      wbp = wVel(IJK_);
+    }
+
+    s11(i,j,k) = (uep-uwp)/Dx.x();
+    s22(i,j,k) = (vnp-vsp)/Dx.y();
+    s33(i,j,k) = (wtp-wbp)/Dx.z();
+    s12(i,j,k) = 0.50 * ((unp-usp)/Dx.y() + (vep-vwp)/Dx.x());
+    s13(i,j,k) = 0.50 * ((utp-ubp)/Dx.z() + (wep-wwp)/Dx.x());
+    s23(i,j,k) = 0.50 * ((vtp-vbp)/Dx.z() + (wnp-wsp)/Dx.y());
+
+    IsI(i,j,k) = 2.0 * ( s11(i,j,k)*s11(i,j,k) + s22(i,j,k)*s22(i,j,k) + s33(i,j,k)*s33(i,j,k)
+               + 2.0 * ( s12(i,j,k)*s12(i,j,k) + s13(i,j,k)*s13(i,j,k) + s23(i,j,k)*s23(i,j,k) ) );
+
+    IsI(i,j,k) = sqrt( IsI(i,j,k) );
+
+  });
+
+  Uintah::parallel_for( range, [&](int i, int j, int k){
     Beta11(i,j,k) = rho(i,j,k)*IsI(i,j,k)*s11(i,j,k);
     Beta22(i,j,k) = rho(i,j,k)*IsI(i,j,k)*s22(i,j,k);
     Beta33(i,j,k) = rho(i,j,k)*IsI(i,j,k)*s33(i,j,k);
@@ -259,6 +285,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     Beta23(i,j,k) = rho(i,j,k)*IsI(i,j,k)*s23(i,j,k);
   });
 
+
   ArchesCore::BCFilter bcfilter;
   bcfilter.apply_zero_neumann(patch,Beta11,vol_fraction);
   bcfilter.apply_zero_neumann(patch,Beta22,vol_fraction);
@@ -266,19 +293,25 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   bcfilter.apply_zero_neumann(patch,Beta12,vol_fraction);
   bcfilter.apply_zero_neumann(patch,Beta13,vol_fraction);
   bcfilter.apply_zero_neumann(patch,Beta23,vol_fraction);
+
   // Filter rho
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho");
   filterRho.initialize(0.0);
-  // this need to be fixed
+
+
+  // this need to be fixed (??)
   //filterRho.copy(ref_rho);
 
   CCVariable<double>& rhoBC = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoBC");
 
-  rhoBC.copy(rho);
-  bcfilter.apply_BC_rho(patch,rhoBC,rho,vol_fraction);
-  m_Filter.applyFilter(rhoBC,filterRho,range2,vol_fraction);
+  rhoBC.initialize(0.0); 
+  Uintah::parallel_for(range, [&](int i, int j, int k){
+      rhoBC(i,j,k) = rho(i,j,k);
+  });
+  bcfilter.apply_BC_rho( patch, rhoBC, rho, vol_fraction);
+  m_Filter.applyFilter( rho, filterRho, range, vol_fraction);
 
-  //m_Filter.applyFilter(rho,filterRho,range1,vol_fraction);
+  //m_Filter.applyFilter(rho,filterRho,range,vol_fraction);
 
   // filter rho*ux...
   SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrhou");
@@ -294,35 +327,35 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   IntVector low;
   if ( xminus ){
-    low  = patch->getCellLowIndex()+IntVector(1,0,0) + IntVector(-nG2,-nG2,-nG2);
+    low  = patch->getCellLowIndex()+IntVector(1,0,0);
   }else{
-    low  = patch->getCellLowIndex()+ IntVector(-nG2,-nG2,-nG2);
+    low  = patch->getCellLowIndex();
   }
 
-  Uintah::BlockRange range_u(low, high_filter2);
+  Uintah::BlockRange range_u(low, patch->getCellHighIndex() );
   m_Filter.applyFilter(uVel,filterRhoU,rho,vol_fraction,range_u);
   if ( yminus ){
-    low = patch->getCellLowIndex()+IntVector(0,1,0) + IntVector(-nG2,-nG2,-nG2);
+    low = patch->getCellLowIndex()+IntVector(0,1,0);
   } else {
-    low = patch->getCellLowIndex()+ IntVector(-nG2,-nG2,-nG2);
+    low = patch->getCellLowIndex();
   }
 
-  Uintah::BlockRange range_v(low, high_filter2);
+  Uintah::BlockRange range_v(low, patch->getCellHighIndex() );
   m_Filter.applyFilter(vVel,filterRhoV,rho,vol_fraction,range_v);
 
   if ( zminus ){
-    low = patch->getCellLowIndex()+IntVector(0,0,1)+ IntVector(-nG2,-nG2,-nG2);
+    low = patch->getCellLowIndex()+IntVector(0,0,1);
   } else {
-    low = patch->getCellLowIndex()+ IntVector(-nG2,-nG2,-nG2);
+    low = patch->getCellLowIndex();
   }
-  Uintah::BlockRange range_w(low, high_filter2);
+  Uintah::BlockRange range_w(low, patch->getCellHighIndex() );
   m_Filter.applyFilter(wVel,filterRhoW,rho,vol_fraction,range_w);
-
 
   bcfilter.apply_BC_rhou(patch,filterRhoU,uVel,rho,vol_fraction);
   bcfilter.apply_BC_rhou(patch,filterRhoV,vVel,rho,vol_fraction);
   bcfilter.apply_BC_rhou(patch,filterRhoW,wVel,rho,vol_fraction);
   bcfilter.apply_BC_filter_rho(patch,filterRho,rhoBC,vol_fraction);
+
   // Compute rhouiuj at cc
   CCVariable<double>& rhoUU = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoUU");
   CCVariable<double>& rhoVV = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoVV");
@@ -344,7 +377,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   rhoV.initialize(0.0);
   rhoW.initialize(0.0);
 
-  Uintah::parallel_for( range2, [&](int i, int j, int k){
+  Uintah::parallel_for( range, [&](int i, int j, int k){
     rhoUU(i,j,k) = rho(i,j,k)*CCuVel(i,j,k)*CCuVel(i,j,k);
     rhoVV(i,j,k) = rho(i,j,k)*CCvVel(i,j,k)*CCvVel(i,j,k);
     rhoWW(i,j,k) = rho(i,j,k)*CCwVel(i,j,k)*CCwVel(i,j,k);

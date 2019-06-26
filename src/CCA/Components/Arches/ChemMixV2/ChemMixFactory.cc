@@ -34,10 +34,10 @@ ChemMixFactory::register_all_tasks( ProblemSpecP& db )
 
       if ( type == "constant" ){
         TaskInterface::TaskBuilder* tsk = scinew ConstantStateProperties::Builder( label, 0 );
-        register_task( label, tsk );
+        register_task( label, tsk, db_p );
       } else if ( type == "coldflow" ){
         TaskInterface::TaskBuilder* tsk = scinew ColdFlowProperties::Builder( label, 0 );
-        register_task( label, tsk );
+        register_task( label, tsk, db_p );
       } else {
         throw InvalidValue("Error: Unknown state property evaluator type: "+type, __FILE__, __LINE__);
       }
@@ -49,29 +49,29 @@ ChemMixFactory::register_all_tasks( ProblemSpecP& db )
 void
 ChemMixFactory::build_all_tasks( ProblemSpecP& db )
 {
-
-  if ( db->findBlock("StateProperties") ){
-
-    ProblemSpecP db_sp = db->findBlock("StateProperties");
-
-    for ( ProblemSpecP db_p = db_sp->findBlock("model");
-	  db_p.get_rep() != nullptr;
-          db_p = db_p->findNextBlock("model")){
-
-      std::string label;
-      std::string type;
-
-      db_p->getAttribute("label", label);
-      db_p->getAttribute("type", type);
-
-      TaskInterface* tsk = retrieve_task( label );
-      tsk->problemSetup( db_p );
-      tsk->create_local_labels();
-
-      m_task_order.push_back( label );
-
-    }
-  }
+  //
+  // if ( db->findBlock("StateProperties") ){
+  //
+  //   ProblemSpecP db_sp = db->findBlock("StateProperties");
+  //
+  //   for ( ProblemSpecP db_p = db_sp->findBlock("model");
+	//     db_p.get_rep() != nullptr;
+  //     db_p = db_p->findNextBlock("model")){
+  //
+  //     std::string label;
+  //     std::string type;
+  //
+  //     db_p->getAttribute("label", label);
+  //     db_p->getAttribute("type", type);
+  //
+  //     TaskInterface* tsk = retrieve_task( label );
+  //     tsk->problemSetup( db_p );
+  //     tsk->create_local_labels();
+  //
+  //     m_task_order.push_back( label );
+  //
+  //   }
+  // }
 }
 
 void

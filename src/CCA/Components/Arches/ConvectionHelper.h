@@ -128,9 +128,9 @@ namespace Uintah {
 
     void
     operator()(int i, int j, int k ) const {
-      double c1 = 7./12.; 
-      double c2 = -1./12.; 
-      
+      double c1 = 7./12.;
+      double c2 = -1./12.;
+
       //std::cout<<"fourth convection"<< std::endl;
 
       //X-dir
@@ -195,7 +195,6 @@ namespace Uintah {
     }
 
     void operator()( const UpwindConvection& scheme, int i, int j, int k ) const {
-
         STENCIL3_1D(dir);
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double afc = eps(IJK_)*eps(IJK_M_);
