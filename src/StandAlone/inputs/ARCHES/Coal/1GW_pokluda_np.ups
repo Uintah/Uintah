@@ -11,7 +11,7 @@
     <delt_min>1e-9</delt_min>
     <delt_max>1e-3</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
-    <max_Timesteps>10</max_Timesteps>
+    <max_Timesteps>11</max_Timesteps>
   </Time>
   <DataArchiver>
     <filebase>1GW_pokluda_np.uda</filebase>
