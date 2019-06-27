@@ -3253,7 +3253,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 {
 
   size_t totalBytesSaved = 0;
-#if HAVE_PIDX
+#ifdef HAVE_PIDX
   if(dbgPIDX.active())
     dbgPIDX << "saveLabels_PIDX()\n";
 
