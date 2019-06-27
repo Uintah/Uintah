@@ -35,7 +35,9 @@
  */
 
 #include <Core/Util/StringUtil.h>
-
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
 
 #include <cstdio>
@@ -43,6 +45,9 @@
 #include <ctype.h> // for toupper() (at least for linux RH8)
 
 namespace Uintah {
+
+using std::string;
+using std::vector;
 
 bool
 string_to_int(const std::string &str, int &result)
@@ -62,7 +67,61 @@ string_to_unsigned_long(const std::string &str, unsigned long &result)
   return sscanf(str.c_str(), "%lu", &result) == 1;
 }
 
+//__________________________________
+//
+IntVector
+string_to_IntVector(const string &input, 
+                    vector<char> separators )
+{
+  vector<string> strV = split_string( input, separators );
+  
+  if( strV.size() != 3){
+    std::ostringstream msg;
+    msg << " *** Error:string_to_IntVector() The input string(" << input <<") does not have 3 elements ***";
+    throw InternalError( msg.str(), __FILE__, __LINE__ );
+  }
 
+  IntVector result;  
+  for (int indx = 0; indx < 3; indx++) {
+    result[indx] = stoi( strV[indx] );
+  }
+  return result;
+}
+
+//__________________________________
+//  
+Vector
+string_to_Vector(const string &input, 
+                 const vector<char> separators )
+{
+  vector<string> strV = split_string( input, separators );
+  
+  if( strV.size() != 3){
+    std::ostringstream msg;
+    msg << " *** Error:string_to_Vector() The input string(" << input <<") does not have 3 elements ***";
+    throw InternalError( msg.str(), __FILE__, __LINE__ );
+  }
+
+  Vector result;  
+  for (int indx = 0; indx < 3; indx++) {
+    result[indx] = stod( strV[indx] );
+  }
+  return result;
+}
+
+//__________________________________
+//  
+Point
+string_to_Point(const string &input, 
+                const vector<char> separators )
+{
+  Vector vec = string_to_Vector( input, separators );
+  return vec.asPoint();
+}
+
+
+//__________________________________
+//
 std::string
 to_string(int val)
 {
