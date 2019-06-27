@@ -124,9 +124,9 @@ namespace Uintah {
 
     void
     operator()(int i, int j, int k ) const {
-      double c1 = 7./12.; 
-      double c2 = -1./12.; 
-      
+      double c1 = 7./12.;
+      double c2 = -1./12.;
+
       //std::cout<<"fourth convection"<< std::endl;
 
       //X-dir
@@ -372,7 +372,6 @@ namespace Uintah {
     grid_T& flux_y;
     grid_T& flux_z;
     const grid_CT& eps;
-
   };
 
     // ------------------------------UPWIND -------------------------//

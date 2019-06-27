@@ -81,7 +81,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
     std::string task_name = "dqmom_no_inversion";
     TaskInterface::TaskBuilder* tsk = scinew DQMOMNoInversion::Builder( task_name, 0, N );
     _pre_update_particle_tasks.push_back(task_name);
-    register_task( task_name, tsk );
+    register_task( task_name, tsk, db->findBlock("DQMOM") );
 
   } else if (db->findBlock("LagrangianParticles")){
 
@@ -149,7 +149,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             TaskInterface::TaskBuilder* tsk = scinew
               ExampleParticleModel<CCVariable<double> ,CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
-            register_task( task_name, tsk );
+            register_task( task_name, tsk, db_model );
             _post_update_particle_tasks.push_back(task_name);
 
           } else {
@@ -177,7 +177,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             TaskInterface::TaskBuilder* tsk = scinew
             DragModel<constCCVariable<double>, CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
-            register_task( task_name, tsk );
+            register_task( task_name, tsk, db_model );
             _post_update_particle_tasks.push_back(task_name);
 
           } else {
@@ -199,7 +199,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           ienv << i;
           std::string task_name_N = task_name + "_qn" + ienv.str();
           TaskInterface::TaskBuilder* tsk = scinew WDragModel<CCVariable<double> >::Builder(task_name_N, 0, i);
-          register_task( task_name_N, tsk );
+          register_task( task_name_N, tsk, db_model );
           _dqmom_model_task.push_back(task_name_N);
         }
       } else if  ( type == "char_oxidation_ps" ) {
@@ -210,7 +210,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           ienv << i;
           std::string task_name_N = task_name + "_qn" + ienv.str();
           TaskInterface::TaskBuilder* tsk = scinew CharOxidationps<CCVariable<double> >::Builder(task_name_N, 0, i);
-          register_task( task_name_N, tsk );
+          register_task( task_name_N, tsk, db_model );
           _dqmom_model_task.push_back(task_name_N);
         }
 
@@ -228,7 +228,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             TaskInterface::TaskBuilder* tsk = scinew
             BodyForce<CCVariable<double>, CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
-            register_task( task_name, tsk );
+            register_task( task_name, tsk, db_model );
             _post_update_particle_tasks.push_back(task_name);
 
           } else {
@@ -256,7 +256,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           TaskInterface::TaskBuilder* tsk = scinew
           FaceParticleVel<CCVariable<double> >::Builder(task_name, 0, model_name);
 
-          register_task( task_name, tsk );
+          register_task( task_name, tsk, db_model );
           _dqmom_variables.push_back(task_name);
 
         }
@@ -275,7 +275,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           TaskInterface::TaskBuilder* tsk = scinew
           Constant<CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
-          register_task( task_name, tsk );
+          register_task( task_name, tsk, db_model );
           _post_update_particle_tasks.push_back(task_name);
 
           //else lagrangian particle type...need to add
@@ -288,7 +288,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if ( type == "coal_density" ){
 
         TaskInterface::TaskBuilder* tsk = scinew CoalDensity::Builder(task_name,0,N);
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_model );
 
         _coal_models.push_back(task_name);
 
@@ -299,7 +299,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if ( type == "coal_temperature" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew CoalTemperature::Builder(task_name,0,N);
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_model );
 
         _coal_models.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
@@ -309,7 +309,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if ( type == "burnout" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew Burnout::Builder(task_name,0,N);
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_model );
 
         _coal_models.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
@@ -319,7 +319,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if ( type == "deposition_velocity" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew DepositionVelocity::Builder(task_name,0,N,_materialManager);
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_model );
 
         _coal_models.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
@@ -330,7 +330,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if ( type == "deposition_enthalpy" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew DepositionEnthalpy::Builder(task_name,0,N,_materialManager);
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_model );
 
         _coal_models.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
@@ -340,13 +340,13 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if ( type == "particle_variables_dqmom" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew PartVariablesDQMOM::Builder(task_name,0);
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_model );
         _dqmom_variables.push_back(task_name);
 
       } else if ( type == "rate_deposition" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew RateDeposition::Builder(task_name,0,N);
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_model );
 
         _coal_models.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
@@ -357,7 +357,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if ( type == "total_number_density" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew TotNumDensity::Builder(task_name, 0);
-        register_task( task_name, tsk );
+        register_task( task_name, tsk, db_model );
 
         //_active_tasks.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
@@ -378,7 +378,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             TaskInterface::TaskBuilder* tsk = scinew
             FOWYDevol<CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
-            register_task( task_name, tsk );
+            register_task( task_name, tsk, db_model );
             //_active_tasks.push_back(task_name);
             _post_update_particle_tasks.push_back(task_name);
 
@@ -405,7 +405,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           TaskInterface::TaskBuilder* tsk = scinew
           ShaddixOxidation<CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
-          register_task( task_name, tsk );
+          register_task( task_name, tsk, db_model );
           //_active_tasks.push_back(task_name);
           _post_update_particle_tasks.push_back(task_name);
 
@@ -427,7 +427,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           TaskInterface::TaskBuilder* tsk = scinew
           ShaddixEnthalpy<CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
-          register_task( task_name, tsk );
+          register_task( task_name, tsk, db_model );
           //_active_tasks.push_back(task_name);
           _post_update_particle_tasks.push_back(task_name);
 
@@ -467,59 +467,59 @@ void
 ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
 {
 
-  if ( db->findBlock("ParticleModels")){
+  // if ( db->findBlock("ParticleModels")){
+  //
+  //   ProblemSpecP db_pm = db->findBlock("ParticleModels");
+  //
+  //   for (ProblemSpecP db_model = db_pm->findBlock("model"); db_model != nullptr;
+  //        db_model = db_model->findNextBlock("model")){
+  //
+  //
+  //     std::string model_name;
+  //     std::string type;
+  //     db_model->getAttribute("label",model_name );
+  //     db_model->getAttribute("type", type );
+  //     print_task_setup_info( model_name, type );
+  //
+  //     if (type == "wdrag") {
+  //       const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
+  //       for ( int i = 0; i < nQn_part; i++ ){
+  //         std::stringstream ienv;
+  //         ienv << i;
+  //         std::string model_name_N = model_name + "_qn" + ienv.str();
+  //         TaskInterface* tsk = retrieve_task(model_name_N);
+  //
+  //         tsk->problemSetup( db_model );
+  //         tsk->create_local_labels();
+  //       }
+  //
+  //     } else if (type == "char_oxidation_ps") {
+  //       const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
+  //       for ( int i = 0; i < nQn_part; i++ ){
+  //         std::stringstream ienv;
+  //         ienv << i;
+  //         std::string model_name_N = model_name + "_qn" + ienv.str();
+  //         TaskInterface* tsk = retrieve_task(model_name_N);
+  // 
+  //         tsk->problemSetup( db_model );
+  //         tsk->create_local_labels();
+  //       }
+  //     } else {
+  //       TaskInterface* tsk = retrieve_task(model_name);
+  //
+  //       tsk->problemSetup( db_model );
+  //       tsk->create_local_labels();
+  //     }
+  //   }
+  // }
 
-    ProblemSpecP db_pm = db->findBlock("ParticleModels");
-
-    for (ProblemSpecP db_model = db_pm->findBlock("model"); db_model != nullptr;
-         db_model = db_model->findNextBlock("model")){
-
-
-      std::string model_name;
-      std::string type;
-      db_model->getAttribute("label",model_name );
-      db_model->getAttribute("type", type );
-      print_task_setup_info( model_name, type );
-
-      if (type == "wdrag") {
-        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
-        for ( int i = 0; i < nQn_part; i++ ){
-          std::stringstream ienv;
-          ienv << i;
-          std::string model_name_N = model_name + "_qn" + ienv.str();
-          TaskInterface* tsk = retrieve_task(model_name_N);
-
-          tsk->problemSetup( db_model );
-          tsk->create_local_labels();
-        }
-
-      } else if (type == "char_oxidation_ps") {
-        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
-        for ( int i = 0; i < nQn_part; i++ ){
-          std::stringstream ienv;
-          ienv << i;
-          std::string model_name_N = model_name + "_qn" + ienv.str();
-          TaskInterface* tsk = retrieve_task(model_name_N);
-
-          tsk->problemSetup( db_model );
-          tsk->create_local_labels();
-        }
-      } else {
-        TaskInterface* tsk = retrieve_task(model_name);
-
-        tsk->problemSetup( db_model );
-        tsk->create_local_labels();
-      }
-    }
-  }
-
-  if (db->findBlock("DQMOM") ) {
-    //See comment above about this task.
-    std::string task_name = "dqmom_no_inversion";
-    print_task_setup_info( task_name, "DQMOM: No Inversion");
-    TaskInterface* tsk = retrieve_task(task_name);
-    tsk->problemSetup(db);
-    tsk->create_local_labels();
-  }
+  // if (db->findBlock("DQMOM") ) {
+  //   //See comment above about this task.
+  //   std::string task_name = "dqmom_no_inversion";
+  //   print_task_setup_info( task_name, "DQMOM: No Inversion");
+  //   TaskInterface* tsk = retrieve_task(task_name);
+  //   tsk->problemSetup(db);
+  //   tsk->create_local_labels();
+  // }
 
 }

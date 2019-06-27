@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/PropertyModelsV2/ContinuityPredictor.h>
+#include <CCA/Components/Arches/UPSHelper.h>
 #include <CCA/Components/Arches/KokkosTools.h>
 
 namespace Uintah{
@@ -113,9 +114,9 @@ ContinuityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::V
                                           variable_registry, const int time_substep,
                                           const bool packed_tasks ){
 
-  register_variable( "x-mom", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-  register_variable( "y-mom", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-  register_variable( "z-mom", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( ArchesCore::default_uMom_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( ArchesCore::default_vMom_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( ArchesCore::default_wMom_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( m_label_drhodt , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
   register_variable( m_label_balance , ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
@@ -127,9 +128,9 @@ ContinuityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::V
 template <typename ExecSpace, typename MemSpace>
 void ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>("x-mom");
-  auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>("y-mom");
-  auto zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>("z-mom");
+  auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(ArchesCore::default_uMom_name);
+  auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(ArchesCore::default_vMom_name);
+  auto zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(ArchesCore::default_wMom_name);
 
   auto drho_dt = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>( m_label_drhodt );
   auto Balance = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( m_label_balance );

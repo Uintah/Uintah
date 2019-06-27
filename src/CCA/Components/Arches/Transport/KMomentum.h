@@ -229,11 +229,13 @@ private:
   KMomentum<T>::KMomentum( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ) {
 
+    std::string eqn_name = strip_class_name();
+
     m_boundary_functors = scinew ArchesCore::BCFunctors<T>();
 
     // Hard Coded defaults for the momentum eqns:
     m_total_eqns = 1;
-    m_eqn_names.push_back(task_name);
+    m_eqn_names.push_back(eqn_name);
 
     ArchesCore::VariableHelper<T> helper;
     my_dir = helper.dir;
@@ -486,12 +488,12 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable(  m_vel_name[ieqn] , ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  m_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  m_vel_name[ieqn] , ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      register_variable(  m_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      register_variable(  m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      register_variable(  m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      register_variable(  m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
     }
   }
 
@@ -509,7 +511,6 @@ private:
       auto u    = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_vel_name[ieqn]);
       auto phi    = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_eqn_names[ieqn]);
       auto rhs    = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
-
       auto x_flux = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
       auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
       auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
@@ -576,32 +577,30 @@ private:
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( m_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
       register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
       register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
       register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
 
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator i = m_source_info[ieqn].begin(); i != m_source_info[ieqn].end(); i++){
-        register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+        register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
       }
 
     }
 
     //globally common variables
     if ( !m_inviscid ){
-      register_variable( m_sigmax_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( m_sigmay_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( m_sigmaz_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( m_sigmax_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_sigmay_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_sigmaz_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
     }
 
-    register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
-    //register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    //register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
 
   }
 
@@ -616,12 +615,7 @@ private:
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
-    // CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(m_x_velocity_name));
-    // CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(m_y_velocity_name));
-    // CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(m_z_velocity_name));
     auto eps     = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eps_name);
-    // constCCVariable<double>& mu = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_mu_name));
-    // constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_rho_name));
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -635,6 +629,7 @@ private:
       auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
       auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
+      //This is a bit paranoid and probably could be removed
       parallel_initialize(execObj,0.0,rhs,x_flux,y_flux,z_flux);
 
       //convection

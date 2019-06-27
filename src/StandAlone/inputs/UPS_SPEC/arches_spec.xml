@@ -1323,6 +1323,9 @@
             <!-- by default, the scalar is intialized to zero. Other values may be specified -->
             <initialize                   spec="OPTIONAL NO_DATA"
                                           attribute1="value REQUIRED DOUBLE"/>
+            <!-- DQMOM ONLY: Flag added automagically to the input file. This is needed for weights -->
+            <no_weight_factor             spec="OPTIONAL NO_DATA"/>
+                                          
 
             <!-- Allow one to unscale the the solution variable by a constant. The solution variable
                  is thus the scaled value and the unscaled value is given by the user assigned label -->
@@ -1342,6 +1345,15 @@
 
           <diffusion_coef               spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
+
+          <!-- Add this tag if it is an independent variable for the tabulated state-space -->
+          <determines_properties        spec="OPTIONAL NO_DATA"/>
+
+          <!-- pre-multiplier on the transported variable -->
+          <weight_factor                spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
+          <env_number                   spec="OPTIONAL NO_DATA" 
+                                        attribute1="number REQUIRED STRING"/> <!-- FOR DQMOM ONLY. This is automagically added by the code.  -->
 
         </eqn_group>
       </KScalarTransport>
@@ -2165,6 +2177,8 @@
                                         attribute1="type OPTIONAL STRING 'unweightedAbs, weightedAbs'"> <!-- phasing out the type specification. all dqmom is weightedAbs-->
 
         <!-- These tags are for the new DQMOM interface -->
+        <DQMOM_built                  spec="OPTIONAL NO_DATA"/> <!-- This tag will be automagically added to input.xml file in the uda for restart -->
+        
 
         <!--If this tag is present, diffusion is computed.-->
         <diffusion                    spec="OPTIONAL NO_DATA"

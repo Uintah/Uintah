@@ -111,8 +111,8 @@ SampleTask::register_initialize(
   typedef ArchesFieldContainer AFC;
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable( "a_sample_field", AFC::MODIFIES, variable_registry );
-  register_variable( "a_result_field", AFC::COMPUTES, variable_registry );
+  register_variable( "a_sample_field", AFC::MODIFIES, variable_registry, m_task_name );
+  register_variable( "a_result_field", AFC::COMPUTES, variable_registry, m_task_name );
 
 }
 
@@ -166,11 +166,11 @@ SampleTask::register_timestep_eval(
   typedef ArchesFieldContainer AFC;
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable( "a_sample_field", AFC::COMPUTES, variable_registry, time_substep );
-  register_variable( "a_result_field", AFC::COMPUTES, variable_registry, time_substep );
-  register_variable( "density",        AFC::REQUIRES, 1, AFC::LATEST, variable_registry, time_substep );
+  register_variable( "a_sample_field", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "a_result_field", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable( "density",        AFC::REQUIRES, 1, AFC::LATEST, variable_registry, time_substep, m_task_name );
 
-  register_variable( "A", AFC::COMPUTES, variable_registry, time_substep );
+  register_variable( "A", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
 
 }
 

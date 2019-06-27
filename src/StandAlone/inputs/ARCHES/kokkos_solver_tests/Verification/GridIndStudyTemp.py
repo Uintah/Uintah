@@ -150,7 +150,7 @@ def main():
   
   # if the number of levels is <2, then reset it to 3
   if (args.levels < 2):
-    print 'The number of levels has to be >= 3. Setting levels to 3'
+    print('The number of levels has to be >= 3. Setting levels to 3')
     args.levels = 3
   
   rootups = args.ups
@@ -158,7 +158,7 @@ def main():
   
   # cleanup the list of variables for which the order is to be computed
   myvars = [x.strip() for x in args.vars.split(',')]
-  print 'variables', myvars 
+  #print('variables '+myvars) 
   # first makes copies of the ups files
   fnames = []
   basename = os.path.basename(rootups)
@@ -184,7 +184,7 @@ def main():
   
   args.suspath = os.path.normpath(args.suspath)
   args.suspath = os.path.abspath(args.suspath)
-  print args.suspath
+  print(args.suspath)
   #os.system('ln -fs ' + args.suspath + '/sus sus')
   #os.system('ln -fs ' + args.suspath + '/tools/extractors/lineextract lineextract')
   sus = args.suspath + '/sus'
@@ -240,7 +240,7 @@ def main():
   Ly = U1 - L1
   Lz = U2 - L2
   for fname in fnames:
-    print 'now updating xml for ', fname
+    #print('now updating xml for '+ fname)
     basename = os.path.splitext(fname)[0]
     xmldoc = minidom.parse(fname)
   
@@ -301,7 +301,7 @@ def main():
     # When I have a handoff plane 
     for node in xmldoc.getElementsByTagName('filename'):
       node.firstChild.replaceWholeText('scalars/2D/BC_mms/x_lr'+str(Nx*refinement)+'.dat')  
-      print "hand off", 'BC_mms/x_lr'+str(Nx*refinement)+'.dat'
+      #print("hand off "+ 'BC_mms/x_lr'+str(Nx*refinement)+'.dat')
 
     for node in xmldoc.getElementsByTagName('delt_max'):
       node.firstChild.replaceWholeText(dtmin)
@@ -316,8 +316,8 @@ def main():
   fe = [0.5,0.5,0.5]
   BCs = [0,0,0]
   BCe = [0,0,0]
-  print 'axis: ', mydir
-  print 'variables: ', myvars
+  #print('axis: '+ mydir)
+  #print('variables: '+ myvars)
   for dire in mydir:
     if dire == 'x':
       fs[0] = 0
@@ -351,15 +351,15 @@ def main():
 
   for fname in fnames:
     os.system('mpirun -np '+ str(total_proc) + ' ' + sus +' -do_not_validate' + ' ' + fname + ' > log.txt')
-    print 'running: ', fname 
+    #print('running: '+ fname)
     udaName = os.path.splitext(fname)[0] + '.uda'
     p_s   = [int(fs[0]*Nx*refinement - BCs[0]), int(fs[1]*Ny*refinement - BCs[1]), int(fs[2]*Nz*refinement - BCs[2])] 
     p_end = [int(fe[0]*Nx*refinement - BCe[0]), int(fe[1]*Ny*refinement - BCe[1]), int(fe[2]*Nz*refinement - BCe[2])] 
-    print 'p_s', p_s
-    print 'p_end', p_end
+    #print( 'p_s '+ p_s)
+    #print( 'p_end '+ p_end)
     #    #EXTRACT THE variables
     for var in myvars:
-      print "variable:", var                      
+      #print("variable: "+var)
       outFile = data + '/' + str(var) + '-t' + str(counter) + '.txt'
 
       if typeofanalysis == 'temporal' :
@@ -368,7 +368,7 @@ def main():
 
         the_command = lineextract + ' -v ' + str(var) + ' -timestep '+ str(time_step) + ' -istart ' + str(p_s[0] )+' '+str(p_s[1])+' '+str(p_s[2])+' -iend ' + str(p_end[0] )+' '+str(p_end[1])+' '+str(p_end[2])+ ' -o ' + outFile +' -uda '+udaName
 
-      print 'Executing command: ', the_command
+      #print 'Executing command: ', the_command
       os.system(the_command)
 
     os.system('rm ' + fname)    
@@ -377,10 +377,10 @@ def main():
     counter += 1
 
 
-  print 'dx', dx 
+  #print('dx '+ dx )
   ### Here is where we compute m and b   #####
   
-  print 'Verification data was saved in: ', data
+  #print 'Verification data was saved in: ', data
   #data = 'data/'
   Nl = nLevels 
   p = 2 # 
@@ -393,10 +393,10 @@ def main():
          L1 = compute_temporal(data,var,var_mms,Nl,p)
          dx = np.copy(dt)
          label_x = '$\Delta$ [s]'
-       print 'L1:', L1
-       print 'dx:', dx
+       #print('L1: ', L1)
+       #print('dx:', dx)
        m, b, r_value, p_value, std_err = stats.linregress(np.log(dx),np.log(L1))
-       print 'm = ',m,'b = ', b, 'r_value = ' ,r_value  
+       print('m = '+np.str(m)+' b = '+np.str(b)+  ' r_value = ' +np.str(r_value)  )
 
        plt.figure()
        plt.loglog(dx,L1,'*--',label=var)

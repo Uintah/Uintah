@@ -53,10 +53,10 @@ TaskAssignedExecutionSpace VelRhoHatBC::loadTaskRestartInitFunctionPointers()
 void VelRhoHatBC::problemSetup( ProblemSpecP& db ){
 
   using namespace ArchesCore;
-  
-  m_xmom = "x-mom";
-  m_ymom = "y-mom";
-  m_zmom = "z-mom";
+
+  m_xmom = default_uMom_name;
+  m_ymom = default_vMom_name;
+  m_zmom = default_wMom_name;
   m_uVel = parse_ups_for_role( UVELOCITY, db, default_uVel_name );
   m_vVel = parse_ups_for_role( VVELOCITY, db, default_vVel_name );
   m_wVel = parse_ups_for_role( WVELOCITY, db, default_wVel_name );
@@ -72,9 +72,6 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_xmom, AFC::MODIFIES, variable_registry, m_task_name );
   register_variable( m_ymom, AFC::MODIFIES, variable_registry, m_task_name );
   register_variable( m_zmom, AFC::MODIFIES, variable_registry, m_task_name );
-//  register_variable( m_uVel, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-//  register_variable( m_vVel, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-//  register_variable( m_wVel, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
   register_variable( m_uVel, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
   register_variable( m_vVel, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
   register_variable( m_wVel, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );

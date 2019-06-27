@@ -709,11 +709,9 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     }
   }
 
-
   // register any other source terms:
   SourceTermFactory& src_factory = SourceTermFactory::self();
   src_factory.registerSources( d_lab, d_doDQMOM, d_which_dqmom );
-
 
   // do any last setup operations on the active source terms:
   src_factory.extraSetup( grid, d_boundaryCondition, d_tabulated_properties );
@@ -1133,7 +1131,7 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
       double tmp_time= Abs(max_intrusion_vel.x())/(DX.x())+
                        Abs(max_intrusion_vel.y())/(DX.y())+
                        Abs(max_intrusion_vel.z())/(DX.z())+small_num;
-      if ( tmp_time > 0. ){ 
+      if ( tmp_time > 0. ){
         delta_t2=Min(1.0/tmp_time, delta_t2);
       }
 
@@ -1536,7 +1534,7 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
     d_pressSolver->scheduleRestartInitialize( level, sched, matls);
 
     d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart, false);
-    
+
     d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, doingRestart, false );
 
     //__________________________________
@@ -1847,7 +1845,7 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
     i_transport->second->schedule_task_group("scalar_rhs_builders",
       TaskInterface::BC, dont_pack_tasks, level, sched, matls, curr_level );
 
-    i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::TIMESTEP_EVAL,
+    i_transport->second->schedule_task_group( "momentum_conv", TaskInterface::TIMESTEP_EVAL,
       dont_pack_tasks, level, sched, matls, curr_level );
 
     i_transport->second->schedule_task_group( "momentum_fe_update", TaskInterface::TIMESTEP_EVAL,

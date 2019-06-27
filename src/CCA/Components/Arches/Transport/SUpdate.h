@@ -205,8 +205,8 @@ private:
     std::string postmultiplier_name = get_postmultiplier_name( m_eqn_class );
 
     std::string env_number="NA";
-    if (m_eqn_class == ArchesCore::DQMOM) {      
-      db->findBlock("env_number")->getAttribute("number", env_number);    
+    if (m_eqn_class == ArchesCore::DQMOM) {
+      db->findBlock("env_number")->getAttribute("number", env_number);
     }
     _eqn_names.clear();
     for (ProblemSpecP eqn_db = db->findBlock("eqn");
@@ -231,11 +231,12 @@ private:
         trans_variable = premultiplier_name + scalar_name + postmultiplier_name;//
 
       }
-    
+
       m_transported_eqn_names.push_back(trans_variable);//
     } else {
-      // weight:  w is transported 
+      // weight:  w is transported
           m_transported_eqn_names.push_back(scalar_name);// for weights in DQMOM
+
       //Scaling Constant only for weight
       if ( eqn_db->findBlock("scaling") ){
 
@@ -248,7 +249,7 @@ private:
         scaling_w.constant    = scaling_constant;
         m_scaling_info.insert(std::make_pair(scalar_name, scaling_w));
       }
-    }  
+    }
 
     }
 

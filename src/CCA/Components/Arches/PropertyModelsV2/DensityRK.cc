@@ -128,7 +128,6 @@ DensityRK::register_initialize( std::vector<ArchesFieldContainer::VariableInform
                                        variable_registry, const bool packed_tasks ){
 
   register_variable( m_label_densityRK , ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( m_label_density , ArchesFieldContainer::REQUIRES,0, ArchesFieldContainer::NEWDW, variable_registry);
 
 }
 
@@ -137,12 +136,7 @@ template <typename ExecSpace, typename MemSpace>
 void DensityRK::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   auto rhoRK = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( m_label_densityRK );
-  auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>( m_label_density );
-
-  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-    rhoRK(i,j,k)   = rho(i,j,k);
-  });
+  parallel_initialize(execObj,0.0,rhoRK);
 
 }
 
@@ -152,7 +146,7 @@ DensityRK::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInf
                                           variable_registry, const int time_substep,
                                           const bool packed_tasks ){
 
-  register_variable( m_label_density , ArchesFieldContainer::MODIFIES, variable_registry, time_substep  );
+  register_variable( m_label_density , ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
   register_variable( m_label_density , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
 
   register_variable( m_label_densityRK, ArchesFieldContainer::COMPUTES, variable_registry );
@@ -175,7 +169,7 @@ void DensityRK::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execu
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for(execObj,range, KOKKOS_LAMBDA(int i, int j, int k){
 
-    rhoRK(i,j,k) =  alpha * old_rho(i,j,k) +  beta * rho(i,j,k);
+    rhoRK(i,j,k) = alpha * old_rho(i,j,k) +  beta * rho(i,j,k);
 
     rho(i,j,k)  = rhoRK(i,j,k); // I am copy density guess in density
 

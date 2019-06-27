@@ -45,14 +45,15 @@ namespace Uintah{
       } else if ( subset == "variable_stat_models" ){
 
         return _var_stats_tasks;
-      } else if ( subset == "phifromrhophi" ){
 
-        return _phi_from_rho_phi;
-
-      } else if ( subset == "ufromrhou" ){
-
-        return _u_from_rho_u;
-
+      // } else if ( subset == "phifromrhophi" ){
+      //
+      //   return _phi_from_rho_phi;
+      //
+      // } else if ( subset == "ufromrhou" ){
+      //
+      //   return _u_from_rho_u;
+      // 
       } else if ( subset == _all_tasks_str ){
 
         return _active_tasks;

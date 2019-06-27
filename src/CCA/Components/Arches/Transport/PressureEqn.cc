@@ -84,9 +84,9 @@ PressureEqn::problemSetup( ProblemSpecP& db ){
   var_map.problemSetup( db );
   m_eps_name = var_map.vol_frac_name;
 
-  m_xmom_name = "x-mom";
-  m_ymom_name = "y-mom";
-  m_zmom_name = "z-mom";
+  m_xmom_name = ArchesCore::default_uMom_name;
+  m_ymom_name = ArchesCore::default_vMom_name;
+  m_zmom_name = ArchesCore::default_wMom_name;
 
   m_drhodt_name = "drhodt";
 
@@ -151,10 +151,10 @@ PressureEqn::register_initialize(
   std::vector<AFC::VariableInformation>& variable_registry,
   const bool pack_tasks ){
 
-  register_variable( "A_press", AFC::COMPUTES, variable_registry );
-  register_variable( "b_press", AFC::COMPUTES, variable_registry );
-  register_variable( m_pressure_name, AFC::COMPUTES, variable_registry );
-  register_variable( "guess_press", AFC::COMPUTES, variable_registry );
+  register_variable( "A_press", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "b_press", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( m_pressure_name, AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "guess_press", AFC::COMPUTES, variable_registry, m_task_name );
 
 }
 
@@ -172,7 +172,6 @@ void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
   auto x = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_pressure_name);
   auto guess = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("guess_press");
 
-  //const double dt = tsk_info->get_dt();
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
     Stencil7& A = Apress(i,j,k);
@@ -250,11 +249,11 @@ PressureEqn::register_timestep_init(
   std::vector<AFC::VariableInformation>& variable_registry,
   const bool packed_tasks ){
 
-  register_variable( "A_press", AFC::COMPUTES, variable_registry );
-  register_variable( "A_press", AFC::REQUIRES, 0, AFC::OLDDW, variable_registry );
-  register_variable( "b_press", AFC::COMPUTES, variable_registry );
-  register_variable( m_pressure_name, AFC::COMPUTES, variable_registry );
-  register_variable( "guess_press", AFC::COMPUTES, variable_registry );
+  register_variable( "A_press", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "A_press", AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, m_task_name );
+  register_variable( "b_press", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( m_pressure_name, AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "guess_press", AFC::COMPUTES, variable_registry, m_task_name );
 
 }
 
@@ -284,12 +283,12 @@ PressureEqn::register_timestep_eval(
   std::vector<AFC::VariableInformation>& variable_registry,
   const int time_substep, const bool packed_tasks ){
 
-  register_variable( "b_press", AFC::MODIFIES, variable_registry, time_substep );
-  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
-  register_variable( "x-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
-  register_variable( "y-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
-  register_variable( "z-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
-  register_variable( m_drhodt_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( "b_press", AFC::MODIFIES, variable_registry, time_substep, m_task_name );
+  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( ArchesCore::default_uMom_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( ArchesCore::default_vMom_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( ArchesCore::default_wMom_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_drhodt_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
 
 }
 
@@ -305,9 +304,9 @@ void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
 
   auto b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("b_press");
   auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_eps_name);
-  auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>("x-mom");
-  auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>("y-mom");
-  auto zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>("z-mom");
+  auto xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(ArchesCore::default_uMom_name);
+  auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(ArchesCore::default_vMom_name);
+  auto zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(ArchesCore::default_wMom_name);
   auto drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_drhodt_name);
 
   const double dt = tsk_info->get_dt();
@@ -315,11 +314,10 @@ void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
 
   Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
 
-    b(i,j,k) = ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
+    b(i,j,k) = -eps(i,j,k) * ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
                  area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) ) +
                  area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) ) +
                  V*drhodt(i,j,k)  ) / dt ;
-    b(i,j,k)  *= -eps(i,j,k) ;
 
   });
 }
