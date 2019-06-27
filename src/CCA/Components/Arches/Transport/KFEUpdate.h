@@ -87,7 +87,8 @@ public:
     template <typename ExecSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj){}
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -171,11 +172,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskInitializeFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &KFEUpdate<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &KFEUpdate<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &KFEUpdate<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -193,18 +190,14 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskTimestepInitFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &KFEUpdate<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &KFEUpdate<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &KFEUpdate<T>::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskRestartInitFunctionPointers()
   {
-    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------

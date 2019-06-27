@@ -45,7 +45,8 @@ namespace Uintah{
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){};
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj){};
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){};
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
@@ -123,7 +124,7 @@ namespace Uintah{
     void register_massFlowRate( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
 
     template <typename ExecSpace, typename MemSpace>
-    void eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info ,ExecutionObject<ExecSpace, MemSpace>);
+    void eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>);
 
   };
 

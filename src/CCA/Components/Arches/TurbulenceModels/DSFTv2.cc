@@ -15,11 +15,7 @@ DSFTv2::~DSFTv2(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DSFTv2::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &DSFTv2::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &DSFTv2::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DSFTv2::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -45,16 +41,13 @@ TaskAssignedExecutionSpace DSFTv2::loadTaskEvalFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DSFTv2::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &DSFTv2::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DSFTv2::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DSFTv2::loadTaskRestartInitFunctionPointers()
 {
- return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

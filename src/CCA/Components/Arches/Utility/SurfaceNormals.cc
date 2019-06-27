@@ -18,11 +18,7 @@ SurfaceNormals::~SurfaceNormals(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceNormals::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &SurfaceNormals::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &SurfaceNormals::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &SurfaceNormals::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -38,11 +34,7 @@ TaskAssignedExecutionSpace SurfaceNormals::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceNormals::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &SurfaceNormals::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &SurfaceNormals::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &SurfaceNormals::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -51,13 +43,14 @@ TaskAssignedExecutionSpace SurfaceNormals::loadTaskTimestepInitFunctionPointers(
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &SurfaceNormals::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &SurfaceNormals::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceNormals::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceNormals::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -158,7 +158,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskRestartInitFunctionPointers()
   {
-    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------

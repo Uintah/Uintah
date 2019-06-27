@@ -35,21 +35,13 @@ WallConstSmag::~WallConstSmag()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WallConstSmag::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &WallConstSmag::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &WallConstSmag::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &WallConstSmag::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WallConstSmag::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &WallConstSmag::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &WallConstSmag::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &WallConstSmag::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -65,11 +57,7 @@ TaskAssignedExecutionSpace WallConstSmag::loadTaskEvalFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WallConstSmag::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &WallConstSmag::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &WallConstSmag::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &WallConstSmag::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

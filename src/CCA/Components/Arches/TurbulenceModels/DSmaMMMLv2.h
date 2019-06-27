@@ -39,7 +39,8 @@ public:
     template <typename ExecSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -87,22 +88,14 @@ DSmaMMMLv2<TT>::~DSmaMMMLv2(){}
 template<typename TT>
 TaskAssignedExecutionSpace DSmaMMMLv2<TT>::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &DSmaMMMLv2<TT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &DSmaMMMLv2<TT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DSmaMMMLv2<TT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 template<typename TT>
 TaskAssignedExecutionSpace DSmaMMMLv2<TT>::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &DSmaMMMLv2<TT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &DSmaMMMLv2<TT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DSmaMMMLv2<TT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -120,17 +113,14 @@ TaskAssignedExecutionSpace DSmaMMMLv2<TT>::loadTaskEvalFunctionPointers()
 template<typename TT>
 TaskAssignedExecutionSpace DSmaMMMLv2<TT>::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &DSmaMMMLv2<TT>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DSmaMMMLv2<TT>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 template<typename TT>
 TaskAssignedExecutionSpace DSmaMMMLv2<TT>::loadTaskRestartInitFunctionPointers()
 {
- return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+ return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

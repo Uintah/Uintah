@@ -54,11 +54,7 @@ MassFlowRate::~MassFlowRate(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace MassFlowRate::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &MassFlowRate::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &MassFlowRate::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &MassFlowRate::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -84,16 +80,13 @@ TaskAssignedExecutionSpace MassFlowRate::loadTaskEvalFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace MassFlowRate::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &MassFlowRate::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &MassFlowRate::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace MassFlowRate::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //-------------------------------------------------------------------------------------------------------

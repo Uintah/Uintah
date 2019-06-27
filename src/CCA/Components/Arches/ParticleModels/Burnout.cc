@@ -8,11 +8,7 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Burnout::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &Burnout::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &Burnout::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &Burnout::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -48,7 +44,7 @@ TaskAssignedExecutionSpace Burnout::loadTaskTimestepInitFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Burnout::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

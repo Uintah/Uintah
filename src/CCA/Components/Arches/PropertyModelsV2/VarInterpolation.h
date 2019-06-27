@@ -129,11 +129,7 @@ VarInterpolation<T, IT>::~VarInterpolation()
 template <typename T, typename IT>
 TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &VarInterpolation<T, IT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &VarInterpolation<T, IT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &VarInterpolation<T, IT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -162,17 +158,14 @@ TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskEvalFunctionPointers
 template <typename T, typename IT>
 TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &VarInterpolation<T, IT>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &VarInterpolation<T, IT>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
 TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

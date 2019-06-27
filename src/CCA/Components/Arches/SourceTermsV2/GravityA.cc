@@ -16,11 +16,7 @@ GravityA::~GravityA()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GravityA::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &GravityA::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &GravityA::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &GravityA::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -46,16 +42,13 @@ TaskAssignedExecutionSpace GravityA::loadTaskEvalFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GravityA::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &GravityA::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &GravityA::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GravityA::loadTaskRestartInitFunctionPointers()
 {
- return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+ return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -162,8 +155,7 @@ GravityA::register_timestep_init( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename MemSpace>
-void
-GravityA::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void GravityA::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 }
 

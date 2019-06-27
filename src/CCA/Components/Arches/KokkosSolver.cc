@@ -297,6 +297,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
                           "KokkosSolver::setTimeStep",
                           &KokkosSolver::setTimeStep<UINTAH_CPU_TAG>,
                           &KokkosSolver::setTimeStep<KOKKOS_OPENMP_TAG>,
+                          //&KokkosSolver::setTimeStep<KOKKOS_CUDA_TAG>,
                           sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 
   }

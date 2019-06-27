@@ -61,11 +61,7 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace FractalUD::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &FractalUD::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &FractalUD::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &FractalUD::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -91,16 +87,13 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace FractalUD::loadTaskTimestepInitFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &FractalUD::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &FractalUD::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace FractalUD::loadTaskRestartInitFunctionPointers()
   {
-    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //---------------------------------------------------------------------------------
@@ -268,9 +261,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-  void
-    FractalUD::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void FractalUD::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
     }
 
   //---------------------------------------------------------------------------------

@@ -40,7 +40,8 @@ public:
     template <typename ExecSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -96,11 +97,7 @@ DSmaCsv2<TT>::~DSmaCsv2(){
 template<typename TT>
 TaskAssignedExecutionSpace DSmaCsv2<TT>::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &DSmaCsv2<TT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &DSmaCsv2<TT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DSmaCsv2<TT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -140,7 +137,7 @@ TaskAssignedExecutionSpace DSmaCsv2<TT>::loadTaskTimestepInitFunctionPointers()
 template<typename TT>
 TaskAssignedExecutionSpace DSmaCsv2<TT>::loadTaskRestartInitFunctionPointers()
 {
- return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

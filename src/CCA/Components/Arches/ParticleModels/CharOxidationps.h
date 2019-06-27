@@ -210,11 +210,7 @@ CharOxidationps<T>::~CharOxidationps()
 template <typename T>
 TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &CharOxidationps<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &CharOxidationps<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &CharOxidationps<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -243,17 +239,14 @@ TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskEvalFunctionPointers()
 template <typename T>
 TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &CharOxidationps<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &CharOxidationps<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 TaskAssignedExecutionSpace CharOxidationps<T>::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

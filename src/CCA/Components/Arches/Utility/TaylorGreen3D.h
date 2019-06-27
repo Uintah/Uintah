@@ -64,7 +64,8 @@ protected:
     template <typename ExecSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj){}
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
@@ -102,11 +103,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace TaylorGreen3D<T>::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &TaylorGreen3D<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &TaylorGreen3D<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &TaylorGreen3D<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -124,29 +121,21 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace TaylorGreen3D<T>::loadTaskEvalFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &TaylorGreen3D<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &TaylorGreen3D<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &TaylorGreen3D<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace TaylorGreen3D<T>::loadTaskTimestepInitFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &TaylorGreen3D<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &TaylorGreen3D<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &TaylorGreen3D<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace TaylorGreen3D<T>::loadTaskRestartInitFunctionPointers()
   {
-    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //------------------------------------------------------------------------------------------------

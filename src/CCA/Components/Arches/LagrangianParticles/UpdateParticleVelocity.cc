@@ -14,11 +14,7 @@ UpdateParticleVelocity::~UpdateParticleVelocity(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &UpdateParticleVelocity::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &UpdateParticleVelocity::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &UpdateParticleVelocity::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -44,16 +40,13 @@ TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskEvalFunctionPointers(
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &UpdateParticleVelocity::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &UpdateParticleVelocity::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

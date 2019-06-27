@@ -83,7 +83,8 @@ namespace Uintah{
     template <typename ExecSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -132,11 +133,7 @@ namespace Uintah{
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &BodyForce<IT, DT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &BodyForce<IT, DT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &BodyForce<IT, DT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -165,17 +162,14 @@ namespace Uintah{
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskTimestepInitFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &BodyForce<IT, DT>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &BodyForce<IT, DT>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskRestartInitFunctionPointers()
   {
-    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------

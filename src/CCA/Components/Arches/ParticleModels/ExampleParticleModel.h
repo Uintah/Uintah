@@ -66,7 +66,8 @@ protected:
     template <typename ExecSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -124,11 +125,7 @@ private:
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &ExampleParticleModel<IT, DT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &ExampleParticleModel<IT, DT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &ExampleParticleModel<IT, DT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -157,17 +154,14 @@ private:
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskTimestepInitFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &ExampleParticleModel<IT, DT>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &ExampleParticleModel<IT, DT>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskRestartInitFunctionPointers()
   {
-    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------

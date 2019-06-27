@@ -17,21 +17,13 @@ PressureBC::~PressureBC()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace PressureBC::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &PressureBC::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &PressureBC::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &PressureBC::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace PressureBC::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &PressureBC::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &PressureBC::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &PressureBC::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -47,17 +39,13 @@ TaskAssignedExecutionSpace PressureBC::loadTaskEvalFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace PressureBC::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &PressureBC::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &PressureBC::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &PressureBC::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace PressureBC::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

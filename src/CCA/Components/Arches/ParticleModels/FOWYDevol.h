@@ -87,7 +87,8 @@ namespace Uintah{
     template <typename ExecSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -146,11 +147,7 @@ namespace Uintah{
   template <typename T>
   TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &FOWYDevol<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &FOWYDevol<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &FOWYDevol<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -179,17 +176,14 @@ namespace Uintah{
   template <typename T>
   TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskTimestepInitFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &FOWYDevol<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &FOWYDevol<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskRestartInitFunctionPointers()
   {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------

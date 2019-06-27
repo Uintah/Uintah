@@ -17,11 +17,7 @@ DensityStar::~DensityStar(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DensityStar::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &DensityStar::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DensityStar::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &DensityStar::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -50,14 +46,14 @@ TaskAssignedExecutionSpace DensityStar::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &DensityStar::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &DensityStar::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &DensityStar::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &DensityStar::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
                                      );
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DensityStar::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

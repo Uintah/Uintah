@@ -12,11 +12,7 @@ InitLagrangianParticleSize::~InitLagrangianParticleSize(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &InitLagrangianParticleSize::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &InitLagrangianParticleSize::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &InitLagrangianParticleSize::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -32,27 +28,19 @@ TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskInitializeFunctio
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &InitLagrangianParticleSize::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &InitLagrangianParticleSize::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &InitLagrangianParticleSize::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &InitLagrangianParticleSize::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &InitLagrangianParticleSize::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &InitLagrangianParticleSize::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 void

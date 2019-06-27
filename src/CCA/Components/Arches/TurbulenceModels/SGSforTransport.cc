@@ -31,11 +31,7 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace SGSforTransport::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &SGSforTransport::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &SGSforTransport::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &SGSforTransport::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -71,7 +67,7 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace SGSforTransport::loadTaskRestartInitFunctionPointers()
   {
-    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -141,9 +137,8 @@ namespace Uintah{
     }
 
   //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-  void
-    SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
       // Unused - creating a compiler warning
       // SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");

@@ -6,11 +6,7 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BurnsChriston::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &BurnsChriston::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &BurnsChriston::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &BurnsChriston::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -26,11 +22,7 @@ TaskAssignedExecutionSpace BurnsChriston::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BurnsChriston::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &BurnsChriston::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &BurnsChriston::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &BurnsChriston::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -39,6 +31,7 @@ TaskAssignedExecutionSpace BurnsChriston::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &BurnsChriston::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &BurnsChriston::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &BurnsChriston::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -48,6 +41,7 @@ TaskAssignedExecutionSpace BurnsChriston::loadTaskRestartInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
                                      , &BurnsChriston::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &BurnsChriston::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &BurnsChriston::restart_initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 

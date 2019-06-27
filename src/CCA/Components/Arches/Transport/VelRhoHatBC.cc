@@ -18,21 +18,13 @@ VelRhoHatBC::~VelRhoHatBC()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VelRhoHatBC::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &VelRhoHatBC::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &VelRhoHatBC::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &VelRhoHatBC::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VelRhoHatBC::loadTaskInitializeFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &VelRhoHatBC::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &VelRhoHatBC::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &VelRhoHatBC::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -48,13 +40,13 @@ TaskAssignedExecutionSpace VelRhoHatBC::loadTaskEvalFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VelRhoHatBC::loadTaskTimestepInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VelRhoHatBC::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

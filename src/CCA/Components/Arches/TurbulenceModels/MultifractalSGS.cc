@@ -61,11 +61,7 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace MultifractalSGS::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &MultifractalSGS::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &MultifractalSGS::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &MultifractalSGS::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -101,7 +97,7 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
   TaskAssignedExecutionSpace MultifractalSGS::loadTaskRestartInitFunctionPointers()
   {
-   return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //---------------------------------------------------------------------------------
@@ -216,8 +212,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-    template <typename ExecSpace, typename MemSpace> void
-    MultifractalSGS::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  template <typename ExecSpace, typename MemSpace>
+  void MultifractalSGS::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
       // Unused - creating a compiler warning
       // SFCXVariable<double>& ucell_xSgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress"));

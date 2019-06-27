@@ -56,14 +56,14 @@ TaskAssignedExecutionSpace PressureEqn::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &PressureEqn::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &PressureEqn::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &PressureEqn::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &PressureEqn::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
                                      );
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace PressureEqn::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

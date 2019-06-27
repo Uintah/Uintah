@@ -45,11 +45,7 @@ if (_particle_calculator_type=="tabulated")
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace partRadProperties::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &partRadProperties::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &partRadProperties::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &partRadProperties::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -75,17 +71,13 @@ TaskAssignedExecutionSpace partRadProperties::loadTaskEvalFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace partRadProperties::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &partRadProperties::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &partRadProperties::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &partRadProperties::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::CUDA builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace partRadProperties::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //---------------------------------------------------------------------------
@@ -355,8 +347,8 @@ void partRadProperties::register_timestep_init( VIVec& variable_registry , const
 }
 
 
-template <typename ExecSpace, typename MemSpace> void
-partRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void partRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 }
 

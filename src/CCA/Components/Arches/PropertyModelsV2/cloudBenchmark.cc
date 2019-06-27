@@ -6,11 +6,7 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace cloudBenchmark::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &cloudBenchmark::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &cloudBenchmark::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &cloudBenchmark::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -26,11 +22,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace cloudBenchmark::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &cloudBenchmark::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &cloudBenchmark::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &cloudBenchmark::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -39,6 +31,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskTimestepInitFunctionPointers(
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &cloudBenchmark::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &cloudBenchmark::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &cloudBenchmark::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -48,6 +41,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskRestartInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
                                      , &cloudBenchmark::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &cloudBenchmark::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &cloudBenchmark::restart_initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 

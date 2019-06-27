@@ -80,7 +80,8 @@ namespace Uintah{
     template <typename ExecSpace, typename MemSpace>
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
@@ -123,11 +124,7 @@ namespace Uintah{
   template <typename T>
   TaskAssignedExecutionSpace Constant<T>::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &Constant<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &Constant<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &Constant<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -145,11 +142,7 @@ namespace Uintah{
   template <typename T>
   TaskAssignedExecutionSpace Constant<T>::loadTaskEvalFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &Constant<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &Constant<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &Constant<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -159,6 +152,7 @@ namespace Uintah{
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                        , &Constant<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &Constant<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &Constant<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -166,7 +160,7 @@ namespace Uintah{
   template <typename T>
   TaskAssignedExecutionSpace Constant<T>::loadTaskRestartInitFunctionPointers()
   {
-    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //------------------------------------------------------------------------------------------------

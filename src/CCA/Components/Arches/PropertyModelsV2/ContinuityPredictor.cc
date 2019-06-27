@@ -15,11 +15,7 @@ ContinuityPredictor::~ContinuityPredictor(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ContinuityPredictor::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &ContinuityPredictor::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &ContinuityPredictor::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &ContinuityPredictor::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -45,17 +41,13 @@ TaskAssignedExecutionSpace ContinuityPredictor::loadTaskEvalFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ContinuityPredictor::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &ContinuityPredictor::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &ContinuityPredictor::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &ContinuityPredictor::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ContinuityPredictor::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

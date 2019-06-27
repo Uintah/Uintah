@@ -14,11 +14,7 @@ DQMOMNoInversion::~DQMOMNoInversion(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &DQMOMNoInversion::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &DQMOMNoInversion::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DQMOMNoInversion::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -54,7 +50,7 @@ TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskTimestepInitFunctionPointer
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskRestartInitFunctionPointers()
 {
-    return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

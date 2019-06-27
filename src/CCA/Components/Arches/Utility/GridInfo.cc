@@ -8,11 +8,7 @@ typedef ArchesFieldContainer AFC;
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GridInfo::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &GridInfo::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &GridInfo::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &GridInfo::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -28,11 +24,7 @@ TaskAssignedExecutionSpace GridInfo::loadTaskInitializeFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GridInfo::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &GridInfo::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &GridInfo::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &GridInfo::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -41,14 +33,14 @@ TaskAssignedExecutionSpace GridInfo::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &GridInfo::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &GridInfo::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &GridInfo::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &GridInfo::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
                                      );
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GridInfo::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

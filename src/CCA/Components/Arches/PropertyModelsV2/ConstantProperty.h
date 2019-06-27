@@ -51,9 +51,10 @@ public:
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj  );
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    template <typename ExecSpace, typename MemSpace> void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj);
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
@@ -108,11 +109,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &ConstantProperty<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &ConstantProperty<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &ConstantProperty<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -130,11 +127,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskEvalFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &ConstantProperty<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &ConstantProperty<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &ConstantProperty<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -144,6 +137,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                        , &ConstantProperty<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &ConstantProperty<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ConstantProperty<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -154,6 +148,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
                                        , &ConstantProperty<T>::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &ConstantProperty<T>::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ConstantProperty<T>::restart_initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -261,7 +256,7 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template <typename ExecSpace, typename MemSpace>
-  void ConstantProperty<T>::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj  ){
+  void ConstantProperty<T>::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     T& property = tsk_info->get_uintah_field_add<T>( m_task_name );
     property.initialize(0.0);

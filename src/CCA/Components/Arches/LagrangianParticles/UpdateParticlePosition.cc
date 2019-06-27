@@ -14,11 +14,7 @@ UpdateParticlePosition::~UpdateParticlePosition(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &UpdateParticlePosition::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &UpdateParticlePosition::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &UpdateParticlePosition::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -44,16 +40,13 @@ TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskEvalFunctionPointers(
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &UpdateParticlePosition::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &UpdateParticlePosition::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -112,8 +105,8 @@ UpdateParticlePosition::register_timestep_init(
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace> void
-UpdateParticlePosition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+template <typename ExecSpace, typename MemSpace>
+void UpdateParticlePosition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
 //--------------------------------------------------------------------------------------------------
 void

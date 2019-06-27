@@ -17,11 +17,7 @@ VariableStats::~VariableStats()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VariableStats::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &VariableStats::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &VariableStats::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &VariableStats::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -60,6 +56,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskRestartInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
                                      , &VariableStats::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &VariableStats::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &VariableStats::restart_initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 

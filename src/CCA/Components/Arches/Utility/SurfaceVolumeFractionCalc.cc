@@ -7,11 +7,7 @@ using namespace Uintah;
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &SurfaceVolumeFractionCalc::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &SurfaceVolumeFractionCalc::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &SurfaceVolumeFractionCalc::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -27,11 +23,7 @@ TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskInitializeFunction
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &SurfaceVolumeFractionCalc::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &SurfaceVolumeFractionCalc::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &SurfaceVolumeFractionCalc::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -40,14 +32,14 @@ TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskTimestepInitFuncti
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &SurfaceVolumeFractionCalc::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &SurfaceVolumeFractionCalc::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &SurfaceVolumeFractionCalc::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &SurfaceVolumeFractionCalc::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
                                      );
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -266,7 +258,7 @@ SurfaceVolumeFractionCalc::register_timestep_init( ArchesVIVector& variable_regi
 
 //--------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename MemSpace> void
-SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj){
+SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   auto cc_vol_frac = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("volFraction");
   auto cc_vol_frac_old = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>("volFraction");

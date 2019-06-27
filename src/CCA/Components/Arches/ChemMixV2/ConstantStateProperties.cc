@@ -15,11 +15,7 @@ ConstantStateProperties::~ConstantStateProperties(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ConstantStateProperties::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &ConstantStateProperties::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &ConstantStateProperties::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &ConstantStateProperties::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -35,11 +31,7 @@ TaskAssignedExecutionSpace ConstantStateProperties::loadTaskInitializeFunctionPo
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ConstantStateProperties::loadTaskEvalFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &ConstantStateProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &ConstantStateProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &ConstantStateProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -48,6 +40,7 @@ TaskAssignedExecutionSpace ConstantStateProperties::loadTaskTimestepInitFunction
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &ConstantStateProperties::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &ConstantStateProperties::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ConstantStateProperties::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 

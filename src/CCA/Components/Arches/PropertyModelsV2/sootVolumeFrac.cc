@@ -27,11 +27,7 @@ sootVolumeFrac::~sootVolumeFrac( )
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sootVolumeFrac::loadTaskComputeBCsFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &sootVolumeFrac::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &sootVolumeFrac::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &sootVolumeFrac::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -57,16 +53,13 @@ TaskAssignedExecutionSpace sootVolumeFrac::loadTaskEvalFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sootVolumeFrac::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &sootVolumeFrac::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &sootVolumeFrac::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sootVolumeFrac::loadTaskRestartInitFunctionPointers()
 {
-  return  TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //---------------------------------------------------------------------------
@@ -112,8 +105,8 @@ void sootVolumeFrac::register_timestep_init( VIVec& variable_registry , const bo
 }
 
 
-template <typename ExecSpace, typename MemSpace> void
-sootVolumeFrac::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void sootVolumeFrac::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 }
 
