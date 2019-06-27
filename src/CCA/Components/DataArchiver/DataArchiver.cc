@@ -3252,7 +3252,9 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
                                ProblemSpecP                & doc )
 {
 
-  cout << "saveLabels_PIDX()\n";
+  if(dbgPIDX.active())
+    dbgPIDX << "saveLabels_PIDX()\n";
+
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX
   const int timeStep = m_application->getTimeStep();
@@ -3640,7 +3642,8 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
   pidx.varDesc=0;
 
 #endif
-  cout << "end saveLabels_PIDX()\n";
+  if(dbgPIDX.active())
+    dbgPIDX << "end saveLabels_PIDX()\n";
 
   return totalBytesSaved;
 } // end saveLabels_PIDX();
