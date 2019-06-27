@@ -8,7 +8,7 @@
 #
 
 # Note: Change PIDX_TAG to "master" if you want to grab the latest trunk.
-# this was "v0.9.2", changing it temporarly to master 
+# this was "v0.9.2", changing it temporarly to master (see TODO note below when switching from master to release version)
 PIDX_TAG="master"
 
 PIDX_DIR=$1
@@ -59,7 +59,8 @@ fi
 
 run "git config --unset-all remote.origin.fetch"
 run "git config --add remote.origin.fetch +refs/tags/${PIDX_TAG}:refs/tags/${PIDX_TAG}"
-run "git fetch --depth=1 --prune origin tags/${PIDX_TAG}"
+# TODO change ${PIDX_TAG} to "tags/${PIDX_TAG}"  when using a PIDX release
+run "git fetch --depth=1 --prune origin ${PIDX_TAG}"
 run "git checkout FETCH_HEAD"
 
 run "cd build"
