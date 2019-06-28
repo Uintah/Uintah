@@ -1,5 +1,9 @@
 Fix failing inputs and re-enable kokkos_rt tests
 
+Continue to refactor Arches tasks to support Kokkos::CUDA
+- Consistently use back-ends across tasks using a given variable (e.g., do not initialize to 0 on the GPU to send to the CPU for calculation)
+- Note, Kokkos::CUDA support disabled in kokkos_dev commit r59496 may be easily restored once calculations are moved to the GPU
+
 Revisit support for task dependency type Task::Modifies on the GPU in the Unified Scheduler and Kokkos Scheduler
 - CS development for Arches builds using Kokkos::CUDA left off with support for Task::Computes and Task::Requires on the GPU
 - Revisit UnifiedScheduler::runTasks and helper function logic for Task::Modifies

@@ -279,7 +279,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &KScalarRHS<T, PT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KScalarRHS<T, PT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &KScalarRHS<T, PT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       //, &KScalarRHS<T, PT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -301,7 +301,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                        , &KScalarRHS<T, PT>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KScalarRHS<T, PT>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &KScalarRHS<T, PT>::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
+                                       //, &KScalarRHS<T, PT>::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
                                        );
   }
 

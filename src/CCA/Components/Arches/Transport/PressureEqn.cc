@@ -56,7 +56,7 @@ TaskAssignedExecutionSpace PressureEqn::loadTaskTimestepInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &PressureEqn::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &PressureEqn::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &PressureEqn::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
+                                     //, &PressureEqn::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -504,7 +504,7 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
                           "PressureEqn::blindGuessToLinearSystem",
                           &PressureEqn::blindGuessToLinearSystem<UINTAH_CPU_TAG>,
                           &PressureEqn::blindGuessToLinearSystem<KOKKOS_OPENMP_TAG>,
-                          &PressureEqn::blindGuessToLinearSystem<KOKKOS_CUDA_TAG>,
+                          //&PressureEqn::blindGuessToLinearSystem<KOKKOS_CUDA_TAG>,
                           sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT);
    }
 
