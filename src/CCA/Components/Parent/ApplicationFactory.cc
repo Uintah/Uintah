@@ -54,6 +54,7 @@
 #include <CCA/Components/Examples/Poisson2.h>
 #include <CCA/Components/Examples/Poisson3.h>
 #include <CCA/Components/Examples/Poisson4.h>
+#include <CCA/Components/Examples/PortableDependencyTest.h>
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/Examples/SolverTest2.h>
@@ -382,6 +383,12 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   }
   else
     turned_on_options += "poisson4 ";
+
+  if (sim_comp == "portabledependencytest" || sim_comp == "PORTABLEDEPENDENCYTEST") {
+    return scinew PortableDependencyTest(myworld, materialManager);
+  }
+  else
+    turned_on_options += "portabledependencytest ";
 
 #ifndef NO_MODELS_RADIATION
   if (sim_comp == "RMCRT_Test") {
