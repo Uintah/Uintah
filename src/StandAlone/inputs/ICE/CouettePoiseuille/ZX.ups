@@ -130,7 +130,7 @@
       <save label = "tau_X_FC"/>
       <save label = "tau_Z_FC"/>
 
-      <!--<checkpoint interval="0.75" cycle="2"/> -->
+      <!--<checkpoint interval="0.75" cycle="1"/> -->
       <checkpoint timestepInterval="100" cycle="1"/>
    </DataArchiver>
 

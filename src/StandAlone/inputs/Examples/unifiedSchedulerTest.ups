@@ -27,7 +27,7 @@
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "phi"/>
       <save label = "residual"/>
-      <checkpoint cycle = "2" timestepInterval = "1"/>
+      <checkpoint cycle = "1" timestepInterval = "1"/>
   </DataArchiver> 
   
   

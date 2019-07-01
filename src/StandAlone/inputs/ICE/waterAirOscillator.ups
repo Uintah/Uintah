@@ -127,7 +127,7 @@
       <save label="TotalMass"/>
       <save label="TotalIntEng"/>
       <save label="TotalMomentum"/>
-      <checkpoint interval="0.01" cycle="2"/>
+      <checkpoint interval="0.01" cycle="1"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->

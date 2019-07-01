@@ -108,7 +108,7 @@
       <save label = "temp_CC"/>
       <save label = "p.x"/>
       <save label = "p.volume"/>
-      <checkpoint cycle = "2" timestepInterval = "300"/>
+      <checkpoint cycle = "1" timestepInterval = "300"/>
 <!--
       <save label = "mom_source_CC"/>    
       <save label = "mom_L_CC"/>

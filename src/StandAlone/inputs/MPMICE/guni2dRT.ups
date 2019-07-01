@@ -117,7 +117,7 @@
       <save label = "p.localizedMPM"/>
 -->
 
-      <checkpoint cycle = "2" timestepInterval = "20"/>
+      <checkpoint cycle = "1" timestepInterval = "20"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->

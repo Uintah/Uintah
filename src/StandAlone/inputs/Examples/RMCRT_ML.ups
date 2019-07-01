@@ -121,7 +121,7 @@
       <!--<save label = "abskgRMCRT"/>        floats -->
       <save label = "abskg"/>             <!--<doubles-->
       <save label = "sigmaT4"/>
-      <checkpoint cycle = "2" timestepInterval = "2"/>
+      <checkpoint cycle = "1" timestepInterval = "2"/>
   </DataArchiver>
   
   
