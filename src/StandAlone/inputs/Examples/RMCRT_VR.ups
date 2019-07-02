@@ -113,7 +113,7 @@
       <save label = "abskg"   />
       <save label = "sigmaT4" />
       <save label = "VRFlux" />
-      <checkpoint cycle = "1" timestepInterval = "2"/>
+      <checkpoint cycle = "1" timestepInterval = "3"/>
   </DataArchiver>
 
   <!--__________________________________ -->

@@ -165,7 +165,7 @@
       <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/> 
-      <checkpoint timestepInterval = "5" cycle = "1" />    
+      <checkpoint timestepInterval = "6" cycle = "1" />    
     </DataArchiver>
 
     

@@ -159,7 +159,7 @@
       <save label="vvel_FCME"/>
       <save label="wvel_FCME"/>
       <save label="rhs"/>
-      <checkpoint interval="0.05" cycle="1"/>
+      <checkpoint interval="0.06" cycle="1"/>
    </DataArchiver>
    
     <!--____________________________________________________________________-->
