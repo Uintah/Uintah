@@ -70,6 +70,26 @@
 using namespace std;
 using namespace Uintah;
 
+//HYPRE_USING_CUDA gets defined in HYPRE_config.h if hypre is configured with cuda.
+//if HYPRE_USING_CUDA or HYPRE_USING_KOKKOS (with kokkos-cuda backend) is enabled, 
+//copy all values to gpu memory buffer and then pass it to SetBoxValues. Rest everything remains same.
+//This is a temporary solution to get the code working. TODO: 
+//1. Analyze performance of hypre gpu solve without considering the copying time. (look at solve only time)
+//2. Improve performance, if possible. 
+//3. If gpu hypre performs faster than mpi only cpu hypre, convert this code into portable task
+//   (similar to CharOx)
+//4. If gpu hypre can not perform, possibly use cpu only version. (may be with thread as rank approach)
+
+//-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+#define cudaErrorCheck(err) \
+	if(err != cudaSuccess) {\
+		printf("error in cuda call at %s: %d. %s: %s\n", __FILE__, __LINE__, cudaGetErrorName(err), cudaGetErrorString(err));\
+		exit(1);	\
+	}
+#endif
+//-----------------  end of hypre-cuda  -----------------
+
 //__________________________________
 //  To turn on normal output
 //  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
@@ -192,6 +212,17 @@ namespace Uintah {
           IntVector hi;
           getPatchExtents( patch, lo, hi );
 
+          //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+          double *d_values;
+          int row_size = abs(hi.x()-lo.x())*sizeof(double);
+          cudaErrorCheck(cudaMalloc((void**)&d_values, row_size));
+#else
+          double *d_values;
+#endif	//defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+          //-----------------  end of hypre-cuda  -----------------
+
+
           //__________________________________
           // Feed Q variable to Hypre
           for(int z=lo.z(); z<hi.z(); z++){
@@ -202,11 +233,24 @@ namespace Uintah {
 
               const double* values = &Q[l];
 
+              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+              cudaErrorCheck(cudaMemcpy(d_values, values, row_size, cudaMemcpyHostToDevice));
+#else
+              d_values = const_cast<double*>(values);
+#endif	//defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+              //-----------------  end of hypre-cuda  -----------------
+
               HYPRE_StructVectorSetBoxValues( *HQ,
                                              l.get_pointer(), h.get_pointer(),
-                                             const_cast<double*>(values));
+											 d_values);
             }
           }
+          //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+          cudaErrorCheck(cudaFree(d_values));
+#endif
+          //-----------------  end of hypre-cuda  -----------------
         }  // label exist?
       }  // patch loop
 
@@ -419,6 +463,15 @@ namespace Uintah {
               double* values = scinew double[(h.x()-l.x())*4];
               int stencil_indices[] = {0,1,2,3};
 
+              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+              double *d_values;
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+              int row_size = abs(h.x()-l.x())*sizeof(double)*4;
+              cudaErrorCheck(cudaMalloc((void**)&d_values, row_size));
+#endif	//defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+              //-----------------  end of hypre-cuda  -----------------
+
+
               // use stencil4 as coefficient matrix. NOTE: This should be templated
               // on the stencil type. This workaround is to get things moving
               // until we convince component developers to move to stencil4. You must
@@ -440,11 +493,20 @@ namespace Uintah {
                       *p++ = AA->b;
                       AA++;
                     }
+
+                    //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+                    cudaErrorCheck(cudaMemcpy(d_values, values, row_size, cudaMemcpyHostToDevice));
+#else
+                    d_values = values;
+#endif	//defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+                    //-----------------  end of hypre-cuda  -----------------
+
                     IntVector ll(l.x(), y, z);
                     IntVector hh(h.x()-1, y, z);
                     HYPRE_StructMatrixSetBoxValues(*HA,
                                                    ll.get_pointer(), hh.get_pointer(),
-                                                   4, stencil_indices, values);
+                                                   4, stencil_indices, d_values);
 
                   } // y loop
                 }  // z loop
@@ -464,19 +526,43 @@ namespace Uintah {
                       *p++ = AA->b;
                       AA++;
                     }
+
+                    //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+                    cudaErrorCheck(cudaMemcpy(d_values, values, row_size, cudaMemcpyHostToDevice));
+#else
+                    d_values = values;
+#endif	//defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+                    //-----------------  end of hypre-cuda  -----------------
+
                     IntVector ll(l.x(), y, z);
                     IntVector hh(h.x()-1, y, z);
                     HYPRE_StructMatrixSetBoxValues(*HA,
                                                    ll.get_pointer(), hh.get_pointer(),
-                                                   4, stencil_indices, values);
+                                                   4, stencil_indices, d_values);
 
                   } // y loop
                 }  // z loop
               }
               delete[] values;
+              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+              cudaErrorCheck(cudaFree(d_values));
+#endif
+              //-----------------  end of hypre-cuda  -----------------
+
             } else {
               double* values = scinew double[(h.x()-l.x())*7];
               int stencil_indices[] = {0,1,2,3,4,5,6};
+
+              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+              double *d_values;
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+              int row_size = abs(h.x()-l.x())*sizeof(double)*7;
+              cudaErrorCheck(cudaMalloc((void**)&d_values, row_size));
+#endif	//defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+              //-----------------  end of hypre-cuda  -----------------
+
 
               for(int z=l.z();z<h.z();z++){
                 for(int y=l.y();y<h.y();y++){
@@ -495,15 +581,30 @@ namespace Uintah {
                     AA++;
                   }
 
+                  //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+                  cudaErrorCheck(cudaMemcpy(d_values, values, row_size, cudaMemcpyHostToDevice));
+#else
+                  d_values = values;
+#endif	//defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+                  //-----------------  end of hypre-cuda  -----------------
+
+
                   IntVector ll(l.x(), y, z);
                   IntVector hh(h.x()-1, y, z);
                   HYPRE_StructMatrixSetBoxValues(*HA,
                                                  ll.get_pointer(), hh.get_pointer(),
                                                  7, stencil_indices,
-                                                 values);
+												 d_values);
                 }  // y loop
               } // z loop
               delete[] values;
+              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+              cudaErrorCheck(cudaFree(d_values));
+#endif
+              //-----------------  end of hypre-cuda  -----------------
+
             }
           }
           if (timeStep == 1 || recompute || do_setup){
@@ -780,6 +881,16 @@ namespace Uintah {
             new_dw->allocateAndPut(Xnew, m_X_label, matl, patch);
           }
 
+          //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+          double *d_values;
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+          int row_size = abs(h.x()-l.x())*sizeof(double);
+          cudaErrorCheck(cudaMalloc((void**)&d_values, row_size));
+#endif	//defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+          //-----------------  end of hypre-cuda  -----------------
+
+
+
           // Get the solution back from hypre
           for(int z=l.z();z<h.z();z++){
             for(int y=l.y();y<h.y();y++){
@@ -788,11 +899,32 @@ namespace Uintah {
               IntVector ll(l.x(), y, z);
               IntVector hh(h.x()-1, y, z);
 
+              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+              //cudaErrorCheck(cudaMemcpy(d_values, values, row_size, cudaMemcpyHostToDevice));
+              // do nothing
+#else
+              d_values = values;
+#endif	//defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+              //-----------------  end of hypre-cuda  -----------------
+
+
               HYPRE_StructVectorGetBoxValues(HX,
                   ll.get_pointer(), hh.get_pointer(),
-                  values);
+				  d_values);
+
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+              cudaErrorCheck(cudaMemcpy(values, d_values, row_size, cudaMemcpyDeviceToHost));
+#endif
             }
           }
+
+          //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+          cudaErrorCheck(cudaFree(d_values));
+#endif
+          //-----------------  end of hypre-cuda  -----------------
+
         }
         //__________________________________
         // clean up
@@ -1032,6 +1164,14 @@ namespace Uintah {
   HypreSolver2::HypreSolver2(const ProcessorGroup* myworld)
   : SolverCommon(myworld)
   {
+  	//-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+  	int argc = 0;
+	//std::string
+  	HYPRE_Init(argc, NULL);
+#endif
+  	//-----------------  end of hypre-cuda  -----------------
+
     // Time Step
     m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
 
@@ -1046,6 +1186,9 @@ namespace Uintah {
 
   HypreSolver2::~HypreSolver2()
   {
+	  	//-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+	  	HYPRE_Finalize();
+	  	//-----------------  end of hypre-cuda  -----------------
     VarLabel::destroy(m_timeStepLabel);
     VarLabel::destroy(hypre_solver_label);
     delete m_params;
