@@ -208,7 +208,7 @@
     <save label="grad_dp_ZFC"/>
     <save label="sum_rho_CC"/>
     <save label="rhs"/>
-    <checkpoint timestepInterval="5" cycle="2"/>
+    <checkpoint timestepInterval="5" cycle="1"/>
   </DataArchiver>
 
   <!--____________________________________________________________________-->
