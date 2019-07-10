@@ -51,6 +51,9 @@ namespace Uintah {
 		const VarLabel* pPorePressureLabel;
 		const VarLabel* pPorePressureLabel_preReloc;
 
+		const VarLabel* pFreeSurfaceLabel;
+		const VarLabel* pFreeSurfaceLabel_preReloc;
+
 		const VarLabel* pStressFilterLabel;
 
 		const VarLabel* pPorosityLabel;
@@ -97,6 +100,10 @@ namespace Uintah {
 		const VarLabel* gStressLabel;
 
 		const VarLabel* gDraggingLabel;
+
+
+
+		const VarLabel* VolumeRatioLabel;
 	};
 
 }

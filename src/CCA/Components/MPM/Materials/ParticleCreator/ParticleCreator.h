@@ -125,6 +125,7 @@ namespace Uintah {
 
 	// DOUBLEMPM
 	ParticleVariable<double> pPorePressure;
+	ParticleVariable<double> pFreeSurface;
 	ParticleVariable<double> pPorosity;
 	ParticleVariable<double> pPermeability;
 	ParticleVariable<Vector> pVelocityLiquid;

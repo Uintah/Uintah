@@ -70,6 +70,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <unistd.h>
 
 using namespace Uintah;
 using namespace std;
@@ -1030,7 +1031,6 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
 		scheduleSetPrescribedMotion(sched, patches, matls);
 	}
 	
-
 	scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(sched, patches, matls);
 	scheduleComputeParticleGradientsAndPorePressure_DOUBLEMPM(sched, patches, matls);
 
@@ -1042,8 +1042,6 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
 	scheduleInterpolatePorePresureToParticle(sched, patches, matls);
 	}
 	
-
-
 	scheduleFinalParticleUpdate(sched, patches, matls);
 
 	if (flags->d_insertParticles) {
@@ -3578,9 +3576,36 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 				}
 
 				// Update volume
+				
 				double J = pFNew[idx].Determinant();
 				double JOld = pFOld[idx].Determinant();
+
+				// Check 1: Look at Jacobian
+				if (!(J > 0.0)) {
+					cerr << getpid();
+					constParticleVariable<long64> pParticleID;
+					old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
+					cerr << "**ERROR** Negative Jacobian of deformation gradient"
+						<< " in particle " << pParticleID[idx] << endl;
+					cerr << "l = " << pVelGrad[idx] << endl;
+					cerr << "F_old = " << pFOld[idx] << endl;
+					cerr << "F_new = " << pFNew[idx] << endl;
+					cerr << "J = " << J << endl;
+					throw InternalError("Negative Jacobian", __FILE__, __LINE__);
+				}
+				
 				pvolume[idx] = pVolumeOld[idx] * (J / JOld)*(pMassSolidNew[idx] / pMassSolid[idx]);
+				
+				/*
+				// Analytical solution of volume
+				double Jsolid = exp(delT * tensorL.Trace());
+				double Jliquid = exp(delT * tensorLLiquid.Trace());
+				pvolume[idx] = pvolume[idx] * Jsolid;
+
+				VolumeRateSolid = delT * Jsolid * (-pPorosity[idx]) / pPorosity[idx];
+				VolumeRateLiquid = delT * Jliquid * (1 - pPorosity[idx]) / pPorosity[idx];;
+				// End of analytical solution
+				*/
 				partvoldef += pvolume[idx];
 
 				// Update pore water pressure
@@ -3590,10 +3615,21 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 				VolumeRateSolid = delT * StrainRateSolid.Trace() * (-pPorosity[idx]) / pPorosity[idx];
 				VolumeRateLiquid = delT * StrainRateLiquid.Trace() * (1 - pPorosity[idx]) / pPorosity[idx];;
 
-				pPorePressurenew[idx] = pPorePressure[idx] + pBulkModulLiquid[idx] * (VolumeRateSolid + VolumeRateLiquid);
+
+				if (StrainRateSolid.Trace() > 100) {
+					cerr << "Solid "<< StrainRateSolid.Trace() << endl;
+				}
+
+				if (StrainRateLiquid.Trace() > 100) {
+					cerr << "Liquid " << StrainRateLiquid.Trace() << endl;
+				}
 
 				// Update porosity
 				pPorositynew[idx] = 1 - (1 - mpm_matl->getInitialPorosity()) / J;
+				//pPorositynew[idx] = 1 - (1 - pPorosity[idx]) / Jsolid;
+
+
+				pPorePressurenew[idx] = pPorePressure[idx] + pBulkModulLiquid[idx] * (VolumeRateSolid + VolumeRateLiquid);
 			}
 
 			// The following is used only for pressure stabilization
@@ -3783,7 +3819,7 @@ void DOUBLEMPM::scheduleInterpolatePorePresureToGrid(SchedulerP& sched,
 	t->computes(double_lb->gStressLabel);
 	t->computes(double_lb->gStressLabel, m_materialManager->getAllInOneMatls(),
 		Task::OutOfDomain);
-
+	
 	// Porosity
 	const MaterialSubset* mss = matls->getUnion();
 	t->requires(Task::NewDW, double_lb->pPorosityLabel_preReloc, gnone);
@@ -3978,6 +4014,11 @@ void DOUBLEMPM::scheduleInterpolatePorePresureToParticle(SchedulerP& sched,
 	t->requires(Task::NewDW, double_lb->gStressLabel, gac, NGN);
 	t->modifies(lb->pStressLabel_preReloc);
 
+	// Free surface
+	t->requires(Task::OldDW, lb->pVolumeLabel, gnone);
+	t->requires(Task::OldDW, double_lb->pFreeSurfaceLabel, gnone);
+	t->computes(double_lb->pFreeSurfaceLabel_preReloc);
+
 	// Porosity
 	t->requires(Task::NewDW, double_lb->gPorosityLabel, gac, NGN);
 	t->modifies(double_lb->pPorosityLabel_preReloc);
@@ -4031,13 +4072,30 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 			new_dw->get(gStress, double_lb->gStressLabel, dwi, patch, gac, NGP);
 			new_dw->getModifiable(pstressnew, lb->pStressLabel_preReloc, pset);
 
-			// Liquid
+			// Porosity
 			constNCVariable<double> gPorosity;
 			ParticleVariable<double> pPorosityNew;
 
 			new_dw->get(gPorosity, double_lb->gPorosityLabel, dwi, patch, gac, NGP);
 			new_dw->getModifiable(pPorosityNew, double_lb->pPorosityLabel_preReloc, pset);
 
+			
+			// Free surface
+			constParticleVariable<double> pvolume;
+			old_dw->get(pvolume, lb->pVolumeLabel, pset);
+
+			constParticleVariable<double> pFreeSurface;
+			ParticleVariable<double> pFreeSurfacenew;
+			old_dw->get(pFreeSurface, double_lb->pFreeSurfaceLabel, pset);
+			new_dw->allocateAndPut(pFreeSurfacenew, double_lb->pFreeSurfaceLabel_preReloc, pset);
+
+			CCVariable<double> Volume_ratio;      // Volume ratio of the cell
+			new_dw->allocateTemporary(Volume_ratio, patch);
+			Volume_ratio.initialize(0.);
+
+			Vector cell = patch->dCell();		// Cell dimension
+			double vol_cell = cell.x()*cell.y()*cell.z();  // Cell volume
+		
 			// Loop over particles
 			for (ParticleSubset::iterator iter = pset->begin();
 				iter != pset->end(); iter++) {
@@ -4064,8 +4122,40 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 				pPorePressurenew[idx] = PorePressure;
 				pstressnew[idx] = Stressnew;
 				pPorosityNew[idx] = Porosity;
+				
+				// Free surface
+				IntVector cell_index;
+				patch->findCell(px[idx], cell_index);
+
+				Volume_ratio[cell_index] += pvolume[idx];    // sum up particle volume inside cell	
+				pFreeSurfacenew[idx] = 0;
+			
 			}
 
+			if (flags->d_FreeSurface) {
+				// Free surface
+				for (CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) { // loop not include extra cells
+					IntVector c = *iter;   // cell index
+					Volume_ratio[c] /= vol_cell;    // calculate Volume ratio
+
+					//cerr << Volume_ratio[c] << endl;		
+
+					if (Volume_ratio[c] <= 0.9) {
+
+						for (ParticleSubset::iterator iter = pset->begin();
+							iter != pset->end(); iter++) {
+
+							particleIndex idx = *iter;
+							IntVector cell_idx = patch->getLevel()->getCellIndex(px[idx]);     // get cell index
+
+							if (cell_idx == c) {
+								pPorePressurenew[idx] = 0;
+								pFreeSurfacenew[idx] = 1;
+							}
+						}
+					}
+				}
+			}
 		}  // loop over materials
 		delete linear_interpolator;
 	}

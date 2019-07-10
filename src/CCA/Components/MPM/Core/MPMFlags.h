@@ -134,6 +134,7 @@ class Output;
 	bool        d_insertPorePressure;                        // Prescribe Pore Pressure
 	std::string d_insertPorePressureFile;                   // File containing prescribed Pore Pressure
 	bool		d_NullSpaceFilter;
+	bool		d_FreeSurface;
 
 	// Flag for Generalized Alpha scheme
 	bool        d_GeneralizedAlpha;

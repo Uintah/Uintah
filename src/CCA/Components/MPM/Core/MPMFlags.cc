@@ -135,6 +135,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_DOUBLEMPM = false;
   d_insertPorePressure = false;
   d_NullSpaceFilter = false;
+  d_FreeSurface = false;
 
   // Generalized Alpha scheme
   d_GeneralizedAlpha = false;
@@ -404,6 +405,7 @@ else{
 	  mpm_flag_ps->require("InsertPorePressureFile", d_insertPorePressureFile);
   }
   mpm_flag_ps->get("NullSpaceFilter", d_NullSpaceFilter);
+  mpm_flag_ps->get("FreeSurface", d_FreeSurface);
 
 
   // Generalized Alpha scheme
@@ -463,6 +465,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
 	  ps->appendElement("InsertPorePressureFile", d_insertPorePressureFile);
   }
   ps->appendElement("NullSpaceFilter", d_NullSpaceFilter);
+  ps->appendElement("FreeSurface", d_FreeSurface);
 
   // Generalized Alpha scheme
   ps->appendElement("GeneralizedAlpha", d_GeneralizedAlpha);

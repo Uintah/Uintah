@@ -4843,7 +4843,7 @@ void SingleMPM::computeStressTensor(const ProcessorGroup*,
 	}
 }
 
-
+// Null space filter using local method
 void SingleMPM::scheduleInterpolateParticleToGrid(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)
@@ -5002,7 +5002,6 @@ void SingleMPM::InterpolateParticleToGrid(const ProcessorGroup*,
 }
 
 
-
 void SingleMPM::scheduleInterpolateGridToParticle(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)
@@ -5108,7 +5107,6 @@ void SingleMPM::InterpolateGridToParticle(const ProcessorGroup*,
 		delete linear_interpolator;
 	}
 }
-
 
 
 // Extra part for damage erosion model

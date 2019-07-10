@@ -168,7 +168,7 @@ void HypoplasticB::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
 	cm_ps->appendElement("mean_pressure", UI[13]);
 	cm_ps->appendElement("phase", UI[14]);
 	cm_ps->appendElement("phase_change", UI[15]);
-	cm_ps->appendElement("nullspace", UI[16]);
+	cm_ps->appendElement("Volumerate", UI[16]);
 }
 
 HypoplasticB* HypoplasticB::clone()
@@ -281,7 +281,7 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 		ParticleVariable<Matrix3> pstress_new;
 		constParticleVariable<Matrix3> deformationGradient_new, velGrad;
 		constParticleVariable<double> pmass, pvolume, ptemperature;
-		constParticleVariable<double> pvolume_new;
+		ParticleVariable<double> pvolume_new;
 		constParticleVariable<Vector> pvelocity;
 		constParticleVariable<Point> px;
 		delt_vartype delT;
@@ -312,118 +312,15 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 		new_dw->allocateAndPut(p_q, lb->p_qLabel_preReloc, pset);
 		new_dw->get(deformationGradient_new,
 			lb->pDeformationMeasureLabel_preReloc, pset);
-		new_dw->get(pvolume_new, lb->pVolumeLabel_preReloc, pset);
+
+		new_dw->getModifiable(pvolume_new, lb->pVolumeLabel_preReloc, pset);
+
 		new_dw->get(velGrad, lb->pVelGradLabel_preReloc, pset);
 
 		std::vector<ParticleVariable<double> > ISVs_new(d_NINSV + 1);
 		for (int i = 0; i < d_NINSV; i++) {
 			new_dw->allocateAndPut(ISVs_new[i], ISVLabels_preReloc[i], pset);
 		}	
-
-		/*
-		///////////// NON - LOCAL PROBLEM IMPLEMENTED BY JAKUB KRZYZANOWSKI, 02.2019
-			//I determined the value from which itercoord would start
-		int itercoordB = 0;
-
-		//iNLB - will be done as many times as there are particles in the analysis
-		iNLB = 0;
-
-		// Petla "for" will be performed as many times as there are all particles in the analysis, at each time step
-
-		for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
-		{
-			particleIndex idx = *iter;
-
-			//Each co-ordinates "x" and "y" and the volume of the particle is saved. 
-			//Petla will be done as many times as there are particles - 
-			//so all coordinates are saved from each particle at a given moment of time
-			coordXB[0][itercoordB] = px[idx].x();
-			coordYB[0][itercoordB] = px[idx].y();
-			//coordZ[0][itercoord]=px[idx].z();
-			ElAreaB[itercoordB] = pvolume[idx];
-
-			Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*.5;
-
-			double Darray[6];
-			Darray[0] = D(0, 0)*delT;
-			Darray[1] = D(1, 1)*delT;
-			Darray[2] = D(2, 2)*delT;
-			Darray[3] = D(0, 1)*delT;
-			Darray[4] = D(1, 2)*delT;
-			Darray[5] = D(2, 0)*delT;
-
-			//The value below is the value under the root
-			double dlooocB = pow(((1.0 / delT)*Darray[0]), 2) + pow(((1.0 / delT)*Darray[1]), 2) + pow(((1.0 / delT)*Darray[2]), 2) + 2.0*pow(((1.0 / delT)*Darray[3]), 2) + 2.0*pow(((1.0 / delT)*Darray[4]), 2) + 2.0*pow(((1.0 / delT)*Darray[5]), 2);
-
-			double dlocB;
-
-			//If the value under the element would be less than 0, then you know - accept 0
-			if (dlooocB <= 0)
-			{
-				dlocB = 0;
-			}
-			else
-			{
-				dlocB = sqrt(dlooocB);
-			}
-
-			//For example - here for the first particle, I determined the local module needed for further calculations
-			dlocMB[0][itercoordB] = dlocB;
-
-			//Petla will be done as many times as there are particles, and below I have determined how to change the next drawers, ie dlocM [0] [0]
-			//- means a drawer for the first particle, for [0] [1] - for 2 etc. Petla sie break - if all particles are assigned to a local module
-			itercoordB = itercoordB + 1;
-		}
-
-		int itercoord2B = 0;
-		double PI2B = 2 * asin(1.0);
-		double nlbetaB = UI[11];
-		double charlB = UI[12];
-		double lcharB = charlB * charlB;
-		double stalaB = 1 / (charlB*sqrt(PI2B));
-		double dziewlkwB = 9 * lcharB;
-
-		for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
-		{
-
-			int itercoord3B = 0;
-			double sumaB, sumB, distxB, distyB, rdistB, wwB; //distz
-			sumaB = 0;
-			sumB = 0;
-
-			//This loop below works so that it will first take the particle [0] [0] [0] and into it
-			//will refer all the points around iteratorordord3. Like itercoord
-			//it will fly all particles, it just breaks and it is for this particle
-			//defined non-local modulus, which he visits directly to calculate stress for her
-			//in the CalculateStress department. For each particle, a non-local module is defined here.
-			//For changing the part considered at the moment, itercoord2 responds, while
-			//itercoord3 - also changes each point, but in a sense, takes all particles
-			//from the whole body and refers them to the currently considered.
-			for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
-			{
-				distxB = coordXB[0][itercoord3B] - coordXB[0][itercoord2B];
-				distyB = coordYB[0][itercoord3B] - coordYB[0][itercoord2B];
-				//distz=coordZ[0][itercoord3]-coordZ[0][itercoord2];
-				rdistB = distxB * distxB + distyB * distyB;//+distz*distz;
-
-				//This "if" is to take into account the influence of non-locality in the field (3l) ^ 2 = 9l ^ 2
-				if (rdistB <= dziewlkwB)
-				{
-					wwB = stalaB * exp(-(rdistB / lcharB));
-					sumaB = sumaB + (dlocMB[0][itercoord3B])*wwB*ElAreaB[itercoord3B];
-					sumB = sumB + (wwB*ElAreaB[itercoord3B]);
-				}
-				itercoord3B = itercoord3B + 1;
-			}
-
-			//Here, the non-local modulus is recorded for a given particle.
-			//What is worth noting - if nl = 0, then the module being written is really local
-			dnonlocMB[0][itercoord2B] = (1 - nlbetaB)*dlocMB[0][itercoord2B] + nlbetaB * sumaB / sumB;
-
-			itercoord2B = itercoord2B + 1;
-		}
-		///////////// NON - LOCAL PROBLEM IMPLEMENTED BY JAKUB KRZYZANOWSKI, 02.2019
-		*/
 
 		for (ParticleSubset::iterator iter = pset->begin();
 			iter != pset->end(); iter++) {
@@ -436,7 +333,11 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 			Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*.5;
 
 			// get the volumetric part of the deformation
-			double J = deformationGradient_new[idx].Determinant();
+			//double J = deformationGradient_new[idx].Determinant();
+
+			// This is wrong because it is for current configuraition but avoid the negative jacobian
+			double J = exp(delT * velGrad[idx].Trace());
+
 			// Check 1: Look at Jacobian
 			if (!(J > 0.0)) {
 				cerr << getpid();
@@ -447,12 +348,12 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 				cerr << "l = " << velGrad[idx] << endl;
 				cerr << "F_old = " << deformationGradient[idx] << endl;
 				cerr << "F_new = " << deformationGradient_new[idx] << endl;
-				cerr << "J = " << J << endl;
+				cerr << "J_hypo = " << J << endl;
 				throw InternalError("Negative Jacobian", __FILE__, __LINE__);
 			}
 
 			// Compute the local sound speed
-			double rho_cur = rho_orig / J;
+			//double rho_cur = rho_orig / J;
 
 			// NEED TO FIND R
 			Matrix3 tensorR, tensorU;
@@ -493,6 +394,14 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 			for (int i = 0; i < d_NINSV; i++) {
 				svarg[i] = ISVs[i][idx];
 			}
+
+			pvolume_new[idx] = pvolume[idx] * exp(delT * velGrad[idx].Trace());
+
+			// Ratio of current volume over initial volume (jacobian)
+			svarg[16] = pvolume_new[idx] * rho_orig / pmass[idx];
+
+			// Compute the local sound speed
+			double rho_cur = rho_orig / svarg[16];
 
 			//calculateStress for each particle
 			CalculateStress(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
@@ -722,7 +631,7 @@ HypoplasticB::getInputParameters(ProblemSpecP& ps)
 	ps->getWithDefault("mean_pressure", UI[13], 0.0);
 	ps->getWithDefault("phase", UI[14], 0.0);
 	ps->getWithDefault("phase_change", UI[15], 0.0);
-	ps->getWithDefault("nullspace", UI[16], 0.0);
+	ps->getWithDefault("Volumerate", UI[16], 0.0);
 }
 
 void
@@ -746,7 +655,7 @@ HypoplasticB::initializeLocalMPMLabels()
 	ISVNames.push_back("mean_pressure");
 	ISVNames.push_back("phase");
 	ISVNames.push_back("phase_change");
-	ISVNames.push_back("nullspace");
+	ISVNames.push_back("Volumerate");
 
 	for (int i = 0; i < d_NINSV; i++) {
 		ISVLabels.push_back(VarLabel::create(ISVNames[i],
@@ -794,11 +703,12 @@ n - compression coefficient
 alpha - pycontrophy coefficient
 E - young modulus
 v - poisson ratio
-epocz - initial void ratio
+eini - initial void ratio
 nl - non-local (0 - OFF; 1 - ON)
 lchar - characterstic length
    */
 
+	double eini = UI[10];
 	double ei0 = UI[0];
 	double ed0 = UI[1];
 	double ec0 = UI[2];
@@ -813,8 +723,6 @@ lchar - characterstic length
 	double PI = 2 * asin(1.0);
 	double R = PI / 180;
 	double phi = phic * R;
-
-
 
 	// Enforce stress
 	if (stress[0] >= 0.0)
@@ -831,6 +739,7 @@ lchar - characterstic length
 	}
 	   	 
 	double esd = svarg[10];
+	double volumeRate = svarg[16];
 	double trT = stress[0] + stress[1] + stress[2];
 	double ps = -trT / 3.0;
 
@@ -847,131 +756,153 @@ lchar - characterstic length
 	double fd = pow(((esd - ed) / (ec - ed)), alpha);
 	double fs = (hs / (n*hi))*pow((ei / esd), beta)*((1.0 + ei) / ei)*pow((3.0*ps / hs), (1.0 - n));
 
-	double T11 = stress[0] / trT;
-	double T22 = stress[1] / trT;
-	double T33 = stress[2] / trT;
-	double T1212 = stress[3] / trT;
-	double T2323 = stress[4] / trT;
-	double T1313 = stress[5] / trT;
+			// Start calculate stress
+			double T11 = stress[0] / trT;
+			double T22 = stress[1] / trT;
+			double T33 = stress[2] / trT;
+			double T1212 = stress[3] / trT;
+			double T2323 = stress[4] / trT;
+			double T1313 = stress[5] / trT;
 
-	double TSS1 = (stress[0] - trT / 3.0) / trT;
-	double TSS2 = (stress[1] - trT / 3.0) / trT;
-	double TSS3 = (stress[2] - trT / 3.0) / trT;
-	double TSS12 = stress[3] / trT;
-	double TSS23 = stress[4] / trT;
-	double TSS13 = stress[5] / trT;
+			double TSS1 = (stress[0] - trT / 3.0) / trT;
+			double TSS2 = (stress[1] - trT / 3.0) / trT;
+			double TSS3 = (stress[2] - trT / 3.0) / trT;
+			double TSS12 = stress[3] / trT;
+			double TSS23 = stress[4] / trT;
+			double TSS13 = stress[5] / trT;
 
-	double tr1 = pow(TSS1, 2.0) + pow(TSS12, 2.0) + pow(TSS13, 2.0);
-	double tr2 = pow(TSS12, 2.0) + pow(TSS2, 2.0) + pow(TSS23, 2.0);
-	double tr3 = pow(TSS13, 2.0) + pow(TSS23, 2.0) + pow(TSS3, 2.0);
-	double tr4 = TSS1 * TSS12 + TSS2 * TSS12 + TSS13 * TSS23;
-	double tr5 = TSS1 * TSS13 + TSS12 * TSS23 + TSS13 * TSS3;
-	double tr6 = TSS12 * TSS13 + TSS2 * TSS23 + TSS23 * TSS3;
-	double tr7 = TSS1 * TSS13 + TSS12 * TSS23 + TSS13 * TSS3;
-	double tr8 = TSS12 * TSS13 + TSS2 * TSS23 + TSS23 * TSS3;
-	double tr9 = pow(TSS13, 2.0) + pow(TSS23, 2.0) + pow(TSS3, 2.0);
+			double tr1 = pow(TSS1, 2.0) + pow(TSS12, 2.0) + pow(TSS13, 2.0);
+			double tr2 = pow(TSS12, 2.0) + pow(TSS2, 2.0) + pow(TSS23, 2.0);
+			double tr3 = pow(TSS13, 2.0) + pow(TSS23, 2.0) + pow(TSS3, 2.0);
+			double tr4 = TSS1 * TSS12 + TSS2 * TSS12 + TSS13 * TSS23;
+			double tr5 = TSS1 * TSS13 + TSS12 * TSS23 + TSS13 * TSS3;
+			double tr6 = TSS12 * TSS13 + TSS2 * TSS23 + TSS23 * TSS3;
+			double tr7 = TSS1 * TSS13 + TSS12 * TSS23 + TSS13 * TSS3;
+			double tr8 = TSS12 * TSS13 + TSS2 * TSS23 + TSS23 * TSS3;
+			double tr9 = pow(TSS13, 2.0) + pow(TSS23, 2.0) + pow(TSS3, 2.0);
 
-	double trTs2 = tr1 + tr2 + tr3;
-	double trTs3 = (TSS1*tr1 + TSS12 * tr4 + TSS13 * tr5) + (TSS12*tr4 + TSS2 * tr2 + TSS23 * tr6) + (TSS13*tr7 + TSS23 * tr8 + TSS3 * tr9);
-	double PtsI = sqrt(pow(TSS1, 2.0) + pow(TSS2, 2.0) + pow(TSS3, 2.0) + 2.0*pow(TSS12, 2.0) + 2.0*pow(TSS23, 2.0) + 2.0*pow(TSS13, 2.0));
+			double trTs2 = tr1 + tr2 + tr3;
+			double trTs3 = (TSS1*tr1 + TSS12 * tr4 + TSS13 * tr5) + (TSS12*tr4 + TSS2 * tr2 + TSS23 * tr6) + (TSS13*tr7 + TSS23 * tr8 + TSS3 * tr9);
+			double PtsI = sqrt(pow(TSS1, 2.0) + pow(TSS2, 2.0) + pow(TSS3, 2.0) + 2.0*pow(TSS12, 2.0) + 2.0*pow(TSS23, 2.0) + 2.0*pow(TSS13, 2.0));
 
-	double a1;
-	double cos3o;
-	if (trTs2 == 0.0)
-	{
-		a1 = 1 / c1;
-	}
-	else
-	{
-		cos3o = -sqrt(d)*trTs3 / pow((trTs2), 1.5);
-		if (cos3o >= 1.0)
-		{
-			cos3o = 1.0;
-		}
-		if (cos3o <= -1.0)
-		{
-			cos3o = -1.0;
-		}
-		a1 = 1 / (c1 + (c2*(1.0 + cos3o)*PtsI));
-	}
+			double a1;
+			double cos3o;
+			if (trTs2 == 0.0)
+			{
+				a1 = 1 / c1;
+			}
+			else
+			{
+				cos3o = -sqrt(d)*trTs3 / pow((trTs2), 1.5);
+				if (cos3o >= 1.0)
+				{
+					cos3o = 1.0;
+				}
+				if (cos3o <= -1.0)
+				{
+					cos3o = -1.0;
+				}
+				a1 = 1 / (c1 + (c2*(1.0 + cos3o)*PtsI));
+			}
 
-	double trTTD = T11*D[0] + T22*D[1] + T33*D[2] + 2.0*T1212*D[3] + 2.0*T2323*D[4] + 2.0*T1313*D[5];
+			double trTTD = T11 * D[0] + T22 * D[1] + T33 * D[2] + 2.0*T1212*D[3] + 2.0*T2323*D[4] + 2.0*T1313*D[5];
 
-	double LTD1 = pow(a1, 2.0)*D[0] + T11 * trTTD;
-	double LTD2 = pow(a1, 2.0)*D[1] + T22 * trTTD;
-	double LTD3 = pow(a1, 2.0)*D[2] + T33 * trTTD;
-	double LTD12 = pow(a1, 2.0)*D[3] + T1212 * trTTD;
-	double LTD23 = pow(a1, 2.0)*D[4] + T2323 * trTTD;
-	double LTD13 = pow(a1, 2.0)*D[5] + T1313 * trTTD;
+			double LTD1 = pow(a1, 2.0)*D[0] + T11 * trTTD;
+			double LTD2 = pow(a1, 2.0)*D[1] + T22 * trTTD;
+			double LTD3 = pow(a1, 2.0)*D[2] + T33 * trTTD;
+			double LTD12 = pow(a1, 2.0)*D[3] + T1212 * trTTD;
+			double LTD23 = pow(a1, 2.0)*D[4] + T2323 * trTTD;
+			double LTD13 = pow(a1, 2.0)*D[5] + T1313 * trTTD;
 
-	double NT1 = a1 * ((2.0*stress[0] - trT / 3.0) / (trT));
-	double NT2 = a1 * ((2.0*stress[1] - trT / 3.0) / (trT));
-	double NT3 = a1 * ((2.0*stress[2] - trT / 3.0) / (trT));
-	double NT12 = a1 * (2.0*stress[3] / (trT));
-	double NT23 = a1 * (2.0*stress[4] / (trT));
-	double NT13 = a1 * (2.0*stress[5] / (trT));
+			double NT1 = a1 * ((2.0*stress[0] - trT / 3.0) / (trT));
+			double NT2 = a1 * ((2.0*stress[1] - trT / 3.0) / (trT));
+			double NT3 = a1 * ((2.0*stress[2] - trT / 3.0) / (trT));
+			double NT12 = a1 * (2.0*stress[3] / (trT));
+			double NT23 = a1 * (2.0*stress[4] / (trT));
+			double NT13 = a1 * (2.0*stress[5] / (trT));
 
-	double dlooocB = pow(D[0], 2) + pow(D[1], 2) + pow(D[2], 2) + 2.0*pow(D[3], 2) + 2.0*pow(D[4], 2) + 2.0*pow(D[5], 2);
-	double dloc = sqrt(dlooocB);
+			double dlooocB = pow(D[0], 2) + pow(D[1], 2) + pow(D[2], 2) + 2.0*pow(D[3], 2) + 2.0*pow(D[4], 2) + 2.0*pow(D[5], 2);
+			double dloc = sqrt(dlooocB);
 
-	double dT1 = fs * (LTD1 + fd * NT1*dloc);
-	double dT2 = fs * (LTD2 + fd * NT2*dloc);
-	double dT3 = fs * (LTD3 + fd * NT3*dloc);
-	double dT12 = fs * (LTD12 + fd * NT12*dloc);
-	double dT23 = fs * (LTD23 + fd * NT23*dloc);
-	double dT13 = fs * (LTD13 + fd * NT13*dloc);
+			double dT1 = fs * (LTD1 + fd * NT1*dloc);
+			double dT2 = fs * (LTD2 + fd * NT2*dloc);
+			double dT3 = fs * (LTD3 + fd * NT3*dloc);
+			double dT12 = fs * (LTD12 + fd * NT12*dloc);
+			double dT23 = fs * (LTD23 + fd * NT23*dloc);
+			double dT13 = fs * (LTD13 + fd * NT13*dloc);
 
-	stress[0] += dT1 * dt;
-	stress[1] += dT2 * dt;
-	stress[2] += dT3 * dt;
-	stress[3] += dT12 * dt;
-	stress[4] += dT23 * dt;
-	stress[5] += dT13 * dt;
+			stress[0] += dT1 * dt;
+			stress[1] += dT2 * dt;
+			stress[2] += dT3 * dt;
+			stress[3] += dT12 * dt;
+			stress[4] += dT23 * dt;
+			stress[5] += dT13 * dt;
 
-	iNLB = iNLB + 1;
+			//iNLB = iNLB + 1;
 
-	double de = (1.0 + esd)*(D[0] + D[1] + D[2]);
+			double de = (1.0 + esd)*(D[0] + D[1] + D[2]);
 
-	//Zeby pokazac porowatosc, musi ona byc jednoczesnie UI oraz svarg
-	svarg[10] += de * dt;
-	svarg[13] = stress[0] + stress[1] + stress[2];
+			//Void ratio
+			svarg[10] += de * dt;
 
-	svarg[14] = 0;
-	/*
+			// mean pressure
+			svarg[13] = stress[0] + stress[1] + stress[2];
 
-	// positive mean stress corresponds to extension
-	// Tension cut off
-	double trTnew = stress[0] + stress[1] + stress[2];
-	if (trTnew > 0) {
-		stress[0] = 0;
-		stress[1] = 0;
-		stress[2] = 0;
-		stress[3] = 0;
-		stress[4] = 0;
-		stress[5] = 0;
-	}
-	*/
+			// phase solid
+			svarg[14] = 0;
+		
 
-	// Void ratio cut off
-	double phase_change = UI[15];
-	if (phase_change) {
-		if (svarg[10] >= ei0) {
-			stress[0] = 0;
-			stress[1] = 0;
-			stress[2] = 0;
-			stress[3] = 0;
-			stress[4] = 0;
-			stress[5] = 0;
+			// Void ratio cut off
+			double phase_change = UI[15];
+			if (volumeRate >= (1 + ei) / (1 + eini)) {
 
-			// Cut off void ratio
-			svarg[10] = ei0;
+				if (phase_change) {
+					stress[0] = 0;
+					stress[1] = 0;
+					stress[2] = 0;
+					stress[3] = 0;
+					stress[4] = 0;
+					stress[5] = 0;
 
-			// Detect phase change
-			svarg[14] = 1;
-		}
+					// Cut off void ratio
+					svarg[10] = ei;
 
-	}
-		   
+					// mean pressure
+					svarg[13] = stress[0] + stress[1] + stress[2];
+
+
+					// Detect phase change
+					svarg[14] = 1;
+				}
+			}
+
+			// positive mean stress corresponds to extension
+			// Tension cut off
+			else if (trT >= 0) {
+				if (phase_change) {
+					stress[0] = 0;
+					stress[1] = 0;
+					stress[2] = 0;
+					stress[3] = 0;
+					stress[4] = 0;
+					stress[5] = 0;
+
+					svarg[10] = esd;
+
+					// mean pressure
+					svarg[13] = stress[0] + stress[1] + stress[2];
+
+					// phase solid
+					svarg[14] = 1;
+				}
+			}
+			   		 	  
+			if (svarg[10] <= ed) {
+				// Cut off void ratio
+				svarg[10] = ed;
+			}
+
+	
 	/////////////////////////////////////
 	double Kmod = (E) / (3 * (1 - 2 * v));
 	double Gmod = (E) / (2 * (1 + v));
