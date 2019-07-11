@@ -645,7 +645,7 @@
                         attribute18="outer_lower  OPTIONAL MULTIPLE_DOUBLES"                                                                        
                         attribute19="inner_upper  OPTIONAL MULTIPLE_DOUBLES"                                                                        
                         attribute20="outer_upper  OPTIONAL MULTIPLE_DOUBLES"                                                                        
-                        attribute21="rectangulus   OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'">                                                       
+                        attribute21="rectangulus  OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'">                                                       
          <!--__________________________________-->
          <!--  Wasatch                         -->                       
         <ParticleBC     spec="OPTIONAL NO_DATA" children1="ONE_OF(CHILD Wall, Inlet)">
@@ -664,7 +664,7 @@
                               attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, slip, Custom, 
                                                                      VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
-                                                                     Swirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
+                                                                     Swirl, ScalarSwirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
                               attribute4="type      OPTIONAL STRING 'int, velocity, handoff,MMS_almgren,PressureOutlet'" 
                               attribute5="value     OPTIONAL STRING" >
@@ -689,11 +689,21 @@
                               attribute2="value     OPTIONAL DOUBLE" 
                               attribute3="velvalue  OPTIONAL VECTOR"
                               need_applies_to="var VelocityFileInput FromFile"/> 
-          
-          <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl"/>
+         
+          <!-- Swirl No. -->
+          <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl, ScalarSwirl"/>
 
-          <!--swirl_centriod is only required for geometries that don't have "origin" set.  See BoundaryCondition.cc for details.-->
-          <swirl_centroid   spec="OPTIONAL VECTOR"  need_applies_to="var Swirl"/>
+          <!-- swirl_centriod is only required for geometries that don't have "origin" set.  See BoundaryCondition.cc for details.-->
+          <swirl_centroid   spec="OPTIONAL VECTOR"  need_applies_to="var Swirl, ScalarSwirl"/>
+
+          <!-- For DQMOM: when using swirl one must clarify which component of velocity this phase variable represents. 
+               This is needed because the velocity names are user-specified. To specify it, we assume that the normal 
+               component is X and so the Y and Z "components" must be specified. This will vary face-to-face and component to 
+               component. 
+               Example: Face = y-, therefore Y would be assigned to z-velocity component and Z would be assigned to the 
+               x-velocity component to maintain a right-handed coordinate system. 
+          -->
+          <swirl_coord      spec="OPTIONAL STRING 'Y,Z'"  need_applies_to="var ScalarSwirl"/>
 
           <!-- Stabilized Atmospheric Boundary Layer --> 
           <!-- When using StABL, the free stream velocity is specified in the <value> tag. --> 

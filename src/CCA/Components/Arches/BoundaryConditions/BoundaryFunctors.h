@@ -342,10 +342,11 @@ public:
              proper execution of the boundary condition. This may be a nullptr op. **/
   virtual void add_mod( std::vector<std::string>& master_mod ) = 0;
   /** @brief Actually evaluate the boundary condition **/
-    template <typename ExecutionSpace, typename MemorySpace>
-    void eval_bc( ExecutionObject<ExecutionSpace,MemorySpace> executionObject,
-    std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
-    const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter ) {
+  template <typename ExecutionSpace, typename MemorySpace>
+  void eval_bc( ExecutionObject<ExecutionSpace,MemorySpace> executionObject,
+  std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+  const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter )
+  {
     if (BCFunctors<T>::Dirichlet*             child   = dynamic_cast<BCFunctors<T>::Dirichlet*           >(this)){
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
     }else if (BCFunctors<T>::Neumann*               child   = dynamic_cast<BCFunctors<T>::Neumann*             >(this)){
@@ -366,8 +367,8 @@ public:
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
     }else {
           throw InvalidValue("Portable Boundary condition not properly included in source code.",__FILE__,__LINE__);
-   }
-}
+    }
+  }
 
 protected:
 
@@ -1285,6 +1286,7 @@ void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_h
                    "  Functor name: " << spec->functorName << std::endl;
             throw InvalidValue( msg.str(), __FILE__, __LINE__);
           }
+          
         }
       }
     }

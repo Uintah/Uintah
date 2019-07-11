@@ -375,10 +375,10 @@ wallStressDynSmag( const Patch* p,
 void setBCHelper( std::map<int,WBCHelper*>* helper ){m_bcHelper = helper;}
 
 /** @brief Copy the temperature into a radiation temperature for use later. Also forces BCs in extra cell **/
-void sched_create_radiation_temperature( SchedulerP        & sched, 
-                                         const LevelP      & level, 
+void sched_create_radiation_temperature( SchedulerP        & sched,
+                                         const LevelP      & level,
                                          const MaterialSet * matls,
-                                         const bool doing_restart, 
+                                         const bool doing_restart,
                                          const bool use_old_dw );
 
 /** @brief See sched_create_radiation_temperature **/
@@ -633,6 +633,7 @@ struct BCInfo {
   std::string partName;
   std::string faceName;
   bool lHasPartMassFlow;
+  Patch::FaceType face; 
 
   // Inlets:
   Vector velocity;
@@ -1061,6 +1062,60 @@ bool inline is_corner_cell( const Patch* patch, IntVector c,
   }
 
   return is_corner;
+
+}
+
+// Pick a side based on UPS spec:
+Patch::FaceType getFaceTypeFromUPS( ProblemSpecP db_face ){
+  //Assuming that the Face node is coming into this function
+
+  std::string face_type_str;
+
+  //side check
+  if ( db_face->findAttribute("side") ){
+      db_face->getAttribute("side", face_type_str);
+  }
+
+  //circle check
+  if ( db_face->findAttribute("circle") ){
+    db_face->getAttribute("circle", face_type_str );
+  }
+
+  //annulus check
+  if ( db_face->findAttribute("annulus") ){
+    db_face->getAttribute("annulus", face_type_str );
+  }
+
+  //rectangle check
+  if ( db_face->findAttribute("rectangle") ){
+    db_face->getAttribute("rectangle", face_type_str );
+  }
+
+  //ellipse check
+  if ( db_face->findAttribute("ellipse") ){
+    db_face->getAttribute("ellipse", face_type_str );
+  }
+
+  //rectangulus check
+  if ( db_face->findAttribute("rectangulus") ){
+    db_face->getAttribute("rectangulus", face_type_str );
+  }
+
+  if ( face_type_str == "x-" ){
+    return Patch::xminus;
+  } else if ( face_type_str == "x+" ){
+    return Patch::xplus;
+  } else if ( face_type_str == "y-" ){
+    return Patch::yminus;
+  } else if ( face_type_str == "y+" ){
+    return Patch::yplus;
+  } else if ( face_type_str == "z-" ){
+    return Patch::zminus;
+  } else if ( face_type_str == "z+" ){
+    return Patch::zplus;
+  } else {
+    return Patch::invalidFace;
+  }
 
 }
 

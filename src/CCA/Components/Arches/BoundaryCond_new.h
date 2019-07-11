@@ -72,7 +72,6 @@ public:
                         const std::string override_bc="NA")
   {
 
-
     using std::vector;
     using std::string;
 
@@ -191,6 +190,59 @@ public:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
               scalar[*bound_ptr] = bc_value;
             }
+
+          } else if ( bc_kind == "ScalarSwirl" ){
+
+            //An implementation of a swirl condition for particle velocity (DQMOM)
+
+            int idim; //normal direction
+            int jdim; //1st tangential
+            int kdim; //2nd tangential
+
+            double sign = 1.;
+            if ( face == Patch::xminus || face == Patch::xplus ){
+              idim = 0; jdim = 1; kdim = 2;
+            } else if ( face == Patch::yminus || face == Patch::yplus ){
+              idim = 1; jdim = 2; kdim = 0;
+            } else if ( face == Patch::zminus || face == Patch::zplus ){
+              idim = 2; jdim = 0; kdim = 1;
+            }
+
+            auto swirl_i = m_swirl_map[face_name];
+            const double swrl_no = swirl_i.swirl_no;
+            const Vector swrl_cent = swirl_i.swirl_cent;
+            const int swrl_coord = swirl_i.coord;
+
+            int* coord_pt;
+            if ( swrl_coord == 1 ){
+              coord_pt = &kdim;
+              sign = -1;
+            } else {
+              coord_pt = &jdim;
+            }
+
+            const double noise = 1e-10; //avoid divide by zero
+
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+              IntVector c  = *bound_ptr;
+              IntVector cp = *bound_ptr - insideCellDir;
+              Point p = patch->cellPosition(c);
+              Vector pp; pp[0] = p.x(); pp[1] = p.y(); pp[2] = p.z();
+              Vector pt; //translated point
+              pt[idim] = 99; //error check...
+              pt[jdim] = pp[jdim] - swrl_cent[jdim];
+              pt[kdim] = pp[kdim] - swrl_cent[kdim];
+
+              double denom = pt[jdim]*pt[jdim] + pt[kdim]*pt[kdim]; denom = std::pow(denom,0.5);
+              denom = (denom > 1e-16) ? denom : denom+noise;
+
+              // NOTE: Assuming that the <value> tag in the input is the normal component
+              const double swirl_condition = sign * pt[*coord_pt] * swrl_no * bc_value / denom;
+              scalar[c] = 2.0*swirl_condition - scalar[cp];
+
+            }
+
           } else {
             throw InvalidValue( "Error: Cannot determine boundary condition type for variable: "+varname, __FILE__, __LINE__);
           }
@@ -254,7 +306,7 @@ public:
         if (foundIterator) {
 
           if ( bc_kind != "Dirichlet" && bc_kind != "Neumann" && bc_kind != "Tabulated"
-              && bc_kind != "FromFile" && bc_kind != "ForcedDirichlet" ){
+              && bc_kind != "FromFile" && bc_kind != "ForcedDirichlet" && bc_kind != "ScalarSwirl"){
             throw InvalidValue( "Error: Cannot determine boundary condition type for variable: "+varname+ " with bc type: "+bc_kind, __FILE__, __LINE__);
           }
 
@@ -401,6 +453,14 @@ private:
   LabelMap           areaMap;
   MapDoubleMap       _tabVarsMap;
   ScalarToBCValueMap scalar_bc_from_file;
+
+  struct swirlInfo{
+    double swirl_no;
+    Vector swirl_cent;
+    int coord;
+  };
+
+  std::map<std::string, swirlInfo> m_swirl_map;
 
   void assignTabBCs( const ProcessorGroup*,
                      const PatchSubset* patches,

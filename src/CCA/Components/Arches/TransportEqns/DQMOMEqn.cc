@@ -955,7 +955,6 @@ DQMOMEqn::addSources( const ProcessorGroup* pc,
   }
 }
 
-
 //---------------------------------------------------------------------------
 // Method: Schedule solve the transport equation.
 //---------------------------------------------------------------------------
@@ -979,6 +978,7 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
+
 //---------------------------------------------------------------------------
 // Method: Actually solve the transport equation.
 //---------------------------------------------------------------------------

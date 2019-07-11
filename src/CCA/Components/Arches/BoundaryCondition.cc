@@ -2029,6 +2029,8 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
         throw InvalidValue("Error: Could not identify the boundary face direction.", __FILE__, __LINE__);
       }
 
+      Patch::FaceType this_face_type = getFaceTypeFromUPS(db_face);
+
       int numberOfMomentumBCs = 0;
       for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ) {
 
@@ -2041,6 +2043,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
         my_info.name = name;
         my_info.faceName=faceName;
         my_info.lHasPartMassFlow=false;
+        my_info.face = this_face_type;
         std::stringstream color;
         color << bc_type_index;
 
@@ -2919,6 +2922,8 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
         Patch::FaceType face = *bf_iter;
         IntVector insideCellDir = patch->faceDirection(face);
 
+        if ( bc_iter->second.face == face ){
+
         //get the number of children
         int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
 
@@ -2949,7 +2954,6 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
 
           if ( foundIterator ) {
 
-
             bound_ptr.reset();
 
             if ( bc_iter->second.type != VELOCITY_FILE ) {
@@ -2957,17 +2961,20 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
                 if ( face == Patch::xminus || face == Patch::xplus ) {
 
                   setSwirl( patch, face, uVelocity, vVelocity, wVelocity,
-                      density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent );
+                            density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no,
+                            bc_iter->second.swirl_cent );
 
                 } else if ( face == Patch::yminus || face == Patch::yplus ) {
 
                   setSwirl( patch, face, vVelocity, wVelocity, uVelocity,
-                      density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent );
+                            density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no,
+                            bc_iter->second.swirl_cent );
 
                 } else if ( face == Patch::zminus || face == Patch::zplus ) {
 
                   setSwirl( patch, face, wVelocity, uVelocity, vVelocity,
-                      density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent );
+                            density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no,
+                            bc_iter->second.swirl_cent );
 
                 }
               } else if ( bc_iter->second.type == MASSFLOW_INLET || bc_iter->second.type == VELOCITY_INLET ){
@@ -2994,6 +3001,7 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
               setVelFromInput( patch, face, face_name, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.filename );
 
             }
+            }
           }
         }
       }
@@ -3016,59 +3024,70 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
 
   //get the face direction
   IntVector insideCellDir = patch->faceDirection(face);
+  IntVector outsideCell(0,0,0);
   Vector Dx = patch->dCell();
-  Vector mDx; //mapped dx
-  int dir = 0;
 
-  int norm = getNormal(face);
-  double pm = -1.0*insideCellDir[norm];
+  int idim; //normal direction
+  int jdim; //1st tangential
+  int kdim; //2nd tangential
 
-  //remap the dx's and vector values
-  for (int i = 0; i < 3; i++ ) {
-    if ( insideCellDir[i] != 0 ) {
-      dir = i;
+  double sign_v = -1.;
+  double sign_w = 1.;
+  if ( face == Patch::xminus || face == Patch::xplus ){
+    idim = 0; jdim = 1; kdim = 2;
+    if ( face == Patch::xplus ){
+      outsideCell[0] = 1;
+      sign_v = 1;
+      sign_w = -1;
+    }
+  } else if ( face == Patch::yminus || face == Patch::yplus ){
+    idim = 1; jdim = 2; kdim = 0;
+    if ( face == Patch::yplus ){
+      outsideCell[1] = 1;
+      sign_v = 1;
+      sign_w = -1;
+    }
+  } else if ( face == Patch::zminus || face == Patch::zplus ){
+    idim = 2; jdim = 0; kdim = 1;
+    if ( face == Patch::zplus ){
+      outsideCell[2] = 1;
+      sign_v = 1;
+      sign_w = -1;
     }
   }
-  Vector bc_values;
-  for (int i = 0; i < 3; i++ ) {
-    int index = index_map[dir][i];
-    bc_values[i] = value[index];
-    mDx[i] = Dx[index];
-  }
 
-  for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+  const double noise = 1e-10; //avoid divide by zero
+
+  for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
 
     IntVector c  = *bound_ptr;
     IntVector cp = *bound_ptr - insideCellDir;
-
-    uVel[c]  = pm * bc_values.x();
-    uVel[cp] = pm * bc_values.x();
-
-    double ave_u = bc_values.x();
-
     Point p = patch->cellPosition(c);
-    vector<double> my_p;
-    my_p.push_back(p.x());
-    my_p.push_back(p.y());
-    my_p.push_back(p.z());
+    Vector pp; pp[0] = p.x(); pp[1] = p.y(); pp[2] = p.z();
+    Vector pt; //translated point
+    pt[idim] = 99; //error check...
+    pt[jdim] = pp[jdim] - swrl_cent[jdim];
+    pt[kdim] = pp[kdim] - Dx[kdim]/2. - swrl_cent[kdim];
 
-    double y = my_p[index_map[dir][1]] - swrl_cent[index_map[dir][1]];
-    double z = my_p[index_map[dir][2]] + mDx.z()/2.0 - swrl_cent[index_map[dir][2]];
+    double denom = pt[jdim]*pt[jdim] + pt[kdim]*pt[kdim]; denom = std::pow(denom,0.5);
+    denom = (denom > 1e-16) ? denom : denom+noise;
 
-    double denom = pow(y,2.0) + pow(z,2.0);
-    denom = pow(denom,0.5);
+    uVel[c] = value[idim];
+    uVel[cp] = value[idim];
+    uVel[c+outsideCell] = value[idim];  //sets the extra cell in the + direction (that isn't used) for vis.
 
-    double bc_v = -1.0 * z * swrl_no * ave_u /denom;
-    vVel[c] = 2.0*bc_v - vVel[cp];
+    double swirl_condition = sign_v * pt[kdim] * swrl_no * value[idim] / denom;
+    vVel[c] = 2.0*swirl_condition - vVel[cp];
 
-    y = my_p[index_map[dir][1]] + mDx.y()/2.0 - swrl_cent[index_map[dir][1]];
-    z = my_p[index_map[dir][2]] - swrl_cent[index_map[dir][2]];
+    pt[jdim] = pp[jdim] - Dx[jdim]/2. - swrl_cent[jdim];
+    pt[kdim] = pp[kdim] - swrl_cent[kdim];
 
-    denom = pow(y,2) + pow(z,2);
-    denom = pow(denom,0.5);
+    denom = pt[jdim]*pt[jdim] + pt[kdim]*pt[kdim]; denom = std::pow(denom,0.5);
+    denom = (denom > 1e-16) ? denom : denom+noise;
 
-    double bc_w = y * swrl_no * ave_u / denom;
-    wVel[c] = 2.0*bc_w - wVel[cp];
+    swirl_condition = sign_w * pt[jdim] * swrl_no * value[idim] / denom;
+    wVel[c] = 2.0*swirl_condition - wVel[cp];
+
   }
 }
 
@@ -4631,24 +4650,9 @@ BoundaryCondition::wallStressLog( const Patch* patch,
 
   }
 
-
-    // combing
-
-      vars->uVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->uVelNonlinearSrc(i,j,k)+ NonLinearX :  vars->uVelNonlinearSrc(i,j,k);
-      vars->vVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->vVelNonlinearSrc(i,j,k)+ NonLinearY :  vars->vVelNonlinearSrc(i,j,k);
-      vars->wVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->wVelNonlinearSrc(i,j,k)+ NonLinearZ :  vars->wVelNonlinearSrc(i,j,k);
-
-      //if(i==20 && j== 0 && k == 8)
-    //{ std::cout<<"log-log rule:\n"<<"i="<<i<<"j="<<j<<"k="<<k<<std::scientific;
-      //std::cout<< "Is_wall "<< If_wallymUd <<"Y "<<( constvars->cellType(i,j-1,k) == WALL || constvars->cellType(i,j-1,k) == INTRUSION)<< "\n";
-      //std::cout<< "uVelcoity= "<<  constvars->uVelocity(i,j,k)<<"vVelocity="<<constvars->vVelocity(i,j,k)<<"wVelocity="<<constvars->wVelocity(i,j,k)<<"\n";
-      //std::cout<< "uVelcoity(i,j+1,k)= "<<  constvars->uVelocity(i,j+1,k)<<"vVelocity="<<constvars->vVelocity(i,j+1,k)<<"wVelocity(i,j+1,k)="<<constvars->wVelocity(i,j+1,k)<<"\n";
-      //std::cout<<" Density="<<constvars->density(i,j,k) << "Viscosity "<< constvars->viscosity(i,j,k)<< "Dy "<< Dx.y()<<"utauY="<< vtauGuess<< "\n";
-      //std::cout<< "NonLinearX "<<NonLinearX<< "NonLinearY "<<NonLinearY<< " NonLinearZ "<< NonLinearZ << "\n";
-
-
-    //}//end for std::cout
-
+    vars->uVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->uVelNonlinearSrc(i,j,k)+ NonLinearX :  vars->uVelNonlinearSrc(i,j,k);
+    vars->vVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->vVelNonlinearSrc(i,j,k)+ NonLinearY :  vars->vVelNonlinearSrc(i,j,k);
+    vars->wVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->wVelNonlinearSrc(i,j,k)+ NonLinearZ :  vars->wVelNonlinearSrc(i,j,k);
 
   });
 
@@ -5395,36 +5399,36 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
 //______________________________________________________________________
 //
 void
-BoundaryCondition::sched_create_radiation_temperature( SchedulerP       & sched, 
-                                                       const LevelP     & level, 
+BoundaryCondition::sched_create_radiation_temperature( SchedulerP       & sched,
+                                                       const LevelP     & level,
                                                        const MaterialSet* matls,
                                                        bool doing_restart,
                                                        const bool use_old_dw )
 {
   SourceTermFactory& srcs = SourceTermFactory::self();
-  
+
   bool doing_DO_rad    = srcs.source_type_exists("do_radiation");
   bool doing_RMCRT_rad = srcs.source_type_exists( "rmcrt_radiation");
-  
+
   if ( !doing_DO_rad && !doing_RMCRT_rad ){
     return;
   }
-  
+
   //__________________________________
   //  Return if restarting and rad temp exists
   DataWarehouse* new_dw = sched->get_dw(1);
   int archIndex = 0;
   int matlIndex = d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
-  
+
   bool radTemp_exists = false;
-  
+
 
   const int rank = Uintah::Parallel::getMPIRank();
-  
+
   // Find the patches on the arches level that this mpi rank owns.
   const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet( level );
   const PatchSubset* myPatches     = ps->getSubset( rank );
-  
+
   // hackish way to determine if radTemp exists.
   for( auto i=0; i<myPatches->size(); i++) {
     const Patch* patch = myPatches->get(i);
@@ -5436,7 +5440,7 @@ BoundaryCondition::sched_create_radiation_temperature( SchedulerP       & sched,
   }
 
   //__________________________________
-  //  
+  //
   // Before you can require varLabel from the new_dw
   // there must be a compute() for that variable.  This is an empty task.
   if ( doing_restart ) {
@@ -5487,7 +5491,7 @@ BoundaryCondition::create_radiation_temperature( const ProcessorGroup* pc,
 
     if ( use_old_dw ) {
       old_dw->get( old_temperature, d_temperature_label, matlIndex, patch, Ghost::None, 0 );
-    } 
+    }
     else {
       new_dw->get( old_temperature, d_temperature_label, matlIndex, patch, Ghost::None, 0 );
       d_newBC->checkForBC( pc, patch, "radiation_temperature");
