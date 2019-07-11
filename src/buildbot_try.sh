@@ -40,7 +40,8 @@
 
 #______________________________________________________________________
 #
-set possibleServers = ("opt-full-try" "dbg-full-try" "opt-gpu-try")
+
+set trunkServers = ("Trunk:opt-full-try" "Trunk:dbg-full-try" "Trunk:opt-gpu-try")
 
 set BUILDERS = ""
 set CREATE_PATCH = false
@@ -49,7 +50,7 @@ set MY_PATCH     = false
 # No args so all tests
 
 if ($#argv == 0) then
-  foreach server ($possibleServers )
+  foreach server ($trunkServers )
     set BUILDERS = "$BUILDERS --builder=$server"
   end
 endif
@@ -60,7 +61,7 @@ while ( $#argv )
   #echo "($1)"
 
   # remove punctuation chars and convert to lowercase
-  set arg = `echo $1 | tr '[:upper:]' '[:lower:]' | tr -d '[:punct:]'`
+  set arg = `echo $1 | tr '[:upper:]' '[:lower:]'`
 
   switch ($arg:q)
     case createpatch:
@@ -74,22 +75,27 @@ while ( $#argv )
       shift; shift
       breaksw
 
-    case opt:
-      set BUILDERS = "$BUILDERS --builder=opt-full-try"
+    case trunk-opt:
+      set BUILDERS = "$BUILDERS --builder=Trunk:opt-full-try"
       shift
       breaksw
-    case d*b*g:         # debug or dbg
-      set BUILDERS = "$BUILDERS --builder=dbg-full-try"
-      shift
-      breaksw
-
-    case gpu:
-      set BUILDERS = "$BUILDERS --builder=opt-gpu-try"
+    case trunk-d*b*g:         # debug or dbg
+      set BUILDERS = "$BUILDERS --builder=Trunk:dbg-full-try"
       shift
       breaksw
 
+    case trunk-gpu:
+      set BUILDERS = "$BUILDERS --builder=Trunk:opt-gpu-try"
+      shift
+      breaksw
+    
+    case kokkos-opt:
+      set BUILDERS = "$BUILDERS --builder=Kokkos:opt-full-try"
+      shift
+      breaksw
+      
     case all:
-      foreach server ($possibleServers)
+      foreach server ($trunkServers)
         set BUILDERS = "$BUILDERS --builder=$server"
       end  
       shift
@@ -98,11 +104,12 @@ while ( $#argv )
       echo " Error parsing inputs."
       echo " Usage: buildbot_try.sh   [options]"
       echo "             Options:"
-      echo "              opt                       run opt-full-try server"
-      echo "              debug/dbg                 run dbg-full-try server"
-      echo "              gpu                       run opt-gpu-try server"
-      echo "              all                       run opt + dbg + gpu try servers"
-      echo "              create_patch              run svn diff on src/ and submit that patch"
+      echo "              trunk-opt                  Trunk:opt-full-try server"
+      echo "              trunk-debug/dbg            Trunk:dbg-full-try server"
+      echo "              trunk-gpu                  Trunk:opt-gpu-try server"
+      echo "              kokkos-opt                 Kokkos:opt-full-try server"
+      echo "              all                        run trunk(opt + dbg + gpu) try servers"
+      echo "              create_patch               run svn diff on src/ and submit that patch"
       echo "              myPatch      <patchFile>  submit the patchfile to the try servers"
       echo "   Now exiting"
       exit(1)
