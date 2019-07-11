@@ -39,7 +39,6 @@ SRCS += \
 				$(SRCDIR)/Diffusion.cc     \
 				$(SRCDIR)/TransportHelper.cc  \
 				$(SRCDIR)/TimeAve.cc  \
-				$(SRCDIR)/SUpdate.cc  \
         $(SRCDIR)/TransportFactory.cc 
 
 ########################################################################

@@ -4,7 +4,6 @@
 #include <CCA/Components/Arches/Transport/ComputePsi.h>
 #include <CCA/Components/Arches/Transport/KFEUpdate.h>
 #include <CCA/Components/Arches/Transport/TimeAve.h>
-#include <CCA/Components/Arches/Transport/SUpdate.h>
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
 #include <CCA/Components/Arches/Transport/VelRhoHatBC.h>
 #include <CCA/Components/Arches/Transport/AddPressGradient.h>
@@ -158,7 +157,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
       std::string diffusion_task_name = "[Diffusion]" + group_name;
       std::string rk_time_ave_task_name = "[TimeAve]" + group_name;
-      std::string scalar_update_task_name = "[SUpdate]" + group_name;
+      std::string scalar_update_task_name = "[KFEUpdate]" + group_name;
 
       if ( type == "CC" ){
 
@@ -168,7 +167,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
           scinew Diffusion<CCVariable<double> >::Builder( diffusion_task_name, 0 );
           register_task( diffusion_task_name, diff_tsk, eqn_db );
 
-          //split KFEUpate in two task for scalar
+          //split KFEUpdate in two task for scalar
           // rk time average
           TaskInterface::TaskBuilder* rk_ta_tsk =
           scinew TimeAve<CCVariable<double> >::Builder( rk_time_ave_task_name, 0 );
@@ -176,7 +175,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
           // scalar updated
           TaskInterface::TaskBuilder* sup_tsk =
-          scinew SUpdate<CCVariable<double> >::Builder( scalar_update_task_name, 0 );
+          scinew KFEUpdate<CCVariable<double> >::Builder( scalar_update_task_name, 0, false );
           register_task( scalar_update_task_name, sup_tsk, eqn_db );
         }
 
@@ -186,7 +185,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         scinew Diffusion<SFCXVariable<double> >::Builder( diffusion_task_name, 0 );
         register_task( diffusion_task_name, diff_tsk, eqn_db );
 
-        //split KFEUpate in two task for scalar
+        //split KFEUpdate in two task for scalar
         // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCXVariable<double> >::Builder( rk_time_ave_task_name, 0 );
@@ -194,7 +193,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
         // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
-        scinew SUpdate<SFCXVariable<double> >::Builder( scalar_update_task_name, 0 );
+        scinew KFEUpdate<SFCXVariable<double> >::Builder( scalar_update_task_name, 0, false );
         register_task( scalar_update_task_name, sup_tsk, eqn_db );
 
       } else if ( type == "FY" ){
@@ -203,7 +202,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         scinew Diffusion<SFCYVariable<double> >::Builder( diffusion_task_name, 0 );
         register_task( diffusion_task_name, diff_tsk, eqn_db );
 
-        //split KFEUpate in two task for scalar
+        //split KFEUpdate in two task for scalar
         // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCYVariable<double> >::Builder( rk_time_ave_task_name, 0 );
@@ -211,7 +210,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
         // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
-        scinew SUpdate<SFCYVariable<double> >::Builder( scalar_update_task_name, 0 );
+        scinew KFEUpdate<SFCYVariable<double> >::Builder( scalar_update_task_name, 0, false );
         register_task( scalar_update_task_name, sup_tsk, eqn_db );
 
       } else if ( type == "FZ" ){
@@ -220,7 +219,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         scinew Diffusion<SFCZVariable<double> >::Builder( diffusion_task_name, 0 );
         register_task( diffusion_task_name, diff_tsk, eqn_db );
 
-        //split KFEUpate in two task for scalar
+        //split KFEUpdate in two task for scalar
         // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCZVariable<double> >::Builder( rk_time_ave_task_name, 0 );
@@ -228,7 +227,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
         // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
-        scinew SUpdate<SFCZVariable<double> >::Builder( scalar_update_task_name, 0 );
+        scinew KFEUpdate<SFCZVariable<double> >::Builder( scalar_update_task_name, 0, false );
         register_task( scalar_update_task_name, sup_tsk, eqn_db );
 
       }
@@ -273,7 +272,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* x_tsk = scinew KMomentum<SFCXVariable<double> >::Builder(mom_task_name, 0);
     register_task( mom_task_name, x_tsk, db_mom );
     KFEUpdate<SFCXVariable<double> >::Builder* x_update_tsk =
-      scinew KFEUpdate<SFCXVariable<double> >::Builder( update_task_name, 0 );
+      scinew KFEUpdate<SFCXVariable<double> >::Builder( update_task_name, 0, true );
     register_task( update_task_name, x_update_tsk, db_mom );
     // compute u from rhou
     std::string unweight_xmom_name = ArchesCore::default_uMom_name;
@@ -294,7 +293,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* y_tsk = scinew KMomentum<SFCYVariable<double> >::Builder(mom_task_name, 0);
     register_task( mom_task_name, y_tsk, db_mom );
     TaskInterface::TaskBuilder* y_update_tsk =
-      scinew KFEUpdate<SFCYVariable<double> >::Builder( update_task_name, 0 );
+      scinew KFEUpdate<SFCYVariable<double> >::Builder( update_task_name, 0, true );
     register_task( update_task_name, y_update_tsk, db_mom );
     // compute v from rhov
     TaskInterface::TaskBuilder* unw_y_tsk =
@@ -314,7 +313,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* z_tsk = scinew KMomentum<SFCZVariable<double> >::Builder(mom_task_name, 0);
     register_task( mom_task_name, z_tsk, db_mom );
     TaskInterface::TaskBuilder* z_update_tsk =
-      scinew KFEUpdate<SFCZVariable<double> >::Builder( update_task_name, 0 );
+      scinew KFEUpdate<SFCZVariable<double> >::Builder( update_task_name, 0, true );
     register_task( update_task_name, z_update_tsk, db_mom );
     // compute w from rhow
     TaskInterface::TaskBuilder* unw_z_tsk =
@@ -813,7 +812,7 @@ void TransportFactory::register_DQMOM( ProblemSpecP db ){
       update_task_name << "[KFEUpdate]" << m_dqmom_grp_name << "_" << i;
 
       KFEUpdate<CCVariable<double> >::Builder* update_tsk =
-      scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name.str(), 0 );
+      scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name.str(), 0, true );
       register_task( update_task_name.str(), update_tsk, db_eqn_group );
       _dqmom_fe_update.push_back( update_task_name.str() );
 
@@ -876,7 +875,7 @@ void TransportFactory::register_DQMOM( ProblemSpecP db ){
             update_task_name << "[KFEUpdate]" << m_dqmom_grp_name << "_" << env;
 
             KFEUpdate<CCVariable<double> >::Builder* update_tsk =
-            scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name.str(), 0 );
+            scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name.str(), 0, true );
             register_task( update_task_name.str(), update_tsk, db_eqn_group );
             _dqmom_fe_update.push_back( update_task_name.str() );
 

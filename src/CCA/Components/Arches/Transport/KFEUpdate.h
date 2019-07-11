@@ -43,30 +43,31 @@ namespace Uintah{
 
 public:
 
-    KFEUpdate<T>( std::string task_name, int matl_index );
-    ~KFEUpdate<T>();
+    KFEUpdate<T>( std::string task_name, int matl_index, bool do_time_ave );
+    ~KFEUpdate<T>(){}
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
 
-    void create_local_labels();
+    void create_local_labels(){}
 
     /** @brief Build instruction for this class **/
     class Builder : public TaskInterface::TaskBuilder {
 
       public:
 
-      Builder( std::string task_name, int matl_index ) :
-        m_task_name(task_name), m_matl_index(matl_index) {}
+      Builder( std::string task_name, int matl_index, bool do_time_ave ) :
+        m_task_name(task_name), m_matl_index(matl_index), m_do_time_ave(do_time_ave) {}
       ~Builder(){}
 
       KFEUpdate* build()
-      { return scinew KFEUpdate( m_task_name, m_matl_index ); }
+      { return scinew KFEUpdate( m_task_name, m_matl_index, m_do_time_ave ); }
 
       private:
 
       std::string m_task_name;
       int m_matl_index;
+      bool m_do_time_ave;
 
     };
 
@@ -100,11 +101,10 @@ private:
 
     std::vector<std::string> _eqn_names;
     std::vector<std::string> m_transported_eqn_names;
-    //std::map<std::string, double> m_scaling_info;
 
     struct Scaling_info {
-      std::string unscaled_var; // unscaled value
-      double constant; //
+      std::string unscaled_var;
+      double constant;
     };
     std::map<std::string, Scaling_info> m_scaling_info;
 
@@ -117,29 +117,16 @@ private:
     ArchesCore::DIR m_dir;
     std::string m_volFraction_name;
 
-    //std::string m_premultiplier_name;
+    const bool m_do_time_ave;
 
   };
 
   //Function definitions:
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  KFEUpdate<T>::KFEUpdate( std::string task_name, int matl_index ) :
+  KFEUpdate<T>::KFEUpdate( std::string task_name, int matl_index, bool do_time_ave ) :
+  m_do_time_ave(do_time_ave),
   TaskInterface( task_name, matl_index ){}
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  KFEUpdate<T>::~KFEUpdate()
-  {
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  void KFEUpdate<T>::create_local_labels(){
-    // for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
-    //   register_new_variable<T>( (i->second).unscaled_var);
-    // }
-  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
@@ -330,12 +317,7 @@ private:
       double ay = Dx.z() * Dx.x();
       double az = Dx.x() * Dx.y();
 
-#ifdef DO_TIMINGS
-      SpatialOps::TimeLogger timer("kokkos_fe_update.out."+*i);
-      timer.start("work");
-#endif
-
-      if ( time_substep == 0 ){
+      if ( time_substep == 0  || !m_do_time_ave ){
 
         auto fe_update = [&](int i, int j, int k){
 
@@ -396,10 +378,6 @@ private:
           Uintah::parallel_for( range, fe_update );
         }
       }
-
-#ifdef DO_TIMINGS
-      timer.stop("work");
-#endif
 
     }
 
