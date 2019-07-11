@@ -167,13 +167,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
           scinew Diffusion<CCVariable<double> >::Builder( diffusion_task_name, 0 );
           register_task( diffusion_task_name, diff_tsk, eqn_db );
 
-          //split KFEUpdate in two task for scalar
-          // rk time average
+          //split KFEUpdate and time ave in two task for scalar
+          // This is needed for the algorithm
           TaskInterface::TaskBuilder* rk_ta_tsk =
           scinew TimeAve<CCVariable<double> >::Builder( rk_time_ave_task_name, 0 );
           register_task( rk_time_ave_task_name, rk_ta_tsk, eqn_db );
 
-          // scalar updated
           TaskInterface::TaskBuilder* sup_tsk =
           scinew KFEUpdate<CCVariable<double> >::Builder( scalar_update_task_name, 0, false );
           register_task( scalar_update_task_name, sup_tsk, eqn_db );
@@ -185,13 +184,10 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         scinew Diffusion<SFCXVariable<double> >::Builder( diffusion_task_name, 0 );
         register_task( diffusion_task_name, diff_tsk, eqn_db );
 
-        //split KFEUpdate in two task for scalar
-        // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCXVariable<double> >::Builder( rk_time_ave_task_name, 0 );
         register_task( rk_time_ave_task_name, rk_ta_tsk, eqn_db );
 
-        // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
         scinew KFEUpdate<SFCXVariable<double> >::Builder( scalar_update_task_name, 0, false );
         register_task( scalar_update_task_name, sup_tsk, eqn_db );
@@ -202,13 +198,10 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         scinew Diffusion<SFCYVariable<double> >::Builder( diffusion_task_name, 0 );
         register_task( diffusion_task_name, diff_tsk, eqn_db );
 
-        //split KFEUpdate in two task for scalar
-        // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCYVariable<double> >::Builder( rk_time_ave_task_name, 0 );
         register_task( rk_time_ave_task_name, rk_ta_tsk, eqn_db );
 
-        // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
         scinew KFEUpdate<SFCYVariable<double> >::Builder( scalar_update_task_name, 0, false );
         register_task( scalar_update_task_name, sup_tsk, eqn_db );
@@ -219,13 +212,10 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         scinew Diffusion<SFCZVariable<double> >::Builder( diffusion_task_name, 0 );
         register_task( diffusion_task_name, diff_tsk, eqn_db );
 
-        //split KFEUpdate in two task for scalar
-        // rk time average
         TaskInterface::TaskBuilder* rk_ta_tsk =
         scinew TimeAve<SFCZVariable<double> >::Builder( rk_time_ave_task_name, 0 );
         register_task( rk_time_ave_task_name, rk_ta_tsk, eqn_db );
 
-        // scalar updated
         TaskInterface::TaskBuilder* sup_tsk =
         scinew KFEUpdate<SFCZVariable<double> >::Builder( scalar_update_task_name, 0, false );
         register_task( scalar_update_task_name, sup_tsk, eqn_db );

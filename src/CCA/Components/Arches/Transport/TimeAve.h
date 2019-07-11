@@ -1,4 +1,3 @@
-
 #ifndef Uintah_Component_Arches_TimeAve_h
 #define Uintah_Component_Arches_TimeAve_h
 
@@ -44,12 +43,12 @@ namespace Uintah{
 public:
 
     TimeAve<T>( std::string task_name, int matl_index );
-    ~TimeAve<T>();
+    ~TimeAve<T>(){}
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
 
-    void create_local_labels();
+    void create_local_labels(){}
 
     /** @brief Build instruction for this class **/
     class Builder : public TaskInterface::TaskBuilder {
@@ -126,17 +125,6 @@ private:
   template <typename T>
   TimeAve<T>::TimeAve( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ){}
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  TimeAve<T>::~TimeAve()
-  {
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  void TimeAve<T>::create_local_labels(){
-  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
@@ -230,16 +218,6 @@ private:
         trans_variable = premultiplier_name + scalar_name + postmultiplier_name;//
 
       }
-      //if ( eqn_db->findBlock("scaling") ){
-
-      //  double scaling_constant;
-      //  eqn_db->findBlock("scaling")->getAttribute("value", scaling_constant);
-
-      //  Scaling_info scaling_w ;
-      //  scaling_w.unscaled_var = trans_variable + "_unscaled" ;
-      //  scaling_w.constant     = scaling_constant;
-      //  m_scaling_info.insert(std::make_pair(trans_variable, scaling_w));
-      // }
 
       m_transported_eqn_names.push_back(trans_variable);//
     } else {
@@ -250,7 +228,6 @@ private:
 
         double scaling_constant;
         eqn_db->findBlock("scaling")->getAttribute("value", scaling_constant);
-        //m_scaling_info.insert(std::make_pair(scalar_name, scaling_constant));
 
         Scaling_info scaling_w ;
         scaling_w.unscaled_var = "w_" + env_number ;
@@ -297,10 +274,6 @@ private:
   template <typename T>
   void TimeAve<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    //const double dt = tsk_info->get_dt();
-    //Vector DX = patch->dCell();
-    //const double V = DX.x()*DX.y()*DX.z();
-
     typedef std::vector<std::string> SV;
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
@@ -311,11 +284,6 @@ private:
       T& phi = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]);
       CT& old_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
       ceqn +=1;
-
-#ifdef DO_TIMINGS
-      SpatialOps::TimeLogger timer("kokkos_time_av.out."+*i);
-      timer.start("work");
-#endif
 
       auto fe_update = [&](int i, int j, int k){
         phi(i,j,k) = _alpha[time_substep] * old_phi(i,j,k) + _beta[time_substep] * phi(i,j,k);
@@ -337,10 +305,6 @@ private:
         Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
         Uintah::parallel_for( range, fe_update );
       }
-
-#ifdef DO_TIMINGS
-      timer.stop("work");
-#endif
 
     }
 
