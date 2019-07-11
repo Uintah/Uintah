@@ -27,11 +27,19 @@
 #include <Core/Grid/Variables/ListOfCellsIterator.h>
 #include <Core/Grid/Variables/DifferenceIterator.h>
 #include <Core/Grid/Variables/UnionIterator.h>
+#include <Core/Parallel/KokkosTools.h>
 
 #include <iostream>
 
 int main()
 {
+
+#ifdef UINTAH_ENABLE_KOKKOS
+    Kokkos::initialize();
+#endif //UINTAH_ENABLE_KOKKOS
+
+
+  
   //create 3 iterators 1 that is the whole region and 2 that are the halves
   Uintah::Iterator giter_big(Uintah::GridIterator(Uintah::IntVector(0,0,0), Uintah::IntVector(2,2,2)));
   Uintah::Iterator giter_left(Uintah::GridIterator(Uintah::IntVector(0,0,0),Uintah::IntVector(2,2,1)));
@@ -67,6 +75,12 @@ int main()
   }
 
   std::cout << "All tests passed\n";
+
+#ifdef UINTAH_ENABLE_KOKKOS
+  Uintah::cleanupKokkosTools();
+  Kokkos::finalize();
+#endif //UINTAH_ENABLE_KOKKOS
+
 
   return 0;
 }
