@@ -2029,7 +2029,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
         throw InvalidValue("Error: Could not identify the boundary face direction.", __FILE__, __LINE__);
       }
 
-      Patch::FaceType this_face_type = getFaceTypeFromUPS(db_face);
+      Patch::FaceType the_face = getFaceTypeFromUPS(db_face);
 
       int numberOfMomentumBCs = 0;
       for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ) {
@@ -2043,7 +2043,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
         my_info.name = name;
         my_info.faceName=faceName;
         my_info.lHasPartMassFlow=false;
-        my_info.face = this_face_type;
+        my_info.face = the_face;
         std::stringstream color;
         color << bc_type_index;
 
@@ -2675,6 +2675,8 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
         //get the face
         Patch::FaceType face = *bf_iter;
 
+        if ( bc_iter->second.face == face ){
+
         //get the number of children
         int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
 
@@ -2773,8 +2775,6 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
                     bc_iter->second.velocity[ix]=bc_iter->second.velocity[norm]*bc_iter->second.unitVector[ix]/bc_iter->second.unitVector[norm];
                   }
 
-
-
                   if (d_check_inlet_obstructions) {
                     if (volFraction[c - insideCellDir] < small) {
                       std::stringstream msg;
@@ -2787,20 +2787,22 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
                 }
 
                 case (SWIRL) :
+                {
+                  double pm = -1.0 * insideCellDir[norm];
                   bc_iter->second.mass_flow_rate = bc_value;
-                  bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / (area * bc_iter->second.density);
+                  bc_iter->second.velocity[norm] = pm * bc_iter->second.mass_flow_rate / (area * bc_iter->second.density);
                   break;
-
+                }
                 case (STABL) :
                   bc_iter->second.mass_flow_rate = 0.0;
                   break;
-
                 default :
                   break;
 
               }
             }
           }
+        }
         }
       }
 
