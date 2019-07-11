@@ -50,7 +50,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
           $(M_LIBRARY)
 else
-  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY) $(KOKKOS_LIBRARY)
+  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
@@ -61,5 +61,16 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 SRCS    := $(SRCDIR)/perfmatrix3.cc
 PROGRAM := $(SRCDIR)/perfmatrix3
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(M_LIBRARY)
+else
+  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY) $(KOKKOS_LIBRARY)
+endif
+
 
 include $(SCIRUN_SCRIPTS)/program.mk
