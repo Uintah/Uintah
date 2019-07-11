@@ -46,7 +46,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
 
 else
   LIBS := $(LAPACK_LIBRARY) $(BLAS_LIBRARY)              \
-	        $(MPI_LIBRARY) $(XML2_LIBRARY) $(CUDA_LIBRARY)
+	        $(MPI_LIBRARY) $(XML2_LIBRARY) $(CUDA_LIBRARY) $(KOKKOS_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

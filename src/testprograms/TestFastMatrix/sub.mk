@@ -46,7 +46,7 @@ else
         $(MPI_LIBRARY)                    \
         $(F_LIBRARY)                      \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
-        $(CUDA_LIBRARY)                   
+        $(CUDA_LIBRARY) $(KOKKOS_LIBRARY)                  
 endif
 
 ###############################################

@@ -50,7 +50,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
           $(M_LIBRARY)
 else
-  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY)
+  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY) $(KOKKOS_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

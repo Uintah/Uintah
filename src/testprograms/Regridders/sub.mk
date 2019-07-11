@@ -49,7 +49,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(M_LIBRARY)
 else
   LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) \
-	        $(XML2_LIBRARY) $(CUDA_LIBRARY)
+	        $(XML2_LIBRARY) $(CUDA_LIBRARY) $(KOKKOS_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
