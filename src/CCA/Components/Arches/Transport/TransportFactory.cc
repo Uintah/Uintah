@@ -72,7 +72,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
           std::string unweight_task_name = "[UnweightVariable]"+group_name;
           TaskInterface::TaskBuilder* unweight_var_tsk =
           scinew UnweightVariable<C>::Builder( "NULL", unweight_task_name,
-                                               enum_grp_class, eqn_db, 0 );
+                                               enum_grp_class, 0 );
           register_task( unweight_task_name, unweight_var_tsk, eqn_db );
           if ( prop_scalar ){
             _prop_phi_from_rho_phi.push_back(unweight_task_name);
@@ -96,7 +96,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
           std::string unweight_task_name = "[UnweightVariable]"+group_name;
           TaskInterface::TaskBuilder* unweight_var_tsk =
           scinew UnweightVariable<C>::Builder( "NULL", unweight_task_name,
-                                               enum_grp_class, eqn_db, 0 );
+                                               enum_grp_class, 0 );
           register_task( unweight_task_name, unweight_var_tsk, eqn_db );
           _phi_from_rho_phi.push_back(unweight_task_name);
         }
@@ -116,7 +116,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
           std::string unweight_task_name = "[UnweightVariable]"+group_name;
           TaskInterface::TaskBuilder* unweight_var_tsk =
           scinew UnweightVariable<C>::Builder( "NULL", unweight_task_name,
-                                               enum_grp_class, eqn_db, 0 );
+                                               enum_grp_class, 0 );
           register_task( unweight_task_name, unweight_var_tsk, eqn_db );
           _phi_from_rho_phi.push_back(unweight_task_name);
         }
@@ -136,7 +136,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
           std::string unweight_task_name = "[UnweightVariable]"+group_name;
           TaskInterface::TaskBuilder* unweight_var_tsk =
           scinew UnweightVariable<C>::Builder( "NULL", unweight_task_name,
-                                               enum_grp_class, eqn_db, 0 );
+                                               enum_grp_class, 0 );
           register_task( unweight_task_name, unweight_var_tsk, eqn_db );
           _phi_from_rho_phi.push_back(unweight_task_name);
         }
@@ -279,7 +279,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     std::string unweight_xmom_name = ArchesCore::default_uMom_name;
     TaskInterface::TaskBuilder* unw_x_tsk =
       scinew UnweightVariable<SFCXVariable<double>>::Builder( unweight_xmom_name, m_u_vel_name,
-                                                            ArchesCore::MOMENTUM, db, 0 );
+                                                            ArchesCore::MOMENTUM, 0 );
     register_task( unweight_xmom_name, unw_x_tsk, db_mom );
 
     _u_from_rho_u.push_back( unweight_xmom_name );
@@ -299,7 +299,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     // compute v from rhov
     TaskInterface::TaskBuilder* unw_y_tsk =
       scinew UnweightVariable<SFCYVariable<double>>::Builder( unweight_ymom_name, m_v_vel_name,
-                                                            ArchesCore::MOMENTUM, db, 0 );
+                                                            ArchesCore::MOMENTUM, 0 );
     register_task( unweight_ymom_name, unw_y_tsk, db_mom );
 
     _u_from_rho_u.push_back( unweight_ymom_name );
@@ -319,7 +319,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     // compute w from rhow
     TaskInterface::TaskBuilder* unw_z_tsk =
       scinew UnweightVariable<SFCZVariable<double>>::Builder( unweight_zmom_name, m_w_vel_name,
-                                                            ArchesCore::MOMENTUM, db, 0 );
+                                                            ArchesCore::MOMENTUM, 0 );
     register_task( unweight_zmom_name, unw_z_tsk, db_mom );
 
     _u_from_rho_u.push_back( unweight_zmom_name );
@@ -822,7 +822,7 @@ void TransportFactory::register_DQMOM( ProblemSpecP db ){
 
       TaskInterface::TaskBuilder* weight_var_tsk =
       scinew UnweightVariable<CCVariable<double>>::Builder( "NULL", unweight_task_name.str(),
-                                                            ArchesCore::DQMOM, db, 0 );
+                                                            ArchesCore::DQMOM, 0 );
       register_task( unweight_task_name.str(), weight_var_tsk, db_eqn_group );
       _ic_from_w_ic.push_back( unweight_task_name.str() );
 
@@ -885,7 +885,7 @@ void TransportFactory::register_DQMOM( ProblemSpecP db ){
 
             TaskInterface::TaskBuilder* weight_var_tsk =
             scinew UnweightVariable<CCVariable<double>>::Builder( "NULL", unweight_task_name.str(),
-                                                                  ArchesCore::DQMOM, db, 0 );
+                                                                  ArchesCore::DQMOM, 0 );
             register_task( unweight_task_name.str(), weight_var_tsk, db_eqn_group );
             _ic_from_w_ic.push_back( unweight_task_name.str() );
 
