@@ -293,7 +293,7 @@ public:
   static Region computeEnclosingRegion(SuperBoxPIterator superBoxesBegin,
                                        SuperBoxPIterator superBoxesEnd);
 public:
-  virtual ~SuperBox()
+  virtual ~SuperBox() noexcept(false)
   {}
 
   const Region& getRegion() const
@@ -1018,7 +1018,7 @@ makeCompositeBox(typename SBS::BoxHashMap& boxMap, BoxPIterator begin, BoxPItera
 
 
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
-CompositeBox<BoxP, Point, Volume, Value, Evaluator>::~CompositeBox()
+  CompositeBox<BoxP, Point, Volume, Value, Evaluator>::~CompositeBox()
 {
   // should have reactivated before deleting
   ASSERT(activatedSubSuperBoxes_.size() == 0);
