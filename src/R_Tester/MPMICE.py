@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 
-from sys import argv,exit
-from os import environ
-from helpers.runSusTests import runSusTests, ignorePerformanceTests
+from sys import argv, exit
+from os import environ, system
+from helpers.runSusTests import runSusTests, ignorePerformanceTests, getInputsDir
+from helpers.modUPS import modUPS, modUPS2
+
+
+inputs = "%s/%s" % ( getInputsDir(),"MPMICE" )
+
+advectSlipExchOn_ups = modUPS( inputs, \
+                               "advectSlipExch.ups", \
+                               ["<useSlipCoeffs>  true </useSlipCoeffs>"] )
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2",...])
@@ -45,6 +53,8 @@ AMRTESTS   = [
 
 LOCALTESTS = [   ("advect",                   "advect.ups",                1,  "ALL", ["exactComparison"]),
                  ("rmpmice_advect_periodic",  "advect_periodic.ups",       8,  "ALL", ["exactComparison"]),
+                 ("advectSlipExch_Off",       "advectSlipExch.ups",        8,  "ALL", ["exactComparison"]),
+                 ("advectSlipExch_On",        advectSlipExchOn_ups,        8,  "ALL", ["exactComparison"]),
                  ("massX",                    "massX.ups",                 1,  "ALL", ["exactComparison"]),
                  ("pistonVal",                "pistonValidation.ups",      2,  "ALL", ["exactComparison"]),
                  ("pistonVal_mks",            "pistonValidation.SI.Cu.ups",2,  "ALL", ["exactComparison"]),
