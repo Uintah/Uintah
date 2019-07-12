@@ -62,15 +62,11 @@ if [ "$OS" = "Linux" ]; then
       COMMON="      --with-mpi=/usr/lib/mpich\\
       --with-hypre=/usr/local/hypre-2.8.0b \\
       --with-boost=/usr/local/boost-1.65.1 \\
-      --without-petsc \\
-      --enable-kokkos \\
+      --with-petsc=/usr/local/petsc-3.8.4 \\
       --enable-examples \\
       --enable-arches \\
-      LDFLAGS='-ldl'\\"
-      
-      DBG_CONFIGURE="    --enable-debug \\
-          --enable-64bit \\
-          --enable-scinew-line-numbers \\"
+      --enable-wasatch_3p \\
+      --enable-ray-scatter \\"
     fi
 
     ENV="     CC=mpicc \\
