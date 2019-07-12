@@ -81,7 +81,7 @@
     <save label="uHat"/>
     <save label="vHat"/>
     <save label="wHat"/>
-    <checkpoint cycle="2" interval=".0007"/>
+    <checkpoint cycle="1" interval=".0007"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>

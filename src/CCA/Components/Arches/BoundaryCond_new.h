@@ -195,9 +195,9 @@ public:
 
             //An implementation of a swirl condition for particle velocity (DQMOM)
 
-            int idim; //normal direction
-            int jdim; //1st tangential
-            int kdim; //2nd tangential
+            int idim=9999; //normal direction
+            int jdim=9999; //1st tangential
+            int kdim=9999; //2nd tangential
 
             double sign = 1.;
             if ( face == Patch::xminus || face == Patch::xplus ){

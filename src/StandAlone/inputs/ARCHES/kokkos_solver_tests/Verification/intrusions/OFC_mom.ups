@@ -54,7 +54,7 @@
     <save label="A_press"/>
     <!--save label="TransportFactory/x-mom/ExecTime"/-->
     <!--<save label="WaitTime"/>-->
-    <checkpoint cycle="2" interval="1e-3"/>
+    <checkpoint cycle="1" interval="1e-3"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
