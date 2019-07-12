@@ -50,6 +50,9 @@ PRODUCTION_TESTS_NO_COAL = [
    ("almgrenMMS"                        , "mms/almgrenMMS.ups"                                      , 1   , "All"   , ["exactComparison"])   ,
    ("oned_pulse_conv"                   , "mms/oned_pulse_conv.ups"                                 , 1   , "All"   , ["exactComparison"])   ,
    ("isotropic-turbulence-decay"        , "periodicTurb/isotropic-turbulence-decay.ups"             , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
+   ("isotropic_p4_dynsmag_32"           , "periodicTurb/isotropic_p4_dynsmag_32.ups"                , 8   , "All"   , ["exactComparison"     , "no_restart"]) ,
+   ("isotropic_p4_wale_32"              , "periodicTurb/isotropic_p4_wale_32.ups"                   , 8   , "All"   , ["exactComparison"     , "no_restart"]) ,
+   ("isotropic_p4_sigma_32"             , "periodicTurb/isotropic_p4_sigma_32.ups"                  , 8   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("helium_1m"                         , "helium_1m.ups"                                           , 1   , "All"   , ["exactComparison"])   ,
    ("methane_fire"                      , "methane_fire.ups"                                        , 1   , "All"   , ["exactComparison"])   ,
    ("methane_fire_dRad"                 , "methane_fire_dRad.ups"                                   , 4   , "All"   , ["exactComparison"]) ,
@@ -143,7 +146,6 @@ KOKKOS_TESTS = [
    ("kokkos-x-scalar_mms_RK3"           , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms_RK3.ups"                 , 8   , "All"   , ["exactComparison"]),
    ("kokkos-xy-scalar"                  , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar.ups"                     , 1   , "All"   , ["exactComparison"]),
    ("kokkos-xy-scalar-MMSBC"            , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar-MMSBC.ups"               , 1   , "All"   , ["exactComparison"]),
-   ("kokkos-xy-scalar-handoff"          , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar-handoff.ups"             , 1   , "All"   , ["exactComparison","no_restart"]),
    ("problem3_Shunn_mms-x"              , "kokkos_solver_tests/Verification/variableDensity/problem3_Shunn_mms-x.ups"            , 4   , "All"   , ["exactComparison"]),
    ("isotropic_kokkos_wale"             , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_wale.ups"              , 1   , "All"   , ["exactComparison", "no_restart"]),
 #   Packing dissabled for the moment...

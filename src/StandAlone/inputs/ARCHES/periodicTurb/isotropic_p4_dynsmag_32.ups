@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='ISO-8859-1'?>
 <Uintah_specification>
   <Meta>
-    <title>Arches Decay of Isotropic Turbulence - Dynamic Model: compdynamic - 32x32x32</title>
+    <title>Arches Decay of Isotropic Turbulence - Dynamic Model: dynamic smag with parallel_fors - 32x32x32</title>
   </Meta>
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
@@ -17,7 +17,7 @@
   </Time>
   <!--__________________________________-->
   <DataArchiver>
-    <filebase>compdyn-32.uda</filebase>
+    <filebase>isotropic_kokkos_dynsmag_32</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="totalKineticEnergy"/>
@@ -33,7 +33,7 @@
     <save label="viscosityCTS"/>
     <save label="cellType"/>
  -->
-    <checkpoint cycle="2" timestepInterval="0.001"/>
+    <checkpoint cycle="2" timestepInterval="1."/>
     <compression>gzip</compression>
   </DataArchiver>
   <!--__________________________________-->
@@ -59,8 +59,18 @@
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
+      <VarID>
+        <var label="uVelocitySPBC" role="uvelocity"/>
+        <var label="vVelocitySPBC" role="vvelocity"/>
+        <var label="wVelocitySPBC" role="wvelocity"/>
+        <var label="CCUVelocity" role="ccuvelocity"/>
+        <var label="CCVVelocity" role="ccvvelocity"/>
+        <var label="CCWVelocity" role="ccwvelocity"/>
+      </VarID>
       <TurbulenceModels>
-        <model label="the_sigma_model" type="sigma"/>
+        <model type="dynamic_smagorinsky" label="ds_model">
+          <filter type="three_points"/>
+        </model>
       </TurbulenceModels>
       <Properties>
         <table label="a_user_generated_label" type="constant">
@@ -86,7 +96,7 @@
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
           <initialization type="input">
-            <input_file>cbc32_uvw_arches.gz</input_file>
+            <input_file>inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz</input_file>
           </initialization>
         </MomentumSolver>
       </ExplicitSolver>
