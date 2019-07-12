@@ -44,6 +44,7 @@ endif
 
 PSELIBS :=                 \
         CCA/Ports          \
+	CCA/Components/Schedulers \
         Core/Disclosure    \
         Core/Exceptions    \
         Core/Geometry      \

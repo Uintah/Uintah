@@ -31,6 +31,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Math/Expon.h>
 #include <Core/Disclosure/TypeDescription.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 #include <sci_defs/uintah_defs.h>
 

@@ -235,7 +235,7 @@ class DWDatabase {
 
         DataItem() {}
 
-        ~DataItem()
+        ~DataItem() noexcept(false)
         {
           if (m_next) {
             delete m_next;
