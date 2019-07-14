@@ -31,15 +31,15 @@ SRCS += \
         $(SRCDIR)/KFEUpdate.cc        \
         $(SRCDIR)/KScalarRHS.cc       \
         $(SRCDIR)/KMomentum.cc        \
-			  $(SRCDIR)/PressureEqn.cc      \
-				$(SRCDIR)/VelRhoHatBC.cc      \
-				$(SRCDIR)/AddPressGradient.cc \
-				$(SRCDIR)/PressureBC.cc       \
-				$(SRCDIR)/StressTensor.cc     \
-				$(SRCDIR)/Diffusion.cc     \
-				$(SRCDIR)/TransportHelper.cc  \
-				$(SRCDIR)/TimeAve.cc  \
-        $(SRCDIR)/TransportFactory.cc 
+        $(SRCDIR)/PressureEqn.cc      \
+        $(SRCDIR)/VelRhoHatBC.cc      \
+        $(SRCDIR)/AddPressGradient.cc \
+        $(SRCDIR)/PressureBC.cc       \
+        $(SRCDIR)/StressTensor.cc     \
+        $(SRCDIR)/Diffusion.cc        \
+        $(SRCDIR)/TransportHelper.cc  \
+        $(SRCDIR)/TimeAve.cc          \
+        $(SRCDIR)/TransportFactory.cc
 
 ########################################################################
 #
