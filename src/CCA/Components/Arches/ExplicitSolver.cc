@@ -1945,7 +1945,6 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
           dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
         }
 
-
         for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
              iEqn!=dqmom_eqns.end(); ++iEqn ) {
 

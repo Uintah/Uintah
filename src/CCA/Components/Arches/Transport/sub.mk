@@ -29,20 +29,17 @@ endif
 SRCS += \
         $(SRCDIR)/ComputePsi.cc       \
         $(SRCDIR)/KFEUpdate.cc        \
-        $(SRCDIR)/SUpdate.cc          \
-        $(SRCDIR)/TimeAve.cc          \
         $(SRCDIR)/KScalarRHS.cc       \
         $(SRCDIR)/KMomentum.cc        \
-			  $(SRCDIR)/PressureEqn.cc      \
-				$(SRCDIR)/VelRhoHatBC.cc      \
-				$(SRCDIR)/AddPressGradient.cc \
-				$(SRCDIR)/PressureBC.cc       \
-				$(SRCDIR)/StressTensor.cc     \
-				$(SRCDIR)/Diffusion.cc     \
-				$(SRCDIR)/TransportHelper.cc  \
-				$(SRCDIR)/TimeAve.cc  \
-				$(SRCDIR)/SUpdate.cc  \
-        $(SRCDIR)/TransportFactory.cc 
+        $(SRCDIR)/PressureEqn.cc      \
+        $(SRCDIR)/VelRhoHatBC.cc      \
+        $(SRCDIR)/AddPressGradient.cc \
+        $(SRCDIR)/PressureBC.cc       \
+        $(SRCDIR)/StressTensor.cc     \
+        $(SRCDIR)/Diffusion.cc        \
+        $(SRCDIR)/TransportHelper.cc  \
+        $(SRCDIR)/TimeAve.cc          \
+        $(SRCDIR)/TransportFactory.cc
 
 ########################################################################
 #

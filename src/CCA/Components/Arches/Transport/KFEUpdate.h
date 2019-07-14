@@ -44,8 +44,8 @@ namespace Uintah{
 
 public:
 
-    KFEUpdate<T>( std::string task_name, int matl_index );
-    ~KFEUpdate<T>();
+    KFEUpdate<T>( std::string task_name, int matl_index, bool do_time_ave );
+    ~KFEUpdate<T>(){}
 
     TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
 
@@ -60,24 +60,25 @@ public:
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
 
-    void create_local_labels();
+    void create_local_labels(){}
 
     /** @brief Build instruction for this class **/
     class Builder : public TaskInterface::TaskBuilder {
 
       public:
 
-      Builder( std::string task_name, int matl_index ) :
-        m_task_name(task_name), m_matl_index(matl_index) {}
+      Builder( std::string task_name, int matl_index, bool do_time_ave ) :
+        m_task_name(task_name), m_matl_index(matl_index), m_do_time_ave(do_time_ave) {}
       ~Builder(){}
 
       KFEUpdate* build()
-      { return scinew KFEUpdate( m_task_name, m_matl_index ); }
+      { return scinew KFEUpdate( m_task_name, m_matl_index, m_do_time_ave ); }
 
       private:
 
       std::string m_task_name;
       int m_matl_index;
+      bool m_do_time_ave;
 
     };
 
@@ -115,11 +116,10 @@ private:
 
     std::vector<std::string> _eqn_names;
     std::vector<std::string> m_transported_eqn_names;
-    //std::map<std::string, double> m_scaling_info;
 
     struct Scaling_info {
-      std::string unscaled_var; // unscaled value
-      double constant; //
+      std::string unscaled_var;
+      double constant;
     };
     std::map<std::string, Scaling_info> m_scaling_info;
 
@@ -132,31 +132,18 @@ private:
     ArchesCore::DIR m_dir;
     std::string m_volFraction_name;
 
-    //std::string m_premultiplier_name;
+    const bool m_do_time_ave;
 
   };
 
   //Function definitions:
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  KFEUpdate<T>::KFEUpdate( std::string task_name, int matl_index ) :
+  KFEUpdate<T>::KFEUpdate( std::string task_name, int matl_index, bool do_time_ave ) :
+  m_do_time_ave(do_time_ave),
   TaskInterface( task_name, matl_index ){}
 
   //------------------------------------------------------------------------------------------------
-  template <typename T>
-  KFEUpdate<T>::~KFEUpdate()
-  {
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  void KFEUpdate<T>::create_local_labels(){
-    // for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
-    //   register_new_variable<T>( (i->second).unscaled_var);
-    // }
-  }
-
-  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskComputeBCsFunctionPointers()
   {
@@ -393,27 +380,24 @@ private:
       double ay = Dx.z() * Dx.x();
       double az = Dx.x() * Dx.y();
 
-#ifdef DO_TIMINGS
-      SpatialOps::TimeLogger timer("kokkos_fe_update.out."+*i);
-      timer.start("work");
-#endif
+      if ( time_substep == 0  || !m_do_time_ave ){
 
-      if ( time_substep == 0 ){
+        BlockRange range;
 
-         BlockRange range;
         if ( m_dir == ArchesCore::XDIR ){
           GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
-          range=Uintah::BlockRange(low_fx_patch_range, high_fx_patch_range);
+          range = Uintah::BlockRange(low_fx_patch_range, high_fx_patch_range);
         } else if ( m_dir == ArchesCore::YDIR ){
           GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
-          range=Uintah::BlockRange(low_fy_patch_range, high_fy_patch_range);
+          range = Uintah::BlockRange(low_fy_patch_range, high_fy_patch_range);
         } else if ( m_dir == ArchesCore::ZDIR ){
           GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
-          range=Uintah::BlockRange(low_fz_patch_range, high_fz_patch_range);
+          range = Uintah::BlockRange(low_fz_patch_range, high_fz_patch_range);
         } else {
-          range=Uintah::BlockRange(patch->getCellLowIndex(), patch->getCellHighIndex());
+          range = Uintah::BlockRange(patch->getCellLowIndex(), patch->getCellHighIndex());
         }
-          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+
+        Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
           rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                       az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
@@ -424,24 +408,25 @@ private:
       } else {
 
 
-         BlockRange range2;
+        BlockRange range2;
+
         if ( m_dir == ArchesCore::XDIR ){
           GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
-          range2=Uintah::BlockRange(low_fx_patch_range, high_fx_patch_range);
+          range2 = Uintah::BlockRange(low_fx_patch_range, high_fx_patch_range);
         } else if ( m_dir == ArchesCore::YDIR ){
           GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
-          range2=Uintah::BlockRange(low_fy_patch_range, high_fy_patch_range);
+          range2 = Uintah::BlockRange(low_fy_patch_range, high_fy_patch_range);
         } else if ( m_dir == ArchesCore::ZDIR ){
           GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
-          range2=Uintah::BlockRange(low_fz_patch_range, high_fz_patch_range);
+          range2 = Uintah::BlockRange(low_fz_patch_range, high_fz_patch_range);
         } else {
-          range2=Uintah::BlockRange(patch->getCellLowIndex(), patch->getCellHighIndex());
+          range2 = Uintah::BlockRange(patch->getCellLowIndex(), patch->getCellHighIndex());
         }
-          const double alpha=_alpha[time_substep];
-          const double beta=_beta[time_substep];
 
-          Uintah::parallel_for(execObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
-         
+        const double alpha = _alpha[time_substep];
+        const double beta = _beta[time_substep];
+
+        Uintah::parallel_for(execObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
           rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                       az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
@@ -449,29 +434,26 @@ private:
           phi(i,j,k) = phi(i,j,k) + dt/Vol * rhs(i,j,k);
 
           phi(i,j,k) = alpha * old_phi(i,j,k) + beta * phi(i,j,k);
-
         });
-      }
 
-#ifdef DO_TIMINGS
-      timer.stop("work");
-#endif
+      }
 
     }
 
-     //unscaling
-     //work in progress
+    // unscaling
+    // work in progress
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
 
       std::string varname = ieqn->first;
       Scaling_info info = ieqn->second;
+      const double ScalingConstant = info.constant;
       auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
 
       auto phi = tsk_info->get_uintah_field_add<T, double, MemSpace>(varname);
       auto phi_unscaled = tsk_info->get_uintah_field_add<T, double, MemSpace>(info.unscaled_var);
 
       Uintah::BlockRange range3( patch->getCellLowIndex(), patch->getCellHighIndex() );
-      const double ScalingConstant=info.constant;
+
       Uintah::parallel_for(execObj, range3, KOKKOS_LAMBDA(int i, int j, int k){
 
         phi_unscaled(i,j,k) = phi(i,j,k) * ScalingConstant * vol_fraction(i,j,k);
@@ -517,9 +499,10 @@ private:
         Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
         const double scalConstant=(ieqn->second).constant;
-            parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
-            phi_unscaled(i,j,k) = phi(i,j,k) *scalConstant *vol_fraction(i,j,k) ;
-          });
+
+        parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+          phi_unscaled(i,j,k) = phi(i,j,k) *scalConstant *vol_fraction(i,j,k) ;
+        });
         }
     }
   }

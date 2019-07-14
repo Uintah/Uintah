@@ -16,7 +16,6 @@ public:
     UnweightVariable<T>( std::string weighted_variable,
                          std::string unweighted_variable,
                          ArchesCore::EQUATION_CLASS eqn_class,
-                         ProblemSpecP& db,
                          int matl_index);
     ~UnweightVariable<T>();
 
@@ -39,25 +38,22 @@ public:
       Builder( std::string weighted_variable,
                std::string unweighted_variable,
                ArchesCore::EQUATION_CLASS eqn_class,
-               ProblemSpecP& db,
                int matl_index ) :
                m_weighted_variable(weighted_variable),
                m_unweighted_variable(unweighted_variable),
                m_class(eqn_class),
-               m_db(db),
                m_matl_index(matl_index){}
       ~Builder(){}
 
       UnweightVariable* build()
       { return scinew UnweightVariable<T>( m_weighted_variable, m_unweighted_variable,
-                                           m_class, m_db, m_matl_index ); }
+                                           m_class, m_matl_index ); }
 
       private:
 
       std::string m_weighted_variable;
       std::string m_unweighted_variable;
       ArchesCore::EQUATION_CLASS m_class;
-      ProblemSpecP& m_db;
       int m_matl_index;
 
     };
@@ -92,7 +88,6 @@ private:
     std::string m_rho_name;
     std::vector<std::string> m_eqn_names;
     std::vector<std::string> m_un_eqn_names;
-    ProblemSpecP& m_db;
     std::vector<int> m_ijk_off;
     int m_dir;
     int m_Nghost_cells;
@@ -126,15 +121,13 @@ template <typename T>
 UnweightVariable<T>::UnweightVariable( std::string weighted_variable,
                                        std::string unweighted_variable,
                                        ArchesCore::EQUATION_CLASS eqn_class,
-                                       ProblemSpecP& db,
                                        int matl_index ) :
                                        TaskInterface( unweighted_variable,
-                                       matl_index ), m_db(db){
+                                       matl_index ){
 
   m_weighted_variable = weighted_variable;
   m_unweighted_variable = unweighted_variable;
   m_eqn_class = eqn_class;
-  m_db = db;
 
   ArchesCore::VariableHelper<T> helper;
   m_ijk_off.push_back(0);
@@ -362,7 +355,7 @@ void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   //int eqn =0;
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     const double ScalingConst = ieqn->second.constant;
-    auto  var = tsk_info->get_uintah_field_add<T, double, MemSpace>(ieqn->first);
+    auto var = tsk_info->get_uintah_field_add<T, double, MemSpace>(ieqn->first);
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       var(i,j,k) /= ScalingConst;
     });
@@ -439,7 +432,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
 
           // DQMOM : BCs are Ic_qni, then we need to compute Ic
           for (int ieqn = istart; ieqn < iend; ieqn++ ){
-            auto  var = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eqn_names[ieqn]);
+            auto var = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eqn_names[ieqn]);
             auto un_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_un_eqn_names[ieqn]);
             auto vol_fraction =
             tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
@@ -453,7 +446,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
           for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
             Scaling_info info = ieqn->second;
             const double ScalingConst = info.constant;
-            auto  un_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(info.unscaled_var);
+            auto un_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(info.unscaled_var);
             parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
               un_var(i,j,k) *= ScalingConst;
             });
@@ -486,7 +479,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
         // phi variable that are transported in staggered position
         // rho_phi = phi/pho
         for (int ieqn = istart; ieqn < iend; ieqn++ ){
-          auto  var = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_eqn_names[ieqn]);// rho*phi
+          auto var = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_eqn_names[ieqn]);// rho*phi
           auto un_var = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_un_eqn_names[ieqn]); // phi
 
           if ( dot == -1 ){
