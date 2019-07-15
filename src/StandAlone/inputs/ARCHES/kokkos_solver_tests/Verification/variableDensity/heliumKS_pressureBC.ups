@@ -19,7 +19,6 @@
   <DataArchiver>
     <filebase>KS_helium.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
-    <outputInitTimestep/>
     <save label="x-mom"/>
     <save label="volFraction"/>
     <save label="cellType"/>
