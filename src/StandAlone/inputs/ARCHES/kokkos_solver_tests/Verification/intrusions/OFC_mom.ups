@@ -24,7 +24,7 @@
   </Time>
   <DataArchiver>
     <filebase>OFC_mom.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="A_press"/>
     <save label="volFraction"/>
@@ -54,7 +54,7 @@
     <save label="A_press"/>
     <!--save label="TransportFactory/x-mom/ExecTime"/-->
     <!--<save label="WaitTime"/>-->
-    <checkpoint cycle="1" interval="1e-3"/>
+    <checkpoint cycle="1" interval="3e-2"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
