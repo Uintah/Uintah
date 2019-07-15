@@ -25,7 +25,6 @@
   <DataArchiver>
     <filebase>OFC_mom.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
-    <outputInitTimestep/>
     <save label="A_press"/>
     <save label="volFraction"/>
     <save label="volFractionX"/>
