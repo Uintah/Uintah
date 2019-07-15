@@ -17,7 +17,7 @@
   </Time>
   <!--__________________________________-->
   <DataArchiver>
-    <filebase>isotropic_kokkos_dynsmag_32</filebase>
+    <filebase>isotropic_kokkos_dynsmag_32.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="totalKineticEnergy"/>
