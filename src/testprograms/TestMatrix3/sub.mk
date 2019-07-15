@@ -63,6 +63,20 @@ SRCS    := $(SRCDIR)/perfmatrix3.cc
 PROGRAM := $(SRCDIR)/perfmatrix3
 
 ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
+else
+  PSELIBS := \
+	testprograms/TestSuite \
+	CCA/Ports              \
+	Core/Exceptions        \
+	Core/Geometry          \
+	Core/Grid              \
+	Core/Parallel          \
+	Core/Math         
+endif
+
+
+ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
           $(BOOST_LIBRARY)         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
