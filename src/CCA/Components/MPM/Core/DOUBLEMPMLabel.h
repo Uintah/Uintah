@@ -101,7 +101,7 @@ namespace Uintah {
 
 		const VarLabel* gDraggingLabel;
 
-
+		const VarLabel* gnodeSurfaceLabel;
 
 		const VarLabel* VolumeRatioLabel;
 	};

@@ -1906,7 +1906,9 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 			MPMBoundCond bc;
 			bc.setBoundaryCondition(patch, dwi, "Temperature", gTemperature, interp_type);
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity, interp_type);
-			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity_liquid, interp_type);
+
+			bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gvelocity_liquid, interp_type);
+
 		}  // End loop over materials
 
 		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
@@ -2553,7 +2555,8 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 
 			MPMBoundCond bc;
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", internalforce, interp_type);
-			bc.setBoundaryCondition(patch, dwi, "Symmetric", gInternalForceLiquid, interp_type);
+
+			bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gInternalForceLiquid, interp_type);
 		}
 
 		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
@@ -2810,8 +2813,8 @@ void DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity_star, interp_type);
 
 			// Liquid
-			bc.setBoundaryCondition(patch, dwi, "Velocity", gVelocityStarLiquid, interp_type);
-			bc.setBoundaryCondition(patch, dwi, "Symmetric", gVelocityStarLiquid, interp_type);
+			bc.setBoundaryConditionLiquid(patch, dwi, "VelocityLiquid", gVelocityStarLiquid, interp_type);
+			bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gVelocityStarLiquid, interp_type);
 
 			// Now recompute acceleration as the difference between the velocity
 			// interpolated to the grid (no bcs applied) and the new velocity_star
@@ -4018,6 +4021,7 @@ void DOUBLEMPM::scheduleInterpolatePorePresureToParticle(SchedulerP& sched,
 	t->requires(Task::OldDW, lb->pVolumeLabel, gnone);
 	t->requires(Task::OldDW, double_lb->pFreeSurfaceLabel, gnone);
 	t->computes(double_lb->pFreeSurfaceLabel_preReloc);
+	t->computes(double_lb->gnodeSurfaceLabel);
 
 	// Porosity
 	t->requires(Task::NewDW, double_lb->gPorosityLabel, gac, NGN);
@@ -4044,6 +4048,9 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 		ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
 		vector<IntVector> ni(linear_interpolator->size());
 		vector<double> S(linear_interpolator->size());
+		
+		vector<IntVector> ni1(linear_interpolator->size());
+		vector<double> S1(linear_interpolator->size());
 
 		unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
 
@@ -4089,13 +4096,14 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 			old_dw->get(pFreeSurface, double_lb->pFreeSurfaceLabel, pset);
 			new_dw->allocateAndPut(pFreeSurfacenew, double_lb->pFreeSurfaceLabel_preReloc, pset);
 
+			NCVariable<double> gnodeSurface;
+			new_dw->allocateAndPut(gnodeSurface, double_lb->gnodeSurfaceLabel, dwi, patch);
+			gnodeSurface.initialize(0.0);
+
 			CCVariable<double> Volume_ratio;      // Volume ratio of the cell
 			new_dw->allocateTemporary(Volume_ratio, patch);
 			Volume_ratio.initialize(0.);
-
-			Vector cell = patch->dCell();		// Cell dimension
-			double vol_cell = cell.x()*cell.y()*cell.z();  // Cell volume
-		
+	
 			// Loop over particles
 			for (ParticleSubset::iterator iter = pset->begin();
 				iter != pset->end(); iter++) {
@@ -4128,34 +4136,52 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 				patch->findCell(px[idx], cell_index);
 
 				Volume_ratio[cell_index] += pvolume[idx];    // sum up particle volume inside cell	
-				pFreeSurfacenew[idx] = 0;
-			
+				pFreeSurfacenew[idx] = 0;	
 			}
 
+			
+			// Free surface algorithm
 			if (flags->d_FreeSurface) {
 				// Free surface
 				for (CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) { // loop not include extra cells
 					IntVector c = *iter;   // cell index
-					Volume_ratio[c] /= vol_cell;    // calculate Volume ratio
 
-					//cerr << Volume_ratio[c] << endl;		
+					if (Volume_ratio[c] == 0) {
 
-					if (Volume_ratio[c] <= 0.9) {
+						IntVector nodeIdx[8];
+						patch->findNodesFromCell(c, nodeIdx);
 
-						for (ParticleSubset::iterator iter = pset->begin();
-							iter != pset->end(); iter++) {
+						for (int in = 0; in < 8; in++) {
 
-							particleIndex idx = *iter;
-							IntVector cell_idx = patch->getLevel()->getCellIndex(px[idx]);     // get cell index
+							IntVector node = nodeIdx[in];
 
-							if (cell_idx == c) {
-								pPorePressurenew[idx] = 0;
-								pFreeSurfacenew[idx] = 1;
+							if (gPorePresure[node] != 0) {
+								gnodeSurface[node] = 1;
 							}
 						}
 					}
 				}
-			}
+				
+				for (ParticleSubset::iterator iter1 = pset->begin();
+					iter1 != pset->end(); iter1++) {
+
+					particleIndex idx1 = *iter1;
+
+					// Get the node indices that surround the cell
+					int NN1 = linear_interpolator->findCellAndWeights(px[idx1], ni1, S1,
+						psize[idx1]);
+
+					// Accumulate the contribution from each surrounding vertex
+					for (int k = 0; k < NN1; k++) {
+						IntVector node1 = ni1[k];
+						
+						if (gnodeSurface[node1] == 1) {					
+							pPorePressurenew[idx1] = (1.2-px[idx1].y())*(-1000)*10;
+							pFreeSurfacenew[idx1] = 1;
+						}						
+					}
+				}
+			}				
 		}  // loop over materials
 		delete linear_interpolator;
 	}
@@ -4198,7 +4224,6 @@ void DOUBLEMPM::computeAccStrainEnergy(const ProcessorGroup*,
 		(double)accStrainEnergy + (double)incStrainEnergy;
 	new_dw->put(max_vartype(totalStrainEnergy), lb->AccStrainEnergyLabel);
 }
-
 
 // Update other quantities of particles
 void DOUBLEMPM::scheduleFinalParticleUpdate(SchedulerP& sched,

@@ -117,7 +117,8 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 
 	gDraggingLabel				= VarLabel::create("g.Dragging", NCVariable<double>::getTypeDescription());
 
-
+	gnodeSurfaceLabel			= VarLabel::create("g.nodeSurface", NCVariable<double>::getTypeDescription());
+	
 	// Cell variables
 	VolumeRatioLabel			= VarLabel::create("c.VolumeRatio",CCVariable<double>::getTypeDescription());
 }
@@ -179,6 +180,8 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 	VarLabel::destroy(gStressLabel);
 
 	VarLabel::destroy(gDraggingLabel);
+
+	VarLabel::destroy(gnodeSurfaceLabel);
 
 	// Cell variables
 	VarLabel::destroy(VolumeRatioLabel);

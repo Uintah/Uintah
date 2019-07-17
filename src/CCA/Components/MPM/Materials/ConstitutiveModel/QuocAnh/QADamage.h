@@ -93,12 +93,17 @@ namespace Uintah {
 			double K;
 			double Alpha;
 
+			// For Damage
 			double length;
 			double mesh;
 			double kRatio;
 			double tensile;
 			double Gf;
 			double nNonlocal;
+			double a;
+			double b;
+			double beta;
+			double ref_eqstrain;
 		};
 
 		struct YieldDistribution {
