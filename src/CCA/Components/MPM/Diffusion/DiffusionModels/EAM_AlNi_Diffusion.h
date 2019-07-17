@@ -89,8 +89,8 @@ namespace Uintah {
                                       ,const double & D0_solid
                                       ,const double & D0_lowT
                                       ,const bool   & lowT_Use1Component = false
-                                      ,const bool   & lowT_Al = 933
-                                      ,const bool   & lowT_Ni = 1728) // Input temp & conc
+                                      ,const double & lowT_Al = 933
+                                      ,const double & lowT_Ni = 1728) // Input temp & conc
       {
           bool LowTempSolid = true;
           bool NiAllLiquid = true;
