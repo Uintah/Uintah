@@ -35,7 +35,7 @@ ______________________________________________________________________-->
 
 
 <batchScheduler>
-  <template> myBatch.slrm   </template>
+  <template> ashBatch.slrm   </template>
   <submissionCmd> sbatch    </submissionCmd>
   <batchReplace tag="[acct]"       value = "smithp-ash-cs" />
   <batchReplace tag="[partition]"  value = "smithp-ash" />
