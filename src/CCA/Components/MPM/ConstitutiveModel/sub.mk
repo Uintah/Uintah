@@ -67,7 +67,7 @@ SRCS   += \
         $(SRCDIR)/TongeRamesh_gitInfo.cc        \
         $(SRCDIR)/RFElasticPlastic.cc           \
         $(SRCDIR)/ReactiveDiffusiveElasticPlasticHP.cc \
-        $(SRCDIR)/CleanReactiveDiffusiveElasticPlasticHP.cc 
+        $(SRCDIR)/CleanerReactiveDiffusiveElasticPlasticHP.cc 
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \

@@ -9,7 +9,7 @@
 #define CCA_COMPONENTS_MPM_DIFFUSION_DIFFUSIONMODELS_EAM_ALNI_DIFFUSION_H_
 
 #include <CCA/Components/MPM/Diffusion/FunctionInterpolators/FunctionInterpolator.h>
-
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/AlNi_Diffusivity.h>
 #include <tuple>
 #include <algorithm>
 
@@ -87,7 +87,10 @@ namespace Uintah {
                                       ,const FunctionInterpolator * interpolator
                                       ,const double & D0_liquid
                                       ,const double & D0_solid
-                                      ,const double & D0_lowT ) // Input temp & conc
+                                      ,const double & D0_lowT
+                                      ,const bool   & lowT_Use1Component = false
+                                      ,const bool   & lowT_Al = 933
+                                      ,const bool   & lowT_Ni = 1728) // Input temp & conc
       {
           bool LowTempSolid = true;
           bool NiAllLiquid = true;
@@ -120,14 +123,28 @@ namespace Uintah {
           typedef std::tuple<double,double> interpPoint;
           interpPoint leftPoint, rightPoint;
           if (regionType == EAM_AlNi_Region::AlRich) {
-            if (T < 933 && LowTempSolid) return (D_lowT);
+            if (LowTempSolid && (T < lowT_Al)) {
+              if (lowT_Use1Component) {
+                return(AlNi::Diffusivity(T));
+              }
+              else {
+                return (D_lowT);
+              }
+            }
             liqConc = 0.01*getLiquidusAl(TinC);
             solConc = 0.01*getSolidusAl(TinC);
             leftPoint = std::make_tuple(liqConc,D_liq);
             rightPoint = std::make_tuple(solConc, D_sol);
           } else // Ni rich
           {
-            if (T < 1728 && LowTempSolid) return (D_lowT);
+            if (LowTempSolid && (T < lowT_Ni)) {
+              if (lowT_Use1Component) {
+                return(AlNi::Diffusivity(T));
+              }
+              else {
+                return (D_lowT);
+              }
+            }
             solConc = 0.01*getSolidusNi(TinC);
             liqConc = 0.01*getLiquidusNi(TinC);
             rightPoint = std::make_tuple(liqConc, D_liq);

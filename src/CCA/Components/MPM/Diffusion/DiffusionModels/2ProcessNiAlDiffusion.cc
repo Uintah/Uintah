@@ -26,13 +26,15 @@ namespace Uintah {
                                                    mpmFlag,
                                                    diff_type)
   {
-
     const double lowTFactor = 1000.0;
     probSpec->getWithDefault("scaleMultiplier", m_multiplier, 1.0);
     probSpec->getWithDefault("normalized", f_isConcNormalized, true);
     probSpec->require("D0_Liquid", m_D0Liquid);
     probSpec->getWithDefault("D0_Solid", m_D0Solid, 0.0);
     probSpec->getWithDefault("D0_LowT",m_D0LowT, m_D0Liquid/lowTFactor);
+    probSpec->getWithDefault("Low_Temp_Al",m_lowT_Al, 933);
+    probSpec->getWithDefault("Low_Temp_Ni",m_lowT_Ni, 1728);
+    probSpec->getWithDefault("Use_old_model_low_temp",m_lowTOldModel, false);
 
     ProblemSpecP interpPS = probSpec->findBlock("function_interp");
     if (!interpPS) {
@@ -151,7 +153,8 @@ namespace Uintah {
       // For now, just ignore the minimum concentration crap.  JBH Fixme
       minConc = 0.0;
       double D = EAM_AlNi::Diffusivity(Temp,Conc,gradConc,minConc,regionType,
-                                       m_phaseInterpolator,m_D0Liquid,m_D0Solid,m_D0LowT)*m_multiplier;
+                                       m_phaseInterpolator,m_D0Liquid,m_D0Solid,m_D0LowT,
+                                       m_lowTOldModel, m_lowT_Al, m_lowT_Ni)*m_multiplier;
       pFluxNew[pIdx] = D * pGradConcentration[pIdx];
       diffMax = std::max(diffMax, D);
     }
@@ -244,6 +247,11 @@ namespace Uintah {
       sdmPS->appendElement("D0_Liquid", m_D0Liquid);
       sdmPS->appendElement("D0_Solid", m_D0Solid);
       sdmPS->appendElement("D0_LowT", m_D0LowT);
+      sdmPS->appendElement("Low_Temp_Al",m_lowT_Al);
+      sdmPS->appendElement("Low_Temp_Ni",m_lowT_Ni);
+      sdmPS->appendElement("Use_old_model_low_temp",m_lowTOldModel);
+
+
       m_phaseInterpolator->outputProblemSpec(sdmPS, output_rdm_tag);
 
     }
@@ -320,6 +328,7 @@ namespace Uintah {
     ParticleVariable<int> pRegionType_Update;
     new_dw->allocateAndPut(pRegionType_Update, m_pRegionType_preReloc, pSubset);
 
+    pRegionType_Update.copyData(pRegionType);
     for (size_t pIdx = 0; pIdx < pSubset->numParticles(); ++pIdx) {
       // Set the region type dependent upon the conentration:
       if (pConcentrationNew[pIdx] < 0.50) {
@@ -327,7 +336,7 @@ namespace Uintah {
       } else {
   //      pRegionType_Update[pIdx] = EAM_AlNi_Region::NiRich;
       }
-      pRegionType_Update[pIdx] = pRegionType[pIdx];
+//      pRegionType_Update[pIdx] = pRegionType[pIdx];
       if (pRegionType[pIdx] == EAM_AlNi_Region::AlRich) {
         if (pConcentrationNew[pIdx] < localMinNiConc) {
           localMinNiConc = pConcentrationNew[pIdx];

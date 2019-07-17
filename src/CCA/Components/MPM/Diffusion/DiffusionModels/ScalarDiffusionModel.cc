@@ -105,7 +105,7 @@ ScalarDiffusionModel::~ScalarDiffusionModel() {
 
   if(d_conductivity_equation){
     delete d_conductivity_equation;
-    d_conductivity_equation = 0;
+    d_conductivity_equation = nullptr;
   }
 }
 

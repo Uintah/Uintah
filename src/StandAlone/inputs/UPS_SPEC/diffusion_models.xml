@@ -46,6 +46,9 @@
     <D0_Liquid             spec="REQUIRED DOUBLE 'positive' " need_applies_to="type eam_alni" />
     <D0_Solid              spec="OPTIONAL DOUBLE 'positive' " need_applies_to="type eam_alni" />
     <D0_LowT               spec="OPTIONAL DOUBLE 'positive' " need_applies_to="type eam_alni" />
+    <Use_old_model_low_temp spec="OPTIONAL BOOLEAN" need_applies_to="type eam_alni" />
+    <Low_Temp_Al            spec="OPTIONAL DOUBLE 'positive' " need_applies_to="type eam_alni" />
+    <Low_Temp_Ni            spec="OPTIONAL DOUBLE 'positive' " need_applies_to="type eam_alni" />
     
     <function_interp       spec="REQUIRED NO_DATA"
                            attribute1="interp REQUIRED STRING 'linear, heaviside, heaviside_global, heaviside_local'"

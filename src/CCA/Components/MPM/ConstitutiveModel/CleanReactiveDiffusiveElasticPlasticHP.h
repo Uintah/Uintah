@@ -177,24 +177,22 @@ namespace Uintah {
     DevStressModel*     d_devStress;
          
   private:
-    typedef ParticleSubset::iterator pSetIter;
     // Prevent copying of this class
     // copy constructor
     CleanReactionDiffusionEP& operator=(const CleanReactionDiffusionEP &cm);
+    std::tuple<double,double> TemporaryDoMeltingFunction(const double   meltTemp      ,
+                                                         const double   mass          ,
+                                                         const double   heatCapacity  ,
+                                                         const double   delta_t       ,
+                                                         const double   temperature   ,
+                                                         const double   pdTdt         ,
+                                                         const double   qBuffer       );
 
     double d_molesPerMass;
     double d_meltingColor;
     double d_meltedColor;
     double d_reactedColor;
 
-    std::string   d_TempOutName;
-    std::ofstream d_TempOutputFile;
-    std::string   d_ConcOutName;
-    std::ofstream d_ConcOutputFile;
-    std::string   d_HeatOutName;
-    std::ofstream d_HeatGenOutputFile;
-    bool d_writeDirectly;
-    int  d_directOutputFrequency;
     double d_dHRxn;
   public:
 
@@ -329,7 +327,7 @@ namespace Uintah {
                                       double& delGamma,
                                       double& flowStress,
                                       double& porosity,
-                                      double& mu_cur,
+                                      const double& mu_cur,
                                       const double delT,
                                       const MPMMaterial* matl,
                                       const int idx);
