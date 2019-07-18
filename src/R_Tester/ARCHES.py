@@ -126,7 +126,7 @@ PRODUCTION_COAL_TESTS = [
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"   , ["exactComparison"     ,"do_performance_test",  "no_cuda"   ]) ,
    ("OFC4c"                             , "Coal/OFC4.ups"                                           , 3   , "All"   , ["exactComparison"     , "no_cuda"]) ,
    #("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"   , ["exactComparison"     , "no_cuda"]) ,
-   ("OFC_smith"                         , "Coal/OFC_smith.ups"                                  , 3   , "All"   , ["exactComparison"     , "no_cuda"]) ,
+   ("OFC_smith"                         , "Coal/OFC_smith.ups"                                      , 3   , "All"   , ["exactComparison"     , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"   , ["exactComparison"     , "no_cuda"]) ,
    ("BrownSoot_spectral"                , "Coal/BrownSoot_spectral.ups"                             , 8   , "All"   , ["exactComparison"     , "no_cuda"]) ,
    ("Coal_Nox"                          , "Coal/Coal_Nox.ups"                                       , 8   , "All"   , ["exactComparison"     , "no_cuda"]) ,
@@ -155,10 +155,10 @@ KOKKOS_TESTS = [
    ("dqmom_example_char"                , "kokkos_solver_tests/Verification/particleModels/dqmom_example_char.ups"               , 8   , "All"   , ["exactComparison"]),
    ("dqmom_example"                     , "kokkos_solver_tests/dqmom_example.ups"                                                , 1   , "All"   , ["exactComparison"]),
    ("OFC_mom"                           , "kokkos_solver_tests/Verification/intrusions/OFC_mom.ups"                              , 3   , "All"   , ["exactComparison"]),
-   ("helium_pressure_BC"                , "inputs/ARCHES/kokkos_solver_tests/Verification/variableDensity/heliumKS_pressureBC.ups" , 1   , "All"   , ["exactComparison"]),
-   ("helium_plume_rk1"                  , "kokkos_solver_tests/Verification/variableDensity/heliumKS_rk1.ups"                   , 1   , "All"   , ["exactComparison"]),
-   ("helium_plume_rk2"                  , "kokkos_solver_tests/Verification/variableDensity/heliumKS_rk2.ups"                   , 1   , "All"   , ["exactComparison"]),
-   ("helium_plume_rk3"                  , "kokkos_solver_tests/Verification/variableDensity/heliumKS_rk3.ups"                   , 1   , "All"   , ["exactComparison"]),
+   ("helium_pressure_BC"                , "kokkos_solver_tests/Verification/variableDensity/heliumKS_pressureBC.ups"             , 1   , "All"   , ["exactComparison"]),
+   ("helium_plume_rk1"                  , "kokkos_solver_tests/Verification/variableDensity/heliumKS_rk1.ups"                    , 1   , "All"   , ["exactComparison"]),
+   ("helium_plume_rk2"                  , "kokkos_solver_tests/Verification/variableDensity/heliumKS_rk2.ups"                    , 1   , "All"   , ["exactComparison"]),
+   ("helium_plume_rk3"                  , "kokkos_solver_tests/Verification/variableDensity/heliumKS_rk3.ups"                    , 1   , "All"   , ["exactComparison"]),
    # Handoff test was having diffs on restart. It needs to be fixed:
    ("kokkos-xy-scalar-handoff"          , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar-handoff.ups"             , 1   , "All"   , ["exactComparison", "no_restart"]),
 ]

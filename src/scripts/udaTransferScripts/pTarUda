@@ -63,7 +63,7 @@ while [ "$#" -gt 0 ]; do
   -create|--create)
       createExtract="create"
       ;;
-  -deleteOrgTimesteps|---deleteOrgTimesteps)
+  -deleteOrgTimesteps|--deleteOrgTimesteps)
       deleteOrgTimesteps="Y"
       ;;
   -extract|--extract)
