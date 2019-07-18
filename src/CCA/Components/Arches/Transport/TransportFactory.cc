@@ -153,6 +153,8 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         register_task( group_name, tsk_builder, eqn_db );
       } else if ( enum_grp_class != DQMOM ){
         throw ProblemSetupException("Error: Unable to classify eqn group: "+group_name, __FILE__, __LINE__);
+      } else {
+        delete tsk_builder;  //this task doesnt get registered here...
       }
 
       std::string diffusion_task_name = "[Diffusion]" + group_name;
