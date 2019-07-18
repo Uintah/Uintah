@@ -1182,6 +1182,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 	  particle_state.push_back(double_lb->pVelocityLiquidLabel);
 	  particle_state_preReloc.push_back(double_lb->pVelocityLiquidLabel_preReloc);
 
+	  particle_state.push_back(double_lb->pVelocityLiquidXLabel);
+	  particle_state_preReloc.push_back(double_lb->pVelocityLiquidXLabel_preReloc);
+
 	  particle_state.push_back(double_lb->pVelocityGradLiquidLabel);
 	  particle_state_preReloc.push_back(double_lb->pVelocityGradLiquidLabel_preReloc);
 

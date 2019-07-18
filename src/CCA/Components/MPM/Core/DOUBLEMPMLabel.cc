@@ -72,6 +72,10 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 	pVelocityLiquidLabel		= VarLabel::create("p.VelocityLiquid", ParticleVariable<Vector>::getTypeDescription());
 	pVelocityLiquidLabel_preReloc = VarLabel::create("p.VelocityLiquid+", ParticleVariable<Vector>::getTypeDescription());
 
+	pVelocityLiquidXLabel = VarLabel::create("p.VelocityLiquidX", ParticleVariable<double>::getTypeDescription());
+	pVelocityLiquidXLabel_preReloc = VarLabel::create("p.VelocityLiquidX+", ParticleVariable<double>::getTypeDescription());
+
+
 	pVelocityGradLiquidLabel	= VarLabel::create("p.VelocityGradLiquid", ParticleVariable<Vector>::getTypeDescription());
 	pVelocityGradLiquidLabel_preReloc = VarLabel::create("p.VelocityGradLiquid+", ParticleVariable<Vector>::getTypeDescription());
 
@@ -144,6 +148,9 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 	VarLabel::destroy(pVelocityLiquidLabel);
 	VarLabel::destroy(pVelocityLiquidLabel_preReloc);
 	
+	VarLabel::destroy(pVelocityLiquidXLabel);
+	VarLabel::destroy(pVelocityLiquidXLabel_preReloc);
+
 	VarLabel::destroy(pVelocityGradLiquidLabel);
 	VarLabel::destroy(pVelocityGradLiquidLabel_preReloc);
 

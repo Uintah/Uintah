@@ -25,6 +25,7 @@
 
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMBoundCond.h>
+#include <CCA/Components/MPM/Core/DOUBLEMPMBoundCond.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
@@ -1171,6 +1172,11 @@ void DOUBLEMPM::scheduleRelocateParticle_DOUBLEMPM(SchedulerP& sched,
 	t->computes(double_lb->pMassLiquidLabel_preReloc);
 	t->computes(double_lb->pBulkModulLiquidLabel_preReloc);
 
+	if (!flags->d_FreeSurface) {
+		t->requires(Task::OldDW, double_lb->pFreeSurfaceLabel, gan, NGP);
+		t->computes(double_lb->pFreeSurfaceLabel_preReloc);
+	}
+
 	sched->addTask(t, patches, matls);
 }
 
@@ -1220,6 +1226,13 @@ void DOUBLEMPM::RelocateParticle_DOUBLEMPM(const ProcessorGroup*,
 			new_dw->allocateAndPut(pMassLiquidnew, double_lb->pMassLiquidLabel_preReloc, pset);
 			new_dw->allocateAndPut(pBulkModulLiquidnew, double_lb->pBulkModulLiquidLabel_preReloc, pset);
 
+			constParticleVariable<double> pFreeSurface;
+			ParticleVariable<double> pFreeSurfacenew;
+			if (!flags->d_FreeSurface) {			
+				old_dw->get(pFreeSurface, double_lb->pFreeSurfaceLabel, pset);
+				new_dw->allocateAndPut(pFreeSurfacenew, double_lb->pFreeSurfaceLabel_preReloc, pset);
+			}
+
 			//new_dw->get(pCurSize, lb->pCurSizeLabel, pset);
 			//new_dw->allocateAndPut(pCurSizenew, lb->pCurSizeLabel_preReloc, pset);
 
@@ -1232,6 +1245,10 @@ void DOUBLEMPM::RelocateParticle_DOUBLEMPM(const ProcessorGroup*,
 				pPermeabilitynew[idx] = pPermeability[idx];
 				pMassLiquidnew[idx] = pMassLiquid[idx];
 				pBulkModulLiquidnew[idx] = pBulkModulLiquid[idx];
+
+				if (!flags->d_FreeSurface) {
+					pFreeSurfacenew[idx] = pFreeSurface[idx];
+				}
 				//pCurSizenew[idx] = pCurSize[idx];
 			}
 		} // End of particle loop
@@ -1904,10 +1921,12 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 
 			// Apply boundary conditions to the temperature and velocity (if symmetry)
 			MPMBoundCond bc;
+			DOUBLEMPMBoundCond d_bc;
+
 			bc.setBoundaryCondition(patch, dwi, "Temperature", gTemperature, interp_type);
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity, interp_type);
 
-			bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gvelocity_liquid, interp_type);
+			d_bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gvelocity_liquid, interp_type);
 
 		}  // End loop over materials
 
@@ -2554,9 +2573,11 @@ void DOUBLEMPM::computeInternalForce_DOUBLEMPM(const ProcessorGroup*,
 			} // faces
 
 			MPMBoundCond bc;
+			DOUBLEMPMBoundCond d_bc;
+
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", internalforce, interp_type);
 
-			bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gInternalForceLiquid, interp_type);
+			d_bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gInternalForceLiquid, interp_type);
 		}
 
 		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
@@ -2707,11 +2728,23 @@ void DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM(const ProcessorGroup*,
 				if (gMassSolid[c] > flags->d_min_mass_for_acceleration) {
 					acc = (internalforce[c] + gInternalForceLiquid[c] + gMassLiquid[c] * (gravity - gAccelerationLiquid[c]) + externalforce[c]) / gMassSolid[c];
 					acc -= damp_coef * velocity[c];
-					//acc = 0;
 				}
 
 				acceleration[c] = acc + gravity;
 				velocity_star[c] = velocity[c] + acceleration[c] * delT;
+
+
+				// Artificial boundary condition
+				Point gx = patch->nodePosition(c);
+				double radius = pow((gx.x() - 3), 2) + pow(gx.y(), 2);
+				if (radius < 1.0000) {
+				
+					velocity_star[c] = 0;
+					acceleration[c] = (velocity_star[c] - velocity[c]) / delT;
+					gVelocityStarLiquid[c] = 0;
+					gAccelerationLiquid[c] = (gVelocityStarLiquid[c] - gVelocityLiquid[c]) / delT;
+				}
+
 			}
 		}    // matls
 	}
@@ -2807,14 +2840,15 @@ void DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
 			// Apply grid boundary conditions to the velocity_star and
 			// acceleration before interpolating back to the particles
 			MPMBoundCond bc;
+			DOUBLEMPMBoundCond d_bc;
 
 			// Solid
 			bc.setBoundaryCondition(patch, dwi, "Velocity", gvelocity_star, interp_type);
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity_star, interp_type);
 
 			// Liquid
-			bc.setBoundaryConditionLiquid(patch, dwi, "VelocityLiquid", gVelocityStarLiquid, interp_type);
-			bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gVelocityStarLiquid, interp_type);
+			d_bc.setBoundaryConditionLiquid(patch, dwi, "VelocityLiquid", gVelocityStarLiquid, interp_type);
+			d_bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gVelocityStarLiquid, interp_type);
 
 			// Now recompute acceleration as the difference between the velocity
 			// interpolated to the grid (no bcs applied) and the new velocity_star
@@ -3068,6 +3102,8 @@ void DOUBLEMPM::scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(SchedulerP& sc
 	t->requires(Task::OldDW, double_lb->pVelocityLiquidLabel, gnone);
 	t->computes(double_lb->pVelocityLiquidLabel_preReloc);
 
+	t->computes(double_lb->pVelocityLiquidXLabel_preReloc);
+
 	//__________________________________
 	//  reduction variables
 	if (flags->d_reductionVars->momentum) {
@@ -3241,12 +3277,14 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 
 			// Liquid
 			ParticleVariable<Vector> pvelLiquidnew;
+			ParticleVariable<double> pvelLiquidXnew;
 			constNCVariable<Vector> gAccelerationLiquid;
 			constParticleVariable<Vector> pVelocityLiquid;
 
 			new_dw->get(gAccelerationLiquid, double_lb->gAccelerationLiquidLabel, dwi, patch, gac, NGP);
 			old_dw->get(pVelocityLiquid, double_lb->pVelocityLiquidLabel, pset);
 			new_dw->allocateAndPut(pvelLiquidnew, double_lb->pVelocityLiquidLabel_preReloc, pset);
+			new_dw->allocateAndPut(pvelLiquidXnew, double_lb->pVelocityLiquidXLabel_preReloc, pset);
 
 			// Diffusion related - JBH
 			double sdmMaxEffectiveConc = -999;
@@ -3295,10 +3333,10 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 				pxnew[idx] = px[idx] + vel * delT;
 				pdispnew[idx] = pdisp[idx] + vel * delT;
 				pvelnew[idx] = pvelocity[idx] + acc * delT;
-
+				
 				// Liquid
 				pvelLiquidnew[idx] = pVelocityLiquid[idx] + accLiquid * delT;
-
+				pvelLiquidXnew[idx] = pvelLiquidnew[idx].x();
 
 				pTempNew[idx] = pTemperature[idx] + tempRate * delT;
 				pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
@@ -3620,11 +3658,11 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 
 
 				if (StrainRateSolid.Trace() > 100) {
-					cerr << "Solid "<< StrainRateSolid.Trace() << endl;
+					//cerr << "Solid "<< StrainRateSolid.Trace() << endl;
 				}
 
 				if (StrainRateLiquid.Trace() > 100) {
-					cerr << "Liquid " << StrainRateLiquid.Trace() << endl;
+					//cerr << "Liquid " << StrainRateLiquid.Trace() << endl;
 				}
 
 				// Update porosity
@@ -3702,7 +3740,6 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 		delete interpolator;
 	}
 }
-
 
 // Compute stress tensor
 // Flags: d_reductionVars
@@ -4018,10 +4055,12 @@ void DOUBLEMPM::scheduleInterpolatePorePresureToParticle(SchedulerP& sched,
 	t->modifies(lb->pStressLabel_preReloc);
 
 	// Free surface
-	t->requires(Task::OldDW, lb->pVolumeLabel, gnone);
-	t->requires(Task::OldDW, double_lb->pFreeSurfaceLabel, gnone);
-	t->computes(double_lb->pFreeSurfaceLabel_preReloc);
-	t->computes(double_lb->gnodeSurfaceLabel);
+	if (flags->d_FreeSurface) {
+		t->requires(Task::OldDW, lb->pVolumeLabel, gnone);
+		t->requires(Task::OldDW, double_lb->pFreeSurfaceLabel, gnone);
+		t->computes(double_lb->pFreeSurfaceLabel_preReloc);
+		t->computes(double_lb->gnodeSurfaceLabel);
+	}
 
 	// Porosity
 	t->requires(Task::NewDW, double_lb->gPorosityLabel, gac, NGN);
@@ -4087,23 +4126,26 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 			new_dw->getModifiable(pPorosityNew, double_lb->pPorosityLabel_preReloc, pset);
 
 			
-			// Free surface
 			constParticleVariable<double> pvolume;
-			old_dw->get(pvolume, lb->pVolumeLabel, pset);
-
 			constParticleVariable<double> pFreeSurface;
 			ParticleVariable<double> pFreeSurfacenew;
-			old_dw->get(pFreeSurface, double_lb->pFreeSurfaceLabel, pset);
-			new_dw->allocateAndPut(pFreeSurfacenew, double_lb->pFreeSurfaceLabel_preReloc, pset);
-
 			NCVariable<double> gnodeSurface;
-			new_dw->allocateAndPut(gnodeSurface, double_lb->gnodeSurfaceLabel, dwi, patch);
-			gnodeSurface.initialize(0.0);
-
 			CCVariable<double> Volume_ratio;      // Volume ratio of the cell
-			new_dw->allocateTemporary(Volume_ratio, patch);
-			Volume_ratio.initialize(0.);
-	
+			// Free surface
+			if (flags->d_FreeSurface) {
+				
+				old_dw->get(pvolume, lb->pVolumeLabel, pset);
+				
+				old_dw->get(pFreeSurface, double_lb->pFreeSurfaceLabel, pset);
+				new_dw->allocateAndPut(pFreeSurfacenew, double_lb->pFreeSurfaceLabel_preReloc, pset);
+				
+				new_dw->allocateAndPut(gnodeSurface, double_lb->gnodeSurfaceLabel, dwi, patch);
+				gnodeSurface.initialize(0.0);
+				
+				new_dw->allocateTemporary(Volume_ratio, patch);
+				Volume_ratio.initialize(0.);
+			}
+
 			// Loop over particles
 			for (ParticleSubset::iterator iter = pset->begin();
 				iter != pset->end(); iter++) {
@@ -4132,14 +4174,16 @@ void DOUBLEMPM::InterpolatePorePresureToParticle(const ProcessorGroup*,
 				pPorosityNew[idx] = Porosity;
 				
 				// Free surface
-				IntVector cell_index;
-				patch->findCell(px[idx], cell_index);
+				if (flags->d_FreeSurface) {
+					IntVector cell_index;
+					patch->findCell(px[idx], cell_index);
 
-				Volume_ratio[cell_index] += pvolume[idx];    // sum up particle volume inside cell	
-				pFreeSurfacenew[idx] = 0;	
+					Volume_ratio[cell_index] += pvolume[idx];    // sum up particle volume inside cell	
+					pFreeSurfacenew[idx] = 0;
+				}
+
 			}
-
-			
+	
 			// Free surface algorithm
 			if (flags->d_FreeSurface) {
 				// Free surface

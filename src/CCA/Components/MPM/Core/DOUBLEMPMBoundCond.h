@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MPMBOUNDCOND_H
-#define UINTAH_MPMBOUNDCOND_H
+#ifndef UINTAH_DOUBLEMPMBOUNDCOND_H
+#define UINTAH_DOUBLEMPMBOUNDCOND_H
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -31,21 +31,20 @@
 
 namespace Uintah {
 
-  class MPMBoundCond {
+  class DOUBLEMPMBoundCond {
 
   public:
     
-    MPMBoundCond();
-    ~MPMBoundCond();
+    DOUBLEMPMBoundCond();
+    ~DOUBLEMPMBoundCond();
 
-    void setBoundaryCondition(const Patch* patch,int dwi, const std::string& type,
-                              NCVariable<Vector>& variable,
-                              std::string interp_type="linear");
+	void setBoundaryConditionLiquid(const Patch* patch, int dwi, const std::string& type,
+		NCVariable<Vector>& variable,
+		std::string interp_type = "linear");
 
-    void setBoundaryCondition(const Patch* patch,int dwi, const std::string& type,
-                              NCVariable<double>& variable,
-                              std::string interp_type="linear");
-
+	void setBoundaryConditionLiquid(const Patch* patch, int dwi, const std::string& type,
+		NCVariable<double>& variable,
+		std::string interp_type = "linear");
   private:
 
 
