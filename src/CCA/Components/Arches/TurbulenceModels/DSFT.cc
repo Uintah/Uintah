@@ -202,6 +202,20 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& Beta23 = tsk_info->get_uintah_field_add< CCVariable<double> >( "Beta23" );
   CCVariable<double>& Beta33 = tsk_info->get_uintah_field_add< CCVariable<double> >( "Beta33" );
 
+  IsI.initialize(0.0);
+  s11.initialize(0.0);
+  s12.initialize(0.0);
+  s13.initialize(0.0);
+  s22.initialize(0.0);
+  s23.initialize(0.0);
+  s33.initialize(0.0);
+  Beta11.initialize(0.0);
+  Beta12.initialize(0.0);
+  Beta13.initialize(0.0);
+  Beta22.initialize(0.0);
+  Beta23.initialize(0.0);
+  Beta33.initialize(0.0); 
+
   Uintah::parallel_for( range, [&](int i, int j, int k){
 
     double uep = 0.0;
@@ -304,7 +318,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& rhoBC = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoBC");
 
-  rhoBC.initialize(0.0); 
+  rhoBC.initialize(0.0);
   Uintah::parallel_for(range, [&](int i, int j, int k){
       rhoBC(i,j,k) = rho(i,j,k);
   });

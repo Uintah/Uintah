@@ -488,16 +488,10 @@ private:
       FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux"));
       FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux"));
 
-      //This is a bit paranoid and probably could be removed
-      Uintah::BlockRange init_range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-      Uintah::parallel_for( init_range, [&](int i, int j, int k){
-
-        rhs(i,j,k) = 0.;
-        x_flux(i,j,k) = 0.;
-        y_flux(i,j,k) = 0.;
-        z_flux(i,j,k) = 0.;
-
-      });
+      x_flux.initialize(0.0);
+      y_flux.initialize(0.0);
+      z_flux.initialize(0.0);
+      rhs.initialize(0.0);
 
       //convection
       if ( m_conv_scheme[ieqn] != NOCONV ){
