@@ -175,7 +175,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
               double separation = gmatlprominence[n][c] - 
                                   gmatlprominence[alpha][c];
               // If that separation is negative, the matls have overlapped
-              if(separation <= 0.0){
+//              if(separation <= 0.0){
+              if(separation <= 0.01*dx.x()){
                Vector deltaVelocity=gvelocity[n][c] - centerOfMassVelocity;
                Vector normal = -1.0*normAlphaToBeta[c];
                double normalDeltaVel=Dot(deltaVelocity,normal);
@@ -206,6 +207,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                    Dv=Dv*ff;
                 }
 #endif 
+                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
+                Dv=Dv*ff;
                 Vector DvAlpha = -Dv*gmass[n][c]/gmass[alpha][c];
                 gvelocity[n][c]    +=Dv;
                 gvelocity[alpha][c]+=DvAlpha;
@@ -302,7 +305,8 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
             if(mass>1.e-16){
               double separation = gmatlprominence[n][c] - 
                                   gmatlprominence[alpha][c];
-              if(separation <= 0.0){
+//              if(separation <= 0.0){
+              if(separation <= 0.01*dx.x()){
                Vector deltaVelocity=gvelocity_star[n][c] - centerOfMassVelocity;
                Vector normal = -1.0*normAlphaToBeta[c];
                double normalDeltaVel=Dot(deltaVelocity,normal);
@@ -333,6 +337,8 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                   Dv=Dv*ff;
                 }
 #endif 
+                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
+                Dv=Dv*ff;
                 gvelocity_star[n][c]    +=Dv;
                 Vector DvAlpha = -Dv*gmass[n][c]/gmass[alpha][c];
                 gvelocity_star[alpha][c]+=DvAlpha;
