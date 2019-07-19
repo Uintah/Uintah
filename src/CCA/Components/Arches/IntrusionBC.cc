@@ -382,6 +382,8 @@ IntrusionBC::sched_computeBCArea( SchedulerP& sched,
       found_inlet_intrusion = true;
     }
 
+    tsk->requires( Task::NewDW, _lab->d_areaFractionLabel, Ghost::AroundCells, 1 );
+
   }
 
   if ( found_inlet_intrusion ){
@@ -403,7 +405,13 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     Box patch_box = patch->getBox();
+    int archIndex = 0; // only one arches material
+    int indx = _lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
+
+    constCCVariable<double> eps;
+
+    new_dw->get(eps, _lab->d_areaFractionLabel, indx, patch, Ghost::AroundCells, 1 );
 
     for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){
 
@@ -446,7 +454,9 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
 
                     if ( !neighbor_cell ) {
 
-                      total_area += darea;
+                      if ( eps[n] != 0.0 ){
+                        total_area += darea;
+                      }
 
                     }
                   }
