@@ -557,13 +557,13 @@ private:
       auto old_phi = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_eqn_names[ieqn]);
       auto old_u   = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_vel_name[ieqn]);
 
-
       Uintah::BlockRange init_range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-       parallel_for(execObj,init_range, KOKKOS_LAMBDA (int i,int j,int k){
-      phi(i,j,k)=old_phi(i,j,k);
-      u(i,j,k)=old_u(i,j,k);
-      rhs(i,j,k)=0.0;
-     });
+
+      parallel_for(execObj,init_range, KOKKOS_LAMBDA (int i,int j,int k){
+        phi(i,j,k) = old_phi(i,j,k);
+        u(i,j,k)   = old_u(i,j,k);
+        rhs(i,j,k) = 0.0;
+      });
 
     } //equation loop
   }
@@ -629,7 +629,6 @@ private:
       auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
       auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
-      //This is a bit paranoid and probably could be removed
       parallel_initialize(execObj,0.0,rhs,x_flux,y_flux,z_flux);
 
       //convection
