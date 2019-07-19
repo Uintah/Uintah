@@ -188,6 +188,7 @@
           <verticalDir>      1      </verticalDir>
           <principalDir>     0      </principalDir>
           <Re_tau>           395    </Re_tau>
+          <halfChannelHeight> 1.0   </halfChannelHeight>
         </powerLawProfile2>
 
         <vortexPairs>

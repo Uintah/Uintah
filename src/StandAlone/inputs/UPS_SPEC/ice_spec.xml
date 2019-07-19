@@ -83,7 +83,7 @@
           <Re_tau                       spec="REQUIRED DOUBLE  'positive'"/>
           <verticalDir                  spec="REQUIRED INTEGER '0,2'" />
           <principalDir                 spec="REQUIRED INTEGER '0,2'" />
-          <maxHeight                    spec="OPTIONAL DOUBLE" />
+          <halfChannelHeight            spec="REQUIRED DOUBLE  'positive'"/>
         </powerLawProfile2> 
         
         <DNS_Moser                      spec="OPTIONAL NO_DATA">
