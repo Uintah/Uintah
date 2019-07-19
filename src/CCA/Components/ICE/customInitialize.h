@@ -103,7 +103,7 @@ namespace Uintah {
     double Re_tau;                // Reynolds number based on uTau
     int verticalDir;              // vertical direction
     int principalDir;             // component of velocity to set
-    double maxHeight;             // max height of velocity profile before it's set to u_infinity
+    double halfChanHeight;        // half channel height
     Point gridMin;
     Point gridMax;
     ~powerLaw2() {};

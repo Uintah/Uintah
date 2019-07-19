@@ -208,24 +208,20 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
 
       int vDir = -9;
       int pDir = -9;
+      double halfChannelHeight = -9;
       pL2_ps->require( "Re_tau",       cib->powerLaw2_vars.Re_tau );
       pL2_ps->require( "verticalDir",  vDir );
       pL2_ps->require( "principalDir", pDir );
+      pL2_ps->require( "halfChannelHeight", halfChannelHeight );
 
       cib->powerLaw2_vars.verticalDir  = vDir;
       cib->powerLaw2_vars.principalDir = pDir;
-
+      cib->powerLaw2_vars.halfChanHeight = halfChannelHeight;
       // geometry: computational domain
       BBox bb;
       grid->getInteriorSpatialRange(bb);
       cib->powerLaw2_vars.gridMin = bb.min();
       cib->powerLaw2_vars.gridMax = bb.max();
-      
-      Point tmp = Point( bb.max() - bb.min() );
-      double maxHeight = tmp(vDir);
-      
-      pL2_ps->get( "maxHeight",  maxHeight   );
-      cib->powerLaw2_vars.maxHeight = maxHeight;
     }  // powerLaw2 inputs
 
     //_______________________________________________
@@ -609,15 +605,15 @@ void customInitialization(const Patch* patch,
       int pDir          =  cib->powerLaw2_vars.principalDir;
       double gridMin    =  cib->powerLaw2_vars.gridMin(vDir);
       double gridMax    =  cib->powerLaw2_vars.gridMax(vDir);
-      double height     =  cib->powerLaw2_vars.maxHeight;
+      double halfChanHeight  =  cib->powerLaw2_vars.halfChanHeight;
       const Level* level = patch->getLevel();
 
       double visc      = ice_matl->getViscosity();
       double Re_tau    = cib->powerLaw2_vars.Re_tau;
-      double u_tau     = (visc * Re_tau/height) ;
+      double u_tau     = ( visc * Re_tau/halfChanHeight ) ;
       double vonKarman = 0.4;
       
-//      std::cout << "     height: " << height << " vDir: " << vDir << " pDir: " << pDir 
+//      std::cout << "     halfChannelHeight: " << halfChannelHeight << " vDir: " << vDir << " pDir: " << pDir 
 //                << " visc: " << visc << " Re_tau: " << Re_tau << " u_tau: " << u_tau << endl;
 
 
@@ -626,10 +622,16 @@ void customInitialization(const Patch* patch,
 
         Point here   = level->getCellPosition(c);
         double h     = here.asVector()[vDir] ;
-
-        double ratio = (h - gridMin)/height;
-        ratio        = Clamp(ratio,0.0,1.0);
-
+        
+        double ratio = -9;
+        if ( h < halfChanHeight) {
+          ratio = (h - gridMin)/halfChanHeight;
+        } 
+        else {
+          ratio = 1 - (h - halfChanHeight)/halfChanHeight;
+        }
+        
+        ratio = Clamp(ratio,0.0,1.0);
         vel_CC[c][pDir] = (u_tau/vonKarman) * std::log( ratio * Re_tau );
 
         // Clamp edge/corner values
