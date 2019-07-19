@@ -382,7 +382,7 @@ IntrusionBC::sched_computeBCArea( SchedulerP& sched,
       found_inlet_intrusion = true;
     }
 
-    tsk->requires( Task::NewDW, _lab->d_areaFractionLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, _lab->d_volFractionLabel, Ghost::AroundCells, 1 );
 
   }
 
@@ -411,7 +411,7 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
 
     constCCVariable<double> eps;
 
-    new_dw->get(eps, _lab->d_areaFractionLabel, indx, patch, Ghost::AroundCells, 1 );
+    new_dw->get(eps, _lab->d_volFractionLabel, indx, patch, Ghost::AroundCells, 1 );
 
     for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){
 
