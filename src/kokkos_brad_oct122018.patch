@@ -913,7 +913,7 @@ index eac4abac..113dc817 100644
    //
  
    const FunctorType   m_functor ;
-+  const Policy        m_policy ; 
++  const Policy        m_policy ;
    const ReducerType   m_reducer ;
    const pointer_type  m_result_ptr ;
    size_type *         m_scratch_space ;

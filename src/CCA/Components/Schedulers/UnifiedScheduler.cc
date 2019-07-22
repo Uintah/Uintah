@@ -1980,6 +1980,8 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
               << " material: " << matlID << " level: " << levelID;
           if (curDependency->m_dep_type == Task::Requires) {
             gpu_stats << " - A REQUIRES dependency";
+          } else if (curDependency->m_dep_type == Task::Modifies) {
+            gpu_stats << " - A MODIFIES dependency";
           } else if (curDependency->m_dep_type == Task::Computes) {
             gpu_stats << " - A COMPUTES dependency";
           }
@@ -1991,7 +1993,8 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           } else if (type == TypeDescription::ReductionVariable) {
             gpu_stats << " a reduction variable";
           }
-          gpu_stats<< " and the entire variable uses  " << memSize << " bytes." << std::endl;
+          gpu_stats << " the variable is in data warehouse #" << dwIndex;
+          gpu_stats << " and the entire variable uses  " << memSize << " bytes." << std::endl;
         }
         cerrLock.unlock();
       }

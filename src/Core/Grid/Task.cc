@@ -647,8 +647,27 @@ void Task::modifiesWithScratchGhost( const VarLabel           * var
                                    ,       bool                 oldTG
                                    )
 {
-  this->requires(NewDW, var, patches, patches_dom, matls, matls_dom, gtype, numGhostCells);
-  this->modifies(var, patches, patches_dom, matls, matls_dom);
+  if (matls == nullptr && var->typeDescription()->isReductionVariable()) {
+	// default material for a reduction variable is the global material (-1)
+	matls = getGlobalMatlSubset();
+	matls_dom = OutOfDomain;
+	ASSERT(patches == nullptr);
+  }
+
+  Dependency* dep = scinew Dependency(Modifies, this, NewDW, var, oldTG, patches, matls,
+		                              patches_dom, matls_dom, gtype, numGhostCells);
+  dep->m_next = nullptr;
+  if (m_mod_tail) {
+	m_mod_tail->m_next = dep;
+  }
+  else {
+	m_mod_head = dep;
+  }
+  m_mod_tail = dep;
+
+  m_requires.insert(std::make_pair(var, dep));
+  m_computes.insert(std::make_pair(var, dep));
+  m_modifies.insert(std::make_pair(var, dep));
 }
 
 //______________________________________________________________________
