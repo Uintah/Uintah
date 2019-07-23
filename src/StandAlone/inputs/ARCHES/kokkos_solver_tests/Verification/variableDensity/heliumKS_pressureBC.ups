@@ -65,7 +65,7 @@
     <save label="ucellX"/>
     <save label="vcellY"/>
     <save label="wcellZ"/>
-    <checkpoint cycle="2" interval=".0005"/>
+    <checkpoint cycle="1" interval=".0006"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
