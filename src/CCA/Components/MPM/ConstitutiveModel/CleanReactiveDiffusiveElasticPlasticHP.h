@@ -194,6 +194,10 @@ namespace Uintah {
     double d_reactedColor;
 
     double d_dHRxn;
+
+    double m_dTdt_Heating;
+    double m_dTdt_Threshold;
+
   public:
 
     ////////////////////////////////////////////////////////////////////////

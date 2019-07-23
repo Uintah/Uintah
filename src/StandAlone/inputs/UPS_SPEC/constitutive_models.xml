@@ -68,8 +68,6 @@
     <max_fiber_strain              spec="OPTIONAL DOUBLE" />
     <max_matrix_strain             spec="OPTIONAL DOUBLE" />
     <failure_option                spec="OPTIONAL DOUBLE" />
-    <heat_of_fusion                spec="REQUIRED DOUBLE 'positive'" need_applies_to="type reactive_diffusive_EP" />
-    <heat_of_reaction              spec="REQUIRED DOUBLE " need_applies_to="type reactive_diffusive_EP" />
     <output_frequency              spec="OPTIONAL INTEGER 'positive'" need_applies_to="type reactive_diffusive_EP" />
     <C1                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
     <C2                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
@@ -79,6 +77,13 @@
     <failure_variable_mean         spec="OPTIONAL DOUBLE"/>
     <failure_variable_std          spec="OPTIONAL DOUBLE"/>
     <failure_variable_distrib      spec="OPTIONAL STRING"/>
+
+	<!-- Reactive/Diffusive CM -->
+	<heat_of_fusion                spec="REQUIRED DOUBLE 'positive'" need_applies_to="type reactive_diffusive_EP" />
+    <heat_of_reaction              spec="REQUIRED DOUBLE " need_applies_to="type reactive_diffusive_EP" />
+    <heating_rate                  spec="OPTIONAL DOUBLE " need_applies_to="type reactive_diffusive_EP" />
+    <heating_cutoff                spec="OPTIONAL DOUBLE 'positive' " need_applies_to="type reactive_diffusive_EP" />
+	
     
     <!--__________________________________-->
     

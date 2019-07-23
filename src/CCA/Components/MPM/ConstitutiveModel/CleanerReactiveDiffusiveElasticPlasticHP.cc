@@ -93,6 +93,9 @@ CleanReactionDiffusionEP::CleanReactionDiffusionEP(ProblemSpecP & ps    ,
     ps->require("molar_mass", molarMass);
     d_molesPerMass = 1.0/molarMass;
 
+    ps->getWithDefault("heating_rate",m_dTdt_Heating, 0.0);
+    ps->getWithDefault("heating_cutoff",m_dTdt_Threshold, -1.0);
+
     // Heat of reaction
     ps->require("heat_of_reaction",d_dHRxn);
     d_meltingColor  = 3.0;
@@ -389,6 +392,11 @@ void CleanReactionDiffusionEP::outputProblemSpec(ProblemSpecP  & ps            ,
   double molarMass = 1.0/d_molesPerMass;
   cm_ps->appendElement("molar_mass",                    molarMass);
   cm_ps->appendElement("heat_of_reaction",              d_dHRxn);
+
+  cm_ps->appendElement("heating_rate",                  m_dTdt_Heating);
+  if (m_dTdt_Threshold > 0.0) {
+    cm_ps->appendElement("heating_cutoff",              m_dTdt_Threshold);
+  }
   //Diffusion variable
   cm_ps->appendElement("volume_expansion_coeff",        d_initialData.vol_exp_coeff);
 
@@ -1041,9 +1049,22 @@ CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches  ,
     ParticleSubset::iterator iter = pset->begin();
     for (;  iter != pset->end();  ++iter) {
       particleIndex idx = *iter;
+
       // Assign zero int. heating by default, modify with appropriate sources
       // This has units (in MKS) of K/s  (i.e. temperature/time)
       pdTdt[idx] = 0.0;
+
+      double dTdt_heatRamp = 0.0;
+      double T_old = pTemperature[idx];
+      // Check heating threshold and add in internal heating to simulate constant heating ramp processes.
+      int heatDirection = SignZero(m_dTdt_Heating);
+      if (heatDirection > 0 && T_old < m_dTdt_Threshold) {
+        dTdt_heatRamp = m_dTdt_Heating;
+      } else if (heatDirection < 0 && T_old > m_dTdt_Threshold) {
+        dTdt_heatRamp = m_dTdt_Heating;
+      }
+      pdTdt[idx] += dTdt_heatRamp;
+
 
       // For ease of use, we'll track dissipative process energy additions
       //   via their calculated delta_temp and adjust at the end.
@@ -1089,8 +1110,12 @@ CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches  ,
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
       double Cp = matl->getSpecificHeat();
+      double thermalMass = Cp * pMass[idx];
+      double invThermalMass = 1.0/thermalMass;
+
       // Account for stress-free adjustement to the deformation tensor due
       //   to inclusion of diffusants.
+      double dTdt_Rxn = 0.0;
       if (flag->d_doScalarDiffusion)
       {
         // Back out expansion due to stress free expansion of the material point
@@ -1107,7 +1132,8 @@ CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches  ,
           // pReactionHeat_temp is the amount of heat energy generated presuming
           // 100% conversion of diffusant nickel into NiAl3
           double pdQdt_Rxn = -d_dHRxn * std::max(0.0,std::abs(dCdt)) * pStartingMoles[idx];
-          pdTdt[idx] += pdQdt_Rxn / (Cp * pMass[idx]);
+          dTdt_Rxn = pdQdt_Rxn / thermalMass;
+          pdTdt[idx] += dTdt_Rxn;
         }
 
       }
