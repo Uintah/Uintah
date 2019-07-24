@@ -78,9 +78,6 @@
     <save label="ucellX"/>
     <save label="vcellY"/>
     <save label="wcellZ"/>
-    <save label="uHat"/>
-    <save label="vHat"/>
-    <save label="wHat"/>
     <checkpoint cycle="1" interval=".0007"/>
     <compression>gzip</compression>
   </DataArchiver>
