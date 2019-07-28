@@ -116,7 +116,7 @@ namespace Uintah {
 
     /** @brief Get a table value **/
     virtual double getTableValue( std::vector<double> iv, std::string depend_varname,
-                   doubleMap inert_mixture_fractions ) = 0;
+                   doubleMap inert_mixture_fractions, bool do_inverse = false ) = 0;
 
     /** @brief For efficiency: Matches tables lookup species with pointers/index/etc */
     virtual void tableMatching() = 0;
@@ -885,8 +885,8 @@ namespace Uintah {
         struct1DArray<double,ALMOST_A_MAGIC_NUMBER> get_reference_iv(){
 
           if ( _is_acidbase ){
-
             std::vector<double> iv(2);
+
             iv[_fp_index] = _fp_ref;
             iv[_eta_index] = _eta_ref;
 

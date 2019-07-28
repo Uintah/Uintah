@@ -796,7 +796,6 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
   struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv,iv.size());  //portable version
 
-
   struct1DArray<int,1> varIndex{dep_index};
   struct1DArray<double,1> tabValue(1);
     ND_interp->find_val_wrapper<UintahSpaces::HostSpace>(iv_p, varIndex, tabValue);
@@ -819,7 +818,8 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 //---------------------------
 double
 ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend_varname,
-    MixingRxnModel::doubleMap inert_mixture_fractions )
+                                      MixingRxnModel::doubleMap inert_mixture_fractions, 
+                                      bool do_inverse )
 {
 
   double total_inert_f = 0.0;
@@ -843,6 +843,10 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
   ND_interp->find_val_wrapper<UintahSpaces::HostSpace>( iv_p, varIndex, tabValue);
   double table_value = tabValue[0];
 
+  if ( do_inverse ){ 
+    table_value = 1./table_value; 
+  }
+
   // for post look-up mixing
   for (MixingRxnModel::doubleMap::iterator inert_iter = inert_mixture_fractions.begin();
       inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
@@ -852,6 +856,10 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
     post_mixing( table_value, inert_f, depend_varname, inert_species_map_list );
 
+  }
+
+  if ( do_inverse ){ 
+    table_value = 1./table_value; 
   }
 
   return table_value;

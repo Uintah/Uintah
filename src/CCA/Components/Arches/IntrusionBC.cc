@@ -612,7 +612,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
             }
 
-            density = mixingTable->getTableValue(iv, "density",inert_list);
+            density = mixingTable->getTableValue(iv, "density",inert_list, true);
 
             //get values for all other scalars that depend on a table lookup:
             for (std::map<std::string, scalarInletBase*>::iterator iter_lookup = iIntrusion->second.scalar_map.begin();
@@ -1137,7 +1137,8 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
         if ( iter->second.velocity_inlet_type == IntrusionBC::MASSFLOW ){
           proc0cout << "         density  = " << iter->second.density << std::endl;
         } else {
-          proc0cout << "   (note: unable to report a single density because it may vary over the face of the inlet)" << std::endl;
+          proc0cout << "         density  = " << iter->second.density << std::endl;
+          proc0cout << "         (note: note that density may vary over the face of the inlet)" << std::endl;
 
         }
 
@@ -1219,17 +1220,19 @@ IntrusionBC::addMomRHS( const Patch*  patch,
               v_indx = 0;
 
               if ( directions[0] != 0 ){
-                IntVector cp = c;
-                usrc[cp] += area * ( (rho[cp] + i_rho )/2. * u[cp]
+                IntVector cp = c - IntVector(1,0,0);
+                if ( !patch->containsCell(cp) ){
+                  throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
+                }
+                usrc[cp] += area * ( (rho[cp] + rho[c] )/2. * u[cp]
                                    + i_rho * i_vel[v_indx] )/2.*(u[cp]+i_vel[v_indx])/2.;
               }
               if ( directions[1] != 0 ){
                 IntVector cp = c + IntVector(1,0,0);
-                // A bit clunky - needs to be rewritten from the perspective of the velocity cell
                 if ( !patch->containsCell(cp) ){
                   throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
                 }
-                usrc[cp] += area * ( (rho[cp] + i_rho )/2. * u[cp]
+                usrc[cp] += area * ( (rho[cp] + rho[c] )/2. * u[cp]
                                    + i_rho * i_vel[v_indx] )/2.*(u[cp]+i_vel[v_indx])/2.;
               }
 
@@ -1243,17 +1246,19 @@ IntrusionBC::addMomRHS( const Patch*  patch,
               area = Dx.x() * Dx.z();
 
               if ( directions[2] != 0 ){
-                IntVector cp = c;
-                vsrc[cp] += area * ( (rho[cp] + i_rho )/2. * v[cp]
+                IntVector cp = c - IntVector(0,1,0);
+                if ( !patch->containsCell(cp) ){
+                  throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
+                }
+                vsrc[cp] += area * ( (rho[cp] + rho[c] )/2. * v[cp]
                                    + i_rho * i_vel[v_indx] )/2.*(v[cp]+i_vel[v_indx])/2.;
               }
               if ( directions[3] != 0 ){
                 IntVector cp = c + IntVector(0,1,0);
-                // A bit clunky - needs to be rewritten from the perspective of the velocity cell
                 if ( !patch->containsCell(cp) ){
                   throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
                 }
-                vsrc[cp] += area * ( (rho[cp] + i_rho )/2. * v[cp]
+                vsrc[cp] += area * ( (rho[cp] + rho[c] )/2. * v[cp]
                                    + i_rho * i_vel[v_indx] )/2.*(v[cp]+i_vel[v_indx])/2.;
               }
 
@@ -1266,17 +1271,19 @@ IntrusionBC::addMomRHS( const Patch*  patch,
               area = Dx.x() * Dx.y();
 
               if ( directions[4] != 0 ){
-                IntVector cp = c;
-                wsrc[cp] += area * ( (rho[cp] + i_rho )/2. * w[cp]
+                IntVector cp = c - IntVector(0,0,1);
+                if ( !patch->containsCell(cp) ){
+                  throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
+                }
+                wsrc[cp] += area * ( (rho[cp] + rho[c] )/2. * w[cp]
                                    + i_rho * i_vel[v_indx] )/2.*(w[cp]+i_vel[v_indx])/2.;
               }
               if ( directions[5] != 0 ){
                 IntVector cp = c + IntVector(0,0,1);
-                // A bit clunky - needs to be rewritten from the perspective of the velocity cell
                 if ( !patch->containsCell(cp) ){
                   throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
                 }
-                wsrc[cp] += area * ( (rho[cp] + i_rho )/2. * w[cp]
+                wsrc[cp] += area * ( (rho[cp] + rho[c] )/2. * w[cp]
                                    + i_rho * i_vel[v_indx] )/2.*(w[cp]+i_vel[v_indx])/2.;
               }
 
