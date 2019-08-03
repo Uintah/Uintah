@@ -125,6 +125,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
 
   d_flags = flags;
   d_DOUBLEMPM = flags->d_DOUBLEMPM;
+  d_GeneralizedAlpha = flags->d_GeneralizedAlpha;
   registerPermanentParticleState(matl);
 }
 
@@ -610,7 +611,16 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
 
 	  new_dw->allocateAndPut(pvars.pBulkModulLiquid, double_lb->pBulkModulLiquidLabel, subset);
   }
+  
+  // Generalized alpha
+  if (d_flags->d_GeneralizedAlpha) {
+	  new_dw->allocateAndPut(pvars.pAcceleration, d_lb->pAccelerationLabel, subset);
 
+	  if (d_flags->d_DOUBLEMPM) {
+		  new_dw->allocateAndPut(pvars.pAccelerationLiquid, double_lb->pAccelerationLiquidLabel, subset);
+	  }
+  }
+  
 
   return subset;
 }
@@ -818,7 +828,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
 	// DOUBLEMPM
 	if (d_DOUBLEMPM) {
-
 		pvars.pPorePressure[i] = 0.0;
 		pvars.pFreeSurface[i] = 0.0;
 		pvars.pPorosity[i] = matl->getInitialPorosity();
@@ -830,6 +839,16 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
 		pvars.pBulkModulLiquid[i] = matl->getBulkLiquidModulus();
 	}
+	
+	// Generalized alpha
+	if (d_GeneralizedAlpha) {
+		pvars.pAcceleration[i] = Vector(0., 0., 0.);
+		if (d_flags->d_DOUBLEMPM) {
+			pvars.pAccelerationLiquid[i] = Vector(0., 0., 0.);
+		}
+
+	}
+	
 
     pvars.pdisp[i]        = Vector(0.,0.,0.);
   }
@@ -1199,9 +1218,20 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
 	  particle_state.push_back(double_lb->pFreeSurfaceLabel);
 	  particle_state_preReloc.push_back(double_lb->pFreeSurfaceLabel_preReloc);
-
-
   }
+
+  
+  if (d_flags->d_GeneralizedAlpha) {
+	  particle_state.push_back(d_lb->pAccelerationLabel);
+	  particle_state_preReloc.push_back(d_lb->pAccelerationLabel_preReloc);
+	  
+	  if (d_flags->d_DOUBLEMPM) {
+		  particle_state.push_back(double_lb->pAccelerationLiquidLabel);
+		  particle_state_preReloc.push_back(double_lb->pAccelerationLiquidLabel_preReloc);
+	  }
+	  
+  }
+  
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
                                                  particle_state_preReloc);

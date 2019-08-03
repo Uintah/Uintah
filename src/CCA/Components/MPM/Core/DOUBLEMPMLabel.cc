@@ -125,6 +125,15 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 	
 	// Cell variables
 	VolumeRatioLabel			= VarLabel::create("c.VolumeRatio",CCVariable<double>::getTypeDescription());
+
+	// Generalized Alpha scheme
+	pAccelerationLiquidLabel = VarLabel::create("p.AccelerationLiquid", ParticleVariable<Vector>::getTypeDescription());
+	pAccelerationLiquidLabel_preReloc = VarLabel::create("p.AccelerationLiquid+", ParticleVariable<Vector>::getTypeDescription());
+
+	gAccelerationLiquidBeginLabel = VarLabel::create("g.AccelerationLiquidBegin", NCVariable<Vector>::getTypeDescription());
+	gAccelerationLiquidBeginNewLabel = VarLabel::create("g.AccelerationLiquidBeginNew", NCVariable<Vector>::getTypeDescription());
+	gAccelerationLiquidMiddleLabel = VarLabel::create("g.AccelerationLiquidMiddle", NCVariable<Vector>::getTypeDescription());
+	gAccelerationLiquidEndLabel = VarLabel::create("g.AccelerationLiquidEnd", NCVariable<Vector>::getTypeDescription());
 }
 
 DOUBLEMPMLabel::~DOUBLEMPMLabel()
@@ -192,6 +201,16 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 
 	// Cell variables
 	VarLabel::destroy(VolumeRatioLabel);
+
+
+	// Generalized Alpha scheme
+	VarLabel::destroy(pAccelerationLiquidLabel);
+	VarLabel::destroy(pAccelerationLiquidLabel_preReloc);
+
+	VarLabel::destroy(gAccelerationLiquidBeginLabel);
+	VarLabel::destroy(gAccelerationLiquidBeginNewLabel);
+	VarLabel::destroy(gAccelerationLiquidMiddleLabel);
+	VarLabel::destroy(gAccelerationLiquidEndLabel);
 }
 
 

@@ -107,6 +107,16 @@ namespace Uintah {
 		const VarLabel* gnodeSurfaceLabel;
 
 		const VarLabel* VolumeRatioLabel;
+
+		// Generalized Alpha
+		const VarLabel* pAccelerationLiquidLabel;
+		const VarLabel* pAccelerationLiquidLabel_preReloc;
+
+		const VarLabel* gAccelerationLiquidBeginLabel;
+		const VarLabel* gAccelerationLiquidBeginNewLabel;
+		const VarLabel* gAccelerationLiquidMiddleLabel;
+		const VarLabel* gAccelerationLiquidEndLabel;
+
 	};
 
 }

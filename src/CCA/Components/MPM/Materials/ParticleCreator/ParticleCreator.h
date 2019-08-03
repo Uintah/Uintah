@@ -137,6 +137,8 @@ namespace Uintah {
 
 	// Generalized Alpha scheme
 	ParticleVariable<Vector> pAcceleration;
+	ParticleVariable<Vector> pAccelerationLiquid;
+
     } ParticleVars;
 
   protected:

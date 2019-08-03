@@ -460,9 +460,9 @@ void SingleMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
 
   // Hypoplasticity
-  if (flags->d_Hypoplasticity) {
-	  t->computes(lb->pVoidRatioLabel);
-  }
+  //if (flags->d_Hypoplasticity) {
+	//  t->computes(lb->pVoidRatioLabel);
+  //}
 
 
   // Debugging Scalar
@@ -1080,13 +1080,14 @@ void SingleMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
   if (flags->d_GeneralizedAlpha) {
-	  //scheduleComputeAndIntegrateAccelerationGeneralizedAlpha(sched, patches, matls);
+	  scheduleComputeAndIntegrateAccelerationGeneralizedAlpha(sched, patches, matls);
 	  //scheduleRelocateParticle(sched, patches, matls);
   }
   else {
 
 	  scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
   }
+
   if (flags->d_doScalarDiffusion) {
     scheduleComputeAndIntegrateDiffusion( sched, patches, matls);
   }
@@ -1594,78 +1595,83 @@ void SingleMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	DataWarehouse* old_dw,
 	DataWarehouse* new_dw)
 {
-	for (int p = 0; p < patches->size(); p++) {
-		const Patch* patch = patches->get(p);
+  for (int p = 0; p < patches->size(); p++) {
+	const Patch* patch = patches->get(p);
 
-		printTask(patches, patch, cout_doing,
-			"Doing MPM::interpolateParticlesToGrid");
+	printTask(patches, patch, cout_doing,
+		"Doing MPM::interpolateParticlesToGrid");
 
-		unsigned int numMatls = m_materialManager->getNumMatls("MPM");
-		ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-		vector<IntVector> ni(interpolator->size());
-		vector<double> S(interpolator->size());
+	unsigned int numMatls = m_materialManager->getNumMatls("MPM");
+	ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+	vector<IntVector> ni(interpolator->size());
+	vector<double> S(interpolator->size());
 
-		ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
+	ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
 
-		string interp_type = flags->d_interpolator_type;
+	string interp_type = flags->d_interpolator_type;
 
-		NCVariable<double> gmassglobal, gtempglobal, gvolumeglobal;
-		NCVariable<Vector> gvelglobal;
-		int globMatID = m_materialManager->getAllInOneMatls()->get(0);
-		new_dw->allocateAndPut(gmassglobal, lb->gMassLabel, globMatID, patch);
-		new_dw->allocateAndPut(gtempglobal, lb->gTemperatureLabel, globMatID, patch);
-		new_dw->allocateAndPut(gvolumeglobal, lb->gVolumeLabel, globMatID, patch);
-		new_dw->allocateAndPut(gvelglobal, lb->gVelocityLabel, globMatID, patch);
-		gmassglobal.initialize(d_SMALL_NUM_MPM);
-		gvolumeglobal.initialize(d_SMALL_NUM_MPM);
-		gtempglobal.initialize(0.0);
-		gvelglobal.initialize(Vector(0.0));
-		Ghost::GhostType  gan = Ghost::AroundNodes;
+	NCVariable<double> gmassglobal, gtempglobal, gvolumeglobal;
+	NCVariable<Vector> gvelglobal;
+	int globMatID = m_materialManager->getAllInOneMatls()->get(0);
+	new_dw->allocateAndPut(gmassglobal, lb->gMassLabel, globMatID, patch);
+	new_dw->allocateAndPut(gtempglobal, lb->gTemperatureLabel, globMatID, patch);
+	new_dw->allocateAndPut(gvolumeglobal, lb->gVolumeLabel, globMatID, patch);
+	new_dw->allocateAndPut(gvelglobal, lb->gVelocityLabel, globMatID, patch);
+	gmassglobal.initialize(d_SMALL_NUM_MPM);
+	gvolumeglobal.initialize(d_SMALL_NUM_MPM);
+	gtempglobal.initialize(0.0);
+	gvelglobal.initialize(Vector(0.0));
+	Ghost::GhostType  gan = Ghost::AroundNodes;
+
+	// Generalized Alpha scheme
+	NCVariable<Vector> gAccBeginglobal;
+	if (flags->d_GeneralizedAlpha) {
+		new_dw->allocateAndPut(gAccBeginglobal, lb->gAccelerationBeginLabel, globMatID, patch);
+		gAccBeginglobal.initialize(Vector(0.0));
+	}
+
+	for (unsigned int m = 0; m < numMatls; m++) {
+		MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+		int dwi = mpm_matl->getDWIndex();
+
+		// Create arrays for the particle data
+		constParticleVariable<Point>  px;
+		constParticleVariable<double> pmass, pvolume, pTemperature, pColor;
+		constParticleVariable<Vector> pvelocity, pexternalforce;
+		constParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
+			pExternalForceCorner3, pExternalForceCorner4;
+		constParticleVariable<Matrix3> psize;
+		constParticleVariable<Matrix3> pFOld;
+		constParticleVariable<Matrix3> pVelGrad;
+		constParticleVariable<Vector>  pTempGrad;
+
+		ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+			gan, NGP, lb->pXLabel);
+
+		old_dw->get(px, lb->pXLabel, pset);
+		old_dw->get(pmass, lb->pMassLabel, pset);
+		//    old_dw->get(pColor,         lb->pColorLabel,         pset);
+		old_dw->get(pvolume, lb->pVolumeLabel, pset);
+		old_dw->get(pvelocity, lb->pVelocityLabel, pset);
+		if (flags->d_GEVelProj) {
+			old_dw->get(pVelGrad, lb->pVelGradLabel, pset);
+			old_dw->get(pTempGrad, lb->pTemperatureGradientLabel, pset);
+		}
+		old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
+		new_dw->get(psize, lb->pCurSizeLabel, pset);
+		//      old_dw->get(pFOld,          lb->pDeformationMeasureLabel,pset);
 
 		// Generalized Alpha scheme
-
-		NCVariable<Vector> gAccBeginglobal;
+		constParticleVariable<Vector> pAcceleration;
 		if (flags->d_GeneralizedAlpha) {
-			new_dw->allocateAndPut(gAccBeginglobal, lb->gAccelerationBeginLabel, globMatID, patch);
-			gAccBeginglobal.initialize(Vector(0.0));
+			old_dw->get(pAcceleration, lb->pAccelerationLabel, pset);
 		}
 
-		for (unsigned int m = 0; m < numMatls; m++) {
-			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
-			int dwi = mpm_matl->getDWIndex();
-
-			// Create arrays for the particle data
-			constParticleVariable<Point>  px;
-			constParticleVariable<double> pmass, pvolume, pTemperature, pColor;
-			constParticleVariable<Vector> pvelocity, pexternalforce;
-			constParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
-				pExternalForceCorner3, pExternalForceCorner4;
-			constParticleVariable<Matrix3> psize;
-			constParticleVariable<Matrix3> pFOld;
-			constParticleVariable<Matrix3> pVelGrad;
-			constParticleVariable<Vector>  pTempGrad;
-
-			ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-				gan, NGP, lb->pXLabel);
-
-			old_dw->get(px, lb->pXLabel, pset);
-			old_dw->get(pmass, lb->pMassLabel, pset);
-			//    old_dw->get(pColor,         lb->pColorLabel,         pset);
-			old_dw->get(pvolume, lb->pVolumeLabel, pset);
-			old_dw->get(pvelocity, lb->pVelocityLabel, pset);
-			if (flags->d_GEVelProj) {
-				old_dw->get(pVelGrad, lb->pVelGradLabel, pset);
-				old_dw->get(pTempGrad, lb->pTemperatureGradientLabel, pset);
-			}
-			old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
-			new_dw->get(psize, lb->pCurSizeLabel, pset);
-			//      old_dw->get(pFOld,          lb->pDeformationMeasureLabel,pset);
-
-				  // JBH -- Scalar diffusion related
-			constParticleVariable<double> pConcentration, pExternalScalarFlux;
-			constParticleVariable<Vector> pConcGrad;
-			constParticleVariable<Matrix3> pStress;
-			if (flags->d_doScalarDiffusion) {
+		  // JBH -- Scalar diffusion related
+		constParticleVariable<double> pConcentration, pExternalScalarFlux;
+		constParticleVariable<Vector> pConcGrad;
+		constParticleVariable<Matrix3> pStress;
+		if (flags->d_doScalarDiffusion) {
 				new_dw->get(pExternalScalarFlux, lb->diffusion->pExternalScalarFlux_preReloc, pset);
 				old_dw->get(pConcentration, lb->diffusion->pConcentration, pset);
 				old_dw->get(pStress, lb->pStressLabel, pset);
@@ -1674,9 +1680,9 @@ void SingleMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 				}
 			}
 
-			new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
-			constParticleVariable<IntVector> pLoadCurveID;
-			if (flags->d_useCBDI) {
+		new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
+		constParticleVariable<IntVector> pLoadCurveID;
+		if (flags->d_useCBDI) {
 				new_dw->get(pExternalForceCorner1,
 					lb->pExternalForceCorner1Label, pset);
 				new_dw->get(pExternalForceCorner2,
@@ -1688,68 +1694,68 @@ void SingleMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 				old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
 			}
 
-			// Create arrays for the grid data
-			NCVariable<double> gmass;
-			NCVariable<double> gvolume;
-			NCVariable<Vector> gvelocity;
-			NCVariable<Vector> gexternalforce;
-			NCVariable<double> gexternalheatrate;
-			NCVariable<double> gTemperature;
-			NCVariable<double> gSp_vol;
-			//    NCVariable<double> gColor;
-			NCVariable<double> gTemperatureNoBC;
-			NCVariable<double> gTemperatureRate;
+		// Create arrays for the grid data
+		NCVariable<double> gmass;
+		NCVariable<double> gvolume;
+		NCVariable<Vector> gvelocity;
+		NCVariable<Vector> gexternalforce;
+		NCVariable<double> gexternalheatrate;
+		NCVariable<double> gTemperature;
+		NCVariable<double> gSp_vol;
+		//    NCVariable<double> gColor;
+		NCVariable<double> gTemperatureNoBC;
+		NCVariable<double> gTemperatureRate;
 
-			new_dw->allocateAndPut(gmass, lb->gMassLabel, dwi, patch);
-			//    new_dw->allocateAndPut(gColor,           lb->gColorLabel,      dwi,patch);
-			new_dw->allocateAndPut(gSp_vol, lb->gSp_volLabel, dwi, patch);
-			new_dw->allocateAndPut(gvolume, lb->gVolumeLabel, dwi, patch);
-			new_dw->allocateAndPut(gvelocity, lb->gVelocityLabel, dwi, patch);
-			new_dw->allocateAndPut(gTemperature, lb->gTemperatureLabel, dwi, patch);
-			new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
-				dwi, patch);
-			new_dw->allocateAndPut(gTemperatureRate, lb->gTemperatureRateLabel,
-				dwi, patch);
-			new_dw->allocateAndPut(gexternalforce, lb->gExternalForceLabel,
-				dwi, patch);
-			new_dw->allocateAndPut(gexternalheatrate, lb->gExternalHeatRateLabel,
-				dwi, patch);
+		new_dw->allocateAndPut(gmass, lb->gMassLabel, dwi, patch);
+		//    new_dw->allocateAndPut(gColor,           lb->gColorLabel,      dwi,patch);
+		new_dw->allocateAndPut(gSp_vol, lb->gSp_volLabel, dwi, patch);
+		new_dw->allocateAndPut(gvolume, lb->gVolumeLabel, dwi, patch);
+		new_dw->allocateAndPut(gvelocity, lb->gVelocityLabel, dwi, patch);
+		new_dw->allocateAndPut(gTemperature, lb->gTemperatureLabel, dwi, patch);
+		new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
+			dwi, patch);
+		new_dw->allocateAndPut(gTemperatureRate, lb->gTemperatureRateLabel,
+			dwi, patch);
+		new_dw->allocateAndPut(gexternalforce, lb->gExternalForceLabel,
+			dwi, patch);
+		new_dw->allocateAndPut(gexternalheatrate, lb->gExternalHeatRateLabel,
+			dwi, patch);
 
-			gmass.initialize(d_SMALL_NUM_MPM);
-			gvolume.initialize(d_SMALL_NUM_MPM);
-			//      gColor.initialize(0.0);
-			gvelocity.initialize(Vector(0, 0, 0));
-			gexternalforce.initialize(Vector(0, 0, 0));
-			gTemperature.initialize(0);
-			gTemperatureNoBC.initialize(0);
-			gTemperatureRate.initialize(0);
-			gexternalheatrate.initialize(0);
-			gSp_vol.initialize(0.);
+		gmass.initialize(d_SMALL_NUM_MPM);
+		gvolume.initialize(d_SMALL_NUM_MPM);
+		//      gColor.initialize(0.0);
+		gvelocity.initialize(Vector(0, 0, 0));
+		gexternalforce.initialize(Vector(0, 0, 0));
+		gTemperature.initialize(0);
+		gTemperatureNoBC.initialize(0);
+		gTemperatureRate.initialize(0);
+		gexternalheatrate.initialize(0);
+		gSp_vol.initialize(0.);
 
-			// JBH -- Scalar diffusion related
-			NCVariable<double>  gConcentration, gConcentrationNoBC;
-			NCVariable<double>  gHydrostaticStress, gExtScalarFlux;
-			if (flags->d_doScalarDiffusion) {
-				new_dw->allocateAndPut(gConcentration, lb->diffusion->gConcentration,
-					dwi, patch);
-				new_dw->allocateAndPut(gConcentrationNoBC, lb->diffusion->gConcentrationNoBC,
-					dwi, patch);
-				new_dw->allocateAndPut(gHydrostaticStress, lb->diffusion->gHydrostaticStress,
-					dwi, patch);
-				new_dw->allocateAndPut(gExtScalarFlux, lb->diffusion->gExternalScalarFlux,
-					dwi, patch);
-				gConcentration.initialize(0);
-				gConcentrationNoBC.initialize(0);
-				gHydrostaticStress.initialize(0);
-				gExtScalarFlux.initialize(0);
+		// JBH -- Scalar diffusion related
+		NCVariable<double>  gConcentration, gConcentrationNoBC;
+		NCVariable<double>  gHydrostaticStress, gExtScalarFlux;
+		if (flags->d_doScalarDiffusion) {
+			new_dw->allocateAndPut(gConcentration, lb->diffusion->gConcentration,
+				dwi, patch);
+			new_dw->allocateAndPut(gConcentrationNoBC, lb->diffusion->gConcentrationNoBC,
+				dwi, patch);
+			new_dw->allocateAndPut(gHydrostaticStress, lb->diffusion->gHydrostaticStress,
+				dwi, patch);
+			new_dw->allocateAndPut(gExtScalarFlux, lb->diffusion->gExternalScalarFlux,
+				dwi, patch);
+			gConcentration.initialize(0);
+			gConcentrationNoBC.initialize(0);
+			gHydrostaticStress.initialize(0);
+			gExtScalarFlux.initialize(0);
 			}
 
-			// Generalized Alpha scheme
-			NCVariable<Vector> gAccelerationBegin;
-			if (flags->d_GeneralizedAlpha) {
-				new_dw->allocateAndPut(gAccelerationBegin, lb->gAccelerationBeginLabel, dwi, patch);
-				gAccelerationBegin.initialize(Vector(0, 0, 0));
-			}
+		// Generalized Alpha scheme
+		NCVariable<Vector> gAccelerationBegin;
+		if (flags->d_GeneralizedAlpha) {
+			new_dw->allocateAndPut(gAccelerationBegin, lb->gAccelerationBeginLabel, dwi, patch);
+			gAccelerationBegin.initialize(Vector(0, 0, 0));
+		}
 
 			// Interpolate particle data to Grid data.
 			// This currently consists of the particle velocity and mass
@@ -1757,52 +1763,51 @@ void SingleMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 			// Vector from the individual mass matrix and velocity vector
 			// GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
 
-			Vector total_mom(0.0, 0.0, 0.0);
-			double pSp_vol = 1. / mpm_matl->getInitialDensity();
-			//loop over all particles in the patch:
-			for (ParticleSubset::iterator iter = pset->begin();
-				iter != pset->end();
-				iter++) {
-				particleIndex idx = *iter;
-				int NN =
-					interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
-				Vector pmom = pvelocity[idx] * pmass[idx];
-				double ptemp_ext = pTemperature[idx];
-				total_mom += pmom;
+		Vector total_mom(0.0, 0.0, 0.0);
+		double pSp_vol = 1. / mpm_matl->getInitialDensity();
+		//loop over all particles in the patch:
+		for (ParticleSubset::iterator iter = pset->begin();
+			iter != pset->end();
+			iter++) {
+			particleIndex idx = *iter;
+			int NN =
+				interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
+			Vector pmom = pvelocity[idx] * pmass[idx];
+			double ptemp_ext = pTemperature[idx];
+			total_mom += pmom;
 
 				// Add each particles contribution to the local mass & velocity
 				// Must use the node indices
-				IntVector node;
-				// Iterate through the nodes that receive data from the current particle
-				for (int k = 0; k < NN; k++) {
-					node = ni[k];
-					if (patch->containsNode(node)) {
-						if (flags->d_GEVelProj) {
-							Point gpos = patch->getNodePosition(node);
-							Vector distance = px[idx] - gpos;
-							Vector pvel_ext = pvelocity[idx] - pVelGrad[idx] * distance;
-							pmom = pvel_ext * pmass[idx];
-							ptemp_ext = pTemperature[idx] - Dot(pTempGrad[idx], distance);
-						}
-						gmass[node] += pmass[idx] * S[k];
-						gvelocity[node] += pmom * S[k];
-						gvolume[node] += pvolume[idx] * S[k];
-						//            gColor[node]         += pColor[idx]*pmass[idx]         * S[k];
-						if (!flags->d_useCBDI) {
-							gexternalforce[node] += pexternalforce[idx] * S[k];
-						}
-						gTemperature[node] += ptemp_ext * pmass[idx] * S[k];
-						gSp_vol[node] += pSp_vol * pmass[idx] * S[k];
-						//gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
-
-						/*
-						if (flags->d_GeneralizedAlpha) {
-							gAccelerationBegin[node] += pAcceleration[idx] * pmass[idx] * S[k];
-						}
-						*/
+			IntVector node;
+			// Iterate through the nodes that receive data from the current particle
+			for (int k = 0; k < NN; k++) {
+				node = ni[k];
+				if (patch->containsNode(node)) {
+					if (flags->d_GEVelProj) {
+						Point gpos = patch->getNodePosition(node);
+						Vector distance = px[idx] - gpos;
+						Vector pvel_ext = pvelocity[idx] - pVelGrad[idx] * distance;
+						pmom = pvel_ext * pmass[idx];
+						ptemp_ext = pTemperature[idx] - Dot(pTempGrad[idx], distance);
 					}
+					gmass[node] += pmass[idx] * S[k];
+					gvelocity[node] += pmom * S[k];
+					gvolume[node] += pvolume[idx] * S[k];
+					//            gColor[node]         += pColor[idx]*pmass[idx]         * S[k];
+						if (!flags->d_useCBDI) {
+						gexternalforce[node] += pexternalforce[idx] * S[k];
+					}
+					gTemperature[node] += ptemp_ext * pmass[idx] * S[k];
+					gSp_vol[node] += pSp_vol * pmass[idx] * S[k];
+					//gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
+				
+					if (flags->d_GeneralizedAlpha) {
+						gAccelerationBegin[node] += pAcceleration[idx] * pmass[idx] * S[k];
+					}
+						
 				}
-				if (flags->d_doScalarDiffusion) {
+			}
+			if (flags->d_doScalarDiffusion) {
 					double one_third = 1. / 3.;
 					double pHydroStress = one_third * pStress[idx].Trace();
 					double pConc_Ext = pConcentration[idx];
@@ -1821,7 +1826,7 @@ void SingleMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 						}
 					}
 				}
-				if (flags->d_useCBDI && pLoadCurveID[idx].x() > 0) {
+			if (flags->d_useCBDI && pLoadCurveID[idx].x() > 0) {
 					vector<IntVector> niCorner1(linear_interpolator->size());
 					vector<IntVector> niCorner2(linear_interpolator->size());
 					vector<IntVector> niCorner3(linear_interpolator->size());
@@ -1857,73 +1862,72 @@ void SingleMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 						}
 					}
 				}
-			} // End of particle loop
-			for (NodeIterator iter = patch->getExtraNodeIterator();
-				!iter.done(); iter++) {
-				IntVector c = *iter;
+		} // End of particle loop
+		for (NodeIterator iter = patch->getExtraNodeIterator();
+			!iter.done(); iter++) {
+			IntVector c = *iter;
 
-				gmassglobal[c] += gmass[c];
-				gvolumeglobal[c] += gvolume[c];
-				gvelglobal[c] += gvelocity[c];
-				gvelocity[c] /= gmass[c];
-				gtempglobal[c] += gTemperature[c];
-				gTemperature[c] /= gmass[c];
-				//        gColor[c]         /= gmass[c];
-				gTemperatureNoBC[c] = gTemperature[c];
-				gSp_vol[c] /= gmass[c];
-
-				if (flags->d_GeneralizedAlpha) {
-					for (NodeIterator iter = patch->getExtraNodeIterator();
-						!iter.done(); ++iter) {
-						IntVector c = *iter;
-						gAccBeginglobal[c] += gAccelerationBegin[c];
-						gAccelerationBegin[c] /= gmass[c];
-					}
-				}
-
-			}
-
-			if (flags->d_doScalarDiffusion) {
-				for (NodeIterator iter = patch->getExtraNodeIterator();
-					!iter.done(); ++iter) {
-					IntVector c = *iter;
-					gConcentration[c] /= gmass[c];
-					gHydrostaticStress[c] /= gmass[c];
-					gConcentrationNoBC[c] = gConcentration[c];
-				}
-			}
-
-			// Apply boundary conditions to the temperature and velocity (if symmetry)
-			MPMBoundCond bc;
-			bc.setBoundaryCondition(patch, dwi, "Temperature", gTemperature, interp_type);
-			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity, interp_type);
-			if (flags->d_doScalarDiffusion) {
-				bc.setBoundaryCondition(patch, dwi, "SD-Type", gConcentration,
-					interp_type);
-			}
+			gmassglobal[c] += gmass[c];
+			gvolumeglobal[c] += gvolume[c];
+			gvelglobal[c] += gvelocity[c];
+			gvelocity[c] /= gmass[c];
+			gtempglobal[c] += gTemperature[c];
+			gTemperature[c] /= gmass[c];
+			//        gColor[c]         /= gmass[c];
+			gTemperatureNoBC[c] = gTemperature[c];
+			gSp_vol[c] /= gmass[c];
 
 			if (flags->d_GeneralizedAlpha) {
-				bc.setBoundaryCondition(patch, dwi, "Symmetric", gAccelerationBegin, interp_type);
+			gAccBeginglobal[c] += gAccelerationBegin[c];
+			gAccelerationBegin[c] /= gmass[c];
 			}
 
-			// If an MPMICE problem, create a velocity with BCs variable for NCToCC_0
-			if (flags->d_with_ice) {
-				NCVariable<Vector> gvelocityWBC;
-				new_dw->allocateAndPut(gvelocityWBC, lb->gVelocityBCLabel, dwi, patch);
-				gvelocityWBC.copyData(gvelocity);
-				bc.setBoundaryCondition(patch, dwi, "Velocity", gvelocityWBC, interp_type);
-				bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocityWBC, interp_type);
-			}
-		}  // End loop over materials
-
-		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-			IntVector c = *iter;
-			gtempglobal[c] /= gmassglobal[c];
-			gvelglobal[c] /= gmassglobal[c];
 		}
-		delete interpolator;
-		delete linear_interpolator;
-	}  // End loop over patches
+
+		if (flags->d_doScalarDiffusion) {
+			for (NodeIterator iter = patch->getExtraNodeIterator();
+				!iter.done(); ++iter) {
+				IntVector c = *iter;
+				gConcentration[c] /= gmass[c];
+				gHydrostaticStress[c] /= gmass[c];
+				gConcentrationNoBC[c] = gConcentration[c];
+			}
+		}
+
+		// Apply boundary conditions to the temperature and velocity (if symmetry)
+		MPMBoundCond bc;
+		bc.setBoundaryCondition(patch, dwi, "Temperature", gTemperature, interp_type);
+		bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity, interp_type);
+		if (flags->d_doScalarDiffusion) {
+			bc.setBoundaryCondition(patch, dwi, "SD-Type", gConcentration,
+				interp_type);
+		}
+
+		if (flags->d_GeneralizedAlpha) {
+			bc.setBoundaryCondition(patch, dwi, "Symmetric", gAccelerationBegin, interp_type);
+		}
+
+		// If an MPMICE problem, create a velocity with BCs variable for NCToCC_0
+		if (flags->d_with_ice) {
+			NCVariable<Vector> gvelocityWBC;
+			new_dw->allocateAndPut(gvelocityWBC, lb->gVelocityBCLabel, dwi, patch);
+			gvelocityWBC.copyData(gvelocity);
+			bc.setBoundaryCondition(patch, dwi, "Velocity", gvelocityWBC, interp_type);
+			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocityWBC, interp_type);
+		}
+	}  // End loop over materials
+
+	for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+		IntVector c = *iter;
+		gtempglobal[c] /= gmassglobal[c];
+		gvelglobal[c] /= gmassglobal[c];
+		if (flags->d_GeneralizedAlpha) {
+			gAccBeginglobal[c] /= gmassglobal[c];
+		}
+	}
+	delete interpolator;
+	delete linear_interpolator;
+  }  // End loop over patches
 }
 
 
@@ -3286,7 +3290,6 @@ void SingleMPM::computeAndIntegrateAccelerationGeneralizedAlpha(const ProcessorG
 		// Generalized-Alpha scheme
 		double p_b = flags->d_SpectralRadius;
 		double alpha_m = (2 * p_b - 1) / (1 + p_b);
-		//double beta = (5 - 3 * p_b) / ((1 + p_b) * (1 + p_b) * (2 - p_b));
 		double gamma = 1.5 - alpha_m;
 
 		for (unsigned int m = 0; m < m_materialManager->getNumMatls("MPM"); m++) {
@@ -3332,10 +3335,9 @@ void SingleMPM::computeAndIntegrateAccelerationGeneralizedAlpha(const ProcessorG
 					accMiddle = (internalforce[c] + externalforce[c]) / mass[c];
 					accMiddle -= damp_coef * velocity[c];
 					accEnd = (accMiddle - accelerationBegin[c] * alpha_m) / (1 - alpha_m);
-
-
-
+									   
 				}
+
 				accelerationEnd[c] = accEnd + gravity;
 				accelerationBeginNew[c] = accelerationBegin[c] + gravity;
 
@@ -4164,7 +4166,6 @@ void SingleMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 			// Get the arrays of grid data on which the new part. values depend
 			constNCVariable<Vector> gvelocity_star, gacceleration, gvelSPSSP;
-			constNCVariable<Vector> accelerationEnd, accelerationBeginNew;
 			constNCVariable<double> gTemperatureRate;
 			constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
 
@@ -4181,6 +4182,7 @@ void SingleMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 				new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel, pset);
 			}
 
+			constNCVariable<Vector> accelerationEnd, accelerationBeginNew;
 			ParticleVariable<Vector> pAccelerationNew;
 			if (flags->d_GeneralizedAlpha) {
 				new_dw->get(accelerationEnd, lb->gAccelerationEndLabel, dwi, patch, gnone, 0);
@@ -4284,21 +4286,12 @@ void SingleMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 					double concRate = 0.0;
 					double burnFraction = 0.0;
 
-					Vector accEnd(0.0, 0.0, 0.0);
-					Vector accBeginNew(0.0, 0.0, 0.0);
-					Vector gravity = flags->d_gravity;
-
 					// Accumulate the contribution from each surrounding vertex
 					for (int k = 0; k < NN; k++) {
 						IntVector node = ni[k];
 						vel += gvelocity_star[node] * S[k];
 						velSSPSSP += gvelSPSSP[node] * S[k];
 						acc += gacceleration[node] * S[k];
-
-						if (flags->d_GeneralizedAlpha) {
-							accEnd += accelerationEnd[node] * S[k];
-							accBeginNew += accelerationBeginNew[node] * S[k];
-						}
 
 						fricTempRate = frictionTempRate[node] * flags->d_addFrictionWork;
 						tempRate += (gTemperatureRate[node] + dTdt[node] +
@@ -4313,14 +4306,6 @@ void SingleMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 					pvelnew[idx] = 2.0*pvelSSPlus[idx] - velSSPSSP + acc * delT;
 					pdispnew[idx] = pdisp[idx] + (pxnew[idx] - px[idx]);
 
-					if (flags->d_GeneralizedAlpha) {
-						//pxnew[idx] = px[idx] + vel * delT + ( beta * accEnd + (0.5 - beta) * accBeginNew)*delT*delT;
-						pxnew[idx] = px[idx] + vel * delT;
-						pAccelerationNew[idx] = accEnd - gravity;
-					}
-					else {
-						pxnew[idx] = px[idx] + vel * delT;
-					}
 #if 0
 					// PIC, or XPIC(1)
 					pxnew[idx] = px[idx] + vel * delT
@@ -4378,6 +4363,11 @@ void SingleMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 						pcursize[idx]);
 					Vector vel(0.0, 0.0, 0.0);
 					Vector acc(0.0, 0.0, 0.0);
+
+					Vector accEnd(0.0, 0.0, 0.0);
+					Vector accBeginNew(0.0, 0.0, 0.0);
+					Vector gravity = flags->d_gravity;
+
 					double fricTempRate = 0.0;
 					double tempRate = 0.0;
 					double concRate = 0.0;
@@ -4389,16 +4379,31 @@ void SingleMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 						vel += gvelocity_star[node] * S[k];
 						acc += gacceleration[node] * S[k];
 
+						if (flags->d_GeneralizedAlpha) {
+							accEnd += accelerationEnd[node] * S[k];
+							accBeginNew += accelerationBeginNew[node] * S[k];
+						}
+
 						fricTempRate = frictionTempRate[node] * flags->d_addFrictionWork;
 						tempRate += (gTemperatureRate[node] + dTdt[node] +
 							fricTempRate)   * S[k];
 						burnFraction += massBurnFrac[node] * S[k];
+
 					}
 
-					// Update the particle's pos and vel using std "FLIP" method
-					pxnew[idx] = px[idx] + vel * delT;
-					pdispnew[idx] = pdisp[idx] + vel * delT;
-					pvelnew[idx] = pvelocity[idx] + acc * delT;
+					if (flags->d_GeneralizedAlpha) {
+						pxnew[idx] = px[idx] + vel * delT + ( beta * accEnd + (0.5 - beta) * accBeginNew)*delT*delT;
+						//pxnew[idx] = px[idx] + vel * delT;
+						pAccelerationNew[idx] = accEnd - gravity;
+						pvelnew[idx] = pvelocity[idx] + acc * delT;
+					}
+					else {
+						// Update the particle's pos and vel using std "FLIP" method
+						pxnew[idx] = px[idx] + vel * delT;
+						//pxnew[idx] = px[idx];
+						//pdispnew[idx] = pdisp[idx] + vel * delT;
+						pvelnew[idx] = pvelocity[idx] + acc * delT;
+					}
 
 					pTempNew[idx] = pTemperature[idx] + tempRate * delT;
 					pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
@@ -4874,13 +4879,13 @@ void SingleMPM::scheduleInterpolateParticleToGrid(SchedulerP& sched,
 	t->computes(lb->gStressFilterLabel);
 	t->computes(lb->gStressFilterLabel, m_materialManager->getAllInOneMatls(),
 		Task::OutOfDomain);
-
+	
 	// Porosity
-	t->requires(Task::NewDW, lb->pVoidRatioLabel, gan, NGP);
-	t->computes(lb->gVoidRatioLabel);
-	t->computes(lb->gVoidRatioLabel, m_materialManager->getAllInOneMatls(),
-		Task::OutOfDomain);
-
+	//t->requires(Task::NewDW, lb->pVoidRatioLabel, gan, NGP);
+	//t->computes(lb->gVoidRatioLabel);
+	//t->computes(lb->gVoidRatioLabel, m_materialManager->getAllInOneMatls(),
+	//	Task::OutOfDomain);
+	
 	sched->addTask(t, patches, matls);
 }
 
@@ -4895,8 +4900,12 @@ void SingleMPM::InterpolateParticleToGrid(const ProcessorGroup*,
 		printTask(patches, patch, cout_doing, "Doing InterpolateParticleToGrid");
 
 		ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
-		vector<IntVector> ni(linear_interpolator->size());
-		vector<double> S(linear_interpolator->size());
+		//vector<IntVector> ni(linear_interpolator->size());
+		//vector<double> S(linear_interpolator->size());
+
+		ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+		vector<IntVector> ni(interpolator->size());
+		vector<double> S(interpolator->size());
 
 		unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
 
@@ -4911,10 +4920,10 @@ void SingleMPM::InterpolateParticleToGrid(const ProcessorGroup*,
 		gStressglobal.initialize(Matrix3(0.0));
 
 		// Porosity
-		NCVariable<double>       gVoidRatioglobal;
-		new_dw->allocateAndPut(gVoidRatioglobal, lb->gVoidRatioLabel,
-			m_materialManager->getAllInOneMatls()->get(0), patch);
-		gVoidRatioglobal.initialize(0.0);
+		//NCVariable<double>       gVoidRatioglobal;
+		//new_dw->allocateAndPut(gVoidRatioglobal, lb->gVoidRatioLabel,
+		//	m_materialManager->getAllInOneMatls()->get(0), patch);
+		//gVoidRatioglobal.initialize(0.0);
 
 		for (unsigned int m = 0; m < numMPMMatls; m++) {
 			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
@@ -4951,14 +4960,14 @@ void SingleMPM::InterpolateParticleToGrid(const ProcessorGroup*,
 								 0, 0, 0);
 
 			// Porosity
-			constParticleVariable<double> pVoidRatio;
-			NCVariable<double>		      gVoidRatio;
-			new_dw->get(pVoidRatio, lb->pVoidRatioLabel, pset);
-			new_dw->allocateAndPut(gVoidRatio, lb->gVoidRatioLabel, dwi, patch);
+			//constParticleVariable<double> pVoidRatio;
+			//NCVariable<double>		      gVoidRatio;
+			//new_dw->get(pVoidRatio, lb->pVoidRatioLabel, pset);
+			//new_dw->allocateAndPut(gVoidRatio, lb->gVoidRatioLabel, dwi, patch);
 
-			gVoidRatio.initialize(0.0);
+			//gVoidRatio.initialize(0.0);
 
-			double VoidRatioVol = 0.0;
+			//double VoidRatioVol = 0.0;
 
 			for (ParticleSubset::iterator iter = pset->begin();
 				iter != pset->end();
@@ -4966,16 +4975,16 @@ void SingleMPM::InterpolateParticleToGrid(const ProcessorGroup*,
 				particleIndex idx = *iter;
 
 				// Get the node indices that surround the cell
-				int  NN = linear_interpolator->findCellAndWeights(px[idx], ni, S,
+				int  NN = interpolator->findCellAndWeights(px[idx], ni, S,
 					psize[idx]);
 
 				StressVol = pstress_new[idx] * pvol[idx];
-				VoidRatioVol = pVoidRatio[idx] * pvol[idx];
+				//VoidRatioVol = pVoidRatio[idx] * pvol[idx];
 
 				for (int k = 0; k < NN; k++) {
 					if (patch->containsNode(ni[k])) {
 						gStress[ni[k]] += StressVol * S[k];
-						gVoidRatio[ni[k]] += VoidRatioVol * S[k];
+						//gVoidRatio[ni[k]] += VoidRatioVol * S[k];
 					}
 				}
 			} // End particle loop
@@ -4987,17 +4996,18 @@ void SingleMPM::InterpolateParticleToGrid(const ProcessorGroup*,
 				gStressglobal[c] += gStress[c];
 				gStress[c] /= gvolume[c];
 				// Porosity
-				gVoidRatioglobal[c] += gVoidRatio[c];
-				gVoidRatio[c] /= gvolume[c];
+				//gVoidRatioglobal[c] += gVoidRatio[c];
+				//gVoidRatio[c] /= gvolume[c];
 			}
 		}
 
 		for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
 			IntVector c = *iter;
 			gStressglobal[c] /= gvolumeglobal[c];
-			gVoidRatioglobal[c] /= gvolumeglobal[c];
+			//gVoidRatioglobal[c] /= gvolumeglobal[c];
 		}
 		delete linear_interpolator;
+		delete interpolator;
 	}
 }
 
@@ -5029,8 +5039,8 @@ void SingleMPM::scheduleInterpolateGridToParticle(SchedulerP& sched,
 	t->modifies(lb->pStressLabel_preReloc);
 
 	// Porosity
-	t->requires(Task::NewDW, lb->gVoidRatioLabel, gac, NGN);
-	t->modifies(lb->pVoidRatioLabel);
+	//t->requires(Task::NewDW, lb->gVoidRatioLabel, gac, NGN);
+	//t->modifies(lb->pVoidRatioLabel);
 
 	sched->addTask(t, patches, matls);
 }
@@ -5047,8 +5057,12 @@ void SingleMPM::InterpolateGridToParticle(const ProcessorGroup*,
 			"Doing InterpolateGridToParticle");
 
 		ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
-		vector<IntVector> ni(linear_interpolator->size());
-		vector<double> S(linear_interpolator->size());
+		//vector<IntVector> ni(linear_interpolator->size());
+		//vector<double> S(linear_interpolator->size());
+
+		ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+		vector<IntVector> ni(interpolator->size());
+		vector<double> S(interpolator->size());
 
 		unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
 
@@ -5072,11 +5086,11 @@ void SingleMPM::InterpolateGridToParticle(const ProcessorGroup*,
 			new_dw->getModifiable(pstressnew, lb->pStressLabel_preReloc, pset);
 
 			// ¨Porosity
-			constNCVariable<double> gVoidRatio;
-			ParticleVariable<double> pVoidRatioNew;
+			//constNCVariable<double> gVoidRatio;
+			//ParticleVariable<double> pVoidRatioNew;
 
-			new_dw->get(gVoidRatio, lb->gVoidRatioLabel, dwi, patch, gac, NGP);
-			new_dw->getModifiable(pVoidRatioNew, lb->pVoidRatioLabel, pset);
+			//new_dw->get(gVoidRatio, lb->gVoidRatioLabel, dwi, patch, gac, NGP);
+			//new_dw->getModifiable(pVoidRatioNew, lb->pVoidRatioLabel, pset);
 
 			// Loop over particles
 			for (ParticleSubset::iterator iter = pset->begin();
@@ -5084,10 +5098,10 @@ void SingleMPM::InterpolateGridToParticle(const ProcessorGroup*,
 				particleIndex idx = *iter;
 
 				// Get the node indices that surround the cell
-				int NN = linear_interpolator->findCellAndWeights(px[idx], ni, S,
+				int NN = interpolator->findCellAndWeights(px[idx], ni, S,
 					psize[idx]);
 
-				double VoidRatio = 0;
+				//double VoidRatio = 0;
 				Matrix3 Stressnew = (0, 0, 0,
 									 0, 0, 0,
 									 0, 0, 0);
@@ -5096,15 +5110,16 @@ void SingleMPM::InterpolateGridToParticle(const ProcessorGroup*,
 				for (int k = 0; k < NN; k++) {
 					IntVector node = ni[k];
 					Stressnew += gStress[node] * S[k];
-					VoidRatio += gVoidRatio[node] * S[k];
+					//VoidRatio += gVoidRatio[node] * S[k];
 				}
 
 				pstressnew[idx] = Stressnew;
-				pVoidRatioNew[idx] = VoidRatio;
+				//pVoidRatioNew[idx] = VoidRatio;
 			}
 
 		}  // loop over materials
 		delete linear_interpolator;
+		delete interpolator;
 	}
 }
 
@@ -6007,9 +6022,9 @@ void SingleMPM::scheduleRefine( const PatchSet   * patches,
   t->computes(lb->delTLabel,getLevel(patches));
 
   // Hypoplasticity
-  if (flags->d_Hypoplasticity) {
-	  t->computes(lb->pVoidRatioLabel);
-  }
+  //if (flags->d_Hypoplasticity) {
+	//  t->computes(lb->pVoidRatioLabel);
+  //}
 
 
   // JBH -- Add code to support these variables FIXME TODO

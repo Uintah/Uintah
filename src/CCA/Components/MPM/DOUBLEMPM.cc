@@ -996,8 +996,6 @@ void DOUBLEMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 	new_dw->put(delt_vartype(1.0e10), lb->delTLabel, level);
 }
 
-
-
 // MPM algorithm _______________________________________________________________________________
 void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
 	SchedulerP   & sched)
@@ -1013,7 +1011,6 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
 
 	scheduleComputeCurrentParticleSize(sched, patches, matls);
 	scheduleApplyExternalLoads(sched, patches, matls);
-
 	scheduleInterpolateParticlesToGrid_DOUBLEMPM(sched, patches, matls);
 	if (flags->d_computeNormals) {
 		scheduleComputeNormals_DOUBLEMPM(sched, patches, matls);
@@ -1023,7 +1020,17 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
 		scheduleComputeContactArea(sched, patches, matls);
 	}
 	scheduleComputeInternalForce_DOUBLEMPM(sched, patches, matls);
-	scheduleComputeAndIntegrateAcceleration_DOUBLEMPM(sched, patches, matls);
+
+	
+		if (flags->d_GeneralizedAlpha) {
+			scheduleComputeAndIntegrateAccelerationGeneralizedAlpha_DOUBLEMPM(sched, patches, matls);
+		}
+		else {
+			scheduleComputeAndIntegrateAcceleration_DOUBLEMPM(sched, patches, matls);
+		}
+		
+
+	//scheduleComputeAndIntegrateAcceleration_DOUBLEMPM(sched, patches, matls);
 
 	scheduleExMomIntegrated(sched, patches, matls);
 	scheduleSetGridBoundaryConditions_DOUBLEMPM(sched, patches, matls);
@@ -1037,7 +1044,6 @@ void DOUBLEMPM::scheduleTimeAdvance(const LevelP & level,
 
 	scheduleComputeStressTensor(sched, patches, matls);
 
-	
 	if (flags->d_NullSpaceFilter) {
 	scheduleInterpolatePorePresureToGrid(sched, patches, matls);
 	scheduleInterpolatePorePresureToParticle(sched, patches, matls);
@@ -1176,6 +1182,16 @@ void DOUBLEMPM::scheduleRelocateParticle_DOUBLEMPM(SchedulerP& sched,
 		t->requires(Task::OldDW, double_lb->pFreeSurfaceLabel, gan, NGP);
 		t->computes(double_lb->pFreeSurfaceLabel_preReloc);
 	}
+	
+	/*
+	if (flags->d_GeneralizedAlpha) {
+		t->requires(Task::OldDW, lb->pAccelerationLabel, gan, NGP);
+		t->computes(lb->pAccelerationLabel_preReloc);
+		
+		t->requires(Task::OldDW, double_lb->pAccelerationLiquidLabel, gan, NGP);
+		t->computes(double_lb->pAccelerationLiquidLabel_preReloc);
+		
+	}*/
 
 	sched->addTask(t, patches, matls);
 }
@@ -1232,9 +1248,19 @@ void DOUBLEMPM::RelocateParticle_DOUBLEMPM(const ProcessorGroup*,
 				old_dw->get(pFreeSurface, double_lb->pFreeSurfaceLabel, pset);
 				new_dw->allocateAndPut(pFreeSurfacenew, double_lb->pFreeSurfaceLabel_preReloc, pset);
 			}
+			
+			constParticleVariable<Vector> pAcceleration, pAccelerationLiquid;
+			ParticleVariable<Vector> pAccelerationnew, pAccelerationLiquidnew;
 
-			//new_dw->get(pCurSize, lb->pCurSizeLabel, pset);
-			//new_dw->allocateAndPut(pCurSizenew, lb->pCurSizeLabel_preReloc, pset);
+			/*
+			if (flags->d_GeneralizedAlpha) {
+				old_dw->get(pAcceleration, lb->pAccelerationLabel, pset);
+				new_dw->allocateAndPut(pAccelerationnew, lb->pAccelerationLabel_preReloc, pset);
+				
+				old_dw->get(pAccelerationLiquid, double_lb->pAccelerationLiquidLabel, pset);
+				new_dw->allocateAndPut(pAccelerationLiquidnew, double_lb->pAccelerationLiquidLabel_preReloc, pset);
+			
+			}*/
 
 			//loop over all particles in the patch:
 			for (ParticleSubset::iterator iter = pset->begin();
@@ -1249,7 +1275,12 @@ void DOUBLEMPM::RelocateParticle_DOUBLEMPM(const ProcessorGroup*,
 				if (!flags->d_FreeSurface) {
 					pFreeSurfacenew[idx] = pFreeSurface[idx];
 				}
-				//pCurSizenew[idx] = pCurSize[idx];
+
+				/*
+				if (flags->d_GeneralizedAlpha) {
+					pAccelerationnew[idx] = pAcceleration[idx];
+					pAccelerationLiquidnew[idx] = pAccelerationLiquid[idx];			
+				}	*/		
 			}
 		} // End of particle loop
 	}
@@ -1618,6 +1649,20 @@ void DOUBLEMPM::scheduleInterpolateParticlesToGrid_DOUBLEMPM(SchedulerP& sched,
 	t->computes(double_lb->gPorosityLabel);
 	t->computes(double_lb->gDraggingLabel);
 
+	
+	if (flags->d_GeneralizedAlpha) {
+	t->requires(Task::OldDW, lb->pAccelerationLabel, gan, NGP);
+	t->computes(lb->gAccelerationBeginLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+	t->computes(lb->gAccelerationBeginLabel);
+
+	t->requires(Task::OldDW, double_lb->pAccelerationLiquidLabel, gan, NGP);
+	t->computes(double_lb->gAccelerationLiquidBeginLabel, m_materialManager->getAllInOneMatls(),
+		Task::OutOfDomain);
+	t->computes(double_lb->gAccelerationLiquidBeginLabel);
+	}
+
+
 	sched->addTask(t, patches, matls);
 }
 
@@ -1677,6 +1722,18 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 
 		Ghost::GhostType  gan = Ghost::AroundNodes;
 
+		
+		// Generalized Alpha scheme
+		NCVariable<Vector> gAccBeginglobal, gAccLiquidBeginglobal;
+		if (flags->d_GeneralizedAlpha) {
+			new_dw->allocateAndPut(gAccBeginglobal, lb->gAccelerationBeginLabel, globMatID, patch);
+			gAccBeginglobal.initialize(Vector(0.0));
+
+			new_dw->allocateAndPut(gAccLiquidBeginglobal, double_lb->gAccelerationLiquidBeginLabel, globMatID, patch);
+			gAccLiquidBeginglobal.initialize(Vector(0.0));
+		}
+	
+
 		for (unsigned int m = 0; m < numMatls; m++) {
 			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);		// mpm_matl is the material with index m
 			int dwi = mpm_matl->getDWIndex();													// dwi is the  material index in datawarehouse
@@ -1725,7 +1782,14 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 			old_dw->get(pvelocity_liquid, double_lb->pVelocityLiquidLabel, pset);
 			old_dw->get(pPorosity, double_lb->pPorosityLabel, pset);
 			old_dw->get(pPermeability, double_lb->pPermeabilityLabel, pset);
-
+	
+			// Generalized Alpha scheme
+			constParticleVariable<Vector> pAcceleration, pAccelerationLiquid;
+			if (flags->d_GeneralizedAlpha) {
+				old_dw->get(pAcceleration, lb->pAccelerationLabel, pset);
+				old_dw->get(pAccelerationLiquid, double_lb->pAccelerationLiquidLabel, pset);
+			}
+			
 			// JBH -- Scalar diffusion related
 			constParticleVariable<double> pConcentration, pExternalScalarFlux;
 			constParticleVariable<Vector> pConcGrad;
@@ -1792,6 +1856,17 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 			gvelocity_liquid.initialize(Vector(0, 0, 0));
 			gPorosity.initialize(0.0);
 			gDragging.initialize(0.0);
+
+			// Generalized Alpha scheme
+			NCVariable<Vector> gAccelerationBegin, gAccelerationLiquidBegin;
+			if (flags->d_GeneralizedAlpha) {
+				new_dw->allocateAndPut(gAccelerationBegin, lb->gAccelerationBeginLabel, dwi, patch);
+				gAccelerationBegin.initialize(Vector(0, 0, 0));
+
+				new_dw->allocateAndPut(gAccelerationLiquidBegin, double_lb->gAccelerationLiquidBeginLabel, dwi, patch);
+				gAccelerationLiquidBegin.initialize(Vector(0, 0, 0));
+			}
+
 			// JBH -- Scalar diffusion related
 			NCVariable<double>  gConcentration, gConcentrationNoBC;
 			NCVariable<double>  gHydrostaticStress, gExtScalarFlux;
@@ -1852,7 +1927,13 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 						gvelocity[node] += pmom * S[k];
 						gPorosity[node] += pPorosity[idx] * pMassSolid[idx] * S[k];
 						gDragging[node] += pMassLiquid[idx] * 9.81 / pPermeability[idx] * S[k];
+						
+						if (flags->d_GeneralizedAlpha) {
+							gAccelerationBegin[node] += pAcceleration[idx] * pMassSolid[idx] * S[k];
+							gAccelerationLiquidBegin[node] += pAccelerationLiquid[idx] * pMassLiquid[idx] * S[k];
+						}
 					}
+					
 				}
 				if (flags->d_useCBDI && pLoadCurveID[idx].x() > 0) {
 					vector<IntVector> niCorner1(linear_interpolator->size());
@@ -1917,6 +1998,31 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 				gPorosityglobal[c] += gPorosity[c];
 				gPorosity[c] /= gmass_solid[c];
 				gDraggingglobal[c] += gDragging[c];
+
+				if (flags->d_GeneralizedAlpha) {
+					gAccBeginglobal[c] += gAccelerationBegin[c];
+					gAccelerationBegin[c] /= gmass_solid[c];
+
+					gAccLiquidBeginglobal[c] += gAccelerationLiquidBegin[c];
+					gAccelerationLiquidBegin[c] /= gmass_liquid[c];
+				}
+
+				
+				// Artificial boundary condition
+				Point gx = patch->nodePosition(c);
+				double radius = pow((gx.x() - 3), 2) + pow(gx.y(), 2);
+				if (radius < 1.0000) {
+
+					gvelocity[c] = 0;
+					gvelocity_liquid[c] = 0;
+					if (flags->d_GeneralizedAlpha) {
+						gAccBeginglobal[c] = 0;
+						gAccelerationBegin[c] = 0;
+						gAccLiquidBeginglobal[c] = 0;
+						gAccelerationLiquidBegin[c] = 0;
+					}
+				}
+				
 			}
 
 			// Apply boundary conditions to the temperature and velocity (if symmetry)
@@ -1927,6 +2033,11 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 			bc.setBoundaryCondition(patch, dwi, "Symmetric", gvelocity, interp_type);
 
 			d_bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gvelocity_liquid, interp_type);
+			
+			if (flags->d_GeneralizedAlpha) {
+				bc.setBoundaryCondition(patch, dwi, "Symmetric", gAccelerationBegin, interp_type);
+				d_bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gAccelerationLiquidBegin, interp_type);
+			}
 
 		}  // End loop over materials
 
@@ -1939,6 +2050,11 @@ void DOUBLEMPM::interpolateParticlesToGrid_DOUBLEMPM(const ProcessorGroup*,
 			gvelglobal_liquid[c] /= gmassglobal_liquid[c];
 			gvelglobal[c] /= gmassglobal_solid[c];
 			gPorosityglobal[c] /= gmassglobal_solid[c];
+
+			if (flags->d_GeneralizedAlpha) {
+				gAccBeginglobal[c] /= gmassglobal_solid[c];
+				gAccLiquidBeginglobal[c] /= gmassglobal_liquid[c];
+			}
 
 		}
 		delete interpolator;
@@ -2732,19 +2848,214 @@ void DOUBLEMPM::computeAndIntegrateAcceleration_DOUBLEMPM(const ProcessorGroup*,
 
 				acceleration[c] = acc + gravity;
 				velocity_star[c] = velocity[c] + acceleration[c] * delT;
-
-
+			
 				// Artificial boundary condition
 				Point gx = patch->nodePosition(c);
 				double radius = pow((gx.x() - 3), 2) + pow(gx.y(), 2);
 				if (radius < 1.0000) {
-				
+
 					velocity_star[c] = 0;
 					acceleration[c] = (velocity_star[c] - velocity[c]) / delT;
 					gVelocityStarLiquid[c] = 0;
 					gAccelerationLiquid[c] = (gVelocityStarLiquid[c] - gVelocityLiquid[c]) / delT;
 				}
+				
+				/*
+				// Artificial boundary condition
+				Point gx = patch->nodePosition(c);
 
+				Vector Initial(0.000005, 0., 0.);
+
+				if (gx.x() < 0.05) {
+					gVelocityStarLiquid[c] = Initial;
+				}
+				*/
+			}
+		}    // matls
+	}
+}
+
+
+// Compute the acceleration for porous media with Generalized Alpha
+void DOUBLEMPM::scheduleComputeAndIntegrateAccelerationGeneralizedAlpha_DOUBLEMPM(SchedulerP& sched,
+	const PatchSet* patches,
+	const MaterialSet* matls)
+{
+	if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+		getLevel(patches)->getGrid()->numLevels()))
+		return;
+
+	printSchedule(patches, cout_doing, "DOUBLEMPM::scheduleComputeAndIntegrateAccelerationGeneralizedAlpha_DOUBLEMPM");
+
+	Task* t = scinew Task("DOUBLEMPM::computeAndIntegrateAccelerationGeneralizedAlpha_DOUBLEMPM",
+		this, &DOUBLEMPM::computeAndIntegrateAccelerationGeneralizedAlpha_DOUBLEMPM);
+
+	t->requires(Task::OldDW, lb->delTLabel);
+
+	//t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
+	t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
+	t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
+	t->requires(Task::NewDW, lb->gVelocityLabel, Ghost::None);
+
+	t->computes(lb->gVelocityStarLabel);
+	t->computes(lb->gAccelerationLabel);
+
+	// Liquid
+	t->requires(Task::NewDW, double_lb->gMassSolidLabel, Ghost::None);
+	t->requires(Task::NewDW, double_lb->gMassLiquidLabel, Ghost::None);
+	t->requires(Task::NewDW, double_lb->gInternalForceLiquidLabel, Ghost::None);
+	t->requires(Task::NewDW, double_lb->gPorosityLabel, Ghost::None);
+	t->requires(Task::NewDW, double_lb->gDraggingLabel, Ghost::None);
+	t->requires(Task::NewDW, double_lb->gVelocityLiquidLabel, Ghost::None);
+	t->computes(double_lb->gAccelerationLiquidLabel);
+	t->computes(double_lb->gVelocityStarLiquidLabel);
+
+	// Generalized Alpha
+	t->requires(Task::NewDW, lb->gAccelerationBeginLabel, Ghost::None);
+	t->requires(Task::NewDW, double_lb->gAccelerationLiquidBeginLabel, Ghost::None);
+
+	t->computes(lb->gAccelerationEndLabel);
+	t->computes(lb->gAccelerationBeginNewLabel);
+	t->computes(double_lb->gAccelerationLiquidEndLabel);
+	t->computes(double_lb->gAccelerationLiquidBeginNewLabel);
+
+	sched->addTask(t, patches, matls);
+}
+
+void DOUBLEMPM::computeAndIntegrateAccelerationGeneralizedAlpha_DOUBLEMPM(const ProcessorGroup*,
+	const PatchSubset* patches,
+	const MaterialSubset*,
+	DataWarehouse* old_dw,
+	DataWarehouse* new_dw)
+{
+	for (int p = 0; p < patches->size(); p++) {
+		const Patch* patch = patches->get(p);
+		printTask(patches, patch, cout_doing,
+			"Doing DOUBLEMPM::computeAndIntegrateAccelerationGeneralizedAlpha_DOUBLEMPM");
+
+		Ghost::GhostType  gnone = Ghost::None;
+		Vector gravity = flags->d_gravity;
+
+		// Generalized-Alpha scheme
+		double p_b = flags->d_SpectralRadius;
+		double alpha_m = (2 * p_b - 1) / (1 + p_b);
+		double gamma = 1.5 - alpha_m;
+
+		for (unsigned int m = 0; m < m_materialManager->getNumMatls("MPM"); m++) {
+			MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+			int dwi = mpm_matl->getDWIndex();
+
+			// Get required variables for this patch
+			constNCVariable<Vector> internalforce, externalforce, velocity;
+			constNCVariable<double> gMassSolid;
+
+			delt_vartype delT;
+			old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
+			new_dw->get(internalforce, lb->gInternalForceLabel, dwi, patch, gnone, 0);
+			new_dw->get(externalforce, lb->gExternalForceLabel, dwi, patch, gnone, 0);
+			//new_dw->get(mass, lb->gMassLabel, dwi, patch, gnone, 0);
+			new_dw->get(gMassSolid, double_lb->gMassSolidLabel, dwi, patch, gnone, 0);
+			new_dw->get(velocity, lb->gVelocityLabel, dwi, patch, gnone, 0);
+
+			// Create variables for the results
+			NCVariable<Vector> velocity_star, acceleration;
+			new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
+			new_dw->allocateAndPut(acceleration, lb->gAccelerationLabel, dwi, patch);
+
+			acceleration.initialize(Vector(0., 0., 0.));
+			double damp_coef = flags->d_artificialDampCoeff;
+
+			// Liquid
+			constNCVariable<Vector> gInternalForceLiquid, gVelocityLiquid;
+			constNCVariable<double> gMassLiquid, gPorosity, gDragging;
+			new_dw->get(gMassLiquid, double_lb->gMassLiquidLabel, dwi, patch, gnone, 0);
+			new_dw->get(gInternalForceLiquid, double_lb->gInternalForceLiquidLabel, dwi, patch, gnone, 0);
+			new_dw->get(gVelocityLiquid, double_lb->gVelocityLiquidLabel, dwi, patch, gnone, 0);
+			new_dw->get(gPorosity, double_lb->gPorosityLabel, dwi, patch, gnone, 0);
+			new_dw->get(gDragging, double_lb->gDraggingLabel, dwi, patch, gnone, 0);
+
+			NCVariable<Vector> gAccelerationLiquid, gVelocityStarLiquid;
+			new_dw->allocateAndPut(gAccelerationLiquid, double_lb->gAccelerationLiquidLabel, dwi, patch);
+			new_dw->allocateAndPut(gVelocityStarLiquid, double_lb->gVelocityStarLiquidLabel, dwi, patch);
+
+
+			// Generalized-Alpha scheme
+			constNCVariable<Vector> accelerationBegin;
+			NCVariable<Vector> accelerationBeginNew, accelerationEnd;
+			new_dw->get(accelerationBegin, lb->gAccelerationBeginLabel, dwi, patch, gnone, 0);
+			new_dw->allocateAndPut(accelerationEnd, lb->gAccelerationEndLabel, dwi, patch);
+			new_dw->allocateAndPut(accelerationBeginNew, lb->gAccelerationBeginNewLabel, dwi, patch);
+			accelerationEnd.initialize(Vector(0., 0., 0.));
+			accelerationBeginNew.initialize(Vector(0., 0., 0.));
+
+			constNCVariable<Vector> accelerationLiquidBegin;
+			NCVariable<Vector> accelerationLiquidBeginNew, accelerationLiquidEnd;
+			new_dw->get(accelerationLiquidBegin, double_lb->gAccelerationLiquidBeginLabel, dwi, patch, gnone, 0);
+			new_dw->allocateAndPut(accelerationLiquidEnd, double_lb->gAccelerationLiquidEndLabel, dwi, patch);
+			new_dw->allocateAndPut(accelerationLiquidBeginNew, double_lb->gAccelerationLiquidBeginNewLabel, dwi, patch);
+			accelerationLiquidEnd.initialize(Vector(0., 0., 0.));
+			accelerationLiquidBeginNew.initialize(Vector(0., 0., 0.));
+
+			for (NodeIterator iter = patch->getExtraNodeIterator();
+				!iter.done(); iter++) {
+				IntVector c = *iter;
+
+				Vector GradientVelocity(0., 0., 0.);
+				Vector DraggingForce(0., 0., 0.);
+
+				Vector accLiquidMiddle(0., 0., 0.);
+				Vector accLiquidEnd(0., 0., 0.);
+
+				if (gMassLiquid[c] > flags->d_min_mass_for_acceleration) {
+					GradientVelocity = gVelocityLiquid[c] - velocity[c];
+					DraggingForce = gPorosity[c] * gDragging[c] * GradientVelocity;
+
+					accLiquidMiddle = (gPorosity[c] * gInternalForceLiquid[c] - DraggingForce) / gMassLiquid[c];
+					accLiquidMiddle -= damp_coef * gVelocityLiquid[c];
+					accLiquidEnd = (accLiquidMiddle - accelerationLiquidBegin[c] * alpha_m) / (1 - alpha_m);
+				}
+
+				//gAccelerationLiquid[c] = accLiquidMiddle + gravity;
+				//gVelocityStarLiquid[c] = gVelocityLiquid[c] + gAccelerationLiquid[c] * delT;
+
+				accelerationLiquidEnd[c] = accLiquidEnd + gravity;
+				accelerationLiquidBeginNew[c] = accelerationLiquidBegin[c] + gravity;
+				gAccelerationLiquid[c] = (gamma*accelerationLiquidEnd[c] + (1 - gamma)*accelerationLiquidBeginNew[c]);
+				gVelocityStarLiquid[c] = gVelocityLiquid[c] + gAccelerationLiquid[c] * delT;
+
+				Vector accMiddle(0., 0., 0.);
+				Vector accEnd(0., 0., 0.);
+
+				if (gMassSolid[c] > flags->d_min_mass_for_acceleration) {
+					accMiddle = (internalforce[c] + gInternalForceLiquid[c] + gMassLiquid[c] * (gravity - gAccelerationLiquid[c]) + externalforce[c]) / gMassSolid[c];
+					accMiddle -= damp_coef * velocity[c];
+					accEnd = (accMiddle - accelerationBegin[c] * alpha_m) / (1 - alpha_m);
+				}
+
+				//acceleration[c] = acc + gravity;
+				//velocity_star[c] = velocity[c] + acceleration[c] * delT;
+
+				accelerationEnd[c] = accEnd + gravity;
+				accelerationBeginNew[c] = accelerationBegin[c] + gravity;
+				acceleration[c] = (gamma*accelerationEnd[c] + (1 - gamma)*accelerationBeginNew[c]);
+				velocity_star[c] = velocity[c] + acceleration[c] * delT;
+
+				// Artificial boundary condition
+				Point gx = patch->nodePosition(c);
+				double radius = pow((gx.x() - 3), 2) + pow(gx.y(), 2);
+				if (radius < 1.0000) {
+
+					velocity_star[c] = 0;
+					acceleration[c] = (velocity_star[c] - velocity[c]) / delT;
+					accelerationBeginNew[c] = 0;
+					accelerationEnd[c] = 0;
+
+					gVelocityStarLiquid[c] = 0;
+					gAccelerationLiquid[c] = (gVelocityStarLiquid[c] - gVelocityLiquid[c]) / delT;
+					accelerationLiquidBeginNew[c] = 0;
+					accelerationLiquidEnd[c] = 0;
+				}
 			}
 		}    // matls
 	}
@@ -2795,6 +3106,15 @@ void DOUBLEMPM::scheduleSetGridBoundaryConditions_DOUBLEMPM(SchedulerP& sched,
 	t->modifies(double_lb->gVelocityStarLiquidLabel, mss);
 	t->requires(Task::NewDW, double_lb->gVelocityLiquidLabel, Ghost::None);
 
+	// Generalized Alpha
+	if (flags->d_GeneralizedAlpha) {
+		t->modifies(lb->gAccelerationBeginNewLabel, mss);
+		t->modifies(lb->gAccelerationEndLabel, mss);
+
+		t->modifies(double_lb->gAccelerationLiquidBeginNewLabel, mss);
+		t->modifies(double_lb->gAccelerationLiquidEndLabel, mss);
+	}
+
 	sched->addTask(t, patches, matls);
 }
 
@@ -2837,6 +3157,18 @@ void DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
 			new_dw->get(gVelocityLiquid, double_lb->gVelocityLiquidLabel, dwi, patch,
 				Ghost::None, 0);
 
+			// Generalized Alpha
+			NCVariable<Vector> accelerationEnd, accelerationBeginNew;
+			NCVariable<Vector> accelerationLiquidEnd, accelerationLiquidBeginNew;
+
+			if (flags->d_GeneralizedAlpha) {
+				new_dw->getModifiable(accelerationBeginNew, lb->gAccelerationBeginNewLabel, dwi, patch);
+				new_dw->getModifiable(accelerationEnd, lb->gAccelerationEndLabel, dwi, patch);
+
+				new_dw->getModifiable(accelerationLiquidBeginNew, double_lb->gAccelerationLiquidBeginNewLabel, dwi, patch);
+				new_dw->getModifiable(accelerationLiquidEnd, double_lb->gAccelerationLiquidEndLabel, dwi, patch);
+			}
+
 			// Apply grid boundary conditions to the velocity_star and
 			// acceleration before interpolating back to the particles
 			MPMBoundCond bc;
@@ -2849,6 +3181,21 @@ void DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
 			// Liquid
 			d_bc.setBoundaryConditionLiquid(patch, dwi, "VelocityLiquid", gVelocityStarLiquid, interp_type);
 			d_bc.setBoundaryConditionLiquid(patch, dwi, "SymmetricLiquid", gVelocityStarLiquid, interp_type);
+
+			// Generalized Alpha
+			if (flags->d_GeneralizedAlpha) {
+				bc.setBoundaryCondition(patch, dwi, "Velocity", accelerationBeginNew, interp_type);
+				bc.setBoundaryCondition(patch, dwi, "Symmetric", accelerationBeginNew, interp_type);
+
+				bc.setBoundaryCondition(patch, dwi, "Velocity", accelerationEnd, interp_type);
+				bc.setBoundaryCondition(patch, dwi, "Symmetric", accelerationEnd, interp_type);
+
+				d_bc.setBoundaryConditionLiquid(patch, dwi, "Velocity", accelerationLiquidBeginNew, interp_type);
+				d_bc.setBoundaryConditionLiquid(patch, dwi, "Symmetric", accelerationLiquidBeginNew, interp_type);
+
+				d_bc.setBoundaryConditionLiquid(patch, dwi, "Velocity", accelerationLiquidEnd, interp_type);
+				d_bc.setBoundaryConditionLiquid(patch, dwi, "Symmetric", accelerationLiquidEnd, interp_type);
+			}
 
 			// Now recompute acceleration as the difference between the velocity
 			// interpolated to the grid (no bcs applied) and the new velocity_star
@@ -2865,7 +3212,6 @@ void DOUBLEMPM::setGridBoundaryConditions_DOUBLEMPM(const ProcessorGroup*,
 		} // matl loop
 	}  // patch loop
 }
-
 
 // Set prescribed motion (optional for flags->d_prescribeDeformation)
 void DOUBLEMPM::scheduleSetPrescribedMotion(SchedulerP  & sched,
@@ -3087,6 +3433,16 @@ void DOUBLEMPM::scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(SchedulerP& sc
 	t->requires(Task::OldDW, lb->pSizeLabel, gnone);
 	//t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gnone);
 
+	if (flags->d_GeneralizedAlpha) {
+		t->requires(Task::NewDW, lb->gAccelerationEndLabel, gac, NGN);
+		t->requires(Task::NewDW, lb->gAccelerationBeginNewLabel, gac, NGN);
+		t->computes(lb->pAccelerationLabel_preReloc);
+
+		t->requires(Task::NewDW, double_lb->gAccelerationLiquidEndLabel, gac, NGN);
+		t->requires(Task::NewDW, double_lb->gAccelerationLiquidBeginNewLabel, gac, NGN);
+		t->computes(double_lb->pAccelerationLiquidLabel_preReloc);
+	}
+
 	t->computes(lb->pDispLabel_preReloc);
 	t->computes(lb->pVelocityLabel_preReloc);
 	t->computes(lb->pXLabel_preReloc);
@@ -3177,6 +3533,10 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 		double minPatchConc = 5e11;
 		double maxPatchConc = -5e11;
 
+		// Generalized-Alpha scheme
+		double p_b = flags->d_SpectralRadius;
+		double beta = (5 - 3 * p_b) / ((1 + p_b) * (1 + p_b) * (2 - p_b));
+
 		unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
 		delt_vartype delT;
 		old_dw->get(delT, lb->delTLabel, getLevel(patches));
@@ -3262,6 +3622,8 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 			}
 
 			Ghost::GhostType  gac = Ghost::AroundCells;
+
+			// Solid
 			new_dw->get(gvelocity_star, lb->gVelocityStarLabel, dwi, patch, gac, NGP);
 			new_dw->get(gacceleration, lb->gAccelerationLabel, dwi, patch, gac, NGP);
 			new_dw->get(gTemperatureRate, lb->gTemperatureRateLabel, dwi, patch, gac, NGP);
@@ -3286,13 +3648,28 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 			new_dw->allocateAndPut(pvelLiquidnew, double_lb->pVelocityLiquidLabel_preReloc, pset);
 			new_dw->allocateAndPut(pvelLiquidXnew, double_lb->pVelocityLiquidXLabel_preReloc, pset);
 
+			// Generalized Alpha
+			constNCVariable<Vector> accelerationEnd, accelerationBeginNew;
+			constNCVariable<Vector> accelerationLiquidEnd, accelerationLiquidBeginNew;
+			ParticleVariable<Vector> pAccelerationNew;
+			ParticleVariable<Vector> pAccelerationLiquidNew;
+			if (flags->d_GeneralizedAlpha) {
+				new_dw->get(accelerationEnd, lb->gAccelerationEndLabel, dwi, patch, gnone, 0);
+				new_dw->get(accelerationBeginNew, lb->gAccelerationBeginNewLabel, dwi, patch, gnone, 0);
+				new_dw->allocateAndPut(pAccelerationNew, lb->pAccelerationLabel_preReloc, pset);
+
+				new_dw->get(accelerationLiquidEnd, double_lb->gAccelerationLiquidEndLabel, dwi, patch, gnone, 0);
+				new_dw->get(accelerationLiquidBeginNew, double_lb->gAccelerationLiquidBeginNewLabel, dwi, patch, gnone, 0);
+				new_dw->allocateAndPut(pAccelerationLiquidNew, double_lb->pAccelerationLiquidLabel_preReloc, pset);
+			}
+
 			// Diffusion related - JBH
 			double sdmMaxEffectiveConc = -999;
 			double sdmMinEffectiveConc = 999;
 			constParticleVariable<double> pConcentration;
 			constNCVariable<double>       gConcentrationRate;
-
 			ParticleVariable<double>      pConcentrationNew, pConcPreviousNew;
+
 			// Loop over particles
 			for (ParticleSubset::iterator iter = pset->begin();
 				iter != pset->end(); iter++) {
@@ -3305,6 +3682,13 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 				Vector vel(0.0, 0.0, 0.0);
 				Vector acc(0.0, 0.0, 0.0);
 				Vector accLiquid(0.0, 0.0, 0.0);
+
+				Vector accEnd(0.0, 0.0, 0.0);
+				Vector accBeginNew(0.0, 0.0, 0.0);
+				Vector accLiquidEnd(0.0, 0.0, 0.0);
+				Vector accLiquidBeginNew(0.0, 0.0, 0.0);
+				Vector gravity = flags->d_gravity;
+
 				double fricTempRate = 0.0;
 				double tempRate = 0.0;
 				double concRate = 0.0;
@@ -3318,25 +3702,59 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 					vel += gvelocity_star[node] * S[k];
 					acc += gacceleration[node] * S[k];
 
+					if (flags->d_GeneralizedAlpha) {
+						accEnd += accelerationEnd[node] * S[k];
+						accBeginNew += accelerationBeginNew[node] * S[k];
+					}
+
 					// Liquid
 					accLiquid += gAccelerationLiquid[node] * S[k];
 
+					if (flags->d_GeneralizedAlpha) {
+						accLiquidEnd += accelerationLiquidEnd[node] * S[k];
+						accLiquidBeginNew += accelerationLiquidBeginNew[node] * S[k];
+					}
+
+					// Thermo
 					fricTempRate = frictionTempRate[node] * flags->d_addFrictionWork;
-					tempRate += (gTemperatureRate[node] + dTdt[node] +
-						fricTempRate)   * S[k];
+					tempRate += (gTemperatureRate[node] + dTdt[node] + fricTempRate)   * S[k];
 					burnFraction += massBurnFrac[node] * S[k];
 				}
 
 				// Update the particle's pos and vel using std "FLIP" method
 
 				// Solid
-				pxnew[idx] = px[idx] + vel * delT;
-				pdispnew[idx] = pdisp[idx] + vel * delT;
-				pvelnew[idx] = pvelocity[idx] + acc * delT;
+				//pxnew[idx] = px[idx] + vel * delT;
+				//pdispnew[idx] = pdisp[idx] + vel * delT;
+				//pvelnew[idx] = pvelocity[idx] + acc * delT;
 				
+				if (flags->d_GeneralizedAlpha) {
+					pxnew[idx] = px[idx] + vel * delT + (beta * accEnd + (0.5 - beta) * accBeginNew)*delT*delT;
+					//pxnew[idx] = px[idx] + vel * delT;
+					pAccelerationNew[idx] = accEnd - gravity;
+					pvelnew[idx] = pvelocity[idx] + acc * delT;
+				}
+				else {
+					// Update the particle's pos and vel using std "FLIP" method
+					pxnew[idx] = px[idx] + vel * delT;
+					pdispnew[idx] = pdisp[idx] + vel * delT;
+					pvelnew[idx] = pvelocity[idx] + acc * delT;
+				}
+
 				// Liquid
-				pvelLiquidnew[idx] = pVelocityLiquid[idx] + accLiquid * delT;
-				pvelLiquidXnew[idx] = pvelLiquidnew[idx].x();
+				//pvelLiquidnew[idx] = pVelocityLiquid[idx] + accLiquid * delT;
+				//pvelLiquidXnew[idx] = pvelLiquidnew[idx].x();
+
+				if (flags->d_GeneralizedAlpha) {
+					pAccelerationLiquidNew[idx] = accLiquidEnd - gravity;
+					pvelLiquidnew[idx] = pVelocityLiquid[idx] + accLiquid * delT;
+					pvelLiquidXnew[idx] = pvelLiquidnew[idx].x();
+				}
+				else {
+					// Update the particle's pos and vel using std "FLIP" method
+					pvelLiquidnew[idx] = pVelocityLiquid[idx] + accLiquid * delT;
+					pvelLiquidXnew[idx] = pvelLiquidnew[idx].x();
+				}
 
 				pTempNew[idx] = pTemperature[idx] + tempRate * delT;
 				pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
@@ -3410,7 +3828,6 @@ void DOUBLEMPM::interpolateToParticlesAndUpdate_DOUBLEMPM(const ProcessorGroup*,
 	}
 }
 
-
 void DOUBLEMPM::scheduleComputeParticleGradientsAndPorePressure_DOUBLEMPM(SchedulerP& sched,
 	const PatchSet* patches,
 	const MaterialSet* matls)
@@ -3461,6 +3878,7 @@ void DOUBLEMPM::scheduleComputeParticleGradientsAndPorePressure_DOUBLEMPM(Schedu
 	t->requires(Task::OldDW, double_lb->pPorePressureLabel, gnone);
 
 	t->requires(Task::NewDW, double_lb->gVelocityStarLiquidLabel, gac, NGN);
+	//t->modifies(Task::NewDW, double_lb->gVelocityStarLiquidLabel, gac, NGN);
 
 	t->computes(double_lb->pVelocityGradLiquidLabel_preReloc);
 	t->computes(double_lb->pPorePressureLabel_preReloc);
@@ -3532,6 +3950,7 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 
 			// Liquid
 			constNCVariable<Vector>  gVelocityStarLiquid;
+			//NCVariable<Vector>  gVelocityStarLiquid;
 			constParticleVariable<double>  pPorosity, pBulkModulLiquid, pPorePressure;
 			ParticleVariable<Matrix3> pVelocityGradLiquid;
 			ParticleVariable<double> pPorePressurenew, pPorositynew;
@@ -3541,6 +3960,7 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 			old_dw->get(pPorePressure, double_lb->pPorePressureLabel, pset);
 
 			new_dw->get(gVelocityStarLiquid, double_lb->gVelocityStarLiquidLabel, dwi, patch, gac, NGP);
+			//new_dw->getModifiable(gVelocityStarLiquid, double_lb->gVelocityStarLiquidLabel, dwi, patch, gac, NGP);
 
 			new_dw->allocateAndPut(pVelocityGradLiquid, double_lb->pVelocityGradLiquidLabel_preReloc, pset);
 			new_dw->allocateAndPut(pPorePressurenew, double_lb->pPorePressureLabel_preReloc, pset);
@@ -3568,6 +3988,21 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 
 				double VolumeRateSolid = 0.;
 				double VolumeRateLiquid = 0.;
+				
+				/*
+				// Artificial boundary condition
+				for (NodeIterator iter = patch->getExtraNodeIterator();
+					!iter.done(); iter++) {
+					IntVector c = *iter;
+
+					Point gx = patch->nodePosition(c);
+					Vector Initial(0.000005, 0., 0.);
+
+					if (gx.x() < 0.05) {
+						gVelocityStarLiquid[c] = Initial;
+					}
+				}			
+				*/
 
 				if (!flags->d_axisymmetric) {
 					// Get the node indices that surround the cell
@@ -3616,8 +4051,7 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 					pFNew[idx] = Finc * pFOld[idx];
 				}
 
-				// Update volume
-				
+				// Update volume				
 				double J = pFNew[idx].Determinant();
 				double JOld = pFOld[idx].Determinant();
 
@@ -3669,8 +4103,13 @@ void DOUBLEMPM::computeParticleGradientsAndPorePressure_DOUBLEMPM(const Processo
 				pPorositynew[idx] = 1 - (1 - mpm_matl->getInitialPorosity()) / J;
 				//pPorositynew[idx] = 1 - (1 - pPorosity[idx]) / Jsolid;
 
-
 				pPorePressurenew[idx] = pPorePressure[idx] + pBulkModulLiquid[idx] * (VolumeRateSolid + VolumeRateLiquid);
+			
+				/*
+				if (px[idx].x() > 5.95) {
+					pPorePressurenew[idx] = 0;
+				}
+				*/
 			}
 
 			// The following is used only for pressure stabilization
@@ -3820,7 +4259,6 @@ void DOUBLEMPM::computeStressTensor(const ProcessorGroup*,
 
 	}
 }
-
 
 // Null space filter using local method
 void DOUBLEMPM::scheduleInterpolatePorePresureToGrid(SchedulerP& sched,
@@ -4514,7 +4952,6 @@ void DOUBLEMPM::insertParticles(const ProcessorGroup*,
 	}             // end for
 }
 
-
 // Scale particle factor (optional for flags->d_computeScaleFactor)
 // For vizualization
 void DOUBLEMPM::scheduleComputeParticleScaleFactor(SchedulerP  & sched,
@@ -4577,7 +5014,6 @@ void DOUBLEMPM::computeParticleScaleFactor(const ProcessorGroup*,
 	} // patches
 
 }
-
 
 // Add paticles (optional for flags->d_refineParticles)
 void DOUBLEMPM::scheduleAddParticles(SchedulerP& sched,

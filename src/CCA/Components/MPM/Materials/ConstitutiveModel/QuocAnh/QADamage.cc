@@ -109,7 +109,7 @@ QADamage::QADamage(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
 	bElBarLabel_preReloc = VarLabel::create("p.bElBar+",
 		ParticleVariable<Matrix3>::getTypeDescription());
 
-	d_INPUT = 10;
+	d_INPUT = 11;
 	UI[d_INPUT];
 	rinit[d_INPUT];
 
@@ -134,6 +134,7 @@ QADamage::QADamage(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
 	ps->getWithDefault("EqStrain", UI[7], 0.0);
 	ps->getWithDefault("ft_dynamic", UI[8], d_initialData.tensile);
 	ps->getWithDefault("EqStrainRate", UI[9], 0.0);
+	ps->getWithDefault("Gf", UI[10], 0.0);
 
 	vector<string> ISVNames;
 
@@ -147,6 +148,7 @@ QADamage::QADamage(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
 	ISVNames.push_back("EqStrain");
 	ISVNames.push_back("ft_dynamic");
 	ISVNames.push_back("EqStrainRate");
+	ISVNames.push_back("Gf");
 
 	for (int i = 0; i < d_INPUT; i++) {
 		ISVLabels.push_back(VarLabel::create(ISVNames[i],
@@ -245,6 +247,7 @@ void QADamage::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
 	cm_ps->appendElement("EqStrain", UI[7]);
 	cm_ps->appendElement("ft_dynamic", UI[8]);
 	cm_ps->appendElement("EqStrainRate", UI[9]);
+	cm_ps->appendElement("Gf", UI[10]);
 
 	if (d_useInitialStress) {
 		cm_ps->appendElement("initial_pressure", d_init_pressure);
@@ -723,7 +726,7 @@ void QADamage::computeStressTensor(const PatchSubset* patches,
 	double Young_modul = (9 * bulk * shear) / (3 * bulk + shear);
 	double ini_tensile = d_initialData.tensile;
 	double length = d_initialData.length;
-	double Gf = d_initialData.Gf;
+	double ini_Gf = d_initialData.Gf;
 	double mesh = d_initialData.mesh;
 
 	double a = d_initialData.a;
@@ -931,9 +934,11 @@ void QADamage::computeStressTensor(const PatchSubset* patches,
 			double ko = d_initialData.kRatio; 
 					
 			double tensile = ini_tensile * (a + b * pow(EQStrainRateOld / ref_eqstrain, betarate));
+			double Gf = ini_Gf * (a + b * pow(EQStrainRateOld / ref_eqstrain, betarate));
 
 			if (EQStrainRateOld < ref_eqstrain) {
 				tensile = ini_tensile;
+				Gf = ini_Gf;
 			}
 			
 			double kappa_i = tensile / Young_modul; // initial strain to trigger damage
@@ -967,8 +972,8 @@ void QADamage::computeStressTensor(const PatchSubset* patches,
 			}
 
 			// Compute equivalent strain rate
-			double dI1 = (e11 + e22 + e33)*dt;
-			double dJ2 = 1.0/3.0*dt*dt*((e11*e11 + e22 * e22 + e33 * e33 - e11 * e22 - e22 * e33 - e33 * e11) + e12 * e12 + e23 * e23 + e13 * e13);
+			double dI1 = (e11 + e22 + e33);
+			double dJ2 = 1.0/3.0*((e11*e11 + e22 * e22 + e33 * e33 - e11 * e22 - e22 * e33 - e33 * e11) + e12 * e12 + e23 * e23 + e13 * e13);
 			double eqstrain_rate = (kRatio-1)/(2*kRatio*(1-2*nu))*dI1 + 1/(2*kRatio)*sqrt((kRatio-1)*(kRatio-1)/(1-2*nu)/(1-2*nu)*dI1*dI1 + 12*kRatio/(1+nu)/(1+nu)*dJ2);
 			
 			// Calculate Damage parameters
@@ -994,6 +999,7 @@ void QADamage::computeStressTensor(const PatchSubset* patches,
 			svarg[7] = eqStrain;
 			svarg[8] = tensile;
 			svarg[9] = eqstrain_rate;
+			svarg[10] = Gf;
 
 			// Unload ISVs from 1D array into ISVs_new
 			for (int i = 0; i < d_INPUT; i++) {
