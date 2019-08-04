@@ -71,7 +71,8 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
     GridP grid = da->queryGrid(t);
 
     Vector mean_disp(0.,0.,0.);
-//    double total_mass=0.;
+    Vector max_disp(0.,0.,0.);
+    double total_mass=0.;
       LevelP level = grid->getLevel(grid->numLevels()-1);
       cout << "Level: " << grid->numLevels() - 1 <<  endl;
       for(Level::const_patch_iterator iter = level->patchesBegin();
@@ -94,17 +95,17 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
           for(;piter != pset->end(); piter++){
             if(value_pos[*piter].z() < zmin){
               zmin = value_pos[*piter].z();
-              mean_disp = value_disp[*piter];
+              max_disp = value_disp[*piter];
             }
-//            mean_disp+=value_disp[*piter]*value_mass[*piter];
-//            total_mass+=value_mass[*piter];
+            mean_disp+=value_disp[*piter]*value_mass[*piter];
+            total_mass+=value_mass[*piter];
           } // for
         }  //if
       }  // for patches
-//    mean_disp/=total_mass;
+    mean_disp/=total_mass;
 
    outfile.precision(15);
-   outfile << time << " " << mean_disp.z() << endl; 
+   outfile << time << " " << mean_disp.z() << " " << max_disp.z() << endl; 
   }
 } // end jim2()
 
