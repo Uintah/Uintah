@@ -114,7 +114,7 @@ void releaseGrid(GridP *grid)
 
 /////////////////////////////////////////////////////////////////////
 // Get the time for each cycle.
-extern "C++"
+extern "C"
 std::vector<double> getCycleTimes(DataArchive *archive)
 {
   // DOUT(dbgOut, "getCycleTimes" );
@@ -1015,7 +1015,7 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
 /////////////////////////////////////////////////////////////////////
 // Read the particle position name
 // This function uses the archive for file reading.
-extern "C++"
+extern "C"
 std::string getParticlePositionName(DataArchive *archive)
 {
   return archive->getParticlePositionName();
