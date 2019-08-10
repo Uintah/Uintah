@@ -383,9 +383,14 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   MPMPhysicalBCFactory::create(mat_ps, grid, flags);
   
-  bool needNorms;
+  bool needNormals = false;
+  bool useLR       = false;
   contactModel = ContactFactory::create(d_myworld,
-                                        mat_ps,m_materialManager,lb,flags, needNorms);
+                                        mat_ps,m_materialManager,lb,
+                                        flags, needNormals, useLR);
+
+  flags->d_computeNormals=needNormals;
+  flags->d_useLogisticRegression=useLR;
 
   // Determine extents for coarser level particle data
   // Linear Interpolation:  1 layer of coarse level cells
