@@ -161,8 +161,20 @@ PressureBC::flagMaterialPoint(const Point& p,
   if (d_surfaceType == "box") {
     // Create box that is min-dxpp, max+dxpp;
     Box box = d_surface->getBoundingBox();
-    GeometryPiece* volume = scinew BoxGeometryPiece(box.lower()-dxpp, 
-                                                    box.upper()+dxpp);
+    Vector dbox = box.upper() - box.lower();
+    double minCom =  dbox.minComponent();
+    Vector extra(0.,0.,0);
+    if(minCom==dbox.x()){
+      extra=Vector(dxpp.x(),0.,0.);
+    } else
+    if (minCom==dbox.y()){
+      extra=Vector(0.,dxpp.y(),0.);
+    } else {
+      extra=Vector(0.,0.,dxpp.z());
+    }
+
+    GeometryPiece* volume = scinew BoxGeometryPiece(box.lower()-extra, 
+                                                    box.upper()+extra);
 
     if (volume->inside(p)){
       flag = true;

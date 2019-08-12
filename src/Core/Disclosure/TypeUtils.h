@@ -39,6 +39,7 @@ namespace Uintah {
 
 class  Matrix3;
 class  Short27;
+class  Int130;
 class  TypeDescription;
 struct Stencil7;
 struct Stencil4;
@@ -67,6 +68,7 @@ typedef int64_t long64;
 // since these are defined in Math/Grid, and declared here, we need to export them correctly
  const TypeDescription* fun_getTypeDescription(Matrix3*);
  const TypeDescription* fun_getTypeDescription(Short27*);
+ const TypeDescription* fun_getTypeDescription(Int130*);
 
  const TypeDescription* fun_getTypeDescription(Stencil7*);
  const TypeDescription* fun_getTypeDescription(Stencil4*);

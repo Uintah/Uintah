@@ -22,10 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-// Friction.h
+// FrictionContactBard.h
 
-#ifndef __FRICTION_H__
-#define __FRICTION_H__
+#ifndef __FRICTIONBARD_H__
+#define __FRICTIONBARD_H__
 
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/Materials/Contact/ContactMaterialSpec.h> 
@@ -42,13 +42,16 @@ namespace Uintah {
 /**************************************
 
 CLASS
-   FrictionContact
+   FrictionContactBard
    
-   Short description...
+   This is the contact model that has been evolving in Uintah since about
+   2001, based on a paper by Bardenhagen, Guilkey, Witzel, et al., with some
+   changes for volume constraints and separation constraints added, the latter
+   based on some work of John Nairn.
 
 GENERAL INFORMATION
 
-   FrictionContact.h
+   FrictionContactBard.h
 
    Steven G. Parker
    Department of Computer Science
@@ -68,13 +71,13 @@ WARNING
   
 ****************************************/
 
-      class FrictionContact : public Contact {
+      class FrictionContactBard : public Contact {
       private:
          
          // Prevent copying of this class
          // copy constructor
-         FrictionContact(const FrictionContact &con);
-         FrictionContact& operator=(const FrictionContact &con);
+         FrictionContactBard(const FrictionContactBard &con);
+         FrictionContactBard& operator=(const FrictionContactBard &con);
          
          MaterialManagerP    d_materialManager;
          
@@ -88,12 +91,12 @@ WARNING
 
       public:
          // Constructor
-         FrictionContact(const ProcessorGroup* myworld,
+         FrictionContactBard(const ProcessorGroup* myworld,
                          ProblemSpecP& ps, MaterialManagerP& d_sS,MPMLabel* lb,
                          MPMFlags* MFlag);
          
          // Destructor
-         virtual ~FrictionContact();
+         virtual ~FrictionContactBard();
 
          virtual void outputProblemSpec(ProblemSpecP& ps);
 
@@ -120,4 +123,4 @@ WARNING
       };
 } // End namespace Uintah
 
-#endif /* __FRICTION_H__ */
+#endif /* __FRICTIONBARD_H__ */

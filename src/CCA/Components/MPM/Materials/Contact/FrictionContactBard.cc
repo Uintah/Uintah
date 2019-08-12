@@ -36,7 +36,7 @@
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
-#include <CCA/Components/MPM/Materials/Contact/FrictionContact.h>
+#include <CCA/Components/MPM/Materials/Contact/FrictionContactBard.h>
 #include <vector>
 #include <iostream>
 
@@ -47,7 +47,7 @@ using std::string;
 using namespace std;
 
 
-FrictionContact::FrictionContact(const ProcessorGroup* myworld,
+FrictionContactBard::FrictionContactBard(const ProcessorGroup* myworld,
                                  ProblemSpecP& ps,MaterialManagerP& d_sS,
                                  MPMLabel* Mlb,MPMFlags* MFlag)
   : Contact(myworld, Mlb, MFlag, ps)
@@ -73,15 +73,15 @@ FrictionContact::FrictionContact(const ProcessorGroup* myworld,
   }
 }
 
-FrictionContact::~FrictionContact()
+FrictionContactBard::~FrictionContactBard()
 {
   // Destructor
 }
 
-void FrictionContact::outputProblemSpec(ProblemSpecP& ps)
+void FrictionContactBard::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
-  contact_ps->appendElement("type","friction");
+  contact_ps->appendElement("type","friction_bard");
   contact_ps->appendElement("mu",                d_mu);
   contact_ps->appendElement("volume_constraint", d_vol_const);
   contact_ps->appendElement("separation_factor", d_sepFac);
@@ -89,7 +89,7 @@ void FrictionContact::outputProblemSpec(ProblemSpecP& ps)
   d_matls.outputProblemSpec(contact_ps);
 }
 
-void FrictionContact::exMomInterpolated(const ProcessorGroup*,
+void FrictionContactBard::exMomInterpolated(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* matls,
                                         DataWarehouse* old_dw,
@@ -277,7 +277,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
  }   // if d_oneOrTwoStep
 }
 
-void FrictionContact::exMomIntegrated(const ProcessorGroup*,
+void FrictionContactBard::exMomIntegrated(const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* matls,
                                       DataWarehouse* old_dw,
@@ -498,12 +498,12 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   }
 }
 
-void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
+void FrictionContactBard::addComputesAndRequiresInterpolated(SchedulerP & sched,
                                                         const PatchSet* patches,
                                                         const MaterialSet* ms)
 {
   Task * t = scinew Task("Friction::exMomInterpolated", 
-                      this, &FrictionContact::exMomInterpolated);
+                      this, &FrictionContactBard::exMomInterpolated);
 
   MaterialSubset* z_matl = scinew MaterialSubset();
   z_matl->add(0);
@@ -526,12 +526,12 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
     delete z_matl; // shouln't happen, but...
 }
 
-void FrictionContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
+void FrictionContactBard::addComputesAndRequiresIntegrated(SchedulerP & sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* ms) 
 {
   Task * t = scinew Task("Friction::exMomIntegrated", 
-                      this, &FrictionContact::exMomIntegrated);
+                      this, &FrictionContactBard::exMomIntegrated);
 
   MaterialSubset* z_matl = scinew MaterialSubset();
   z_matl->add(0);

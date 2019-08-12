@@ -31,6 +31,7 @@
 #include <Core/Parallel/LoopExecution.hpp>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/Matrix3.h>
+#include <Core/Math/Int130.h>
 
 #include <Core/Util/Endian.h>
 #include <Core/Geometry/IntVector.h>

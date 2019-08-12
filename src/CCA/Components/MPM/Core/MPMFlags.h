@@ -100,6 +100,7 @@ class Output;
     bool        d_deleteGeometryObjects;
     bool        d_doPressureStabilization;
     bool        d_computeNormals;
+    bool        d_useLogisticRegression;
     bool        d_computeColinearNormals;
     bool        d_restartOnLargeNodalVelocity;
     bool        d_computeNodalHeatFlux;                        // compute the auxilary nodal heat flux

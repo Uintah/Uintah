@@ -159,7 +159,7 @@
         </geom_object>
       </material>
       <contact>
-        <type>friction</type>
+        <type>friction_bard</type>
         <mu>0.25</mu>
         <materials>[0,1]</materials>
       </contact>
