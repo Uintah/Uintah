@@ -81,7 +81,7 @@ FrictionContactBard::~FrictionContactBard()
 void FrictionContactBard::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
-  contact_ps->appendElement("type","friction");
+  contact_ps->appendElement("type","friction_bard");
   contact_ps->appendElement("mu",                d_mu);
   contact_ps->appendElement("volume_constraint", d_vol_const);
   contact_ps->appendElement("separation_factor", d_sepFac);
