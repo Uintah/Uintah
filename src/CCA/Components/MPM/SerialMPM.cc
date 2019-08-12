@@ -1349,7 +1349,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
   t->requires(Task::NewDW, lb->pSurfLabel_preReloc,             gnone);
 
@@ -5873,7 +5872,6 @@ void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
-//  t->computes(lb->gPositionLabel);
   t->computes(lb->gMatlProminenceLabel);
   t->computes(lb->gAlphaMaterialLabel);
   t->computes(lb->gNormAlphaToBetaLabel,z_matl);
