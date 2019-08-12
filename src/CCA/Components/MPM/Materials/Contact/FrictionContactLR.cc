@@ -79,7 +79,7 @@ FrictionContactLR::~FrictionContactLR()
 void FrictionContactLR::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
-  contact_ps->appendElement("type", "friction");
+  contact_ps->appendElement("type", "friction_LR");
   contact_ps->appendElement("mu",                d_mu);
   contact_ps->appendElement("volume_constraint", d_vol_const);
   contact_ps->appendElement("OneOrTwoStep",      d_oneOrTwoStep);
@@ -102,7 +102,6 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
    std::vector<constNCVariable<double> >  gvolume(numMatls);
    std::vector<constNCVariable<double> >  gmatlprominence(numMatls);
    std::vector<NCVariable<Vector> >       gvelocity(numMatls);
-//   std::vector<NCVariable<double> >       frictionWork(numMatls);
 
    Ghost::GhostType  gnone = Ghost::None;
 
@@ -129,7 +128,6 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
       new_dw->get(gmatlprominence[m],lb->gMatlProminenceLabel,
                                                          dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity[m],   lb->gVelocityLabel,      dwi,patch);
-//    new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel, dwi,patch);
     }  // loop over matls
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
@@ -240,7 +238,6 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
   std::vector<constNCVariable<double> > gvolume(numMatls);
   std::vector<constNCVariable<double> > gmatlprominence(numMatls);    
   std::vector<NCVariable<Vector> >      gvelocity_star(numMatls);
-  std::vector<NCVariable<double> >      frictionWork(numMatls);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -262,8 +259,6 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
                                                          dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,
                             dwi, patch);
-//      new_dw->getModifiable(frictionWork[m], lb->frictionalWorkLabel,
-//                            dwi, patch);
     }
 
     delt_vartype delT;
@@ -371,7 +366,6 @@ void FrictionContactLR::addComputesAndRequiresInterpolated(SchedulerP & sched,
   t->requires(Task::NewDW, lb->gAlphaMaterialLabel,         Ghost::None);
   t->requires(Task::NewDW, lb->gNormAlphaToBetaLabel,z_matl,Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,     Ghost::None);
-//  t->modifies(lb->frictionalWorkLabel, mss);
   t->modifies(lb->gVelocityLabel,      mss);
 
   sched->addTask(t, patches, ms);
@@ -400,7 +394,6 @@ void FrictionContactLR::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,     Ghost::None);
   t->requires(Task::NewDW, lb->gNormAlphaToBetaLabel,z_matl,Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,  mss);
-//  t->modifies(             lb->frictionalWorkLabel, mss);
 
   sched->addTask(t, patches, ms);
 
