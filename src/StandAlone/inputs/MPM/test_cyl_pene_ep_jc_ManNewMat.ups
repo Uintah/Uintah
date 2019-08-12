@@ -233,7 +233,7 @@
       </material>
 -->
       <contact>
-        <type>friction</type>
+        <type>friction_bard</type>
         <mu>0.25</mu>
       </contact>
     </MPM>

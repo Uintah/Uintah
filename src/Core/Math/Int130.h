@@ -22,32 +22,72 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef _CONTACTFACTORY_H_
-#define _CONTACTFACTORY_H_
 
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/MaterialManagerP.h>
+#ifndef __INT130_H__
+#define __INT130_H__
+
+#include <Core/Geometry/Vector.h>
+#include <Core/Util/Assert.h>
+#include <Core/Disclosure/TypeUtils.h> // for get_funTD(Int130) prototype
+
+#include <cmath>
+#include <iosfwd>
+#include <string>
+#include <vector>
 
 namespace Uintah {
 
-  class Contact;
-  class MPMLabel;
-  class MPMFlags;
+class Int130 {
 
-  class ContactFactory
-  {
-  public:
-        
-    // this function has a switch for all known mat_types
-    // and calls the proper class' readParameters()
-    // addMaterial() calls this
-    static Contact* create(const ProcessorGroup* myworld,
-                           const ProblemSpecP& ps,MaterialManagerP& ss,
-                           MPMLabel* lb, MPMFlags* MFlag, bool &needNormals,
-                           bool &useLR);
-  };
+ private:
+  int s[400];
+
+ public:
+  // constructors
+  inline Int130();
+  inline ~Int130();
+
+  // access operator
+  inline int operator[] (int i) const;
+  inline int & operator[] (int i);
+  static const std::string& get_h_file_path();
+};
+
+inline Int130::Int130()
+{
+  for(int i=0;i<400;i++){
+        s[i] = 0;
+  }
+}
+
+inline Int130::~Int130()
+{
+}
+
+inline int Int130::operator [] (int i) const
+{
+  // Access the i component
+  return s[i];
+}
+
+inline int & Int130::operator [] (int i)
+{
+  // Access the i component
+  return s[i];
+}
+
 } // End namespace Uintah
-  
-#endif /* _CONTACTFACTORY_H_ */
 
+// Added for compatibility with core types
+#include <Core/Datatypes/TypeName.h>
+
+namespace Uintah {
+
+              void                    swapbytes( Uintah::Int130 & s );
+  template<>  const std::string       find_type_name( Uintah::Int130 * );
+              const TypeDescription * get_type_description( Uintah::Int130 * );
+
+
+} // namespace Uintah
+
+#endif  // __INT130_H__

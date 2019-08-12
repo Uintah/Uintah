@@ -65,6 +65,7 @@ SRCS += \
         $(SRCDIR)/CubeRoot.cc          \
         $(SRCDIR)/Sparse.cc            \
         $(SRCDIR)/Short27.cc           \
+        $(SRCDIR)/Int130.cc            \
         $(SRCDIR)/TangentModulusTensor.cc  \
         $(SRCDIR)/Expon.cc  \
 	\

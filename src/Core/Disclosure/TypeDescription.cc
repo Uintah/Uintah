@@ -232,6 +232,7 @@ TypeDescription::toString( Type type )
     case long_type:           return "long_type";
     case long64_type:         return "long64_type";
     case Short27:             return "Short27";
+    case Int130:              return "Int130";
     case Stencil4:            return "Stencil4";
     case Stencil7:            return "Stencil7";
     case IntVector:           return "IntVector";

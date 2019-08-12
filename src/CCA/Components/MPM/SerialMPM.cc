@@ -283,12 +283,14 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
 
-  bool needNormals=false;
+  bool needNormals = false;
+  bool useLR       = false;
   contactModel = ContactFactory::create(d_myworld,
-                                        restart_mat_ps,m_materialManager,lb,flags,
-                                        needNormals);
+                                        restart_mat_ps,m_materialManager,lb,
+                                        flags, needNormals, useLR);
 
-  flags->d_computeNormals=needNormals;
+  flags->d_computeNormals        = needNormals;
+  flags->d_useLogisticRegression = useLR;
 
   thermalContactModel =
     ThermalContactFactory::create(restart_mat_ps, m_materialManager, lb,flags);
@@ -418,6 +420,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pTemperatureGradientLabel);
   t->computes(lb->pSizeLabel);
   t->computes(lb->pLocalizedMPMLabel);
+  t->computes(lb->pSurfLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(lb->delTLabel,level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
@@ -689,6 +692,10 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   if(flags->d_computeNormals){
     scheduleComputeNormals(               sched, patches, matls);
+  }
+  if(flags->d_useLogisticRegression){
+    scheduleFindSurfaceParticles(         sched, patches, matls);
+    scheduleComputeLogisticRegression(    sched, patches, matls);
   }
   scheduleExMomInterpolated(              sched, patches, matls);
   if(flags->d_doScalarDiffusion) {
@@ -5478,6 +5485,7 @@ void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
   t->requires(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
   t->requires(Task::OldDW, lb->pStressLabel,             particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
   t->computes(lb->gSurfNormLabel);
@@ -5530,14 +5538,12 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
     vector<Vector> d_S(interpolator->size());
     string interp_type = flags->d_interpolator_type;
 
-
-
-
+    // Find surface normal at each material based on a gradient of nodal mass
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = 
                     (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
-      new_dw->get(gmass[m],                lb->gMassLabel,   dwi,patch,gnone,0);
+      new_dw->get(gmass[m],                lb->gMassLabel,   dwi,patch,gan,  1);
 
       new_dw->allocateAndPut(gsurfnorm[m],    lb->gSurfNormLabel,    dwi,patch);
       new_dw->allocateAndPut(gposition[m],    lb->gPositionLabel,    dwi,patch);
@@ -5584,7 +5590,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
           particleIndex idx = *it;
 
           int NN = interpolator->findCellAndWeightsAndShapeDerivatives(
-                          px[idx],ni,S,d_S,psize[idx]);
+                                                   px[idx],ni,S,d_S,psize[idx]);
           for(int k = 0; k < NN; k++) {
             if (patch->containsNode(ni[k])){
               Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
@@ -5623,9 +5629,10 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
       }
     }
 
-    // Make norms unit length
+    // Make traditional norms unit length, compute gnormtraction
     for(unsigned int m=0;m<numMPMMatls;m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                   (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
@@ -5641,11 +5648,510 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
          gnormtraction[m][c] = Dot((norm*gstress[m][c]),norm);
          gposition[m][c]    /= gmass[m][c];
       }
+    }
+
+    delete interpolator;
+  }    // patches
+}
+
+//
+void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
+                                                  const PatchSet * patches,
+                                                  const MaterialSet * matls )
+{
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeLogisticRegression");
+  
+  Task* t = scinew Task("MPM::computeLogisticRegression", this, 
+                        &SerialMPM::computeLogisticRegression);
+
+  MaterialSubset* z_matl = scinew MaterialSubset();
+  z_matl->add(0);
+  z_matl->addReference();
+
+  t->requires(Task::OldDW, lb->pXLabel,                  particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pSurfLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
+  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
+
+  t->computes(lb->gMatlProminenceLabel);
+  t->computes(lb->gAlphaMaterialLabel);
+  t->computes(lb->gNormAlphaToBetaLabel,z_matl);
+
+  sched->addTask(t, patches, matls);
+
+  if (z_matl->removeReference())
+    delete z_matl; // shouln't happen, but...
+}
+
+//______________________________________________________________________
+//
+void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
+                                          const PatchSubset    * patches,
+                                          const MaterialSubset * ,
+                                                DataWarehouse  * old_dw,
+                                                DataWarehouse  * new_dw)
+{
+
+  // As of 5/22/19, this uses John Nairn's and Chad Hammerquist's
+  // Logistic Regression method for finding normals used in contact.
+  // These "NormAlphaToBeta" are then used to find each material's
+  // greatest prominence at a node.  That is, the portion of a
+  // particle that projects farthest along the direction of that normal.
+  // One material at each multi-material node is identified as the
+  // alpha material, this is the material with the most mass at the node.
+  // All other materials are beta materials, and the NormAlphaToBeta
+  // is perpendicular to the plane separating those materials
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
+  Ghost::GhostType  gnone = Ghost::None;
+
+  unsigned int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
+  std::vector<constNCVariable<double> >  gmass(numMPMMatls);
+  std::vector<constParticleVariable<Point> > px(numMPMMatls);
+
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+
+    printTask(patches, patch,cout_doing,"Doing MPM::computeLogisticRegression");
+
+    Vector dx = patch->dCell();
+
+    constNCVariable<double>    NC_CCweight;
+    old_dw->get(NC_CCweight,   lb->NC_CCweightLabel,  0, patch, gnone, 0);
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
+    string interp_type = flags->d_interpolator_type;
+
+    // Declare and allocate storage for use in the Logistic Regression
+    NCVariable<int> alphaMaterial;
+    NCVariable<int> NumMatlsOnNode;
+    NCVariable<int> NumParticlesOnNode;
+    NCVariable<Vector> normAlphaToBeta;
+    std::vector<NCVariable<Int130> > ParticleList(numMPMMatls);
+
+    new_dw->allocateAndPut(alphaMaterial,  lb->gAlphaMaterialLabel,   0, patch);
+    new_dw->allocateAndPut(normAlphaToBeta,lb->gNormAlphaToBetaLabel, 0, patch);
+    new_dw->allocateTemporary(NumMatlsOnNode,     patch);
+    new_dw->allocateTemporary(NumParticlesOnNode, patch);
+    alphaMaterial.initialize(-99);
+    NumMatlsOnNode.initialize(0);
+    NumParticlesOnNode.initialize(0);
+    normAlphaToBeta.initialize(Vector(-99.-99.-99.));
+
+    // Get out the mass first, need access to the mass of all materials
+    // at each node.
+    // Also, at each multi-material node, we need the position of the
+    // particles around that node.  Rather than store the positions, for now,
+    // store a list of particle indices for each material at each node and
+    // use those to point into the particle set to get the particle positions
+    for(unsigned int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = 
+                    (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      int dwi = mpm_matl->getDWIndex();
+      new_dw->get(gmass[m],                lb->gMassLabel,   dwi,patch,gnone,0);
+      new_dw->allocateTemporary(ParticleList[m], patch);
+    }
+
+    // Here, find out two things:
+    // 1.  How many materials have mass on a node
+    // 2.  Which material has the most mass on a node.  That is the alpha matl.
+    for(NodeIterator iter =patch->getExtraNodeIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      double maxMass=-9.e99;
+      for(unsigned int m = 0; m < numMPMMatls; m++){
+        if(gmass[m][c] > 1.e-16){
+          NumMatlsOnNode[c]++;
+          if(gmass[m][c]>maxMass){
+            // This is the alpha material, all other matls are beta
+            alphaMaterial[c]=m;
+            maxMass=gmass[m][c];
+          }
+        }
+      } // Loop over materials
+      if(NumMatlsOnNode[c]<2){
+        alphaMaterial[c]=-99;
+      }
+    }   // Node Iterator
+
+    // In this section of code, we find the particles that are in the 
+    // vicinity of a multi-material node and put their indices in a list
+    // so we can retrieve their positions later.
+
+    // I hope to improve on this ParticleList later, but for now,
+    // the last element in the array holds the number of entries in the
+    // array.  I don't yet know how to allocate an STL container on the nodes.
+    for(unsigned int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = 
+                    (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      int dwi = mpm_matl->getDWIndex();
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
+      constParticleVariable<Matrix3> cursize;
+
+      old_dw->get(px[m],                lb->pXLabel,               pset);
+      new_dw->get(cursize,              lb->pCurSizeLabel,         pset);
+
+      // Initialize the ParticleList
+      for(NodeIterator iter =patch->getExtraNodeIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        for(unsigned int p = 0; p < 400; p++){
+          ParticleList[m][c][p]=0;
+        }
+      }
+
+      // Loop over particles and find which multi-mat nodes they contribute to
+      for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+        particleIndex idx = *it;
+
+        int NN = interpolator->findCellAndWeights(px[m][idx],ni,S,cursize[idx]);
+
+        set<IntVector> nodeList;
+
+        for(int k = 0; k < NN; k++) {
+          if (patch->containsNode(ni[k]) && 
+              NumMatlsOnNode[ni[k]]>1    && 
+              S[k]>1.e-100){
+            nodeList.insert(ni[k]);
+          } // conditional
+        }   // loop over nodes returned by interpolator
+        for (set<IntVector>::iterator it1 = nodeList.begin(); 
+                                      it1!= nodeList.end();  it1++){
+          ParticleList[m][*it1][ParticleList[m][*it1][399]]=idx;
+          ParticleList[m][*it1][399]++;
+          NumParticlesOnNode[*it1]++;
+        }
+        nodeList.clear();
+      }    // Loop over Particles
+    }
+
+    // This is the Logistic Regression code that finds the normal to the
+    // plane that separates two materials.  This is as directly as possible
+    // from Nairn & Hammerquist, 2019.
+    double lam = 1.e-7*dx.x()*dx.x();
+    double lambda[4]={lam,lam,lam,0};
+    double wp = 1.0;
+    double RHS[4];
+    for(NodeIterator iter =patch->getNodeIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      // Only work on multi-material nodes
+      if(alphaMaterial[c]>=0){
+       bool converged = false;
+       int num_iters=0;
+       double tol = 1.e-5;
+       double phi[4]={1.,0.,0.,0.};
+       Vector nhat_k(phi[0],phi[1],phi[2]);
+       while(!converged){
+        num_iters++;
+        // Initialize the coefficient matrix
+        FastMatrix FMJtWJ(4,4);
+        FMJtWJ.zero();
+        for(int i = 0; i<4; i++){
+          FMJtWJ(i,i) = lambda[i];
+        }
+        for(int i = 0; i<4; i++){
+          RHS[i] = -1.0*lambda[i]*phi[i];
+        }
+        for(unsigned int m = 0; m < numMPMMatls; m++){
+          double cp=0.;
+          if(alphaMaterial[c]==(int) m){
+            cp=-1.;
+          } else {
+            cp=1.;
+          }
+          for(int p=0;p<ParticleList[m][c][399];p++){
+            Point xp = px[m][ParticleList[m][c][p]];
+            double xp4[4]={xp.x(),xp.y(),xp.z(),1.0};
+            double XpDotPhi = xp4[0]*phi[0]
+                            + xp4[1]*phi[1]
+                            + xp4[2]*phi[2]
+                            + xp4[3]*phi[3];
+            double expterm = exp(-XpDotPhi);
+            double num     = 2.0*expterm;
+            double denom   = (1.0 + expterm)*(1.0 + expterm);
+            double fEq20   = 2./(1+expterm) - 1.0;
+            double psi = num/denom;
+            double psi2wp = psi*psi*wp;
+            // Construct coefficient matrix, Eqs. 54 and 55
+            // Inner terms
+            for(int i = 0; i<3; i++){
+              for(int j = 0; j<3; j++){
+                FMJtWJ(i,j)+=psi2wp*xp(i)*xp(j);
+              }
+            }
+            // Other terms
+            FMJtWJ(0,3)+=psi2wp*xp(0);
+            FMJtWJ(1,3)+=psi2wp*xp(1);
+            FMJtWJ(2,3)+=psi2wp*xp(2);
+            FMJtWJ(3,0)=FMJtWJ(0,3);
+            FMJtWJ(3,1)=FMJtWJ(1,3);
+            FMJtWJ(3,2)=FMJtWJ(2,3);
+            FMJtWJ(3,3)+=psi2wp;
+            // Construct RHS
+            for(int i = 0; i<4; i++){
+              RHS[i]+=psi*wp*(cp - fEq20)*xp4[i];
+            }
+          } // Loop over each material's particle list 
+        }     // Loop over materials
+
+        // Solve (FMJtWJ)^(-1)*RHS.  The solution comes back in the RHS array
+        FMJtWJ.destructiveSolve(RHS);
+
+        for(int i = 0; i<4; i++){
+          phi[i]+=RHS[i];
+        }
+        Vector nhat_kp1(phi[0],phi[1],phi[2]);
+        nhat_kp1/=(nhat_kp1.length()+1.e-100);
+        double error = 1.0 - Dot(nhat_kp1,nhat_k);
+        if(error < tol || num_iters > 15){
+          converged=true;
+          normAlphaToBeta[c] = nhat_kp1;
+        } else{
+          nhat_k=nhat_kp1;
+        }
+       } // while(!converged) loop
+      }  // If this node has more than one particle on it
+    }    // Loop over nodes
+
+    MPMBoundCond bc;
+    bc.setBoundaryCondition(patch,0,"Symmetric", normAlphaToBeta, interp_type);
+
+    // Renormalize normal vectors after setting BCs
+    for(NodeIterator iter =patch->getExtraNodeIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      normAlphaToBeta[c]/=(normAlphaToBeta[c].length()+1.e-100);
+      if(alphaMaterial[c]==-99){
+        normAlphaToBeta[c]=Vector(0.);
+      }
+    }    // Loop over nodes
+
+    // Loop over all the particles, find the nodes they interact with
+    // For the alpha material (alphaMaterial) find g.position as the
+    // maximum of the dot product between each particle corner and the
+    // gNormalAlphaToBeta vector.
+    // For the beta materials (every other material) find g.position as the
+    // minimum of the dot product between each particle corner and the
+    // gNormalAlphaToBeta vector.  
+    // Compute "MatlProminence" as the min/max of the dot product between
+    // the normal and the particle corners
+
+    std::vector<NCVariable<double> >      d_x_p_dot_n(numMPMMatls);
+    
+    for(unsigned int m=0;m<numMPMMatls;m++){
+      MPMMaterial* mpm_matl = 
+                   (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      int dwi = mpm_matl->getDWIndex();
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
+
+      constParticleVariable<Matrix3> pcursize;
+      constParticleVariable<double> psurf;
+
+      new_dw->get(pcursize,                 lb->pCurSizeLabel,         pset);
+      new_dw->get(psurf,                    lb->pSurfLabel_preReloc,   pset);
+      new_dw->allocateAndPut(d_x_p_dot_n[m],lb->gMatlProminenceLabel,dwi,patch);
+
+      d_x_p_dot_n[m].initialize(-99.);
+
+      NCVariable<double> projMax, projMin;
+      new_dw->allocateTemporary(projMax,                  patch,    gnone);
+      new_dw->allocateTemporary(projMin,                  patch,    gnone);
+      projMax.initialize(-9.e99);
+      projMin.initialize( 9.e99);
+
+      for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+        particleIndex idx = *it;
+
+      if(psurf[idx]>0.9){
+       int NN = interpolator->findCellAndWeights(px[m][idx],ni,S,pcursize[idx]);
+
+        Matrix3 dsize = pcursize[idx]*Matrix3(dx[0],0,0,
+                                              0,dx[1],0,
+                                              0,0,dx[2]);
+
+#if 0
+        // This version uses particle corners to compute prominence
+        // Compute vectors from particle center to the corners
+        Vector RNL[8];
+        RNL[0] = Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                        -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                        -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+        RNL[1] = Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                         dsize(1,0)-dsize(1,1)+dsize(1,2),
+                         dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+        RNL[2] = Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                         dsize(1,0)+dsize(1,1)+dsize(1,2),
+                         dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+        RNL[3] = Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                        -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                        -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+        RNL[4] = Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                        -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                        -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+        RNL[5] = Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                         dsize(1,0)-dsize(1,1)-dsize(1,2),
+                         dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+        RNL[6] = Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                         dsize(1,0)+dsize(1,1)-dsize(1,2),
+                         dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+        RNL[7] = Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                        -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                        -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+
+        for(int k = 0; k < NN; k++) {
+          if (patch->containsNode(ni[k])){
+            if(S[k] > 0. && NumParticlesOnNode[ni[k]] > 1){
+              for(int ic=0;ic<8;ic++){
+                Vector xp_xi = (px[m][idx].asVector()+RNL[ic]);
+                double proj = Dot(xp_xi, normAlphaToBeta[ni[k]]);
+                if((int) m==alphaMaterial[ni[k]]){
+                  if(proj>projMax[ni[k]]){
+                     projMax[ni[k]]=proj;
+                     d_x_p_dot_n[m][ni[k]] = proj;
+                  }
+                } else {
+                  if(proj<projMin[ni[k]]){
+                     projMin[ni[k]]=proj;
+                     d_x_p_dot_n[m][ni[k]] = proj;
+                  }
+                }
+              } // Loop over all 8 particle corners
+            }  // Only deal with nodes that this particle affects
+          }  // If node is on the patch
+        } // Loop over nodes near this particle
+#endif
+#if 0
+        // This version uses constant particle radius, here assuming 2 PPC
+        // in each direction
+        double Rp = 0.25*dx.x();
+        for(int k = 0; k < NN; k++) {
+          if (patch->containsNode(ni[k])){
+            if(S[k] > 0. && NumParticlesOnNode[ni[k]] > 1){
+//              Point xi = patch->getNodePosition(ni[k]);
+              for(int ic=0;ic<8;ic++){
+                Vector xp_xi = (px[m][idx].asVector());// - xi;
+                double proj = Dot(xp_xi, normAlphaToBeta[ni[k]]);
+                if((int) m==alphaMaterial[ni[k]]){
+                  proj+=Rp;
+                  if(proj>projMax[ni[k]]){
+                     projMax[ni[k]]=proj;
+                     d_x_p_dot_n[m][ni[k]] = proj;
+                  }
+                } else {
+                  proj-=Rp;
+                  if(proj<projMin[ni[k]]){
+                     projMin[ni[k]]=proj;
+                     d_x_p_dot_n[m][ni[k]] = proj;
+                  }
+                }
+              } // Loop over all 8 particle corners
+            }  // Only deal with nodes that this particle affects
+          }  // If node is on the patch
+        } // Loop over nodes near this particle
+#endif
+
+        // This version uses particle faces to compute prominence.
+        // Compute vectors from particle center to the faces
+        Vector RFL[6];
+        RFL[0] = Vector(-dsize(0,0),-dsize(1,0),-dsize(2,0))*0.5;
+        RFL[1] = Vector( dsize(0,0), dsize(1,0), dsize(2,0))*0.5;
+        RFL[2] = Vector(-dsize(0,1),-dsize(1,1),-dsize(2,1))*0.5;
+        RFL[3] = Vector( dsize(0,1), dsize(1,1), dsize(2,1))*0.5;
+        RFL[4] = Vector(-dsize(0,2),-dsize(1,2),-dsize(2,2))*0.5;
+        RFL[5] = Vector( dsize(0,2), dsize(1,2), dsize(2,2))*0.5;
+
+        for(int k = 0; k < NN; k++) {
+          if (patch->containsNode(ni[k])){
+            if(S[k] > 0. && NumParticlesOnNode[ni[k]] > 1){
+              for(int ic=0;ic<6;ic++){
+                Vector xp_xi = (px[m][idx].asVector()+RFL[ic]);
+                double proj = Dot(xp_xi, normAlphaToBeta[ni[k]]);
+                if((int) m==alphaMaterial[ni[k]]){
+                  if(proj>projMax[ni[k]]){
+                     projMax[ni[k]]=proj;
+                     d_x_p_dot_n[m][ni[k]] = proj;
+                  }
+                } else {
+                  if(proj<projMin[ni[k]]){
+                     projMin[ni[k]]=proj;
+                     d_x_p_dot_n[m][ni[k]] = proj;
+                  }
+                }
+              } // Loop over all 8 particle corners
+            }  // Only deal with nodes that this particle affects
+          }  // If node is on the patch
+        } // Loop over nodes near this particle
+       } // Is a surface particle
+      } // end Particle loop
     }  // loop over matls
 
     delete interpolator;
   }    // patches
 }
+
+//
+void SerialMPM::scheduleFindSurfaceParticles(SchedulerP   & sched,
+                                             const PatchSet * patches,
+                                             const MaterialSet * matls )
+{ 
+  printSchedule(patches,cout_doing,"SerialMPM::scheduleFindSurfaceParticles");
+  
+  Task* t = scinew Task("MPM::findSurfaceParticles", this, 
+                        &SerialMPM::findSurfaceParticles);
+  
+  Ghost::GhostType  gp;
+  int ngc_p;
+  getParticleGhostLayer(gp, ngc_p);
+  
+  t->requires(Task::OldDW, lb->pSurfLabel,               gp, ngc_p);
+  t->computes(lb->pSurfLabel_preReloc);
+
+  sched->addTask(t, patches, matls);
+}
+
+//______________________________________________________________________
+//
+void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
+                                     const PatchSubset    * patches,
+                                     const MaterialSubset * ,
+                                           DataWarehouse  * old_dw,
+                                           DataWarehouse  * new_dw)
+{
+  unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
+
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+
+    printTask(patches, patch, cout_doing, "Doing findSurfaceParticles");
+
+    for(unsigned int m = 0; m < numMPMMatls; m++){
+      MPMMaterial*  mpm_matl  = 
+                       (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
+      int dwi = mpm_matl->getDWIndex();
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      constParticleVariable<double> pSurfOld;
+      ParticleVariable<double> pSurf;
+
+      old_dw->get(pSurfOld,            lb->pSurfLabel,               pset);
+      new_dw->allocateAndPut(pSurf,    lb->pSurfLabel_preReloc,      pset);
+
+      // For now carry forward the particle surface data
+      for (ParticleSubset::iterator iter = pset->begin();
+           iter != pset->end();
+           iter++){
+         particleIndex idx = *iter;
+         pSurf[idx]=pSurfOld[idx];
+      }
+    }   // matl loop
+  }    // patches
+}
+
 
 //
 void SerialMPM::scheduleConcInterpolated(       SchedulerP  & sched
