@@ -5484,8 +5484,7 @@ void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,             particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
   t->requires(Task::OldDW, lb->pStressLabel,             particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::AroundNodes, 1);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
   t->computes(lb->gSurfNormLabel);
