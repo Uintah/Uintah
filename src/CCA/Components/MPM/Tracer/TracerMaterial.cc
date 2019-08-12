@@ -95,6 +95,11 @@ Tracer* TracerMaterial::getTracer()
   return  d_tracer;
 }
 
+int TracerMaterial::getAssociatedMaterial() const
+{
+  return d_associated_material;
+}
+
 string TracerMaterial::getTracerFilename() const
 {
   return d_tracer_filename;

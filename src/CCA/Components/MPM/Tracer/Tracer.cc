@@ -176,31 +176,17 @@ void Tracer::registerPermanentTracerState(TracerMaterial* trmat)
 }
 //__________________________________
 //
-void Tracer::scheduleInitialize(const LevelP& level, 
-                                      SchedulerP& sched,
-                                      TracerMaterial* trmat)
+void Tracer::scheduleInitialize(const LevelP& level,
+                                      SchedulerP& sched, MaterialManagerP &mm)
 {
   Task* t = scinew Task("Tracer::initialize",
                   this, &Tracer::initialize);
 
-  MaterialSubset* zeroth_matl = scinew MaterialSubset();
-  zeroth_matl->add(0);
-  zeroth_matl->addReference();
-
   t->computes(d_lb->pXLabel);
+  t->computes(d_lb->pDispLabel);
   t->computes(d_lb->tracerIDLabel);
-  t->computes(d_lb->pCellNATracerIDLabel,zeroth_matl);
 
-  vector<int> m(1);
-  m[0] = trmat->getDWIndex();
-  MaterialSet* tr_matl_set = scinew MaterialSet();
-  tr_matl_set->addAll(m);
-  tr_matl_set->addReference();
-  sched->addTask(t, level->eachPatch(), tr_matl_set);
-
-  // The task will have a reference to zeroth_matl
-  if (zeroth_matl->removeReference())
-    delete zeroth_matl; // shouln't happen, but...
+  sched->addTask(t, level->eachPatch(), mm->allMaterials("Tracer"));
 }
 
 //__________________________________

@@ -498,19 +498,21 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     }
   }
 
+  // The following CZ code needs to be fixed in the same manner as the tracer
+  // code below
   unsigned int numCZM = m_materialManager->getNumMatls( "CZ" );
   for(unsigned int m = 0; m < numCZM; m++){
-    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial( "CZ", m);
+    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ", m);
     CohesiveZone* ch = cz_matl->getCohesiveZone();
     ch->scheduleInitialize(level, sched, cz_matl);
   }
 
   int numTracerM = m_materialManager->getNumMatls("Tracer");
   if(numTracerM>0){
-    TracerMaterial* tracer_matl = (TracerMaterial *) 
-                                    m_materialManager->getMaterial("Tracer", 0);
-    Tracer* tr = tracer_matl->getTracer();
-    tr->scheduleInitialize(level, sched, tracer_matl);
+   TracerMaterial* tracer_matl = (TracerMaterial *)
+                                   m_materialManager->getMaterial("Tracer", 0);
+   Tracer* tr = tracer_matl->getTracer();
+   tr->scheduleInitialize(level, sched, m_materialManager);
   }
 
   if (flags->d_deleteGeometryObjects) {
@@ -4504,94 +4506,94 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
       new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN);
     }
 
-    int tm = 0;
-    TracerMaterial* t_matl = (TracerMaterial *) 
+    int numTracerMatls=m_materialManager->getNumMatls("Tracer");
+    for(int tm = 0; tm < numTracerMatls; tm++){
+      TracerMaterial* t_matl = (TracerMaterial *)
                                  m_materialManager->getMaterial("Tracer", tm );
-    int dwi = t_matl->getDWIndex();
+      int dwi = t_matl->getDWIndex();
 
-    // Not populating the delset, but we need this to satisfy Relocate
-    ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
-    new_dw->deleteParticles(delset);
+      int adv_matl = t_matl->getAssociatedMaterial();
 
-    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      // Not populating the delset, but we need this to satisfy Relocate
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
+      new_dw->deleteParticles(delset);
 
-    // Get the arrays of particle values to be changed
-    constParticleVariable<Point> tx;
-    ParticleVariable<Point> tx_new;
-    constParticleVariable<long64> tracer_ids;
-    ParticleVariable<long64> tracer_ids_new;
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-    old_dw->get(tx,          lb->pXLabel,                         pset);
-    old_dw->get(tracer_ids,  lb->tracerIDLabel,                   pset);
+      // Get the arrays of particle values to be changed
+      constParticleVariable<Point> tx;
+      ParticleVariable<Point> tx_new;
+      constParticleVariable<long64> tracer_ids;
+      ParticleVariable<long64> tracer_ids_new;
 
-    new_dw->allocateAndPut(tx_new,        lb->pXLabel_preReloc,       pset);
-    new_dw->allocateAndPut(tracer_ids_new,lb->tracerIDLabel_preReloc, pset);
+      old_dw->get(tx,          lb->pXLabel,                         pset);
+      old_dw->get(tracer_ids,  lb->tracerIDLabel,                   pset);
 
-    tracer_ids_new.copyData(tracer_ids);
+      new_dw->allocateAndPut(tx_new,        lb->pXLabel_preReloc,       pset);
+      new_dw->allocateAndPut(tracer_ids_new,lb->tracerIDLabel_preReloc, pset);
 
-    // Loop over particles
-    for(ParticleSubset::iterator iter = pset->begin();
-        iter != pset->end(); iter++){
-      particleIndex idx = *iter;
+      tracer_ids_new.copyData(tracer_ids);
 
-      Matrix3 size(1.0,0.,0.,0.,1.0,0.,0.,0.,1.0);
+      // Loop over particles
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
 
-      // Get the node indices that surround the cell
-      int NN = interpolator->findCellAndWeights(tx[idx],ni,S,size);
-      Vector vel(0.0,0.0,0.0);
+        Matrix3 size(0.5,0.,0.,0.,0.5,0.,0.,0.,0.5);
 
-      double sumSk=0.0;
-      // Accumulate the contribution from each surrounding vertex
-      for(unsigned int m = 0; m < numMPMMatls; m++){
-       if(m!=flags->d_containerMaterial){
-        for (int k = 0; k < NN; k++) {
+        // Get the node indices that surround the cell
+        int NN = interpolator->findCellAndWeights(tx[idx],ni,S,size);
+        Vector vel(0.0,0.0,0.0);
+
+        double sumSk=0.0;
+        // Accumulate the contribution from each surrounding vertex
+        for (int k = 0; k < NN; k++){
           IntVector node = ni[k];
-          vel   += gvelocity[m][node]*gmass[m][node]*S[k];
-          sumSk += gmass[m][node]*S[k];
+          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+          sumSk += gmass[adv_matl][node]*S[k];
         }
-       }
-      }
-      vel/=sumSk;
+        vel/=sumSk;
 
-      tx_new[idx] = tx[idx] + vel*delT;
+        tx_new[idx] = tx[idx] + vel*delT;
 
-      // Check to see if a tracer has left the domain
-      if(!domain.inside(tx_new[idx])){
-        double epsilon = 1.e-15;
-        Point txn = tx_new[idx];
-        if(periodic.x()==0){
-         if(tx_new[idx].x()<dom_min.x()){
-          tx_new[idx] = Point(dom_min.x()+epsilon, txn.y(), txn.z());
-          txn = tx_new[idx];
-         }
-         if(tx_new[idx].x()>dom_max.x()){
-          tx_new[idx] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
-          txn = tx_new[idx];
-         }
-         static ProgressiveWarning warn("A tracer has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-         warn.invoke();
-        }
-        if(periodic.y()==0){
-         if(tx_new[idx].y()<dom_min.y()){
-          tx_new[idx] = Point(txn.x(),dom_min.y()+epsilon, txn.z());
-          txn = tx_new[idx];
-         }
-         if(tx_new[idx].y()>dom_max.y()){
-          tx_new[idx] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
-          txn = tx_new[idx];
-         }
-         static ProgressiveWarning warn("A tracer has moved outside the domain through a y boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-         warn.invoke();
-        }
-        if(periodic.z()==0){
-         if(tx_new[idx].z()<dom_min.z()){
-          tx_new[idx] = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
-         }
-         if(tx_new[idx].z()>dom_max.z()){
-          tx_new[idx] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
-         }
-         static ProgressiveWarning warn("A tracer has moved outside the domain through a z boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-         warn.invoke();
+        // Check to see if a tracer has left the domain
+        if(!domain.inside(tx_new[idx])){
+          double epsilon = 1.e-15;
+          Point txn = tx_new[idx];
+          if(periodic.x()==0){
+           if(tx_new[idx].x()<dom_min.x()){
+            tx_new[idx] = Point(dom_min.x()+epsilon, txn.y(), txn.z());
+            txn = tx_new[idx];
+           }
+           if(tx_new[idx].x()>dom_max.x()){
+            tx_new[idx] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
+            txn = tx_new[idx];
+           }
+           static ProgressiveWarning warn("A tracer has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+           warn.invoke();
+          }
+          if(periodic.y()==0){
+           if(tx_new[idx].y()<dom_min.y()){
+            tx_new[idx] = Point(txn.x(),dom_min.y()+epsilon, txn.z());
+            txn = tx_new[idx];
+           }
+           if(tx_new[idx].y()>dom_max.y()){
+            tx_new[idx] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
+            txn = tx_new[idx];
+           }
+           static ProgressiveWarning warn("A tracer has moved outside the domain through a y boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+           warn.invoke();
+          }
+          if(periodic.z()==0){
+           if(tx_new[idx].z()<dom_min.z()){
+            tx_new[idx] = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
+           }
+           if(tx_new[idx].z()>dom_max.z()){
+            tx_new[idx] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
+           }
+           static ProgressiveWarning warn("A tracer has moved outside the domain through a z boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+           warn.invoke();
+          }
         }
       }
     }
