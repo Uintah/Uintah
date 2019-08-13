@@ -4,6 +4,13 @@
 <symbolicLinks>
 </symbolicLinks>
 
+
+
+<test>
+  <name>DNS_ReTau180</name>
+  <tst>delT_study.tst</tst>
+</test>
+
 <!--
 <test>
   <name>Couette-Poiseuille_XY</name>
@@ -31,13 +38,13 @@
   <name>Couette-Poiseuille_ZX</name>
   <tst>Couette-Poiseuille/ZX.tst</tst>
 </test>
--->
+
 
 <test>
   <name>Couette-Poiseuille_ZX_periodic</name>
   <tst>Couette-Poiseuille/ZX_periodic.tst</tst>
 </test>
-
+-->
 <!--__________________________________-->
 <!--
 <test>
