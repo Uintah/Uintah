@@ -609,8 +609,9 @@ void customInitialization(const Patch* patch,
       const Level* level = patch->getLevel();
 
       double visc      = ice_matl->getViscosity();
+      double rho       = ice_matl->getInitialDensity();
       double Re_tau    = cib->powerLaw2_vars.Re_tau;
-      double u_tau     = ( visc * Re_tau/halfChanHeight ) ;
+      double u_tau     = ( visc * Re_tau/(rho * halfChanHeight) ) ;
       double vonKarman = 0.4;
       
 //      std::cout << "     halfChannelHeight: " << halfChannelHeight << " vDir: " << vDir << " pDir: " << pDir 
@@ -650,6 +651,8 @@ void customInitialization(const Patch* patch,
     if ( whichMethod == "DNS_Moser" ){
 
       double visc       =  ice_matl->getViscosity();
+      double rho        =  ice_matl->getInitialDensity();
+      double nu         =  visc / rho;
       int vDir          =  cib->DNS_Moser_vars.verticalDir;
       double dpdx       =  cib->DNS_Moser_vars.dpdx;
       double gridCeil   =  cib->DNS_Moser_vars.gridCeil(vDir);
@@ -670,7 +673,7 @@ void customInitialization(const Patch* patch,
         double y   = here.asVector()[vDir];
 
         vel_CC[c] = Vector(0,0,0);
-        double u = 1./(2.*visc) * dpdx * ( y*y - gridCeil*y );
+        double u = 1./(2. * nu) * dpdx * ( y*y - gridCeil*y );
         vel_CC[c].x( u );
 
         // Clamp for edge/corner cells
