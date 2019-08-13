@@ -39,7 +39,24 @@
                                                                              camclay, 
                                                                              TongeRameshPTR, 
                                                                              rf_elastic_plastic,
-                                                                             ArrudaBoyce8'">
+                                                                             ArrudaBoyce8,
+                                                                             Kelvin_Voigt,
+                                                                             Maxwell_Weichert">
+	<!-- input parameters for Kelvin_voigt model -->
+	<elastic_shear				   spec="REQUIRED DOUBLE 'positive'" need_applies_to = "type Kelvin_Voigt" />
+	<elastic_bulk                  spec="REQUIRED DOUBLE 'positive'" need_applies_to = "type Kelvin_Voigt" />
+	<viscous_shear                 spec="REQUIRED DOUBLE 'positive'" need_applies_to = "type Kelvin_Voigt" />
+	<viscous_bulk                  spec="OPTIONAL DOUBLE 'positive'" need_applies_to = "type Kelvin_Voigt" />
+	
+	<!-- input parameters for Maxwell_Weichert model -->
+	<terminal_shear_modulus        spec="REQUIRED DOUBLE 'positive'" need_applies_to = "type Maxwell_Weichert" />
+	<viscoelastic_series           spec="REQUIRED NO_DATA" need_applies_to = "type Maxwell_Weichert" >
+	  <mode                        spec="MULTIPLE NO_DATA" attribute1="name OPTIONAL STRING">
+	    <relaxation_time           spec="REQUIRED DOUBLE 'positive'" />
+	    <partial_shear_modulus     spec="REQUIRED DOUBLE 'positive'" />
+	  </mode>
+	</viscoelastic_series>
+	
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />

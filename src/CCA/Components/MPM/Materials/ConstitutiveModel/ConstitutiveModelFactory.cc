@@ -66,6 +66,11 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/RFElasticPlastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ArrudaBoyce8Chain.h>
+
+// Generalized Viscoelastic CMs
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoElastic/KelvinVoigt.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoElastic/MaxwellWeichert.h>
+
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -287,6 +292,16 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (cm_type == "ArrudaBoyce8") {
     computes_pLocalizedMPM = false;
     return(scinew ArrudaBoyce8Chain(child,flags));
+  }
+
+  else if (cm_type == "Kelvin_Voigt") {
+    computes_pLocalizedMPM = false;
+    return(scinew KelvinVoigt(child,flags));
+  }
+
+  else if (cm_type == "Maxwell_Weichert") {
+    computes_pLocalizedMPM = false;
+    return(scinew MaxwellWeichert(child,flags));
   }
 
   else
