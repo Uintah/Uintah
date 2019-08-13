@@ -51,6 +51,7 @@ void
 TracerMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
 
 {
+  ps->require("associated_material",d_associated_material);
   ps->require("tracer_filename",    d_tracer_filename);
 }
 
@@ -78,6 +79,7 @@ ProblemSpecP TracerMaterial::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP tracer_ps = ps->appendChild("tracer");
 
+  tracer_ps->appendElement("associated_material",d_associated_material);
   tracer_ps->appendElement("tracer_filename",    d_tracer_filename);
 
   return tracer_ps;
