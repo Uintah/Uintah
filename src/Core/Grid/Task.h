@@ -229,7 +229,7 @@ protected: // class Task
                   ,       Tuple::seq<S...>
                   )
       {
-        (ptr->*pmf)(patches, matls, static_cast<OnDemandDataWarehouse*>(fromDW), static_cast<OnDemandDataWarehouse*>(toDW),
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW),
                     uintahParams, execObj, std::get<S>(m_args)...);
       }
 
