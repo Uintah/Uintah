@@ -41,7 +41,11 @@
                                                                              rf_elastic_plastic,
                                                                              ArrudaBoyce8,
                                                                              Kelvin_Voigt,
-                                                                             Maxwell_Weichert">
+                                                                             Maxwell_Weichert,
+									     MohrCoulomb,
+									     HypoplasticB,
+									     QADamage">
+
 	<!-- input parameters for Kelvin_voigt model -->
 	<elastic_shear				   spec="REQUIRED DOUBLE 'positive'" need_applies_to = "type Kelvin_Voigt" />
 	<elastic_bulk                  spec="REQUIRED DOUBLE 'positive'" need_applies_to = "type Kelvin_Voigt" />
@@ -977,6 +981,102 @@
     <PTR_MGTheta_0 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
     <PTR_JMin spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
     <PTR_MGNPts spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+
+	    <!--______________________________________________________________________ -->
+
+    <ei0_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <ed0_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <ec0_B        spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <phic_B         spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<hs_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<beta_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<n_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<alpha_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<E_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<v_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<epocz_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <nl_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <lchar_B          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+    <mean_pressure          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<phase               spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	<phase_change          spec="OPTIONAL DOUBLE" need_applies_to="type HypoplasticB"/>
+	    <!--______________________________________________________________________ -->
+
+    <bulk_modulus          spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+    <shear_modulus         spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+    <length_scale          spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	<length_mesh           spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	
+    <k_ratio               spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	<tensile_strength      spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+    <fracture_energy       spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	<n_nonlocal            spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	<a            spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	<b            spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	<beta            spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	<ref_eqstrain            spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	
+	<usePlasticity         spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	<alpha       		   spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	<yield_stress          spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+	<hardening_modulus     spec="OPTIONAL DOUBLE" need_applies_to="type QADamage"/>
+
+	 <!--______________________________________________________________________ -->
+    <!-- The following are for the Mohr-Coulomb model -->
+    <!-- G - shear modulus, K - bulk modulus, c-cohesion [all stress units]
+	Phi - friction angle, Psi - dilation angle [all degrees]
+	note - some are repeated, but apparently there is no problem with that
+	as some of the names are already twice in the file-->
+
+    <G        spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <K        spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <c        spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <Phi      spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <Psi      spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <Version  spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	
+	
+    <Usetransition     spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <A1                spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <B1                spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <W                 spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <beta              spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <strain_ref        spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+
+    <Usemodul  		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	<m_modul  		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	<nuy      		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+
+	
+	<Use_softening	   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	<St       		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	<strain_95		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+
+
+	<Use_linear	   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	<a       		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	<y_ref		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+		<y		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	<n		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+
+	<Use_regular	   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	<tFE       		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	<tShear		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	
+	<n_nonlocalMC		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	<l_nonlocal		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+	
+    <UseWaterRetention spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <PhiB  spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type MohrCoulomb"/>
+    <suction  spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type MohrCoulomb"/>
+    <SpecVol  spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type MohrCoulomb"/>
+    <WR_Param1 spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <WR_Param2 spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <WR_Param3 spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <WR_Param4 spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+<!-- Version: 1- classic Mohr Coulomb, 11 - proper implementation (implicit)
+3- Sheng Mohr Coulomb -->
+
 
 
   </constitutive_model>

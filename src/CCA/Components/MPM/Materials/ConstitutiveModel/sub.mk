@@ -79,6 +79,7 @@ SUBDIRS := \
         $(SRCDIR)/PortableTongeRamesh \
         $(SRCDIR)/ArenaSoilBanerjeeBrannon \
         $(SRCDIR)/ViscoElastic \
+	$(SRCDIR)/QuocAnh \
 #        $(SRCDIR)/Biswajit \
 
 ifneq ($(NO_FORTRAN),yes)
