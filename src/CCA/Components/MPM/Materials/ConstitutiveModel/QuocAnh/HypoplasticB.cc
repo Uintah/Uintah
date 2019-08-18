@@ -46,7 +46,7 @@
 #include <Core/Math/Short27.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Containers/StaticArray.h>
+//#include <Core/Containers/StaticArray.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
@@ -186,6 +186,7 @@ void HypoplasticB::initializeCMData(const Patch* patch,
 
 	ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
+	/*
 	// PVoidRatio
 	ParticleVariable<double>  pVoidRatio;
 	new_dw->allocateAndPut(pVoidRatio, lb->pVoidRatioLabel, pset);
@@ -197,6 +198,7 @@ void HypoplasticB::initializeCMData(const Patch* patch,
 		pVoidRatio[idx] = 0.0;
 
 	}
+	*/
 
 	//StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
 	std::vector<ParticleVariable<double> > ISVs(d_NINSV + 1);
@@ -302,12 +304,13 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 			old_dw->get(ISVs[i], ISVLabels[i], pset);
 		}
 
-		ParticleVariable<double> pdTdt, p_q, pVoidRatio;
+		ParticleVariable<double> pdTdt, p_q;
+		//ParticleVariable<double> pVoidRatio;
 
 		new_dw->allocateAndPut(pstress_new, lb->pStressLabel_preReloc, pset);
 		new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel, pset);
 		// void ratio
-		new_dw->allocateAndPut(pVoidRatio, lb->pVoidRatioLabel, pset);
+		//new_dw->allocateAndPut(pVoidRatio, lb->pVoidRatioLabel, pset);
 
 		new_dw->allocateAndPut(p_q, lb->p_qLabel_preReloc, pset);
 		new_dw->get(deformationGradient_new,
@@ -320,7 +323,7 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 		std::vector<ParticleVariable<double> > ISVs_new(d_NINSV + 1);
 		for (int i = 0; i < d_NINSV; i++) {
 			new_dw->allocateAndPut(ISVs_new[i], ISVLabels_preReloc[i], pset);
-		}	
+		}
 
 		for (ParticleSubset::iterator iter = pset->begin();
 			iter != pset->end(); iter++) {
@@ -363,7 +366,7 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 
 			// This is the previous timestep Cauchy stress
 			// unrotated tensorSig=R^T*pstress*R
-			Matrix3 tensorSig = (tensorR.Transpose())*(pstress[idx]*tensorR);
+			Matrix3 tensorSig = (tensorR.Transpose())*(pstress[idx] * tensorR);
 
 			// Load into 1-D array for the fortran code
 			double sigarg[6];
@@ -406,7 +409,7 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 			//calculateStress for each particle
 			CalculateStress(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
 
-			pVoidRatio[idx] = svarg[10];
+			//pVoidRatio[idx] = svarg[10];
 
 
 			// Unload ISVs from 1D array into ISVs_new
@@ -459,8 +462,8 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 				p_q[idx] = 0.;
 			}
 		}  // end loop over particles
-	   
-	
+
+
 		WaveSpeed = dx / WaveSpeed;
 		double delT_new = WaveSpeed.minComponent();
 		new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
@@ -486,18 +489,19 @@ void HypoplasticB::carryForward(const PatchSubset* patches,
 		// This method is defined in the ConstitutiveModel base class.
 		carryForwardSharedData(pset, old_dw, new_dw, matl);
 
+		/*
 		// PVoidratio
 		ParticleVariable<double>  pVoidRatio;
 
 		new_dw->allocateAndPut(pVoidRatio, lb->pVoidRatioLabel, pset);
 
 		ParticleSubset::iterator iter = pset->begin();
-		for (; iter != pset->end(); iter++) {	
+		for (; iter != pset->end(); iter++) {
 			particleIndex idx = *iter;
 
 			pVoidRatio[idx] = 0.0;
 		}
-
+		*/
 
 		// Carry forward the data local to this constitutive model
 		std::vector<constParticleVariable<double> > ISVs(d_NINSV + 1);
@@ -547,7 +551,7 @@ void HypoplasticB::addComputesAndRequires(Task* task,
 	const MaterialSubset* matlset = matl->thisMaterial();
 	addSharedCRForHypoExplicit(task, matlset, patches);
 
-	task->computes(lb->pVoidRatioLabel, matlset);
+	//task->computes(lb->pVoidRatioLabel, matlset);
 
 	// Computes and requires for internal state data
 	for (int i = 0; i < d_NINSV; i++) {
@@ -737,7 +741,7 @@ lchar - characterstic length
 	{
 		stress[2] = -1.0;
 	}
-	   	 
+
 	double esd = svarg[10];
 	double volumeRate = svarg[16];
 	double trT = stress[0] + stress[1] + stress[2];
@@ -756,153 +760,153 @@ lchar - characterstic length
 	double fd = pow(((esd - ed) / (ec - ed)), alpha);
 	double fs = (hs / (n*hi))*pow((ei / esd), beta)*((1.0 + ei) / ei)*pow((3.0*ps / hs), (1.0 - n));
 
-			// Start calculate stress
-			double T11 = stress[0] / trT;
-			double T22 = stress[1] / trT;
-			double T33 = stress[2] / trT;
-			double T1212 = stress[3] / trT;
-			double T2323 = stress[4] / trT;
-			double T1313 = stress[5] / trT;
+	// Start calculate stress
+	double T11 = stress[0] / trT;
+	double T22 = stress[1] / trT;
+	double T33 = stress[2] / trT;
+	double T1212 = stress[3] / trT;
+	double T2323 = stress[4] / trT;
+	double T1313 = stress[5] / trT;
 
-			double TSS1 = (stress[0] - trT / 3.0) / trT;
-			double TSS2 = (stress[1] - trT / 3.0) / trT;
-			double TSS3 = (stress[2] - trT / 3.0) / trT;
-			double TSS12 = stress[3] / trT;
-			double TSS23 = stress[4] / trT;
-			double TSS13 = stress[5] / trT;
+	double TSS1 = (stress[0] - trT / 3.0) / trT;
+	double TSS2 = (stress[1] - trT / 3.0) / trT;
+	double TSS3 = (stress[2] - trT / 3.0) / trT;
+	double TSS12 = stress[3] / trT;
+	double TSS23 = stress[4] / trT;
+	double TSS13 = stress[5] / trT;
 
-			double tr1 = pow(TSS1, 2.0) + pow(TSS12, 2.0) + pow(TSS13, 2.0);
-			double tr2 = pow(TSS12, 2.0) + pow(TSS2, 2.0) + pow(TSS23, 2.0);
-			double tr3 = pow(TSS13, 2.0) + pow(TSS23, 2.0) + pow(TSS3, 2.0);
-			double tr4 = TSS1 * TSS12 + TSS2 * TSS12 + TSS13 * TSS23;
-			double tr5 = TSS1 * TSS13 + TSS12 * TSS23 + TSS13 * TSS3;
-			double tr6 = TSS12 * TSS13 + TSS2 * TSS23 + TSS23 * TSS3;
-			double tr7 = TSS1 * TSS13 + TSS12 * TSS23 + TSS13 * TSS3;
-			double tr8 = TSS12 * TSS13 + TSS2 * TSS23 + TSS23 * TSS3;
-			double tr9 = pow(TSS13, 2.0) + pow(TSS23, 2.0) + pow(TSS3, 2.0);
+	double tr1 = pow(TSS1, 2.0) + pow(TSS12, 2.0) + pow(TSS13, 2.0);
+	double tr2 = pow(TSS12, 2.0) + pow(TSS2, 2.0) + pow(TSS23, 2.0);
+	double tr3 = pow(TSS13, 2.0) + pow(TSS23, 2.0) + pow(TSS3, 2.0);
+	double tr4 = TSS1 * TSS12 + TSS2 * TSS12 + TSS13 * TSS23;
+	double tr5 = TSS1 * TSS13 + TSS12 * TSS23 + TSS13 * TSS3;
+	double tr6 = TSS12 * TSS13 + TSS2 * TSS23 + TSS23 * TSS3;
+	double tr7 = TSS1 * TSS13 + TSS12 * TSS23 + TSS13 * TSS3;
+	double tr8 = TSS12 * TSS13 + TSS2 * TSS23 + TSS23 * TSS3;
+	double tr9 = pow(TSS13, 2.0) + pow(TSS23, 2.0) + pow(TSS3, 2.0);
 
-			double trTs2 = tr1 + tr2 + tr3;
-			double trTs3 = (TSS1*tr1 + TSS12 * tr4 + TSS13 * tr5) + (TSS12*tr4 + TSS2 * tr2 + TSS23 * tr6) + (TSS13*tr7 + TSS23 * tr8 + TSS3 * tr9);
-			double PtsI = sqrt(pow(TSS1, 2.0) + pow(TSS2, 2.0) + pow(TSS3, 2.0) + 2.0*pow(TSS12, 2.0) + 2.0*pow(TSS23, 2.0) + 2.0*pow(TSS13, 2.0));
+	double trTs2 = tr1 + tr2 + tr3;
+	double trTs3 = (TSS1*tr1 + TSS12 * tr4 + TSS13 * tr5) + (TSS12*tr4 + TSS2 * tr2 + TSS23 * tr6) + (TSS13*tr7 + TSS23 * tr8 + TSS3 * tr9);
+	double PtsI = sqrt(pow(TSS1, 2.0) + pow(TSS2, 2.0) + pow(TSS3, 2.0) + 2.0*pow(TSS12, 2.0) + 2.0*pow(TSS23, 2.0) + 2.0*pow(TSS13, 2.0));
 
-			double a1;
-			double cos3o;
-			if (trTs2 == 0.0)
-			{
-				a1 = 1 / c1;
-			}
-			else
-			{
-				cos3o = -sqrt(d)*trTs3 / pow((trTs2), 1.5);
-				if (cos3o >= 1.0)
-				{
-					cos3o = 1.0;
-				}
-				if (cos3o <= -1.0)
-				{
-					cos3o = -1.0;
-				}
-				a1 = 1 / (c1 + (c2*(1.0 + cos3o)*PtsI));
-			}
+	double a1;
+	double cos3o;
+	if (trTs2 == 0.0)
+	{
+		a1 = 1 / c1;
+	}
+	else
+	{
+		cos3o = -sqrt(d)*trTs3 / pow((trTs2), 1.5);
+		if (cos3o >= 1.0)
+		{
+			cos3o = 1.0;
+		}
+		if (cos3o <= -1.0)
+		{
+			cos3o = -1.0;
+		}
+		a1 = 1 / (c1 + (c2*(1.0 + cos3o)*PtsI));
+	}
 
-			double trTTD = T11 * D[0] + T22 * D[1] + T33 * D[2] + 2.0*T1212*D[3] + 2.0*T2323*D[4] + 2.0*T1313*D[5];
+	double trTTD = T11 * D[0] + T22 * D[1] + T33 * D[2] + 2.0*T1212*D[3] + 2.0*T2323*D[4] + 2.0*T1313*D[5];
 
-			double LTD1 = pow(a1, 2.0)*D[0] + T11 * trTTD;
-			double LTD2 = pow(a1, 2.0)*D[1] + T22 * trTTD;
-			double LTD3 = pow(a1, 2.0)*D[2] + T33 * trTTD;
-			double LTD12 = pow(a1, 2.0)*D[3] + T1212 * trTTD;
-			double LTD23 = pow(a1, 2.0)*D[4] + T2323 * trTTD;
-			double LTD13 = pow(a1, 2.0)*D[5] + T1313 * trTTD;
+	double LTD1 = pow(a1, 2.0)*D[0] + T11 * trTTD;
+	double LTD2 = pow(a1, 2.0)*D[1] + T22 * trTTD;
+	double LTD3 = pow(a1, 2.0)*D[2] + T33 * trTTD;
+	double LTD12 = pow(a1, 2.0)*D[3] + T1212 * trTTD;
+	double LTD23 = pow(a1, 2.0)*D[4] + T2323 * trTTD;
+	double LTD13 = pow(a1, 2.0)*D[5] + T1313 * trTTD;
 
-			double NT1 = a1 * ((2.0*stress[0] - trT / 3.0) / (trT));
-			double NT2 = a1 * ((2.0*stress[1] - trT / 3.0) / (trT));
-			double NT3 = a1 * ((2.0*stress[2] - trT / 3.0) / (trT));
-			double NT12 = a1 * (2.0*stress[3] / (trT));
-			double NT23 = a1 * (2.0*stress[4] / (trT));
-			double NT13 = a1 * (2.0*stress[5] / (trT));
+	double NT1 = a1 * ((2.0*stress[0] - trT / 3.0) / (trT));
+	double NT2 = a1 * ((2.0*stress[1] - trT / 3.0) / (trT));
+	double NT3 = a1 * ((2.0*stress[2] - trT / 3.0) / (trT));
+	double NT12 = a1 * (2.0*stress[3] / (trT));
+	double NT23 = a1 * (2.0*stress[4] / (trT));
+	double NT13 = a1 * (2.0*stress[5] / (trT));
 
-			double dlooocB = pow(D[0], 2) + pow(D[1], 2) + pow(D[2], 2) + 2.0*pow(D[3], 2) + 2.0*pow(D[4], 2) + 2.0*pow(D[5], 2);
-			double dloc = sqrt(dlooocB);
+	double dlooocB = pow(D[0], 2) + pow(D[1], 2) + pow(D[2], 2) + 2.0*pow(D[3], 2) + 2.0*pow(D[4], 2) + 2.0*pow(D[5], 2);
+	double dloc = sqrt(dlooocB);
 
-			double dT1 = fs * (LTD1 + fd * NT1*dloc);
-			double dT2 = fs * (LTD2 + fd * NT2*dloc);
-			double dT3 = fs * (LTD3 + fd * NT3*dloc);
-			double dT12 = fs * (LTD12 + fd * NT12*dloc);
-			double dT23 = fs * (LTD23 + fd * NT23*dloc);
-			double dT13 = fs * (LTD13 + fd * NT13*dloc);
+	double dT1 = fs * (LTD1 + fd * NT1*dloc);
+	double dT2 = fs * (LTD2 + fd * NT2*dloc);
+	double dT3 = fs * (LTD3 + fd * NT3*dloc);
+	double dT12 = fs * (LTD12 + fd * NT12*dloc);
+	double dT23 = fs * (LTD23 + fd * NT23*dloc);
+	double dT13 = fs * (LTD13 + fd * NT13*dloc);
 
-			stress[0] += dT1 * dt;
-			stress[1] += dT2 * dt;
-			stress[2] += dT3 * dt;
-			stress[3] += dT12 * dt;
-			stress[4] += dT23 * dt;
-			stress[5] += dT13 * dt;
+	stress[0] += dT1 * dt;
+	stress[1] += dT2 * dt;
+	stress[2] += dT3 * dt;
+	stress[3] += dT12 * dt;
+	stress[4] += dT23 * dt;
+	stress[5] += dT13 * dt;
 
-			//iNLB = iNLB + 1;
+	//iNLB = iNLB + 1;
 
-			double de = (1.0 + esd)*(D[0] + D[1] + D[2]);
+	double de = (1.0 + esd)*(D[0] + D[1] + D[2]);
 
-			//Void ratio
-			svarg[10] += de * dt;
+	//Void ratio
+	svarg[10] += de * dt;
+
+	// mean pressure
+	svarg[13] = stress[0] + stress[1] + stress[2];
+
+	// phase solid
+	svarg[14] = 0;
+
+
+	// Void ratio cut off
+	double phase_change = UI[15];
+	if (volumeRate >= (1 + ei) / (1 + eini)) {
+
+		if (phase_change) {
+			stress[0] = 0;
+			stress[1] = 0;
+			stress[2] = 0;
+			stress[3] = 0;
+			stress[4] = 0;
+			stress[5] = 0;
+
+			// Cut off void ratio
+			svarg[10] = ei;
+
+			// mean pressure
+			svarg[13] = stress[0] + stress[1] + stress[2];
+
+
+			// Detect phase change
+			svarg[14] = 1;
+		}
+	}
+
+	// positive mean stress corresponds to extension
+	// Tension cut off
+	else if (trT >= 0) {
+		if (phase_change) {
+			stress[0] = 0;
+			stress[1] = 0;
+			stress[2] = 0;
+			stress[3] = 0;
+			stress[4] = 0;
+			stress[5] = 0;
+
+			svarg[10] = esd;
 
 			// mean pressure
 			svarg[13] = stress[0] + stress[1] + stress[2];
 
 			// phase solid
-			svarg[14] = 0;
-		
+			svarg[14] = 1;
+		}
+	}
 
-			// Void ratio cut off
-			double phase_change = UI[15];
-			if (volumeRate >= (1 + ei) / (1 + eini)) {
-
-				if (phase_change) {
-					stress[0] = 0;
-					stress[1] = 0;
-					stress[2] = 0;
-					stress[3] = 0;
-					stress[4] = 0;
-					stress[5] = 0;
-
-					// Cut off void ratio
-					svarg[10] = ei;
-
-					// mean pressure
-					svarg[13] = stress[0] + stress[1] + stress[2];
+	if (svarg[10] <= ed) {
+		// Cut off void ratio
+		svarg[10] = ed;
+	}
 
 
-					// Detect phase change
-					svarg[14] = 1;
-				}
-			}
-
-			// positive mean stress corresponds to extension
-			// Tension cut off
-			else if (trT >= 0) {
-				if (phase_change) {
-					stress[0] = 0;
-					stress[1] = 0;
-					stress[2] = 0;
-					stress[3] = 0;
-					stress[4] = 0;
-					stress[5] = 0;
-
-					svarg[10] = esd;
-
-					// mean pressure
-					svarg[13] = stress[0] + stress[1] + stress[2];
-
-					// phase solid
-					svarg[14] = 1;
-				}
-			}
-			   		 	  
-			if (svarg[10] <= ed) {
-				// Cut off void ratio
-				svarg[10] = ed;
-			}
-
-	
 	/////////////////////////////////////
 	double Kmod = (E) / (3 * (1 - 2 * v));
 	double Gmod = (E) / (2 * (1 + v));
