@@ -31,11 +31,14 @@
 SRCDIR := CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh
 
 SRCS   += \
-        $(SRCDIR)/HypoplasticB.cc                \
+        $(SRCDIR)/HypoplasticB.cc                       \
 		$(SRCDIR)/MohrCoulomb.cc                \
-		$(SRCDIR)/ClassicMohrCoulomb.cc                \
-		$(SRCDIR)/ShengMohrCoulomb.cc                \
-		$(SRCDIR)/BBMMatrix.cc                \
-		$(SRCDIR)/QADamage.cc                \
-		$(SRCDIR)/BBMPoint.cc                
+		$(SRCDIR)/ClassicMohrCoulomb.cc         \
+		$(SRCDIR)/ShengMohrCoulomb.cc           \
+		$(SRCDIR)/BBMMatrix.cc                  \
+		$(SRCDIR)/QADamage.cc                   \
+		$(SRCDIR)/BBMPoint.cc                   \
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+     
 		
