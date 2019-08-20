@@ -44,7 +44,7 @@ The list below summarizes desired needs from the perspective of both Uintah's ru
 
 \section{Core Pieces}
 
-Template metaprogramming in Uintah did not come easy.  The significant challenge was that Uintah's runtime system which controlled task compilation was intertwined with C++ polymorphism.  Templates requires compile-time knowledge (i.e. early binding), and polymorphism requires runtime knowledge (i.e. late binding).  The cleanest solution was utilizing a parameter object to carry template parameters and template deduction.  This reduced the template metaprogramming to three core pieces, 1) task tagging, 2) a Uintah templated \emph{Execution Object}, 3) functors, and 4) task code.  These four are discussed in the following sections.
+Template metaprogramming in Uintah did not come easy.  The significant challenge was that Uintah's runtime system which controlled task compilation was intertwined with C++ polymorphism.  Templates requires compile-time knowledge (i.e. early binding), and polymorphism requires runtime knowledge (i.e. late binding).  The cleanest solution was utilizing a parameter object to carry template parameters and template deduction.  This reduced the template metaprogramming to four core pieces, 1) task tagging, 2) a Uintah templated \emph{Execution Object}, 3) functors, and 4) task code.  These four are discussed in the following sections.
 
 \subsection{Task Tagging}
 \label{sec:task_tagging}
@@ -150,7 +150,7 @@ The task code itself can now use the template parameters to aid in template meta
 	\label{fig:uintah_parallel_for}
 \end{figure}
 
-Uintah's parallel loops avoid requiring template chevron syntax.  The Execution Object again carries the templated information.  Uintah relies on C++ template deduction to pass the template information.  Figure~\ref{fig:uintah_parallel_for} depicts how Uintah calls the correct parallel loop for the matching template execution space.  From here, Uintah is able to supply its own architecture specific backend loop options.  We found that Kokkos's portability options were insufficient for Uintah and we needed more control.  Further, we retain control to run our functors via pthreads in case Kokkos were not used at all.  
+Uintah's parallel loops avoid requiring template chevron syntax.  The Execution Object again carries the templated information.  Uintah relies on C++ template deduction to pass the template information.  Figure~\ref{fig:uintah_parallel_for} depicts how Uintah calls the correct parallel loop for the matching template execution space.  From here, Uintah is able to supply its own architecture specific backend loop options.  We found that Kokkos's portability options were insufficient for Uintah and we needed more control.  Further, we retain control to run our functors via pthreads in case Kokkos was not used at all.  
 
 \subsection{Overview}
 
