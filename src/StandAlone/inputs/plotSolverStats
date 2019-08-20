@@ -89,18 +89,18 @@ cat >> gp << fin
 
 #__________________________________
 # compute stats this version of gnuplot is > 3.8
-haveStats =0
 if ( strstrt(GPVAL_COMPILE_OPTIONS,"+STATS") ) {
   print "Computing the statistics of the mean time per timestep"; 
-  haveStats = 1
+} else {
+  print " This version of gnuplot does not support computing statistics.";
+  print " Now exiting...."
+  exit
 }
 
 # compute statistics of mean time and scale the results
-if(haveStats == 1){
-  stats 'data' using 2 name "A"; 
-  stats 'data' using 3 name "B"; 
-  stats 'data' using 4 name "C"; 
-}
+stats 'data' using 2 name "A"; 
+stats 'data' using 3 name "B"; 
+stats 'data' using 4 name "C"; 
 
 set multiplot
 set size   1.0, 0.33
@@ -128,7 +128,7 @@ plot 'data' using 3  t 'solver Time ' with lines
 set origin 0.0,0.0
 set ylabel 'Solver iterations'
 set autoscale
-set yrange[C_lo_quartile - C_stddev:C_up_quartile + C_stddev]
+set yrange[C_lo_quartile - C_stddev -1 :C_up_quartile + C_stddev + 1]
 
 plot 'data' using 4 t 'solver iterations' with lines
 
