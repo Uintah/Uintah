@@ -872,7 +872,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requires(Task::NewDW, lb->pCurSizeLabel,          gan,NGP);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
   if (flags->d_useCBDI) {
     t->requires(Task::NewDW,  lb->pExternalForceCorner1Label,gan,NGP);
     t->requires(Task::NewDW,  lb->pExternalForceCorner2Label,gan,NGP);
@@ -936,7 +935,6 @@ void SerialMPM::scheduleComputeSSPlusVp(SchedulerP& sched,
   Ghost::GhostType gnone = Ghost::None;
   t->requires(Task::OldDW, lb->pXLabel,                         gnone);
   t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
 
   t->requires(Task::NewDW, lb->gVelocityLabel,                  gac,NGN);
 
@@ -963,7 +961,6 @@ void SerialMPM::scheduleComputeSPlusSSPlusVp(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                     gan, NGP);
   t->requires(Task::OldDW, lb->pMassLabel,                  gan, NGP);
   t->requires(Task::NewDW, lb->pCurSizeLabel,               gan, NGP);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,    gan, NGP);
   t->requires(Task::NewDW, lb->pVelocitySSPlusLabel,        gan, NGP);
   t->requires(Task::NewDW, lb->gMassLabel,                  gac, NGN);
 
@@ -1150,7 +1147,6 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::NewDW,lb->pCurSizeLabel,              gan,NGP);
-//  t->requires(Task::OldDW,lb->pDeformationMeasureLabel,   gan,NGP);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          gan,NGP);
@@ -1347,7 +1343,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -2574,7 +2569,6 @@ void SerialMPM::computeSSPlusVp(const ProcessorGroup*,
 
       old_dw->get(px,       lb->pXLabel,                         pset);
       new_dw->get(psize,    lb->pCurSizeLabel,                   pset);
-//      old_dw->get(pFOld,    lb->pDeformationMeasureLabel,        pset);
 
       new_dw->allocateAndPut(pvelSSPlus,lb->pVelocitySSPlusLabel,    pset);
 
@@ -2639,7 +2633,6 @@ void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
       old_dw->get(px,         lb->pXLabel,                         pset);
       old_dw->get(pmass,      lb->pMassLabel,                      pset);
       new_dw->get(psize,      lb->pCurSizeLabel,                   pset);
-//      old_dw->get(pFOld,      lb->pDeformationMeasureLabel,        pset);
       new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
       new_dw->get(gmass,      lb->gMassLabel,         dwi,patch,gac,NGP);
       new_dw->allocateAndPut(gvelSPSSP,   lb->gVelSPSSPLabel,   dwi,patch);
@@ -2997,7 +2990,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(pvol,    lb->pVolumeLabel,                 pset);
       old_dw->get(pstress, lb->pStressLabel,                 pset);
       new_dw->get(psize,   lb->pCurSizeLabel,                pset);
-//      old_dw->get(pFOld,   lb->pDeformationMeasureLabel,     pset);
 
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
 
@@ -3807,7 +3799,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
-//      old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       if(flags->d_XPIC2){
         new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
