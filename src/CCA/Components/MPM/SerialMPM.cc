@@ -3908,7 +3908,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         gSN_create.initialize(Vector(0.));
         gSurfNorm = gSN_create;                     // reference created data
       }
-      
+
       new_dw->get(massBurnFrac,    lb->massBurnFractionLabel,dwi,patch,gac,NGP);
 
       double Cp=mpm_matl->getSpecificHeat();
@@ -6298,8 +6298,8 @@ void SerialMPM::scheduleFindSurfaceParticles(SchedulerP   & sched,
                                              const MaterialSet * matls )
 {
   printSchedule(patches,cout_doing,"SerialMPM::scheduleFindSurfaceParticles");
-  
-  Task* t = scinew Task("MPM::findSurfaceParticles", this, 
+
+  Task* t = scinew Task("MPM::findSurfaceParticles", this,
                         &SerialMPM::findSurfaceParticles);
 
   Ghost::GhostType  gp;
@@ -6352,7 +6352,7 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
     printTask(patches, patch, cout_doing, "Doing findSurfaceParticles");
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial*  mpm_matl  = 
+      MPMMaterial*  mpm_matl  =
                        (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
       int dwi = mpm_matl->getDWIndex();
       bool needSurfaceParticles = mpm_matl->getNeedSurfaceParticles();
@@ -6473,7 +6473,7 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
           neighborCent/=((double) nclose);
 
           // Compare centroid of neighbors to the location of current particle
-          Vector posDiff = pxOP[idx].asVector() - neighborCent; 
+          Vector posDiff = pxOP[idx].asVector() - neighborCent;
           if(posDiff.length() < tol){
             pSurf[idx] = pSurfOld[idx];
           }else{
