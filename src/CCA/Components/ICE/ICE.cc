@@ -1122,19 +1122,6 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   t->requires(Task::NewDW,lb->gammaLabel,                gn);
   t->requires(Task::NewDW,lb->specific_heatLabel,        gn);
 
-  /*if (Uintah::Parallel::usingDevice()) {
-    //This helps us pre-allocate the data on the device so that later we don't have to worry
-    //about trying to allocate it correctly.
-    //We can't exactly do that on the GPU.  It makes more sense to do it here.
-
-    //t->computesTemporary("rho_micro", CCVariable<double>::getTypeDescription());
-    t->computes(lb->rho_micro_tempLabel);
-    t->computes(lb->press_eos_tempLabel);
-    t->computes(lb->dp_drho_tempLabel);
-    t->computes(lb->dp_de_tempLabel);
-
-  }*/
-
   t->computes(lb->f_theta_CCLabel); 
   t->computes(lb->speedSound_CCLabel);
   t->computes(lb->vol_frac_CCLabel);
@@ -2361,20 +2348,25 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       ostringstream warn, base;
       base <<"ERROR ICE:(L-"<<L_indx<<"):actuallyInitialize, mat "<< indx <<" cell ";
       
-      if( !areAllValuesPositive(press_CC, neg_cell) ) {
-        warn << base.str()<< neg_cell << " press_CC is negative\n";
+      if( !areAllValuesPositive( press_CC, neg_cell ) ) {
+        warn << base.str()<< neg_cell << " press_CC is invalid (" <<press_CC[neg_cell] <<")";
+        throw ProblemSetupException( warn.str(), __FILE__, __LINE__ );
+      }
+      if( !areAllValuesPositive( rho_CC[indx], neg_cell ) ) {
+        warn << base.str()<< neg_cell << " rho_CC is invalid (" <<rho_CC[indx][neg_cell] <<")";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !areAllValuesPositive(rho_CC[indx], neg_cell) ) {
-        warn << base.str()<< neg_cell << " rho_CC is negative\n";
+      if( !areAllValuesPositive( Temp_CC[indx], neg_cell ) ) {
+        warn << base.str()<< neg_cell << " Temp_CC is invalid (" <<Temp_CC[indx][neg_cell] <<")";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !areAllValuesPositive(Temp_CC[indx], neg_cell) ) {
-        warn << base.str()<< neg_cell << " Temp_CC is negative\n";
+      if( !areAllValuesPositive( sp_vol_CC[indx], neg_cell ) ) {
+        warn << base.str()<< neg_cell << " sp_vol_CC is invalid (" <<sp_vol_CC[indx][neg_cell] <<")";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !areAllValuesPositive(sp_vol_CC[indx], neg_cell) ) {
-        warn << base.str()<< neg_cell << " sp_vol_CC is negative\n";
+      if( !areAllValuesPositive( speedSound[indx], neg_cell ) ) {
+        warn << base.str()<< neg_cell << " speedSound is invalid (" <<speedSound[indx][neg_cell] <<")"
+             << "  Verify that at least one geom_object covers the entire computational domain.";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
     }   // numMatls
