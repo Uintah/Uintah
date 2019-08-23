@@ -121,7 +121,6 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   d_loadCurveIndex=0;
   d_switchCriteria = 0;
 
-  d_ndim = 0;
   d_fracture = false;
 
   // Diffusion related
@@ -2030,6 +2029,21 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 {
   particleIndex totalParticles=0;
 
+  const Level* level = getLevel(patches);
+  IntVector lowNode, highNode;
+  level->findInteriorNodeIndexRange(lowNode, highNode);
+
+  // Determine dimensionality for particle splitting
+  // To be recognized as 2D, must be in the x-y plane
+  // A 1D problem must be in the x-direction.
+  flags->d_ndim=3;
+  if(highNode.z() - lowNode.z()==2) {
+     flags->d_ndim=2;
+    if(highNode.y() - lowNode.y()==2) {
+       flags->d_ndim=1;
+    }
+  }
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -2084,18 +2098,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     }
   } // patches
 
-  const Level* level = getLevel(patches);
-  IntVector lowNode, highNode;
-  level->findInteriorNodeIndexRange(lowNode, highNode);
-  string interp_type = flags->d_interpolator_type;
-
-  // Determine dimensionality for particle splitting
-  // To be recognized as 2D, must be in the x-y plane
-  d_ndim=3;
-  if(highNode.z() - lowNode.z()==2) {
-     d_ndim=2;
-  }
-
   // Only allow axisymmetric runs if the grid is one cell
   // thick in the theta dir.
   if(flags->d_axisymmetric){
@@ -2111,6 +2113,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   // Bulletproofing for extra cells/interpolators/periodic BCs
   IntVector num_extra_cells=level->getExtraCells();
   IntVector periodic=level->getPeriodicBoundaries();
+  string interp_type = flags->d_interpolator_type;
   if(interp_type=="linear" && num_extra_cells!=IntVector(0,0,0)){
     if(!flags->d_with_ice && !flags->d_with_arches){
       ostringstream msg;
@@ -4783,13 +4786,13 @@ void SerialMPM::addParticles(const ProcessorGroup*,
                 pSplitR1R2R3[pp]=1;
               } else if (R1_R2_ratSq < tV_invSq) {
                 pSplitR1R2R3[pp]=-1;
-              } else if (R1_R3_ratSq > tVSq && d_ndim==3){
+              } else if (R1_R3_ratSq > tVSq && flags->d_ndim==3){
                 pSplitR1R2R3[pp]=2;
-              } else if (R1_R3_ratSq < tV_invSq && d_ndim==3){
+              } else if (R1_R3_ratSq < tV_invSq && flags->d_ndim==3){
                 pSplitR1R2R3[pp]=-2;
-              } else if (R2_R3_ratSq > tVSq && d_ndim==3){
+              } else if (R2_R3_ratSq > tVSq && flags->d_ndim==3){
                  pSplitR1R2R3[pp]=3;
-              } else if (R2_R3_ratSq < tV_invSq && d_ndim==3){
+              } else if (R2_R3_ratSq < tV_invSq && flags->d_ndim==3){
                  pSplitR1R2R3[pp]=-3;
               } else {
                  pSplitR1R2R3[pp]=0;
@@ -4811,7 +4814,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
        }
       }  // Loop over original particles
 
-      int fourOrEight=pow(2,d_ndim);
+      int fourOrEight=pow(2,flags->d_ndim);
       if(splitForStretch){
         fourOrEight=4;
       }
