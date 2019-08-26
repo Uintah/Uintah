@@ -402,7 +402,6 @@ void PortableDependencyTest::task3Modifies( const PatchSubset                   
       residual += diff * diff;
     }, residual);
   }
-  cudaDeviceSynchronize();
 }
 
 //______________________________________________________________________

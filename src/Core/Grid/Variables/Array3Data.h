@@ -69,8 +69,10 @@ namespace Uintah {
 template <typename T>
 class Array3Data;
 
-template <typename T, typename MemSpace>
-using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+#if defined( UINTAH_ENABLE_KOKKOS ) && defined( KOKKOS_ENABLE_OPENMP )
+  template <typename T, typename MemSpace>
+  using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+#endif
 
   template<class T> class Array3Data : public RefCounted {
     public:
