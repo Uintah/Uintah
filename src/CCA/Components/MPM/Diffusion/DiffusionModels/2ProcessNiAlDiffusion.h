@@ -141,6 +141,7 @@ namespace Uintah
       const VarLabel              * m_globalMinAlConc;
       const VarLabel              * m_pRegionType;
       const VarLabel              * m_pRegionType_preReloc;
+      const VarLabel              * m_pDiffusionCoefficient;
 
   };
 }

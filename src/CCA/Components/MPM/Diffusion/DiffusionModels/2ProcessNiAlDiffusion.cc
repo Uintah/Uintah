@@ -49,6 +49,7 @@ namespace Uintah {
     m_globalMinAlConc = VarLabel::create("globalMinAlConc",min_vartype::getTypeDescription());
     m_pRegionType = VarLabel::create("p.regionTypeEnumIndex",ParticleVariable<int>::getTypeDescription());
     m_pRegionType_preReloc = VarLabel::create("p.regionTypeEnumIndex+", ParticleVariable<int>::getTypeDescription());
+    m_pDiffusionCoefficient = VarLabel::create("p.diffusionCoefficient", ParticleVariable<double>::getTypeDescription());
   }
 
   NiAl2Process::~NiAl2Process()
@@ -57,6 +58,7 @@ namespace Uintah {
     VarLabel::destroy(m_globalMinAlConc);
     VarLabel::destroy(m_pRegionType);
     VarLabel::destroy(m_pRegionType_preReloc);
+    VarLabel::destroy(m_pDiffusionCoefficient);
 
     delete m_phaseInterpolator;
   }
@@ -101,6 +103,7 @@ namespace Uintah {
     task->requires(Task::OldDW, m_globalMinNiConc);
 
     task->computes(d_lb->pFluxLabel_preReloc, matlSubset);
+    task->computes(m_pDiffusionCoefficient, matlSubset);
     task->computes(d_sharedState->get_delt_label(), getLevel(patches));
   }
 
@@ -125,6 +128,9 @@ namespace Uintah {
     old_dw->get(pTemperature,       d_lb->pTemperatureLabel,    pSubset);
     old_dw->get(pConcentration,     d_lb->pConcentrationLabel,  pSubset);
     old_dw->get(pRegionType,        m_pRegionType,              pSubset);
+
+    ParticleVariable<double> pDiffusionCoefficient;
+    new_dw->allocateAndPut(pDiffusionCoefficient, m_pDiffusionCoefficient, pSubset);
 
     ParticleVariable<Vector> pFluxNew;
     new_dw->allocateAndPut(pFluxNew, d_lb->pFluxLabel_preReloc, pSubset);
@@ -155,6 +161,7 @@ namespace Uintah {
       double D = EAM_AlNi::Diffusivity(Temp,Conc,gradConc,minConc,regionType,
                                        m_phaseInterpolator,m_D0Liquid,m_D0Solid,m_D0LowT,
                                        m_lowTOldModel, m_lowT_Al, m_lowT_Ni)*m_multiplier;
+      pDiffusionCoefficient[pIdx] = D;
       pFluxNew[pIdx] = D * pGradConcentration[pIdx];
       diffMax = std::max(diffMax, D);
     }
