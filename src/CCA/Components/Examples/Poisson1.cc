@@ -191,7 +191,6 @@ void Poisson1::initialize( const ProcessorGroup *
     NCVariable<double> phi;
     new_dw->allocateAndPut(phi, phi_label, matl, patch);
     phi.initialize(0.);
-
     for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face = Patch::nextFace(face)) {
 
       if (patch->getBCType(face) == Patch::None) {
@@ -205,7 +204,6 @@ void Poisson1::initialize( const ProcessorGroup *
           double value = bc->getValue();
           for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
             phi[*nbound_ptr] = value;
-
           }
           delete bcb;
         }
@@ -247,7 +245,6 @@ void Poisson1::timeAdvance( const PatchSubset* patches,
     Uintah::BlockRange range( l, h );
     auto phi = old_dw->getConstNCVariable<double, MemSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
     auto newphi = new_dw->getNCVariable<double, MemSpace> (phi_label, matl, patch);
-
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
     //Uintah::parallel_for<ExecSpace, LaunchBounds< 640,1 > >( execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
     Uintah::parallel_for(execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){

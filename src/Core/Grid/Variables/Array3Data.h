@@ -66,6 +66,11 @@ namespace Uintah {
     WARNING
 
    ****************************************/
+template <typename T>
+class Array3Data;
+
+template <typename T, typename MemSpace>
+using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
   template<class T> class Array3Data : public RefCounted {
     public:
@@ -186,8 +191,9 @@ namespace Uintah {
         for(int j=0;j<s.y();j++){
           T* ddd=dd;
           T* sss=ss;
-          for(int k=0;k<s.x();k++)
+          for(int k=0;k<s.x();k++) {
             ddd[k]=sss[k];
+          }
           dd+=d_size.x();
           ss+=from->d_size.x();
         }

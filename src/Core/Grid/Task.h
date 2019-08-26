@@ -229,8 +229,7 @@ protected: // class Task
                   ,       Tuple::seq<S...>
                   )
       {
-        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW),
-                    uintahParams, execObj, std::get<S>(m_args)...);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, std::get<S>(m_args)...);
       }
 
   };  // end Kokkos enabled task Action constructor

@@ -398,6 +398,7 @@ public:
                                             , var_offset.x
                                             , var_offset.y
                                             , var_offset.z
+                                            , nullptr
                                             );
 
   }
@@ -516,6 +517,7 @@ public:
   __host__ bool compareAndSwapCopyingIntoGPUStaging(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
   __host__ bool isValidWithGhostsOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ void setValidWithGhostsOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool compareAndSwapSetInvalidWithGhostsOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
 
   __host__ bool compareAndSwapFormASuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ bool compareAndSwapSetSuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx);

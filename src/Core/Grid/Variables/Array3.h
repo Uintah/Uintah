@@ -131,8 +131,9 @@ public:
   }
 
   void copyPointer(const Array3& copy) {
-    if(copy.d_window)
+    if(copy.d_window) {
       copy.d_window->addReference();
+    }
     if(d_window && d_window->removeReference())
     {
       delete d_window;
@@ -213,6 +214,13 @@ public:
 #if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
   inline KokkosView3<T, Kokkos::HostSpace> getKokkosView() const
   {
+    // Kokkos Views don't reference count, but OnDemand Data Warehouse's GridVariables will clean themselves up
+    // when it goes out of scope and the ref count hits zero.  Uintah's KokkosView3 API means that the GridVariables
+    // are out of scope but the KokkosView3 remains.  So we have the KokkosView3 also manage Array3Data ref counting.
+	  if (!m_view.m_A3Data) {
+      m_view.m_A3Data = d_window->getData();
+      m_view.m_A3Data->addReference();
+	  }
     return m_view;
   }
 #endif

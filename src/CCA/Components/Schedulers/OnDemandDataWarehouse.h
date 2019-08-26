@@ -682,8 +682,17 @@ public:
                )
   {
     NCVariable<T> var;
-    this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
+    if ( matlIndex != -999 ) {
+      if ( this->exists(label, matlIndex, patch) ){
+        // Assumption is this is a modifies.
+        this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
+      } else {
+        // Assumption is this is a computes.
+        this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
+      }
+    }
     return var.getKokkosView();
+
   }
 
   template <typename T, typename MemSpace>
@@ -711,7 +720,13 @@ public:
   {
     CCVariable<T> var;
     if ( matlIndex != -999 ) {
-      this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
+      if ( this->exists(label, matlIndex, patch) ){
+        // Assumption is this is a modifies.
+        this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
+      } else {
+        // Assumption is this is a computes.
+        this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
+      }
     }
     return var.getKokkosView();
   }

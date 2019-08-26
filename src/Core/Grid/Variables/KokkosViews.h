@@ -29,8 +29,12 @@
 #include <Kokkos_Core.hpp>
 #include <Core/Parallel/LoopExecution.hpp>
 #include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/Array3Data.h>
+
 namespace Uintah {
 
+template <typename T>
+class Array3Data;
 
 template <typename T, typename MemSpace>
 using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
@@ -38,8 +42,18 @@ using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemSpace, Kokkos::Memo
 
 //For the default memory space
 template <typename T, typename MemSpace>
-struct KokkosView3
+class KokkosView3
 {
+public:
+
+  ~KokkosView3() {
+
+    if( m_A3Data && m_A3Data->removeReference())  // Race condition
+    {
+      delete m_A3Data;
+      m_A3Data = nullptr;
+    }
+  }
   using view_type = Kokkos::View<T***, Kokkos::LayoutStride, MemSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
 
   using reference_type = typename view_type::reference_type;
@@ -54,35 +68,68 @@ struct KokkosView3
   reference_type operator()(const IType & i ) const
   { return m_view( i, 0, 0 ); }
 
-  KokkosView3( const view_type & v, int i, int j, int k )
+  KokkosView3( const view_type & v, int i, int j, int k, Array3Data<T>* A3Data)
     : m_view(v)
     , m_i(i)
     , m_j(j)
     , m_k(k)
-  {}
+    , m_A3Data(A3Data)
+  {
+    if (this->m_A3Data) {  // These two lines are currently an OnDemand DW race condition
+      this->m_A3Data->addReference();
+    }
+  }
 
   KokkosView3() = default;
 
-  template <typename U, typename MemSpaceSource,
-            typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value >,
-            typename = std::enable_if< std::is_same<MemSpaceSource, MemSpace>::value > >
-  KokkosView3( const KokkosView3<U, MemSpaceSource> & v)
+  //template <typename U, typename MemSpaceSource,
+  //          typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value >,
+  //          typename = std::enable_if< std::is_same<MemSpaceSource, MemSpace>::value > >
+  //KokkosView3( const KokkosView3<U, MemSpaceSource> & v)
+  KokkosView3( const KokkosView3<T, MemSpace> & v)
     : m_view(v.m_view)
     , m_i(v.m_i)
     , m_j(v.m_j)
     , m_k(v.m_k)
-  {}
+  {
+    if( this->m_A3Data && this->m_A3Data->removeReference())  // Race condition
+    {
+      delete this->m_A3Data;
+      this->m_A3Data = nullptr;
+    }
+    this->m_A3Data = v.m_A3Data;  // Copy the pointer
+    if (this->m_A3Data) {  // Race condition
+      this->m_A3Data->addReference();
+    }
+  }
 
-  template <typename U, typename MemSpaceSource,
-            typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value >,
-            typename = std::enable_if< std::is_same<MemSpaceSource, MemSpace>::value > >
-  KokkosView3 & operator=( const KokkosView3<U, MemSpaceSource> & v)
+  //template <typename U, typename MemSpaceSource,
+  //          typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value >,
+  //          typename = std::enable_if< std::is_same<MemSpaceSource, MemSpace>::value > >
+  //KokkosView3 & operator=( const KokkosView3<U, MemSpaceSource> & v)
+  KokkosView3 & operator=( const KokkosView3<T, MemSpace> & v)
   {
     m_view = v.m_view;
     m_i = v.m_i;
     m_j = v.m_j;
     m_k = v.m_k;
+    if( this->m_A3Data && this->m_A3Data->removeReference())  // Race condition
+    {
+      delete this->m_A3Data;
+      this->m_A3Data = nullptr;
+    }
+    this->m_A3Data = v.m_A3Data;  // Copy the pointer
+    if (this->m_A3Data) {  // Race condition
+      this->m_A3Data->addReference();
+    }
     return *this;
+  }
+
+
+  template <typename ExecSpace>
+  inline  void
+  initialize( T init_val){
+    Uintah::parallel_for<ExecSpace>(*this,init_val );
   }
 
   view_type m_view;
@@ -90,11 +137,16 @@ struct KokkosView3
   int       m_j{0};
   int       m_k{0};
 
-    template <typename ExecSpace>
-    inline  void
-    initialize( T init_val){
-      Uintah::parallel_for<ExecSpace>(*this,init_val );
-    }
+  Array3Data<T>* m_A3Data{nullptr};   // Uintah's Host Memory (OnDemand Data Warehouse) grid variables can be created on-the-fly
+                                    // when ghost cells are requested, and those grid variables (and the underlying Array3Data
+                                    // d_data) will clean themselves up once they go out of scope.  However, with Kokkos, these
+                                    // were going out of scope before the task loops started.  So KokkosView3 needs to also
+                                    // take on responsibility for Array3Data's ref counting so that when the KokkosView3 is done
+                                    // and goes out of scope, the KokkosView3 can decrement the Array3Data letting it finally
+                                    // deallocate d_data if needed.
+                                    // If something like the GPU Data Warehouse, which doesn't use Array3Data, uses KokkosView3,
+                                    // then just keep this boolean false and the d_data pointer nullptr
+
 
 };
 

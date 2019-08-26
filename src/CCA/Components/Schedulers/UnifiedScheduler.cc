@@ -1284,6 +1284,13 @@ UnifiedScheduler::runTasks( int thread_id )
         // Go through all computes for the task. Mark them as valid.
         markDeviceComputesDataAsValid(readyTask);
 
+        // Go through all modifies for the task.  Mark any that had valid ghost cells as being invalid.
+        // (Consider task A computes, task B modifies ghost cell layer 1, task C requires ghost cell layer 1.
+        // Task C should not consider the ghost cells valid, as task B just updated the data, and so task C needs
+        // new ghost cells.
+        markDeviceModifiesGhostAsInvalid(readyTask);
+
+
         // The Task GPU Datawarehouses are no longer needed.  Delete them on the host and device.
         readyTask->deleteTaskGpuDataWarehouses();
 
@@ -3494,6 +3501,40 @@ UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
   }
 }
 
+//______________________________________________________________________
+//
+void
+UnifiedScheduler::markDeviceModifiesGhostAsInvalid( DetailedTask * dtask )
+{
+  // Go through device modifies vars and mark ghosts as invalid.
+
+  const Task* task = dtask->getTask();
+  for (const Task::Dependency* comp = task->getModifies(); comp != 0; comp = comp->m_next) {
+    constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(dtask->getMaterials());
+    // this is so we can allocate persistent events and streams to distribute when needed
+    // one stream and one event per variable per H2D copy (numPatches * numMatls)
+    int numPatches = patches->size();
+    int numMatls = matls->size();
+    int dwIndex = comp->mapDataWarehouse();
+    OnDemandDataWarehouseP dw = m_dws[dwIndex];
+
+    for (int i = 0; i < numPatches; i++) {
+      GPUDataWarehouse * gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patches->get(i)));
+      if (gpudw != nullptr) {
+        for (int j = 0; j < numMatls; j++) {
+          int patchID = patches->get(i)->getID();
+          int matlID = matls->get(j);
+          const Level* level = patches->get(i)->getLevel();
+          int levelID = level->getID();
+          if (gpudw->isAllocatedOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID)) {
+            gpudw->compareAndSwapSetInvalidWithGhostsOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+          }
+        }
+      }
+    }
+  }
+}
 
 //______________________________________________________________________
 //

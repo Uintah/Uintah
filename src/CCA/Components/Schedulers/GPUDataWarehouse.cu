@@ -2150,7 +2150,6 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
 //                 sourceOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset, *((double*)(d_varDB[i].var_ptr) + sourceOffset),
 //                 destIndex, d_varDB[destIndex].var_ptr,  destOffset, (double*)(d_varDB[destIndex].var_ptr) + destOffset);
 
-
          }
          //or copy all 4 bytes of an int in one shot.
          else if (d_varDB[i].sizeOfDataType == sizeof(int)) {
@@ -2209,7 +2208,6 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
      cerrLock.unlock();
     }
     copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock, 0, *stream >>>(this->d_device_copy);
-
   }
 }
 
@@ -3271,6 +3269,42 @@ GPUDataWarehouse::setValidWithGhostsOnGPU(char const* label, int patchID, int ma
     varLock->unlock();
     exit(-1);
   }
+}
+
+//______________________________________________________________________
+// returns false if something else already changed a valid variable to valid awaiting ghost data
+// returns true if we are the ones to manage this variable's ghost data.
+__host__ bool
+GPUDataWarehouse::compareAndSwapSetInvalidWithGhostsOnGPU(char const* label, int patchID, int matlIndx, int levelIndx)
+{
+
+  bool allocating = false;
+
+  varLock->lock();
+  while (!allocating) {
+    //get the address
+    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+    if (varPointers->find(lpml) != varPointers->end()) {
+      atomicDataStatus *status = &(varPointers->at(lpml).var->atomicStatusInGpuMemory);
+      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
+      if ((oldVarStatus & VALID_WITH_GHOSTS) == 0) {
+        //Something else already took care of it.  So this task won't manage it.
+        varLock->unlock();
+        return false;
+      } else {
+        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
+        atomicDataStatus newVarStatus = oldVarStatus & ~VALID_WITH_GHOSTS;
+        allocating = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+      }
+    } else {
+      varLock->unlock();
+      printf("ERROR:\nGPUDataWarehouse::compareAndSwapSetInvalidWithGhostsOnGPU( )  Variable %s not found.\n", label);
+      exit(-1);
+      return false;
+    }
+  }
+  varLock->unlock();
+  return true;
 }
 
 

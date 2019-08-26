@@ -1925,7 +1925,6 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase & var
     }
     // allocate the memory
     var.allocate(lowIndex, highIndex);
-
     // put the variable in the database
     printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
     m_var_DB.put(label, matlIndex, patch, var.clone(), d_scheduler->copyTimestep(), true);
@@ -3139,7 +3138,6 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
     std::vector<ValidNeighbors> validNeighbors;
     getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
     for(auto iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
-
       GridVariableBase* srcvar = var.cloneType();
       GridVariableBase* tmp = iter->validNeighbor;
       srcvar->copyPointer(*tmp);

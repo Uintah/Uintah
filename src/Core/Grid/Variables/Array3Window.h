@@ -138,9 +138,10 @@ template<class T> class Array3Window : public RefCounted {
                                  , Kokkos::pair<int,int>( lowIndex.x() - offset.x(), highIndex.x() - offset.x())
                                  , Kokkos::pair<int,int>( lowIndex.y() - offset.y(), highIndex.y() - offset.y())
                                  , Kokkos::pair<int,int>( lowIndex.z() - offset.z(), highIndex.z() - offset.z()) )
-                              ,offset.x()
-                              ,offset.y()
-                              ,offset.z()
+                              , offset.x()
+                              , offset.y()
+                              , offset.z()
+                              , data
                             );
       }
 
@@ -260,7 +261,7 @@ template<class T> class Array3Window : public RefCounted {
    template<class T>
       Array3Window<T>::~Array3Window()
       {
-        if(data && data->removeReference())
+        if(data && data->removeReference())  // Race condition
         {
           delete data;
           data=0;

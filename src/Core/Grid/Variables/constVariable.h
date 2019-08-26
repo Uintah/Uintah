@@ -139,7 +139,8 @@ WARNING
       inline KokkosView3<const T, Kokkos::HostSpace> getKokkosView() const
       {
         auto v = this->rep_.getKokkosView();
-        return KokkosView3<const T, Kokkos::HostSpace>( v.m_view, v.m_i, v.m_j, v.m_k );
+        Array3Data<const T>* constA3Data = reinterpret_cast<Array3Data<const T>*>(v.m_A3Data);
+        return KokkosView3<const T, Kokkos::HostSpace>( v.m_view, v.m_i, v.m_j, v.m_k, constA3Data );
       }
 #endif
 

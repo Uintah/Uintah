@@ -131,6 +131,7 @@ void PortableDependencyTest::scheduleTask1Computes( const LevelP     & level
                                                   )
 {
   auto TaskDependencies = [&](Task* task) {
+	task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
     task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   };
 
@@ -184,8 +185,10 @@ void PortableDependencyTest::scheduleTask4Requires( const LevelP     & level
                                                   ,       SchedulerP & sched
                                                   )
 {
+  const Uintah::PatchSubset* const localPatches = level->allPatches()->getSubset( Uintah::Parallel::getMPIRank());
+
   auto Task4Dependencies = [&](Task* task4) {
-    task4->requires(Task::NewDW, phi_label, Ghost::AroundNodes, 1);
+	  task4->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   };
 
   create_portable_tasks(Task4Dependencies, this,
@@ -242,7 +245,6 @@ void PortableDependencyTest::initialize( const ProcessorGroup *
           double value = bc->getValue();
           for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
             phi[*nbound_ptr] = value;
-
           }
           delete bcb;
         }
@@ -282,18 +284,17 @@ void PortableDependencyTest::task1Computes( const PatchSubset                   
                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
     Uintah::BlockRange range( l, h );
+    auto phi = old_dw->getConstNCVariable<double, MemSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
     auto newphi = new_dw->getNCVariable<double, MemSpace> (phi_label, matl, patch);
-
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
     Uintah::parallel_for(execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
-      //newphi(i, j, k) = i + j * 0.17 + k * 0.42;
-      //printf("[task1Computes] newphi[%d,%d,%d]: %f\n", i, j, k, newphi(i,j,k));
+      newphi(i, j, k) = phi(i,j,k);
     });
 
     // Perform the main loop
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
       //newphi(i, j, k) = i + j * 0.17 + k * 0.42;
-      //printf("[task1Computes] newphi[%d,%d,%d]: %f\n", i, j, k, newphi(i,j,k));
+    	newphi(i, j, k) = phi(i,j,k);
     });
   }
 }
@@ -329,17 +330,14 @@ void PortableDependencyTest::task2Modifies( const PatchSubset                   
 
     Uintah::BlockRange range( l, h );
     auto newphi = new_dw->getNCVariable<double, MemSpace> (phi_label, matl, patch);
-
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
     Uintah::parallel_for(execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
       //newphi(i, j, k) = newphi(i, j, k) - (i + j * 0.17 + k * 0.42);
-      //printf("[task2Modifies] newphi[%d,%d,%d]: %f\n", i, j, k, newphi(i,j,k));
     });
 
     // Perform the main loop
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
-      //newphi(i, j, k) = newphi(i, j, k) - (i + j * 0.17 + k * 0.42);
-      //printf("[task2Modifies] newphi[%d,%d,%d]: %f\n", i, j, k, newphi(i,j,k));
+      newphi(i, j, k) = newphi(i, j, k) - (i + j * 0.17 + k * 0.42);
     });
   }
 }
@@ -381,7 +379,6 @@ void PortableDependencyTest::task3Modifies( const PatchSubset                   
     //Uintah::parallel_for<ExecSpace, LaunchBounds< 640,1 > >( execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
     Uintah::parallel_for(execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
       newphi(i, j, k) = phi(i,j,k);
-      //printf("[task3Modifies] newphi[%d,%d,%d]: %f\n", i, j, k, newphi(i,j,k));
     });
 
     // Perform the main loop
@@ -390,20 +387,22 @@ void PortableDependencyTest::task3Modifies( const PatchSubset                   
           * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
               phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
 
-      //printf("[task3Modifies] newphi[%d,%d,%d]: %f phi[%d,%d,%d]: %f phi[%d,%d,%d]: %f phi[%d,%d,%d]: %f phi[%d,%d,%d]: %f phi[%d,%d,%d]: %f phi[%d,%d,%d]: %f\n"
-      //      , i, j, k, newphi(i,j,k)
-      //      , i + 1, j, k, phi(i + 1, j, k)
-      //      , i - 1, j, k, phi(i - 1, j, k)
-      //      , i, j + 1, k, phi(i, j + 1, k)
-      //      , i, j - 1, k, phi(i, j - 1, k)
-      //      , i, j, k + 1, phi(i, j, k + 1)
-      //      , i, j, k - 1, phi(i, j, k - 1)
-      //      );
+//      printf("[task3Modifies] newphi[%d,%d,%d]: %f (%p) (%p) phi[%d,%d,%d] (%p): %f phi[%d,%d,%d] (%p): %f phi[%d,%d,%d] (%p): %f phi[%d,%d,%d] (%p): %f phi[%d,%d,%d]: %f phi[%d,%d,%d]: %f\n"
+//            , i, j, k, newphi(i,j,k), &(newphi(i,j,k)), &(newphi(2,0,0))
+//            , i + 1, j, k, &(phi(i + 1, j, k)), phi(i + 1, j, k)
+//            , i - 1, j, k, &(phi(i - 1, j, k)), phi(i - 1, j, k)
+//            , i, j + 1, k, &(phi(i, j + 1, k)), phi(i, j + 1, k)
+//            , i, j - 1, k, &(phi(i, j - 1, k)),  phi(i, j - 1, k)
+//            , i, j, k + 1, phi(i, j, k + 1)
+//            , i, j, k - 1, phi(i, j, k - 1)
+//            );
 
+      //  printf("[task3Modifies] newphi[%d,%d,%d]: %g\n", i, j, k, newphi(i,j,k));
       double diff = newphi(i, j, k) - phi(i, j, k);
       residual += diff * diff;
     }, residual);
   }
+  cudaDeviceSynchronize();
 }
 
 //______________________________________________________________________
@@ -436,7 +435,7 @@ void PortableDependencyTest::task4Requires( const PatchSubset                   
                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
     Uintah::BlockRange range( l, h );
-    auto newphi = new_dw->getNCVariable<double, MemSpace> (phi_label, matl, patch);
+    auto phi = old_dw->getConstNCVariable<double, MemSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
 
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
     Uintah::parallel_for(execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
@@ -445,7 +444,9 @@ void PortableDependencyTest::task4Requires( const PatchSubset                   
 
     // Perform the main loop
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
-      //printf("[task4Requires] newphi[%d,%d,%d]: %f\n", i, j, k, newphi(i,j,k));
+      //if (i == 17 && j == 4 && k == 4) {
+      //  printf("[task4Requires] phi[%d,%d,%d]: %g\n", i, j, k, phi(i,j,k));
+      //}
     });
   }
 }
